@@ -192,7 +192,14 @@ importers:
       tslib: ^2.0.3
       typescript: ^4.0.3
   packages/snowpack-config:
-    specifiers: {}
+    dependencies:
+      rollup-plugin-svelte: 6.0.1_svelte@3.29.0
+      svelte: 3.29.0
+      svelte-hmr: 0.11.1_svelte@3.29.0
+    specifiers:
+      rollup-plugin-svelte: ^6.0.1
+      svelte: ^3.29.0
+      svelte-hmr: ^0.11.1
   packages/svelte-app-demo:
     dependencies:
       svelte: 3.29.0
@@ -2469,7 +2476,6 @@ packages:
     resolution:
       integrity: sha512-ZOIzd8yVsQQA7j8GCSlPGXwg5PfmA1mrq0JP4nGhh54LaKN3xdai/vHUDu74pKwV8OxseMS65u2NImosQcSD0Q==
   /require-relative/0.8.7:
-    dev: true
     resolution:
       integrity: sha1-eZlTn8ngR6N5KPoZb44VY9q9Nt4=
   /requires-port/1.0.0:
@@ -2548,7 +2554,6 @@ packages:
       rollup-pluginutils: 2.8.2
       sourcemap-codec: 1.4.8
       svelte: 3.29.0
-    dev: true
     peerDependencies:
       rollup: '>=1.19.2'
       svelte: '*'
@@ -2890,6 +2895,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==
+  /svelte-hmr/0.11.1_svelte@3.29.0:
+    dependencies:
+      svelte: 3.29.0
+    dev: false
+    peerDependencies:
+      svelte: '>=3.19.0'
+    resolution:
+      integrity: sha512-ecW9G/Pp7+RXXFvoWcF1WQsdajgigtdFH6qe25kMggmidvqTrzThkfELfR8cgnWng6eNVV4Y70vvb4MI/3N7OQ==
   /svelte-hmr/0.11.2-1_svelte@3.29.0:
     dependencies:
       svelte: 3.29.0
