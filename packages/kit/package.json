@@ -2,7 +2,7 @@
   "name": "@sveltejs/kit",
   "version": "0.0.11",
   "dependencies": {
-    "@sveltejs/app-utils": "0.0.5",
+    "@sveltejs/app-utils": "workspace:0.0.5",
     "cheap-watch": "^1.0.2",
     "find-cache-dir": "^3.3.1",
     "http-proxy": "^1.18.1",
