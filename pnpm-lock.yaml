@@ -33,6 +33,32 @@ importers:
       tiny-glob: ^0.2.6
       toml: ^3.0.0
       typescript: ^4.0.3
+  packages/adapter-node:
+    dependencies:
+      '@sveltejs/app-utils': 'link:../app-utils'
+    devDependencies:
+      '@rollup/plugin-commonjs': 15.1.0_rollup@2.30.0
+      '@rollup/plugin-node-resolve': 9.0.0_rollup@2.30.0
+      '@rollup/plugin-sucrase': 3.1.0_rollup@2.30.0
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/1619da56dc9f485fd84540e54dfd11078cb45773_6695033900341fbf48090c963c74f32d
+      '@typescript-eslint/eslint-plugin': 4.4.1_eslint@7.11.0+typescript@4.0.3
+      eslint: 7.11.0
+      eslint-plugin-import: 2.22.1_eslint@7.11.0
+      rollup: 2.30.0
+      sirv: 1.0.6
+      typescript: 4.0.3
+    specifiers:
+      '@rollup/plugin-commonjs': ^15.1.0
+      '@rollup/plugin-node-resolve': ^9.0.0
+      '@rollup/plugin-sucrase': ^3.1.0
+      '@sveltejs/app-utils': 'workspace:0.0.5'
+      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.2.0'
+      '@typescript-eslint/eslint-plugin': ^4.4.1
+      eslint: ^7.11.0
+      eslint-plugin-import: ^2.22.1
+      rollup: ^2.30.0
+      sirv: ^1.0.6
+      typescript: ^4.0.3
   packages/app-utils:
     dependencies:
       mime: 2.4.6

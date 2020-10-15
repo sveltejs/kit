@@ -1,0 +1,28 @@
+{
+  "name": "@sveltejs/adapter-node",
+  "version": "0.0.3",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^15.1.0",
+    "@rollup/plugin-node-resolve": "^9.0.0",
+    "@rollup/plugin-sucrase": "^3.1.0",
+    "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.2.0",
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "eslint": "^7.11.0",
+    "eslint-plugin-import": "^2.22.1",
+    "rollup": "^2.30.0",
+    "sirv": "^1.0.6",
+    "typescript": "^4.0.3"
+  },
+  "main": "index.js",
+  "files": [
+    "server.js"
+  ],
+  "scripts": {
+    "dev": "rollup -cw",
+    "build": "rollup -c",
+    "prepublish": "npm run build"
+  },
+  "dependencies": {
+    "@sveltejs/app-utils": "workspace:0.0.5"
+  }
+}
