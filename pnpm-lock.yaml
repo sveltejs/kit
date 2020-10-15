@@ -59,6 +59,11 @@ importers:
       rollup: ^2.30.0
       sirv: ^1.0.6
       typescript: ^4.0.3
+  packages/adapter-static:
+    dependencies:
+      '@sveltejs/app-utils': 'link:../app-utils'
+    specifiers:
+      '@sveltejs/app-utils': 'workspace:0.0.5'
   packages/app-utils:
     dependencies:
       mime: 2.4.6
