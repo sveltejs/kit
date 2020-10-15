@@ -1,0 +1,27 @@
+{
+  "name": "@sveltejs/app-utils",
+  "version": "0.0.5",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "scripts": {
+    "dev": "rollup -cw",
+    "build": "rollup -c",
+    "prepublish": "npm run build"
+  },
+  "dependencies": {
+    "mime": "^2.4.6"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^9.0.0",
+    "@rollup/plugin-sucrase": "^3.1.0",
+    "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.2.0",
+    "@typescript-eslint/eslint-plugin": "^4.4.0",
+    "devalue": "^2.0.1",
+    "eslint": "^7.11.0",
+    "eslint-plugin-import": "^2.22.1",
+    "node-fetch": "^2.6.1",
+    "rollup": "^2.29.0",
+    "svelte": "^3.29.0",
+    "typescript": "^4.0.3"
+  }
+}
