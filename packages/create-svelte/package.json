@@ -1,6 +1,6 @@
 {
   "name": "create-svelte",
-  "version": "2.0.0-alpha.4",
+  "version": "2.0.0-alpha.5",
   "bin": "./bin",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
