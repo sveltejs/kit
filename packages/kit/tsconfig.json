@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"noImplicitThis": true,
+		"noEmitOnError": true,
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"moduleResolution": "Node",
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"lib": ["es5", "es6", "dom"],
+		"importHelpers": true,
+		"target": "es2020",
+		"baseUrl": ".",
+		"module": "esnext"
+	},
+	"include": [
+		"src"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}
