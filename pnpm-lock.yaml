@@ -1,6 +1,38 @@
 importers:
   .:
     specifiers: {}
+  packages/adapter-netlify:
+    dependencies:
+      kleur: 4.1.3
+      tiny-glob: 0.2.6
+      toml: 3.0.0
+    devDependencies:
+      '@rollup/plugin-commonjs': 15.1.0_rollup@2.30.0
+      '@rollup/plugin-node-resolve': 9.0.0_rollup@2.30.0
+      '@rollup/plugin-sucrase': 3.1.0_rollup@2.30.0
+      '@sveltejs/app-utils': 'link:../app-utils'
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/1619da56dc9f485fd84540e54dfd11078cb45773_6695033900341fbf48090c963c74f32d
+      '@typescript-eslint/eslint-plugin': 4.4.1_eslint@7.11.0+typescript@4.0.3
+      devalue: 2.0.1
+      eslint: 7.11.0
+      eslint-plugin-import: 2.22.1_eslint@7.11.0
+      rollup: 2.30.0
+      typescript: 4.0.3
+    specifiers:
+      '@rollup/plugin-commonjs': ^15.1.0
+      '@rollup/plugin-node-resolve': ^9.0.0
+      '@rollup/plugin-sucrase': ^3.1.0
+      '@sveltejs/app-utils': 'workspace:0.0.5'
+      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.2.0'
+      '@typescript-eslint/eslint-plugin': ^4.4.1
+      devalue: ^2.0.1
+      eslint: ^7.11.0
+      eslint-plugin-import: ^2.22.1
+      kleur: ^4.1.3
+      rollup: ^2.30.0
+      tiny-glob: ^0.2.6
+      toml: ^3.0.0
+      typescript: ^4.0.3
   packages/app-utils:
     dependencies:
       mime: 2.4.6
@@ -1342,6 +1374,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-BWICuzzDvDoH54NHKCseDanAhE3CeDorgDL5MT6LMXXj2WCnd9UC2szdk4AWLfjdgNBCXLUanXYcpBBKOSWGwg==
+  /globalyzer/0.1.4:
+    dev: false
+    resolution:
+      integrity: sha512-LeguVWaxgHN0MNbWC6YljNMzHkrCny9fzjmEUdnF1kQ7wATFD1RHFRqA1qxaX2tgxGENlcxjOflopBwj3YZiXA==
   /globby/11.0.1:
     dependencies:
       array-union: 2.1.0
@@ -1355,6 +1391,10 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-iH9RmgwCmUJHi2z5o2l3eTtGBtXek1OYlHrbcxOYugyHLmAsZrPj43OtHThd62Buh/Vv6VyCBD2bdyWcGNQqoQ==
+  /globrex/0.1.2:
+    dev: false
+    resolution:
+      integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==
   /graceful-fs/4.2.4:
     dev: true
     resolution:
@@ -2733,6 +2773,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==
+  /tiny-glob/0.2.6:
+    dependencies:
+      globalyzer: 0.1.4
+      globrex: 0.1.2
+    dev: false
+    resolution:
+      integrity: sha512-A7ewMqPu1B5PWwC3m7KVgAu96Ch5LA0w4SnEN/LbDREj/gAD0nPWboRbn8YoP9ISZXqeNAlMvKSKoEuhcfK3Pw==
   /to-regex-range/5.0.1:
     dependencies:
       is-number: 7.0.0
@@ -2740,6 +2787,10 @@ packages:
       node: '>=8.0'
     resolution:
       integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==
+  /toml/3.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==
   /totalist/1.1.0:
     dev: true
     engines:
