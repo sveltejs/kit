@@ -9,6 +9,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "0.0.3",
 		"@sveltejs/kit": "0.0.11",
-		"@sveltejs/snowpack-config": "^0.0.1"
+		"@sveltejs/snowpack-config": "^0.0.2"
 	}
 }
