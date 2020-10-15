@@ -11,7 +11,17 @@ export default {
 	},
 	plugins: [
 		nodeResolve(),
-		commonjs()
+		commonjs(),
+		{
+			transform(code, id) {
+				if (id.endsWith('.gitignore')) {
+					return {
+						code: `export default ${JSON.stringify(code)}`,
+						map: null
+					};
+				}
+			}
+		}
 	],
 	external: require('module').builtinModules
 };

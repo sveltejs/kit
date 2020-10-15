@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { bold, cyan, green, red } from 'kleur/colors';
+import { bold, cyan, green } from 'kleur/colors';
 import parser from 'gitignore-parser';
+import gitignore_contents from '../template/.gitignore';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
 
@@ -35,7 +36,7 @@ async function main() {
 	}
 
 	const cwd = path.join(__dirname, 'template');
-	const gitignore = parser.compile(fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8'));
+	const gitignore = parser.compile(gitignore_contents);
 
 	const files = glob('**/*', { cwd }).filter(gitignore.accepts);
 
@@ -49,6 +50,8 @@ async function main() {
 			fs.copyFileSync(src, dest);
 		}
 	});
+
+	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
 	console.log(bold(green(`✔ Copied project files`)));
 	console.log(`\nNext steps:`);

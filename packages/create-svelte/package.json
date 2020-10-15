@@ -1,6 +1,6 @@
 {
   "name": "create-svelte",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "bin": "./bin",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.1.0",
@@ -17,7 +17,6 @@
     "prepublishOnly": "npm run build"
   },
   "files": [
-    "template",
-    "template/.gitignore"
+    "template"
   ]
 }
