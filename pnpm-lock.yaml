@@ -119,10 +119,12 @@ importers:
       '@snowpack/plugin-svelte': 2.2.0_svelte@3.29.0
       '@sveltejs/adapter-node': 'link:../../adapter-node'
       '@sveltejs/kit': 'link:../../kit'
+      '@sveltejs/snowpack-config': 'link:../../snowpack-config'
     specifiers:
       '@snowpack/plugin-svelte': ^2.2.0
       '@sveltejs/adapter-node': 0.0.3
       '@sveltejs/kit': 0.0.11
+      '@sveltejs/snowpack-config': 'workspace:^0.0.1'
       svelte: ^3.29.0
   packages/kit:
     dependencies:
