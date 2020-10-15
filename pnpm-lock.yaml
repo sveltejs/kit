@@ -1,6 +1,8 @@
 importers:
   .:
     specifiers: {}
+  ../../../../.nvm/versions/node/v12.18.3/pnpm-global:
+    specifiers: {}
   packages/adapter-netlify:
     dependencies:
       kleur: 4.1.3

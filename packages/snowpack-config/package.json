@@ -1,0 +1,5 @@
+{
+  "name": "@sveltejs/snowpack-config",
+  "version": "0.0.1",
+  "main": "snowpack.config.js"
+}
