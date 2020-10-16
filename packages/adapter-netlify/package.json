@@ -2,17 +2,8 @@
   "name": "@sveltejs/adapter-netlify",
   "version": "0.0.7",
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.1.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@rollup/plugin-sucrase": "^3.1.0",
     "@sveltejs/app-utils": "workspace:0.0.5",
-    "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.2.0",
-    "@typescript-eslint/eslint-plugin": "^4.4.1",
-    "devalue": "^2.0.1",
-    "eslint": "^7.11.0",
-    "eslint-plugin-import": "^2.22.1",
-    "rollup": "^2.30.0",
-    "typescript": "^4.0.3"
+    "devalue": "^2.0.1"
   },
   "main": "index.js",
   "files": [
@@ -21,7 +12,7 @@
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "kleur": "^4.1.3",
