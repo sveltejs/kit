@@ -1,5 +1,6 @@
 {
 	"name": "~TODO~",
+	"version": "0.0.1",
 	"scripts": {
 		"dev": "svelte dev",
 		"build": "svelte build"
@@ -12,6 +13,5 @@
 		"@sveltejs/adapter-node": "workspace:0.0.4",
 		"@sveltejs/kit": "workspace:0.0.14",
 		"@sveltejs/snowpack-config": "workspace:^0.0.3"
-	},
-	"version": null
+	}
 }

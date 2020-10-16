@@ -2217,10 +2217,10 @@ packages:
       graceful-fs: 4.2.4
     resolution:
       integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=
-  /jsonschema/1.2.11:
+  /jsonschema/1.3.0:
     dev: false
     resolution:
-      integrity: sha512-XNZHs3N1IOa3lPKm//npxMhOdaoPw+MvEV0NIgxcER83GTJcG13rehtWmpBCfEt8DrtYwIkMTs8bdXoYs4fvnQ==
+      integrity: sha512-qg48ckmeeQNPyPAUVIb4Qgmg/U2Kgg5SuEyMs8Z72cnxsw5Ra088U/Foi6sMp/cs7sZ+LNrmvX0Ww+ohE2By0g==
   /kind-of/6.0.3:
     dev: true
     engines:
@@ -3319,7 +3319,7 @@ packages:
       http-proxy: 1.18.1
       httpie: 1.1.2
       isbinaryfile: 4.0.6
-      jsonschema: 1.2.11
+      jsonschema: 1.3.0
       kleur: 4.1.3
       mime-types: 2.1.27
       mkdirp: 1.0.4
