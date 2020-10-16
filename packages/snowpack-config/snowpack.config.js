@@ -1,5 +1,3 @@
-const temporary_plugin_until_new_snowpack_svelte_release = './temporary-plugin.js'
-
 // Consult https://www.snowpack.dev to learn about these options
 module.exports = {
 	install: ['svelte'],
@@ -8,8 +6,10 @@ module.exports = {
 		externalPackage: require('module').builtinModules
 	},
 	plugins: [
-		[temporary_plugin_until_new_snowpack_svelte_release, {
-			hydratable: true
+		['@snowpack/plugin-svelte', {
+			compilerOptions: {
+				hydratable: true
+			}
 		}]
 	],
 	devOptions: {
