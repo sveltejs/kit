@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "prepublishOnly": "npm run build"
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "kleur": "^4.1.3",

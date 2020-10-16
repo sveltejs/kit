@@ -1,6 +1,6 @@
 {
   "name": "@sveltejs/kit",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "dependencies": {
     "@sveltejs/app-utils": "workspace:0.0.6",
     "cheap-watch": "^1.0.2",
@@ -37,6 +37,6 @@
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "prepublishOnly": "npm run build"
+    "prepublish": "npm run build"
   }
 }

@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "prepublishOnly": "npm run build"
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "@sveltejs/app-utils": "workspace:0.0.6"
