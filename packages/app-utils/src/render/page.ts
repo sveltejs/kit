@@ -47,7 +47,7 @@ export default async function render_page({
 
 	try {
 		if (!page) {
-			const error: any = new Error('Not found');
+			const error: any = new Error(`Not found: ${path}`);
 			error.status = 404;
 			throw error;
 		}

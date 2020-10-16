@@ -14,6 +14,7 @@
   "devDependencies": {
     "devalue": "^2.0.1",
     "node-fetch": "^2.6.1",
+    "rollup": "^2.31.0",
     "svelte": "^3.29.0"
   }
 }
