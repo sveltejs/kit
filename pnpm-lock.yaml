@@ -28,6 +28,8 @@ importers:
       rollup: ^2.32.0
       tslib: ^2.0.3
       typescript: ^4.0.3
+  ../../../../.nvm/versions/node/v12.18.3/pnpm-global:
+    specifiers: {}
   examples/hn.svelte.dev:
     dependencies:
       svelte: 3.29.0
