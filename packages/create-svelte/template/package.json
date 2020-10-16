@@ -5,12 +5,13 @@
 		"build": "svelte build"
 	},
 	"dependencies": {
-		"@sveltejs/adapter-node": "workspace:^0.0.3",
+		"@sveltejs/adapter-node": "workspace:^0.0.4",
 		"svelte": "^3.29.0"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:0.0.3",
-		"@sveltejs/kit": "workspace:0.0.13",
+		"@sveltejs/adapter-node": "workspace:0.0.4",
+		"@sveltejs/kit": "workspace:0.0.14",
 		"@sveltejs/snowpack-config": "workspace:^0.0.3"
-	}
+	},
+	"version": null
 }

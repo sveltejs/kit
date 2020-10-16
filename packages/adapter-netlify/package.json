@@ -1,24 +1,24 @@
 {
-  "name": "@sveltejs/adapter-netlify",
-  "version": "0.0.7",
-  "devDependencies": {
-    "@sveltejs/app-utils": "workspace:0.0.6",
-    "devalue": "^2.0.1",
-    "rollup": "^2.32.0"
-  },
-  "main": "index.js",
-  "files": [
-    "render.js"
-  ],
-  "scripts": {
-    "dev": "rollup -cw",
-    "build": "rollup -c",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
-  },
-  "dependencies": {
-    "kleur": "^4.1.3",
-    "tiny-glob": "^0.2.6",
-    "toml": "^3.0.0"
-  }
+	"name": "@sveltejs/adapter-netlify",
+	"version": "0.0.8",
+	"devDependencies": {
+		"@sveltejs/app-utils": "workspace:0.0.7",
+		"devalue": "^2.0.1",
+		"rollup": "^2.32.0"
+	},
+	"main": "index.js",
+	"files": [
+		"render.js"
+	],
+	"scripts": {
+		"dev": "rollup -cw",
+		"build": "rollup -c",
+		"prepare": "npm run build",
+		"prepublishOnly": "npm run build"
+	},
+	"dependencies": {
+		"kleur": "^4.1.3",
+		"tiny-glob": "^0.2.6",
+		"toml": "^3.0.0"
+	}
 }

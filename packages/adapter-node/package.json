@@ -1,21 +1,21 @@
 {
-  "name": "@sveltejs/adapter-node",
-  "version": "0.0.3",
-  "devDependencies": {
-    "rollup": "^2.32.0",
-    "sirv": "^1.0.7"
-  },
-  "main": "index.js",
-  "files": [
-    "server.js"
-  ],
-  "scripts": {
-    "dev": "rollup -cw",
-    "build": "rollup -c",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
-  },
-  "dependencies": {
-    "@sveltejs/app-utils": "workspace:0.0.6"
-  }
+	"name": "@sveltejs/adapter-node",
+	"version": "0.0.4",
+	"devDependencies": {
+		"rollup": "^2.32.0",
+		"sirv": "^1.0.7"
+	},
+	"main": "index.js",
+	"files": [
+		"server.js"
+	],
+	"scripts": {
+		"dev": "rollup -cw",
+		"build": "rollup -c",
+		"prepare": "npm run build",
+		"prepublishOnly": "npm run build"
+	},
+	"dependencies": {
+		"@sveltejs/app-utils": "workspace:0.0.7"
+	}
 }
