@@ -1,0 +1,14 @@
+{
+	"scripts": {
+		"dev": "svelte dev",
+		"build": "svelte build"
+	},
+	"dependencies": {
+		"svelte": "^3.29.0"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "0.0.3",
+		"@sveltejs/kit": "0.0.11",
+		"@sveltejs/snowpack-config": "^0.0.2"
+	}
+}
