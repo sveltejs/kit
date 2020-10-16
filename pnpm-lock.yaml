@@ -28,8 +28,6 @@ importers:
       rollup: ^2.32.0
       tslib: ^2.0.3
       typescript: ^4.0.3
-  ../../../../.nvm/versions/node/v12.18.3/pnpm-global:
-    specifiers: {}
   examples/hn.svelte.dev:
     dependencies:
       svelte: 3.29.0
@@ -38,8 +36,8 @@ importers:
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
     specifiers:
-      '@sveltejs/adapter-node': 'workspace:0.0.4'
-      '@sveltejs/kit': 'workspace:0.0.14'
+      '@sveltejs/adapter-node': 'workspace:0.0.5'
+      '@sveltejs/kit': 'workspace:0.0.15'
       '@sveltejs/snowpack-config': 'workspace:^0.0.3'
       svelte: ^3.29.0
   examples/svelte-kit-demo:
@@ -51,9 +49,9 @@ importers:
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
     specifiers:
-      '@sveltejs/adapter-node': 'workspace:0.0.4'
-      '@sveltejs/adapter-static': 'workspace:0.0.4'
-      '@sveltejs/kit': 'workspace:^0.0.14'
+      '@sveltejs/adapter-node': 'workspace:0.0.5'
+      '@sveltejs/adapter-static': 'workspace:0.0.5'
+      '@sveltejs/kit': 'workspace:^0.0.15'
       '@sveltejs/snowpack-config': 'workspace:^0.0.3'
       svelte: ^3.29.0
   packages/adapter-netlify:
@@ -66,7 +64,7 @@ importers:
       devalue: 2.0.1
       rollup: 2.32.0
     specifiers:
-      '@sveltejs/app-utils': 'workspace:0.0.7'
+      '@sveltejs/app-utils': 'workspace:0.0.8'
       devalue: ^2.0.1
       kleur: ^4.1.3
       rollup: ^2.32.0
@@ -79,14 +77,14 @@ importers:
       rollup: 2.32.0
       sirv: 1.0.7
     specifiers:
-      '@sveltejs/app-utils': 'workspace:0.0.7'
+      '@sveltejs/app-utils': 'workspace:0.0.8'
       rollup: ^2.32.0
       sirv: ^1.0.7
   packages/adapter-static:
     dependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
     specifiers:
-      '@sveltejs/app-utils': 'workspace:0.0.7'
+      '@sveltejs/app-utils': 'workspace:0.0.8'
   packages/app-utils:
     dependencies:
       mime: 2.4.6
@@ -115,15 +113,14 @@ importers:
       rollup: ^2.32.0
       tiny-glob: ^0.2.6
   packages/create-svelte/template:
-    dependencies:
-      '@sveltejs/adapter-node': 'link:../../adapter-node'
-      svelte: 3.29.0
     devDependencies:
+      '@sveltejs/adapter-node': 'link:../../adapter-node'
       '@sveltejs/kit': 'link:../../kit'
       '@sveltejs/snowpack-config': 'link:../../snowpack-config'
+      svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': 'workspace:^0.0.4'
-      '@sveltejs/kit': 'workspace:0.0.14'
+      '@sveltejs/adapter-node': 'workspace:0.0.5'
+      '@sveltejs/kit': 'workspace:0.0.15'
       '@sveltejs/snowpack-config': 'workspace:^0.0.3'
       svelte: ^3.29.0
   packages/kit:
@@ -152,7 +149,7 @@ importers:
       source-map-support: 0.5.19
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/app-utils': 'workspace:0.0.7'
+      '@sveltejs/app-utils': 'workspace:0.0.8'
       '@types/node': ^14.11.10
       '@types/sade': ^1.7.2
       cheap-watch: ^1.0.2
