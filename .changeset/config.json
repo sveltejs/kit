@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@1.4.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "master",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "hn.svelte.dev",
+    "svelte-kit-demo"
+  ]
+}

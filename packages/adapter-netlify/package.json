@@ -4,7 +4,7 @@
   "devDependencies": {
     "@sveltejs/app-utils": "workspace:0.0.6",
     "devalue": "^2.0.1",
-    "rollup": "^2.31.0"
+    "rollup": "^2.32.0"
   },
   "main": "index.js",
   "files": [
@@ -13,7 +13,8 @@
   "scripts": {
     "dev": "rollup -cw",
     "build": "rollup -c",
-    "prepublish": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "kleur": "^4.1.3",

@@ -1,4 +1,5 @@
 {
+	"name": "svelte-kit-demo",
 	"scripts": {
 		"dev": "svelte dev",
 		"build": "svelte build"
@@ -9,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:0.0.3",
 		"@sveltejs/adapter-static": "workspace:0.0.3",
-		"@sveltejs/kit": "workspace:^0.0.12",
-		"@sveltejs/snowpack-config": "workspace:^0.0.2"
+		"@sveltejs/kit": "workspace:^0.0.13",
+		"@sveltejs/snowpack-config": "workspace:^0.0.3"
 	}
 }
