@@ -185,11 +185,13 @@ export async function prerender({
 						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
-						const file = `static${parsed.pathname}`;
+						const file_exists = (
+							fs.existsSync(`${out}${parsed.pathname}`) ||
+							fs.existsSync(`static${parsed.pathname}`) ||
+							fs.existsSync(`static${parsed.pathname}/index.html`)
+						);
 
-						if (fs.existsSync(file) || fs.existsSync(`${file}/index.html`)) {
-							continue;
-						}
+						if (file_exists) continue;
 
 						if (parsed.query) {
 							// TODO warn that query strings have no effect on statically-exported pages
