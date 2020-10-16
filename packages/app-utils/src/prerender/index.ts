@@ -1,6 +1,6 @@
 import fs from 'fs';
-import path from 'path';
-import { parse, resolve } from 'url';
+import { dirname, resolve as resolve_path } from 'path';
+import { parse, resolve, URLSearchParams } from 'url';
 import { render } from '../render';
 import { RouteManifest } from '../types';
 
@@ -75,21 +75,25 @@ export async function prerender({
 	const template = fs.readFileSync('src/app.html', 'utf-8');
 	const client = JSON.parse(fs.readFileSync(`${input}/client.json`, 'utf-8'));
 
-	const server_root = path.resolve(input);
+	const server_root = resolve_path(input);
 	const App = require(`${server_root}/server/app.js`);
 
-	async function crawl(pathname) {
-		if (seen.has(pathname)) return;
-		seen.add(pathname);
+	async function crawl(path) {
+		if (seen.has(path)) return;
+		seen.add(path);
 
 		const rendered = await render({
+			host: null, // TODO ???
+			method: 'GET',
+			headers: {},
+			path,
+			query: new URLSearchParams()
+		}, {
 			only_prerender: !force,
 			template,
 			manifest,
 			client,
 			static_dir: 'static',
-			host: null,
-			url: pathname,
 			App,
 			load: route => require(`${server_root}/server/routes/${route.name}.js`),
 			dev: false
@@ -97,21 +101,21 @@ export async function prerender({
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const is_html = rendered.headers['Content-Type'] === 'text/html' || response_type === REDIRECT;
+			const is_html = rendered.headers['content-type'] === 'text/html' || response_type === REDIRECT;
 
-			const parts = pathname.split('/');
+			const parts = path.split('/');
 			if (is_html && (parts[parts.length - 1] !== 'index.html')) {
 				parts.push('index.html');
 			}
 
 			const file = `${output}${parts.join('/')}`;
-			mkdirp(path.dirname(file));
+			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const location = rendered.headers['Location'];
+				const location = rendered.headers['location'];
 
-				log.warn(`${rendered.status} ${pathname} -> ${location}`);
-				fs.writeFileSync(file, `<script>window.location.href=${JSON.stringify(rendered.headers['Location'])}</script>`);
+				log.warn(`${rendered.status} ${path} -> ${location}`);
+				fs.writeFileSync(file, `<script>window.location.href=${JSON.stringify(rendered.headers['location'])}</script>`);
 
 				return;
 			}
@@ -119,33 +123,33 @@ export async function prerender({
 			fs.writeFileSync(file, rendered.body); // TODO minify where possible?
 
 			if (response_type === OK) {
-				log.info(`${rendered.status} ${pathname}`);
+				log.info(`${rendered.status} ${path}`);
 			} else {
 				// TODO should this fail the build?
-				log.error(`${rendered.status} ${pathname}`);
+				log.error(`${rendered.status} ${path}`);
 			}
 
 			if (rendered.dependencies) {
-				for (const pathname in rendered.dependencies) {
-					const result = rendered.dependencies[pathname];
+				for (const path in rendered.dependencies) {
+					const result = rendered.dependencies[path];
 					const response_type = Math.floor(result.status / 100);
 
-					const is_html = result.headers['Content-Type'] === 'text/html';
+					const is_html = result.headers['content-type'] === 'text/html';
 
-					const parts = pathname.split('/');
+					const parts = path.split('/');
 					if (is_html && (parts[parts.length - 1] !== 'index.html')) {
 						parts.push('index.html');
 					}
 
 					const file = `${output}${parts.join('/')}`;
-					mkdirp(path.dirname(file));
+					mkdirp(dirname(file));
 
 					fs.writeFileSync(file, result.body);
 
 					if (response_type === OK) {
-						log.info(`${result.status} ${pathname}`);
+						log.info(`${result.status} ${path}`);
 					} else {
-						log.error(`${result.status} ${pathname}`);
+						log.error(`${result.status} ${path}`);
 					}
 				}
 			}
@@ -173,7 +177,7 @@ export async function prerender({
 					hrefs = hrefs.filter(Boolean);
 
 					for (const href of hrefs) {
-						const resolved = resolve(pathname, href);
+						const resolved = resolve(path, href);
 						if (resolved[0] !== '/') continue;
 
 						const parsed = parse(resolved);

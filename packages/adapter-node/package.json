@@ -2,6 +2,7 @@
   "name": "@sveltejs/adapter-node",
   "version": "0.0.3",
   "devDependencies": {
+    "rollup": "^2.31.0",
     "sirv": "^1.0.6"
   },
   "main": "index.js",

@@ -1,3 +1,27 @@
+import { URLSearchParams } from 'url';
+
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
+
+export type IncomingRequest = {
+	host: string; // TODO is this actually necessary?
+	method: Method;
+	headers: Record<string, string>;
+	// TODO body
+	path: string;
+	query: URLSearchParams;
+};
+
+export type RenderOptions = {
+	only_prerender: boolean;
+	static_dir: string;
+	template: string;
+	manifest: RouteManifest;
+	client: ClientManifest;
+	App: any; // TODO
+	load: (route: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO
+	dev: boolean; // TODO this is awkward
+};
+
 export type PageComponentManifest = {
 	default?: boolean;
 	type?: string;
@@ -35,3 +59,5 @@ export type ClientManifest = {
 };
 
 export type Query = Record<string, string | true>;
+
+export type Loader = (item: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO types for modules

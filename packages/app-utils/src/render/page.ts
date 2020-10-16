@@ -1,41 +1,29 @@
+import { URLSearchParams } from 'url';
 import { existsSync, createReadStream } from 'fs';
-import { writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import { parse, resolve } from 'url';
 import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import * as mime from 'mime';
 import { render } from './index';
-import { ClientManifest, PageComponentManifest, PageManifest, Query, RouteManifest, ServerRouteManifest } from '../types';
+import { IncomingRequest, RenderOptions, PageManifest } from '../types';
 
-export default async function render_page({
-	only_prerender,
-	static_dir,
-	template,
-	manifest,
-	client,
-	host,
-	path,
-	query,
-	page,
-	App,
-	load,
-	dev // TODO this is awkward
-}: {
-	only_prerender: boolean;
-	static_dir: string;
-	template: string;
-	manifest: RouteManifest;
-	client: ClientManifest;
-	host: string;
-	path: string;
-	query: Query;
-	page: PageManifest;
-	App: any; // TODO
-	load: (route: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO
-	dev: boolean;
-}) {
+const noop = () => {};
+
+type FetchOpts = {
+	method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
+	headers?: Record<string, string>;
+	body?: any;
+};
+
+export default async function render_page(
+	request: IncomingRequest,
+	options: RenderOptions
+) {
 	let redirected;
 	let preload_error;
+
+	const page: PageManifest = options.manifest.pages.find(page => page.pattern.test(request.path));
 
 	const baseUrl = ''; // TODO
 
@@ -47,12 +35,12 @@ export default async function render_page({
 
 	try {
 		if (!page) {
-			const error: any = new Error(`Not found: ${path}`);
+			const error: any = new Error(`Not found: ${request.path}`);
 			error.status = 404;
 			throw error;
 		}
 
-		const segments = path.split('/').filter(Boolean);
+		const segments = request.path.split('/').filter(Boolean);
 
 		// TODO make this less confusing
 		const layout_segments = [segments[0]];
@@ -74,9 +62,7 @@ export default async function render_page({
 				location = location.replace(/^\//g, ''); // leading slash (only)
 				redirected = {
 					status,
-					headers: {
-						Location: location
-					}
+					headers: { location }
 				};
 			},
 			error: (status, error) => {
@@ -85,7 +71,7 @@ export default async function render_page({
 				}
 				preload_error = { ...error, status };
 			},
-			fetch: async (url, opts) => {
+			fetch: async (url, opts: FetchOpts = {}) => {
 				const parsed = parse(url);
 
 				if (parsed.protocol) {
@@ -97,33 +83,28 @@ export default async function render_page({
 				// probably no advantage to using fetch here — we should replace
 				// `this.fetch` with `this.load` or whatever
 
-				const resolved = resolve(path, parsed.pathname);
+				const resolved = resolve(request.path, parsed.pathname);
 
 				// edge case — fetching a static file
-				const candidates = [`${static_dir}${resolved}`, `${static_dir}${resolved}/index.html`];
+				const candidates = [`${options.static_dir}${resolved}`, `${options.static_dir}${resolved}/index.html`];
 				for (const file of candidates) {
 					if (existsSync(file)) {
 						return new Response(createReadStream(file), {
 							headers: {
-								'Content-Type': mime.getType(file)
+								'content-type': mime.getType(file)
 							}
 						});
 					}
 				}
 
-				// TODO this doesn't take account of sent headers, or non-GET methods
+				// TODO this doesn't take account of opts.body
 				const rendered = await render({
-					only_prerender,
-					static_dir,
-					template,
-					manifest,
-					client,
-					host,
-					url: parsed.query ? `${resolved}?${parsed.query}` : resolved,
-					dev,
-					App,
-					load
-				});
+					host: request.host,
+					method: opts.method || 'GET',
+					headers: opts.headers, // TODO inject credentials...
+					path: resolved,
+					query: new URLSearchParams(parsed.query)
+				}, options);
 
 				if (rendered) {
 					// TODO this is primarily for the benefit of the static case,
@@ -142,7 +123,7 @@ export default async function render_page({
 			}
 		};
 
-		const match = page.pattern.exec(path);
+		const match = page.pattern.exec(request.path);
 
 		// TODO this logic is duplicated in several places
 		const params = {};
@@ -153,12 +134,12 @@ export default async function render_page({
 		const preloaded = [];
 		let can_prerender = true;
 
-		const parts = await Promise.all([{ component: manifest.layout, params: [] }, ...page.parts].map(async (part, i) => {
+		const parts = await Promise.all([{ component: options.manifest.layout, params: [] }, ...page.parts].map(async (part, i) => {
 			if (!part) return null;
 
-			const mod = await load(part.component);
+			const mod = await options.load(part.component);
 
-			if (only_prerender && !mod.prerender) {
+			if (options.only_prerender && !mod.prerender) {
 				can_prerender = false;
 				return;
 			}
@@ -170,9 +151,9 @@ export default async function render_page({
 
 			const props = mod.preload
 				? await mod.preload.call(preload_context, {
-					host,
-					path,
-					query,
+					host: request.host,
+					path: request.path,
+					query: request.query,
 					params
 				}, session)
 				: {};
@@ -181,7 +162,7 @@ export default async function render_page({
 			return { component: mod.default, props };
 		}));
 
-		if (only_prerender && !can_prerender) return;
+		if (options.only_prerender && !can_prerender) return;
 
 		if (preload_error) throw preload_error;
 		if (redirected) return redirected;
@@ -201,17 +182,13 @@ export default async function render_page({
 			status: 200,
 			error: null,
 			stores: {
-				page: {
-					subscribe: writable({
-						host,
-						path,
-						query,
-						params
-					}).subscribe
-				},
-				preloading: {
-					subscribe: writable(null).subscribe
-				},
+				page: readable({
+					host: request.host,
+					path: request.path,
+					query: request.query,
+					params
+				}, noop),
+				preloading: readable(null, noop),
 				session: writable(session)
 			},
 			// TODO stores, status, segments, notify, CONTEXT_KEY
@@ -244,13 +221,13 @@ export default async function render_page({
 			console.warn('The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information');
 		})).join(',')}]`;
 
-		const rendered = App.default.render(props);
+		const rendered = options.App.default.render(props);
 
-		const js_deps = new Set(client.deps.__entry__ ? [...client.deps.__entry__.js] : []);
-		const css_deps = new Set(client.deps.__entry__ ? [...client.deps.__entry__.css] : []);
+		const js_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.js] : []);
+		const css_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.css] : []);
 
 		page.parts.filter(Boolean).forEach(part => {
-			const deps = client.deps[part.component.name];
+			const deps = options.client.deps[part.component.name];
 
 			if (!deps) return; // we don't have this info during dev
 
@@ -262,10 +239,10 @@ export default async function render_page({
 
 			${Array.from(js_deps).map(dep => `<link rel="modulepreload" href="/_app/${dep}">`).join('\n\t\t\t')}
 			${Array.from(css_deps).map(dep => `<link rel="stylesheet" href="/_app/${dep}">`).join('\n\t\t\t')}
-			${dev ? `<style>${rendered.css.code}</style>` : ''}
+			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
 
 			<script type="module">
-				import { start } from '/_app/${client.entry}';
+				import { start } from '/_app/${options.client.entry}';
 
 				start({
 					target: document.body
@@ -283,12 +260,12 @@ export default async function render_page({
 				};
 			</script>`.replace(/^\t{3}/gm, '');
 
-		const html = template.replace('%svelte.head%', head).replace('%svelte.body%', body);
+		const html = options.template.replace('%svelte.head%', head).replace('%svelte.body%', body);
 
 		return {
 			status: 200,
 			headers: {
-				'Content-Type': 'text/html'
+				'content-type': 'text/html'
 			},
 			body: html,
 			dependencies
@@ -299,11 +276,11 @@ export default async function render_page({
 		const status = error.status || 500;
 
 		try {
-			const rendered = App.default.render({ status, error });
+			const rendered = options.App.default.render({ status, error });
 
 			const head = `${rendered.head}
 				<script type="module">
-					import { start } from '/_app/${client.entry}';
+					import { start } from '/_app/${options.client.entry}';
 
 					start({
 						target: document.body
@@ -321,14 +298,14 @@ export default async function render_page({
 					};
 				</script>`.replace(/^\t\t\t/gm, '');
 
-			const html = template
+			const html = options.template
 				.replace('%svelte.head%', head)
 				.replace('%svelte.body%', body);
 
 			return {
 				status,
 				headers: {
-					'Content-Type': 'text/html'
+					'content-type': 'text/html'
 				},
 				body: html
 			};

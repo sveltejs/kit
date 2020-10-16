@@ -60,19 +60,23 @@ importers:
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
       devalue: 2.0.1
+      rollup: 2.31.0
     specifiers:
       '@sveltejs/app-utils': 'workspace:0.0.6'
       devalue: ^2.0.1
       kleur: ^4.1.3
+      rollup: ^2.31.0
       tiny-glob: ^0.2.6
       toml: ^3.0.0
   packages/adapter-node:
     dependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
     devDependencies:
+      rollup: 2.31.0
       sirv: 1.0.6
     specifiers:
       '@sveltejs/app-utils': 'workspace:0.0.6'
+      rollup: ^2.31.0
       sirv: ^1.0.6
   packages/adapter-static:
     dependencies:
@@ -112,7 +116,9 @@ importers:
       '@sveltejs/kit': 'link:../../kit'
       '@sveltejs/snowpack-config': 'link:../../snowpack-config'
     specifiers:
+      '@sveltejs/adapter-netlify': ^0.0.7
       '@sveltejs/adapter-node': 'workspace:0.0.3'
+      '@sveltejs/adapter-static': ^0.0.3
       '@sveltejs/kit': 'workspace:0.0.12'
       '@sveltejs/snowpack-config': 'workspace:^0.0.2'
       svelte: ^3.29.0

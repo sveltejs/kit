@@ -1,3 +1,4 @@
+import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
 import find_cache_dir from 'find-cache-dir';
@@ -121,7 +122,15 @@ class Watcher extends EventEmitter {
 						</head>`.replace(/^\t{6}/gm, '')
 					);
 
+					const parsed = parse(req.url);
+
 					const rendered = await render({
+						host: null, // TODO what should this be? is it necessary?
+						headers: req.headers,
+						method: req.method,
+						path: parsed.pathname,
+						query: new URLSearchParams(parsed.query)
+					}, {
 						static_dir: 'static',
 						template,
 						manifest: this.manifest,
@@ -130,8 +139,6 @@ class Watcher extends EventEmitter {
 							deps: {}
 						},
 						files: 'build',
-						host: req.headers.host,
-						url: req.url,
 						dev: true,
 						App: await load(`/_app/main/App.js`),
 						load: route => load(route.url.replace(/\.\w+$/, '.js'))

@@ -1,60 +1,63 @@
-import { Query, ServerRouteManifest } from '../types';
+import { IncomingRequest, RenderOptions, ServerRouteManifest } from '../types';
 
-export default async function render_route({
-	method,
-	host,
-	path,
-	query,
-	route,
-	load
-}: {
-	method: string;
-	host: string;
-	path: string;
-	query: Query;
-	route: ServerRouteManifest;
-	load: (route: ServerRouteManifest) => Promise<any>; // TODO
-}) {
-	const mod = await load(route);
-	const handler = mod[method === 'DELETE' ? 'del' : method.toLowerCase()];
+export default function render_route(
+	request: IncomingRequest,
+	options: RenderOptions
+) {
+	const route: ServerRouteManifest = options.manifest.server_routes.find(route => route.pattern.test(request.path));
+	if (!route) return;
 
-	const session = {}; // TODO
+	return options.load(route).then(async mod => {
+		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
-	if (handler) {
-		const params = {};
-		const match = route.pattern.exec(path);
-		route.params.forEach((name, i) => {
-			params[name] = match[i + 1]
-		});
+		const session = {}; // TODO
 
-		try {
-			let {
-				status = 200,
-				body,
-				headers = {}
-			} = await handler({
-				host,
-				path,
-				query,
-				params
-			}, session);
+		if (handler) {
+			const params = {};
+			const match = route.pattern.exec(request.path);
+			route.params.forEach((name, i) => {
+				params[name] = match[i + 1]
+			});
 
-			if (typeof body === 'object' && !('Content-Type' in headers) || headers['Content-Type'] === 'application/json') {
-				headers = { ...headers, 'Content-Type': 'application/json' };
-				body = JSON.stringify(body);
+			try {
+				let {
+					status = 200,
+					body,
+					headers = {}
+				} = await handler({
+					host: request.host,
+					path: request.path,
+					query: request.query,
+					params
+				}, session);
+
+				headers = lowercase_keys(headers);
+
+				if (typeof body === 'object' && !('content-type' in headers) || headers['content-type'] === 'application/json') {
+					headers = { ...headers, 'content-type': 'application/json' };
+					body = JSON.stringify(body);
+				}
+
+				return { status, body, headers };
+			} catch (err) {
+				return {
+					status: 500,
+					body: err.message
+				};
 			}
-
-			return { status, body, headers };
-		} catch (err) {
+		} else {
 			return {
-				status: 500,
-				body: err.message
+				status: 501,
+				body: `${request.method} is not implemented for ${request.path}`
 			};
 		}
-	} else {
-		return {
-			status: 501,
-			body: `${method} is not implemented for ${path}`
-		};
+	});
+}
+
+function lowercase_keys(obj) {
+	const clone = {};
+	for (const key in obj) {
+		clone[key.toLowerCase()] = obj[key];
 	}
+	return clone;
 }

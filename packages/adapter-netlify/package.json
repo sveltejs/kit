@@ -3,7 +3,8 @@
   "version": "0.0.7",
   "devDependencies": {
     "@sveltejs/app-utils": "workspace:0.0.6",
-    "devalue": "^2.0.1"
+    "devalue": "^2.0.1",
+    "rollup": "^2.31.0"
   },
   "main": "index.js",
   "files": [
