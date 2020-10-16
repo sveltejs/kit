@@ -17,7 +17,7 @@ export type RenderOptions = {
 	template: string;
 	manifest: RouteManifest;
 	client: ClientManifest;
-	App: any; // TODO
+	root: any; // TODO
 	load: (route: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO
 	dev: boolean; // TODO this is awkward
 };

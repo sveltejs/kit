@@ -140,7 +140,7 @@ class Watcher extends EventEmitter {
 						},
 						files: 'build',
 						dev: true,
-						App: await load(`/_app/main/App.js`),
+						root: await load(`/_app/main/root.js`),
 						load: route => load(route.url.replace(/\.\w+$/, '.js'))
 					});
 

@@ -9,14 +9,14 @@ import {
 } from './types';
 import goto from './goto';
 import { page_store } from './stores';
-import App from 'APP';
+import root from 'ROOT';
 import { Layout, components, routes } from 'MANIFEST';
 
 declare const __SVELTE__;
 export const initial_data = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
 
 let ready = false;
-let root_component: InstanceType<typeof App>;
+let root_component: InstanceType<typeof root>;
 let current_token: {};
 let layout_preloaded: Promise<any>;
 let current_branch = [];
@@ -224,7 +224,7 @@ async function render(branch: any[], props: any, page: Page) {
 		};
 		props.notify = stores.page.notify;
 
-		root_component = new App({
+		root_component = new root({
 			target,
 			props,
 			hydrate: true

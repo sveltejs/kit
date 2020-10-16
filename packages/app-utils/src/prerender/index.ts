@@ -76,7 +76,7 @@ export async function prerender({
 	const client = JSON.parse(fs.readFileSync(`${input}/client.json`, 'utf-8'));
 
 	const server_root = resolve_path(input);
-	const App = require(`${server_root}/server/app.js`);
+	const root = require(`${server_root}/server/root.js`);
 
 	async function crawl(path) {
 		if (seen.has(path)) return;
@@ -94,7 +94,7 @@ export async function prerender({
 			manifest,
 			client,
 			static_dir: 'static',
-			App,
+			root,
 			load: route => require(`${server_root}/server/routes/${route.name}.js`),
 			dev: false
 		});

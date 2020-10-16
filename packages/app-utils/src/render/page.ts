@@ -221,7 +221,7 @@ export default async function render_page(
 			console.warn('The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information');
 		})).join(',')}]`;
 
-		const rendered = options.App.default.render(props);
+		const rendered = options.root.default.render(props);
 
 		const js_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.js] : []);
 		const css_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.css] : []);
@@ -276,7 +276,7 @@ export default async function render_page(
 		const status = error.status || 500;
 
 		try {
-			const rendered = options.App.default.render({ status, error });
+			const rendered = options.root.default.render({ status, error });
 
 			const head = `${rendered.head}
 				<script type="module">

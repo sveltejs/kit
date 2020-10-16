@@ -74,7 +74,7 @@ export async function build(config: SvelteAppConfig) {
 		await exec(`rm -rf .svelte/build/optimized`);
 
 		const server_input = {
-			app: `.svelte/build/unoptimized/server/_app/main/App.js`,
+			root: `.svelte/build/unoptimized/server/_app/main/root.js`,
 			// TODO session middleware etc
 		};
 

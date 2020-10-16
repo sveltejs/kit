@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page';
 import render_route from './route';
-import { ClientManifest, IncomingRequest, Loader, RouteManifest } from '../types';
+import { IncomingRequest, RenderOptions } from '../types';
 
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
@@ -9,16 +9,7 @@ function md5(body) {
 
 export async function render(
 	request: IncomingRequest,
-	options: {
-		only_prerender: boolean;
-		static_dir: string;
-		template: string;
-		manifest: RouteManifest;
-		client: ClientManifest;
-		dev: boolean;
-		App: any; // TODO replace `any`
-		load: Loader
-	}
+	options: RenderOptions
 ) {
 	const response = await (
 		render_route(request, options) ||

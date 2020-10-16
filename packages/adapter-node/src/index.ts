@@ -22,7 +22,7 @@ const assets_handler = sirv('build/assets', {
 	immutable: true
 });
 
-const App = require('./app.js');
+const root = require('./root.js');
 const template = fs.readFileSync('build/app.html', 'utf-8');
 
 const server = http.createServer((req, res) => {
@@ -41,7 +41,7 @@ const server = http.createServer((req, res) => {
 				template,
 				manifest,
 				client,
-				App,
+				root,
 				load: route => require(`./routes/${route.name}.js`),
 				dev: false
 			});

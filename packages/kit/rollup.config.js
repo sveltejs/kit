@@ -18,13 +18,13 @@ export default [
 			format: 'esm',
 			sourcemap: true,
 			paths: {
-				APP: './App.svelte',
+				ROOT: './root.svelte',
 				MANIFEST: './manifest.js'
 			}
 		},
 		external: [
 			'svelte/store',
-			'APP',
+			'ROOT',
 			'MANIFEST'
 		],
 		plugins: [
