@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.9
+
+### Patch Changes
+
+- 90a98ae: Exclude static and generated assets from crawler
+
 ## 0.0.8
 
 ### Patch Changes

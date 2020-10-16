@@ -1,7 +1,7 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:0.0.8"
+		"@sveltejs/app-utils": "workspace:0.0.9"
 	}
 }
