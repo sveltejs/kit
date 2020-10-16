@@ -1,18 +1,19 @@
 const { copy, prerender } = require('@sveltejs/app-utils');
 
 module.exports = async function adapter({
-	input,
-	output,
+	dir,
 	manifest,
 	log
 }) {
-	copy('static', output);
-	copy(`${input}/client`, `${output}/_app`);
+	const out = 'build'; // TODO implement adapter options
+
+	copy('static', out);
+	copy(`${dir}/client`, `${out}/_app`);
 
 	prerender({
 		force: true,
-		input,
-		output,
+		dir,
+		out,
 		manifest,
 		log
 	});

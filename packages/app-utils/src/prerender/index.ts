@@ -58,14 +58,14 @@ type Logger = {
 };
 
 export async function prerender({
-	input,
-	output,
+	dir,
+	out,
 	manifest,
 	force,
 	log
 }: {
-	input: string;
-	output: string;
+	dir: string;
+	out: string;
 	manifest: RouteManifest;
 	force: boolean;
 	log: Logger
@@ -73,9 +73,9 @@ export async function prerender({
 	const seen = new Set();
 
 	const template = fs.readFileSync('src/app.html', 'utf-8');
-	const client = JSON.parse(fs.readFileSync(`${input}/client.json`, 'utf-8'));
+	const client = JSON.parse(fs.readFileSync(`${dir}/client.json`, 'utf-8'));
 
-	const server_root = resolve_path(input);
+	const server_root = resolve_path(dir);
 	const root = require(`${server_root}/server/root.js`);
 
 	async function crawl(path) {
@@ -108,7 +108,7 @@ export async function prerender({
 				parts.push('index.html');
 			}
 
-			const file = `${output}${parts.join('/')}`;
+			const file = `${out}${parts.join('/')}`;
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
@@ -141,7 +141,7 @@ export async function prerender({
 						parts.push('index.html');
 					}
 
-					const file = `${output}${parts.join('/')}`;
+					const file = `${out}${parts.join('/')}`;
 					mkdirp(dirname(file));
 
 					fs.writeFileSync(file, result.body);
@@ -185,7 +185,7 @@ export async function prerender({
 						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
-						const file = `${output}${parsed.pathname}`;
+						const file = `static${parsed.pathname}`;
 
 						if (fs.existsSync(file) || fs.existsSync(`${file}/index.html`)) {
 							continue;

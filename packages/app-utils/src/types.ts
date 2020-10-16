@@ -12,7 +12,7 @@ export type IncomingRequest = {
 };
 
 export type RenderOptions = {
-	only_prerender: boolean;
+	only_prerender: boolean; // TODO this shouldn't really be part of the public API
 	static_dir: string;
 	template: string;
 	manifest: RouteManifest;

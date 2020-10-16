@@ -2,20 +2,23 @@ const fs = require('fs');
 const { copy, prerender } = require('@sveltejs/app-utils');
 
 module.exports = async function adapter({
-	input,
-	output,
+	dir,
 	manifest,
 	log
 }) {
-	copy(`${input}/client`, `${output}/assets/_app`, file => file[0] !== '.');
-	copy(`${input}/server`, output);
-	copy(`${__dirname}/server.js`, `${output}/index.js`);
-	copy(`${input}/client.json`, `${output}/client.json`);
-	copy('src/app.html', `${output}/app.html`);
+	const out = 'build'; // TODO implement adapter options
+
+	copy(`${dir}/client`, `${out}/assets/_app`, file => file[0] !== '.');
+	copy(`${dir}/server`, out);
+	copy(`${__dirname}/server.js`, `${out}/index.js`);
+	copy(`${dir}/client.json`, `${out}/client.json`);
+	copy('src/app.html', `${out}/app.html`);
+
+	log.minor('Prerendering static pages...');
 
 	await prerender({
-		input,
-		output: `${output}/assets`,
+		dir,
+		out,
 		manifest,
 		log
 	});
@@ -33,5 +36,5 @@ module.exports = async function adapter({
 		]
 	};`.replace(/^\t/gm, '');
 
-	fs.writeFileSync(`${output}/manifest.js`, written_manifest);
+	fs.writeFileSync(`${out}/manifest.js`, written_manifest);
 };

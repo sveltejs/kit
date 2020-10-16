@@ -11,7 +11,7 @@ const mkdirp = dir => {
 }
 
 module.exports = async function builder({
-	input,
+	dir,
 	manifest,
 	log
 }) {
@@ -45,7 +45,7 @@ module.exports = async function builder({
 	});
 
 	// copy client code
-	const client_code = path.resolve(input, 'client');
+	const client_code = path.resolve(dir, 'client');
 	glob('**/*', { cwd: client_code, filesOnly: true }).forEach(file => {
 		if (file[0] !== '.') {
 			mkdirp(path.dirname(`${publish}/_app/${file}`));
@@ -54,16 +54,16 @@ module.exports = async function builder({
 	});
 
 	// prerender
-	log.minor('Prerendering...');
+	log.minor('Prerendering static pages...');
 	await prerender({
-		input,
-		output: publish,
+		dir,
+		out: publish,
 		manifest,
 		log
 	});
 
 	// copy server code
-	const server_code = path.resolve(input, 'server');
+	const server_code = path.resolve(dir, 'server');
 	glob('**/*', { cwd: server_code, filesOnly: true }).forEach(file => {
 		if (file[0] !== '.') {
 			mkdirp(path.dirname(`${functions}/render/${file}`));
@@ -90,7 +90,7 @@ module.exports = async function builder({
 	fs.writeFileSync(`${functions}/render/manifest.js`, written_manifest);
 
 	// copy client manifest
-	fs.copyFileSync(`${input}/client.json`, `${functions}/render/client.json`);
+	fs.copyFileSync(`${dir}/client.json`, `${functions}/render/client.json`);
 
 	// copy template
 	fs.writeFileSync(`${functions}/render/template.js`, `module.exports = ${JSON.stringify(fs.readFileSync('src/app.html', 'utf-8'))};`);

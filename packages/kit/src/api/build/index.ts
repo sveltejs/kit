@@ -258,8 +258,7 @@ export async function build(config: SvelteAppConfig) {
 
 		const adapter = relative(config.adapter);
 		await adapter({
-			input: '.svelte/build/optimized',
-			output: 'build',
+			dir: '.svelte/build/optimized',
 			manifest,
 			log
 		});
