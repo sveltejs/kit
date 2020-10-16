@@ -101,7 +101,7 @@ export default async function render_page(
 				const rendered = await render({
 					host: request.host,
 					method: opts.method || 'GET',
-					headers: opts.headers, // TODO inject credentials...
+					headers: opts.headers || {}, // TODO inject credentials...
 					path: resolved,
 					query: new URLSearchParams(parsed.query)
 				}, options);
