@@ -86,16 +86,6 @@ export async function build(config: SvelteAppConfig) {
 			server_input[`routes/${item.name}`] = `.svelte/build/unoptimized/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});
 
-		const workaround_apparent_snowpack_extension_bug: Plugin = {
-			name: 'fix-extensions',
-			async resolveId(importee, importer) {
-				if (importee.endsWith('.svelte.js')) {
-					const resolved = await this.resolve(importee.replace(/\.svelte\.js$/, '.js'), importer);
-					return resolved.id;
-				}
-			}
-		};
-
 		const server_chunks = await rollup({
 			input: server_input,
 			plugins: [
@@ -111,7 +101,6 @@ export async function build(config: SvelteAppConfig) {
 						// console.log(bundle);
 					}
 				},
-				workaround_apparent_snowpack_extension_bug,
 				terser()
 			],
 
@@ -150,7 +139,6 @@ export async function build(config: SvelteAppConfig) {
 						}
 					}
 				},
-				workaround_apparent_snowpack_extension_bug,
 				css_chunks({
 					injectImports: true
 				}),

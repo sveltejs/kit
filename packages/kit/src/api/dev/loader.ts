@@ -16,8 +16,6 @@ export default function loader(loadByUrl): Loader {
 			return null;
 		}
 
-		url = url.replace('.svelte.js', '.js');
-
 		let data: string;
 
 		try {

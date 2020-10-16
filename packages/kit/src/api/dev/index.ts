@@ -109,9 +109,6 @@ class Watcher extends EventEmitter {
 			}
 
 			static_handler(req, res, () => {
-				// Built assets
-				req.url = req.url.replace('.svelte.js', '.js'); // TODO why on earth is this necessary
-
 				this.snowpack.requestHandler(req, res, async () => {
 					const session = {}; // TODO
 
