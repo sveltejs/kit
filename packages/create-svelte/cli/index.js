@@ -53,6 +53,9 @@ async function main() {
 
 	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
+	const pkg_file = path.join(target, 'package.json');
+	fs.writeFileSync(pkg_file, fs.readFileSync(pkg_file, 'utf-8').replace(/workspace:/g, ''));
+
 	console.log(bold(green(`✔ Copied project files`)));
 	console.log(`\nNext steps:`);
 	let i = 1;
