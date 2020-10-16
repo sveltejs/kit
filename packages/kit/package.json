@@ -11,14 +11,14 @@
 		"rollup-plugin-css-chunks": "^1.2.8",
 		"rollup-plugin-terser": "^7.0.2",
 		"sade": "^1.7.4",
-		"snowpack": "^2.14.1"
+		"snowpack": "^2.14.2"
 	},
 	"devDependencies": {
 		"@types/node": "^14.11.10",
 		"@types/sade": "^1.7.2",
 		"kleur": "^4.1.3",
 		"magic-string": "^0.25.7",
-		"meriyah": "^3.0.2",
+		"meriyah": "^3.0.3",
 		"node-fetch": "^2.6.1",
 		"periscopic": "^2.0.2",
 		"port-authority": "^1.1.1",
