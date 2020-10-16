@@ -1,3 +1,4 @@
+import { URL } from 'url';
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
@@ -7,7 +8,6 @@ import { Loader } from './types';
 // snowpack server, for the sake of SSR
 export default function loader(loadByUrl): Loader {
 	const cache = new Map();
-	const loading = new Set();
 
 	async function load(url: string) {
 		if (url.endsWith('.css.proxy.js')) {
@@ -118,8 +118,10 @@ export default function loader(loadByUrl): Loader {
 
 		const deps = [];
 		imports.forEach(node => {
-			const resolved = new URL(node.source.value, `http://localhost${url}`);
-			const promise = load(resolved.pathname);
+			const source = node.source.value;
+			const promise = source[0] === '/' || source[0] === '.'
+				? load(new URL(source, `http://localhost${url}`).pathname)
+				: Promise.resolve(load_node(source));
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -161,18 +163,6 @@ export default function loader(loadByUrl): Loader {
 
 		fn(cached.exports, ...values);
 
-		// {
-		// 	// for debugging
-		// 	const { pathname } = new URL(url);
-		// 	const file = `.tmp${pathname}`;
-		// 	const dir = path.dirname(file);
-		// 	try {
-		// 		fs.mkdirSync(dir, { recursive: true });
-		// 	} catch {}
-
-		// 	fs.writeFileSync(file, code.toString());
-		// }
-
 		return cached.exports;
 	}
 
@@ -185,4 +175,16 @@ function get_hash(str) {
 
 	while(i) hash = (hash * 33) ^ str.charCodeAt(--i);
 	return hash >>> 0;
+}
+
+function load_node(source) {
+	// mirror Rollup's interop by allowing both of these:
+	//  import fs from 'fs';
+	//  import { readFileSync } from 'fs';
+	return new Proxy(require(source), {
+		get(mod, prop) {
+			if (prop === 'default') return mod;
+			return mod[prop];
+		}
+	});
 }
