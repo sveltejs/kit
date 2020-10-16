@@ -112,17 +112,6 @@ importers:
       prompts: ^2.3.2
       rollup: ^2.32.0
       tiny-glob: ^0.2.6
-  packages/create-svelte/template:
-    devDependencies:
-      '@sveltejs/adapter-node': 'link:../../adapter-node'
-      '@sveltejs/kit': 'link:../../kit'
-      '@sveltejs/snowpack-config': 'link:../../snowpack-config'
-      svelte: 3.29.0
-    specifiers:
-      '@sveltejs/adapter-node': 'workspace:0.0.5'
-      '@sveltejs/kit': 'workspace:0.0.15'
-      '@sveltejs/snowpack-config': 'workspace:^0.0.3'
-      svelte: ^3.29.0
   packages/kit:
     dependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
