@@ -7,15 +7,14 @@ import relative from 'require-relative';
 import create_manifest_data from '../../core/create_manifest_data';
 import {
 	rollup,
-	OutputChunk,
-	Plugin
+	OutputChunk
 } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { mkdirp } from '../../utils';
-import { SvelteAppConfig } from 'src/interfaces';
+import { SvelteAppConfig } from '../../interfaces';
 import { css_injection } from './css_injection';
 
 const exec = promisify(child_process.exec);
@@ -140,7 +139,8 @@ export async function build(config: SvelteAppConfig) {
 					}
 				},
 				css_chunks({
-					injectImports: true
+					injectImports: true,
+					sourcemap: true
 				}),
 				css_injection,
 				{

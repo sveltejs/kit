@@ -15,6 +15,9 @@ module.exports = {
 	devOptions: {
 		open: 'none'
 	},
+	buildOptions: {
+		sourceMaps: true
+	},
 	mount: {
 		'.svelte/main': '/_app/main',
 		'src/routes': '/_app/routes',
