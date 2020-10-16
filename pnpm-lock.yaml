@@ -1,6 +1,20 @@
 importers:
   .:
     specifiers: {}
+  examples/svelte-app-demo:
+    dependencies:
+      svelte: 3.29.0
+    devDependencies:
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/adapter-static': 'link:../../packages/adapter-static'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
+    specifiers:
+      '@sveltejs/adapter-node': 'workspace:0.0.3'
+      '@sveltejs/adapter-static': 'workspace:0.0.3'
+      '@sveltejs/kit': 'workspace:^0.0.11'
+      '@sveltejs/snowpack-config': 'workspace:^0.0.2'
+      svelte: ^3.29.0
   packages/adapter-netlify:
     dependencies:
       kleur: 4.1.3
@@ -113,15 +127,13 @@ importers:
     dependencies:
       svelte: 3.29.0
     devDependencies:
-      '@snowpack/plugin-svelte': 2.2.0_svelte@3.29.0
       '@sveltejs/adapter-node': 'link:../../adapter-node'
       '@sveltejs/kit': 'link:../../kit'
       '@sveltejs/snowpack-config': 'link:../../snowpack-config'
     specifiers:
-      '@snowpack/plugin-svelte': ^2.2.0
       '@sveltejs/adapter-node': 0.0.3
       '@sveltejs/kit': 0.0.11
-      '@sveltejs/snowpack-config': 'workspace:^0.0.1'
+      '@sveltejs/snowpack-config': ^0.0.2
       svelte: ^3.29.0
   packages/kit:
     dependencies:
@@ -200,20 +212,6 @@ importers:
       rollup-plugin-svelte: ^6.0.1
       svelte: ^3.29.0
       svelte-hmr: ^0.11.1
-  packages/svelte-app-demo:
-    dependencies:
-      svelte: 3.29.0
-    devDependencies:
-      '@snowpack/plugin-svelte': 2.2.0_svelte@3.29.0
-      '@sveltejs/adapter-node': 'link:../adapter-node'
-      '@sveltejs/adapter-static': 'link:../adapter-static'
-      '@sveltejs/kit': 'link:../kit'
-    specifiers:
-      '@snowpack/plugin-svelte': ^2.2.0
-      '@sveltejs/adapter-node': 'workspace:0.0.3'
-      '@sveltejs/adapter-static': 'workspace:0.0.3'
-      '@sveltejs/kit': 'workspace:^0.0.11'
-      svelte: ^3.29.0
 lockfileVersion: 5.1
 packages:
   /@babel/code-frame/7.10.4:
@@ -455,16 +453,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-dp71x7yCdcxS8f7OQE+uurrkXXKjQetekQz5iSX1XAiXHER0yOXNC/0y7+SgiMTEyYOvlwXTplzBDd+y8Puo6Q==
-  /@snowpack/plugin-svelte/2.2.0_svelte@3.29.0:
-    dependencies:
-      rollup-plugin-svelte: 6.0.1_svelte@3.29.0
-      svelte: 3.29.0
-      svelte-hmr: 0.11.2-1_svelte@3.29.0
-    dev: true
-    peerDependencies:
-      svelte: ^3.21.0
-    resolution:
-      integrity: sha512-eChNIuH9Lfo0eP6faBsTGxfRhJcpaC17WK9e2bazWuZ5gbsKWBmMWqBPrYVX8UqUjtlwZjTjPICqCPuzWpwHjg==
   /@types/estree/0.0.39:
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
@@ -1308,6 +1296,7 @@ packages:
     resolution:
       integrity: sha512-BxbNGGNm0RyRYvUdHpIwv9IWzeM9XClbOxwoATuFdOE7ZE6wHL+HQ5T8hoPM+zHvmKzzsEqhgy0GrQ5X13afiQ==
   /estree-walker/0.6.1:
+    dev: false
     resolution:
       integrity: sha512-SqmZANLWS0mnatqbSfRP5g8OXZC12Fgg1IwNtLsyHDzJizORW4khDfjPqJZsemPWBB2uqykUah5YpQ6epsqC/w==
   /estree-walker/1.0.1:
@@ -2554,6 +2543,7 @@ packages:
       rollup-pluginutils: 2.8.2
       sourcemap-codec: 1.4.8
       svelte: 3.29.0
+    dev: false
     peerDependencies:
       rollup: '>=1.19.2'
       svelte: '*'
@@ -2574,6 +2564,7 @@ packages:
   /rollup-pluginutils/2.8.2:
     dependencies:
       estree-walker: 0.6.1
+    dev: false
     resolution:
       integrity: sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ==
   /rollup/2.30.0:
@@ -2903,14 +2894,6 @@ packages:
       svelte: '>=3.19.0'
     resolution:
       integrity: sha512-ecW9G/Pp7+RXXFvoWcF1WQsdajgigtdFH6qe25kMggmidvqTrzThkfELfR8cgnWng6eNVV4Y70vvb4MI/3N7OQ==
-  /svelte-hmr/0.11.2-1_svelte@3.29.0:
-    dependencies:
-      svelte: 3.29.0
-    dev: true
-    peerDependencies:
-      svelte: '>=3.19.0'
-    resolution:
-      integrity: sha512-VanuFg1OiMvLjs44jo8+qnZnKfQGfflNRf8hETUhOs28J5V4xsCgU2NJHy+3iTVgEX1+a41zIEIBgquh02o9bQ==
   /svelte/3.29.0:
     engines:
       node: '>= 8'
