@@ -8,7 +8,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:0.0.3",
-		"@sveltejs/kit": "workspace:0.0.11",
+		"@sveltejs/kit": "workspace:0.0.12",
 		"@sveltejs/snowpack-config": "workspace:^0.0.2"
 	}
 }
