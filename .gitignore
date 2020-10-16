@@ -1,4 +1,4 @@
 .DS_Store
 node_modules
 dist
-assets/client.*
+/packages/create-svelte/template/CHANGELOG.md

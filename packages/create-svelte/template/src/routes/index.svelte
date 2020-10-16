@@ -4,9 +4,9 @@
 
 <main>
 	<h1>Hello world!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 
 	<Counter/>
+	<p>Visit the <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
 </main>
 
 <style>
@@ -17,19 +17,31 @@
 	main {
 		text-align: center;
 		padding: 1em;
-		max-width: 240px;
 		margin: 0 auto;
 	}
 
 	h1 {
 		color: #ff3e00;
 		text-transform: uppercase;
-		font-size: 4em;
+		font-size: 4rem;
 		font-weight: 100;
+		line-height: 1.1;
+		margin: 4rem auto;
+		max-width: 14rem;
 	}
 
-	@media (min-width: 640px) {
-		main {
+	p {
+		max-width: 14rem;
+		margin: 2rem auto;
+		line-height: 1.35;
+	}
+
+	@media (min-width: 480px) {
+		h1 {
+			max-width: none;
+		}
+
+		p {
 			max-width: none;
 		}
 	}
