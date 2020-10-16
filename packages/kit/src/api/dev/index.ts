@@ -114,7 +114,11 @@ class Watcher extends EventEmitter {
 
 					const template = readFileSync('src/app.html', 'utf-8').replace(
 						'</head>',
-						`<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script></head>`
+						`
+							<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
+							<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
+							<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
+						</head>`.replace(/^\t{6}/gm, '')
 					);
 
 					const rendered = await render({

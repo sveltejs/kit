@@ -259,16 +259,18 @@ export default async function render_page({
 		});
 
 		const head = `${rendered.head}
+
 			${Array.from(js_deps).map(dep => `<link rel="modulepreload" href="/_app/${dep}">`).join('\n\t\t\t')}
 			${Array.from(css_deps).map(dep => `<link rel="stylesheet" href="/_app/${dep}">`).join('\n\t\t\t')}
 			${dev ? `<style>${rendered.css.code}</style>` : ''}
+
 			<script type="module">
 				import { start } from '/_app/${client.entry}';
 
 				start({
 					target: document.body
 				});
-			</script>`.replace(/^\t\t\t/gm, ''); // TODO add links
+			</script>`.replace(/^\t{2}/gm, ''); // TODO add links
 
 		const body = `${rendered.html}
 			<script>
@@ -279,7 +281,7 @@ export default async function render_page({
 					preloaded: ${serialized_preloads},
 					session: ${serialized_session}
 				};
-			</script>`.replace(/^\t\t\t/gm, '');
+			</script>`.replace(/^\t{3}/gm, '');
 
 		const html = template.replace('%svelte.head%', head).replace('%svelte.body%', body);
 
