@@ -85,6 +85,14 @@ importers:
       '@sveltejs/app-utils': 'link:../app-utils'
     specifiers:
       '@sveltejs/app-utils': 'workspace:0.0.11'
+  packages/adatper-vercel:
+    dependencies:
+      tiny-glob: 0.2.6
+    devDependencies:
+      '@sveltejs/app-utils': 'link:../app-utils'
+    specifiers:
+      '@sveltejs/app-utils': '*'
+      tiny-glob: ^0.2.6
   packages/app-utils:
     dependencies:
       mime: 2.4.6
