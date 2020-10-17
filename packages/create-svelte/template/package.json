@@ -6,7 +6,7 @@
 		"build": "svelte build"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:0.0.5",
+		"@sveltejs/adapter-node": "workspace:0.0.7",
 		"@sveltejs/kit": "workspace:0.0.17",
 		"@sveltejs/snowpack-config": "workspace:^0.0.3",
 		"svelte": "^3.29.0"
