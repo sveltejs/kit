@@ -7,15 +7,15 @@ const template = require('./server/template.js');
 
 // TODO: This is the same as netlify's render function, and basically just builds an AWS lambda.
 // We should extract it into some sort of lambda rendering package
-exports.handler = async function (event) {
-  const {
+exports.handler = async function(event) {
+	const {
 		path,
 		httpMethod,
 		headers,
 		queryStringParameters,
 		body, // TODO pass this to renderer
 		isBase64Encoded // TODO is this useful?
-  } = event;
+	} = event;
 
 	const query = new URLSearchParams();
 	for (const k in queryStringParameters) {
@@ -25,21 +25,24 @@ exports.handler = async function (event) {
 		});
 	}
 
-	const rendered = await render({
-		host: null, // TODO
-		method: httpMethod,
-		headers,
-		path,
-		query
-	}, {
-		static_dir: 'static',
-		template,
-		manifest,
-		client,
-		root: App,
-		load: route => require(`./server/routes/${route.name}.js`),
-		dev: false
-	});
+	const rendered = await render(
+		{
+			host: null, // TODO
+			method: httpMethod,
+			headers,
+			path,
+			query
+		},
+		{
+			static_dir: 'static',
+			template,
+			manifest,
+			client,
+			root: App,
+			load: route => require(`./server/routes/${route.name}.js`),
+			dev: false
+		}
+	);
 
 	if (rendered) {
 		return {
@@ -54,4 +57,4 @@ exports.handler = async function (event) {
 		statusCode: 404,
 		body: 'Not found'
 	};
-}
+};
