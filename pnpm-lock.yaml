@@ -131,7 +131,7 @@ importers:
       rollup-plugin-css-chunks: 1.2.8_rollup@2.32.0
       rollup-plugin-terser: 7.0.2_rollup@2.32.0
       sade: 1.7.4
-      snowpack: 2.14.3
+      snowpack: 2.15.0-pre.5
     devDependencies:
       '@types/node': 14.11.10
       '@types/sade': 1.7.2
@@ -165,7 +165,7 @@ importers:
       rollup-plugin-terser: ^7.0.2
       sade: ^1.7.4
       sirv: ^1.0.7
-      snowpack: 2.14.3
+      snowpack: ^2.15.0-pre.5
       source-map-support: ^0.5.19
       svelte: ^3.29.0
   packages/snowpack-config:
@@ -3292,7 +3292,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-bzWRwHwu0RnWjwU7dFy7tF68pDAx/zMSu3g7xr9Nx5J0iSImYInglwEVExyHLxXljy6PWMjkSAbwF7t2mPnRmg==
-  /snowpack/2.14.3:
+  /snowpack/2.15.0-pre.5:
     dependencies:
       '@snowpack/plugin-build-script': 2.0.10
       '@snowpack/plugin-run-script': 2.1.6
@@ -3336,7 +3336,7 @@ packages:
       node: '>=10.19.0'
     hasBin: true
     resolution:
-      integrity: sha512-FDDYeOooDGEg7ewLTYT00jMTwSU8aAsrd/hLuQvpZWzLJaPDqiBEsxgYPtFHiEGEQ7AbYBZOAG+rhiFtU4zPvQ==
+      integrity: sha512-j7tRLhXkxocxU5SXiipORlydXdEsNp4JGP/7DwSbRl3tI4MDs1N+y3vMuWIHSl5ZjXF59wWUH5ITDMPbit6piA==
   /source-map-support/0.5.19:
     dependencies:
       buffer-from: 1.1.1

@@ -7,7 +7,7 @@ import sirv from 'sirv';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
-import snowpack, {ServerResult} from 'snowpack';
+import snowpack, {SnowpackDevServer} from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { ManifestData, ReadyEvent } from '../../interfaces';
@@ -29,7 +29,7 @@ class Watcher extends EventEmitter {
 	cheapwatch: CheapWatch;
 
 	snowpack_port: number;
-	snowpack: StartServerResult;
+	snowpack: SnowpackDevServer;
 	server: Server;
 
 	constructor(opts: DevConfig) {
@@ -82,8 +82,7 @@ class Watcher extends EventEmitter {
 
 	async init_snowpack() {
 		this.snowpack_port = await ports.find(this.opts.port + 1);
-
-		this.snowpack = await snowpack.startServer({
+		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
 			config: snowpack.loadAndValidateConfig({
 				config: 'snowpack.config.js',
@@ -97,7 +96,7 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		const { port } = this.opts;
 		const { snowpack_port } = this;
-		const load: Loader = loader(this.snowpack.loadUrl);
+		const load: Loader = loader(this.snowpack);
 
 		const static_handler = sirv('static', {
 			dev: true
