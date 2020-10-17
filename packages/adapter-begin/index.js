@@ -1,6 +1,12 @@
 'use strict';
 
-const { copyFileSync, mkdirSync, writeFileSync, readFileSync } = require('fs');
+const {
+	copyFileSync,
+	mkdirSync,
+	writeFileSync,
+	readFileSync,
+	existsSync
+} = require('fs');
 const { resolve, join, dirname, relative } = require('path');
 const glob = require('tiny-glob/sync');
 const parse = require('@architect/parser');
@@ -66,12 +72,22 @@ function write_manifest(manifest) {
 }
 
 function parse_arc(arcPath) {
-	const text = readFileSync(arcPath).toString();
-	const arc = parse(text);
+	if (!existsSync(arcPath)) {
+		throw new Error(`No ${arcPath} found. See the documentation.`);
+	}
 
-	return {
-		static: arc.static[0][1]
-	};
+	try {
+		const text = readFileSync(arcPath).toString();
+		const arc = parse(text);
+
+		return {
+			static: arc.static[0][1]
+		};
+	} catch (e) {
+		throw new Error(
+			`Error parsing ${arcPath}. Please consult the documentation for correct syntax.`
+		);
+	}
 }
 
 module.exports = async function builder({ dir, manifest, log }) {
