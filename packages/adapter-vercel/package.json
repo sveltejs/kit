@@ -1,0 +1,15 @@
+{
+	"name": "@sveltejs/adapter-vercel",
+	"version": "0.0.0",
+	"devDependencies": {
+		"@sveltejs/app-utils": "*"
+	},
+	"main": "index.js",
+	"files": [
+		"index.js",
+		"src/render.js"
+	],
+	"dependencies": {
+		"tiny-glob": "^0.2.6"
+	}
+}
