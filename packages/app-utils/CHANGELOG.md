@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.11
+
+### Patch Changes
+
+- Fix prerendering, again
+
 ## 0.0.10
 
 ### Patch Changes
