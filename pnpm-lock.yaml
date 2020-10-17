@@ -54,6 +54,15 @@ importers:
       '@sveltejs/kit': 'workspace:^0.0.18'
       '@sveltejs/snowpack-config': 'workspace:^0.0.3'
       svelte: ^3.29.0
+  packages/adapter-begin:
+    dependencies:
+      '@architect/parser': 2.3.0
+      '@sveltejs/app-utils': 'link:../app-utils'
+      tiny-glob: 0.2.6
+    specifiers:
+      '@architect/parser': ^2.3.0
+      '@sveltejs/app-utils': 'workspace:0.0.11'
+      tiny-glob: ^0.2.6
   packages/adapter-netlify:
     dependencies:
       kleur: 4.1.3
@@ -175,6 +184,12 @@ importers:
       '@snowpack/plugin-svelte': ^3.0.0
 lockfileVersion: 5.1
 packages:
+  /@architect/parser/2.3.0:
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-5VnJNg4O49QSAW2hYPpG0pkgwBF5xGzQTn2fiNifztCynLrGNgyaloFrn1eVMIGDjq85+x6a5jai+zKN+dKUSA==
   /@babel/code-frame/7.10.4:
     dependencies:
       '@babel/highlight': 7.10.4
