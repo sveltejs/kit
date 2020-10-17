@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-alpha.10",
+	"version": "2.0.0-alpha.11",
 	"bin": "./bin",
 	"devDependencies": {
 		"gitignore-parser": "^0.0.2",
