@@ -60,12 +60,14 @@ type Logger = {
 export async function prerender({
 	dir,
 	out,
+	assets,
 	manifest,
 	force,
 	log
 }: {
 	dir: string;
 	out: string;
+	assets?: string;
 	manifest: RouteManifest;
 	force: boolean;
 	log: Logger
@@ -186,7 +188,7 @@ export async function prerender({
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						const file_exists = (
-							fs.existsSync(`${out}${parsed.pathname}`) ||
+							assets && fs.existsSync(`${assets}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}/index.html`)
 						);

@@ -18,7 +18,8 @@ module.exports = async function adapter({
 
 	await prerender({
 		dir,
-		out,
+		out: `${out}/prerendered`,
+		assets: `${out}/assets`,
 		manifest,
 		log
 	});
