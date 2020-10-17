@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
 import find_cache_dir from 'find-cache-dir';
 import * as ports from 'port-authority';
-import sirv from 'sirv';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
@@ -99,61 +98,55 @@ class Watcher extends EventEmitter {
 		const { snowpack_port } = this;
 		const load: Loader = loader(this.snowpack.loadByUrl);
 
-		const static_handler = sirv('static', {
-			dev: true
-		});
-
 		this.server = createServer(async (req, res) => {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {
 				// TODO this fails (see https://github.com/sveltejs/kit/issues/1)
 				return this.snowpack.requestHandler(req, res);
 			}
 
-			static_handler(req, res, () => {
-				this.snowpack.requestHandler(req, res, async () => {
-					const session = {}; // TODO
+			this.snowpack.requestHandler(req, res, async () => {
+				const session = {}; // TODO
 
-					const template = readFileSync('src/app.html', 'utf-8').replace(
-						'</head>',
-						`
-							<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
-							<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
-							<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
-						</head>`.replace(/^\t{6}/gm, '')
-					);
+				const template = readFileSync('src/app.html', 'utf-8').replace(
+					'</head>',
+					`
+						<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
+						<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
+						<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
+					</head>`.replace(/^\t{6}/gm, '')
+				);
 
-					const parsed = parse(req.url);
+				const parsed = parse(req.url);
 
-					const rendered = await render({
-						host: null, // TODO what should this be? is it necessary?
-						headers: req.headers,
-						method: req.method,
-						path: parsed.pathname,
-						query: new URLSearchParams(parsed.query)
-					}, {
-						static_dir: 'static',
-						template,
-						manifest: this.manifest,
-						client: {
-							entry: 'main/client.js',
-							deps: {}
-						},
-						files: 'build',
-						dev: true,
-						root: await load(`/_app/main/root.js`),
-						load: route => load(route.url.replace(/\.\w+$/, '.js'))
-					});
-
-					if (rendered) {
-						res.writeHead(rendered.status, rendered.headers);
-						res.end(rendered.body);
-					}
-
-					else {
-						res.statusCode = 404;
-						res.end('Not found');
-					}
+				const rendered = await render({
+					host: null, // TODO what should this be? is it necessary?
+					headers: req.headers,
+					method: req.method,
+					path: parsed.pathname,
+					query: new URLSearchParams(parsed.query)
+				}, {
+					static_dir: 'static',
+					template,
+					manifest: this.manifest,
+					client: {
+						entry: 'main/client.js',
+						deps: {}
+					},
+					files: 'build',
+					dev: true,
+					root: await load(`/_app/main/root.js`),
+					load: route => load(route.url.replace(/\.\w+$/, '.js'))
 				});
+
+				if (rendered) {
+					res.writeHead(rendered.status, rendered.headers);
+					res.end(rendered.body);
+				}
+
+				else {
+					res.statusCode = 404;
+					res.end('Not found');
+				}
 			});
 		});
 

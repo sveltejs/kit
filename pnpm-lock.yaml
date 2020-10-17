@@ -134,7 +134,6 @@ importers:
       periscopic: 2.0.2
       port-authority: 1.1.1
       require-relative: 0.8.7
-      sirv: 1.0.7
       source-map-support: 0.5.19
       svelte: 3.29.0
     specifiers:
@@ -156,7 +155,6 @@ importers:
       rollup-plugin-css-chunks: ^1.2.8
       rollup-plugin-terser: ^7.0.2
       sade: ^1.7.4
-      sirv: ^1.0.7
       snowpack: 2.14.3
       source-map-support: ^0.5.19
       svelte: ^3.29.0

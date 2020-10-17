@@ -19,6 +19,7 @@ module.exports = {
 		sourceMaps: true
 	},
 	mount: {
+		'static': '/',
 		'.svelte/main': '/_app/main',
 		'src/routes': '/_app/routes',
 		'src/components': '/_app/components/'
