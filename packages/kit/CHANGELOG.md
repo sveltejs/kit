@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 0.0.17
+
+### Patch Changes
+
+- 19323e9: Update Snowpack
+- Updated dependencies [19323e9]
+  - @sveltejs/app-utils@0.0.10
+
 ## 0.0.16
 
 ### Patch Changes

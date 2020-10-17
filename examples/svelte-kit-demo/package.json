@@ -8,9 +8,9 @@
 		"svelte": "^3.29.0"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:0.0.6",
-		"@sveltejs/adapter-static": "workspace:0.0.6",
-		"@sveltejs/kit": "workspace:^0.0.16",
+		"@sveltejs/adapter-node": "workspace:0.0.7",
+		"@sveltejs/adapter-static": "workspace:0.0.7",
+		"@sveltejs/kit": "workspace:^0.0.17",
 		"@sveltejs/snowpack-config": "workspace:^0.0.3"
 	}
 }
