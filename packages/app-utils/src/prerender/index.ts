@@ -187,8 +187,10 @@ export async function prerender({
 						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
+						// TODO this feels iffy
 						const file_exists = (
-							assets && fs.existsSync(`${assets}${parsed.pathname}`) ||
+							(assets && fs.existsSync(`${assets}${parsed.pathname}`)) ||
+							fs.existsSync(`${out}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}/index.html`)
 						);
