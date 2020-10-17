@@ -10,4 +10,3 @@ This adapter expects to find an OpenJS Architect [app.arc](https://arc.codes/) f
 @static
 folder public
 ```
-
