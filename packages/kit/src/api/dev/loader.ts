@@ -3,10 +3,11 @@ import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
 import { Loader } from './types';
+import { ServerResult } from 'snowpack';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(loadByUrl): Loader {
+export default function loader(loadUrl: ServerResult['loadUrl']): Loader {
 	const cache = new Map();
 
 	async function load(url: string) {
@@ -19,7 +20,11 @@ export default function loader(loadByUrl): Loader {
 		let data: string;
 
 		try {
-			(data = await loadByUrl(url, { isSSR: true }));
+			const result = await loadUrl(url, { isSSR: true, allowStale: false });
+			if (typeof result.contents !== 'string') {
+				throw new Error(`${url}: Unexpected Buffer response.`);
+			}
+			data = result.contents;
 		} catch (err) {
 			console.error('>>> error fetching ', url);
 			throw err;
