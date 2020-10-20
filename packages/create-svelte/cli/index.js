@@ -2,18 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { bold, cyan, green } from 'kleur/colors';
 import parser from 'gitignore-parser';
+import { mkdirp } from '@sveltejs/app-utils';
 import gitignore_contents from '../template/.gitignore';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
-
-const mkdirp = (dir, opts) => {
-	try {
-		fs.mkdirSync(dir, opts);
-	} catch (e) {
-		if (e.code === 'EEXIST') return;
-		throw e;
-	}
-};
 
 async function main() {
 	const target = process.argv[2] || '.';
@@ -32,7 +24,7 @@ async function main() {
 			}
 		}
 	} else {
-		mkdirp(target, { recursive: true });
+		mkdirp(target);
 	}
 
 	const cwd = path.join(__dirname, 'template');
@@ -54,7 +46,10 @@ async function main() {
 	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
 	const pkg_file = path.join(target, 'package.json');
-	fs.writeFileSync(pkg_file, fs.readFileSync(pkg_file, 'utf-8').replace(/workspace:/g, ''));
+	const pkg_json = fs.readFileSync(pkg_file, 'utf-8');
+	const name = path.basename(path.resolve(target));
+
+	fs.writeFileSync(pkg_file, pkg_json.replace(/workspace:/g, '').replace('~TODO~', name));
 
 	console.log(bold(green(`✔ Copied project files`)));
 	console.log(`\nNext steps:`);

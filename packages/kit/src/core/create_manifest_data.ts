@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PageManifest, PageComponentManifest, ServerRouteManifest, ManifestData } from '../interfaces';
+import { PageManifest, PageComponentManifest, EndpointManifest, ManifestData } from '../interfaces';
 import { posixify, reserved_words } from '../utils';
 
 export default function create_manifest_data(cwd: string, extensions: string = '.svelte .html'): ManifestData {
@@ -22,7 +22,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 
 	const components: PageComponentManifest[] = [];
 	const pages: PageManifest[] = [];
-	const server_routes: ServerRouteManifest[] = [];
+	const endpoints: EndpointManifest[] = [];
 
 	const default_layout: PageComponentManifest = {
 		name: '$default_layout',
@@ -162,7 +162,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 			}
 
 			else {
-				server_routes.push({
+				endpoints.push({
 					name: `route_${get_slug(item.file)}`,
 					pattern: get_pattern(segments, !item.route_suffix),
 					file: item.file,
@@ -193,8 +193,8 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 		seen_pages.set(pattern, page);
 	});
 
-	const seen_routes: Map<string, ServerRouteManifest> = new Map();
-	server_routes.forEach(route => {
+	const seen_routes: Map<string, EndpointManifest> = new Map();
+	endpoints.forEach(route => {
 		const pattern = route.pattern.toString();
 		if (seen_routes.has(pattern)) {
 			const other_route = seen_routes.get(pattern);
@@ -209,7 +209,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 		error,
 		components,
 		pages,
-		server_routes
+		endpoints
 	};
 }
 

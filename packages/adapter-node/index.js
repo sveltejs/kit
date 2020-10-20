@@ -32,8 +32,8 @@ module.exports = async function adapter({
 		pages: [
 			${manifest.pages.map(page => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`).join(',\n\t\t\t')}
 		],
-		server_routes: [
-			${manifest.server_routes.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
+		endpoints: [
+			${manifest.endpoints.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
 		]
 	};`.replace(/^\t/gm, '');
 

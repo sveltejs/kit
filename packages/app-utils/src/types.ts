@@ -18,7 +18,7 @@ export type RenderOptions = {
 	manifest: RouteManifest;
 	client: ClientManifest;
 	root: any; // TODO
-	load: (route: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO
+	load: (route: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO
 	dev: boolean; // TODO this is awkward
 };
 
@@ -38,7 +38,7 @@ export type PageManifest = {
 	}>;
 };
 
-export type ServerRouteManifest = {
+export type EndpointManifest = {
 	name: string;
 	pattern: RegExp;
 	file: string;
@@ -50,7 +50,7 @@ export type RouteManifest = {
 	layout: PageComponentManifest;
 	components: PageComponentManifest[];
 	pages: PageManifest[];
-	server_routes: ServerRouteManifest[];
+	endpoints: EndpointManifest[];
 };
 
 export type ClientManifest = {
@@ -60,4 +60,4 @@ export type ClientManifest = {
 
 export type Query = Record<string, string | true>;
 
-export type Loader = (item: PageComponentManifest | ServerRouteManifest) => Promise<any>; // TODO types for modules
+export type Loader = (item: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO types for modules

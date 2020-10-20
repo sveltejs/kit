@@ -1,5 +1,6 @@
 import * as fs from 'fs';
-import { mkdirp, stringify, walk, write_if_changed } from '../utils';
+import { mkdirp } from '@sveltejs/app-utils';
+import { stringify, walk, write_if_changed } from '../utils';
 import { PageManifest, ManifestData } from '../interfaces';
 
 export function create_app({
