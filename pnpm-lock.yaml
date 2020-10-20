@@ -133,7 +133,7 @@ importers:
       rollup-plugin-css-chunks: 1.2.8_rollup@2.32.0
       rollup-plugin-terser: 7.0.2_rollup@2.32.0
       sade: 1.7.4
-      snowpack: 2.14.3
+      snowpack: 2.15.0
     devDependencies:
       '@types/node': 14.11.10
       '@types/sade': 1.7.2
@@ -167,7 +167,7 @@ importers:
       rollup-plugin-terser: ^7.0.2
       sade: ^1.7.4
       sirv: ^1.0.7
-      snowpack: 2.14.3
+      snowpack: ^2.15.0
       source-map-support: ^0.5.19
       svelte: ^3.29.0
   packages/snowpack-config:
@@ -458,7 +458,7 @@ packages:
       glob: 7.1.6
       is-reference: 1.2.1
       magic-string: 0.25.7
-      resolve: 1.17.0
+      resolve: 1.18.1
       rollup: 2.32.0
     engines:
       node: '>= 8.0.0'
@@ -492,7 +492,7 @@ packages:
       builtin-modules: 3.1.0
       deepmerge: 4.2.2
       is-module: 1.0.0
-      resolve: 1.17.0
+      resolve: 1.18.1
       rollup: 2.32.0
     engines:
       node: '>= 10.0.0'
@@ -550,20 +550,20 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==
-  /@snowpack/plugin-build-script/2.0.10:
+  /@snowpack/plugin-build-script/2.0.11:
     dependencies:
       execa: 4.0.3
       npm-run-path: 4.0.1
     dev: false
     resolution:
-      integrity: sha512-939mCxrvygPDH/osyGnR0KS+BnERW4Nnp+8NG9os8Ww1wI+V9nI/6a1qqoGhVbD8KX93bW8FrqMljLjXRb74eg==
-  /@snowpack/plugin-run-script/2.1.6:
+      integrity: sha512-bLi7W0ry5OAhCEGuBL3PdLchWU+WaXa2aJYSJapt4FsfhUiNwi+ua1qiZ0syaXXfRq/2jx9eEkx4G7TGB8Kvsg==
+  /@snowpack/plugin-run-script/2.1.7:
     dependencies:
       execa: 4.0.3
       npm-run-path: 4.0.1
     dev: false
     resolution:
-      integrity: sha512-62Rz1ln3igt5uzpLZceSZwGVOj7wmdPW/UoxCRqSvBQ5NLtLCWmzJYUj+trq4e+pUSQPJgQPC26iAraENpm0kA==
+      integrity: sha512-+gwR03tsXDJf3OU0LJ40nZVZXVUu2nr8V5C3rLOHjlJ3U1vYY0WCcS9IvhrO3eYakOg5Git8JDZIakJ1wczvBA==
   /@snowpack/plugin-svelte/3.0.0:
     dependencies:
       rollup-plugin-svelte: 6.0.1
@@ -602,6 +602,9 @@ packages:
   /@types/node/14.11.10:
     resolution:
       integrity: sha512-yV1nWZPlMFpoXyoknm4S56y2nlTAuFYaJuQtYRAOU7xA/FJ9RY0Xm7QOkaYMMmr8ESdHIuUb6oQgR/0+2NqlyA==
+  /@types/node/14.11.11:
+    resolution:
+      integrity: sha512-UcaAZrL8uO5GNS+NLxkYg1RiOMgdLxCXGqs+TTupltXN8rTvUEKTOpqCV3tlcAIZJXzcBQajzmjdrvuPvnuMUw==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
@@ -612,7 +615,7 @@ packages:
       integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.11.10
+      '@types/node': 14.11.11
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
   /@types/sade/1.7.2:
@@ -1383,18 +1386,18 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==
-  /esbuild/0.7.16:
+  /esbuild/0.7.17:
     dev: false
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-qPQ3OE2BCCioUSep3Bnm1BA9EEkamGJwIowyjKmntCKSHIFuNoyfP+cV4HA5zJnQJAjhdM/JOuAnKq8PxlW1Dg==
+      integrity: sha512-5lO1NBOekZYU8h55SJJUc2dMe8duAwIqOQrIIvawRwbBRoWCmLSsMJmEvdFDITt24pkhu8AN4IKfyflLgaKxbg==
   /escape-string-regexp/1.0.5:
     engines:
       node: '>=0.8.0'
     resolution:
       integrity: sha1-G2HAViGQqN/2rjuyzwIAyhMLhtQ=
-  /esinstall/0.3.3:
+  /esinstall/0.3.4:
     dependencies:
       '@rollup/plugin-alias': 3.1.1_rollup@2.32.0
       '@rollup/plugin-commonjs': 15.1.0_rollup@2.32.0
@@ -1413,7 +1416,7 @@ packages:
       validate-npm-package-name: 3.0.0
     dev: false
     resolution:
-      integrity: sha512-FkC0fGn7GJPxWS58YvAdXkALCv2WFV6xnWHMVYXIupO0QvRUkaKx6bRCb6Kq+KuaFvmgTgFGp4zzAWljgD9tuQ==
+      integrity: sha512-UKlx03ARe6NiZ8IVsWZA4vZiSWBBG/JK7sH7+MiI3uXobY8eMd6tU7j5xjUaQoJ7wpaBq449Zm3Z6LL2BbyV7w==
   /eslint-import-resolver-node/0.3.4:
     dependencies:
       debug: 2.6.9
@@ -1793,7 +1796,6 @@ packages:
     resolution:
       integrity: sha512-Auw9a4AxqWpa9GUfj370BMPzzyncfBABW8Mab7BGWBYDj4Isgq+cDKtx0i6u9jcX9pQDnswsaaOTgTmA5pEjuQ==
   /function-bind/1.1.1:
-    dev: true
     resolution:
       integrity: sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==
   /functional-red-black-tree/1.0.1:
@@ -1917,7 +1919,6 @@ packages:
   /has/1.0.3:
     dependencies:
       function-bind: 1.1.1
-    dev: true
     engines:
       node: '>= 0.4.0'
     resolution:
@@ -2039,6 +2040,11 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-YfJT7rkpQB0updsdHLGWrvhBJfcfzNNawYDNIyQXJz0IViGf75O8EBPKSdvw2rF+LGCsX4FZ8tcr3b19LcZq4w==
+  /is-core-module/2.0.0:
+    dependencies:
+      has: 1.0.3
+    resolution:
+      integrity: sha512-jq1AH6C8MuteOoBPwkxHafmByhL9j5q4OaPGdbuD+ZtQJVzH+i6E3BJDQcBA09k57i2Hh2yQbEG8yObZ0jdlWw==
   /is-date-object/1.0.2:
     dev: true
     engines:
@@ -3088,8 +3094,15 @@ packages:
   /resolve/1.17.0:
     dependencies:
       path-parse: 1.0.6
+    dev: true
     resolution:
       integrity: sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==
+  /resolve/1.18.1:
+    dependencies:
+      is-core-module: 2.0.0
+      path-parse: 1.0.6
+    resolution:
+      integrity: sha512-lDfCPaMKfOJXjy0dPayzPdF1phampNWr3qFCjAu+rw/qbQmr5jWH5xN2hwh9QKfw9E5v4hwV7A+jrCmL8yjjqA==
   /reusify/1.0.4:
     dev: true
     engines:
@@ -3294,10 +3307,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-bzWRwHwu0RnWjwU7dFy7tF68pDAx/zMSu3g7xr9Nx5J0iSImYInglwEVExyHLxXljy6PWMjkSAbwF7t2mPnRmg==
-  /snowpack/2.14.3:
+  /snowpack/2.15.0:
     dependencies:
-      '@snowpack/plugin-build-script': 2.0.10
-      '@snowpack/plugin-run-script': 2.1.6
+      '@snowpack/plugin-build-script': 2.0.11
+      '@snowpack/plugin-run-script': 2.1.7
       cacache: 15.0.5
       cachedir: 2.3.0
       chokidar: 3.4.3
@@ -3307,8 +3320,8 @@ packages:
       deepmerge: 4.2.2
       detect-port: 1.3.0
       es-module-lexer: 0.3.25
-      esbuild: 0.7.16
-      esinstall: 0.3.3
+      esbuild: 0.7.17
+      esinstall: 0.3.4
       etag: 1.8.1
       execa: 4.0.3
       find-cache-dir: 3.3.1
@@ -3338,7 +3351,7 @@ packages:
       node: '>=10.19.0'
     hasBin: true
     resolution:
-      integrity: sha512-FDDYeOooDGEg7ewLTYT00jMTwSU8aAsrd/hLuQvpZWzLJaPDqiBEsxgYPtFHiEGEQ7AbYBZOAG+rhiFtU4zPvQ==
+      integrity: sha512-2T9pqIYc/1RXWQzrkLqyJx9QtQnI1UfkKfJfrnn8qd6u0446Jw6l5+47VcEUQqRoH4TasVsra8tJO4Zw2BKZrg==
   /source-map-support/0.5.19:
     dependencies:
       buffer-from: 1.1.1

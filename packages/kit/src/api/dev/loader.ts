@@ -3,23 +3,24 @@ import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
 import { Loader } from './types';
+import { SnowpackDevServer } from 'snowpack';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(loadByUrl): Loader {
+export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map();
 
 	async function load(url: string) {
+		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
-			// bit of a hack, but we need to squelch these as they
-			// assume we're in the DOM
 			return null;
 		}
 
 		let data: string;
 
 		try {
-			(data = await loadByUrl(url, { isSSR: true }));
+			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'});
+			data = result.contents;
 		} catch (err) {
 			console.error('>>> error fetching ', url);
 			throw err;
