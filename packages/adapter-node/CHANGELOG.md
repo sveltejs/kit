@@ -1,5 +1,16 @@
 # @sveltejs/adapter-node
 
+## 0.0.9
+
+### Patch Changes
+
+- 0320208: Rename 'server route' to 'endpoint'
+- 026acd2: Accommodate missing build/prerendered directory
+- 8b63057: Let sirv add must-revalidate
+- Updated dependencies [0320208]
+- Updated dependencies [5ca907c]
+  - @sveltejs/app-utils@0.0.12
+
 ## 0.0.8
 
 ### Patch Changes
