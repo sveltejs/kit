@@ -6,6 +6,7 @@ import { mkdirp } from '@sveltejs/app-utils';
 import gitignore_contents from '../template/.gitignore';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
+import add_typescript from './modifications/add_typescript.js';
 
 async function main() {
 	const target = process.argv[2] || '.';
@@ -52,6 +53,21 @@ async function main() {
 	fs.writeFileSync(pkg_file, pkg_json.replace(/workspace:/g, '').replace('~TODO~', name));
 
 	console.log(bold(green(`✔ Copied project files`)));
+
+	// modifications
+	const modifications = [['Use TypeScript in components?', false, add_typescript]];
+
+	for (const [message, initial, fn] of modifications) {
+		const response = await prompts({
+			type: 'confirm',
+			name: 'value',
+			message,
+			initial
+		});
+
+		await fn(target, response.value);
+	}
+
 	console.log(`\nNext steps:`);
 	let i = 1;
 
