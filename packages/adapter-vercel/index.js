@@ -1,13 +1,7 @@
 const { copyFileSync, mkdirSync, writeFileSync, readFileSync } = require('fs');
 const { resolve, join, dirname } = require('path');
 const glob = require('tiny-glob/sync');
-const { prerender } = require('@sveltejs/app-utils');
-
-const mkdirp = dir => {
-	try {
-		mkdirSync(dir, { recursive: true });
-	} catch {}
-};
+const { prerender, mkdirp } = require('@sveltejs/app-utils');
 
 const copy_contents = (source_directory, base_destination_directory) => {
 	glob('**/*', { cwd: source_directory, filesOnly: true }).forEach(file => {

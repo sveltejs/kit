@@ -2,13 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const toml = require('toml');
 const glob = require('tiny-glob/sync');
-const { prerender } = require('@sveltejs/app-utils');
-
-const mkdirp = dir => {
-	try {
-		fs.mkdirSync(dir, { recursive: true });
-	} catch {}
-}
+const { prerender, mkdirp } = require('@sveltejs/app-utils');
 
 module.exports = async function builder({
 	dir,

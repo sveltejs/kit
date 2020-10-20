@@ -2,18 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { bold, cyan, green } from 'kleur/colors';
 import parser from 'gitignore-parser';
+import { mkdirp } from '@sveltejs/app-utils';
 import gitignore_contents from '../template/.gitignore';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
-
-const mkdirp = (dir, opts) => {
-	try {
-		fs.mkdirSync(dir, opts);
-	} catch (e) {
-		if (e.code === 'EEXIST') return;
-		throw e;
-	}
-};
 
 async function main() {
 	const target = process.argv[2] || '.';
@@ -32,7 +24,7 @@ async function main() {
 			}
 		}
 	} else {
-		mkdirp(target, { recursive: true });
+		mkdirp(target);
 	}
 
 	const cwd = path.join(__dirname, 'template');

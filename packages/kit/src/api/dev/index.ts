@@ -4,6 +4,7 @@ import CheapWatch from 'cheap-watch';
 import find_cache_dir from 'find-cache-dir';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
+import { mkdirp } from '@sveltejs/app-utils';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
@@ -14,7 +15,6 @@ import { ManifestData, ReadyEvent } from '../../interfaces';
 import { render } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
-import { mkdirp } from '../../utils';
 import { readFileSync } from 'fs';
 
 export function dev(opts: DevConfig) {

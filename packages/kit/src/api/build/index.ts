@@ -4,6 +4,7 @@ import child_process from 'child_process';
 import { promisify } from 'util';
 import colors from 'kleur';
 import relative from 'require-relative';
+import { mkdirp } from '@sveltejs/app-utils';
 import create_manifest_data from '../../core/create_manifest_data';
 import {
 	rollup,
@@ -13,7 +14,6 @@ import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
-import { mkdirp } from '../../utils';
 import { SvelteAppConfig } from '../../interfaces';
 import { css_injection } from './css_injection';
 
