@@ -46,7 +46,10 @@ async function main() {
 	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
 	const pkg_file = path.join(target, 'package.json');
-	fs.writeFileSync(pkg_file, fs.readFileSync(pkg_file, 'utf-8').replace(/workspace:/g, ''));
+	const pkg_json = fs.readFileSync(pkg_file, 'utf-8');
+	const name = path.basename(path.resolve(target));
+
+	fs.writeFileSync(pkg_file, pkg_json.replace(/workspace:/g, '').replace('~TODO~', name));
 
 	console.log(bold(green(`✔ Copied project files`)));
 	console.log(`\nNext steps:`);
