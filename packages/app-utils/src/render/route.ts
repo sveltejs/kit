@@ -1,10 +1,10 @@
-import { IncomingRequest, RenderOptions, ServerRouteManifest } from '../types';
+import { IncomingRequest, RenderOptions, EndpointManifest } from '../types';
 
 export default function render_route(
 	request: IncomingRequest,
 	options: RenderOptions
 ) {
-	const route: ServerRouteManifest = options.manifest.server_routes.find(route => route.pattern.test(request.path));
+	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
 	if (!route) return;
 
 	return options.load(route).then(async mod => {

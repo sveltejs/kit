@@ -41,7 +41,7 @@ export type PageManifest = {
 	}>;
 };
 
-export type ServerRouteManifest = {
+export type EndpointManifest = {
 	name: string;
 	pattern: RegExp;
 	file: string;
@@ -60,7 +60,7 @@ export type ManifestData = {
 	layout: PageComponentManifest;
 	components: PageComponentManifest[];
 	pages: PageManifest[];
-	server_routes: ServerRouteManifest[];
+	endpoints: EndpointManifest[];
 };
 
 export type ReadyEvent = {

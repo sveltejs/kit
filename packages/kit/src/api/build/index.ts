@@ -80,7 +80,7 @@ export async function build(config: SvelteAppConfig) {
 		[
 			manifest.layout, // TODO is this necessary? if so why isn't manifest.error?
 			...manifest.components,
-			...manifest.server_routes
+			...manifest.endpoints
 		].forEach(item => {
 			server_input[`routes/${item.name}`] = `.svelte/build/unoptimized/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});

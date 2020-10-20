@@ -33,8 +33,8 @@ function write_manifest(manifest) {
 				)
 				.join(',\n\t\t\t')}
 		],
-		server_routes: [
-			${manifest.server_routes
+		endpoints: [
+			${manifest.endpoints
 				.map(
 					route =>
 						`{ name: '${route.name}', pattern: ${route.pattern}, file: '${
