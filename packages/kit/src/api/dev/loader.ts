@@ -56,6 +56,8 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		const export_from_identifiers = new Map();
 		let uid = 1;
 
+		const rewriteDynamicImportTo = '__dynamicImport';
+
 		ast.body.forEach(node => {
 			if (node.type === 'ImportDeclaration') {
 				imports.push(node);
@@ -117,22 +119,36 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			}
 		});
 
-		if (/import\s*\.\s*meta/.test(data)) {
+		if (/import\s*\.\s*meta/.test(data) || /import *\(/.test(data)) {
 			walk(ast.body, {
 				enter(node: any) {
 					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
 						code.overwrite(node.start, node.end, '__importmeta__');
 					}
+
+					// rename dynamic imports so we can inject a custom implementation
+					if (node.type === 'ImportExpression') {
+						code.overwrite(
+							(node as any).start,
+							(node as any).end,
+							`${rewriteDynamicImportTo}(${code.slice((node as any).source.start, (node as any).source.end)})`
+						);
+					}
 				}
 			});
+		}
+		
+		function importDependency(dependency: string): Promise<any> {
+			return dependency[0] === '/' || dependency[0] === '.'
+				? load(new URL(dependency, `http://localhost${url}`).pathname)
+				: Promise.resolve(load_node(dependency));
 		}
 
 		const deps = [];
 		imports.forEach(node => {
 			const source = node.source.value;
-			const promise = source[0] === '/' || source[0] === '.'
-				? load(new URL(source, `http://localhost${url}`).pathname)
-				: Promise.resolve(load_node(source));
+
+			const promise = importDependency(source)
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -169,10 +185,21 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
+		const fn = new Function(
+			'exports',
+			'__importmeta__',
+			rewriteDynamicImportTo,
+			...deps.map(d => d.name).filter(Boolean),
+			code.toString()
+		);
 		const values = await Promise.all(deps.map(d => d.promise));
 
-		fn(cached.exports, { url }, ...values);
+		fn(
+			cached.exports,
+			{ url },
+			importDependency,
+			...values
+		);
 
 		return cached.exports;
 	}
