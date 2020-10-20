@@ -1,6 +1,6 @@
-import { mkdirp } from '../utils';
 import { copyFileSync } from 'fs';
 import { resolve } from 'path';
+import { mkdirp } from '@sveltejs/app-utils';
 
 export function copy_assets() {
 	mkdirp('.svelte/main/components');

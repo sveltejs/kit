@@ -1,11 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 
-const mkdirp = dir => {
+export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
-	} catch {}
-};
+	} catch (e) {
+		if (e.code === 'EEXIST') return;
+		throw e;
+	}
+}
 
 export function copy(
 	from,

@@ -1,15 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-
-export function mkdirp(dir: string) {
-	const parent = path.dirname(dir);
-	if (parent === dir) return;
-
-	mkdirp(parent);
-	try {
-		fs.mkdirSync(dir);
-	} catch {}
-}
+import { mkdirp } from '@sveltejs/app-utils/src';
 
 export function left_pad(str: string, len: number) {
 	while (str.length < len) str = ` ${str}`;

@@ -1,14 +1,9 @@
 import fs from 'fs';
 import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
+import { mkdirp } from '../files';
 import { render } from '../render';
 import { RouteManifest } from '../types';
-
-function mkdirp(dir) {
-	try {
-		fs.mkdirSync(dir, { recursive: true });
-	} catch {}
-}
 
 function clean_html(html) {
 	return html
