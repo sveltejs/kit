@@ -4,6 +4,7 @@ import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
 import { Loader } from './types';
 import { SnowpackDevServer } from 'snowpack';
+import { walk } from 'estree-walker';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
@@ -41,7 +42,8 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		try {
 			ast = meriyah.parseModule(data, {
-				ranges: true
+				ranges: true,
+				next: true
 			});
 		} catch (err) {
 			console.error('>>> error parsing ', url);
@@ -115,6 +117,16 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			}
 		});
 
+		if (/import\s*\.\s*meta/.test(data)) {
+			walk(ast.body, {
+				enter(node: any) {
+					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
+						code.overwrite(node.start, node.end, '__importmeta__');
+					}
+				}
+			});
+		}
+
 		const deps = [];
 		imports.forEach(node => {
 			const source = node.source.value;
@@ -157,10 +169,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', ...deps.map(d => d.name).filter(Boolean), code.toString());
+		const fn = new Function('exports', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
 		const values = await Promise.all(deps.map(d => d.promise));
 
-		fn(cached.exports, ...values);
+		fn(cached.exports, { url }, ...values);
 
 		return cached.exports;
 	}
