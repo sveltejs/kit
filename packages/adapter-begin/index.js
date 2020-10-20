@@ -2,7 +2,6 @@
 
 const {
 	copyFileSync,
-	mkdirSync,
 	writeFileSync,
 	readFileSync,
 	existsSync
@@ -11,13 +10,7 @@ const { resolve, join, dirname, relative } = require('path');
 const glob = require('tiny-glob/sync');
 const parse = require('@architect/parser');
 const child_process = require('child_process');
-const { prerender } = require('@sveltejs/app-utils');
-
-const mkdirp = (dir) => {
-	try {
-		mkdirSync(dir, { recursive: true });
-	} catch {}
-};
+const { prerender, mkdirp } = require('@sveltejs/app-utils');
 
 const copy_contents = (
 	source_directory,
