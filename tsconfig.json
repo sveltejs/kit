@@ -1,4 +1,9 @@
 {
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
 	"compilerOptions": {
 		// target node v8+ (https://node.green/)
 		// the only missing feature is Array.prototype.values
@@ -22,5 +27,5 @@
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true
-	}
+  }
 }
