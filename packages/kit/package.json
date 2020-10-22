@@ -2,7 +2,7 @@
 	"name": "@sveltejs/kit",
 	"version": "0.0.19",
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:0.0.12",
+		"@sveltejs/app-utils": "workspace:*",
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
 		"rollup": "^2.32.0",
