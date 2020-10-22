@@ -1,6 +1,6 @@
 # create-svelte
 
-## 2.0.0-alpha.14
+## 2.0.0-alpha.14-15
 
 ### Patch Changes
 
