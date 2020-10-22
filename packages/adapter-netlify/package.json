@@ -2,7 +2,7 @@
 	"name": "@sveltejs/adapter-netlify",
 	"version": "0.0.9",
 	"devDependencies": {
-		"@sveltejs/app-utils": "workspace:0.0.12",
+		"@sveltejs/app-utils": "workspace:*",
 		"devalue": "^2.0.1",
 		"rollup": "^2.32.0"
 	},
