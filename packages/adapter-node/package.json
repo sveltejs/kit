@@ -16,6 +16,6 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:0.0.12"
+		"@sveltejs/app-utils": "workspace:*"
 	}
 }
