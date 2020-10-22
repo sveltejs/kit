@@ -7,11 +7,12 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "0.0.7",
-		"@sveltejs/kit": "0.0.17",
 		"@sveltejs/snowpack-config": "^0.0.3",
 		"svelte": "^3.29.0"
 	},
 	"dependencies": {
-		"marked": "^1.2.0"
+		"@sveltejs/kit": "^0.0.18",
+		"marked": "^1.2.0",
+		"node-fetch": "^2.6.1"
 	}
 }
