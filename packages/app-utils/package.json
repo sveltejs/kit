@@ -16,7 +16,6 @@
 	"devDependencies": {
 		"@types/node": "^14.14.0",
 		"devalue": "^2.0.1",
-		"esm": "^3.2.25",
 		"node-fetch": "^2.6.1",
 		"rollup": "^2.32.0",
 		"svelte": "^3.29.0",
