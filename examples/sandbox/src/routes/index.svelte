@@ -1,9 +1,21 @@
+<script context="module">
+	export function preload(page, session) {
+		return {
+			answer: session.answer
+		};
+	}
+</script>
+
 <script>
 	import Counter from '$components/Counter.svelte';
+
+	export let answer;
 </script>
 
 <main>
 	<h1>Hello world!</h1>
+
+	<p>the answer is {answer}</p>
 
 	<Counter/>
 	<p>Visit the <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
