@@ -27,8 +27,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'});
 			data = result.contents;
 		} catch (err) {
-			console.error('>>> error fetching ', url);
-			throw err;
+			throw new Error(`Failed to load ${url}: ${err.message}`);
 		}
 
 		let cached = cache.get(url);
@@ -42,18 +41,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		}
 
 		const code = new MagicString(data);
-		let ast: meriyah.ESTree.Program;
-
-		try {
-			ast = meriyah.parseModule(data, {
-				ranges: true,
-				next: true
-			});
-		} catch (err) {
-			console.error('>>> error parsing ', url);
-			console.log(data);
-			throw err;
-		}
+		const ast = meriyah.parseModule(data, {
+			ranges: true,
+			next: true
+		});
 
 		const imports = [];
 

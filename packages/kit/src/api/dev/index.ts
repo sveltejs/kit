@@ -118,8 +118,6 @@ class Watcher extends EventEmitter {
 					}
 				}
 
-				const session = {}; // TODO
-
 				const template = readFileSync('src/app.html', 'utf-8').replace(
 					'</head>',
 					`
@@ -130,6 +128,15 @@ class Watcher extends EventEmitter {
 				);
 
 				const parsed = parse(req.url);
+				let setup;
+
+				try {
+					setup = await load(`/_app/setup/index.js`);
+				} catch (err) {
+					if (!err.message.endsWith('NOT_FOUND')) throw err;
+					setup = {};
+				}
+
 				const rendered = await render({
 					host: null, // TODO what should this be? is it necessary?
 					headers: req.headers,
@@ -147,8 +154,8 @@ class Watcher extends EventEmitter {
 					files: 'build',
 					dev: true,
 					root: await load(`/_app/main/root.js`),
-					setup: await load(`/_app/setup/index.js`),
-					load: route => load(route.url.replace(/\.\w+$/, '.js'))
+					setup,
+					load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
 				});
 
 				if (rendered) {
