@@ -2,7 +2,8 @@ const { URLSearchParams } = require('url');
 const { render } = require('@sveltejs/app-utils');
 const client = require('./server/client.json');
 const manifest = require('./server/manifest.js');
-const App = require('./server/root.js');
+const root = require('./server/root.js');
+const setup = require('./server/setup.js');
 const template = require('./server/template.js');
 
 // TODO: This is the same as netlify's render function, and basically just builds an AWS lambda.
@@ -38,7 +39,8 @@ exports.handler = async function(event) {
 			template,
 			manifest,
 			client,
-			root: App,
+			root,
+			setup,
 			load: route => require(`./server/routes/${route.name}.js`),
 			dev: false
 		}
