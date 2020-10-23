@@ -55,6 +55,8 @@ export async function build(config: SvelteAppConfig) {
 	log.minor = msg => log(colors.grey(msg));
 	log.info = log;
 
+	const unoptimized = `.svelte/build/unoptimized`;
+
 	{
 		// phase one — build with Snowpack
 		header('Creating unoptimized build...');
@@ -62,9 +64,9 @@ export async function build(config: SvelteAppConfig) {
 
 		copy_assets();
 
-		await exec(`${snowpack_bin} build --out=.svelte/build/unoptimized/server --ssr`);
+		await exec(`${snowpack_bin} build --out=${unoptimized}/server --ssr`);
 		log.success('server');
-		await exec(`${snowpack_bin} build --out=.svelte/build/unoptimized/client`);
+		await exec(`${snowpack_bin} build --out=${unoptimized}/client`);
 		log.success('client');
 	}
 
@@ -74,7 +76,10 @@ export async function build(config: SvelteAppConfig) {
 		await exec(`rm -rf .svelte/build/optimized`);
 
 		const server_input = {
-			root: `.svelte/build/unoptimized/server/_app/main/root.js`,
+			root: `${unoptimized}/server/_app/main/root.js`,
+			setup: fs.existsSync(`${unoptimized}/server/_app/setup/index.js`)
+				? `${unoptimized}/server/_app/setup/index.js`
+				: path.join(__dirname, '../assets/setup.js'),
 			// TODO session middleware etc
 		};
 
@@ -83,7 +88,7 @@ export async function build(config: SvelteAppConfig) {
 			...manifest.components,
 			...manifest.endpoints
 		].forEach(item => {
-			server_input[`routes/${item.name}`] = `.svelte/build/unoptimized/server${item.url.replace(/\.\w+$/, '.js')}`;
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});
 
 		const server_chunks = await rollup({
@@ -122,7 +127,7 @@ export async function build(config: SvelteAppConfig) {
 
 		log.success(`server`);
 
-		const entry = path.resolve('.svelte/build/unoptimized/client/_app/main/client.js');
+		const entry = path.resolve(`${unoptimized}/client/_app/main/client.js`);
 
 		const client_chunks = await rollup({
 			input: {
@@ -149,7 +154,7 @@ export async function build(config: SvelteAppConfig) {
 					generateBundle(options, bundle) {
 						const reverse_lookup = new Map();
 
-						const routes = path.resolve('.svelte/build/unoptimized/client/_app/routes');
+						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
 						const client: {
 							entry: string;
 							deps: Record<string, { js: string[], css: string[] }>
