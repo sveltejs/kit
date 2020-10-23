@@ -23,12 +23,6 @@ export interface PageResponse extends EndpointResponse {
 	dependencies: Record<string, EndpointResponse>;
 }
 
-export interface SetupModule {
-	prepare?: (headers: Headers) => Promise<{ context: any, headers: Headers }>;
-	getSession?: (context: any) => Promise<any>;
-	setSession?: (context: any, session: any) => Promise<any>;
-}
-
 export interface SSRComponentModule {
 	default: SSRComponent;
 }
@@ -39,6 +33,12 @@ export interface SSRComponent {
 		head: string
 		css: { code: string, map: unknown };
 	}
+}
+
+export interface SetupModule<Context = any, Session = any> {
+	prepare?: (headers: Headers) => Promise<{ context: Context, headers: Headers }>;
+	getSession?: (context: Context) => Promise<Session> | Session;
+	setSession?: (context: Context, session: Session) => Promise<Session> | Session;
 }
 
 export interface RenderOptions {
