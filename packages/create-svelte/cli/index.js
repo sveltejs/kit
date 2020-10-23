@@ -1,13 +1,38 @@
 import fs from 'fs';
 import path from 'path';
-import { bold, cyan, green } from 'kleur/colors';
+import { bold, cyan, green, red } from 'kleur/colors';
 import parser from 'gitignore-parser';
 import { mkdirp } from '@sveltejs/app-utils';
 import gitignore_contents from '../template/.gitignore';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
 
+const disclaimer = `
+█████████  ███████████    ███████    ███████████  ███
+███░░░░░███░█░░░███░░░█  ███░░░░░███ ░░███░░░░░███░███
+░███    ░░░ ░   ░███  ░  ███     ░░███ ░███    ░███░███
+░░█████████     ░███    ░███      ░███ ░██████████ ░███
+░░░░░░░░███    ░███    ░███      ░███ ░███░░░░░░  ░███
+███    ░███    ░███    ░░███     ███  ░███        ░░░ 
+░░█████████     █████    ░░░███████░   █████        ███
+░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░ 
+                                                      
+Pump the brakes! A little disclaimer...
+
+svelte@next is not ready for use yet. It definitely can't
+run your apps, and it might not run at all.
+
+We haven't yet started accepting community contributions,
+and we don't need people to start raising issues yet.
+
+Given these warnings, please feel free to experiment, but
+you're on your own for now. We'll have something to show
+soon.
+`
+
 async function main() {
+  console.log(red(disclaimer));
+
 	const target = process.argv[2] || '.';
 
 	if (fs.existsSync(target)) {

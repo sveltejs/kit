@@ -1,14 +1,7 @@
-# @sveltejs/adapter-netlify
+# @sveltejs/adapter-vercel
 
-## 0.0.9
-
+## 0.0.1
 ### Patch Changes
 
 - 0320208: Rename 'server route' to 'endpoint'
 - 5ca907c: Use shared mkdirp helper
-
-## 0.0.8
-
-### Patch Changes
-
-- various

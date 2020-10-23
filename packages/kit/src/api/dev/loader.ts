@@ -11,6 +11,10 @@ import { walk } from 'estree-walker';
 export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map();
 
+	const get_module = (importer, imported) => imported[0] === '/' || imported[0] === '.'
+		? load(new URL(imported, `http://localhost${importer}`).pathname)
+		: Promise.resolve(load_node(imported));
+
 	async function load(url: string) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
@@ -117,11 +121,16 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			}
 		});
 
-		if (/import\s*\.\s*meta/.test(data)) {
+		// replace import.meta and import(dynamic)
+		if (/import\s*\.\s*meta/.test(data) || /import\s*\(/.test(data)) {
 			walk(ast.body, {
 				enter(node: any) {
 					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
 						code.overwrite(node.start, node.end, '__importmeta__');
+					}
+
+					else if (node.type === 'ImportExpression') {
+						code.overwrite(node.start, node.start + 6, `__import__`);
 					}
 				}
 			});
@@ -129,10 +138,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		const deps = [];
 		imports.forEach(node => {
-			const source = node.source.value;
-			const promise = source[0] === '/' || source[0] === '.'
-				? load(new URL(source, `http://localhost${url}`).pathname)
-				: Promise.resolve(load_node(source));
+			const promise = get_module(url, node.source.value);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -169,10 +175,27 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
+		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
 		const values = await Promise.all(deps.map(d => d.promise));
 
-		fn(cached.exports, { url }, ...values);
+		fn(
+			cached.exports,
+			global,
+
+			// require(...)
+			id => {
+				// TODO can/should this restriction be relaxed?
+				throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
+			},
+
+			// import(...)
+			source => get_module(url, source),
+
+			// import.meta
+			{ url },
+
+			...values
+		);
 
 		return cached.exports;
 	}

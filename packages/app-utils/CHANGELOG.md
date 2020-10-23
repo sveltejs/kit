@@ -1,5 +1,12 @@
 # @sveltejs/app-utils
 
+## 0.0.12
+
+### Patch Changes
+
+- 0320208: Rename 'server route' to 'endpoint'
+- 5ca907c: Use shared mkdirp helper
+
 ## 0.0.11
 
 ### Patch Changes

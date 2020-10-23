@@ -1,7 +1,7 @@
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
-import find_cache_dir from 'find-cache-dir';
+import { scorta } from 'scorta/sync';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
 import { mkdirp } from '@sveltejs/app-utils';
@@ -35,7 +35,7 @@ class Watcher extends EventEmitter {
 	constructor(opts: DevConfig) {
 		super();
 
-		this.cachedir = find_cache_dir({ name: 'svelte' });
+		this.cachedir = scorta('svelte');
 		this.opts = opts;
 		this.update();
 

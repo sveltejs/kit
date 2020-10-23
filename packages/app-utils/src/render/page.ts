@@ -18,6 +18,7 @@ type FetchOpts = {
 
 export default async function render_page(
 	request: IncomingRequest,
+	context: any,
 	options: RenderOptions
 ) {
 	let redirected;
@@ -27,7 +28,7 @@ export default async function render_page(
 
 	const baseUrl = ''; // TODO
 
-	const session = {}; // TODO
+	const session = await options.setup.getSession?.(context);
 
 	const serialized_session = try_serialize(session, err => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);
@@ -321,7 +322,7 @@ export default async function render_page(
 
 function try_serialize(data, fail?) {
 	try {
-		return devalue(data);
+		return devalue.default(data);
 	} catch (err) {
 		if (fail) fail(err);
 		return null;
