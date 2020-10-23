@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page';
 import render_route from './route';
-import { IncomingRequest, RenderOptions } from '../types';
+import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../types';
 
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
@@ -10,10 +10,12 @@ function md5(body) {
 export async function render(
 	request: IncomingRequest,
 	options: RenderOptions
-) {
+): Promise<EndpointResponse | PageResponse> {
+	const { context, headers = {} } = await options.setup.prepare?.(request.headers);
+
 	const response = await (
-		render_route(request, options) ||
-		render_page(request, options)
+		render_route(request, context, options) ||
+		render_page(request, context, options)
 	);
 
 	// inject ETags for 200 responses
@@ -29,5 +31,9 @@ export async function render(
 		}
 	}
 
-	return response;
+	return {
+		status: response.status,
+		headers: { ...headers, ...response.headers },
+		body: response.body
+	};
 }

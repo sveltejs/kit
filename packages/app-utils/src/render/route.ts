@@ -2,6 +2,7 @@ import { IncomingRequest, RenderOptions, EndpointManifest } from '../types';
 
 export default function render_route(
 	request: IncomingRequest,
+	context: any,
 	options: RenderOptions
 ) {
 	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
@@ -9,8 +10,6 @@ export default function render_route(
 
 	return options.load(route).then(async mod => {
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
-
-		const session = {}; // TODO
 
 		if (handler) {
 			const params = {};
@@ -29,7 +28,7 @@ export default function render_route(
 					path: request.path,
 					query: request.query,
 					params
-				}, session);
+				}, context);
 
 				headers = lowercase_keys(headers);
 
