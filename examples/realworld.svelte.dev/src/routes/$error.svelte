@@ -1,20 +1,26 @@
 <script>
+	import Layout from './$layout.svelte';
+
 	export let error, status;
 
-	let dev = process.env.NODE_ENV === "development";
+	let dev = import.meta.env.MODE === 'development';
 </script>
 
 <svelte:head>
 	<title>{status}</title>
 </svelte:head>
 
-<h1>{status}</h1>
+<Layout>
+	<div class="col-md-9">
+		<h1>{status}</h1>
 
-<p>{error.message}</p>
+		<p>{error.message}</p>
 
-{#if dev && error.stack}
-	<pre>{error.stack}</pre>
-{/if}
+		{#if dev && error.stack}
+			<pre>{error.stack}</pre>
+		{/if}
+	</div>
+</Layout>
 
 <style>
 	h1,
