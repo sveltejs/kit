@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 0.0.20
+
+### Patch Changes
+
+- Pass setup module to renderer
+- Bump Snowpack version
+- Updated dependencies [undefined]
+- Updated dependencies [96c06d8]
+  - @sveltejs/app-utils@0.0.13
+
 ## 0.0.19
 
 ### Patch Changes

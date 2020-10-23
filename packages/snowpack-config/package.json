@@ -1,8 +1,8 @@
 {
-  "name": "@sveltejs/snowpack-config",
-  "version": "0.0.3",
-  "main": "snowpack.config.js",
-  "dependencies": {
-    "@snowpack/plugin-svelte": "^3.0.0"
-  }
+	"name": "@sveltejs/snowpack-config",
+	"version": "0.0.4",
+	"main": "snowpack.config.js",
+	"dependencies": {
+		"@snowpack/plugin-svelte": "^3.0.0"
+	}
 }
