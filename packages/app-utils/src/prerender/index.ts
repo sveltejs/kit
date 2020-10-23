@@ -74,6 +74,7 @@ export async function prerender({
 
 	const server_root = resolve_path(dir);
 	const root = require(`${server_root}/server/root.js`);
+	const setup = require(`${server_root}/server/setup.js`);
 
 	async function crawl(path) {
 		if (seen.has(path)) return;
@@ -92,13 +93,17 @@ export async function prerender({
 			client,
 			static_dir: 'static',
 			root,
+			setup,
 			load: route => require(`${server_root}/server/routes/${route.name}.js`),
 			dev: false
 		});
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const is_html = rendered.headers['content-type'] === 'text/html' || response_type === REDIRECT;
+			const is_html = (
+				response_type === REDIRECT ||
+				rendered.headers?.['content-type'] === 'text/html'
+			);
 
 			const parts = path.split('/');
 			if (is_html && (parts[parts.length - 1] !== 'index.html')) {
@@ -117,10 +122,9 @@ export async function prerender({
 				return;
 			}
 
-			fs.writeFileSync(file, rendered.body); // TODO minify where possible?
-
 			if (response_type === OK) {
 				log.info(`${rendered.status} ${path}`);
+				fs.writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else {
 				// TODO should this fail the build?
 				log.error(`${rendered.status} ${path}`);

@@ -19,24 +19,26 @@ export async function render(
 			render_page(request, context, options)
 		);
 
-		// inject ETags for 200 responses
-		if (response && response.status === 200) {
-			if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-				const etag = `"${md5(response.body)}"`;
+		if (response) {
+			// inject ETags for 200 responses
+			if (response.status === 200) {
+				if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
+					const etag = `"${md5(response.body)}"`;
 
-				if (request.headers['if-none-match'] === etag) {
-					return { status: 304 };
+					if (request.headers['if-none-match'] === etag) {
+						return { status: 304 };
+					}
+
+					response.headers['etag'] = etag;
 				}
-
-				response.headers['etag'] = etag;
 			}
-		}
 
-		return {
-			status: response.status,
-			headers: { ...headers, ...response.headers },
-			body: response.body
-		};
+			return {
+				status: response.status,
+				headers: { ...headers, ...response.headers },
+				body: response.body
+			};
+		}
 	} catch (err) {
 		return {
 			status: 500,
