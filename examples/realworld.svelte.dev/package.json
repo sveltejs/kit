@@ -1,14 +1,18 @@
 {
-	"name": "svelte-kit-demo",
+	"name": "realworld.svelte.dev",
+	"version": "0.0.1",
 	"scripts": {
 		"dev": "svelte dev",
 		"build": "svelte build"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
-		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/snowpack-config": "workspace:*",
+		"marked": "^1.2.2",
 		"svelte": "^3.29.0"
+	},
+	"dependencies": {
+		"node-fetch": "^2.6.1"
 	}
 }

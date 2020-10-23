@@ -35,7 +35,7 @@ class Watcher extends EventEmitter {
 	constructor(opts: DevConfig) {
 		super();
 
-		this.cachedir = scorta('svelte');
+		this.cachedir = scorta('svelte') as string;
 		this.opts = opts;
 		this.update();
 
@@ -147,6 +147,7 @@ class Watcher extends EventEmitter {
 					files: 'build',
 					dev: true,
 					root: await load(`/_app/main/root.js`),
+					setup: await load(`/_app/setup/index.js`),
 					load: route => load(route.url.replace(/\.\w+$/, '.js'))
 				});
 

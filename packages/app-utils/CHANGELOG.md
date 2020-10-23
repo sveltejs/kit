@@ -1,5 +1,12 @@
 # @sveltejs/app-utils
 
+## 0.0.13
+
+### Patch Changes
+
+- Fix devalue usage
+- 96c06d8: Implement prepare and getSession
+
 ## 0.0.12
 
 ### Patch Changes

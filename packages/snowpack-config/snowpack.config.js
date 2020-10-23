@@ -20,8 +20,9 @@ module.exports = {
 	},
 	mount: {
 		'.svelte/main': '/_app/main',
+		'src/components': '/_app/components',
 		'src/routes': '/_app/routes',
-		'src/components': '/_app/components/'
+		'src/setup': '/_app/setup'
 	},
 	alias: {
 		$components: './src/components'
