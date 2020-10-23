@@ -19,7 +19,8 @@ import { css_injection } from './css_injection';
 
 const exec = promisify(child_process.exec);
 
-const snowpack_pkg_file = require.resolve('snowpack/package.json');
+const snowpack_main = require.resolve('snowpack');
+const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
 const snowpack_pkg = require(snowpack_pkg_file);
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
 
