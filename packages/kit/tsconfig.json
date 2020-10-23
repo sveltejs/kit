@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"declarationDir": "declarations",
+    "emitDeclarationOnly": true,
+    "resolveJsonModule": true
+	},
+  "lib": ["ES2020", "dom", "node"]
+}
