@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 0.0.10
+
+### Patch Changes
+
+- Use setup
+
 ## 0.0.9
 
 ### Patch Changes

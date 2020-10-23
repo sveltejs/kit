@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 0.0.21
+
+### Patch Changes
+
+- Build setup entry point
+- Work around pkg.exports constraint
+- Respond with 500s if render fails
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+  - @sveltejs/app-utils@0.0.14
+
 ## 0.0.20
 
 ### Patch Changes
