@@ -2,7 +2,7 @@
 
 Here be dragons, etc etc.
 
-This is a more fleshed-out version of https://github.com/Rich-Harris/snowpack-svelte-ssr that aims to replicate Sapper's functionality in its entirety, minus building for deployment (which can be handled by 'adapters' that do various opinionated things with the output of `snowpack build`).
+This project aims to replicate Sapper's functionality in its entirety, minus building for deployment (which can be handled by 'adapters' that do various opinionated things with the output of `snowpack build`).
 
 It's currently missing a ton of stuff but I figured I'd throw it up on GitHub anyway partly for the sake of 'working in the open' but mostly because I need an issue tracker to organise my thoughts.
 
