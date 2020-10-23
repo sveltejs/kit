@@ -25,6 +25,7 @@ const assets_handler = sirv('build/assets', {
 });
 
 const root = require('./root.js');
+const setup = require('./setup.js');
 const template = fs.readFileSync('build/app.html', 'utf-8');
 
 const server = http.createServer((req, res) => {
@@ -45,6 +46,7 @@ const server = http.createServer((req, res) => {
 					manifest,
 					client,
 					root,
+					setup,
 					load: route => require(`./routes/${route.name}.js`),
 					dev: false
 				});
