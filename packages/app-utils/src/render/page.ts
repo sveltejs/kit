@@ -322,7 +322,7 @@ export default async function render_page(
 
 function try_serialize(data, fail?) {
 	try {
-		return devalue.default(data);
+		return devalue(data);
 	} catch (err) {
 		if (fail) fail(err);
 		return null;
