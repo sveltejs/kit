@@ -1,21 +1,25 @@
 {
 	"name": "@sveltejs/app-utils",
-	"version": "0.0.11",
+	"version": "0.0.14",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
 		"prepare": "npm run build",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "npm run build",
+		"test": "uvu -r ts-node/register"
 	},
 	"dependencies": {
 		"mime": "^2.4.6"
 	},
 	"devDependencies": {
+		"@types/node": "^14.14.0",
 		"devalue": "^2.0.1",
 		"node-fetch": "^2.6.1",
 		"rollup": "^2.32.0",
-		"svelte": "^3.29.0"
+		"svelte": "^3.29.0",
+		"ts-node": "^9.0.0",
+		"uvu": "^0.3.4"
 	}
 }

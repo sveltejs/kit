@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export function mkdirp(dir) {
 	try {
@@ -10,21 +10,25 @@ export function mkdirp(dir) {
 	}
 }
 
-export function copy(
+export function copy (
 	from,
 	to,
 	filter: (file?: string) => boolean = () => true
-) {
+):string[] {
 	if (!filter(path.basename(from))) return;
 
+  const files = []
 	const stats = fs.statSync(from);
 
 	if (stats.isDirectory()) {
 		fs.readdirSync(from).forEach(file => {
-			copy(path.join(from, file), path.join(to, file));
-		});
+      files.push(...copy(path.join(from, file), path.join(to, file)));
+    });
 	} else {
 		mkdirp(path.dirname(to));
-		fs.copyFileSync(from, to);
-	}
+    fs.copyFileSync(from, to);
+    files.push(to);
+  }
+  
+  return files;
 }

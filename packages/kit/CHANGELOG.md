@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 0.0.22
+
+### Patch Changes
+
+- Force bump version
+
+## 0.0.21
+
+### Patch Changes
+
+- Build setup entry point
+- Work around pkg.exports constraint
+- Respond with 500s if render fails
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+  - @sveltejs/app-utils@0.0.14
+
+## 0.0.20
+
+### Patch Changes
+
+- Pass setup module to renderer
+- Bump Snowpack version
+- Updated dependencies [undefined]
+- Updated dependencies [96c06d8]
+  - @sveltejs/app-utils@0.0.13
+
+## 0.0.19
+
+### Patch Changes
+
+- fa9d7ce: Handle import.meta in SSR module loader
+- 0320208: Rename 'server route' to 'endpoint'
+- b9444d2: Update to Snowpack 2.15
+- 5ca907c: Use shared mkdirp helper
+- Updated dependencies [0320208]
+- Updated dependencies [5ca907c]
+  - @sveltejs/app-utils@0.0.12
+
 ## 0.0.18
 
 ### Patch Changes

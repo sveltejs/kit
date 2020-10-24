@@ -1,9 +1,9 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-alpha.12",
+	"version": "2.0.0-alpha.15",
 	"bin": "./bin",
 	"devDependencies": {
-		"@sveltejs/app-utils": "workspace:^0.0.11",
+		"@sveltejs/app-utils": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.3",
 		"prompts": "^2.3.2",

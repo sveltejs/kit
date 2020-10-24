@@ -1,5 +1,27 @@
 # @sveltejs/app-utils
 
+## 0.0.14
+
+### Patch Changes
+
+- Use setup when prerendering
+- Respond with 500 if render fails
+- Handle null response from prepare function
+
+## 0.0.13
+
+### Patch Changes
+
+- Fix devalue usage
+- 96c06d8: Implement prepare and getSession
+
+## 0.0.12
+
+### Patch Changes
+
+- 0320208: Rename 'server route' to 'endpoint'
+- 5ca907c: Use shared mkdirp helper
+
 ## 0.0.11
 
 ### Patch Changes

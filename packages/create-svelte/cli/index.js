@@ -1,11 +1,11 @@
-import fs from 'fs';
-import path from 'path';
-import { bold, cyan, green, red } from 'kleur/colors';
-import parser from 'gitignore-parser';
 import { mkdirp } from '@sveltejs/app-utils';
-import gitignore_contents from '../template/.gitignore';
+import fs from 'fs';
+import parser from 'gitignore-parser';
+import { bold, cyan, green, red } from 'kleur/colors';
+import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
+import gitignore_contents from '../template/.gitignore';
 import add_typescript from './modifications/add_typescript.js';
 
 const disclaimer = `

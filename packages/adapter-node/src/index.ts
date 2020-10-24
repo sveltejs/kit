@@ -11,10 +11,7 @@ const { PORT = 3000 } = process.env;
 
 const mutable = dir => sirv(dir, {
 	etag: true,
-	setHeaders: (res) => {
-		// TODO offer more fine-grained control over caching?
-		res.setHeader('cache-control', `public, max-age=0, must-revalidate`);
-	}
+	maxAge: 0
 });
 
 const static_handler = mutable('static');
@@ -28,6 +25,7 @@ const assets_handler = sirv('build/assets', {
 });
 
 const root = require('./root.js');
+const setup = require('./setup.js');
 const template = fs.readFileSync('build/app.html', 'utf-8');
 
 const server = http.createServer((req, res) => {
@@ -48,6 +46,7 @@ const server = http.createServer((req, res) => {
 					manifest,
 					client,
 					root,
+					setup,
 					load: route => require(`./routes/${route.name}.js`),
 					dev: false
 				});

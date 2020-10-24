@@ -3,26 +3,31 @@ import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
 import { Loader } from './types';
+import { SnowpackDevServer } from 'snowpack';
+import { walk } from 'estree-walker';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(loadByUrl): Loader {
+export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map();
 
+	const get_module = (importer, imported) => imported[0] === '/' || imported[0] === '.'
+		? load(new URL(imported, `http://localhost${importer}`).pathname)
+		: Promise.resolve(load_node(imported));
+
 	async function load(url: string) {
+		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
-			// bit of a hack, but we need to squelch these as they
-			// assume we're in the DOM
 			return null;
 		}
 
 		let data: string;
 
 		try {
-			(data = await loadByUrl(url, { isSSR: true }));
+			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'});
+			data = result.contents;
 		} catch (err) {
-			console.error('>>> error fetching ', url);
-			throw err;
+			throw new Error(`Failed to load ${url}: ${err.message}`);
 		}
 
 		let cached = cache.get(url);
@@ -36,17 +41,10 @@ export default function loader(loadByUrl): Loader {
 		}
 
 		const code = new MagicString(data);
-		let ast: meriyah.ESTree.Program;
-
-		try {
-			ast = meriyah.parseModule(data, {
-				ranges: true
-			});
-		} catch (err) {
-			console.error('>>> error parsing ', url);
-			console.log(data);
-			throw err;
-		}
+		const ast = meriyah.parseModule(data, {
+			ranges: true,
+			next: true
+		});
 
 		const imports = [];
 
@@ -114,12 +112,24 @@ export default function loader(loadByUrl): Loader {
 			}
 		});
 
+		// replace import.meta and import(dynamic)
+		if (/import\s*\.\s*meta/.test(data) || /import\s*\(/.test(data)) {
+			walk(ast.body, {
+				enter(node: any) {
+					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
+						code.overwrite(node.start, node.end, '__importmeta__');
+					}
+
+					else if (node.type === 'ImportExpression') {
+						code.overwrite(node.start, node.start + 6, `__import__`);
+					}
+				}
+			});
+		}
+
 		const deps = [];
 		imports.forEach(node => {
-			const source = node.source.value;
-			const promise = source[0] === '/' || source[0] === '.'
-				? load(new URL(source, `http://localhost${url}`).pathname)
-				: Promise.resolve(load_node(source));
+			const promise = get_module(url, node.source.value);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -156,10 +166,27 @@ export default function loader(loadByUrl): Loader {
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', ...deps.map(d => d.name).filter(Boolean), code.toString());
+		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
 		const values = await Promise.all(deps.map(d => d.promise));
 
-		fn(cached.exports, ...values);
+		fn(
+			cached.exports,
+			global,
+
+			// require(...)
+			id => {
+				// TODO can/should this restriction be relaxed?
+				throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
+			},
+
+			// import(...)
+			source => get_module(url, source),
+
+			// import.meta
+			{ url },
+
+			...values
+		);
 
 		return cached.exports;
 	}

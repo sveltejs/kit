@@ -24,7 +24,7 @@
     "@rollup/plugin-sucrase": "^3.1.0",
     "@rollup/plugin-typescript": "^6.0.0",
     "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.2.0",
-    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
     "eslint": "^7.11.0",
     "eslint-plugin-import": "^2.22.1",
     "rollup": "^2.32.0",

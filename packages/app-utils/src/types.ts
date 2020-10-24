@@ -2,13 +2,31 @@ import { URLSearchParams } from 'url';
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
+export type Headers = Record<string, string>;
+
 export type IncomingRequest = {
 	host: string; // TODO is this actually necessary?
 	method: Method;
-	headers: Record<string, string>;
+	headers: Headers;
 	// TODO body
 	path: string;
 	query: URLSearchParams;
+};
+
+export type EndpointResponse = {
+	status: number;
+	headers?: Headers;
+	body?: any; // TODO what types can body be?
+};
+
+export type PageResponse = EndpointResponse & {
+	dependencies?: Record<string, EndpointResponse>;
+};
+
+type SetupModule = {
+	prepare?: (headers: Headers) => Promise<{ context: any, headers: Headers }>;
+	getSession?: (context: any) => Promise<any>;
+	setSession?: (context: any, session: any) => Promise<any>;
 };
 
 export type RenderOptions = {
@@ -18,6 +36,7 @@ export type RenderOptions = {
 	manifest: RouteManifest;
 	client: ClientManifest;
 	root: any; // TODO
+	setup: SetupModule;
 	load: (route: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO
 	dev: boolean; // TODO this is awkward
 };
@@ -57,7 +76,5 @@ export type ClientManifest = {
 	entry: string;
 	deps: Record<string, { js: string[], css: string[] }>
 };
-
-export type Query = Record<string, string | true>;
 
 export type Loader = (item: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO types for modules

@@ -4,6 +4,7 @@ import { render } from '@sveltejs/app-utils';
 const manifest = require('./manifest.js');
 const client = require('./client.json');
 const root = require('./root.js');
+const setup = require('./setup.js');
 const template = require('./template.js');
 
 // TODO this is a generic AWS lambda handler, and could be
@@ -39,6 +40,7 @@ export async function handler(event) {
 		manifest,
 		client,
 		root,
+		setup,
 		load: route => require(`./routes/${route.name}.js`),
 		dev: false
 	});

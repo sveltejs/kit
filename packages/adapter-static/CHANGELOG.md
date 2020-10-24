@@ -1,5 +1,30 @@
 # @sveltejs/adapter-static
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+- Updated dependencies [undefined]
+  - @sveltejs/app-utils@0.0.14
+
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [undefined]
+- Updated dependencies [96c06d8]
+  - @sveltejs/app-utils@0.0.13
+
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [0320208]
+- Updated dependencies [5ca907c]
+  - @sveltejs/app-utils@0.0.12
+
 ## 0.0.8
 
 ### Patch Changes

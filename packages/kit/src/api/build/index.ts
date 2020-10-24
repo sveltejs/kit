@@ -19,15 +19,17 @@ import { css_injection } from './css_injection';
 
 const exec = promisify(child_process.exec);
 
-const snowpack_pkg_file = require.resolve('snowpack/package.json');
+const snowpack_main = require.resolve('snowpack');
+const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
 const snowpack_pkg = require(snowpack_pkg_file);
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
 
+const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY']);
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
 	// squelching these warnings (it happens when e.g. the root layout imports
 	// from /_app/main/client)
-	if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+	if (ignorable_warnings.has(warning.code)) return;
 	handler(warning);
 };
 
@@ -54,6 +56,8 @@ export async function build(config: SvelteAppConfig) {
 	log.minor = msg => log(colors.grey(msg));
 	log.info = log;
 
+	const unoptimized = `.svelte/build/unoptimized`;
+
 	{
 		// phase one — build with Snowpack
 		header('Creating unoptimized build...');
@@ -61,9 +65,9 @@ export async function build(config: SvelteAppConfig) {
 
 		copy_assets();
 
-		await exec(`${snowpack_bin} build --out=.svelte/build/unoptimized/server --ssr`);
+		await exec(`${snowpack_bin} build --out=${unoptimized}/server --ssr`);
 		log.success('server');
-		await exec(`${snowpack_bin} build --out=.svelte/build/unoptimized/client`);
+		await exec(`${snowpack_bin} build --out=${unoptimized}/client`);
 		log.success('client');
 	}
 
@@ -73,7 +77,10 @@ export async function build(config: SvelteAppConfig) {
 		await exec(`rm -rf .svelte/build/optimized`);
 
 		const server_input = {
-			root: `.svelte/build/unoptimized/server/_app/main/root.js`,
+			root: `${unoptimized}/server/_app/main/root.js`,
+			setup: fs.existsSync(`${unoptimized}/server/_app/setup/index.js`)
+				? `${unoptimized}/server/_app/setup/index.js`
+				: path.join(__dirname, '../assets/setup.js'),
 			// TODO session middleware etc
 		};
 
@@ -82,7 +89,7 @@ export async function build(config: SvelteAppConfig) {
 			...manifest.components,
 			...manifest.endpoints
 		].forEach(item => {
-			server_input[`routes/${item.name}`] = `.svelte/build/unoptimized/server${item.url.replace(/\.\w+$/, '.js')}`;
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});
 
 		const server_chunks = await rollup({
@@ -121,7 +128,7 @@ export async function build(config: SvelteAppConfig) {
 
 		log.success(`server`);
 
-		const entry = path.resolve('.svelte/build/unoptimized/client/_app/main/client.js');
+		const entry = path.resolve(`${unoptimized}/client/_app/main/client.js`);
 
 		const client_chunks = await rollup({
 			input: {
@@ -148,7 +155,7 @@ export async function build(config: SvelteAppConfig) {
 					generateBundle(options, bundle) {
 						const reverse_lookup = new Map();
 
-						const routes = path.resolve('.svelte/build/unoptimized/client/_app/routes');
+						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
 						const client: {
 							entry: string;
 							deps: Record<string, { js: string[], css: string[] }>
@@ -251,9 +258,7 @@ export async function build(config: SvelteAppConfig) {
 
 	{
 		// phase three — adapter
-		header(`Generating app...`);
-		log.minor(`Using ${config.adapter}`);
-
+		header(`Generating app (${config.adapter})...`);
 		await exec(`rm -rf build`); // TODO customize
 
 		const adapter = relative(config.adapter);
