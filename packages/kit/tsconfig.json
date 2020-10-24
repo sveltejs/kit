@@ -1,9 +1,12 @@
 {
 	"compilerOptions": {
-		"declaration": true,
-		"declarationDir": "declarations",
-    "emitDeclarationOnly": true,
-    "resolveJsonModule": true
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"target": "ES6",
+		"outDir": "build",
+		"esModuleInterop": true
 	},
   "lib": ["ES2020", "dom", "node"]
 }

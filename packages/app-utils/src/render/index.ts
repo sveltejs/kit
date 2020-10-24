@@ -3,7 +3,7 @@ import render_page from './page';
 import render_route from './route';
 import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../types';
 
-function md5(body) {
+function md5(body: string) {
 	return createHash('md5').update(body).digest('hex');
 }
 
