@@ -141,12 +141,6 @@ class Watcher extends EventEmitter {
 				
 				try {
 					root = await load(`/_app/main/root.js`);
-
-					if (!root.default) {
-						res.statusCode = 500;
-						res.end('Failed to load root component');
-						return
-					}
 				}
 				catch (e) {
 					res.statusCode = 500;
