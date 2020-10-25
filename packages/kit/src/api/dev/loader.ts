@@ -8,7 +8,7 @@ import { walk } from 'estree-walker';
 
 interface CachedExports {
 	hash: number;
-	exports: any;
+	exports: Promise<any>;
 }
 
 // This function makes it possible to load modules from the 'server'
@@ -16,14 +16,20 @@ interface CachedExports {
 export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map<string, CachedExports>();
 
-	const get_module = (importer, imported) => imported[0] === '/' || imported[0] === '.'
-		? load(new URL(imported, `http://localhost${importer}`).pathname)
-		: Promise.resolve(load_node(imported));
+	const get_module = (importer: string, imported: string, url_stack: string[]) =>
+		imported[0] === '/' || imported[0] === '.'
+			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
+			: Promise.resolve(load_node(imported));
 
-	async function load(url: string) {
+	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
 			return null;
+		}
+
+		if (url_stack.includes(url)) {
+			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
+			return {}
 		}
 
 		let data: string;
@@ -39,23 +45,22 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		const hash = get_hash(data);
 
 		if (!cached || cached.hash !== hash) {
-			cached = { hash, exports: {} };
+			cached = {
+				hash,
+				exports: initialize_module(url, data, url_stack.concat(url))
+					.catch(e => {
+						cache.delete(url);
+						throw e;
+					})
+			};
 
 			cache.set(url, cached);
-
-			try {
-				cached.exports = await initialize_module(url, data)
-			}
-			catch (e) {
-				cache.delete(url);
-				throw e
-			}
 		}
 
 		return cached.exports;
 	}
 
-	async function initialize_module(url: string, data: string) {
+	async function initialize_module(url: string, data: string, url_stack: string[]) {
 		const code = new MagicString(data);
 		const ast = meriyah.parseModule(data, {
 			ranges: true,
@@ -145,7 +150,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		const deps = [];
 		imports.forEach(node => {
-			const promise = get_module(url, node.source.value);
+			const promise = get_module(url, node.source.value, url_stack);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -198,7 +203,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			},
 
 			// import(...)
-			source => get_module(url, source),
+			source => get_module(url, source, url_stack),
 
 			// import.meta
 			{ url },
@@ -209,7 +214,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		return exports;
 	}
 
-	return load;
+	return url => load(url, []);
 }
 
 function get_hash(str: string) {
