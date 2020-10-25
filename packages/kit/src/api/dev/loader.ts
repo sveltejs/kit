@@ -6,10 +6,15 @@ import { Loader } from './types';
 import { SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
 
+interface CachedExports {
+	hash: number;
+	exports: any;
+}
+
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
 export default function loader(snowpack: SnowpackDevServer): Loader {
-	const cache = new Map();
+	const cache = new Map<string, CachedExports>();
 
 	const get_module = (importer, imported) => imported[0] === '/' || imported[0] === '.'
 		? load(new URL(imported, `http://localhost${importer}`).pathname)
@@ -33,13 +38,24 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		let cached = cache.get(url);
 		const hash = get_hash(data);
 
-		if (cached && cached.hash === hash) {
-			return cached.exports;
-		} else {
+		if (!cached || cached.hash !== hash) {
 			cached = { hash, exports: {} };
+
 			cache.set(url, cached);
+
+			try {
+				cached.exports = await initialize_module(url, data)
+			}
+			catch (e) {
+				cache.delete(url);
+				throw e
+			}
 		}
 
+		return cached.exports;
+	}
+
+	async function initialize_module(url: string, data: string) {
 		const code = new MagicString(data);
 		const ast = meriyah.parseModule(data, {
 			ranges: true,
@@ -169,8 +185,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
 		const values = await Promise.all(deps.map(d => d.promise));
 
+		let exports = {};
+
 		fn(
-			cached.exports,
+			exports,
 			global,
 
 			// require(...)
@@ -188,13 +206,13 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			...values
 		);
 
-		return cached.exports;
+		return exports;
 	}
 
 	return load;
 }
 
-function get_hash(str) {
+function get_hash(str: string) {
 	let hash = 5381;
 	let i = str.length;
 
@@ -202,7 +220,7 @@ function get_hash(str) {
 	return hash >>> 0;
 }
 
-function load_node(source) {
+function load_node(source: string) {
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
 	//  import { readFileSync } from 'fs';

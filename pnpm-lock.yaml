@@ -57,12 +57,12 @@ importers:
       svelte: ^3.29.0
   examples/sandbox:
     devDependencies:
-      '@sveltejs/adapter-static': 'link:../../packages/adapter-static'
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-static': 'workspace:*'
+      '@sveltejs/adapter-node': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0

@@ -7,6 +7,6 @@ export default function prefetchRoutes(pathnames: string[]): Promise<void> {
 			: () => true
 		)
 		.reduce((promise: Promise<any>, route) => promise.then(() => {
-			return Promise.all(route.parts.map(part => part && components[part.i]));
+			return Promise.all(route.parts.map(part => part && components[part.i]()));
 		}), Promise.resolve());
 }

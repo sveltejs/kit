@@ -1,25 +1,24 @@
 import { writable } from 'svelte/store';
-import {
-	HydratedTarget,
-	Target,
-	ScrollPosition,
-	Redirect,
-	Page,
-	Query
-} from './types';
+import { extract_query, init as init_router, load_current_page, select_target } from './router';
+import { get_prefetched, start as start_prefetching } from './prefetch';
+import { HydratedTarget, Target, Redirect, Branch, Page, InitialData } from './types';
 import goto from './goto';
 import { page_store } from './stores';
+import { ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
-import { Layout, components, routes } from 'MANIFEST';
+
+// TODO
+// import { PageContext } from '@sapper/common';
+type PageContext = any;
 
 declare const __SVELTE__;
-export const initial_data = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
+export const initial_data: InitialData = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
 
 let ready = false;
 let root_component: InstanceType<typeof root>;
 let current_token: {};
-let layout_preloaded: Promise<any>;
-let current_branch = [];
+let root_preloaded: object | Promise<object>;
+let current_branch: Branch = [];
 let current_query = '{}';
 
 const stores = {
@@ -28,7 +27,7 @@ const stores = {
 	session: writable(initial_data && initial_data.session)
 };
 
-let $session;
+let $session: any;
 let session_dirty: boolean;
 
 stores.session.subscribe(async value => {
@@ -46,168 +45,87 @@ stores.session.subscribe(async value => {
 	if (redirect) {
 		await goto(redirect.location, { replaceState: true });
 	} else {
-		await render(branch, props, dest.page);
+		await render(branch, props, buildPageContext(props, dest.page));
 	}
 });
 
-export let prefetching: {
-	href: string;
-	promise: Promise<HydratedTarget>;
-} = null;
-export function set_prefetching(href, promise) {
-	prefetching = { href, promise };
+export let target: Node;
+export function set_target(node: Node) {
+	target = node;
 }
 
-export let target: Element;
-export function set_target(element) {
-	target = element;
-}
+export default function start(opts: {
+	target: Node
+}): Promise<void> {
+	set_target(opts.target);
 
-export let uid = 1;
-export function set_uid(n) {
-	uid = n;
-}
+	init_router(initial_data.baseUrl, handle_target);
 
-export let cid: number;
-export function set_cid(n) {
-	cid = n;
-}
+	start_prefetching();
 
-const _history = typeof history !== 'undefined' ? history : {
-	pushState: (state: any, title: string, href: string) => {},
-	replaceState: (state: any, title: string, href: string) => {},
-	scrollRestoration: ''
-};
-export { _history as history };
-
-export const scroll_history: Record<string, ScrollPosition> = {};
-
-export function extract_query(search: string) {
-	const query = Object.create(null);
-	if (search.length > 0) {
-		search.slice(1).split('&').forEach(searchParam => {
-			const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(decodeURIComponent(searchParam.replace(/\+/g, ' ')));
-			if (typeof query[key] === 'string') query[key] = [<string>query[key]];
-			if (typeof query[key] === 'object') (query[key] as string[]).push(value);
-			else query[key] = value;
+	if (initial_data.error) {
+		return Promise.resolve().then(() => {
+			return handle_error();
 		});
 	}
-	return query;
+
+	return load_current_page();
 }
 
-export function select_target(url: URL): Target {
-	if (url.origin !== location.origin) return null;
-	if (!url.pathname.startsWith(initial_data.baseUrl)) return null;
-
-	let path = url.pathname.slice(initial_data.baseUrl.length);
-
-	if (path === '') {
-		path = '/';
-	}
-
-	for (let i = 0; i < routes.length; i += 1) {
-		const route = routes[i];
-
-		const match = route.pattern.exec(path);
-
-		if (match) {
-			const query: Query = extract_query(url.search);
-			const part = route.parts[route.parts.length - 1];
-			const params = part.params ? part.params(match) : {};
-
-			const page = { host: location.host, path, query, params };
-
-			return { href: url.href, route, match, page };
-		}
-	}
-}
-
-export function handle_error(url: URL) {
+function handle_error() {
 	const { host, pathname, search } = location;
 	const { session, preloaded, status, error } = initial_data;
 
-	if (!layout_preloaded) {
-		layout_preloaded = preloaded && preloaded[0];
+	if (!root_preloaded) {
+		root_preloaded = preloaded && preloaded[0];
 	}
 
 	const props = {
 		error,
 		status,
 		session,
+		level0: {
+			props: root_preloaded
+		},
+		level1: {
+			props: {
+				status,
+				error
+			},
+			component: ErrorComponent
+		},
 		segments: preloaded
-	};
 
+	};
 	const query = extract_query(search);
-	render([], props, { host, path: pathname, query, params: {} });
+	render([], props, { host, path: pathname, query, params: {}, error });
 }
 
-export function scroll_state() {
-	return {
-		x: pageXOffset,
-		y: pageYOffset
-	};
+function buildPageContext(props: any, page: Page): PageContext {
+	const { error } = props;
+
+	return { error, ...page };
 }
 
-export async function navigate(dest: Target, id: number, noscroll?: boolean, hash?: string): Promise<any> {
-	if (id) {
-		// popstate or initial navigation
-		cid = id;
-	} else {
-		const current_scroll = scroll_state();
-
-		// clicked on a link. preserve scroll state
-		scroll_history[cid] = current_scroll;
-
-		id = cid = ++uid;
-		scroll_history[cid] = noscroll ? current_scroll : { x: 0, y: 0 };
-	}
-
-	cid = id;
-
+async function handle_target(dest: Target): Promise<void> {
 	if (root_component) stores.preloading.set(true);
 
-	const loaded = prefetching && prefetching.href === dest.href ?
-		prefetching.promise :
-		hydrate_target(dest);
-
-	prefetching = null;
+	const hydrating = get_prefetched(dest);
 
 	const token = current_token = {};
-	const loaded_result = await loaded;
-	const { redirect } = loaded_result;
+	const hydrated_target = await hydrating;
+	const { redirect } = hydrated_target;
 	if (token !== current_token) return; // a secondary navigation happened while we were loading
 
 	if (redirect) {
 		await goto(redirect.location, { replaceState: true });
 	} else {
-		const { props, branch } = loaded_result;
-		await render(branch, props, dest.page);
-	}
-	if (document.activeElement && (document.activeElement instanceof HTMLElement)) document.activeElement.blur();
-
-	if (!noscroll) {
-		let scroll = scroll_history[id];
-
-		if (hash) {
-			// scroll is an element id (from a hash), we need to compute y.
-			const deep_linked = document.getElementById(hash.slice(1));
-
-			if (deep_linked) {
-				scroll = {
-					x: 0,
-					y: deep_linked.getBoundingClientRect().top + scrollY
-				};
-			}
-		}
-
-		scroll_history[cid] = scroll;
-		if (scroll) {
-			redirect ? scrollTo(0, 0) : scrollTo(scroll.x, scroll.y);
-		}
+		const { props, branch } = hydrated_target;
+		await render(branch, props, buildPageContext(props, dest.page));
 	}
 }
 
-async function render(branch: any[], props: any, page: Page) {
+async function render(branch: Branch, props: any, page: PageContext) {
 	stores.page.set(page);
 	stores.preloading.set(false);
 
@@ -220,7 +138,7 @@ async function render(branch: any[], props: any, page: Page) {
 			session: stores.session
 		};
 		props.level0 = {
-			props: await layout_preloaded
+			props: await root_preloaded
 		};
 		props.notify = stores.page.notify;
 
@@ -264,11 +182,11 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 
 	const preload_context = {
 		fetch: (url: string, opts?: any) => fetch(url, opts),
-		redirect: (status: number, location: string) => {
-			if (redirect && (redirect.status !== status || redirect.location !== location)) {
-				throw new Error(`Conflicting redirects`);
+		redirect: (statusCode: number, location: string) => {
+			if (redirect && (redirect.statusCode !== statusCode || redirect.location !== location)) {
+				throw new Error('Conflicting redirects');
 			}
-			redirect = { status, location };
+			redirect = { statusCode, location };
 		},
 		error: (status: number, error: Error | string) => {
 			props.error = typeof error === 'string' ? new Error(error) : error;
@@ -276,9 +194,9 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 		}
 	};
 
-	if (!layout_preloaded) {
-		const layout_preload = Layout.preload || (() => {});
-		layout_preloaded = initial_data.preloaded[0] || layout_preload.call(preload_context, {
+	if (!root_preloaded) {
+		const root_preload = root.preload || (() => ({}));
+		root_preloaded = initial_data.preloaded[0] || root_preload.call(preload_context, {
 			host: page.host,
 			path: page.path,
 			query: page.query,
@@ -286,7 +204,7 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 		}, $session);
 	}
 
-	let branch;
+	let branch: Branch;
 	let l = 1;
 
 	try {
@@ -313,7 +231,7 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 
 			const { default: component, preload } = await components[part.i]();
 
-			let preloaded;
+			let preloaded: object;
 			if (ready || !initial_data.preloaded[i + 1]) {
 				preloaded = preload
 					? await preload.call(preload_context, {
