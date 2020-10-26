@@ -10,6 +10,6 @@
 		"declarationDir": "types",
 		"declaration": true
 	},
-	"include": ["src/**/*", "types/src/**/*", "client"],
-  "lib": ["ES2020", "dom", "node"]
+	"include": ["src/**/*", "client"],
+	"lib": ["ES2020", "dom", "node"]
 }

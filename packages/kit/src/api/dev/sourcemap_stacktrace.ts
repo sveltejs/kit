@@ -70,7 +70,7 @@ export function sourcemap_stacktrace(stack: string) {
 					return input;
 				}
 
-				// TODO: according to typings, this code cannot work; 
+				// TODO: according to typings, this code cannot work;
 				// the constructor returns a promise that needs to be awaited
 				const consumer = new (SourceMapConsumer as any)(raw_sourcemap);
 				const pos = consumer.originalPositionFor({
