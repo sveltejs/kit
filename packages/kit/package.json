@@ -14,7 +14,7 @@
 		"snowpack": "^2.15.1"
 	},
 	"devDependencies": {
-		"@types/node": "12",
+		"@types/node": "^14.11.10",
 		"@types/sade": "^1.7.2",
 		"estree-walker": "^2.0.1",
 		"kleur": "^4.1.3",
