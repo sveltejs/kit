@@ -33,12 +33,14 @@
 	},
 	"files": [
 		"assets",
-		"dist"
+		"dist",
+		"client"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
 		"prepare": "npm run build",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "npm run build",
+    "prepublish": "tsc && cp -r types/src/client client"
 	}
 }

@@ -6,9 +6,10 @@
 		"target": "ES6",
 		"outDir": "build",
 		"esModuleInterop": true,
-		"noEmit": true,
-		"declarationDir": "declarations",
+		"emitDeclarationOnly": true,
+		"declarationDir": "types",
 		"declaration": true
 	},
+	"include": ["src/**/*", "types/src/**/*", "client"],
   "lib": ["ES2020", "dom", "node"]
 }
