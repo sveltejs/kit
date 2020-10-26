@@ -23,10 +23,10 @@ export type PageResponse = EndpointResponse & {
 	dependencies?: Record<string, EndpointResponse>;
 };
 
-type SetupModule<Context = any, Session = any> = {
-	prepare?: (headers: Headers) => Promise<{ context: Context, headers: Headers }>;
-	getSession?: (context: Context) => Promise<Session>;
-	setSession?: (context: Context, session: Session) => Promise<Session>;
+type SetupModule = {
+	prepare?: (headers: Headers) => Promise<{ context: any, headers: Headers }>;
+	getSession?: (context: any) => Promise<any>;
+	setSession?: (context: any, session: any) => Promise<any>;
 };
 
 export type RenderOptions = {
