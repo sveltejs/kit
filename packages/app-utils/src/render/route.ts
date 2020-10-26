@@ -5,8 +5,8 @@ export default function render_route(
 	context: any,
 	options: RenderOptions
 ): Promise<{
-	status: number, 
-	body: string, 
+	status: number,
+	body: string,
 	headers?: Headers
 }> {
 	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
