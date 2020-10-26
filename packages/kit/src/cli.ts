@@ -1,7 +1,7 @@
 import relative from 'require-relative';
 import sade from 'sade';
 import colors from 'kleur';
-import pkg from '../package.json';
+import * as pkg from '../package.json';
 import { ReadyEvent, SvelteAppConfig } from './interfaces';
 
 let config: SvelteAppConfig;
