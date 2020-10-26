@@ -1,10 +1,4 @@
 <script>
-//	import { goto } from '@sveltejs/kit/client';
-	import * as module from '@sveltejs/kit/client';
-
-//	console.log('goto', goto)
-	console.log('module', module)
-
 	export let segment;
 </script>
 
