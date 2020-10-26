@@ -137,6 +137,17 @@ class Watcher extends EventEmitter {
 					setup = {};
 				}
 
+				let root;
+				
+				try {
+					root = await load(`/_app/main/root.js`);
+				}
+				catch (e) {
+					res.statusCode = 500;
+					res.end(e.toString());
+					return
+				}
+
 				const rendered = await render({
 					host: null, // TODO what should this be? is it necessary?
 					headers: req.headers,
@@ -153,7 +164,7 @@ class Watcher extends EventEmitter {
 					},
 					files: 'build',
 					dev: true,
-					root: await load(`/_app/main/root.js`),
+					root,
 					setup,
 					load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
 				});

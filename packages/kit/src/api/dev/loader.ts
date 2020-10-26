@@ -6,19 +6,30 @@ import { Loader } from './types';
 import { SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
 
+interface CachedExports {
+	hash: number;
+	exports: Promise<any>;
+}
+
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
 export default function loader(snowpack: SnowpackDevServer): Loader {
-	const cache = new Map();
+	const cache = new Map<string, CachedExports>();
 
-	const get_module = (importer, imported) => imported[0] === '/' || imported[0] === '.'
-		? load(new URL(imported, `http://localhost${importer}`).pathname)
-		: Promise.resolve(load_node(imported));
+	const get_module = (importer: string, imported: string, url_stack: string[]) =>
+		imported[0] === '/' || imported[0] === '.'
+			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
+			: Promise.resolve(load_node(imported));
 
-	async function load(url: string) {
+	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
 			return null;
+		}
+
+		if (url_stack.includes(url)) {
+			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
+			return {}
 		}
 
 		let data: string;
@@ -33,13 +44,23 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		let cached = cache.get(url);
 		const hash = get_hash(data);
 
-		if (cached && cached.hash === hash) {
-			return cached.exports;
-		} else {
-			cached = { hash, exports: {} };
+		if (!cached || cached.hash !== hash) {
+			cached = {
+				hash,
+				exports: initialize_module(url, data, url_stack.concat(url))
+					.catch(e => {
+						cache.delete(url);
+						throw e;
+					})
+			};
+
 			cache.set(url, cached);
 		}
 
+		return cached.exports;
+	}
+
+	async function initialize_module(url: string, data: string, url_stack: string[]) {
 		const code = new MagicString(data);
 		const ast = meriyah.parseModule(data, {
 			ranges: true,
@@ -129,7 +150,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		const deps = [];
 		imports.forEach(node => {
-			const promise = get_module(url, node.source.value);
+			const promise = get_module(url, node.source.value, url_stack);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -169,8 +190,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
 		const values = await Promise.all(deps.map(d => d.promise));
 
+		let exports = {};
+
 		fn(
-			cached.exports,
+			exports,
 			global,
 
 			// require(...)
@@ -180,7 +203,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			},
 
 			// import(...)
-			source => get_module(url, source),
+			source => get_module(url, source, url_stack),
 
 			// import.meta
 			{ url },
@@ -188,13 +211,13 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			...values
 		);
 
-		return cached.exports;
+		return exports;
 	}
 
-	return load;
+	return url => load(url, []);
 }
 
-function get_hash(str) {
+function get_hash(str: string) {
 	let hash = 5381;
 	let i = str.length;
 
@@ -202,7 +225,7 @@ function get_hash(str) {
 	return hash >>> 0;
 }
 
-function load_node(source) {
+function load_node(source: string) {
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
 	//  import { readFileSync } from 'fs';
