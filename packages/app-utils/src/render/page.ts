@@ -6,13 +6,13 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import * as mime from 'mime';
 import { render } from './index';
-import { IncomingRequest, RenderOptions, PageManifest } from '../types';
+import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers } from '../types';
 
 const noop = () => {};
 
 type FetchOpts = {
 	method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
-	headers?: Record<string, string>;
+	headers?: Headers;
 	body?: any;
 };
 
@@ -20,8 +20,13 @@ export default async function render_page(
 	request: IncomingRequest,
 	context: any,
 	options: RenderOptions
-) {
-	let redirected;
+): Promise<{
+	status: number,
+	body?: string,
+	headers?: Headers,
+	dependencies?: Record< string, EndpointResponse | PageResponse>
+}> {
+	let redirected: { status: number; location?: string; headers: Headers };
 	let preload_error;
 
 	const page: PageManifest = options.manifest.pages.find(page => page.pattern.test(request.path));
@@ -53,10 +58,10 @@ export default async function render_page(
 			l++;
 		});
 
-		const dependencies = {};
+		const dependencies: Record<string, EndpointResponse | PageResponse> = {};
 
 		const preload_context = {
-			redirect: (status, location) => {
+			redirect: (status: number, location: string) => {
 				if (redirected && (redirected.status !== status || redirected.location !== location)) {
 					throw new Error(`Conflicting redirects`);
 				}

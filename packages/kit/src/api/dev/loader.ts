@@ -35,7 +35,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		let data: string;
 
 		try {
-			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'});
+			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf8'});
 			data = result.contents;
 		} catch (err) {
 			throw new Error(`Failed to load ${url}: ${err.message}`);

@@ -70,8 +70,10 @@ export function sourcemap_stacktrace(stack: string) {
 					return input;
 				}
 
-				const consumer = new SourceMapConsumer(raw_sourcemap);
-				const pos = (consumer as any).originalPositionFor({ // TODO investigate need for `as any`
+				// TODO: according to typings, this code cannot work;
+				// the constructor returns a promise that needs to be awaited
+				const consumer = new (SourceMapConsumer as any)(raw_sourcemap);
+				const pos = consumer.originalPositionFor({
 					line: Number(line),
 					column: Number(column),
 					bias: SourceMapConsumer.LEAST_UPPER_BOUND
