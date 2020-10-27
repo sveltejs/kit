@@ -2,3 +2,4 @@
 /node_modules
 /dist
 /assets/client.*
+/client/**/*.d.ts

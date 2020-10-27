@@ -12,7 +12,7 @@ import snowpack, {SnowpackDevServer} from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { ManifestData, ReadyEvent } from '../../interfaces';
-import { render } from '@sveltejs/app-utils';
+import { render, get_body } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -137,12 +137,26 @@ class Watcher extends EventEmitter {
 					setup = {};
 				}
 
+				let root;
+
+				try {
+					root = await load(`/_app/main/root.js`);
+				}
+				catch (e) {
+					res.statusCode = 500;
+					res.end(e.toString());
+					return
+				}
+
+				const body = await get_body(req);
+
 				const rendered = await render({
 					host: null, // TODO what should this be? is it necessary?
 					headers: req.headers,
 					method: req.method,
 					path: parsed.pathname,
-					query: new URLSearchParams(parsed.query)
+					query: new URLSearchParams(parsed.query),
+					body
 				}, {
 					static_dir: 'static',
 					template,
@@ -153,7 +167,7 @@ class Watcher extends EventEmitter {
 					},
 					files: 'build',
 					dev: true,
-					root: await load(`/_app/main/root.js`),
+					root,
 					setup,
 					load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
 				});
@@ -178,7 +192,6 @@ class Watcher extends EventEmitter {
 
 		create_app({
 			manifest_data: this.manifest,
-			routes: '/_app/routes',
 			output: '.svelte/main'
 		});
 	}

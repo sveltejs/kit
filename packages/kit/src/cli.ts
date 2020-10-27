@@ -2,9 +2,9 @@ import relative from 'require-relative';
 import sade from 'sade';
 import colors from 'kleur';
 import * as pkg from '../package.json';
-import { ReadyEvent } from './interfaces';
+import { ReadyEvent, SvelteAppConfig } from './interfaces';
 
-let config;
+let config: SvelteAppConfig;
 
 try {
 	config = relative('./svelte.config.js', process.cwd());

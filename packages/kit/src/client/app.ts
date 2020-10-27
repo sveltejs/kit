@@ -195,13 +195,15 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 	};
 
 	if (!root_preloaded) {
-		const root_preload = root.preload || (() => ({}));
-		root_preloaded = initial_data.preloaded[0] || root_preload.call(preload_context, {
-			host: page.host,
-			path: page.path,
-			query: page.query,
-			params: {}
-		}, $session);
+		// TODO this is wrong! `root` is the auto-generated component, it has no preload
+		// const root_preload = root.preload || (() => ({}));
+		// root_preloaded = initial_data.preloaded[0] || root_preload.call(preload_context, {
+		// 	host: page.host,
+		// 	path: page.path,
+		// 	query: page.query,
+		// 	params: {}
+		// }, $session);
+		root_preloaded = {};
 	}
 
 	let branch: Branch;

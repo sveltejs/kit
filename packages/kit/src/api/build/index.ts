@@ -43,7 +43,6 @@ export async function build(config: SvelteAppConfig) {
 	mkdirp('.svelte/main');
 	create_app({
 		manifest_data: manifest,
-		routes: '/_app/routes',
 		output: '.svelte/main'
 	});
 
@@ -101,12 +100,8 @@ export async function build(config: SvelteAppConfig) {
 						if (/\.css\.proxy\.js$/.test(id)) return '';
 					}
 				},
-				{
-					name: 'generate-server-manifest',
-					generateBundle(options, bundle) {
-						// console.log(bundle);
-					}
-				},
+				// TODO add server manifest generation so we can prune
+				// imports before zipping for cloud functions
 				terser()
 			],
 
@@ -152,7 +147,7 @@ export async function build(config: SvelteAppConfig) {
 				css_injection,
 				{
 					name: 'generate-client-manifest',
-					generateBundle(options, bundle) {
+					generateBundle(_options, bundle) {
 						const reverse_lookup = new Map();
 
 						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
