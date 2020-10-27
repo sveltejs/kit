@@ -7,6 +7,7 @@ import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
 import gitignore_contents from '../template/.gitignore';
 import add_typescript from './modifications/add_typescript.js';
+import versions from './versions.js';
 
 const disclaimer = `
 █████████  ███████████    ███████    ███████████  ███
@@ -14,10 +15,10 @@ const disclaimer = `
 ░███    ░░░ ░   ░███  ░  ███     ░░███ ░███    ░███░███
 ░░█████████     ░███    ░███      ░███ ░██████████ ░███
 ░░░░░░░░███    ░███    ░███      ░███ ░███░░░░░░  ░███
-███    ░███    ░███    ░░███     ███  ░███        ░░░ 
+███    ░███    ░███    ░░███     ███  ░███        ░░░
 ░░█████████     █████    ░░░███████░   █████        ███
-░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░ 
-                                                      
+░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░
+
 Pump the brakes! A little disclaimer...
 
 svelte@next is not ready for use yet. It definitely can't
