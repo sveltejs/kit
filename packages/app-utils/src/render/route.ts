@@ -1,10 +1,14 @@
-import { IncomingRequest, RenderOptions, EndpointManifest } from '../types';
+import { IncomingRequest, RenderOptions, EndpointManifest, Headers } from '../types';
 
 export default function render_route(
 	request: IncomingRequest,
 	context: any,
 	options: RenderOptions
-) {
+): Promise<{
+	status: number,
+	body: string,
+	headers?: Headers
+}> {
 	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
 	if (!route) return;
 
@@ -53,7 +57,7 @@ export default function render_route(
 	});
 }
 
-function lowercase_keys(obj) {
+function lowercase_keys(obj: Record<string, any>) {
 	const clone = {};
 	for (const key in obj) {
 		clone[key.toLowerCase()] = obj[key];
