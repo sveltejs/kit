@@ -45,17 +45,17 @@ function add_tsconfig(cwd) {
 	"compilerOptions": {
 		"moduleResolution": "node",
 		"target": "es2017",
-		/** 
-			 Svelte Preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+		/**
+			svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
 			to enforce using \`import type\` instead of \`import\` for Types.
 			*/
 		"importsNotUsedAsValues": "error",
 		"isolatedModules": true,
 		/**
-			 To have warnings/errors of the Svelte compiler at the correct position,
+			To have warnings/errors of the Svelte compiler at the correct position,
 			enable source maps by default.
 			*/
-		"sourceMap": true,		
+		"sourceMap": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true
