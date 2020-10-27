@@ -27,6 +27,7 @@ export default function render_route(
 					host: request.host,
 					path: request.path,
 					query: request.query,
+					body: request.body,
 					params
 				}, context);
 

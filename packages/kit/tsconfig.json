@@ -7,11 +7,11 @@
 	"compilerOptions": {
 		// target node v8+ (https://node.green/)
 		// the only missing feature is Array.prototype.values
-		"lib": ["es2020"],
-		"target": "es2020",
+		"lib": ["es2020", "DOM"],
+		"target": "es2019",
 
-		"declaration": true,
-		"declarationDir": "types",
+		// "declaration": true,
+		// "declarationDir": "types",
 
 		"noEmitOnError": true,
 		"noErrorTruncation": true,
@@ -26,6 +26,12 @@
 		//"strict": true,
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
-		"noUnusedParameters": true
+		"noUnusedParameters": true,
+
+		"baseUrl": ".",
+		"paths": {
+			"MANIFEST": ["./dummy/manifest.ts"],
+			"ROOT": ["./dummy/root.ts"]
+		}
 	}
 }

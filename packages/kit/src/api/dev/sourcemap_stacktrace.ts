@@ -71,7 +71,7 @@ export function sourcemap_stacktrace(stack: string) {
 				}
 
 				const consumer = new SourceMapConsumer(raw_sourcemap);
-				const pos = consumer.originalPositionFor({
+				const pos = (consumer as any).originalPositionFor({ // TODO investigate need for `as any`
 					line: Number(line),
 					column: Number(column),
 					bias: SourceMapConsumer.LEAST_UPPER_BOUND

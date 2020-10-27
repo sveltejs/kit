@@ -5,18 +5,16 @@ import { PageManifest, ManifestData } from '../interfaces';
 
 export function create_app({
 	manifest_data,
-	routes,
 	output
 }: {
 	manifest_data: ManifestData;
-	routes: string;
 	output: string;
 }) {
 	if (!fs.existsSync(output)) mkdirp(output);
 
-	const client_manifest = generate_client_manifest(manifest_data, routes);
+	const client_manifest = generate_client_manifest(manifest_data);
 
-	const app = generate_app(manifest_data, routes);
+	const app = generate_app(manifest_data);
 
 	write_if_changed(`${output}/manifest.js`, client_manifest);
 	write_if_changed(`${output}/root.svelte`, app);
@@ -55,10 +53,7 @@ function create_param_match(param: string, i: number) {
 		: `${param}: d(match[${i + 1}])`;
 }
 
-function generate_client_manifest(
-	manifest_data: ManifestData,
-	path_to_routes: string
-) {
+function generate_client_manifest(manifest_data: ManifestData) {
 	const component_indexes: Record<string, number> = {};
 
 	const components = `[
@@ -106,7 +101,7 @@ function generate_client_manifest(
 	`.replace(/^\t{2}/gm, '').trim();
 }
 
-function generate_app(manifest_data: ManifestData, path_to_routes: string) {
+function generate_app(manifest_data: ManifestData) {
 	// TODO remove default layout altogether
 
 	const max_depth = Math.max(...manifest_data.pages.map(page => page.parts.filter(Boolean).length));

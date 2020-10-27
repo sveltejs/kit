@@ -3,7 +3,7 @@ import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import { mkdirp } from '../files';
 import { render } from '../render';
-import { RouteManifest } from '../types';
+import { PageResponse, RouteManifest } from '../types';
 
 function clean_html(html) {
 	return html
@@ -85,6 +85,7 @@ export async function prerender({
 			method: 'GET',
 			headers: {},
 			path,
+			body: null,
 			query: new URLSearchParams()
 		}, {
 			only_prerender: !force,
@@ -130,9 +131,11 @@ export async function prerender({
 				log.error(`${rendered.status} ${path}`);
 			}
 
-			if (rendered.dependencies) {
-				for (const path in rendered.dependencies) {
-					const result = rendered.dependencies[path];
+			const { dependencies } = rendered as PageResponse;
+
+			if (dependencies) {
+				for (const path in dependencies) {
+					const result = dependencies[path];
 					const response_type = Math.floor(result.status / 100);
 
 					const is_html = result.headers['content-type'] === 'text/html';
