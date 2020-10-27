@@ -6,22 +6,44 @@ import { Loader } from './types';
 import { SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
 
-interface CachedExports {
-	hash: number;
-	exports: Promise<any>;
+interface InternalModule {
+	exports: any,
+	hash: number
+	dependencies: string[],
+	type: 'internal'
+}
+
+interface ExternalModule {
+	exports: any,
+	type: 'external'
+}
+
+interface CachedModule {
+	module: Promise<InternalModule>;
+	time: number;
 }
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
 export default function loader(snowpack: SnowpackDevServer): Loader {
-	const cache = new Map<string, CachedExports>();
+	const cache = new Map<string, CachedModule>();
 
-	const get_module = (importer: string, imported: string, url_stack: string[]) =>
-		imported[0] === '/' || imported[0] === '.'
+	const isInternalModule = (name: string) => name[0] === '/' || name[0] === '.'
+	
+	const get_module = (importer: string, imported: string, url_stack: string[]): Promise<InternalModule | ExternalModule> =>
+		isInternalModule(imported)
 			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
 			: Promise.resolve(load_node(imported));
 
-	async function load(url: string, url_stack: string[]) {
+	async function loadFromSnowpack(url: string) {
+		try {
+			return (await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'})).contents;
+		} catch (err) {
+			throw new Error(`Failed to load ${url}: ${err.message}`);
+		}
+	}
+
+	async function load(url: string, url_stack: string[]): Promise<InternalModule> {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
 			return null;
@@ -29,25 +51,37 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		if (url_stack.includes(url)) {
 			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
-			return {}
-		}
-
-		let data: string;
-
-		try {
-			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'});
-			data = result.contents;
-		} catch (err) {
-			throw new Error(`Failed to load ${url}: ${err.message}`);
+			return { exports: {}, hash: -1, dependencies: [], type: 'internal' };
 		}
 
 		let cached = cache.get(url);
-		const hash = get_hash(data);
 
-		if (!cached || cached.hash !== hash) {
+		// TODO: if time shorter than x, return cached value
+
+		let data: string;
+		let dependencies: Record<string, InternalModule>;
+
+		await Promise.all([
+			async () => data = await loadFromSnowpack(url),
+			async () => {
+				if (cached) {
+					dependencies = {}
+
+					await Promise.all(
+						(await cached.module).dependencies.map(async dependencyUrl =>
+							dependencies[dependencyUrl] = await load(dependencyUrl, url_stack.concat(url))
+						)
+					);
+				}
+			}
+		])
+
+		const hash = get_hash(data, dependencies);
+
+		if (!cached || (await cached.module).hash !== hash) {
 			cached = {
-				hash,
-				exports: initialize_module(url, data, url_stack.concat(url))
+				time: new Date().getTime(),
+				module: initialize_module(url, data, url_stack.concat(url), dependencies)
 					.catch(e => {
 						cache.delete(url);
 						throw e;
@@ -57,10 +91,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			cache.set(url, cached);
 		}
 
-		return cached.exports;
+		return cached.module;
 	}
 
-	async function initialize_module(url: string, data: string, url_stack: string[]) {
+	async function initialize_module(url: string, data: string, url_stack: string[], oldDependencies: Record<string, InternalModule> = {}): Promise<InternalModule> {
 		const code = new MagicString(data);
 		const ast = meriyah.parseModule(data, {
 			ranges: true,
@@ -148,9 +182,22 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			});
 		}
 
-		const deps = [];
+		const deps: {name: string, promise: Promise<any>}[] = [];
+		let dependencies: Record<string, InternalModule> = {};
+
 		imports.forEach(node => {
-			const promise = get_module(url, node.source.value, url_stack);
+			const url_to_import = node.source.value;
+
+			const promise = (oldDependencies[url]
+				? Promise.resolve(oldDependencies[url])
+				: get_module(url, url_to_import, url_stack)
+			).then(module => {
+				if (module.type == 'internal') {
+					dependencies[url] = module;
+				}
+
+				return module;
+			});
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -203,7 +250,13 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			},
 
 			// import(...)
-			source => get_module(url, source, url_stack),
+			source => get_module(url, source, url_stack).then(module => {
+				if (module.type == 'internal') {
+					dependencies[url] = module;
+				}
+
+				return module;
+			}),
 
 			// import.meta
 			{ url },
@@ -211,28 +264,37 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			...values
 		);
 
-		return exports;
+		return { exports, hash: get_hash(data, dependencies), dependencies: Object.keys(dependencies), type: 'internal' };
 	}
 
-	return url => load(url, []);
+	return url => load(url, []).then(module => module.exports);
 }
 
-function get_hash(str: string) {
+function get_hash(url: string, dependencies: Record<string, InternalModule>) {
 	let hash = 5381;
-	let i = str.length;
+	let i = url.length;
 
-	while(i) hash = (hash * 33) ^ str.charCodeAt(--i);
+	while (i) hash = (hash * 33) ^ url.charCodeAt(--i);
+
+	Object.keys(dependencies).sort().forEach(url => {
+		hash = (hash * 33) ^ dependencies[url].hash
+	})
+
+	// set sign bit to zero
 	return hash >>> 0;
 }
 
-function load_node(source: string) {
+function load_node(source: string): ExternalModule {
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
 	//  import { readFileSync } from 'fs';
-	return new Proxy(require(source), {
-		get(mod, prop) {
-			if (prop === 'default') return mod;
-			return mod[prop];
-		}
-	});
+	return {
+		exports: new Proxy(require(source), {
+			get(mod, prop) {
+				if (prop === 'default') return mod;
+				return mod[prop];
+			}
+		}),
+		type: 'external'
+	};
 }
