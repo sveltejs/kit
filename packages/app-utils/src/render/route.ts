@@ -8,7 +8,7 @@ export default function render_route(
 	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
 	if (!route) return;
 
-	return options.load(route).then(async mod => {
+	return Promise.resolve(options.load(route)).then(async mod => {
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
