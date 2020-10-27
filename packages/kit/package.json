@@ -41,6 +41,6 @@
 		"build": "rollup -c",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build",
-		"prepublish": "tsc && cp -r types/src/client client"
+		"prepublish": "cd client; tsc"
 	}
 }

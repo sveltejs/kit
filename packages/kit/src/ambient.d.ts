@@ -6,5 +6,6 @@ declare module "MANIFEST" {
 }
 
 declare module "ROOT" {
-  export default any;
+  const root: any;
+  export default root;
 }
