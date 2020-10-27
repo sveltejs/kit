@@ -1,7 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
-import sucrase from '@rollup/plugin-sucrase';
+import typescript from '@rollup/plugin-typescript';
 import pkg from './package.json';
 
 const external = [].concat(
@@ -28,7 +28,10 @@ export default [
 			'MANIFEST'
 		],
 		plugins: [
-			sucrase({ transforms: ['typescript'] })
+			resolve({
+				extensions: ['.mjs', '.js', '.ts']
+			}),
+			typescript()
 		]
 	},
 
@@ -52,7 +55,7 @@ export default [
 				extensions: ['.mjs', '.js', '.ts']
 			}),
 			commonjs(),
-			sucrase({ transforms: ['typescript'] })
+			typescript()
 		],
 		preserveEntrySignatures: false
 	}

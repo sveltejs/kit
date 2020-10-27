@@ -8,10 +8,10 @@
 		// target node v8+ (https://node.green/)
 		// the only missing feature is Array.prototype.values
 		"lib": ["es2020"],
-		"target": "es2020",
+		"target": "es2019",
 
-		"declaration": true,
-		"declarationDir": "types",
+		// "declaration": true,
+		// "declarationDir": "types",
 
 		"noEmitOnError": true,
 		"noErrorTruncation": true,

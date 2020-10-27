@@ -109,6 +109,7 @@ export default async function render_page(
 					method: opts.method || 'GET',
 					headers: opts.headers || {}, // TODO inject credentials...
 					path: resolved,
+					body: opts.body,
 					query: new URLSearchParams(parsed.query)
 				}, options);
 

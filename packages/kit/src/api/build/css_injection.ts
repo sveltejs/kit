@@ -92,7 +92,7 @@ export const css_injection: Plugin = {
 			};
 		}
 	},
-	async generateBundle(this: PluginContext, options: NormalizedOutputOptions, bundle: OutputBundle): Promise<void> {
+	async generateBundle(this: PluginContext, _options: NormalizedOutputOptions, bundle: OutputBundle): Promise<void> {
 		const inject_styles_file = Object.keys(bundle).find(f => f.startsWith('inject_styles'));
 
 		let has_css = false;
@@ -102,7 +102,7 @@ export const css_injection: Plugin = {
 			let chunk_has_css = false;
 
 			if (chunk.code) {
-				chunk.code = chunk.code.replace(/___SVELTE_CSS_INJECTION___([0-9a-f]+)___/g, (m, id) => {
+				chunk.code = chunk.code.replace(/___SVELTE_CSS_INJECTION___([0-9a-f]+)___/g, (_m, id) => {
 					id = Buffer.from(id, 'hex').toString();
 					const target = <OutputChunk>Object.values(bundle)
 						.find(c => (<OutputChunk>c).modules && (<OutputChunk>c).modules[id]);

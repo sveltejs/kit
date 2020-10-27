@@ -8,7 +8,7 @@ export type IncomingRequest = {
 	host: string; // TODO is this actually necessary?
 	method: Method;
 	headers: Headers;
-	// TODO body
+	body: any; // TODO
 	path: string;
 	query: URLSearchParams;
 };

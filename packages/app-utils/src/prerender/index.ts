@@ -85,6 +85,7 @@ export async function prerender({
 			method: 'GET',
 			headers: {},
 			path,
+			body: null,
 			query: new URLSearchParams()
 		}, {
 			only_prerender: !force,
@@ -130,7 +131,7 @@ export async function prerender({
 				log.error(`${rendered.status} ${path}`);
 			}
 
-			const dependencies = (rendered as PageResponse).dependencies;
+			const { dependencies } = rendered as PageResponse;
 
 			if (dependencies) {
 				for (const path in dependencies) {
