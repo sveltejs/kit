@@ -39,8 +39,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"prepare": "npm run build",
-		"prepublishOnly": "npm run build",
-		"prepublish": "cd client; tsc"
+		"prepare": "npm run build && cd client && tsc",
+		"prepublishOnly": "npm run build"
 	}
 }
