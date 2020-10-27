@@ -9,6 +9,7 @@ import { walk } from 'estree-walker';
 interface InternalModule {
 	exports: any,
 	hash: number
+	// relative URLs!
 	dependencies: string[],
 	type: 'internal'
 }
@@ -18,10 +19,20 @@ interface ExternalModule {
 	type: 'external'
 }
 
+interface CircularModule {
+	exports: any,
+	type: 'circular'
+}
+
 interface CachedModule {
 	module: Promise<InternalModule>;
 	time: number;
 }
+
+type Module = ExternalModule | InternalModule | CircularModule;
+
+// if a cached module is not older than this, do not re-check if it has changed
+const minRevalidateTimeMs = 100
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
@@ -29,13 +40,21 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map<string, CachedModule>();
 
 	const isInternalModule = (name: string) => name[0] === '/' || name[0] === '.'
-	
-	const get_module = (importer: string, imported: string, url_stack: string[]): Promise<InternalModule | ExternalModule> =>
-		isInternalModule(imported)
-			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
-			: Promise.resolve(load_node(imported));
 
-	async function loadFromSnowpack(url: string) {
+	async function get_module(
+		importer: string,
+		imported: string,
+		url_stack: string[]
+	): Promise<Module> {
+		if (isInternalModule(imported)) {
+			return load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
+		}
+		else {
+			return load_node(imported);
+		}
+	}
+
+	async function get_code_from_snowpack(url: string) {
 		try {
 			return (await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'})).contents;
 		} catch (err) {
@@ -43,45 +62,60 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		}
 	}
 
-	async function load(url: string, url_stack: string[]): Promise<InternalModule> {
+	async function get_dependencies_as_map(urls: string[], importer_url: string, url_stack: string[]) {
+		let dependencies: Record<string, InternalModule> = {};
+
+		await Promise.all(urls.map(
+			async dependencyUrl => {
+				const dependency = await get_module(importer_url, dependencyUrl, url_stack)
+
+				if (dependency.type === 'internal') {
+					dependencies[dependencyUrl] = dependency;
+				}
+			}
+		))
+
+		return dependencies;
+	}
+
+	async function load(url: string, url_stack: string[]): Promise<InternalModule | CircularModule> {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
 		if (url.endsWith('.css.proxy.js')) {
-			return null;
+			return { exports: null, type: 'circular' };
 		}
 
 		if (url_stack.includes(url)) {
 			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
-			return { exports: {}, hash: -1, dependencies: [], type: 'internal' };
+
+			return { exports: {}, type: 'circular' };
 		}
+
+		url_stack = url_stack.concat(url);
 
 		let cached = cache.get(url);
 
-		// TODO: if time shorter than x, return cached value
+		if (cached && cached.time > new Date().getTime() - minRevalidateTimeMs) {
+			return cached.module;
+		}
 
-		let data: string;
-		let dependencies: Record<string, InternalModule>;
+		let code = await get_code_from_snowpack(url);
+		let dependencies: Record<string, InternalModule> = {};
 
-		await Promise.all([
-			async () => data = await loadFromSnowpack(url),
-			async () => {
-				if (cached) {
-					dependencies = {}
+		// Refresh cached; there must not be any awaits after getting the cached value and before fetching dependencies;
+		// otherwise we get race conditions
+		cached = cache.get(url);
 
-					await Promise.all(
-						(await cached.module).dependencies.map(async dependencyUrl =>
-							dependencies[dependencyUrl] = await load(dependencyUrl, url_stack.concat(url))
-						)
-					);
-				}
-			}
-		])
-
-		const hash = get_hash(data, dependencies);
+		const hash = get_hash(
+			code,
+			(dependencies = cached
+				? await get_dependencies_as_map((await cached.module).dependencies, url, url_stack)
+				: {})
+		);
 
 		if (!cached || (await cached.module).hash !== hash) {
 			cached = {
 				time: new Date().getTime(),
-				module: initialize_module(url, data, url_stack.concat(url), dependencies)
+				module: initialize_module(url, code, url_stack, dependencies)
 					.catch(e => {
 						cache.delete(url);
 						throw e;
@@ -94,7 +128,16 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		return cached.module;
 	}
 
-	async function initialize_module(url: string, data: string, url_stack: string[], oldDependencies: Record<string, InternalModule> = {}): Promise<InternalModule> {
+	/**
+	 * Evaluate the module to calculate its exports.
+	 * @param oldDependencies Any previously known dependencies (passing them saves us having to re-fetch them)
+	 */
+	async function initialize_module(
+		url: string,
+		data: string,
+		url_stack: string[],
+		oldDependencies: Record<string, InternalModule> = {}
+	): Promise<InternalModule> {
 		const code = new MagicString(data);
 		const ast = meriyah.parseModule(data, {
 			ranges: true,
@@ -185,19 +228,18 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		const deps: {name: string, promise: Promise<any>}[] = [];
 		let dependencies: Record<string, InternalModule> = {};
 
+		async function get_imported_module(url_to_import: string): Promise<Module> {
+			const module = oldDependencies[url_to_import] || (await get_module(url, url_to_import, url_stack));
+
+			if (module.type == 'internal') {
+				dependencies[url_to_import] = module;
+			}
+
+			return module;
+		}
+
 		imports.forEach(node => {
-			const url_to_import = node.source.value;
-
-			const promise = (oldDependencies[url]
-				? Promise.resolve(oldDependencies[url])
-				: get_module(url, url_to_import, url_stack)
-			).then(module => {
-				if (module.type == 'internal') {
-					dependencies[url] = module;
-				}
-
-				return module;
-			});
+			const promise = get_imported_module(node.source.value).then(module => module.exports);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
@@ -250,13 +292,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			},
 
 			// import(...)
-			source => get_module(url, source, url_stack).then(module => {
-				if (module.type == 'internal') {
-					dependencies[url] = module;
-				}
-
-				return module;
-			}),
+			(source: string) => get_imported_module(source).then(module => module.exports),
 
 			// import.meta
 			{ url },
@@ -264,17 +300,23 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			...values
 		);
 
-		return { exports, hash: get_hash(data, dependencies), dependencies: Object.keys(dependencies), type: 'internal' };
+		return {
+			exports,
+			hash: get_hash(data, dependencies),
+			dependencies: Object.keys(dependencies),
+			type: 'internal'
+		};
 	}
 
 	return url => load(url, []).then(module => module.exports);
 }
 
-function get_hash(url: string, dependencies: Record<string, InternalModule>) {
+/** A dependency is stale if either its code has changed or its dependencies have */
+function get_hash(code: string, dependencies: Record<string, InternalModule>) {
 	let hash = 5381;
-	let i = url.length;
+	let i = code.length;
 
-	while (i) hash = (hash * 33) ^ url.charCodeAt(--i);
+	while (i) hash = (hash * 33) ^ code.charCodeAt(--i);
 
 	Object.keys(dependencies).sort().forEach(url => {
 		hash = (hash * 33) ^ dependencies[url].hash
