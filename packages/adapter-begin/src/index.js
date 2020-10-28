@@ -1,6 +1,6 @@
 'use strict';
 
-const { render } = require('@sveltejs/app-utils');
+const { render } = require('@sveltejs/app-utils/renderer');
 const client = require('@architect/shared/client.json');
 const manifest = require('@architect/shared/manifest.js');
 const App = require('@architect/shared/root.js');

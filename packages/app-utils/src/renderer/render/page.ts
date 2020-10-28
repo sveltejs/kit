@@ -6,7 +6,7 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import * as mime from 'mime';
 import { render } from './index';
-import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers } from '../types';
+import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers } from '../../types';
 
 const noop = () => {};
 
