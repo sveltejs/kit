@@ -66,6 +66,7 @@ export async function build(config: SvelteAppConfig) {
 
 		const setup_file = `${unoptimized}/server/_app/setup/index.js`;
 		if (!fs.existsSync(setup_file)) {
+			mkdirp(path.dirname(setup_file));
 			fs.writeFileSync(setup_file, '');
 		}
 
@@ -81,7 +82,7 @@ export async function build(config: SvelteAppConfig) {
 		await exec(`rm -rf .svelte/build/optimized`);
 
 		const server_input = {
-			root: `${unoptimized}/server/_app/main/root.js`,
+			root: `${unoptimized}/server/_app/main/generated/root.js`,
 			setup: `${unoptimized}/server/_app/setup/index.js`
 		};
 
