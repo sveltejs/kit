@@ -6,8 +6,8 @@ import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
 import gitignore_contents from '../template/.gitignore';
-import add_typescript from './modifications/add_typescript.js';
-import versions from './versions.js';
+import add_typescript from './modifications/add_typescript';
+import versions from './versions';
 
 const disclaimer = `
 █████████  ███████████    ███████    ███████████  ███
@@ -32,7 +32,7 @@ you're on your own for now. We'll have something to show
 soon.
 `;
 
-async function main() {
+async function main(): Promise<void> {
 	console.log(red(disclaimer));
 
 	const target = process.argv[2] || '.';
@@ -75,7 +75,8 @@ async function main() {
 	const name = path.basename(path.resolve(target));
 
 	const pkg_file = path.join(target, 'package.json');
-	const pkg_json = fs.readFileSync(pkg_file, 'utf-8')
+	const pkg_json = fs
+		.readFileSync(pkg_file, 'utf-8')
 		.replace('~TODO~', name)
 		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "${versions[name]}"`);
 
@@ -84,7 +85,7 @@ async function main() {
 	console.log(bold(green(`✔ Copied project files`)));
 
 	// modifications
-	const modifications = [['Use TypeScript in components?', false, add_typescript]];
+	const modifications = [['Use TypeScript in components?', false, add_typescript]] as const;
 
 	for (const [message, initial, fn] of modifications) {
 		const response = await prompts({

@@ -1,8 +1,9 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 
 export default {
-	input: 'cli/index.js',
+	input: 'cli/index.ts',
 	output: {
 		file: 'bin',
 		format: 'cjs',
@@ -12,6 +13,7 @@ export default {
 	plugins: [
 		nodeResolve(),
 		commonjs(),
+		typescript(),
 		{
 			transform(code, id) {
 				if (id.endsWith('.gitignore')) {
