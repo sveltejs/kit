@@ -8,7 +8,7 @@ import {
 	update_package_json
 } from './utils';
 
-export default async function add_typescript(cwd, yes) {
+export default async function add_typescript(cwd: string, yes: boolean): Promise<void> {
 	if (yes) {
 		update_package_json(cwd, {
 			typescript: '^4.0.0',
@@ -38,7 +38,7 @@ export default async function add_typescript(cwd, yes) {
 	}
 }
 
-function add_tsconfig(cwd) {
+function add_tsconfig(cwd: string): void {
 	fs.writeFileSync(
 		path.join(cwd, 'tsconfig.json'),
 		`{
@@ -66,7 +66,7 @@ function add_tsconfig(cwd) {
 	);
 }
 
-function add_d_ts_file(cwd) {
+function add_d_ts_file(cwd: string): void {
 	fs.writeFileSync(
 		path.join(cwd, 'src', 'globals.d.ts'),
 		`//#region Ensure Svelte file endings have a type for TypeScript

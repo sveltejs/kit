@@ -11,7 +11,6 @@ const versions = {};
 [template_pkg.dependencies, template_pkg.devDependencies].forEach(deps => {
 	for (const key in deps) {
 		const value = deps[key];
-		console.log(key, value);
 		if (value.startsWith('workspace:')) {
 			const pkg = pkgs.find(pkg => pkg.name === key);
 			if (pkg) {
@@ -20,7 +19,5 @@ const versions = {};
 		}
 	}
 });
-
-console.log(versions);
 
 writeFileSync(join(__dirname, '../cli/versions.js'), `export default ${JSON.stringify(versions, null, '\t')};`)

@@ -4,7 +4,7 @@ import path from 'path';
 /**
  * Updates package.json with given devDependencies
  */
-export function update_package_json(cwd, newDevDeps) {
+export function update_package_json(cwd: string, newDevDeps: Record<string, string>): void {
 	const pkg_file = path.join(cwd, 'package.json');
 	const pkg_json = fs.readFileSync(pkg_file, 'utf-8');
 	const pkg = JSON.parse(pkg_json);
@@ -20,7 +20,11 @@ export function update_package_json(cwd, newDevDeps) {
 /**
  * Updates a Svelte component, doing all given replacements.
  */
-export function update_component(cwd, filepath, replacements) {
+export function update_component(
+	cwd: string,
+	filepath: string,
+	replacements: [string, string][]
+): void {
 	const file = path.join(cwd, filepath);
 
 	let code = fs.readFileSync(file, 'utf-8');
@@ -32,7 +36,7 @@ export function update_component(cwd, filepath, replacements) {
 /**
  * Adds `svelte-preprocess` to `svelte.config.js`, if there's no preprocessor already.
  */
-export function add_svelte_prepocess_to_config(cwd) {
+export function add_svelte_prepocess_to_config(cwd: string): void {
 	const file = path.join(cwd, 'svelte.config.js');
 	let config = fs.readFileSync(file, 'utf-8');
 
@@ -55,7 +59,7 @@ export function add_svelte_prepocess_to_config(cwd) {
 /**
  * Adds plugin to snowpack config file, if not already present.
  */
-export function add_snowpack_plugin_to_config(cwd, pluginname) {
+export function add_snowpack_plugin_to_config(cwd: string, pluginname: string): void {
 	const file = path.join(cwd, 'snowpack.config.js');
 	let config = fs.readFileSync(file, 'utf-8');
 
@@ -76,9 +80,9 @@ export function add_snowpack_plugin_to_config(cwd, pluginname) {
 	fs.writeFileSync(file, config);
 }
 
-function sortObj(obj) {
+function sortObj<T>(obj: T): T {
 	return Object.keys(obj).reduce((newObj, key) => {
-		newObj[key] = obj[key];
+		newObj[<keyof T>key] = obj[<keyof T>key];
 		return newObj;
-	}, {});
+	}, <T>{});
 }

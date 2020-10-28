@@ -25,7 +25,7 @@ module.exports = {
 		'src/setup': '/_app/setup'
 	},
 	alias: {
-		'@sveltejs/kit': '/_app/main',
+		$app: '/_app/main/runtime',
 		$components: './src/components'
 	}
 };
