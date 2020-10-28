@@ -94,6 +94,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			return cached.module;
 		}
 
+		console.log(`get from snowpack ${url} (in cache: ${!!cached})`)
 		let code_promise = get_code_from_snowpack(url);
 		// references to any dependencies we have loaded. key: relative URL
 		let dependencies: Record<string, InternalModule> = {};
@@ -113,6 +114,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		// if not, we are still synchronous and only load the code AFTER populating the cache.
 		// (meaning race conditions are not possible on first load, but they are on update)
 		if (!cached || (await cached.module).hash !== (await calculate_hash())) {
+			if (cached) {
+				console.log(`cache miss ${url}`)
+			}
+
 			cached = {
 				time: get_time(),
 				module: code_promise
@@ -226,7 +231,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			});
 		}
 
-		const deps: {name: string, promise: Promise<any>}[] = [];
+		const imported_symbols: {name: string, promise: Promise<any>}[] = [];
 		let dependencies: Record<string, InternalModule> = {};
 
 		async function get_imported_module(url_to_import: string): Promise<Module> {
@@ -244,7 +249,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
 				// `export * from './other.js'` or `export { foo } from './other.js'`
-				deps.push({
+				imported_symbols.push({
 					name: export_from_identifiers.get(node.source),
 					promise
 				});
@@ -252,33 +257,33 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 			else if (node.specifiers.length === 0) {
 				// bare import
-				deps.push({
+				imported_symbols.push({
 					name: null,
 					promise
 				});
 			}
 
 			else if (node.specifiers[0].type === 'ImportNamespaceSpecifier') {
-				deps.push({
+				imported_symbols.push({
 					name: node.specifiers[0].local.name,
 					promise
 				});
 			}
 
 			else {
-				deps.push(...node.specifiers.map(specifier => ({
+				imported_symbols.push(...node.specifiers.map(specifier => ({
 					name: specifier.local.name,
 					promise: promise.then(exports => exports[specifier.imported ? specifier.imported.name : 'default'])
 				})));
 			}
 		});
 
-		deps.sort((a, b) => !!a.name !== !!b.name ? a.name ? -1 : 1 : 0);
+		imported_symbols.sort((a, b) => !!a.name !== !!b.name ? a.name ? -1 : 1 : 0);
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
-		const values = await Promise.all(deps.map(d => d.promise));
+		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...imported_symbols.map(d => d.name).filter(Boolean), code.toString());
+		const values = await Promise.all(imported_symbols.map(d => d.promise));
 
 		let exports = {};
 
