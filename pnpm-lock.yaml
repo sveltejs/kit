@@ -190,6 +190,7 @@ importers:
       sirv: 1.0.7
       source-map-support: 0.5.19
       svelte: 3.29.0
+      typescript: 4.0.3
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
       '@types/node': ^14.11.10
@@ -214,12 +215,13 @@ importers:
       snowpack: ^2.15.1
       source-map-support: ^0.5.19
       svelte: ^3.29.0
+      typescript: ^4.0.3
   packages/snowpack-config:
     dependencies:
       '@snowpack/plugin-svelte': 3.0.0
     specifiers:
       '@snowpack/plugin-svelte': ^3.0.0
-lockfileVersion: 5.1
+lockfileVersion: 5.2
 packages:
   /@architect/parser/2.3.0:
     dev: false
@@ -4113,6 +4115,5 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
-      registry: 'https://registry.npmjs.org/'
       tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/1619da56dc9f485fd84540e54dfd11078cb45773'
     version: 5.2.0

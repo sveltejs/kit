@@ -6,10 +6,7 @@ import colors from 'kleur';
 import relative from 'require-relative';
 import { mkdirp } from '@sveltejs/app-utils';
 import create_manifest_data from '../../core/create_manifest_data';
-import {
-	rollup,
-	OutputChunk
-} from 'rollup';
+import { rollup, OutputChunk } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
@@ -60,7 +57,7 @@ export async function build(config: SvelteAppConfig) {
 	{
 		// phase one — build with Snowpack
 		header('Creating unoptimized build...');
-		await exec(`rm -rf .svelte/build/unoptimized`);
+		await rimraf('.svelte/build/unoptimized');
 
 		copy_assets();
 
@@ -73,13 +70,13 @@ export async function build(config: SvelteAppConfig) {
 	{
 		// phase two — optimise
 		header('Optimizing...');
-		await exec(`rm -rf .svelte/build/optimized`);
+		await rimraf('.svelte/build/optimized');
 
 		const server_input = {
 			root: `${unoptimized}/server/_app/main/root.js`,
 			setup: fs.existsSync(`${unoptimized}/server/_app/setup/index.js`)
 				? `${unoptimized}/server/_app/setup/index.js`
-				: path.join(__dirname, '../assets/setup.js'),
+				: path.join(__dirname, '../assets/setup.js')
 			// TODO session middleware etc
 		};
 
@@ -88,7 +85,10 @@ export async function build(config: SvelteAppConfig) {
 			...manifest.components,
 			...manifest.endpoints
 		].forEach(item => {
-			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(/\.\w+$/, '.js')}`;
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
+				/\.\w+$/,
+				'.js'
+			)}`;
 		});
 
 		const server_chunks = await rollup({
@@ -153,7 +153,7 @@ export async function build(config: SvelteAppConfig) {
 						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
 						const client: {
 							entry: string;
-							deps: Record<string, { js: string[], css: string[] }>
+							deps: Record<string, { js: string[]; css: string[] }>;
 						} = {
 							entry: null,
 							deps: {}
@@ -166,13 +166,9 @@ export async function build(config: SvelteAppConfig) {
 
 							if ((chunk as OutputChunk).facadeModuleId === entry) {
 								client.entry = key;
-							}
-
-							else if ((chunk as OutputChunk).facadeModuleId === 'inject_styles.js') {
+							} else if ((chunk as OutputChunk).facadeModuleId === 'inject_styles.js') {
 								inject_styles = key;
-							}
-
-							else if ((chunk as OutputChunk).modules) {
+							} else if ((chunk as OutputChunk).modules) {
 								for (const id in (chunk as OutputChunk).modules) {
 									if (id.startsWith(routes) && id.endsWith('.js')) {
 										const file = id.slice(routes.length + 1);
@@ -227,7 +223,10 @@ export async function build(config: SvelteAppConfig) {
 						});
 
 						// not using this.emitFile because the manifest doesn't belong with client code
-						fs.writeFileSync('.svelte/build/optimized/client.json', JSON.stringify(client, null, '  '));
+						fs.writeFileSync(
+							'.svelte/build/optimized/client.json',
+							JSON.stringify(client, null, '  ')
+						);
 					}
 				},
 				terser()
@@ -254,7 +253,7 @@ export async function build(config: SvelteAppConfig) {
 	{
 		// phase three — adapter
 		header(`Generating app (${config.adapter})...`);
-		await exec(`rm -rf build`); // TODO customize
+		await rimraf('build'); // TODO customize
 
 		const adapter = relative(config.adapter);
 		await adapter({
@@ -265,4 +264,10 @@ export async function build(config: SvelteAppConfig) {
 	}
 
 	log.success('done');
+}
+
+async function rimraf(path: string): Promise<void> {
+	return new Promise(resolve => {
+		((<any>fs).rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
+	});
 }
