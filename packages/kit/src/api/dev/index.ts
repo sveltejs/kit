@@ -141,7 +141,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = await load(`/_app/main/root.js`);
+					root = await load(`/_app/main/generated/root.js`);
 				}
 				catch (e) {
 					res.statusCode = 500;
