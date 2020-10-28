@@ -28,7 +28,7 @@ const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY']);
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
 	// squelching these warnings (it happens when e.g. the root layout imports
-	// from /_app/main/runtime/router)
+	// from /_app/main/runtime/navigation)
 	if (ignorable_warnings.has(warning.code)) return;
 	handler(warning);
 };
@@ -138,7 +138,7 @@ export async function build(config: SvelteAppConfig) {
 
 		log.success(`server`);
 
-		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/router.js`);
+		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
 
 		const client_chunks = await rollup({
 			input: {

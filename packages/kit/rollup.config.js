@@ -13,7 +13,7 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			router: 'src/runtime/router/index.ts',
+			navigation: 'src/runtime/navigation/index.ts',
 			stores: 'src/runtime/stores/index.ts'
 		},
 		output: {

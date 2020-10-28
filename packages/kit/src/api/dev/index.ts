@@ -163,7 +163,7 @@ class Watcher extends EventEmitter {
 					template,
 					manifest: this.manifest,
 					client: {
-						entry: 'main/runtime/router.js',
+						entry: 'main/runtime/navigation.js',
 						deps: {}
 					},
 					files: 'build',
