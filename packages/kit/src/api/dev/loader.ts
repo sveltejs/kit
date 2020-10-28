@@ -1,25 +1,57 @@
+import { existsSync } from 'fs';
 import { URL } from 'url';
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
+import { EventEmitter } from 'events';
+import CheapWatch from 'cheap-watch';
 import { Loader } from './types';
-import { SnowpackDevServer } from 'snowpack';
+import { SnowpackConfig, SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
-
-interface CachedExports {
-	hash: number;
-	exports: Promise<any>;
-}
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(snowpack: SnowpackDevServer): Loader {
-	const cache = new Map<string, CachedExports>();
+export default function loader(snowpack: SnowpackDevServer, config: SnowpackConfig): Loader {
+	const cache = new Map<string, Promise<any>>();
+	const graph = new Map<string, Set<string>>();
 
-	const get_module = (importer: string, imported: string, url_stack: string[]) =>
-		imported[0] === '/' || imported[0] === '.'
-			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
-			: Promise.resolve(load_node(imported));
+	const get_module = (importer: string, imported: string, url_stack: string[]) => {
+		if (imported[0] === '/' || imported[0] === '.') {
+			const { pathname } = new URL(imported, `http://localhost${importer}`);
+
+			if (!graph.has(pathname)) graph.set(pathname, new Set());
+			graph.get(pathname).add(importer);
+
+			return load(pathname, url_stack);
+		}
+
+		return Promise.resolve(load_node(imported));
+	};
+
+	const invalidate_all = path => {
+		cache.delete(path);
+
+		const dependents = graph.get(path);
+		graph.delete(path);
+
+		if (dependents) dependents.forEach(invalidate_all);
+	};
+
+	for (const dir in config.mount) {
+		const base = config.mount[dir].url;
+		if (!existsSync(dir)) continue;
+
+		const cheapwatch = new CheapWatch({ dir });
+		cheapwatch.init();
+
+		const invalidate = ({ path }) => {
+			invalidate_all(`${base}/${path.replace(/\.\w+$/, '.js')}`);
+		};
+
+		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
+		(cheapwatch as any as EventEmitter).on('+',invalidate);
+		(cheapwatch as any as EventEmitter).on('-',invalidate);
+	}
 
 	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
@@ -32,6 +64,8 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			return {}
 		}
 
+		if (cache.has(url)) return cache.get(url);
+
 		let data: string;
 
 		try {
@@ -41,23 +75,14 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			throw new Error(`Failed to load ${url}: ${err.message}`);
 		}
 
-		let cached = cache.get(url);
-		const hash = get_hash(data);
+		const exports = initialize_module(url, data, url_stack.concat(url))
+			.catch(e => {
+				cache.delete(url);
+				throw e;
+			});
 
-		if (!cached || cached.hash !== hash) {
-			cached = {
-				hash,
-				exports: initialize_module(url, data, url_stack.concat(url))
-					.catch(e => {
-						cache.delete(url);
-						throw e;
-					})
-			};
-
-			cache.set(url, cached);
-		}
-
-		return cached.exports;
+		cache.set(url, exports);
+		return exports;
 	}
 
 	async function initialize_module(url: string, data: string, url_stack: string[]) {
@@ -215,14 +240,6 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 	}
 
 	return url => load(url, []);
-}
-
-function get_hash(str: string) {
-	let hash = 5381;
-	let i = str.length;
-
-	while(i) hash = (hash * 33) ^ str.charCodeAt(--i);
-	return hash >>> 0;
 }
 
 function load_node(source: string) {
