@@ -5,8 +5,10 @@
 		"moduleResolution": "node",
 		"target": "ES6",
 		"esModuleInterop": true,
-		"noEmit": true
+		"noEmit": true,
+		"noEmitOnError": true
 	},
 	"include": ["src/**/*"],
-	"lib": ["ES2020", "dom", "node"]
+	"lib": ["ES2020", "dom", "node"],
+	"strict": true
 }

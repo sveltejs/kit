@@ -4,7 +4,7 @@ import child_process from 'child_process';
 import { promisify } from 'util';
 import colors from 'kleur';
 import relative from 'require-relative';
-import { mkdirp } from '@sveltejs/app-utils';
+import { mkdirp } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
 import {
 	rollup,
@@ -28,7 +28,7 @@ const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY']);
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
 	// squelching these warnings (it happens when e.g. the root layout imports
-	// from /_app/main/client)
+	// from /_app/main/runtime/router)
 	if (ignorable_warnings.has(warning.code)) return;
 	handler(warning);
 };
@@ -91,9 +91,20 @@ export async function build(config: SvelteAppConfig) {
 			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});
 
+		const re = /(\.\.\/)+_app\/main\/runtime\//;
+		const work_around_alias_bug = type => ({
+			name: 'work-around-alias-bug',
+			resolveId(imported) {
+				if (re.test(imported)) {
+					return path.resolve(`${unoptimized}/${type}/_app/main/runtime`, imported.replace(re, ''));
+				}
+			}
+		});
+
 		const server_chunks = await rollup({
 			input: server_input,
 			plugins: [
+				work_around_alias_bug('server'),
 				{
 					name: 'remove-css',
 					load(id) {
@@ -123,13 +134,14 @@ export async function build(config: SvelteAppConfig) {
 
 		log.success(`server`);
 
-		const entry = path.resolve(`${unoptimized}/client/_app/main/client.js`);
+		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/router.js`);
 
 		const client_chunks = await rollup({
 			input: {
 				entry
 			},
 			plugins: [
+				work_around_alias_bug('client'),
 				{
 					name: 'deproxy-css',
 					async resolveId(importee, importer) {
@@ -189,18 +201,18 @@ export async function build(config: SvelteAppConfig) {
 
 							const chunk = bundle[key];
 
-							if (!(chunk as OutputChunk).imports) {
-								console.log(chunk);
-							}
+							const imports = chunk && (chunk as OutputChunk).imports;
 
-							(chunk as OutputChunk).imports.forEach(key => {
-								if (key.endsWith('.css')) {
-									js.add(inject_styles);
-									css.add(key);
-								} else {
-									find_deps(key, js, css);
-								}
-							});
+							if (imports) {
+								imports.forEach(key => {
+									if (key.endsWith('.css')) {
+										js.add(inject_styles);
+										css.add(key);
+									} else {
+										find_deps(key, js, css);
+									}
+								});
+							}
 
 							return { js, css };
 						};

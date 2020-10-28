@@ -1,5 +1,5 @@
-import { ScrollPosition, Target } from '../types';
-import find_anchor from './find_anchor';
+import { ScrollPosition, Target } from '../../runtime/router/types';
+import { find_anchor } from './utils';
 import { routes } from 'MANIFEST';
 
 // TODO

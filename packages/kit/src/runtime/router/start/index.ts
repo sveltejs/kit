@@ -1,9 +1,9 @@
 import { writable } from 'svelte/store';
-import { extract_query, init as init_router, load_current_page, select_target } from './router';
-import { get_prefetched, start as start_prefetching } from './prefetch';
-import { HydratedTarget, Target, Redirect, Branch, Page, InitialData } from './types';
-import goto from './goto';
-import { page_store } from './stores';
+import { extract_query, init as init_router, load_current_page, select_target } from '../internal';
+import { get_prefetched, start as start_prefetching } from '../prefetch';
+import { HydratedTarget, Target, Redirect, Branch, Page, InitialData } from '../types';
+import goto from '../goto';
+import { page_store } from './page_store';
 import { ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
 

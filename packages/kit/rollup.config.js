@@ -12,17 +12,21 @@ const external = [].concat(
 
 export default [
 	{
-		input: 'src/client/index.ts',
+		input: {
+			router: 'src/runtime/router/index.ts',
+			stores: 'src/runtime/stores/index.ts'
+		},
 		output: {
-			file: 'assets/client.js',
+			dir: 'assets/runtime',
 			format: 'esm',
 			sourcemap: true,
 			paths: {
-				ROOT: './root.svelte',
-				MANIFEST: './manifest.js'
+				ROOT: '../generated/root.svelte',
+				MANIFEST: '../generated/manifest.js'
 			}
 		},
 		external: [
+			'svelte',
 			'svelte/store',
 			'ROOT',
 			'MANIFEST'

@@ -1,8 +1,7 @@
-import { hydrate_target } from '../app';
-import { select_target } from '../router';
-import find_anchor from '../router/find_anchor';
+import { hydrate_target } from '../start'; // TODO does this belong here?
+import { select_target } from '../internal';
+import { find_anchor, get_base_uri } from '../utils';
 import { HydratedTarget, Target } from '../types';
-import { get_base_uri } from '../baseuri_helper';
 
 let prefetching: {
 	href: string;

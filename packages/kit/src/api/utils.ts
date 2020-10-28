@@ -1,11 +1,6 @@
-import { copyFileSync } from 'fs';
 import { resolve } from 'path';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { copy } from '@sveltejs/app-utils/files';
 
 export function copy_assets() {
-	mkdirp('.svelte/main/components');
-
-	['client.js', 'components/layout.svelte', 'components/error.svelte'].forEach(file => {
-		copyFileSync(resolve(__dirname, `../assets/${file}`), `.svelte/main/${file}`)
-	});
+	copy(resolve(__dirname, `../assets`), '.svelte/main');
 }

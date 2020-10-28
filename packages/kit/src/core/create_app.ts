@@ -16,8 +16,8 @@ export function create_app({
 
 	const app = generate_app(manifest_data);
 
-	write_if_changed(`${output}/manifest.js`, client_manifest);
-	write_if_changed(`${output}/root.svelte`, app);
+	write_if_changed(`${output}/generated/manifest.js`, client_manifest);
+	write_if_changed(`${output}/generated/root.svelte`, app);
 }
 
 export function create_serviceworker_manifest({ manifest_data, output, client_files, static_files }: {
