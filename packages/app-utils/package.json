@@ -24,15 +24,15 @@
 		"uvu": "^0.3.4"
 	},
 	"exports": {
-		"files": {
+		"./files": {
 			"require": "./files/index.js",
 			"import": "./files/index.mjs"
 		},
-		"http": {
+		"./http": {
 			"require": "./http/index.js",
 			"import": "./http/index.mjs"
 		},
-		"renderer": {
+		"./renderer": {
 			"require": "./renderer/index.js",
 			"import": "./renderer/index.mjs"
 		}

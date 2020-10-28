@@ -4,7 +4,7 @@ import pkg from './package.json';
 
 const input = {};
 Object.keys(pkg.exports).forEach(key => {
-	input[key] = `src/${key}/index.ts`;
+	input[key.replace(/^\.\//, '')] = `src/${key}/index.ts`;
 });
 
 export default {
