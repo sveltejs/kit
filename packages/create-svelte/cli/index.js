@@ -72,11 +72,14 @@ async function main() {
 
 	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
-	const pkg_file = path.join(target, 'package.json');
-	const pkg_json = fs.readFileSync(pkg_file, 'utf-8');
 	const name = path.basename(path.resolve(target));
 
-	fs.writeFileSync(pkg_file, pkg_json.replace(/workspace:/g, '').replace('~TODO~', name));
+	const pkg_file = path.join(target, 'package.json');
+	const pkg_json = fs.readFileSync(pkg_file, 'utf-8')
+		.replace('~TODO~', name)
+		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "${versions[name]}"`);
+
+	fs.writeFileSync(pkg_file, pkg_json);
 
 	console.log(bold(green(`✔ Copied project files`)));
 

@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.15
+
+### Patch Changes
+
+- a163000: Parse body on incoming requests
+
 ## 0.0.14
 
 ### Patch Changes

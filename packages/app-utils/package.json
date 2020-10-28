@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/app-utils",
-	"version": "0.0.14",
+	"version": "0.0.15",
 	"scripts": {
 		"clean": "rm -rf common",
 		"dev": "npm run clean && rollup -cw",
