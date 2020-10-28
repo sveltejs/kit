@@ -32,7 +32,7 @@ interface CachedModule {
 type Module = ExternalModule | InternalModule | CircularModule;
 
 // if a cached module is not older than this, do not re-check if it has changed
-const minRevalidateTimeMs = 100
+const min_revalidate_time_ms = 500
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
@@ -40,6 +40,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map<string, CachedModule>();
 
 	const is_internal_module = (name: string) => name[0] === '/' || name[0] === '.';
+	const is_unchangeable = (url: string) => url.startsWith('/web_modules/');
 
 	async function get_module(importer: string, imported: string, url_stack: string[]): Promise<Module> {
 		if (is_internal_module(imported)) {
@@ -90,48 +91,45 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		let cached = cache.get(url);
 
-		if (cached && cached.time > get_time() - minRevalidateTimeMs) {
+		if (cached && (cached.time > get_time() - min_revalidate_time_ms || is_unchangeable(url))) {
 			return cached.module;
 		}
 
-		console.log(`get from snowpack ${url} (in cache: ${!!cached})`)
-		let code_promise = get_code_from_snowpack(url);
-		// references to any dependencies we have loaded. key: relative URL
-		let dependencies: Record<string, InternalModule> = {};
+		// the cached module may or may not be stale here, but to handle race conditions while validating whether it is,
+		// we store a promise that is checking the staleness, so that subsequent calls don't trigger a new check.
+		const module = (async () => {
+			// references to any dependencies we have loaded. key: relative URL
+			let dependencies: Record<string, InternalModule> = {};
 
-		const calculate_hash = async () =>
-			get_hash(
+			// don't await here so we can instead fetch the code
+			// in parallel with the dependencies
+			let code_promise = get_code_from_snowpack(url);
+
+			const calculate_hash = async () => get_hash(
 				await code_promise,
-				(dependencies = await get_dependencies_as_map(
-					(await cached.module).dependencies,
-					url,
-					url_stack
-				))
+				(dependencies = await get_dependencies_as_map((await cached.module).dependencies, url, url_stack))
 			);
 
-		// the execution up to here has been synchronous, which is important to avoid race conditions.
-		// if there is a cached value, we now load the code and the dependencies to calculate the hash.
-		// if not, we are still synchronous and only load the code AFTER populating the cache.
-		// (meaning race conditions are not possible on first load, but they are on update)
-		if (!cached || (await cached.module).hash !== (await calculate_hash())) {
-			if (cached) {
-				console.log(`cache miss ${url}`)
+			if (cached && (await cached.module).hash === await calculate_hash()) {
+				return cached.module;
 			}
-
-			cached = {
-				time: get_time(),
-				module: code_promise
+			else {
+				return code_promise
 					.then(code => initialize_module(url, code, url_stack, dependencies))
 					.catch(e => {
+						console.error(e)
 						cache.delete(url);
 						throw e;
-					})
-			};
+					});
+			}
+		})();
 
-			cache.set(url, cached);
-		}
+		cache.set(url, {
+			time: get_time(),
+			module
+		});
 
-		return cached.module;
+		return module
 	}
 
 	/**
