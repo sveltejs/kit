@@ -1,5 +1,5 @@
-import fs from 'fs';
-import http from 'http';
+import * as fs from 'fs';
+import * as http from 'http';
 import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { render } from '@sveltejs/app-utils/renderer';
