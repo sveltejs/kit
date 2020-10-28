@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 0.0.12
+
+### Patch Changes
+
+- a163000: Parse body on incoming requests
+- Updated dependencies [a163000]
+  - @sveltejs/app-utils@0.0.15
+
 ## 0.0.11
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-alpha.16
+
+### Patch Changes
+
+- 5fbc475: Add TypeScript support at project init
+
 ## 2.0.0-alpha.14-15
 
 ### Patch Changes
