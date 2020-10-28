@@ -64,6 +64,11 @@ export async function build(config: SvelteAppConfig) {
 
 		copy_assets();
 
+		const setup_file = `${unoptimized}/server/_app/setup/index.js`;
+		if (!fs.existsSync(setup_file)) {
+			fs.writeFileSync(setup_file, '');
+		}
+
 		await exec(`${snowpack_bin} build --out=${unoptimized}/server --ssr`);
 		log.success('server');
 		await exec(`${snowpack_bin} build --out=${unoptimized}/client`);
@@ -77,10 +82,7 @@ export async function build(config: SvelteAppConfig) {
 
 		const server_input = {
 			root: `${unoptimized}/server/_app/main/root.js`,
-			setup: fs.existsSync(`${unoptimized}/server/_app/setup/index.js`)
-				? `${unoptimized}/server/_app/setup/index.js`
-				: path.join(__dirname, '../assets/setup.js'),
-			// TODO session middleware etc
+			setup: `${unoptimized}/server/_app/setup/index.js`
 		};
 
 		[
@@ -91,6 +93,7 @@ export async function build(config: SvelteAppConfig) {
 			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(/\.\w+$/, '.js')}`;
 		});
 
+		// https://github.com/snowpackjs/snowpack/discussions/1395
 		const re = /(\.\.\/)+_app\/main\/runtime\//;
 		const work_around_alias_bug = type => ({
 			name: 'work-around-alias-bug',
