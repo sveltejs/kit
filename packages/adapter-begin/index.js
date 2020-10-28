@@ -1,43 +1,15 @@
 'use strict';
 
 const {
-	copyFileSync,
 	writeFileSync,
 	readFileSync,
 	existsSync
 } = require('fs');
-const { resolve, join, dirname, relative } = require('path');
-const glob = require('tiny-glob/sync');
+const { resolve, join } = require('path');
 const parse = require('@architect/parser');
 const child_process = require('child_process');
 const { prerender } = require('@sveltejs/app-utils/renderer');
-const { mkdirp } = require('@sveltejs/app-utils/files');
-
-const copy_contents = (
-	source_directory,
-	base_destination_directory,
-	relativeTo = '.'
-) => {
-	let assets = [];
-	glob('**/*', { cwd: source_directory, filesOnly: true }).forEach((file) => {
-		if (file[0] == '.') {
-			return;
-		}
-		copy_single(source_directory, base_destination_directory, file);
-		assets.push(
-			`/${relative(relativeTo, join(base_destination_directory, file))}`
-		);
-	});
-	return assets;
-};
-
-const copy_single = (source_directory, base_destination_directory, file) => {
-	const destination_file = join(base_destination_directory, file);
-	const destination_directory = dirname(destination_file);
-	mkdirp(destination_directory);
-
-	copyFileSync(join(source_directory, file), destination_file);
-};
+const { copy } = require('@sveltejs/app-utils/files');
 
 function write_manifest(manifest) {
 	return `module.exports = {
@@ -93,15 +65,13 @@ module.exports = async function builder({ dir, manifest, log }) {
 	const server_directory = resolve(join('src', 'shared'));
 
 	log.minor('Writing client application...' + static_directory);
-	const static_assets = copy_contents(
+	const static_assets = copy(
 		'static',
-		static_directory,
 		static_directory
 	);
-	const client_assets = copy_contents(
+	const client_assets = copy(
 		resolve(dir, 'client'),
-		join(static_directory, '_app'),
-		static_directory
+		join(static_directory, '_app')
 	);
 
 	// log.minor('Prerendering static pages...');
@@ -113,14 +83,14 @@ module.exports = async function builder({ dir, manifest, log }) {
 	// });
 
 	log.minor('Building lambda...' + lambda_directory);
-	copy_contents(resolve(__dirname, 'src'), lambda_directory);
+	copy(resolve(__dirname, 'src'), lambda_directory);
 	child_process.execSync('npm install', {
 		stdio: [0, 1, 2],
 		cwd: lambda_directory
 	});
 
 	log.minor('Writing manifest...' + server_directory);
-	copy_single(resolve(dir), server_directory, 'client.json');
+	copy(join(resolve(dir), 'client.json'), join(server_directory, 'client.json'));
 	const written_manifest = write_manifest(manifest);
 	const htmlPath = resolve('src', 'app.html');
 	const appHtml = readFileSync(htmlPath, 'utf-8');
@@ -139,5 +109,5 @@ module.exports = async function builder({ dir, manifest, log }) {
 	);
 
 	log.minor('Writing server application...');
-	copy_contents(resolve(dir, 'server'), server_directory);
+	copy(resolve(dir, 'server'), server_directory);
 };

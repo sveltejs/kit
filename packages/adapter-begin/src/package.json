@@ -1,6 +1,6 @@
 {
 	"main": "index.js",
 	"dependencies": {
-		"@sveltejs/app-utils": "^0.0.11"
+		"@sveltejs/app-utils": "*"
 	}
 }
