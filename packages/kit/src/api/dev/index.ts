@@ -141,7 +141,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = await load(`/_app/main/root.js`);
+					root = await load(`/_app/main/generated/root.js`);
 				}
 				catch (e) {
 					res.statusCode = 500;
@@ -163,7 +163,7 @@ class Watcher extends EventEmitter {
 					template,
 					manifest: this.manifest,
 					client: {
-						entry: 'main/client.js',
+						entry: 'main/runtime/navigation.js',
 						deps: {}
 					},
 					files: 'build',
