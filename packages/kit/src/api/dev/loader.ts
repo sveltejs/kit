@@ -20,7 +20,7 @@ interface ExternalModule {
 }
 
 interface CircularModule {
-	exports: any,
+	exports: {},
 	type: 'circular'
 }
 
@@ -39,15 +39,11 @@ const minRevalidateTimeMs = 100
 export default function loader(snowpack: SnowpackDevServer): Loader {
 	const cache = new Map<string, CachedModule>();
 
-	const isInternalModule = (name: string) => name[0] === '/' || name[0] === '.'
+	const is_internal_module = (name: string) => name[0] === '/' || name[0] === '.';
 
-	async function get_module(
-		importer: string,
-		imported: string,
-		url_stack: string[]
-	): Promise<Module> {
-		if (isInternalModule(imported)) {
-			return load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
+	async function get_module(importer: string, imported: string, url_stack: string[]): Promise<Module> {
+		if (is_internal_module(imported)) {
+			return load(new URL(imported, `http://localhost${importer}`).pathname, url_stack);
 		}
 		else {
 			return load_node(imported);
@@ -62,10 +58,10 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 		}
 	}
 
-	async function get_dependencies_as_map(urls: string[], importer_url: string, url_stack: string[]) {
+	async function get_dependencies_as_map(relative_urls: string[], importer_url: string, url_stack: string[]) {
 		let dependencies: Record<string, InternalModule> = {};
 
-		await Promise.all(urls.map(
+		await Promise.all(relative_urls.map(
 			async dependencyUrl => {
 				const dependency = await get_module(importer_url, dependencyUrl, url_stack)
 
@@ -94,28 +90,33 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 		let cached = cache.get(url);
 
-		if (cached && cached.time > new Date().getTime() - minRevalidateTimeMs) {
+		if (cached && cached.time > get_time() - minRevalidateTimeMs) {
 			return cached.module;
 		}
 
-		let code = await get_code_from_snowpack(url);
+		let code_promise = get_code_from_snowpack(url);
+		// references to any dependencies we have loaded. key: relative URL
 		let dependencies: Record<string, InternalModule> = {};
 
-		// Refresh cached; there must not be any awaits after getting the cached value and before fetching dependencies;
-		// otherwise we get race conditions
-		cached = cache.get(url);
+		const calculate_hash = async () =>
+			get_hash(
+				await code_promise,
+				(dependencies = await get_dependencies_as_map(
+					(await cached.module).dependencies,
+					url,
+					url_stack
+				))
+			);
 
-		const hash = get_hash(
-			code,
-			(dependencies = cached
-				? await get_dependencies_as_map((await cached.module).dependencies, url, url_stack)
-				: {})
-		);
-
-		if (!cached || (await cached.module).hash !== hash) {
+		// the execution up to here has been synchronous, which is important to avoid race conditions.
+		// if there is a cached value, we now load the code and the dependencies to calculate the hash.
+		// if not, we are still synchronous and only load the code AFTER populating the cache.
+		// (meaning race conditions are not possible on first load, but they are on update)
+		if (!cached || (await cached.module).hash !== (await calculate_hash())) {
 			cached = {
-				time: new Date().getTime(),
-				module: initialize_module(url, code, url_stack, dependencies)
+				time: get_time(),
+				module: code_promise
+					.then(code => initialize_module(url, code, url_stack, dependencies))
 					.catch(e => {
 						cache.delete(url);
 						throw e;
@@ -340,3 +341,5 @@ function load_node(source: string): ExternalModule {
 		type: 'external'
 	};
 }
+
+const get_time = () => new Date().getTime();
