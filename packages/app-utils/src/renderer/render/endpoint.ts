@@ -7,17 +7,17 @@ export default function render_route(
 ): Promise<{
 	status: number,
 	body: string,
-	headers?: Headers
-}> {
-	const route: EndpointManifest = options.manifest.endpoints.find(route => route.pattern.test(request.path));
-	if (!route) return;
+	headers: Headers
+}> | null {
+	const route: EndpointManifest | undefined = options.manifest.endpoints.find(route => route.pattern.test(request.path));
+	if (!route) return null;
 
 	return Promise.resolve(options.load(route)).then(async mod => {
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
-			const params = {};
-			const match = route.pattern.exec(request.path);
+			const params: Record<string, string> = {};
+			const match = route.pattern.exec(request.path)!;
 			route.params.forEach((name, i) => {
 				params[name] = match[i + 1]
 			});
@@ -46,20 +46,22 @@ export default function render_route(
 			} catch (err) {
 				return {
 					status: 500,
-					body: err.message
+					body: err.message,
+					headers: {}
 				};
 			}
 		} else {
 			return {
 				status: 501,
-				body: `${request.method} is not implemented for ${request.path}`
+				body: `${request.method} is not implemented for ${request.path}`,
+				headers: {}
 			};
 		}
 	});
 }
 
 function lowercase_keys(obj: Record<string, any>) {
-	const clone = {};
+	const clone: Record<string, string> = {};
 	for (const key in obj) {
 		clone[key.toLowerCase()] = obj[key];
 	}

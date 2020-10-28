@@ -5,7 +5,7 @@ export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 export type Headers = Record<string, string>;
 
 export type IncomingRequest = {
-	host: string; // TODO is this actually necessary?
+	host: string | null; // TODO is this actually necessary?
 	method: Method;
 	headers: Headers;
 	body: any; // TODO
@@ -15,12 +15,12 @@ export type IncomingRequest = {
 
 export type EndpointResponse = {
 	status: number;
-	headers?: Headers;
-	body?: any; // TODO what types can body be?
+	headers: Headers;
+	body: any; // TODO what types can body be?
 };
 
 export type PageResponse = EndpointResponse & {
-	dependencies?: Record<string, EndpointResponse>;
+	dependencies: Record<string, EndpointResponse>;
 };
 
 type SetupModule = {

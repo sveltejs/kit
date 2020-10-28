@@ -13,7 +13,7 @@
 		// "declaration": true,
 		// "declarationDir": "types",
 
-		"noEmitOnError": true,
+		// "noEmitOnError": true,
 		"noErrorTruncation": true,
 
 		// rollup takes care of these
@@ -23,7 +23,7 @@
 		"allowSyntheticDefaultImports": true,
 
 		// TODO: error all the things
-		//"strict": true,
+		"strict": true,
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true

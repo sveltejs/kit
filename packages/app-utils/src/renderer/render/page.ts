@@ -22,20 +22,20 @@ export default async function render_page(
 	options: RenderOptions
 ): Promise<{
 	status: number,
-	body?: string,
-	headers?: Headers,
-	dependencies?: Record< string, EndpointResponse | PageResponse>
-}> {
-	let redirected: { status: number; location?: string; headers: Headers };
+	body: string,
+	headers: Headers,
+	dependencies: Record<string, EndpointResponse>
+} | undefined> {
+	let redirected: PageResponse;
 	let preload_error;
 
-	const page: PageManifest = options.manifest.pages.find(page => page.pattern.test(request.path));
+	const page: PageManifest | undefined = options.manifest.pages.find(page => page.pattern.test(request.path));
 
 	const baseUrl = ''; // TODO
 
 	const session = await options.setup.getSession?.(context);
 
-	const serialized_session = try_serialize(session, err => {
+	const serialized_session = try_serialize(session, (err: Error) => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
@@ -58,26 +58,28 @@ export default async function render_page(
 			l++;
 		});
 
-		const dependencies: Record<string, EndpointResponse | PageResponse> = {};
+		const dependencies: Record<string, EndpointResponse> = {};
 
 		const preload_context = {
 			redirect: (status: number, location: string) => {
-				if (redirected && (redirected.status !== status || redirected.location !== location)) {
+				if (redirected && (redirected.status !== status || redirected.headers.location !== location)) {
 					throw new Error(`Conflicting redirects`);
 				}
 				location = location.replace(/^\//g, ''); // leading slash (only)
 				redirected = {
 					status,
-					headers: { location }
+					headers: { location },
+					body: null,
+					dependencies: {}
 				};
 			},
-			error: (status, error) => {
+			error: (status: number, error: Error | string) => {
 				if (typeof error === 'string') {
 					error = new Error(error);
 				}
 				preload_error = { ...error, status };
 			},
-			fetch: async (url, opts: FetchOpts = {}) => {
+			fetch: async (url: string, opts: FetchOpts = {}) => {
 				const parsed = parse(url);
 
 				if (parsed.protocol) {
@@ -89,7 +91,7 @@ export default async function render_page(
 				// probably no advantage to using fetch here — we should replace
 				// `this.fetch` with `this.load` or whatever
 
-				const resolved = resolve(request.path, parsed.pathname);
+				const resolved = resolve(request.path, parsed.pathname!);
 
 				// edge case — fetching a static file
 				const candidates = [`${options.static_dir}${resolved}`, `${options.static_dir}${resolved}/index.html`];
@@ -97,7 +99,7 @@ export default async function render_page(
 					if (existsSync(file)) {
 						return new Response(createReadStream(file), {
 							headers: {
-								'content-type': mime.getType(file)
+								'content-type': mime.getType(file)!
 							}
 						});
 					}
@@ -110,7 +112,7 @@ export default async function render_page(
 					headers: opts.headers || {}, // TODO inject credentials...
 					path: resolved,
 					body: opts.body,
-					query: new URLSearchParams(parsed.query)
+					query: new URLSearchParams(parsed.query || '')
 				}, options);
 
 				if (rendered) {
@@ -130,15 +132,15 @@ export default async function render_page(
 			}
 		};
 
-		const match = page.pattern.exec(request.path);
+		const match = page.pattern.exec(request.path)!;
 
 		// TODO this logic is duplicated in several places
-		const params = {};
+		const params: Record<string, string> = {};
 		page.parts[page.parts.length - 1].params.forEach((name, i) => {
 			params[name] = match[i + 1];
 		});
 
-		const preloaded = [];
+		const preloaded: any[] = [];
 		let can_prerender = true;
 
 		const parts = await Promise.all([{ component: options.manifest.layout, params: [] }, ...page.parts].map(async (part, i) => {
@@ -151,7 +153,7 @@ export default async function render_page(
 				return;
 			}
 
-			const params = {};
+			const params: Record<string, string> = {};
 			part.params.forEach((name, i) => {
 				params[name] = match[i + 1];
 			});
@@ -172,9 +174,13 @@ export default async function render_page(
 		if (options.only_prerender && !can_prerender) return;
 
 		if (preload_error) throw preload_error;
-		if (redirected) return redirected;
+		if (redirected!) return redirected!;
 
-		const branches = [];
+		const branches: Array<{
+			component: any; // TODO
+			props: any;
+			segment: string;
+		}> = [];
 		parts.forEach((part, i) => {
 			if (part) {
 				branches.push({
@@ -185,7 +191,7 @@ export default async function render_page(
 			}
 		});
 
-		const props = {
+		const props: Record<string, any> = {
 			status: 200,
 			error: null,
 			stores: {
@@ -200,7 +206,7 @@ export default async function render_page(
 			},
 			// TODO stores, status, segments, notify, CONTEXT_KEY
 			segments: layout_segments,
-			branches: branches,
+			branches,
 			level0: {
 				props: preloaded[0]
 			},
@@ -223,7 +229,7 @@ export default async function render_page(
 			};
 		}
 
-		const serialized_preloads = `[${preloaded.map(data => try_serialize(data, err => {
+		const serialized_preloads = `[${preloaded.map(data => try_serialize(data, (err: Error) => {
 			console.error(`Failed to serialize preloaded data to transmit to the client at the /${segments.join('/')} route: ${err.message}`);
 			console.warn('The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information');
 		})).join(',')}]`;
@@ -314,19 +320,22 @@ export default async function render_page(
 				headers: {
 					'content-type': 'text/html'
 				},
-				body: html
+				body: html,
+				dependencies: {}
 			};
 		} catch (error) {
 			// oh lawd now you've done it
 			return {
 				status: 500,
+				headers: {},
 				body: error.stack, // TODO probably not in prod?
+				dependencies: {}
 			};
 		}
 	}
 }
 
-function try_serialize(data, fail?) {
+function try_serialize(data: any, fail?: (err: Error) => void) {
 	try {
 		return devalue(data);
 	} catch (err) {
@@ -336,7 +345,7 @@ function try_serialize(data, fail?) {
 }
 
 // Ensure we return something truthy so the client will not re-render the page over the error
-function serialize_error(error) {
+function serialize_error(error: Error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {

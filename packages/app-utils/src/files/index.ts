@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export function mkdirp(dir) {
+export function mkdirp(dir: string) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
 	} catch (e) {
@@ -10,8 +10,8 @@ export function mkdirp(dir) {
 	}
 }
 
-export function copy(from, to, filter: (file?: string) => boolean = () => true): string[] {
-	if (!filter(path.basename(from))) return;
+export function copy(from: string, to: string, filter: (file?: string) => boolean = () => true): string[] {
+	if (!filter(path.basename(from))) return [];
 
 	const files = [];
 	const stats = fs.statSync(from);

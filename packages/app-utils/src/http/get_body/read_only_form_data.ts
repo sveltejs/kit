@@ -6,7 +6,7 @@ export function read_only_form_data() {
 	return {
 		append(key: string, value: string) {
 			if (map.has(key)) {
-				map.get(key).push(value);
+				(map.get(key) as string[]).push(value);
 			} else {
 				map.set(key, [value]);
 			}

@@ -7,8 +7,8 @@ import { copy } from '.';
 
 const suite_copy = suite('#copy()');
 
-let source_dir;
-let dest_dir;
+let source_dir: string;
+let dest_dir: string;
 
 suite_copy.before.each(() => {
 	const temp_dir = mkdtempSync(join(tmpdir(), 'app-utils-'));

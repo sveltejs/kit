@@ -76,7 +76,7 @@ export async function prerender({
 	const root = require(`${server_root}/server/root.js`);
 	const setup = require(`${server_root}/server/setup.js`);
 
-	async function crawl(path) {
+	async function crawl(path: string) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
@@ -181,12 +181,12 @@ export async function prerender({
 					hrefs = hrefs.filter(Boolean);
 
 					for (const href of hrefs) {
-						const resolved = resolve(path, href);
+						const resolved = resolve(path, href!);
 						if (resolved[0] !== '/') continue;
 
 						const parsed = parse(resolved);
 
-						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
+						const parts = parsed.pathname!.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						// TODO this feels iffy
@@ -203,7 +203,7 @@ export async function prerender({
 							// TODO warn that query strings have no effect on statically-exported pages
 						}
 
-						await crawl(parsed.pathname);
+						await crawl(parsed.pathname!);
 					}
 				}
 			}

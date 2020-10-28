@@ -10,7 +10,7 @@ export function get_body(req: IncomingMessage) {
 
 	if (!has_body) return Promise.resolve(undefined);
 
-	const [type, ...directives] = req.headers['content-type'].split(/;\s*/);
+	const [type, ...directives] = (req.headers['content-type'] as string).split(/;\s*/);
 
 	switch (type) {
 		case 'application/octet-stream':
@@ -67,13 +67,13 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 	const { data, append } = read_only_form_data();
 
 	parts.slice(1, -1).forEach(part => {
-		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part);
+		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part) as RegExpMatchArray;
 		const raw_headers = match[1];
 		const body = match[2].trim();
 
 		let key: string;
 
-		const headers = {};
+		const headers: Record<string, string> = {};
 		raw_headers.split('\r\n').forEach(str => {
 			const [raw_header, ...raw_directives] = str.split('; ');
 			let [name, value] = raw_header.split(': ');
@@ -101,9 +101,9 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 			}
 		});
 
-		if (!key) nope();
+		if (!key!) nope();
 
-		append(key, body);
+		append(key!, body);
 	});
 
 	return data;
