@@ -1,8 +1,9 @@
-import fs from 'fs';
-import http from 'http';
+import * as fs from 'fs';
+import * as http from 'http';
 import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
-import { render } from '@sveltejs/app-utils';
+import { render } from '@sveltejs/app-utils/renderer';
+import { get_body } from '@sveltejs/app-utils/http';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');
@@ -39,6 +40,7 @@ const server = http.createServer((req, res) => {
 					method: req.method,
 					headers: req.headers,
 					path: parsed.pathname,
+					body: await get_body(req),
 					query: new URLSearchParams(parsed.query)
 				}, {
 					static_dir: 'static',

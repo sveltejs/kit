@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "0.0.22",
+	"version": "0.0.23",
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*",
 		"cheap-watch": "^1.0.2",
@@ -33,12 +33,13 @@
 	},
 	"files": [
 		"assets",
-		"dist"
+		"dist",
+		"client"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"prepare": "npm run build",
+		"prepare": "npm run build && cd client && tsc",
 		"prepublishOnly": "npm run build"
 	}
 }

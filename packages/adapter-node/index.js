@@ -1,5 +1,6 @@
 const fs = require('fs');
-const { copy, prerender } = require('@sveltejs/app-utils');
+const { prerender } = require('@sveltejs/app-utils/renderer');
+const { copy } = require('@sveltejs/app-utils/files');
 
 module.exports = async function adapter({
 	dir,

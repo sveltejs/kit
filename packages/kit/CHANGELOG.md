@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 0.0.23
+
+### Patch Changes
+
+- a163000: Parse body on incoming requests
+- a346eab: Copy over latest Sapper router code
+- Updated dependencies [a163000]
+  - @sveltejs/app-utils@0.0.15
+
 ## 0.0.22
 
 ### Patch Changes

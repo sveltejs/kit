@@ -1,11 +1,13 @@
+import { mkdirp } from '@sveltejs/app-utils/files';
 import fs from 'fs';
-import path from 'path';
-import { bold, cyan, green, red } from 'kleur/colors';
 import parser from 'gitignore-parser';
-import { mkdirp } from '@sveltejs/app-utils';
-import gitignore_contents from '../template/.gitignore';
+import { bold, cyan, green, red } from 'kleur/colors';
+import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
+import gitignore_contents from '../template/.gitignore';
+import add_typescript from './modifications/add_typescript.js';
+import versions from './versions.js';
 
 const disclaimer = `
 █████████  ███████████    ███████    ███████████  ███
@@ -13,10 +15,10 @@ const disclaimer = `
 ░███    ░░░ ░   ░███  ░  ███     ░░███ ░███    ░███░███
 ░░█████████     ░███    ░███      ░███ ░██████████ ░███
 ░░░░░░░░███    ░███    ░███      ░███ ░███░░░░░░  ░███
-███    ░███    ░███    ░░███     ███  ░███        ░░░ 
+███    ░███    ░███    ░░███     ███  ░███        ░░░
 ░░█████████     █████    ░░░███████░   █████        ███
-░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░ 
-                                                      
+░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░
+
 Pump the brakes! A little disclaimer...
 
 svelte@next is not ready for use yet. It definitely can't
@@ -28,10 +30,10 @@ and we don't need people to start raising issues yet.
 Given these warnings, please feel free to experiment, but
 you're on your own for now. We'll have something to show
 soon.
-`
+`;
 
 async function main() {
-  console.log(red(disclaimer));
+	console.log(red(disclaimer));
 
 	const target = process.argv[2] || '.';
 
@@ -70,13 +72,31 @@ async function main() {
 
 	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
 
-	const pkg_file = path.join(target, 'package.json');
-	const pkg_json = fs.readFileSync(pkg_file, 'utf-8');
 	const name = path.basename(path.resolve(target));
 
-	fs.writeFileSync(pkg_file, pkg_json.replace(/workspace:/g, '').replace('~TODO~', name));
+	const pkg_file = path.join(target, 'package.json');
+	const pkg_json = fs.readFileSync(pkg_file, 'utf-8')
+		.replace('~TODO~', name)
+		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "${versions[name]}"`);
+
+	fs.writeFileSync(pkg_file, pkg_json);
 
 	console.log(bold(green(`✔ Copied project files`)));
+
+	// modifications
+	const modifications = [['Use TypeScript in components?', false, add_typescript]];
+
+	for (const [message, initial, fn] of modifications) {
+		const response = await prompts({
+			type: 'confirm',
+			name: 'value',
+			message,
+			initial
+		});
+
+		await fn(target, response.value);
+	}
+
 	console.log(`\nNext steps:`);
 	let i = 1;
 

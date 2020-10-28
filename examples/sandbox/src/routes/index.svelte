@@ -10,6 +10,18 @@
 	import Counter from '$components/Counter.svelte';
 
 	export let answer;
+
+	let result;
+
+	async function handle_submit(e) {
+		e.preventDefault();
+		const res = await fetch(this.action, {
+			method: this.method,
+			body: new FormData(this)
+		});
+		result = await res.json();
+		console.log(result);
+	}
 </script>
 
 <main>
@@ -19,6 +31,15 @@
 
 	<Counter/>
 	<p>Visit the <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
+
+	<form on:submit={handle_submit} action="/doubler" method="post">
+		<input type="number" name="num" value="1">
+		<button>double it</button>
+	</form>
+
+	{#if result}
+		<p>{result.original} * 2 = {result.doubled}</p>
+	{/if}
 </main>
 
 <style>

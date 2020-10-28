@@ -1,0 +1,14 @@
+{
+	"name": "@sveltejs/adapter-begin",
+	"version": "0.0.1",
+	"main": "index.js",
+	"files": [
+		"index.js",
+		"src"
+	],
+	"dependencies": {
+		"@architect/parser": "^2.3.0",
+		"@sveltejs/app-utils": "workspace:*",
+		"tiny-glob": "^0.2.6"
+	}
+}

@@ -1,21 +1,21 @@
 import { createHash } from 'crypto';
 import render_page from './page';
-import render_route from './route';
-import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../types';
+import render_endpoint from './endpoint';
+import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../../types';
 
-function md5(body) {
+function md5(body: string) {
 	return createHash('md5').update(body).digest('hex');
 }
 
 export async function render(
 	request: IncomingRequest,
 	options: RenderOptions
-): Promise<EndpointResponse | PageResponse> {
+): Promise<EndpointResponse | PageResponse | undefined> {
 	const { context, headers = {} } = (await options.setup.prepare?.(request.headers)) || {};
 
 	try {
 		const response = await (
-			render_route(request, context, options) ||
+			render_endpoint(request, context, options) ||
 			render_page(request, context, options)
 		);
 
@@ -26,7 +26,11 @@ export async function render(
 					const etag = `"${md5(response.body)}"`;
 
 					if (request.headers['if-none-match'] === etag) {
-						return { status: 304 };
+						return {
+							status: 304,
+							headers: {},
+							body: null
+						};
 					}
 
 					response.headers['etag'] = etag;
@@ -42,6 +46,7 @@ export async function render(
 	} catch (err) {
 		return {
 			status: 500,
+			headers: {},
 			body: options.dev ? err.stack : err.message
 		};
 	}

@@ -4,7 +4,6 @@ import CheapWatch from 'cheap-watch';
 import { scorta } from 'scorta/sync';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
-import { mkdirp } from '@sveltejs/app-utils';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
@@ -12,7 +11,9 @@ import snowpack, {SnowpackDevServer} from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { ManifestData, ReadyEvent } from '../../interfaces';
-import { render } from '@sveltejs/app-utils';
+import { mkdirp } from '@sveltejs/app-utils/files';
+import { render } from '@sveltejs/app-utils/renderer';
+import { get_body } from '@sveltejs/app-utils/http';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -138,7 +139,7 @@ class Watcher extends EventEmitter {
 				}
 
 				let root;
-				
+
 				try {
 					root = await load(`/_app/main/root.js`);
 				}
@@ -148,12 +149,15 @@ class Watcher extends EventEmitter {
 					return
 				}
 
+				const body = await get_body(req);
+
 				const rendered = await render({
 					host: null, // TODO what should this be? is it necessary?
 					headers: req.headers,
 					method: req.method,
 					path: parsed.pathname,
-					query: new URLSearchParams(parsed.query)
+					query: new URLSearchParams(parsed.query),
+					body
 				}, {
 					static_dir: 'static',
 					template,
@@ -189,7 +193,6 @@ class Watcher extends EventEmitter {
 
 		create_app({
 			manifest_data: this.manifest,
-			routes: '/_app/routes',
 			output: '.svelte/main'
 		});
 	}

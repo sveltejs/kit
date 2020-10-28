@@ -1,5 +1,5 @@
 const { URLSearchParams } = require('url');
-const { render } = require('@sveltejs/app-utils');
+const { render } = require('@sveltejs/app-utils/renderer');
 const client = require('./server/client.json');
 const manifest = require('./server/manifest.js');
 const root = require('./server/root.js');

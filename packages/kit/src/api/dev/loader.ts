@@ -53,7 +53,7 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 
 	async function get_code_from_snowpack(url: string) {
 		try {
-			return (await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf-8'})).contents;
+			return (await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf8'})).contents;
 		} catch (err) {
 			throw new Error(`Failed to load ${url}: ${err.message}`);
 		}

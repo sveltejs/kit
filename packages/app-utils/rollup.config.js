@@ -1,26 +1,33 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import sucrase from '@rollup/plugin-sucrase';
+import typescript from '@rollup/plugin-typescript';
 import pkg from './package.json';
 
+const input = {};
+Object.keys(pkg.exports).forEach(key => {
+	input[key.replace(/^\.\//, '')] = `src/${key}/index.ts`;
+});
+
 export default {
-	input: 'src/index.ts',
+	input,
 	output: [
 		{
-			file: pkg.main,
+			dir: '.',
+			entryFileNames: '[name]/index.js',
+			chunkFileNames: 'common/[name].js',
 			format: 'cjs',
 			sourcemap: true
 		},
 		{
-			file: pkg.module,
+			dir: '.',
+			entryFileNames: '[name]/index.mjs',
+			chunkFileNames: 'common/[name].mjs',
 			format: 'esm',
 			sourcemap: true
 		}
 	],
 	plugins: [
 		nodeResolve(),
-		sucrase({
-			transforms: ['typescript']
-		})
+		typescript()
 	],
 	external: [
 		...require('module').builtinModules,

@@ -1,11 +1,11 @@
 import fs from 'fs';
 import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
-import { mkdirp } from '../files';
+import { mkdirp } from '../../files';
 import { render } from '../render';
-import { RouteManifest } from '../types';
+import { PageResponse, RouteManifest } from '../../types';
 
-function clean_html(html) {
+function clean_html(html: string) {
 	return html
 		.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gm, '')
 		.replace(/(<script[\s\S]*?>)[\s\S]*?<\/script>/gm, '$1</' + 'script>')
@@ -13,17 +13,17 @@ function clean_html(html) {
 		.replace(/<!--[\s\S]*?-->/gm, '');
 }
 
-function get_href(attrs) {
+function get_href(attrs: string) {
 	const match = /href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
-function get_src(attrs) {
+function get_src(attrs: string) {
 	const match = /src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
-function get_srcset_urls(attrs) {
+function get_srcset_urls(attrs: string) {
 	const results = [];
 	// Note that the srcset allows any ASCII whitespace, including newlines.
 	const match = /srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
@@ -76,7 +76,7 @@ export async function prerender({
 	const root = require(`${server_root}/server/root.js`);
 	const setup = require(`${server_root}/server/setup.js`);
 
-	async function crawl(path) {
+	async function crawl(path: string) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
@@ -85,6 +85,7 @@ export async function prerender({
 			method: 'GET',
 			headers: {},
 			path,
+			body: null,
 			query: new URLSearchParams()
 		}, {
 			only_prerender: !force,
@@ -130,9 +131,11 @@ export async function prerender({
 				log.error(`${rendered.status} ${path}`);
 			}
 
-			if (rendered.dependencies) {
-				for (const path in rendered.dependencies) {
-					const result = rendered.dependencies[path];
+			const { dependencies } = rendered as PageResponse;
+
+			if (dependencies) {
+				for (const path in dependencies) {
+					const result = dependencies[path];
 					const response_type = Math.floor(result.status / 100);
 
 					const is_html = result.headers['content-type'] === 'text/html';
@@ -178,12 +181,12 @@ export async function prerender({
 					hrefs = hrefs.filter(Boolean);
 
 					for (const href of hrefs) {
-						const resolved = resolve(path, href);
+						const resolved = resolve(path, href!);
 						if (resolved[0] !== '/') continue;
 
 						const parsed = parse(resolved);
 
-						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
+						const parts = parsed.pathname!.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						// TODO this feels iffy
@@ -200,7 +203,7 @@ export async function prerender({
 							// TODO warn that query strings have no effect on statically-exported pages
 						}
 
-						await crawl(parsed.pathname);
+						await crawl(parsed.pathname!);
 					}
 				}
 			}

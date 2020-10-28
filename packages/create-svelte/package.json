@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-alpha.15",
+	"version": "2.0.0-alpha.16",
 	"bin": "./bin",
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
@@ -12,7 +12,7 @@
 	},
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"build": "node scripts/update-versions && rollup -c",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},

@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"target": "ES6",
+		"esModuleInterop": true,
+		"noEmit": true
+	},
+	"include": ["src/**/*"],
+	"lib": ["ES2020", "dom", "node"]
+}
