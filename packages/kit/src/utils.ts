@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { mkdirp } from '@sveltejs/app-utils';
+import { mkdirp } from '@sveltejs/app-utils/files';
 
 export function left_pad(str: string, len: number) {
 	while (str.length < len) str = ` ${str}`;

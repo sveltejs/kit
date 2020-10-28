@@ -2,7 +2,8 @@ import fs from 'fs';
 import http from 'http';
 import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
-import { render, get_body } from '@sveltejs/app-utils';
+import { render } from '@sveltejs/app-utils/renderer';
+import { get_body } from '@sveltejs/app-utils/http';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');

@@ -1,5 +1,5 @@
 import { URLSearchParams } from 'url';
-import { render } from '@sveltejs/app-utils';
+import { render } from '@sveltejs/app-utils/renderer';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');

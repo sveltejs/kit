@@ -1,3 +1,7 @@
 .DS_Store
 node_modules
-dist
+
+/common
+/files
+/http
+/renderer
