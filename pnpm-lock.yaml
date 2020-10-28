@@ -221,7 +221,7 @@ importers:
       '@snowpack/plugin-svelte': 3.0.0
     specifiers:
       '@snowpack/plugin-svelte': ^3.0.0
-lockfileVersion: 5.1
+lockfileVersion: 5.2
 packages:
   /@architect/parser/2.3.0:
     dev: false
@@ -4122,6 +4122,5 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
-      registry: 'https://registry.npmjs.org/'
       tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/1619da56dc9f485fd84540e54dfd11078cb45773'
     version: 5.2.0
