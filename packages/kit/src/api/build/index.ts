@@ -201,17 +201,21 @@ export async function build(config: SvelteAppConfig) {
 
 							const chunk = bundle[key];
 
-							const imports = chunk && (chunk as OutputChunk).imports;
+							if (chunk) {
+								const imports = (chunk as OutputChunk).imports;
 
-							if (imports) {
-								imports.forEach(key => {
-									if (key.endsWith('.css')) {
-										js.add(inject_styles);
-										css.add(key);
-									} else {
-										find_deps(key, js, css);
-									}
-								});
+								if (imports) {
+									imports.forEach(key => {
+										if (key.endsWith('.css')) {
+											js.add(inject_styles);
+											css.add(key);
+										} else {
+											find_deps(key, js, css);
+										}
+									});
+								}
+							} else {
+								this.error(`'${key}' is imported but could not be bundled`);
 							}
 
 							return { js, css };

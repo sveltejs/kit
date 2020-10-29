@@ -81,11 +81,9 @@ importers:
     dependencies:
       '@architect/parser': 2.3.0
       '@sveltejs/app-utils': 'link:../app-utils'
-      tiny-glob: 0.2.6
     specifiers:
       '@architect/parser': ^2.3.0
       '@sveltejs/app-utils': 'workspace:*'
-      tiny-glob: ^0.2.6
   packages/adapter-netlify:
     dependencies:
       kleur: 4.1.3
@@ -221,7 +219,7 @@ importers:
       '@snowpack/plugin-svelte': 3.0.0
     specifiers:
       '@snowpack/plugin-svelte': ^3.0.0
-lockfileVersion: 5.2
+lockfileVersion: 5.1
 packages:
   /@architect/parser/2.3.0:
     dev: false
@@ -4122,5 +4120,6 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
+      registry: 'https://registry.npmjs.org/'
       tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/1619da56dc9f485fd84540e54dfd11078cb45773'
     version: 5.2.0
