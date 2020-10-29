@@ -6,6 +6,7 @@ const manifest = require('@architect/shared/manifest.js');
 const App = require('@architect/shared/root.js');
 const template = require('@architect/shared/template.js');
 const static_assets = require('@architect/shared/static_assets.js');
+const setup = require('@architect/shared/setup.js');
 
 exports.handler = async function http(req) {
 	const {
@@ -38,8 +39,9 @@ exports.handler = async function http(req) {
 			template,
 			manifest,
 			client,
-			root: App,
-			load: (route) => require(`@architect/shared/routes/${route.name}.js`),
+      root: App,
+      setup,
+			load: route => require(`@architect/shared/routes/${route.name}.js`),
 			dev: false
 		}
 	);
