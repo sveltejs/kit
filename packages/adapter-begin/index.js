@@ -1,11 +1,7 @@
 'use strict';
 
-const {
-	writeFileSync,
-	readFileSync,
-	existsSync
-} = require('fs');
-const { resolve, join } = require('path');
+const { writeFileSync, readFileSync, existsSync } = require('fs');
+const { resolve, join, relative } = require('path');
 const parse = require('@architect/parser');
 const child_process = require('child_process');
 const { prerender } = require('@sveltejs/app-utils/renderer');
@@ -99,10 +95,13 @@ module.exports = async function builder({ dir, manifest, log }) {
 		join(server_directory, 'template.js'),
 		`module.exports = ${JSON.stringify(appHtml)};`
 	);
-	const all_static_assets = JSON.stringify([
+  
+  log.minor('Preparing static assets...' + static_directory);
+  const relative_static_assets = [
 		...static_assets,
 		...client_assets
-	]);
+	].map(filename => `/${relative(static_directory, filename)}`)
+	const all_static_assets = JSON.stringify(relative_static_assets);
 	writeFileSync(
 		join(server_directory, 'static_assets.js'),
 		`module.exports = ${all_static_assets}`
