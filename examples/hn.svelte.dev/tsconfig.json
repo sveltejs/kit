@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"$components/*": ["./src/components/*"]
+		},
+		"types": ["@sveltejs/kit"]
+	}
+}

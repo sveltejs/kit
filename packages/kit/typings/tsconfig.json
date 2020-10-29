@@ -8,8 +8,8 @@
 		"esModuleInterop": true,
 		"emitDeclarationOnly": true,
 		"declaration": true,
-		"outDir": "."
+		"outFile": "../index.d.ts"
 	},
-	"include": ["../src/client/**/*", "../src/ambient.d.ts"],
+	"include": ["../src/runtime/**/*", "../src/ambient.d.ts"],
 	"lib": ["ES2020", "dom", "node"]
 }
