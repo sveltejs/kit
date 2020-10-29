@@ -35,7 +35,8 @@
 	"files": [
 		"assets",
 		"dist",
-		"client"
+		"client",
+		"index.d.ts"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
