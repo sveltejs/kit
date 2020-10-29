@@ -70,13 +70,13 @@ module.exports = async function builder({ dir, manifest, log }) {
 		join(static_directory, '_app')
 	);
 
-	// log.minor('Prerendering static pages...');
-	// await prerender({
-	//   dir,
-	//   out: static_directory,
-	//   manifest,
-	//   log
-	// });
+	log.minor('Prerendering static pages...');
+	await prerender({
+	  dir,
+	  out: static_directory,
+	  manifest,
+	  log
+	});
 
 	log.minor('Building lambda...' + lambda_directory);
 	copy(resolve(__dirname, 'src'), lambda_directory);
