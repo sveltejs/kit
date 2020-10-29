@@ -100,7 +100,7 @@ module.exports = async function builder({ dir, manifest, log }) {
   const relative_static_assets = [
 		...static_assets,
 		...client_assets
-	].map(filename => `/${relative(static_directory, filename)}`)
+	].map(filename => `/${relative(static_directory, filename)}`);
 	const all_static_assets = JSON.stringify(relative_static_assets);
 	writeFileSync(
 		join(server_directory, 'static_assets.js'),
