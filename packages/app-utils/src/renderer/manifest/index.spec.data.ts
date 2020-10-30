@@ -1,6 +1,6 @@
 import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../types';
 
-const examplePagComponentManifest: PageComponentManifest = {
+const examplePageComponentManifest: PageComponentManifest = {
   default: true,
   type: 'foo',
   name: 'bar',
@@ -11,7 +11,7 @@ const examplePageManifest: PageManifest = {
   pattern: /a/,
 	path: 'qux',
 	parts: [ {
-		component: examplePagComponentManifest,
+		component: examplePageComponentManifest,
 		params: [ 'quux', 'corge' ]
   } ]
 }
@@ -24,9 +24,9 @@ const exampleEndpointManifest: EndpointManifest = {
 }
 
 export const exampleRouteManifest: RouteManifest = {
-  layout: examplePagComponentManifest,
-  error: examplePagComponentManifest,
-  components: [ examplePagComponentManifest, examplePagComponentManifest ],
+  layout: examplePageComponentManifest,
+  error: examplePageComponentManifest,
+  components: [ examplePageComponentManifest, examplePageComponentManifest ],
   pages: [ examplePageManifest, examplePageManifest ],
   endpoints: [ exampleEndpointManifest, exampleEndpointManifest ]
 }
