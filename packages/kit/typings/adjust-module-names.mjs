@@ -2,34 +2,34 @@ import { readFile, writeFile } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const moduleName = '$app';
+const module_name = '$app';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const typingsFile = join(__dirname, '..', 'index.d.ts');
+const typings_file = join(__dirname, '..', 'index.d.ts');
 
-function onError(e) {
+function handle_error(e) {
 	if (e) {
 		console.error(e.message);
 		process.exit(1);
 	}
 }
 
-function addModuleNameAfter(str, inStr) {
-	return inStr.replace(
-		new RegExp(`${str}(?!${moduleName.replace('$', '\\$')})`, 'g'),
-		`${str}${moduleName}/`
+function add_module_name_after(str, in_str) {
+	return in_str.replace(
+		new RegExp(`${str}(?!${module_name.replace('$', '\\$')})`, 'g'),
+		`${str}${module_name}/`
 	);
 }
 
-readFile(typingsFile, 'utf8', (err, data) => {
+readFile(typings_file, 'utf8', (err, data) => {
 	if (err) {
-		onError(err);
+		handle_error(err);
 	} else {
 		writeFile(
 			join(__dirname, '..', 'index.d.ts'),
-			addModuleNameAfter(' module "', addModuleNameAfter(' from "', data)),
+			add_module_name_after(' module "', add_module_name_after(' from "', data)),
 			'utf8',
-			onError
+			handle_error
 		);
 	}
 });
