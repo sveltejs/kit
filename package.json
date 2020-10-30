@@ -22,7 +22,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-typescript": "^6.0.0",
-    "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.2.0",
+    "@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.5.0",
     "@typescript-eslint/eslint-plugin": "^4.5.0",
     "eslint": "^7.11.0",
     "eslint-plugin-import": "^2.22.1",
