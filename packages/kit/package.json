@@ -40,6 +40,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ '**/*.{ts,js,svelte}'",
 		"prepare": "npm run build && cd client && tsc",
 		"prepublishOnly": "npm run build"
 	}

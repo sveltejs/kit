@@ -61,7 +61,7 @@ module.exports = async function builder({ dir, manifest, log }) {
 
 	log.minor('Writing manifest...' + server_directory);
 	copy(join(resolve(dir), 'client.json'), join(server_directory, 'client.json'));
-	const written_manifest = write_manifest(manifest);
+	const written_manifest = generate_manifest_module(manifest);
 	const htmlPath = resolve('src', 'app.html');
 	const appHtml = readFileSync(htmlPath, 'utf-8');
 	writeFileSync(join(server_directory, 'manifest.js'), written_manifest);

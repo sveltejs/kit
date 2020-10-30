@@ -1,8 +1,8 @@
 {
 	"name": "@sveltejs/adapter-vercel",
 	"version": "0.0.3",
-	"devDependencies": {
-		"@sveltejs/app-utils": "*"
+	"scripts": {
+		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'"
 	},
 	"main": "index.js",
 	"files": [
@@ -11,5 +11,8 @@
 	],
 	"dependencies": {
 		"tiny-glob": "^0.2.6"
+	},
+	"devDependencies": {
+		"@sveltejs/app-utils": "*"
 	}
 }

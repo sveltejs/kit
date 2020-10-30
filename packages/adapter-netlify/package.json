@@ -13,6 +13,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern render.js '**/*.{ts,js,svelte}'",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},
