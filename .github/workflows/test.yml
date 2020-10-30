@@ -1,0 +1,22 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    timeout-minutes: 6
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run:
+        npm i -g pnpm
+        pnpm install
+
+    - name: Test
+      run: pnpm test
