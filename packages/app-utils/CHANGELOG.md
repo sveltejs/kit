@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.16
+
+### Patch Changes
+
+- 67eaeea: Move app-utils stuff into subpackages
+
 ## 0.0.15
 
 ### Patch Changes

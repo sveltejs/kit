@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/app-utils",
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"scripts": {
 		"clean": "node rimraf.js common",
 		"dev": "npm run clean && rollup -cw",

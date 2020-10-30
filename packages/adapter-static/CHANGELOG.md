@@ -1,5 +1,13 @@
 # @sveltejs/adapter-static
 
+## 0.0.13
+
+### Patch Changes
+
+- 67eaeea: Move app-utils stuff into subpackages
+- Updated dependencies [67eaeea]
+  - @sveltejs/app-utils@0.0.16
+
 ## 0.0.12
 
 ### Patch Changes

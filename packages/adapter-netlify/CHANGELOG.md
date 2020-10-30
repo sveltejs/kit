@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 0.0.11
+
+### Patch Changes
+
+- 67eaeea: Move app-utils stuff into subpackages
+
 ## 0.0.10
 
 ### Patch Changes

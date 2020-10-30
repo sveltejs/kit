@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "0.0.23",
+	"version": "0.0.24",
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*",
 		"cheap-watch": "^1.0.2",

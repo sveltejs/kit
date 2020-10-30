@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 0.0.24
+
+### Patch Changes
+
+- 67eaeea: Move app-utils stuff into subpackages
+- 7f8df30: Move kit runtime code, expose via \$app aliases
+- Updated dependencies [67eaeea]
+  - @sveltejs/app-utils@0.0.16
+
 ## 0.0.23
 
 ### Patch Changes

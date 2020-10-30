@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 0.0.3
+
+### Patch Changes
+
+- 67eaeea: Move app-utils stuff into subpackages
+
 ## 0.0.2
 
 ### Patch Changes
