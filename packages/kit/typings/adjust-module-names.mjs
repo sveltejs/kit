@@ -1,22 +1,17 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
-const module_name = '$app';
+process.chdir('..');
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const typings_file = join(__dirname, '..', 'index.d.ts');
+const alias = '$app';
 
-function add_module_name_after(str, in_str) {
-	return in_str.replace(
-		new RegExp(`${str}(?!${module_name.replace('$', '\\$')})`, 'g'),
-		`${str}${module_name}/`
-	);
-}
+const typings_file = 'index.d.ts';
 
-const data = readFileSync(typings_file, 'utf8');
-writeFileSync(
-	typings_file,
-	add_module_name_after(' module "', add_module_name_after(' from "', data)),
-	'utf8'
-);
+const data = readFileSync(typings_file, 'utf8').replace(/ (module|from) ['"]([^'"]+)['"]/g, (m, word, id) => {
+	if (existsSync(`src/runtime/${id}.ts`)) {
+		return ` ${word} "${alias}/${id}"`;
+	}
+
+	return m;
+});
+
+writeFileSync(typings_file, data);
