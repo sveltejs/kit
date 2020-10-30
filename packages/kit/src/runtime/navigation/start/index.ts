@@ -87,14 +87,14 @@ function handle_error() {
 		level0: {
 			props: root_preloaded
 		},
-		level1: {
-			props: {
-				status,
-				error
-			},
-			component: ErrorComponent
-		},
-		segments: preloaded
+		// level1: {
+		// 	props: {
+		// 		status,
+		// 		error
+		// 	},
+		// 	component: ErrorComponent
+		// },
+		segments: location.pathname.split('/').filter(Boolean)
 
 	};
 	const query = extract_query(search);

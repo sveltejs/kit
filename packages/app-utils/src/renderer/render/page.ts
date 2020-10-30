@@ -39,6 +39,12 @@ export default async function render_page(
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
+	const preloaded: any[] = [];
+	const segments = request.path.split('/').filter(Boolean);
+
+	// TODO make this less confusing
+	const layout_segments = [segments[0]];
+
 	try {
 		if (!page) {
 			const error: any = new Error(`Not found: ${request.path}`);
@@ -46,10 +52,6 @@ export default async function render_page(
 			throw error;
 		}
 
-		const segments = request.path.split('/').filter(Boolean);
-
-		// TODO make this less confusing
-		const layout_segments = [segments[0]];
 		let l = 1;
 
 		page.parts.forEach((part, i) => {
@@ -140,7 +142,6 @@ export default async function render_page(
 			params[name] = match[i + 1];
 		});
 
-		const preloaded: any[] = [];
 		let can_prerender = true;
 
 		const parts = await Promise.all([{ component: options.manifest.layout, params: [] }, ...page.parts].map(async (part, i) => {
@@ -289,7 +290,14 @@ export default async function render_page(
 		const status = error.status || 500;
 
 		try {
-			const rendered = options.root.default.render({ status, error });
+			const rendered = options.root.default.render({
+				status,
+				error,
+				segments: layout_segments,
+				level0: {
+					props: preloaded[0]
+				}
+			});
 
 			const head = `${rendered.head}
 				<script type="module">
