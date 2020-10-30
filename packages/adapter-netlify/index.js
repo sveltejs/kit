@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const toml = require('toml');
 const glob = require('tiny-glob/sync');
-const { prerender } = require('@sveltejs/app-utils/renderer');
+const { prerender, generate_manifest_module } = require('@sveltejs/app-utils/renderer');
 const { mkdirp } = require('@sveltejs/app-utils/files');
 
 module.exports = async function builder({
@@ -69,20 +69,8 @@ module.exports = async function builder({
 	// copy the renderer
 	fs.copyFileSync(path.resolve(__dirname, 'render.js'), `${functions}/render/index.js`);
 
-	// generate manifest
-	const written_manifest = `module.exports = {
-		layout: ${JSON.stringify(manifest.layout)},
-		error: ${JSON.stringify(manifest.error)},
-		components: ${JSON.stringify(manifest.components)},
-		pages: [
-			${manifest.pages.map(page => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`).join(',\n\t\t\t')}
-		],
-		endpoints: [
-			${manifest.endpoints.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
-		]
-	};`.replace(/^\t/gm, '');
-
-	fs.writeFileSync(`${functions}/render/manifest.js`, written_manifest);
+  // write manifest
+	fs.writeFileSync(`${functions}/render/manifest.js`, generate_manifest_module(manifest));
 
 	// copy client manifest
 	fs.copyFileSync(`${dir}/client.json`, `${functions}/render/client.json`);
