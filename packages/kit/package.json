@@ -41,7 +41,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"build-typings": "cd typings && tsc && node ./adjust-module-names.mjs",
+		"build-typings": "cd typings && tsc && node adjust-module-names.mjs",
 		"prepare": "npm run build && npm run build-typings",
 		"prepublishOnly": "npm run build"
 	}
