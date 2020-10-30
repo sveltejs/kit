@@ -1,5 +1,6 @@
 {
 	"name": "svelte-kit-demo",
+	"private": true,
 	"scripts": {
 		"dev": "svelte dev",
 		"build": "svelte build"
