@@ -1,5 +1,6 @@
 {
 	"name": "hn.svelte.dev",
+	"private": true,
 	"scripts": {
 		"dev": "svelte dev",
 		"build": "svelte build"

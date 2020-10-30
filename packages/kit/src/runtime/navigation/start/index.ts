@@ -4,7 +4,7 @@ import { get_prefetched, start as start_prefetching } from '../prefetch';
 import { HydratedTarget, Target, Redirect, Branch, Page, InitialData } from '../types';
 import goto from '../goto';
 import { page_store } from './page_store';
-import { ErrorComponent, components } from 'MANIFEST';
+import { layout, ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
 
 // TODO
@@ -195,15 +195,12 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 	};
 
 	if (!root_preloaded) {
-		// TODO this is wrong! `root` is the auto-generated component, it has no preload
-		// const root_preload = root.preload || (() => ({}));
-		// root_preloaded = initial_data.preloaded[0] || root_preload.call(preload_context, {
-		// 	host: page.host,
-		// 	path: page.path,
-		// 	query: page.query,
-		// 	params: {}
-		// }, $session);
-		root_preloaded = {};
+		root_preloaded = initial_data.preloaded[0] || (layout.preload ? layout.preload.call(preload_context, {
+			host: page.host,
+			path: page.path,
+			query: page.query,
+			params: {}
+		}, $session) : {});
 	}
 
 	let branch: Branch;
