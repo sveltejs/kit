@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
 import { scorta } from 'scorta/sync';
 import * as ports from 'port-authority';
-import sirv from 'sirv';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
@@ -100,90 +99,84 @@ class Watcher extends EventEmitter {
 		const { snowpack_port } = this;
 		const load: Loader = loader(this.snowpack);
 
-		const static_handler = sirv('static', {
-			dev: true
-		});
-
 		this.server = createServer(async (req, res) => {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {
 					return this.snowpack.handleRequest(req, res);
 			}
 
-			static_handler(req, res, async () => {
-				try {
-					await this.snowpack.handleRequest(req, res, {handleError: false});
-					return;
-				} catch (err) {
-					if (err.message !== 'NOT_FOUND') {
-						this.snowpack.sendResponseError(req, res, 500);
-						return;
-					}
-				}
-
-				const template = readFileSync('src/app.html', 'utf-8').replace(
-					'</head>',
-					`
-						<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
-						<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
-						<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
-					</head>`.replace(/^\t{6}/gm, '')
-				);
-
-				const parsed = parse(req.url);
-				let setup: SetupModule;
-
-				try {
-					setup = await load('/_app/setup/index.js');
-				} catch (err) {
-					if (!err.message.endsWith('NOT_FOUND')) throw err;
-					setup = {};
-				}
-
-				let root: SSRComponentModule;
-
-				try {
-					root = await load('/_app/main/generated/root.js');
-				}
-				catch (e) {
-					res.statusCode = 500;
-					res.end(e.toString());
+			try {
+				await this.snowpack.handleRequest(req, res, {handleError: false});
+				return;
+			} catch (err) {
+				if (err.message !== 'NOT_FOUND') {
+					this.snowpack.sendResponseError(req, res, 500);
 					return;
 				}
+			}
 
-				const body = await get_body(req);
+			const template = readFileSync('src/app.html', 'utf-8').replace(
+				'</head>',
+				`
+					<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
+					<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
+					<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
+				</head>`.replace(/^\t{6}/gm, '')
+			);
 
-				const rendered = await render({
-					host: null, // TODO what should this be? is it necessary?
-					headers: req.headers,
-					method: req.method,
-					path: parsed.pathname,
-					query: new URLSearchParams(parsed.query),
-					body
-				}, {
-					static_dir: 'static',
-					template,
-					manifest: this.manifest,
-					client: {
-						entry: 'main/runtime/navigation.js',
-						deps: {}
-					},
-					files: 'build',
-					dev: true,
-					root,
-					setup,
-					load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
-				});
+			const parsed = parse(req.url);
+			let setup: SetupModule;
 
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					res.end(rendered.body);
-				}
+			try {
+				setup = await load('/_app/setup/index.js');
+			} catch (err) {
+				if (!err.message.endsWith('NOT_FOUND')) throw err;
+				setup = {};
+			}
 
-				else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
+			let root: SSRComponentModule;
+
+			try {
+				root = await load('/_app/main/generated/root.js');
+			}
+			catch (e) {
+				res.statusCode = 500;
+				res.end(e.toString());
+				return;
+			}
+
+			const body = await get_body(req);
+
+			const rendered = await render({
+				host: null, // TODO what should this be? is it necessary?
+				headers: req.headers,
+				method: req.method,
+				path: parsed.pathname,
+				query: new URLSearchParams(parsed.query),
+				body
+			}, {
+				static_dir: 'static',
+				template,
+				manifest: this.manifest,
+				client: {
+					entry: 'main/runtime/navigation.js',
+					deps: {}
+				},
+				files: 'build',
+				dev: true,
+				root,
+				setup,
+				load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
 			});
+
+			if (rendered) {
+				res.writeHead(rendered.status, rendered.headers);
+				res.end(rendered.body);
+			}
+
+			else {
+				res.statusCode = 404;
+				res.end('Not found');
+			}
 		});
 
 		this.server.listen(port);

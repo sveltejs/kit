@@ -189,7 +189,6 @@ importers:
       periscopic: 2.0.2
       port-authority: 1.1.1
       require-relative: 0.8.7
-      sirv: 1.0.7
       source-map-support: 0.5.19
       svelte: 3.29.0
       typescript: 4.0.5
@@ -213,7 +212,6 @@ importers:
       rollup-plugin-terser: ^7.0.2
       sade: ^1.7.4
       scorta: ^1.0.0
-      sirv: ^1.0.7
       snowpack: ^2.17.0
       source-map-support: ^0.5.19
       svelte: ^3.29.0

@@ -22,7 +22,8 @@ module.exports = {
 		'.svelte/main': '/_app/main',
 		'src/components': '/_app/components',
 		'src/routes': '/_app/routes',
-		'src/setup': '/_app/setup'
+		'src/setup': '/_app/setup',
+		'static': {url: '/', static: true, resolve: false},
 	},
 	alias: {
 		$app: '/_app/main/runtime',
