@@ -6,7 +6,7 @@ importers:
       '@rollup/plugin-json': 4.1.0_rollup@2.32.0
       '@rollup/plugin-node-resolve': 9.0.0_rollup@2.32.0
       '@rollup/plugin-typescript': 6.0.0_fdbcfa007260ce7ec26f11dd44471702
-      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/1619da56dc9f485fd84540e54dfd11078cb45773_7eba8f4661a51073f1cf799a4bca2b59
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3_7eba8f4661a51073f1cf799a4bca2b59
       '@typescript-eslint/eslint-plugin': 4.5.0_eslint@7.11.0+typescript@4.0.3
       eslint: 7.11.0
       eslint-plugin-import: 2.22.1_eslint@7.11.0
@@ -19,7 +19,7 @@ importers:
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^9.0.0
       '@rollup/plugin-typescript': ^6.0.0
-      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.2.0'
+      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.5.0'
       '@typescript-eslint/eslint-plugin': ^4.5.0
       eslint: ^7.11.0
       eslint-plugin-import: ^2.22.1
@@ -4102,14 +4102,14 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
-  github.com/sveltejs/eslint-config/1619da56dc9f485fd84540e54dfd11078cb45773_7eba8f4661a51073f1cf799a4bca2b59:
+  github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3_7eba8f4661a51073f1cf799a4bca2b59:
     dependencies:
       '@typescript-eslint/eslint-plugin': 4.5.0_eslint@7.11.0+typescript@4.0.3
       eslint: 7.11.0
       eslint-plugin-import: 2.22.1_eslint@7.11.0
       typescript: 4.0.3
     dev: true
-    id: github.com/sveltejs/eslint-config/1619da56dc9f485fd84540e54dfd11078cb45773
+    id: github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3
     name: '@sveltejs/eslint-config'
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 3'
@@ -4120,6 +4120,5 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
-      registry: 'https://registry.npmjs.org/'
-      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/1619da56dc9f485fd84540e54dfd11078cb45773'
-    version: 5.2.0
+      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/787b269a808a2863c8c44bfc48349da6253d06d3'
+    version: 5.5.0
