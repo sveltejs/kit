@@ -85,7 +85,7 @@ async function main(): Promise<void> {
 
 	console.log(bold(green(`✔ Copied project files`)));
 
-	await promptModifications(target);
+	await prompt_modifications(target);
 
 	console.log(`\nNext steps:`);
 	let i = 1;
@@ -102,16 +102,16 @@ async function main(): Promise<void> {
 	console.log('\nStuck? Visit us at https://svelte.dev/chat\n');
 }
 
-async function promptModifications(target: string) {
-	const tsResponse = await prompts({
+async function prompt_modifications(target: string) {
+	const ts_response = await prompts({
 		type: 'confirm',
 		name: 'value',
 		message: 'Use TypeScript in components?',
 		initial: false
 	});
-	await add_typescript(target, tsResponse.value);
+	await add_typescript(target, ts_response.value);
 
-	const cssResponse = await prompts({
+	const css_response = await prompts({
 		type: 'select',
 		name: 'value',
 		message: 'What do you want to use for writing Styles in Svelte components?',
@@ -121,7 +121,7 @@ async function promptModifications(target: string) {
 			{ title: 'SCSS', value: 'scss' }
 		]
 	});
-	await add_css(target, cssResponse.value);
+	await add_css(target, css_response.value);
 }
 
 main();
