@@ -15,9 +15,9 @@ export async function handler(event) {
 		path,
 		httpMethod,
 		headers,
-		queryStringParameters,
-		body, // TODO pass this to renderer
-		isBase64Encoded // TODO is this useful?
+		queryStringParameters
+		// body, // TODO pass this to renderer
+		// isBase64Encoded // TODO is this useful?
 	} = event;
 
 	const query = new URLSearchParams();

@@ -1,6 +1,9 @@
 {
 	"name": "@sveltejs/snowpack-config",
 	"version": "0.0.5",
+	"scripts": {
+		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'"
+	},
 	"main": "snowpack.config.js",
 	"dependencies": {
 		"@snowpack/plugin-svelte": "^3.0.0"

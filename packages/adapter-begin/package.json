@@ -2,6 +2,9 @@
 	"name": "@sveltejs/adapter-begin",
 	"version": "0.0.2",
 	"main": "index.js",
+	"scripts": {
+		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'"
+	},
 	"files": [
 		"index.js",
 		"src"

@@ -1,6 +1,9 @@
 {
 	"name": "@sveltejs/adapter-static",
 	"version": "0.0.13",
+	"scripts": {
+		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'"
+	},
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*"
 	}
