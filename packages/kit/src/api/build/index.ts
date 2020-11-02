@@ -89,7 +89,7 @@ export async function build(config: SvelteAppConfig) {
 			...manifest.components,
 			...manifest.endpoints
 		].forEach(item => {
-			server_input[`routes/${item.name}`] = `${unoptimized}/server${(item as EndpointManifest).url.replace(
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
 				/\.\w+$/,
 				'.js'
 			)}`;
