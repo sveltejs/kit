@@ -9,14 +9,14 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/sveltejs/kit-mono.git"
+		"url": "git+https://github.com/sveltejs/kit.git"
 	},
 	"author": "",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/sveltejs/kit-mono/issues"
+		"url": "https://github.com/sveltejs/kit/issues"
 	},
-	"homepage": "https://github.com/sveltejs/kit-mono#readme",
+	"homepage": "https://github.com/sveltejs/kit#readme",
 	"devDependencies": {
 		"@changesets/cli": "^2.11.1",
 		"@rollup/plugin-commonjs": "^15.1.0",
