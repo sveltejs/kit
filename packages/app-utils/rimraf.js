@@ -1,7 +1,11 @@
 const fs = require('fs');
 
-(fs.rm || fs.rmdir)(process.argv[2], { recursive: true, force: true }, err => {
-	if (err) {
-		throw err;
-	}
-});
+const rm = fs.rm || fs.rmdir;
+const [, , ...filenames] = process.argv;
+filenames.forEach(filename =>
+	rm(filename, { recursive: true, force: true }, err => {
+		if (err) {
+			throw err;
+		}
+	})
+);
