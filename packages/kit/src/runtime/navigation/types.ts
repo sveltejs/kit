@@ -48,7 +48,7 @@ export interface Redirect {
 export interface Page {
 	host: string;
 	path: string;
-	params: Record<string, string>;
+	params: Record<string, string | string[]>;
 	query: Record<string, string | string[]>;
 }
 
