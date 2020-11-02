@@ -6,7 +6,10 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import * as mime from 'mime';
 import { render } from './index';
-import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers, PageManifestPart } from '../../types';
+import {
+	IncomingRequest, RenderOptions, PageManifest, EndpointResponse, 
+	PageResponse, Headers, PageManifestPart, RouteParams
+} from '../../types';
 
 const noop = () => {};
 
@@ -299,8 +302,8 @@ export default async function render_page(
 	}
 }
 
-function parts_to_params(match: RegExpMatchArray, part: PageManifestPart): Record<string, string | string[]> {
-	const params: Record<string, string | string[]> = {};
+function parts_to_params(match: RegExpMatchArray, part: PageManifestPart): RouteParams {
+	const params: RouteParams = {};
 
 	part.params.forEach((name, i) => {
 		const is_spread = /^\.{3}.+$/.test(name)

@@ -25,10 +25,12 @@ export interface ScrollPosition {
 	y: number;
 }
 
-interface Route {
+export type RouteParams = Record<string, string | string[]>;
+
+export interface Route {
   pattern: RegExp;
   parts: {
-    params: (match: RegExpExecArray) => Record<string, string>,
+    params: (match: RegExpExecArray) => RouteParams,
 		i: number
   }[];
 }
@@ -48,7 +50,7 @@ export interface Redirect {
 export interface Page {
 	host: string;
 	path: string;
-	params: Record<string, string | string[]>;
+	params: RouteParams;
 	query: Record<string, string | string[]>;
 }
 

@@ -53,6 +53,8 @@ export interface RenderOptions {
 	dev: boolean; // TODO this is awkward
 }
 
+export type RouteParams = Record<string, string | string[]>;
+
 export interface PageComponentManifest {
 	default?: boolean;
 	type?: string;
