@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page';
 import render_endpoint from './endpoint';
-import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../../index';
+import { EndpointResponse, IncomingRequest, PageResponse, RenderOptions } from '../../types';
 
 function md5(body: string) {
 	return createHash('md5').update(body).digest('hex');

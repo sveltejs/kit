@@ -3,7 +3,7 @@ import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import { mkdirp } from '../../files';
 import { render } from '../render';
-import { PageResponse, RouteManifest } from '../../index';
+import { PageResponse, RouteManifest } from '../../types';
 
 function clean_html(html: string) {
 	return html

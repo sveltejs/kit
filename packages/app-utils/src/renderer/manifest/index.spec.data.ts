@@ -1,4 +1,4 @@
-import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../index';
+import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../types';
 
 const examplePageComponentManifest: PageComponentManifest = {
   default: true,

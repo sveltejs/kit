@@ -1,4 +1,4 @@
-import { IncomingRequest, RenderOptions, EndpointManifest, Headers } from '../../index';
+import { IncomingRequest, RenderOptions, EndpointManifest, Headers } from '../../types';
 
 export default function render_route(
 	request: IncomingRequest,

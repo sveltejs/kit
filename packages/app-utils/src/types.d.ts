@@ -44,6 +44,7 @@ export type RenderOptions = {
 export type PageComponentManifest = {
 	default?: boolean;
 	type?: string;
+	url: string;
 	name: string;
 	file: string;
 };

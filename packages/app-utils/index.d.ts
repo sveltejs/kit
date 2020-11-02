@@ -1,1 +1,1 @@
-export { EndpointManifest, PageManifest, PageComponentManifest } from './src/index';
+export { EndpointManifest, PageManifest, PageComponentManifest } from './src/types';
