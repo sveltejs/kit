@@ -25,9 +25,17 @@ export interface ScrollPosition {
 	y: number;
 }
 
+interface Route {
+  pattern: RegExp;
+  parts: {
+    params: (match: RegExpExecArray) => Record<string, string>,
+		i: number
+  }[];
+}
+
 export interface Target {
 	href: string;
-	route: any; // TODO Route;
+	route: Route;
 	match: RegExpExecArray;
 	page: Page;
 }

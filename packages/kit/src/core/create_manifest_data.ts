@@ -296,7 +296,7 @@ function get_parts(part: string): Part[] {
 			return {
 				content,
 				dynamic,
-				spread: /^\.{3}.+$/.test(content),
+				spread: dynamic && /^\.{3}.+$/.test(content),
 				qualifier
 			};
 		})

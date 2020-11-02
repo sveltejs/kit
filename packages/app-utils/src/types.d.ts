@@ -61,13 +61,17 @@ export interface PageComponentManifest {
 	file: string;
 }
 
+export interface PageManifestPart {
+	component: PageComponentManifest;
+	params: string[];
+}
+
 export interface PageManifest {
 	pattern: RegExp;
 	path: string;
-	parts: Array<{
-		component: PageComponentManifest;
-		params: string[];
-	}>;
+	// each part contains the parameters for the page (last part) or layout (earlier parts) corresponding to a URL segment
+	// any part except the last may be null if there is no layout for that segment.
+	parts: Array<PageManifestPart | null>;
 }
 
 export interface EndpointManifest {

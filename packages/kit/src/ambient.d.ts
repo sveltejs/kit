@@ -1,11 +1,27 @@
 declare module "MANIFEST" {
-  export const components: any[];
-  export const routes: any[];
-  export const layout: any;
-  export const ErrorComponent: any;
+  import { SvelteComponent } from "svelte";
+
+  export type Route = {
+    pattern: RegExp;
+    parts: {
+      params: (match: RegExpExecArray) => Record<string, string>,
+      i: number
+    }[];
+  };  
+
+  export const components: (() => SvelteComponent)[];
+  export const routes: Route[];
+  export const layout: SvelteComponent;
+  export const ErrorComponent: SvelteComponent;
 }
 
 declare module "ROOT" {
-  const root: any;
+  import { SvelteComponent } from "svelte";
+
+  type Constructor<T> = {
+    new (...args: any[]): T;
+  }
+
+  const root: Constructor<SvelteComponent>;
   export default root;
 }
