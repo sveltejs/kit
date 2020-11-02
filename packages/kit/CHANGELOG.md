@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 0.0.25
+
+### Patch Changes
+
+- Updated dependencies [3bdf33b]
+  - @sveltejs/app-utils@0.0.17
+
 ## 0.0.24
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.17
+
+### Patch Changes
+
+- 3bdf33b: Fix missing files in published package
+
 ## 0.0.16
 
 ### Patch Changes
