@@ -20,7 +20,7 @@ module.exports = async function builder({
 			throw err;
 		}
 	} else {
-		throw new Error('Missing a netlify.toml file. Consult https://github.com/sveltejs/adapter-netlify#configuration');
+		throw new Error('Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration');
 	}
 
 	if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
