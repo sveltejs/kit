@@ -38,7 +38,7 @@ module.exports = async function builder({ dir, manifest, log }) {
 	// TODO: Merge this, rather than write it
 	log.minor('Rewriting vercel configuration...');
 	writeFileSync(
-		`vercel.json`,
+		'vercel.json',
 		JSON.stringify({
 			public: true,
 			build: {
