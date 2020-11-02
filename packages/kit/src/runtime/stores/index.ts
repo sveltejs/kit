@@ -1,12 +1,10 @@
 import { getContext } from 'svelte';
 import { Readable, Writable } from 'svelte/store';
-import { Page } from '../navigation/types';
+import { PageContext } from '../navigation/types';
 
 // these Svelte types are not exported, so repeating them here.
 type Subscriber<T> = (value: T) => void;
 type Updater<T> = (value: T) => T;
-
-export type PageContext = Page & { error?: Error };
 
 // const ssr = (import.meta as any).env.SSR;
 const ssr = typeof window === 'undefined'; // TODO why doesn't previous line work in build?

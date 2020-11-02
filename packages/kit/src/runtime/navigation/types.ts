@@ -43,3 +43,7 @@ export interface Page {
 	params: Record<string, string>;
 	query: Record<string, string | string[]>;
 }
+
+export interface PageContext extends Page {
+	error?: Error
+};
