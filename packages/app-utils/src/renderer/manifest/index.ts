@@ -1,4 +1,4 @@
-import { RouteManifest, PageManifest, EndpointManifest } from '../../types';
+import { RouteManifest, PageManifest, EndpointManifest } from '../../index';
 
 const array_item_delimiter = ',';
 

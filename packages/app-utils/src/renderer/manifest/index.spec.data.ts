@@ -1,4 +1,4 @@
-import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../types';
+import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../index';
 
 const examplePageComponentManifest: PageComponentManifest = {
   default: true,
@@ -19,7 +19,8 @@ const examplePageManifest: PageManifest = {
 const exampleEndpointManifest: EndpointManifest = {
   name: 'grault',
 	pattern: /b/,
-	file: 'garply',
+  file: 'garply',
+  url: 'bla',
 	params: [ 'waldo', 'fred' ]
 }
 

@@ -61,6 +61,7 @@ export type EndpointManifest = {
 	name: string;
 	pattern: RegExp;
 	file: string;
+	url: string;
 	params: string[];
 };
 

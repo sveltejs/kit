@@ -13,6 +13,7 @@ import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { SvelteAppConfig } from '../../interfaces';
 import { css_injection } from './css_injection';
+import { EndpointManifest } from '@sveltejs/app-utils';
 
 const exec = promisify(child_process.exec);
 
@@ -88,7 +89,7 @@ export async function build(config: SvelteAppConfig) {
 			...manifest.components,
 			...manifest.endpoints
 		].forEach(item => {
-			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${(item as EndpointManifest).url.replace(
 				/\.\w+$/,
 				'.js'
 			)}`;
