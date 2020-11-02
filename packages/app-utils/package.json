@@ -2,7 +2,7 @@
 	"name": "@sveltejs/app-utils",
 	"version": "0.0.16",
 	"scripts": {
-		"clean": "node rimraf.js files http renderer",
+		"clean": "node rimraf.js common files http renderer",
 		"dev": "npm run clean && rollup -cw",
 		"build": "npm run clean && rollup -c",
 		"prepare": "npm run build",
@@ -38,8 +38,9 @@
 		}
 	},
 	"files": [
-    "files",
-    "http",
-    "renderer"
+		"common",
+		"files",
+		"http",
+		"renderer"
 	]
 }

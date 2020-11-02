@@ -13,12 +13,14 @@ export default {
 		{
 			dir: '.',
 			entryFileNames: '[name]/index.js',
+			chunkFileNames: 'common/[name].js',
 			format: 'cjs',
 			sourcemap: true
 		},
 		{
 			dir: '.',
 			entryFileNames: '[name]/index.mjs',
+			chunkFileNames: 'common/[name].js',
 			format: 'esm',
 			sourcemap: true
 		}
