@@ -79,5 +79,5 @@ module.exports = async function builder({
 	fs.writeFileSync(`${functions}/render/template.js`, `module.exports = ${JSON.stringify(fs.readFileSync('src/app.html', 'utf-8'))};`);
 
 	// create _redirects
-	fs.writeFileSync(`${publish}/_redirects`, `/* /.netlify/functions/render 200`);
+	fs.writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
 };

@@ -1,5 +1,12 @@
 # @sveltejs/adapter-node
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [3bdf33b]
+  - @sveltejs/app-utils@0.0.17
+
 ## 0.0.13
 
 ### Patch Changes

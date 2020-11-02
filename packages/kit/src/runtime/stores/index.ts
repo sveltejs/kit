@@ -1,23 +1,29 @@
 import { getContext } from 'svelte';
+import { Readable, Writable } from 'svelte/store';
+import { PageContext } from '../navigation/types';
+
+// these Svelte types are not exported, so repeating them here.
+type Subscriber<T> = (value: T) => void;
+type Updater<T> = (value: T) => T;
 
 // const ssr = (import.meta as any).env.SSR;
 const ssr = typeof window === 'undefined'; // TODO why doesn't previous line work in build?
 
 export const getStores: () => {
-	page: any // TODO
-	preloading: any // TODO
-	session: any // TODO
+	page: Readable<PageContext>
+	preloading: Readable<boolean>
+	session: Writable<any>
 } = () => getContext('__svelte__');
 
 export const page = {
-	subscribe(fn) {
+	subscribe(fn: Subscriber<PageContext>) {
 		const store = getStores().page;
 		return store.subscribe(fn);
 	}
 };
 
 export const preloading = {
-	subscribe(fn) {
+	subscribe(fn: Subscriber<boolean>) {
 		const store = getStores().preloading;
 		return store.subscribe(fn);
 	}
@@ -28,7 +34,7 @@ const error = verb => {
 };
 
 export const session = {
-	subscribe(fn) {
+	subscribe(fn: Subscriber<any>) {
 		const store = getStores().session;
 
 		if (!ssr) {
@@ -38,6 +44,6 @@ export const session = {
 
 		return store.subscribe(fn);
 	},
-	set: () => error('set'),
-	update: () => error('update')
+	set: (updater: Updater<any>) => { error('set') },
+	update: (updater: Updater<any>) => { error('update') }
 };

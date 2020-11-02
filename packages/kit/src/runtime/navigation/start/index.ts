@@ -6,10 +6,7 @@ import goto from '../goto';
 import { page_store } from './page_store';
 import { layout, ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
-
-// TODO
-// import { PageContext } from '@sapper/common';
-type PageContext = any;
+import { PageContext } from '../types';
 
 declare const __SVELTE__;
 export const initial_data: InitialData = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
@@ -22,8 +19,8 @@ let current_branch: Branch = [];
 let current_query = '{}';
 
 const stores = {
-	page: page_store({}),
-	preloading: writable(null),
+	page: page_store<PageContext>({} as any),
+	preloading: writable<boolean>(false),
 	session: writable(initial_data && initial_data.session)
 };
 

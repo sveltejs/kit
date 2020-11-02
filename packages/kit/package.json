@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "0.0.24",
+	"version": "0.0.25",
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*",
 		"cheap-watch": "^1.0.2",
@@ -43,6 +43,7 @@
 		"build": "rollup -c",
 		"build-typings": "cd typings && tsc && node adjust-module-names.mjs",
 		"prepare": "npm run build && npm run build-typings",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ '**/*.{ts,js,svelte}'",
 		"prepublishOnly": "npm run build"
 	}
 }

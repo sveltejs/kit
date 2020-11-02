@@ -20,7 +20,7 @@ export default {
 		{
 			dir: '.',
 			entryFileNames: '[name]/index.mjs',
-			chunkFileNames: 'common/[name].mjs',
+			chunkFileNames: 'common/[name].js',
 			format: 'esm',
 			sourcemap: true
 		}
