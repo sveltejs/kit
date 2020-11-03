@@ -196,17 +196,19 @@ export default async function render_page(
 			}
 		});
 
+		const pageContext = {
+			host: request.host,
+			path: request.path,
+			query: search_params_to_map(request.query),
+			params,
+			error
+		};
+
 		const props: Record<string, any> = {
 			status,
 			error,
 			stores: {
-				page: readable({
-					host: request.host,
-					path: request.path,
-					query: request.query,
-					params,
-					error
-				}, noop),
+				page: readable(pageContext, noop),
 				preloading: readable(null, noop),
 				session: writable(session)
 			},
@@ -344,4 +346,16 @@ function serialize_error(error?: Error|null) {
 		serialized = '{}';
 	}
 	return serialized;
+}
+
+function search_params_to_map(params: URLSearchParams) {
+	const map: Record<string, string | string[]> = {};
+
+	for (const key of params.keys()) {
+		const values = params.getAll(key);
+
+		map[key] = values.length > 1 ? values : values[0];
+	}
+
+	return map;
 }
