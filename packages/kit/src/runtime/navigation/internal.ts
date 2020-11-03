@@ -26,15 +26,13 @@ export { _history as history };
 
 export const scroll_history: Record<string, ScrollPosition> = {};
 
-export function load_current_page(): Promise<void> {
-	return Promise.resolve().then(() => {
-		const { hash, href } = location;
+export async function load_current_page() {
+	const { hash, href } = location;
 
-		_history.replaceState({ id: uid }, '', href);
+	_history.replaceState({ id: uid }, '', href);
 
-		const target = select_target(new URL(location.href));
-		if (target) return navigate(target, uid, true, hash);
-	});
+	const target = select_target(new URL(location.href));
+	if (target) return navigate(target, uid, true, hash);
 }
 
 let base_url: string;
