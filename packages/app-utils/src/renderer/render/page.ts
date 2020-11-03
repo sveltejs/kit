@@ -21,7 +21,7 @@ export default async function render_page(
 	context: any,
 	options: RenderOptions,
 	status: number = 200,
-	error?: Error
+	error: Error | null = null
 ): Promise<{
 	status: number,
 	body: string,
