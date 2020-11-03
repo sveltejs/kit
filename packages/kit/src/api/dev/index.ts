@@ -14,6 +14,7 @@ import { ManifestData, ReadyEvent } from '../../interfaces';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
+import { RootModule, SetupModule } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -129,24 +130,24 @@ class Watcher extends EventEmitter {
 				);
 
 				const parsed = parse(req.url);
-				let setup;
+				let setup: SetupModule;
 
 				try {
-					setup = await load(`/_app/setup/index.js`);
+					setup = await load('/_app/setup/index.js');
 				} catch (err) {
 					if (!err.message.endsWith('NOT_FOUND')) throw err;
 					setup = {};
 				}
 
-				let root;
+				let root: RootModule;
 
 				try {
-					root = await load(`/_app/main/generated/root.js`);
+					root = await load('/_app/main/generated/root.js');
 				}
 				catch (e) {
 					res.statusCode = 500;
 					res.end(e.toString());
-					return
+					return;
 				}
 
 				const body = await get_body(req);

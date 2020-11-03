@@ -23,11 +23,23 @@ export type PageResponse = EndpointResponse & {
 	dependencies: Record<string, EndpointResponse>;
 };
 
-type SetupModule = {
+export type SetupModule = {
 	prepare?: (headers: Headers) => Promise<{ context: any, headers: Headers }>;
 	getSession?: (context: any) => Promise<any>;
 	setSession?: (context: any, session: any) => Promise<any>;
 };
+
+export interface SSRComponentModule {
+	default: SSRComponent;
+}
+
+export interface SSRComponent {
+	render(props: unknown): {
+		html: string
+		head: string
+		css: { code: string, map: unknown };
+	}
+}
 
 export type RenderOptions = {
 	only_prerender: boolean; // TODO this shouldn't really be part of the public API
@@ -35,7 +47,7 @@ export type RenderOptions = {
 	template: string;
 	manifest: RouteManifest;
 	client: ClientManifest;
-	root: any; // TODO
+	root: SSRComponentModule;
 	setup: SetupModule;
 	load: (route: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO
 	dev: boolean; // TODO this is awkward

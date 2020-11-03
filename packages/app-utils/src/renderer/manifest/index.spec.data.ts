@@ -4,8 +4,9 @@ const examplePageComponentManifest: PageComponentManifest = {
   default: true,
   type: 'foo',
   name: 'bar',
-  file: 'baz'
-}
+  file: 'baz',
+  url: 'boo'
+};
 
 const examplePageManifest: PageManifest = {
   pattern: /a/,
@@ -14,7 +15,7 @@ const examplePageManifest: PageManifest = {
 		component: examplePageComponentManifest,
 		params: [ 'quux', 'corge' ]
   } ]
-}
+};
 
 const exampleEndpointManifest: EndpointManifest = {
   name: 'grault',
@@ -22,7 +23,7 @@ const exampleEndpointManifest: EndpointManifest = {
   file: 'garply',
   url: 'bla',
 	params: [ 'waldo', 'fred' ]
-}
+};
 
 export const exampleRouteManifest: RouteManifest = {
   layout: examplePageComponentManifest,
@@ -30,4 +31,4 @@ export const exampleRouteManifest: RouteManifest = {
   components: [ examplePageComponentManifest, examplePageComponentManifest ],
   pages: [ examplePageManifest, examplePageManifest ],
   endpoints: [ exampleEndpointManifest, exampleEndpointManifest ]
-}
+};
