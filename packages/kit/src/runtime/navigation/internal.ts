@@ -1,11 +1,6 @@
-import { ScrollPosition, Target } from './types';
+import { ScrollPosition, Target, Page, Query } from './types';
 import { find_anchor } from './utils';
 import { routes } from 'MANIFEST';
-
-// TODO
-// import { Page, Query } from '@sapper/common';
-type Page = any;
-type Query = any;
 
 export let uid = 1;
 export function set_uid(n: number) {
@@ -65,16 +60,16 @@ export function init(base: string, handler: (dest: Target) => Promise<void>): vo
 	addEventListener('popstate', handle_popstate);
 }
 
-export function extract_query(search: string) {
+export function extract_query(search: string): Query {
 	const query: Query = Object.create(null);
-	if (search.length > 0) {
-		search.slice(1).split('&').forEach(searchParam => {
-			const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(decodeURIComponent(searchParam.replace(/\+/g, ' ')));
-			if (typeof query[key] === 'string') query[key] = [<string>query[key]];
-			if (typeof query[key] === 'object') (query[key] as string[]).push(value);
-			else query[key] = value;
-		});
-	}
+
+	search.slice(1).split('&').filter(Boolean).forEach(searchParam => {
+		const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(decodeURIComponent(searchParam.replace(/\+/g, ' ')));
+		let prev = query[key]
+
+		query[key] = (prev ? (typeof prev === 'string' ? [prev]: prev).concat(value) : value);
+	});
+
 	return query;
 }
 

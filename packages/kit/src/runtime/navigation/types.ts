@@ -29,10 +29,10 @@ export type RouteParams = Record<string, string | string[]>;
 
 export interface Route {
   pattern: RegExp;
-  parts: {
+  parts: Array<{
     params: (match: RegExpExecArray) => RouteParams,
 		i: number
-  }[];
+  }>;
 }
 
 export interface Target {
@@ -47,11 +47,13 @@ export interface Redirect {
 	location: string;
 }
 
+export type Query = Record<string, string | string[]>;
+
 export interface Page {
 	host: string;
 	path: string;
 	params: RouteParams;
-	query: Record<string, string | string[]>;
+	query: Query;
 }
 
 export interface PageContext extends Page {
