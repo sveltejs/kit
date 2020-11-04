@@ -6,3 +6,4 @@ node_modules
 /http
 /renderer
 /types
+/build
