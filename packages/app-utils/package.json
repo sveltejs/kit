@@ -2,7 +2,7 @@
 	"name": "@sveltejs/app-utils",
 	"version": "0.0.17",
 	"scripts": {
-		"clean": "node rimraf.js common files http renderer",
+		"clean": "node rimraf.js common files http renderer types build",
 		"dev": "npm run clean && rollup -cw",
 		"build": "npm run clean && rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ --ignore-pattern files/ --ignore-pattern http/ --ignore-pattern renderer/ \"**/*.{ts,js,svelte}\" && npm run check-format",

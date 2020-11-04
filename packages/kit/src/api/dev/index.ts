@@ -14,7 +14,7 @@ import { ManifestData, ReadyEvent } from '../../interfaces';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
-import { SSRComponentModule, SetupModule } from '@sveltejs/app-utils';
+import { SSRComponentModule, SetupModule, Method } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -157,8 +157,8 @@ class Watcher extends EventEmitter {
 
 				const rendered = await render({
 					host: req.headers.host,
-					headers: req.headers,
-					method: req.method,
+					headers: req.headers as Record<string, string>,
+					method: req.method as Method,
 					path: parsed.pathname,
 					query: new URLSearchParams(parsed.query),
 					body
@@ -170,11 +170,11 @@ class Watcher extends EventEmitter {
 						entry: 'main/runtime/navigation.js',
 						deps: {}
 					},
-					files: 'build',
 					dev: true,
 					root,
 					setup,
-					load: route => load(route.url.replace(/\.\w+$/, '.js')) // TODO is the replace still necessary?
+					load: route => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
+					only_prerender: false
 				});
 
 				if (rendered) {
