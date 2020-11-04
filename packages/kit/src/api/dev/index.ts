@@ -14,7 +14,7 @@ import { ManifestData, ReadyEvent } from '../../interfaces';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
-import { RootModule, SetupModule } from '@sveltejs/app-utils';
+import { SSRComponentModule, SetupModule } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -139,7 +139,7 @@ class Watcher extends EventEmitter {
 					setup = {};
 				}
 
-				let root: RootModule;
+				let root: SSRComponentModule;
 
 				try {
 					root = await load('/_app/main/generated/root.js');

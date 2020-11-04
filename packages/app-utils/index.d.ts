@@ -3,5 +3,5 @@ export {
 	PageManifest,
 	PageComponentManifest,
 	SetupModule,
-	RootModule
+	SSRComponentModule
 } from './src/types';
