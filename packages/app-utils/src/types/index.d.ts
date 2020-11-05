@@ -32,17 +32,17 @@ export interface SetupModule<Context = any, Session = any> {
 	setSession?: (context: Context, session: Session) => Promise<Session> | Session;
 }
 
-export interface SSRComponentModule {
+export type SSRComponentModule = {
 	default: SSRComponent;
-}
+};
 
-export interface SSRComponent {
+export type SSRComponent = {
 	render(props: unknown): {
 		html: string
 		head: string
 		css: { code: string, map: unknown };
 	}
-}
+};
 
 export interface RenderOptions {
 	only_prerender: boolean; // TODO this shouldn't really be part of the public API
