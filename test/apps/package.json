@@ -1,0 +1,15 @@
+{
+	"name": "minimal",
+	"private": true,
+	"scripts": {
+		"dev": "cd basics; svelte dev",
+		"build": "svelte build"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/snowpack-config": "workspace:*",
+		"svelte": "^3.29.0"
+	}
+}
