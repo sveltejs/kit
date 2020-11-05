@@ -292,8 +292,7 @@ export default async function render_page(
 		if (!error) {	
 			const status = thrown.status || 500;
 			return render_page(request, context, options, status, thrown);
-		}
-		else {
+		} else {
 			// oh lawd now you've done it
 			return {
 				status: 500,
