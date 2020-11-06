@@ -47,7 +47,8 @@ export default [
 			dir: 'dist',
 			format: 'cjs',
 			sourcemap: true,
-			chunkFileNames: '[name].js'
+			chunkFileNames: '[name].js',
+			exports: 'named'
 		},
 		external: id => {
 			if (id.includes('snowpack/snowpack')) return true;
@@ -59,8 +60,9 @@ export default [
 				extensions: ['.mjs', '.js', '.ts']
 			}),
 			commonjs(),
-			typescript()
-		],
-		preserveEntrySignatures: false
+			typescript({
+				target: 'ES2018'
+			})
+		]
 	}
 ];

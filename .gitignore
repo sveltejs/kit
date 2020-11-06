@@ -5,4 +5,5 @@ package-lock.json
 yarn.lock
 /examples/*/.svelte
 /examples/*/build
+/test/apps/*/.svelte
 /packages/create-svelte/template/CHANGELOG.md

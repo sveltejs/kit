@@ -87,7 +87,7 @@ class Watcher extends EventEmitter {
 		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
 			config: snowpack.loadAndValidateConfig({
-				config: 'snowpack.config.js',
+				config: process.env.SNOWPACK_CONFIG || 'snowpack.config.js',
 				port: this.snowpack_port
 			}, pkg),
 			lockfile: null,

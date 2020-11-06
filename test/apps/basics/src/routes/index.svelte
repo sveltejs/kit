@@ -1,2 +1,2 @@
 
-This is an app?
+This is a basic app
