@@ -2,9 +2,8 @@
 	"name": "minimal",
 	"private": true,
 	"scripts": {
-		"dev": "cd basics; svelte dev",
-		"build": "svelte build",
-		"test": "cypress run"
+		"test": "node run-cypress run",
+		"cypress": "node run-cypress open"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",

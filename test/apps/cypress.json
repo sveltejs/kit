@@ -2,6 +2,5 @@
   "video": false,
   "integrationFolder": ".",
   "testFiles": "**/*.spec.js",
-  "baseUrl": "http://localhost:3000",
   "ignoreTestFiles": "/node_modules/**/*"
 }
