@@ -1,2 +1,2 @@
 
-This is a basic app
+You're on index.svelte
