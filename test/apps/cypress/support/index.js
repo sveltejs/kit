@@ -1,5 +1,5 @@
 Cypress.Commands.add('startApp', name => {
-	console.log(`will start ${name} server`);
+	cy.log(`Starting app ${name}...`);
 
 	cy.then({ timeout: 15000 }, async () => {
 		const res = await fetch(`http://localhost:3003/start/${name}`);
