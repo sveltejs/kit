@@ -1,3 +1,5 @@
+import { PageComponentManifest, PageManifest, EndpointManifest } from '@sveltejs/app-utils';
+
 export type SvelteAppConfig = {
 	adapter: string;
 }
@@ -24,29 +26,6 @@ export type WritableStore<T> = {
 	set: (value: T) => void;
 	update: (fn: (value: T) => T) => void;
 	subscribe: (fn: (T: any) => void) => () => void;
-};
-
-export type PageComponentManifest = {
-	file: string;
-	name: string;
-	url: string;
-};
-
-export type PageManifest = {
-	path: string;
-	pattern: RegExp;
-	parts: Array<{
-		component: PageComponentManifest;
-		params: string[];
-	}>;
-};
-
-export type EndpointManifest = {
-	name: string;
-	pattern: RegExp;
-	file: string;
-	url: string;
-	params: string[];
 };
 
 export type Dirs = {
