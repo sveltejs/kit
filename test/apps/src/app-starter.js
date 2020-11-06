@@ -11,6 +11,10 @@ let server_closed = null;
  * Forks a child process and calls app-server to start a Svelte dev server there.
  */
 async function start(app_path) {
+	if (is_running()) {
+		await stop();
+	}
+
 	const cwd = app_path;
 
 	const server_listening = deferred();

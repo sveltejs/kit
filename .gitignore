@@ -6,4 +6,5 @@ yarn.lock
 /examples/*/.svelte
 /examples/*/build
 /test/apps/*/.svelte
+/test/apps/*/svelte.log
 /packages/create-svelte/template/CHANGELOG.md

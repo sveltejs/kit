@@ -6,6 +6,7 @@ const hostname = '127.0.0.1';
 const port = 3003;
 
 let server;
+let current_app;
 
 /**
  * Starts a web server exposing an endpoint for starting a Svelte dev server running a specified app.
@@ -13,25 +14,31 @@ let server;
 function start() {
 	return new Promise((resolve, reject) => {
 		server = http.createServer(async (req, res) => {
+			res.setHeader('Access-Control-Allow-Origin', '*');
+			res.setHeader('Content-Type', 'application/json');
+
 			const [command, arg] = req.url.slice(1).split('/');
 
 			if (command === 'start') {
-				const test_name = arg;
+				const app_name = arg;
 
-				if (app_starter.is_running()) {
-					await app_starter.stop();
+				if (current_app === app_name) {
+					res.statusCode = 200;
+					res.end(JSON.stringify({ result: 'ok', status: 'already-running' }));
+
+					return;
 				}
 
-				console.log(`Switching to application ${test_name}...`);
+				console.log(`Switching to application ${app_name}...`);
 
-				await app_starter.start(test_name);
+				await app_starter.start(app_name);
+
+				console.log('Done switching.');
+
+				current_app = app_name;
 
 				res.statusCode = 200;
-
-				res.setHeader('Access-Control-Allow-Origin', '*');
-				res.setHeader('Content-Type', 'application/json');
-
-				res.end(JSON.stringify({ result: 'ok', app: test_name }));
+				res.end(JSON.stringify({ result: 'ok', app: app_name }));
 			} else {
 				res.statusCode = 404;
 			}

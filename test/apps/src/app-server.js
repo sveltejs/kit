@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const properties = ['name', 'message', 'stack', 'code', 'lineNumber', 'fileName'];
 
 /**
@@ -5,6 +7,8 @@ const properties = ['name', 'message', 'stack', 'code', 'lineNumber', 'fileName'
  */
 async function start_app_server() {
   const { dev } = require('@sveltejs/kit/dist/cli');
+
+  redirect_stdout();
 
   const port = 3000;
 
@@ -28,9 +32,13 @@ async function start_app_server() {
 			event: 'listening',
 			port: event.port
 		});
-
-    console.log(`> Listening on http://localhost:${event.port}`);
   });
+}
+
+function redirect_stdout() {
+  const log = fs.createWriteStream('svelte.log');
+
+  process.stdout.write = process.stderr.write = log.write.bind(log);
 }
 
 function send(message) {
