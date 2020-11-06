@@ -1,15 +1,15 @@
 <script context="module">
-  export function preload(pageContext) {
-    if (typeof window !== 'undefined') {
-      window.pageContext = pageContext;
-    }
+	export function preload(pageContext) {
+		if (typeof window !== 'undefined') {
+			window.pageContext = pageContext;
+		}
 
-    return { foo: 'bar' }
-  }
+		return { foo: 'bar' }
+	}
 </script>
 
 <script>
-  export let foo;
+	export let foo;
 </script>
 
 <h1>bar == {foo}?</h1>

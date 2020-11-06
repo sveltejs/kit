@@ -6,39 +6,39 @@ const properties = ['name', 'message', 'stack', 'code', 'lineNumber', 'fileName'
  * Starts a Kit dev server running the app in the current directory.
  */
 async function start_app_server() {
-  const { dev } = require('@sveltejs/kit/dist/cli');
+	const { dev } = require('@sveltejs/kit/dist/cli');
 
-  redirect_stdout();
+	redirect_stdout();
 
-  const port = 3000;
+	const port = 3000;
 
-  const watcher = dev({
-    port
-  });
+	const watcher = dev({
+		port
+	});
 
-  watcher.on('stdout', data => {
-    process.stdout.write(data);
-  });
+	watcher.on('stdout', data => {
+		process.stdout.write(data);
+	});
 
-  watcher.on('stderr', data => {
-    process.stderr.write(data);
+	watcher.on('stderr', data => {
+		process.stderr.write(data);
 
-    send_error(new Error(data));
-  });
+		send_error(new Error(data));
+	});
 
-  watcher.on('ready', async event => {
+	watcher.on('ready', async event => {
 		send({
 			__kit__: true,
 			event: 'listening',
 			port: event.port
 		});
-  });
+	});
 }
 
 function redirect_stdout() {
-  const log = fs.createWriteStream('svelte.log');
+	const log = fs.createWriteStream('svelte.log');
 
-  process.stdout.write = process.stderr.write = log.write.bind(log);
+	process.stdout.write = process.stderr.write = log.write.bind(log);
 }
 
 function send(message) {
