@@ -1,0 +1,5 @@
+{
+	"globals": {
+		"cy": "readonly"
+	}
+}
