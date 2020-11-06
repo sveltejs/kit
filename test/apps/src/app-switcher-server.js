@@ -45,7 +45,7 @@ function start() {
 		});
 
 		server.listen(port, hostname, () => {
-			console.log(`Server running at http://${hostname}:${port}/`);
+			console.log(`App switcher server running at http://${hostname}:${port}/`);
 
 			resolve();
 		});
