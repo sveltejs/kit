@@ -12,7 +12,7 @@ export type Branch = Array<{
 	part?: number;
 }>;
 
-export type InitialData = {
+export interface InitialData {
 	session: any;
 	preloaded?: object[];
 	status: number;
@@ -46,4 +46,4 @@ export interface Page {
 
 export interface PageContext extends Page {
 	error?: Error
-};
+}

@@ -1,10 +1,10 @@
 import { PageComponentManifest, PageManifest, EndpointManifest } from '@sveltejs/app-utils';
 
-export type SvelteAppConfig = {
+export interface SvelteAppConfig {
 	adapter: string;
 }
 
-export type Route = {
+export interface Route {
 	id: string;
 	handlers: Array<{
 		type: 'page' | 'route';
@@ -17,36 +17,36 @@ export type Route = {
 	params: string[];
 };
 
-export type Template = {
+export interface Template {
 	render: (data: Record<string, string>) => string;
 	stream: (req, res, data: Record<string, string | Promise<string>>) => void;
-};
+}
 
-export type WritableStore<T> = {
+export interface WritableStore<T> {
 	set: (value: T) => void;
 	update: (fn: (value: T) => T) => void;
 	subscribe: (fn: (T: any) => void) => () => void;
-};
+}
 
-export type Dirs = {
+export interface Dirs {
 	dest: string;
 	src: string;
 	routes: string;
-};
+}
 
-export type ManifestData = {
+export interface ManifestData {
 	error: PageComponentManifest;
 	layout: PageComponentManifest;
 	components: PageComponentManifest[];
 	pages: PageManifest[];
 	endpoints: EndpointManifest[];
-};
+}
 
-export type ReadyEvent = {
+export interface ReadyEvent {
 	port: number;
-};
+}
 
-export type ErrorEvent = {
+export interface ErrorEvent {
 	type: string;
 	error: Error & {
 		frame?: unknown;
@@ -56,26 +56,26 @@ export type ErrorEvent = {
 			column: number;
 		};
 	};
-};
+}
 
-export type FatalEvent = {
+export interface FatalEvent {
 	message: string;
 	log?: unknown;
-};
+}
 
-export type InvalidEvent = {
+export interface InvalidEvent {
 	changed: string[];
 	invalid: {
 		client: boolean;
 		server: boolean;
 		serviceworker: boolean;
 	};
-};
+}
 
-// export type BuildEvent = {
+// export interface BuildEvent {
 // 	type: string;
 // 	errors: Array<{ file: string; message: string; duplicate: boolean }>;
 // 	warnings: Array<{ file: string; message: string; duplicate: boolean }>;
 // 	duration: number;
 // 	result: CompileResult;
-// };
+// }
