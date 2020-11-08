@@ -6,6 +6,7 @@ import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync';
 import gitignore_contents from '../template/.gitignore';
+import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
 import versions from './versions';
 
@@ -84,19 +85,7 @@ async function main(): Promise<void> {
 
 	console.log(bold(green(`✔ Copied project files`)));
 
-	// modifications
-	const modifications = [['Use TypeScript in components?', false, add_typescript]] as const;
-
-	for (const [message, initial, fn] of modifications) {
-		const response = await prompts({
-			type: 'confirm',
-			name: 'value',
-			message,
-			initial
-		});
-
-		await fn(target, response.value);
-	}
+	await prompt_modifications(target);
 
 	console.log(`\nNext steps:`);
 	let i = 1;
@@ -111,6 +100,28 @@ async function main(): Promise<void> {
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
 	console.log('\nStuck? Visit us at https://svelte.dev/chat\n');
+}
+
+async function prompt_modifications(target: string) {
+	const ts_response = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message: 'Use TypeScript in components?',
+		initial: false
+	});
+	await add_typescript(target, ts_response.value);
+
+	const css_response = await prompts({
+		type: 'select',
+		name: 'value',
+		message: 'What do you want to use for writing Styles in Svelte components?',
+		choices: [
+			{ title: 'CSS', value: 'css' },
+			{ title: 'Less', value: 'less' },
+			{ title: 'SCSS', value: 'scss' }
+		]
+	});
+	await add_css(target, css_response.value);
 }
 
 main();
