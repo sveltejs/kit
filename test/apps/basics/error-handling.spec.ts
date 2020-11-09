@@ -1,9 +1,14 @@
 describe('shows error page', () => {
 	before(() => cy.startApp('basics'));
 
+	function assertIsCustomErrorPage() {
+		cy.contains('custom error page');
+	}
+
 	it('for client-side errors', () => {
 		cy.visit('/crash-clientside');
 
+		// this is the Snowpack error overlay (we're in dev mode)
 		cy.contains('Crashing now');
 	});
 
@@ -11,12 +16,16 @@ describe('shows error page', () => {
 		cy.visit('/crash-serverside');
 
 		cy.contains('Crashing now');
+
+		assertIsCustomErrorPage();
 	});
 
 	it('for errors in preload on the client', () => {
 		cy.visit('/crash-preload-client');
 
 		cy.contains('Crashing now');
+
+		assertIsCustomErrorPage();
 	});
 
 	it('for errors in preload on the server', () => {
@@ -30,6 +39,8 @@ describe('shows error page', () => {
 		cy.visit('/crash-module-scope-client');
 
 		cy.contains('Crashing now');
+
+		assertIsCustomErrorPage();
 	});
 
 	it('for errors in module scope on the server', () => {
