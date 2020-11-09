@@ -6,7 +6,7 @@ importers:
       '@rollup/plugin-json': 4.1.0_rollup@2.32.0
       '@rollup/plugin-node-resolve': 9.0.0_rollup@2.32.0
       '@rollup/plugin-typescript': 6.0.0_fdbcfa007260ce7ec26f11dd44471702
-      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3_aa0d6b64385e65baa59ec3d0ba654ef0
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_aa0d6b64385e65baa59ec3d0ba654ef0
       '@typescript-eslint/eslint-plugin': 4.6.0_f414f6c88b79e375ea6c4ff6443d1d22
       '@typescript-eslint/parser': 4.6.0_eslint@7.11.0+typescript@4.0.3
       eslint: 7.11.0
@@ -21,7 +21,7 @@ importers:
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^9.0.0
       '@rollup/plugin-typescript': ^6.0.0
-      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.5.0'
+      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.6.0'
       '@typescript-eslint/eslint-plugin': ^4.6.0
       '@typescript-eslint/parser': ^4.6.0
       eslint: ^7.11.0
@@ -223,7 +223,7 @@ importers:
       '@snowpack/plugin-svelte': 3.0.0
     specifiers:
       '@snowpack/plugin-svelte': ^3.0.0
-lockfileVersion: 5.1
+lockfileVersion: 5.2
 packages:
   /@architect/parser/2.3.0:
     dev: false
@@ -4135,7 +4135,7 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
-  github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3_aa0d6b64385e65baa59ec3d0ba654ef0:
+  github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_aa0d6b64385e65baa59ec3d0ba654ef0:
     dependencies:
       '@typescript-eslint/eslint-plugin': 4.6.0_f414f6c88b79e375ea6c4ff6443d1d22
       '@typescript-eslint/parser': 4.6.0_eslint@7.11.0+typescript@4.0.3
@@ -4144,7 +4144,7 @@ packages:
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
       typescript: 4.0.3
     dev: true
-    id: github.com/sveltejs/eslint-config/787b269a808a2863c8c44bfc48349da6253d06d3
+    id: github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f
     name: '@sveltejs/eslint-config'
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 3'
@@ -4155,6 +4155,5 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
-      registry: 'https://registry.npmjs.org/'
-      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/787b269a808a2863c8c44bfc48349da6253d06d3'
-    version: 5.5.0
+      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f'
+    version: 5.6.0
