@@ -1,3 +1,5 @@
+import 'cypress';
+
 describe('A second server', () => {
 	before(() => cy.startApp('second'));
 

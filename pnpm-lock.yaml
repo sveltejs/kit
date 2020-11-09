@@ -229,6 +229,8 @@ importers:
       '@sveltejs/adapter-static': 'link:../../packages/adapter-static'
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
+      '@types/cypress': 1.1.3
+      '@types/mocha': 8.0.3
       cypress: 5.5.0
       svelte: 3.29.0
     specifiers:
@@ -236,6 +238,8 @@ importers:
       '@sveltejs/adapter-static': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
+      '@types/cypress': ^1.1.3
+      '@types/mocha': ^8.0.3
       cypress: ^5.5.0
       svelte: ^3.29.0
 lockfileVersion: 5.2
@@ -751,6 +755,13 @@ packages:
       svelte: ^3.21.0
     resolution:
       integrity: sha512-SOZPSBoTK23OvfJQNmQ5s7JYg10Tj+eeDyGbdDXIKGZL4dI1xNSahQUq35nCQAre0Y166mKs1xnFXZnbHM6MZw==
+  /@types/cypress/1.1.3:
+    dependencies:
+      cypress: 5.5.0
+    deprecated: 'This is a stub types definition for cypress (https://cypress.io). cypress provides its own type definitions, so you don''t need @types/cypress installed!'
+    dev: true
+    resolution:
+      integrity: sha512-OXe0Gw8LeCflkG1oPgFpyrYWJmEKqYncBsD/J0r17r0ETx/TnIGDNLwXt/pFYSYuYTpzcq1q3g62M9DrfsBL4g==
   /@types/estree/0.0.39:
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
@@ -773,6 +784,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-aaI6OtKcrwCX8G7aWbNh7i8GOfY=
+  /@types/mocha/8.0.3:
+    dev: true
+    resolution:
+      integrity: sha512-vyxR57nv8NfcU0GZu8EUXZLTbCMupIUwy95LJ6lllN+JRPG25CwMHoB1q5xKh8YKhQnHYRAn4yW2yuHbf/5xgg==
   /@types/mri/1.1.0:
     dev: true
     resolution:
