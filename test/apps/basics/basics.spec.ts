@@ -1,5 +1,3 @@
-import 'cypress';
-
 describe('basics', () => {
 	before(() => cy.startApp('basics'));
 
