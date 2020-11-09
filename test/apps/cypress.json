@@ -1,6 +1,6 @@
 {
 	"video": false,
 	"integrationFolder": ".",
-	"testFiles": "**/*.spec.js",
+	"testFiles": "**/*.spec.ts",
 	"ignoreTestFiles": "/node_modules/**/*"
 }
