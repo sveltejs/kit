@@ -3,7 +3,8 @@
 	"private": true,
 	"scripts": {
 		"test": "node run-cypress run",
-		"cypress": "node run-cypress open"
+		"cypress": "node run-cypress open",
+		"lint": "eslint '**/*.{ts,js,svelte}'"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",

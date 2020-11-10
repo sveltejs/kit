@@ -4,7 +4,7 @@
 			window.pageContext = pageContext;
 		}
 
-		return { foo: 'bar' }
+		return { foo: 'bar' };
 	}
 </script>
 

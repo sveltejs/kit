@@ -4,7 +4,7 @@ describe('basics', () => {
 	it('Serves', () => {
 		cy.visit('/');
 
-		cy.contains(`You're on index.svelte`);
+		cy.contains('You\'re on index.svelte');
 	});
 
 	it('Serves dynamic routes', () => {

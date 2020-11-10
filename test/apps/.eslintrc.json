@@ -3,5 +3,11 @@
 		"cy": "readonly",
 		"Cypress": "readonly",
 		"expect": "readonly"
-	}
+	},
+	"ignorePatterns": [
+		"node_modules/",
+		"dist/",
+		".svelte/",
+		"build"
+	]
 }

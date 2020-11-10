@@ -1,3 +1,3 @@
 <script>
-  throw new Error('Crashing now')
+  throw new Error('Crashing now');
 </script>

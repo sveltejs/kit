@@ -3,7 +3,6 @@
 	export let error;
 
 	const dev = true;
-	const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
 </script>
 
 <svelte:head>
