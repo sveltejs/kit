@@ -229,7 +229,6 @@ importers:
       '@sveltejs/adapter-static': 'link:../../packages/adapter-static'
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
-      '@types/cypress': 1.1.3
       '@types/mocha': 8.0.3
       cypress: 5.5.0
       svelte: 3.29.0
@@ -238,7 +237,6 @@ importers:
       '@sveltejs/adapter-static': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
-      '@types/cypress': ^1.1.3
       '@types/mocha': ^8.0.3
       cypress: ^5.5.0
       svelte: ^3.29.0
@@ -755,13 +753,6 @@ packages:
       svelte: ^3.21.0
     resolution:
       integrity: sha512-SOZPSBoTK23OvfJQNmQ5s7JYg10Tj+eeDyGbdDXIKGZL4dI1xNSahQUq35nCQAre0Y166mKs1xnFXZnbHM6MZw==
-  /@types/cypress/1.1.3:
-    dependencies:
-      cypress: 5.5.0
-    deprecated: 'This is a stub types definition for cypress (https://cypress.io). cypress provides its own type definitions, so you don''t need @types/cypress installed!'
-    dev: true
-    resolution:
-      integrity: sha512-OXe0Gw8LeCflkG1oPgFpyrYWJmEKqYncBsD/J0r17r0ETx/TnIGDNLwXt/pFYSYuYTpzcq1q3g62M9DrfsBL4g==
   /@types/estree/0.0.39:
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
@@ -2963,10 +2954,10 @@ packages:
       graceful-fs: 4.2.4
     resolution:
       integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==
-  /jsonschema/1.4.0:
+  /jsonschema/1.2.11:
     dev: false
     resolution:
-      integrity: sha512-/YgW6pRMr6M7C+4o8kS+B/2myEpHCrxO4PEWnqJNBFMjn7EWXqlQ4tGwL6xTHeRplwuZmcAncdvfOad1nT2yMw==
+      integrity: sha512-XNZHs3N1IOa3lPKm//npxMhOdaoPw+MvEV0NIgxcER83GTJcG13rehtWmpBCfEt8DrtYwIkMTs8bdXoYs4fvnQ==
   /jsprim/1.4.1:
     dependencies:
       assert-plus: 1.0.0
