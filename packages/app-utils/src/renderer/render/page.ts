@@ -315,8 +315,7 @@ function parts_to_params(match: RegExpMatchArray, part: PageManifestPart): Route
 
 		if (is_spread) {
 			params[name.slice(3)] = match[i + 1].split('/');
-		}
-		else {
+		} else {
 			params[name] = match[i + 1];
 		}
 	});
