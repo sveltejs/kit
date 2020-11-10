@@ -1,5 +1,5 @@
 describe('shows error page', () => {
-	before(() => cy.startApp('basics'));
+	before(() => cy.startApp('basics', 'dev'));
 
 	function assertIsCustomErrorPage() {
 		cy.contains('custom error page');

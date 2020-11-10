@@ -1,5 +1,5 @@
 {
-	"name": "minimal",
+	"name": "end-to-end-tests",
 	"private": true,
 	"scripts": {
 		"test": "node run-cypress run",

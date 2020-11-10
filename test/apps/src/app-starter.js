@@ -10,7 +10,7 @@ let server_closed = null;
 /**
  * Forks a child process and calls app-server to start a Svelte dev server there.
  */
-async function start(app_path) {
+async function start(app_path, mode) {
 	if (is_running()) {
 		await stop();
 	}
@@ -26,13 +26,13 @@ async function start(app_path) {
 		env.SNOWPACK_CONFIG = '../snowpack.config.js';
 	}
 
-	server = fork(entry, [], {
+	server = fork(entry, mode === 'prod' ? ['--prod'] : [], {
 		cwd,
 		env
 	});
 
 	server.on('exit', () => {
-		server_listening.reject();
+		server_listening.reject(new Error('App server exited.'));
 		server_closed.resolve();
 		server = null;
 	});
@@ -45,6 +45,10 @@ async function start(app_path) {
 				server_listening.resolve();
 				break;
 
+			case 'stderr':
+				console.error(message.message);
+				break;
+	
 			case 'error':
 				console.error(message.error);
 				break;

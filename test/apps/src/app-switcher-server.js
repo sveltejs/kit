@@ -1,12 +1,15 @@
 const app_starter = require('./app-starter');
 
 const http = require('http');
+const url = require('url');
 
 const hostname = '127.0.0.1';
 const port = 3003;
 
 let server;
 let current_app;
+// 'dev' or 'prod'
+let current_mode;
 
 /**
  * Starts a web server exposing an endpoint for starting a Svelte dev server running a specified app.
@@ -14,33 +17,44 @@ let current_app;
 function start() {
 	return new Promise((resolve, reject) => {
 		server = http.createServer(async (req, res) => {
-			res.setHeader('Access-Control-Allow-Origin', '*');
-			res.setHeader('Content-Type', 'application/json');
-
-			const [command, arg] = req.url.slice(1).split('/');
-
-			if (command === 'start') {
-				const app_name = arg;
-
-				if (current_app === app_name) {
+			try {
+				res.setHeader('Access-Control-Allow-Origin', '*');
+				res.setHeader('Content-Type', 'application/json');
+	
+				const parsed_url = url.parse(req.url);
+	
+				const [command, arg] = parsed_url.pathname.slice(1).split('/');
+	
+				if (command === 'start') {
+					const app_name = arg;
+	
+					if (current_app === app_name && current_mode === mode) {
+						res.statusCode = 200;
+						res.end(JSON.stringify({ result: 'ok', status: 'already-running', app_name, mode }));
+	
+						return;
+					}
+	
+					const query = new URLSearchParams(parsed_url.search);
+					
+					const mode = query.get('mode') === 'prod' ? 'prod' : 'dev';
+	
+					console.log(`Switching to application ${app_name} in ${mode} mode...`);
+	
+					await app_starter.start(app_name, mode);
+	
+					console.log('Done switching.');
+	
+					current_app = app_name;
+					current_mode = mode;
+	
 					res.statusCode = 200;
-					res.end(JSON.stringify({ result: 'ok', status: 'already-running' }));
-
-					return;
+					res.end(JSON.stringify({ result: 'ok', app_name, mode }));
+				} else {
+					res.statusCode = 404;
 				}
-
-				console.log(`Switching to application ${app_name}...`);
-
-				await app_starter.start(app_name);
-
-				console.log('Done switching.');
-
-				current_app = app_name;
-
-				res.statusCode = 200;
-				res.end(JSON.stringify({ result: 'ok', app: app_name }));
-			} else {
-				res.statusCode = 404;
+			} catch (e) {
+				reject(e);
 			}
 		});
 

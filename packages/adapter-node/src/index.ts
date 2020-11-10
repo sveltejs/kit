@@ -15,10 +15,11 @@ const mutable = dir => sirv(dir, {
 	maxAge: 0
 });
 
-const static_handler = mutable('static');
+const noop_handler = (_req: http.IncomingMessage, _res: http.ServerResponse, next: () => void) => next()
+const static_handler = fs.existsSync('static') ? mutable('static') : noop_handler;
 const prerendered_handler = fs.existsSync('build/prerendered')
 	? mutable('build/prerendered')
-	: (_req: http.IncomingMessage, _res: http.ServerResponse, next: () => void) => next();
+	: noop_handler;
 
 const assets_handler = sirv('build/assets', {
 	maxAge: 31536000,

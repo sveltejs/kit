@@ -5,6 +5,8 @@ import * as pkg from '../package.json';
 import { ReadyEvent, SvelteAppConfig } from './interfaces';
 import { dev } from './api/dev';
 export { dev } from './api/dev';
+import { build } from './api/build';
+export { build } from './api/build';
 
 export function cli() {
 	let config: SvelteAppConfig;
@@ -65,9 +67,7 @@ export function cli() {
 	
 	prog.command('build [dest]')
 		.describe('Create a deployment-ready version of your app')
-		.action(async () => {
-			const { build } = await import('./api/build');
-	
+		.action(async () => {	
 			try {
 				await build(config);
 			} catch (err) {
