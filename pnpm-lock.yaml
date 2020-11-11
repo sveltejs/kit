@@ -230,7 +230,7 @@ importers:
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       '@types/mocha': 8.0.3
-      cypress: 5.5.0
+      cypress: 5.6.0
       svelte: 3.29.0
     specifiers:
       '@sveltejs/adapter-node': 'workspace:*'
@@ -238,7 +238,7 @@ importers:
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
       '@types/mocha': ^8.0.3
-      cypress: ^5.5.0
+      cypress: ^5.6.0
       svelte: ^3.29.0
 lockfileVersion: 5.2
 packages:
@@ -1470,12 +1470,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
-  /commander/4.1.1:
+  /commander/5.1.0:
     dev: true
     engines:
       node: '>= 6'
     resolution:
-      integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
+      integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==
   /common-tags/1.8.0:
     dev: true
     engines:
@@ -1594,7 +1594,7 @@ packages:
       node: '>= 0.1.90'
     resolution:
       integrity: sha512-odDyucr9OgJTdGM2wrMbJXbOkJx3nnUX3Pt8SFOwlAMOpsUQlz1dywvLMXJWX/4Ib0rjfOsaawuuwfI5ucqBGQ==
-  /cypress/5.5.0:
+  /cypress/5.6.0:
     dependencies:
       '@cypress/listr-verbose-renderer': 0.4.1
       '@cypress/request': 2.88.5
@@ -1608,7 +1608,7 @@ packages:
       chalk: 4.1.0
       check-more-types: 2.24.0
       cli-table3: 0.6.0
-      commander: 4.1.1
+      commander: 5.1.0
       common-tags: 1.8.0
       debug: 4.2.0_supports-color@7.2.0
       eventemitter2: 6.4.3
@@ -1640,7 +1640,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-UHEiTca8AUTevbT2pWkHQlxoHtXmbq+h6Eiu/Mz8DqpNkF98zjTBLv/HFiKJUU5rQzp9EwSWtms33p5TWCJ8tQ==
+      integrity: sha512-cs5vG3E2JLldAc16+5yQxaVRLLqMVya5RlrfPWkC72S5xrlHFdw7ovxPb61s4wYweROKTyH01WQc2PFzwwVvyQ==
   /dashdash/1.14.1:
     dependencies:
       assert-plus: 1.0.0
