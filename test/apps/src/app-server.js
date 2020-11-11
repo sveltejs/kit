@@ -42,7 +42,7 @@ async function start_prod_server() {
 			}, 200);
 		} finally {
 			if (addPackageJson) {
-				fs.rmSync('package.json');
+				fs.unlinkSync('package.json');
 			}
 		}
 	} catch (e) {
