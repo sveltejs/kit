@@ -1,10 +1,8 @@
-import { existsSync } from 'fs';
 import { URL } from 'url';
+import { resolve, relative } from 'path';
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
-import { EventEmitter } from 'events';
-import CheapWatch from 'cheap-watch';
 import { Loader } from './types';
 import { SnowpackConfig, SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
@@ -37,21 +35,18 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		if (dependents) dependents.forEach(invalidate_all);
 	};
 
-	for (const dir in config.mount) {
-		const base = config.mount[dir].url;
-		if (!existsSync(dir)) continue;
+  const absolute_mount = map_keys(config.mount, resolve);
 
-		const cheapwatch = new CheapWatch({ dir });
-		cheapwatch.init();
+  snowpack.onFileChange(callback => {
+    for (const abs_path in absolute_mount) {
+      if (callback.filePath.startsWith(abs_path)) {
+        const relative_path = relative(abs_path, callback.filePath);
+        const url = resolve(absolute_mount[abs_path].url, relative_path)
 
-		const invalidate = ({ path }) => {
-			invalidate_all(`${base}/${path.replace(/\.\w+$/, '.js')}`);
-		};
-
-		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
-		(cheapwatch as any as EventEmitter).on('+',invalidate);
-		(cheapwatch as any as EventEmitter).on('-',invalidate);
-	}
+        invalidate_all(url);
+      }
+    }
+  });
 
 	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
@@ -66,18 +61,15 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 
 		if (cache.has(url)) return cache.get(url);
 
-		let data: string;
-
-		try {
-			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf8'});
-			data = result.contents;
-		} catch (err) {
-			throw new Error(`Failed to load ${url}: ${err.message}`);
-		}
-
-		const exports = initialize_module(url, data, url_stack.concat(url))
+		const exports = snowpack
+			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
+			.catch(err => {
+				throw new Error(`Failed to load ${url}: ${err.message}`);
+			})
+			.then(result => initialize_module(url, result.contents, url_stack.concat(url)))
 			.catch(e => {
 				cache.delete(url);
+				console.error(e);
 				throw e;
 			});
 
@@ -252,4 +244,12 @@ function load_node(source: string) {
 			return mod[prop];
 		}
 	});
+}
+
+function map_keys<V>(object: Record<string, V>, map: (key: string) => string): Record<string, V> {
+	return Object.entries<V>(object).reduce((new_object, [k, v]) => {
+		new_object[map(k)] = v;
+
+		return new_object;
+	}, {} as Record<string, V>);
 }

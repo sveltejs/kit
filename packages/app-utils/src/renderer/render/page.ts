@@ -314,7 +314,7 @@ function try_serialize(data: any, fail?: (err: Error) => void) {
 }
 
 // Ensure we return something truthy so the client will not re-render the page over the error
-function serialize_error(error?: Error) {
+function serialize_error(error?: Error|null) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
