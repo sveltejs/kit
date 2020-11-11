@@ -11,9 +11,9 @@ export async function render(
 	request: IncomingRequest,
 	options: RenderOptions
 ): Promise<EndpointResponse | PageResponse | undefined> {
-	const { context, headers = {} } = (await options.setup.prepare?.(request.headers)) || {};
-
 	try {
+		const { context, headers = {} } = (await options.setup.prepare?.(request.headers)) || {};
+
 		const response = await (
 			render_endpoint(request, context, options) ||
 			render_page(request, context, options)

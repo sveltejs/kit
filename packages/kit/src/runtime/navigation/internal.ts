@@ -1,6 +1,7 @@
 import { ScrollPosition, Target } from './types';
 import { find_anchor } from './utils';
 import { routes } from 'MANIFEST';
+import { render_error_page } from './start';
 
 // TODO
 // import { Page, Query } from '@sapper/common';
@@ -34,6 +35,9 @@ export function load_current_page(): Promise<void> {
 
 		const target = select_target(new URL(location.href));
 		if (target) return navigate(target, uid, true, hash);
+	})
+	.catch (error => {
+		render_error_page({ status: 500, error });
 	});
 }
 

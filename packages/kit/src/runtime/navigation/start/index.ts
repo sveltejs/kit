@@ -35,14 +35,18 @@ stores.session.subscribe(async value => {
 
 	const dest = select_target(new URL(location.href));
 
-	const token = current_token = {};
-	const { redirect, props, branch } = await hydrate_target(dest);
-	if (token !== current_token) return; // a secondary navigation happened while we were loading
+	try {
+		const token = current_token = {};
+		const { redirect, props, branch } = await hydrate_target(dest);
+		if (token !== current_token) return; // a secondary navigation happened while we were loading
 
-	if (redirect) {
-		await goto(redirect.location, { replaceState: true });
-	} else {
-		await render(branch, props, buildPageContext(props, dest.page));
+		if (redirect) {
+			await goto(redirect.location, { replaceState: true });
+		} else {
+			await render(branch, props, buildPageContext(props, dest.page));
+		}
+	} catch (error) {
+		render_error_page({ status: 500, error });
 	}
 });
 
@@ -70,8 +74,12 @@ export default function start(opts: {
 }
 
 function handle_error() {
+	return render_error_page(initial_data);
+}
+
+export function render_error_page({ status, error }) {
 	const { host, pathname, search } = location;
-	const { session, preloaded, status, error } = initial_data;
+	const { session, preloaded } = initial_data;
 
 	if (!root_preloaded) {
 		root_preloaded = preloaded && preloaded[0];
