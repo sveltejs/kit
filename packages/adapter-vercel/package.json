@@ -13,6 +13,6 @@
 		"tiny-glob": "^0.2.6"
 	},
 	"devDependencies": {
-		"@sveltejs/app-utils": "*"
+		"@sveltejs/app-utils": "workspace:*"
 	}
 }

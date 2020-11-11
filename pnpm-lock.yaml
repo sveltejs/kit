@@ -125,7 +125,7 @@ importers:
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
     specifiers:
-      '@sveltejs/app-utils': '*'
+      '@sveltejs/app-utils': 'workspace:*'
       tiny-glob: ^0.2.6
   packages/app-utils:
     dependencies:
