@@ -5,7 +5,7 @@ importers:
       '@rollup/plugin-commonjs': 15.1.0_rollup@2.32.0
       '@rollup/plugin-json': 4.1.0_rollup@2.32.0
       '@rollup/plugin-node-resolve': 9.0.0_rollup@2.32.0
-      '@rollup/plugin-typescript': 6.0.0_fdbcfa007260ce7ec26f11dd44471702
+      '@rollup/plugin-typescript': 6.1.0_fdbcfa007260ce7ec26f11dd44471702
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_aa0d6b64385e65baa59ec3d0ba654ef0
       '@typescript-eslint/eslint-plugin': 4.6.0_f414f6c88b79e375ea6c4ff6443d1d22
       '@typescript-eslint/parser': 4.6.0_eslint@7.11.0+typescript@4.0.3
@@ -14,6 +14,7 @@ importers:
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
       prettier: 2.1.2
       rollup: 2.32.0
+      rollup-plugin-typescript2: 0.29.0_rollup@2.32.0+typescript@4.0.3
       tslib: 2.0.3
       typescript: 4.0.3
     specifiers:
@@ -30,6 +31,7 @@ importers:
       eslint-plugin-svelte3: ^2.7.3
       prettier: 2.1.2
       rollup: ^2.32.0
+      rollup-plugin-typescript2: ^0.29.0
       tslib: ^2.0.3
       typescript: ^4.0.3
   examples/hn.svelte.dev:
@@ -611,7 +613,7 @@ packages:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-XPmVXZ7IlaoWaJLkSCDaa0Y6uVo5XQYHhiMFzOd5qSv5rE+t/UJToPIOE56flKIxBFQI27ONsxb7dqHnwSsjKQ==
-  /@rollup/plugin-typescript/6.0.0_fdbcfa007260ce7ec26f11dd44471702:
+  /@rollup/plugin-typescript/6.1.0_fdbcfa007260ce7ec26f11dd44471702:
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.32.0
       resolve: 1.18.1
@@ -626,7 +628,7 @@ packages:
       tslib: '*'
       typescript: '>=3.4.0'
     resolution:
-      integrity: sha512-Y5U2L4eaF3wUSgCZRMdvNmuzWkKMyN3OwvhAdbzAi5sUqedaBk/XbzO4T7RlViDJ78MOPhwAIv2FtId/jhMtbg==
+      integrity: sha512-hJxaiE6WyNOsK+fZpbFh9CUijZYqPQuAOWO5khaGTUkM8DYNNyA2TDlgamecE+qLOG1G1+CwbWMAx3rbqpp6xQ==
   /@rollup/pluginutils/3.1.0_rollup@2.32.0:
     dependencies:
       '@types/estree': 0.0.39
@@ -1879,7 +1881,6 @@ packages:
       commondir: 1.0.1
       make-dir: 3.1.0
       pkg-dir: 4.2.0
-    dev: false
     engines:
       node: '>=8'
     resolution:
@@ -2519,7 +2520,6 @@ packages:
   /make-dir/3.1.0:
     dependencies:
       semver: 6.3.0
-    dev: false
     engines:
       node: '>=8'
     resolution:
@@ -3266,6 +3266,12 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
+  /resolve/1.17.0:
+    dependencies:
+      path-parse: 1.0.6
+    dev: true
+    resolution:
+      integrity: sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==
   /resolve/1.18.1:
     dependencies:
       is-core-module: 2.0.0
@@ -3345,6 +3351,21 @@ packages:
       rollup: ^2.0.0
     resolution:
       integrity: sha512-w3iIaU4OxcF52UUXiZNsNeuXIMDvFrr+ZXK6bFZ0Q60qyVfq4uLptoS4bbq3paG3x216eQllFZX7zt6TIImguQ==
+  /rollup-plugin-typescript2/0.29.0_rollup@2.32.0+typescript@4.0.3:
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.32.0
+      find-cache-dir: 3.3.1
+      fs-extra: 8.1.0
+      resolve: 1.17.0
+      rollup: 2.32.0
+      tslib: 2.0.1
+      typescript: 4.0.3
+    dev: true
+    peerDependencies:
+      rollup: '>=1.26.3'
+      typescript: '>=2.4.0'
+    resolution:
+      integrity: sha512-YytahBSZCIjn/elFugEGQR5qTsVhxhUwGZIsA9TmrSsC88qroGo65O5HZP/TTArH2dm0vUmYWhKchhwi2wL9bw==
   /rollup-pluginutils/2.8.2:
     dependencies:
       estree-walker: 0.6.1
@@ -3401,7 +3422,6 @@ packages:
     resolution:
       integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==
   /semver/6.3.0:
-    dev: false
     hasBin: true
     resolution:
       integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==
@@ -3886,6 +3906,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
+  /tslib/2.0.1:
+    dev: true
+    resolution:
+      integrity: sha512-SgIkNheinmEBgx1IUNirK0TUD4X9yjjBRTqqjggWCU3pUEqIk3/Uwl3yRixYKT6WjQuGiwDv4NomL3wqRCj+CQ==
   /tslib/2.0.3:
     dev: true
     resolution:
