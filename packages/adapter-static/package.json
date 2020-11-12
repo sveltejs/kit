@@ -3,7 +3,7 @@
 	"version": "0.0.14",
 	"scripts": {
 		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'",
-		"format": "prettier --write ."
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore"
 	},
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*"

@@ -14,7 +14,7 @@
 		"dev": "rollup -cw",
 		"build": "node scripts/update-versions && rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern bin/ '**/*.{ts,js,svelte}'",
-		"format": "prettier --write .",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},
