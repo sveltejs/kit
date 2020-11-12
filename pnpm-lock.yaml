@@ -12,6 +12,7 @@ importers:
       eslint: 7.11.0
       eslint-plugin-import: 2.22.1_eslint@7.11.0
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
+      prettier: 2.1.2
       rollup: 2.32.0
       tslib: 2.0.3
       typescript: 4.0.3
@@ -27,6 +28,7 @@ importers:
       eslint: ^7.11.0
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^2.7.3
+      prettier: 2.1.2
       rollup: ^2.32.0
       tslib: ^2.0.3
       typescript: ^4.0.3
@@ -3104,6 +3106,13 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-s7PoyDv/II1ObgQunCbB9PdLmUcBZcnWOcxDh7O0N/UwDEsHyqkW+Qh28jW+mVuCdx7gLB0BotYI1Y6uI9iyew==
+  /prettier/2.1.2:
+    dev: true
+    engines:
+      node: '>=10.13.0'
+    hasBin: true
+    resolution:
+      integrity: sha512-16c7K+x4qVlJg9rEbXl7HEGmQyZlG4R9AgP+oHKRMsMsuk8s+ATStlf1NpDqyBI1HpVyfjLOeMhH2LvuNvV5Vg==
   /progress/2.0.3:
     dev: true
     engines:
