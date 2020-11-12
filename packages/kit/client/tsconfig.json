@@ -6,7 +6,6 @@
 		"moduleResolution": "node",
 		"target": "ES6",
 		"esModuleInterop": true,
-		"emitDeclarationOnly": true,
 		"declaration": true,
 		"outDir": "."
 	},
