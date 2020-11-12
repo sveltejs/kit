@@ -3,6 +3,7 @@
 	"version": "0.0.11",
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
+		"@types/aws-lambda": "^8.10.64",
 		"devalue": "^2.0.1",
 		"rollup": "^2.32.0"
 	},

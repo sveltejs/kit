@@ -5,7 +5,6 @@ importers:
       '@rollup/plugin-commonjs': 15.1.0_rollup@2.32.0
       '@rollup/plugin-json': 4.1.0_rollup@2.32.0
       '@rollup/plugin-node-resolve': 9.0.0_rollup@2.32.0
-      '@rollup/plugin-typescript': 6.1.0_fdbcfa007260ce7ec26f11dd44471702
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_aa0d6b64385e65baa59ec3d0ba654ef0
       '@typescript-eslint/eslint-plugin': 4.6.0_f414f6c88b79e375ea6c4ff6443d1d22
       '@typescript-eslint/parser': 4.6.0_eslint@7.11.0+typescript@4.0.3
@@ -22,7 +21,6 @@ importers:
       '@rollup/plugin-commonjs': ^15.1.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^9.0.0
-      '@rollup/plugin-typescript': ^6.0.0
       '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.6.0'
       '@typescript-eslint/eslint-plugin': ^4.6.0
       '@typescript-eslint/parser': ^4.6.0
@@ -99,10 +97,12 @@ importers:
       toml: 3.0.0
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
+      '@types/aws-lambda': 8.10.64
       devalue: 2.0.1
       rollup: 2.32.0
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
+      '@types/aws-lambda': ^8.10.64
       devalue: ^2.0.1
       kleur: ^4.1.3
       rollup: ^2.32.0
@@ -613,22 +613,6 @@ packages:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-XPmVXZ7IlaoWaJLkSCDaa0Y6uVo5XQYHhiMFzOd5qSv5rE+t/UJToPIOE56flKIxBFQI27ONsxb7dqHnwSsjKQ==
-  /@rollup/plugin-typescript/6.1.0_fdbcfa007260ce7ec26f11dd44471702:
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.32.0
-      resolve: 1.18.1
-      rollup: 2.32.0
-      tslib: 2.0.3
-      typescript: 4.0.3
-    dev: true
-    engines:
-      node: '>=8.0.0'
-    peerDependencies:
-      rollup: ^2.14.0
-      tslib: '*'
-      typescript: '>=3.4.0'
-    resolution:
-      integrity: sha512-hJxaiE6WyNOsK+fZpbFh9CUijZYqPQuAOWO5khaGTUkM8DYNNyA2TDlgamecE+qLOG1G1+CwbWMAx3rbqpp6xQ==
   /@rollup/pluginutils/3.1.0_rollup@2.32.0:
     dependencies:
       '@types/estree': 0.0.39
@@ -678,6 +662,10 @@ packages:
       svelte: ^3.21.0
     resolution:
       integrity: sha512-SOZPSBoTK23OvfJQNmQ5s7JYg10Tj+eeDyGbdDXIKGZL4dI1xNSahQUq35nCQAre0Y166mKs1xnFXZnbHM6MZw==
+  /@types/aws-lambda/8.10.64:
+    dev: true
+    resolution:
+      integrity: sha512-LRKk2UQCSi7BsO5TlfSI8cTNpOGz+MH6+RXEWtuZmxJficQgxwEYJDiKVirzgyiHce0L0F4CqCVvKTwblAeOUw==
   /@types/estree/0.0.39:
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
