@@ -5,15 +5,14 @@
 		}
 	},
 	"compilerOptions": {
+		"lib": ["es2020"],
 		// target node v8+ (https://node.green/)
 		// the only missing feature is Array.prototype.values
-		"lib": ["es2020"],
 		"target": "es2019",
 
 		"declaration": true,
 		"declarationDir": "types",
 
-		// "noEmitOnError": true,
 		"noErrorTruncation": true,
 
 		// rollup takes care of these
@@ -22,7 +21,6 @@
 		"resolveJsonModule": true,
 		"allowSyntheticDefaultImports": true,
 
-		// TODO: error all the things
 		"strict": true,
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
