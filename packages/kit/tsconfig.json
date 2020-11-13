@@ -6,6 +6,7 @@
 		"target": "ES6",
 		"esModuleInterop": true,
 		"noEmit": true,
+		"skipLibCheck": true,
 		"noEmitOnError": true
 	},
 	"include": ["src/**/*"],
