@@ -4,28 +4,28 @@ export type Query = Record<string, string | true>;
 
 export type Params = Record<string, any>;
 
-export type Request = {
+export interface Request {
 	host: string;
 	path: string;
 	query: Query;
 	params: Params;
-};
+}
 
-export type Response = {
+export interface Response {
 	status?: number;
 	text?: string;
 	headers?: Record<string, string>;
 	body: any
-};
+}
 
-export type ServerRoute = {
+export interface ServerRoute {
 	get?: (request?: Request, session?: any) => Response | Promise<Response>;
 	post?: (request?: Request, session?: any) => Response | Promise<Response>;
 	put?: (request?: Request, session?: any) => Response | Promise<Response>;
 	del?: (request?: Request, session?: any) => Response | Promise<Response>;
-};
+}
 
-export type PageComponent = {
+export interface PageComponent {
 	default: {
 		render: (props: Record<string, any>) => {
 			html: string;
@@ -37,8 +37,8 @@ export type PageComponent = {
 		}
 	};
 	preload?: (page?: Request, session?: any) => Record<string, any>;
-};
+}
 
-export type DevConfig = {
+export interface DevConfig {
 	port: number;
-};
+}

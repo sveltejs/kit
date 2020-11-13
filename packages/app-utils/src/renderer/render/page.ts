@@ -19,7 +19,9 @@ type FetchOpts = {
 export default async function render_page(
 	request: IncomingRequest,
 	context: any,
-	options: RenderOptions
+	options: RenderOptions,
+	status: number = 200,
+	error: Error | null = null
 ): Promise<{
 	status: number,
 	body: string,
@@ -192,14 +194,15 @@ export default async function render_page(
 		});
 
 		const props: Record<string, any> = {
-			status: 200,
-			error: null,
+			status,
+			error,
 			stores: {
 				page: readable({
 					host: request.host,
 					path: request.path,
 					query: request.query,
-					params
+					params,
+					error
 				}, noop),
 				preloading: readable(null, noop),
 				session: writable(session)
@@ -266,8 +269,8 @@ export default async function render_page(
 			<script>
 				__SVELTE__ = {
 					baseUrl: "${baseUrl}",
-					status: 200,
-					error: null,
+					status: ${status},
+					error: ${serialize_error(error)},
 					preloaded: ${serialized_preloads},
 					session: ${serialized_session}
 				};
@@ -283,52 +286,18 @@ export default async function render_page(
 			body: html,
 			dependencies
 		};
-	} catch (error) {
-		console.error(error.stack);
+	} catch (thrown) {
+		console.error(thrown.stack);
 
-		const status = error.status || 500;
-
-		try {
-			const rendered = options.root.default.render({ status, error });
-
-			const head = `${rendered.head}
-				<script type="module">
-					import { start } from '/_app/${options.client.entry}';
-
-					start({
-						target: document.body
-					});
-				</script>`.replace(/^\t\t\t/gm, '');
-
-			const body = `${rendered.html}
-				<script>
-					__SVELTE__ = {
-						baseUrl: "${baseUrl}",
-						status: ${status},
-						error: ${serialize_error(error)},
-						preloaded: null,
-						session: ${serialized_session}
-					};
-				</script>`.replace(/^\t\t\t/gm, '');
-
-			const html = options.template
-				.replace('%svelte.head%', head)
-				.replace('%svelte.body%', body);
-
-			return {
-				status,
-				headers: {
-					'content-type': 'text/html'
-				},
-				body: html,
-				dependencies: {}
-			};
-		} catch (error) {
+		if (!error) {	
+			const status = thrown.status || 500;
+			return render_page(request, context, options, status, thrown);
+		} else {
 			// oh lawd now you've done it
 			return {
 				status: 500,
 				headers: {},
-				body: error.stack, // TODO probably not in prod?
+				body: thrown.stack, // TODO probably not in prod?
 				dependencies: {}
 			};
 		}
@@ -345,7 +314,7 @@ function try_serialize(data: any, fail?: (err: Error) => void) {
 }
 
 // Ensure we return something truthy so the client will not re-render the page over the error
-function serialize_error(error: Error) {
+function serialize_error(error?: Error|null) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {

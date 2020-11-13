@@ -1,25 +1,52 @@
 import { URL } from 'url';
+import { resolve, relative } from 'path';
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
 import { Loader } from './types';
-import { SnowpackDevServer } from 'snowpack';
+import { SnowpackConfig, SnowpackDevServer } from 'snowpack';
 import { walk } from 'estree-walker';
-
-interface CachedExports {
-	hash: number;
-	exports: Promise<any>;
-}
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(snowpack: SnowpackDevServer): Loader {
-	const cache = new Map<string, CachedExports>();
+export default function loader(snowpack: SnowpackDevServer, config: SnowpackConfig): Loader {
+	const cache = new Map<string, Promise<any>>();
+	const graph = new Map<string, Set<string>>();
 
-	const get_module = (importer: string, imported: string, url_stack: string[]) =>
-		imported[0] === '/' || imported[0] === '.'
-			? load(new URL(imported, `http://localhost${importer}`).pathname, url_stack)
-			: Promise.resolve(load_node(imported));
+	const get_module = (importer: string, imported: string, url_stack: string[]) => {
+		if (imported[0] === '/' || imported[0] === '.') {
+			const { pathname } = new URL(imported, `http://localhost${importer}`);
+
+			if (!graph.has(pathname)) graph.set(pathname, new Set());
+			graph.get(pathname).add(importer);
+
+			return load(pathname, url_stack);
+		}
+
+		return Promise.resolve(load_node(imported));
+	};
+
+	const invalidate_all = path => {
+		cache.delete(path);
+
+		const dependents = graph.get(path);
+		graph.delete(path);
+
+		if (dependents) dependents.forEach(invalidate_all);
+	};
+
+  const absolute_mount = map_keys(config.mount, resolve);
+
+  snowpack.onFileChange(callback => {
+    for (const abs_path in absolute_mount) {
+      if (callback.filePath.startsWith(abs_path)) {
+        const relative_path = relative(abs_path, callback.filePath);
+        const url = resolve(absolute_mount[abs_path].url, relative_path)
+
+        invalidate_all(url);
+      }
+    }
+  });
 
 	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
@@ -32,32 +59,22 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 			return {}
 		}
 
-		let data: string;
+		if (cache.has(url)) return cache.get(url);
 
-		try {
-			const result = await snowpack.loadUrl(url, {isSSR: true, encoding: 'utf8'});
-			data = result.contents;
-		} catch (err) {
-			throw new Error(`Failed to load ${url}: ${err.message}`);
-		}
+		const exports = snowpack
+			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
+			.catch(err => {
+				throw new Error(`Failed to load ${url}: ${err.message}`);
+			})
+			.then(result => initialize_module(url, result.contents, url_stack.concat(url)))
+			.catch(e => {
+				cache.delete(url);
+				console.error(e);
+				throw e;
+			});
 
-		let cached = cache.get(url);
-		const hash = get_hash(data);
-
-		if (!cached || cached.hash !== hash) {
-			cached = {
-				hash,
-				exports: initialize_module(url, data, url_stack.concat(url))
-					.catch(e => {
-						cache.delete(url);
-						throw e;
-					})
-			};
-
-			cache.set(url, cached);
-		}
-
-		return cached.exports;
+		cache.set(url, exports);
+		return exports;
 	}
 
 	async function initialize_module(url: string, data: string, url_stack: string[]) {
@@ -217,14 +234,6 @@ export default function loader(snowpack: SnowpackDevServer): Loader {
 	return url => load(url, []);
 }
 
-function get_hash(str: string) {
-	let hash = 5381;
-	let i = str.length;
-
-	while(i) hash = (hash * 33) ^ str.charCodeAt(--i);
-	return hash >>> 0;
-}
-
 function load_node(source: string) {
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
@@ -235,4 +244,12 @@ function load_node(source: string) {
 			return mod[prop];
 		}
 	});
+}
+
+function map_keys<V>(object: Record<string, V>, map: (key: string) => string): Record<string, V> {
+	return Object.entries<V>(object).reduce((new_object, [k, v]) => {
+		new_object[map(k)] = v;
+
+		return new_object;
+	}, {} as Record<string, V>);
 }

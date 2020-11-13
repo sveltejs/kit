@@ -13,6 +13,7 @@ import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { SvelteAppConfig } from '../../interfaces';
 import { css_injection } from './css_injection';
+import { EndpointManifest } from '@sveltejs/app-utils';
 
 const exec = promisify(child_process.exec);
 
@@ -67,9 +68,9 @@ export async function build(config: SvelteAppConfig) {
 			fs.writeFileSync(setup_file, '');
 		}
 
-		await exec(`${snowpack_bin} build --out=${unoptimized}/server --ssr`);
+		await exec(`node ${snowpack_bin} build --out=${unoptimized}/server --ssr`);
 		log.success('server');
-		await exec(`${snowpack_bin} build --out=${unoptimized}/client`);
+		await exec(`node ${snowpack_bin} build --out=${unoptimized}/client`);
 		log.success('client');
 	}
 

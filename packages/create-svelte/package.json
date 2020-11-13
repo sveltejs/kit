@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-alpha.16",
+	"version": "2.0.0-alpha.17",
 	"bin": "./bin",
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
@@ -14,6 +14,7 @@
 		"dev": "rollup -cw",
 		"build": "node scripts/update-versions && rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern bin/ '**/*.{ts,js,svelte}'",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},
