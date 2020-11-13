@@ -27,7 +27,7 @@ export default {
 	],
 	plugins: [
 		nodeResolve(),
-		typescript({ useTsconfigDeclarationDir: true })
+		typescript()
 	],
 	external: [
 		...require('module').builtinModules,
