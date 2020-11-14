@@ -41,7 +41,6 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"build-typings": "cd typings && tsc && node adjust-module-names.mjs",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ '**/*.{ts,mjs,js,svelte}'",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
 		"prepare": "npm run build && npm run build-typings && cd client && tsc",

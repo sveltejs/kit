@@ -3,6 +3,7 @@ import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from 'rollup-plugin-typescript2';
 import pkg from './package.json';
+import { readFileSync, writeFileSync } from 'fs';
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
@@ -35,7 +36,23 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			typescript()
+			typescript({
+				tsconfigDefaults: {
+					compilerOptions: {
+						// create typings. these options do not apply to the other build target
+						declaration: true,
+						emitDeclarationOnly: true,
+						outFile: "./index.js"
+					}
+				},
+				useTsconfigDeclarationDir: true 
+			}),
+			{
+				name: 'adjust-typings',
+				resolveId: () => null,
+				load: () => null,
+				writeBundle: adjustTypings
+			}
 		]
 	},
 
@@ -64,3 +81,24 @@ export default [
 		preserveEntrySignatures: false
 	}
 ];
+
+/** Remove the typings that do not refer to the runtime and fix the module names 
+ * (e.g. change "src/runtime/navigation/goto/index" to "$app/navigation/goto")
+ */
+function adjustTypings() {
+	const alias = '$app';
+
+	const typings_file = 'index.d.ts';
+
+	const onlyRuntimeModules = code =>
+		Array.from(code.matchAll(/declare module "src\/runtime\/.*?\n}/gms))
+			.map(m => m[0])
+			.join('\n\n');
+
+	const code = onlyRuntimeModules(readFileSync(typings_file, 'utf8')).replace(
+		/ (module|from) ['"]src\/runtime\/(.+?)(\/index)?['"]/g,
+		` $1 "${alias}/$2"`
+	);
+
+	writeFileSync(typings_file, code);
+}
