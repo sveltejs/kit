@@ -35,7 +35,6 @@
 	"files": [
 		"assets",
 		"dist",
-		"client",
 		"index.d.ts"
 	],
 	"scripts": {
@@ -43,7 +42,7 @@
 		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ '**/*.{ts,mjs,js,svelte}'",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
-		"prepare": "npm run build && npm run build-typings && cd client && tsc",
+		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	}
 }

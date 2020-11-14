@@ -51,7 +51,7 @@ export default [
 				name: 'adjust-typings',
 				resolveId: () => null,
 				load: () => null,
-				writeBundle: adjustTypings
+				writeBundle: adjust_typings
 			}
 		]
 	},
@@ -85,17 +85,17 @@ export default [
 /** Remove the typings that do not refer to the runtime and fix the module names 
  * (e.g. change "src/runtime/navigation/goto/index" to "$app/navigation/goto")
  */
-function adjustTypings() {
+function adjust_typings() {
 	const alias = '$app';
 
 	const typings_file = 'index.d.ts';
 
-	const onlyRuntimeModules = code =>
+	const only_runtime = code =>
 		Array.from(code.matchAll(/declare module "src\/runtime\/.*?\n}/gms))
 			.map(m => m[0])
 			.join('\n\n');
 
-	const code = onlyRuntimeModules(readFileSync(typings_file, 'utf8')).replace(
+	const code = only_runtime(readFileSync(typings_file, 'utf8')).replace(
 		/ (module|from) ['"]src\/runtime\/(.+?)(\/index)?['"]/g,
 		` $1 "${alias}/$2"`
 	);
