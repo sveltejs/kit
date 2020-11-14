@@ -1,0 +1,29 @@
+{
+	"ts-node": {
+		"compilerOptions": {
+			"module": "commonjs"
+		}
+	},
+	"compilerOptions": {
+		"lib": ["es2020"],
+		// target node v8+ (https://node.green/)
+		// the only missing feature is Array.prototype.values
+		"target": "es2019",
+
+		"declaration": true,
+		"declarationDir": "types",
+
+		"noErrorTruncation": true,
+
+		// rollup takes care of these
+		"module": "esnext",
+		"moduleResolution": "node",
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+
+		"strict": true,
+		"noImplicitThis": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true
+	}
+}

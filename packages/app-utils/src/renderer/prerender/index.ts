@@ -44,7 +44,7 @@ function get_srcset_urls(attrs: string) {
 const OK = 2;
 const REDIRECT = 3;
 
-type Logger = {
+export type Logger = {
 	(msg: string): void;
 	error: (msg: string) => void;
 	warn: (msg: string) => void;

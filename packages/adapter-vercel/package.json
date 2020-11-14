@@ -2,6 +2,7 @@
 	"name": "@sveltejs/adapter-vercel",
 	"version": "0.0.3",
 	"scripts": {
+		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore"
 	},
@@ -14,6 +15,7 @@
 		"tiny-glob": "^0.2.6"
 	},
 	"devDependencies": {
-		"@sveltejs/app-utils": "workspace:*"
+		"@sveltejs/app-utils": "workspace:*",
+		"@types/aws-lambda": "^8.10.64"
 	}
 }
