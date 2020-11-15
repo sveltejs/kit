@@ -82,7 +82,8 @@ export default [
 	}
 ];
 
-/** Remove the typings that do not refer to the runtime and fix the module names 
+/**
+ * Remove the typings that do not refer to the runtime and fix the module names 
  * (e.g. change "src/runtime/navigation/goto/index" to "$app/navigation/goto")
  */
 function adjust_typings() {
