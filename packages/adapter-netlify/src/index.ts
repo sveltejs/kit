@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { URLSearchParams } from 'url';
 import { render } from '@sveltejs/app-utils/renderer';
-import type { PageComponentManifest, EndpointManifest } from '@sveltejs/app-utils';
+import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');
@@ -32,7 +32,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
 	const rendered = await render({
 		host: null, // TODO
-		method: httpMethod,
+		method: httpMethod as Method,
 		headers,
 		path,
 		query
@@ -44,7 +44,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 		root,
 		setup,
 		load: (route: PageComponentManifest | EndpointManifest) => require(`./routes/${route.name}.js`),
-		dev: false
+		dev: false,
+		only_prerender: false
 	});
 
 	if (rendered) {

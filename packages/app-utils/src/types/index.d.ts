@@ -11,7 +11,7 @@ export interface IncomingRequest {
 	host: string | null; // TODO is this actually necessary?
 	method: Method;
 	headers: Headers;
-	body: any; // TODO
+	body?: any; // TODO
 	path: string;
 	query: URLSearchParams;
 }
