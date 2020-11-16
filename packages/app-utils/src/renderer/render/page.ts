@@ -1,12 +1,20 @@
-import { URLSearchParams } from 'url';
-import { existsSync, createReadStream } from 'fs';
-import { readable, writable } from 'svelte/store';
-import { parse, resolve } from 'url';
 import devalue from 'devalue';
-import fetch, { Response } from 'node-fetch';
+import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
+import fetch, { Response } from 'node-fetch';
+import { readable, writable } from 'svelte/store';
+import { parse, resolve, URLSearchParams } from 'url';
+import {
+	EndpointResponse,
+	Headers,
+	IncomingRequest,
+	PageManifest,
+	PageManifestPart,
+	PageResponse,
+	RenderOptions,
+	RouteParams
+} from '../../types';
 import { render } from './index';
-import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers } from '../../types';
 
 const noop = () => {};
 
@@ -136,11 +144,8 @@ export default async function render_page(
 
 		const match = page.pattern.exec(request.path)!;
 
-		// TODO this logic is duplicated in several places
-		const params: Record<string, string> = {};
-		page.parts[page.parts.length - 1].params.forEach((name, i) => {
-			params[name] = match[i + 1];
-		});
+		// the last part has all parameters from any segment in the URL
+		const params = parts_to_params(match, page.parts[page.parts.length - 1] as PageManifestPart)
 
 		const preloaded: any[] = [];
 		let can_prerender = true;
@@ -155,10 +160,8 @@ export default async function render_page(
 				return;
 			}
 
-			const params: Record<string, string> = {};
-			part.params.forEach((name, i) => {
-				params[name] = match[i + 1];
-			});
+			// these are only the parameters up to the current URL segment
+			const params = parts_to_params(match, part)
 
 			const props = mod.preload
 				? await mod.preload.call(preload_context, {
@@ -242,7 +245,7 @@ export default async function render_page(
 		const js_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.js] : []);
 		const css_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.css] : []);
 
-		page.parts.filter(Boolean).forEach(part => {
+		(page.parts.filter(Boolean) as PageManifestPart[]).forEach(part => {
 			const deps = options.client.deps[part.component.name];
 
 			if (!deps) return; // we don't have this info during dev
@@ -302,6 +305,22 @@ export default async function render_page(
 			};
 		}
 	}
+}
+
+function parts_to_params(match: RegExpMatchArray, part: PageManifestPart): RouteParams {
+	const params: RouteParams = {};
+
+	part.params.forEach((name, i) => {
+		const is_spread = /^\.{3}.+$/.test(name)
+
+		if (is_spread) {
+			params[name.slice(3)] = match[i + 1].split('/');
+		} else {
+			params[name] = match[i + 1];
+		}
+	});
+
+	return params;
 }
 
 function try_serialize(data: any, fail?: (err: Error) => void) {
