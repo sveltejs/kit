@@ -128,8 +128,10 @@ importers:
       tiny-glob: 0.2.6
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
+      '@types/aws-lambda': 8.10.64
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
+      '@types/aws-lambda': ^8.10.64
       tiny-glob: ^0.2.6
   packages/app-utils:
     dependencies:
