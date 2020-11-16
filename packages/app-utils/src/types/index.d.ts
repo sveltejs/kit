@@ -1,7 +1,7 @@
 import { URLSearchParams } from 'url';
 
 // do not import this file from outside app-utils
-// instead, import from @sveltejs/app-utils by re-exporting types in /index.d.ts
+// these types are re-exported in /index.d.ts and should be imported from "@sveltejs/app-utils"
 
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
