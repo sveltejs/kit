@@ -34,7 +34,7 @@ export default {
 			name: 'copy-types',
 			resolveId: () => null,
 			load: () => null,
-			writeBundle: (...args) => {
+			writeBundle: () => {
 				copyRecursiveSync('build/types', '.');
 				copyRecursiveSync('src/types', 'types');
 			}
