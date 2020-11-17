@@ -101,3 +101,16 @@ export interface ClientManifest {
 }
 
 export type Loader = (item: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO types for modules
+
+export type Query = Record<string, string | string[]>;
+
+export interface Page {
+	host: string;
+	path: string;
+	params: RouteParams;
+	query: Query;
+}
+
+export interface PageContext extends Page {
+	error?: Error
+}

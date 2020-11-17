@@ -156,7 +156,7 @@ class Watcher extends EventEmitter {
 				const body = await get_body(req);
 
 				const rendered = await render({
-					host: null, // TODO what should this be? is it necessary?
+					host: req.headers.host,
 					headers: req.headers,
 					method: req.method,
 					path: parsed.pathname,

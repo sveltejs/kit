@@ -1,3 +1,6 @@
+import { Page } from '@sveltejs/app-utils';
+export { Page, Query, PageContext } from '@sveltejs/app-utils';
+
 export interface HydratedTarget {
 	redirect?: Redirect;
 	preload_error?: any;
@@ -29,10 +32,10 @@ export type RouteParams = Record<string, string | string[]>;
 
 export interface Route {
   pattern: RegExp;
-  parts: {
+  parts: Array<{
     params: (match: RegExpExecArray) => RouteParams,
 		i: number
-  }[];
+  }>;
 }
 
 export interface Target {
@@ -45,15 +48,4 @@ export interface Target {
 export interface Redirect {
 	statusCode: number;
 	location: string;
-}
-
-export interface Page {
-	host: string;
-	path: string;
-	params: RouteParams;
-	query: Record<string, string | string[]>;
-}
-
-export interface PageContext extends Page {
-	error?: Error
 }
