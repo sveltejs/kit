@@ -10,9 +10,6 @@
 		// the only missing feature is Array.prototype.values
 		"target": "es2020",
 
-		"declaration": true,
-		"declarationDir": "types",
-
 		"noEmitOnError": true,
 		"noErrorTruncation": true,
 
