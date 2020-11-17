@@ -2,8 +2,9 @@
 	"name": "@sveltejs/snowpack-config",
 	"version": "0.0.5",
 	"scripts": {
-		"lint": "eslint --ignore-pattern node_modules/ '**/*.{ts,js,svelte}'",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore"
+		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.prettierignore"
 	},
 	"main": "snowpack.config.js",
 	"dependencies": {
