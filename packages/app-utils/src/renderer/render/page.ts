@@ -8,6 +8,7 @@ import {
 	EndpointResponse,
 	Headers,
 	IncomingRequest,
+	PageContext,
 	PageManifest,
 	PageManifestPart,
 	PageResponse,
@@ -196,12 +197,12 @@ export default async function render_page(
 			}
 		});
 
-		const pageContext = {
-			host: request.host,
+		const pageContext: PageContext = {
+			host: request.host as string,
 			path: request.path,
 			query: search_params_to_map(request.query),
 			params,
-			error
+			error: error || undefined
 		};
 
 		const props: Record<string, any> = {

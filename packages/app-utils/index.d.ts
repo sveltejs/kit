@@ -3,5 +3,8 @@ export {
 	PageManifest,
 	PageComponentManifest,
 	SetupModule,
-	SSRComponentModule
+	SSRComponentModule,
+	Page,
+	PageContext,
+	Query
 } from './src/types';

@@ -1,3 +1,6 @@
+import { Page } from '@sveltejs/app-utils';
+export { Page, Query, PageContext } from '@sveltejs/app-utils';
+
 export interface HydratedTarget {
 	redirect?: Redirect;
 	preload_error?: any;
@@ -45,17 +48,4 @@ export interface Target {
 export interface Redirect {
 	statusCode: number;
 	location: string;
-}
-
-export type Query = Record<string, string | string[]>;
-
-export interface Page {
-	host: string;
-	path: string;
-	params: RouteParams;
-	query: Query;
-}
-
-export interface PageContext extends Page {
-	error?: Error
 }
