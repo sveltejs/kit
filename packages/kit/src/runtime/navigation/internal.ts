@@ -65,7 +65,7 @@ export function extract_query(search: string): Query {
 
 	search.slice(1).split('&').filter(Boolean).forEach(searchParam => {
 		const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(decodeURIComponent(searchParam.replace(/\+/g, ' ')));
-		let prev = query[key]
+		const prev = query[key];
 
 		query[key] = (prev ? (typeof prev === 'string' ? [prev]: prev).concat(value) : value);
 	});
