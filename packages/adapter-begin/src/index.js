@@ -9,12 +9,7 @@ const static_assets = require('@architect/shared/static_assets.js');
 const setup = require('@architect/shared/setup.js');
 
 exports.handler = async function http(req) {
-	const {
-		rawPath: path,
-		requestContext,
-		headers,
-		queryStringParameters: query
-	} = req;
+	const { rawPath: path, requestContext, headers, queryStringParameters: query } = req;
 
 	const { method, domainName } = requestContext.http;
 
@@ -39,8 +34,8 @@ exports.handler = async function http(req) {
 			template,
 			manifest,
 			client,
-      root: App,
-      setup,
+			root: App,
+			setup,
 			load: route => require(`@architect/shared/routes/${route.name}.js`),
 			dev: false
 		}

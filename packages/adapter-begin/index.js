@@ -35,21 +35,15 @@ module.exports = async function builder({ dir, manifest, log }) {
 	const server_directory = resolve(join('src', 'shared'));
 
 	log.minor('Writing client application...' + static_directory);
-	const static_assets = copy(
-		'static',
-		static_directory
-	);
-	const client_assets = copy(
-		resolve(dir, 'client'),
-		join(static_directory, '_app')
-	);
+	const static_assets = copy('static', static_directory);
+	const client_assets = copy(resolve(dir, 'client'), join(static_directory, '_app'));
 
 	log.minor('Prerendering static pages...');
 	await prerender({
-	  dir,
-	  out: static_directory,
-	  manifest,
-	  log
+		dir,
+		out: static_directory,
+		manifest,
+		log
 	});
 
 	log.minor('Building lambda...' + lambda_directory);
@@ -69,12 +63,11 @@ module.exports = async function builder({ dir, manifest, log }) {
 		join(server_directory, 'template.js'),
 		`module.exports = ${JSON.stringify(appHtml)};`
 	);
-  
-  log.minor('Preparing static assets...' + static_directory);
-  const relative_static_assets = [
-		...static_assets,
-		...client_assets
-	].map(filename => `/${relative(static_directory, filename)}`);
+
+	log.minor('Preparing static assets...' + static_directory);
+	const relative_static_assets = [...static_assets, ...client_assets].map(
+		filename => `/${relative(static_directory, filename)}`
+	);
 	const all_static_assets = JSON.stringify(relative_static_assets);
 	writeFileSync(
 		join(server_directory, 'static_assets.js'),
