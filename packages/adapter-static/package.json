@@ -4,8 +4,8 @@
 	"scripts": {
 		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.prettierignore"
+		"format": "prettier --write . --config .gitignore --ignore-path ../../.prettierignore",
+		"check-format": "prettier --check . --config .gitignore --ignore-path ../../.prettierignore"
 	},
 	"dependencies": {
 		"@sveltejs/app-utils": "workspace:*"

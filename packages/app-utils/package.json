@@ -6,8 +6,8 @@
 		"dev": "npm run clean && rollup -cw",
 		"build": "npm run clean && rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ --ignore-pattern files/ --ignore-pattern http/ --ignore-pattern renderer/ \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.prettierignore",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build",
 		"test": "uvu -r ts-node/register"
