@@ -56,6 +56,14 @@ export interface RenderOptions {
 	dev: boolean; // TODO this is awkward
 }
 
+export interface Route {
+  pattern: RegExp;
+  parts: Array<{
+    params: (match: RegExpExecArray) => RouteParams,
+		i: number
+  }>;
+}
+
 export type RouteParams = Record<string, string | string[]>;
 
 export interface PageComponentManifest {
