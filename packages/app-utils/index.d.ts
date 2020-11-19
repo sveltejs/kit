@@ -7,5 +7,7 @@ export {
 	Page,
 	PageContext,
 	Query,
-	Method
+	Method,
+	Route,
+	RouteParams
 } from './src/types';
