@@ -6,11 +6,14 @@ module.exports = {
 		externalPackage: require('module').builtinModules
 	},
 	plugins: [
-		['@snowpack/plugin-svelte', {
-			compilerOptions: {
-				hydratable: true
+		[
+			'@snowpack/plugin-svelte',
+			{
+				compilerOptions: {
+					hydratable: true
+				}
 			}
-		}]
+		]
 	],
 	devOptions: {
 		open: 'none'
