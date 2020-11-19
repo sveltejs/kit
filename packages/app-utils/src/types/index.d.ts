@@ -1,5 +1,8 @@
 import { URLSearchParams } from 'url';
 
+// do not import this file from outside app-utils
+// these types are re-exported in /index.d.ts and should be imported from "@sveltejs/app-utils"
+
 export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
 export type Headers = Record<string, string>;
@@ -8,7 +11,7 @@ export interface IncomingRequest {
 	host: string | null; // TODO is this actually necessary?
 	method: Method;
 	headers: Headers;
-	body: any; // TODO
+	body?: any; // TODO
 	path: string;
 	query: URLSearchParams;
 }

@@ -6,5 +6,6 @@ export {
 	SSRComponentModule,
 	Page,
 	PageContext,
-	Query
+	Query,
+	Method
 } from './src/types';

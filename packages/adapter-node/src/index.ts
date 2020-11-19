@@ -4,7 +4,7 @@ import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
-import type { PageComponentManifest, EndpointManifest } from '@sveltejs/app-utils';
+import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');
@@ -38,9 +38,9 @@ const server = http.createServer((req, res) => {
 
 				const rendered = await render({
 					host: null, // TODO
-					method: req.method,
-					headers: req.headers,
-					path: parsed.pathname,
+					method: req.method as Method,
+					headers: req.headers as Record<string, string>, // TODO: what about repeated headers, i.e. string[]
+					path: parsed.pathname as string,
 					body: await get_body(req),
 					query: new URLSearchParams(parsed.query || '')
 				}, {
@@ -51,7 +51,8 @@ const server = http.createServer((req, res) => {
 					root,
 					setup,
 					load: (route: PageComponentManifest | EndpointManifest) => require(`./routes/${route.name}.js`),
-					dev: false
+					dev: false,
+					only_prerender: false
 				});
 
 				if (rendered) {
