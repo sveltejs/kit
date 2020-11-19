@@ -19,8 +19,8 @@ import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
 
-export function dev(opts: DevConfig) {
-	return new Watcher(opts);
+export function dev(opts: DevConfig): Promise<Watcher> {
+	return new Watcher(opts).init();
 }
 
 class Watcher extends EventEmitter {
@@ -47,8 +47,6 @@ class Watcher extends EventEmitter {
 		process.on('exit', () => {
 			this.close();
 		});
-
-		this.init();
 	}
 
 	async init() {
@@ -61,6 +59,8 @@ class Watcher extends EventEmitter {
 		this.emit('ready', {
 			port: this.opts.port
 		} as ReadyEvent);
+
+		return this;
 	}
 
 	async init_filewatcher() {
