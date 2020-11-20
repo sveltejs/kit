@@ -43,7 +43,6 @@
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ \"**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	}
 }
