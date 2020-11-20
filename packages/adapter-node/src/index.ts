@@ -1,70 +1,49 @@
-import * as fs from 'fs';
-import * as http from 'http';
-import { parse, URLSearchParams } from 'url';
-import sirv from 'sirv';
-import { render } from '@sveltejs/app-utils/renderer';
-import { get_body } from '@sveltejs/app-utils/http';
+import fs from 'fs';
+import { RouteManifest } from '@sveltejs/app-utils';
+import { copy } from '@sveltejs/app-utils/files';
+import { prerender } from '@sveltejs/app-utils/renderer';
+import { Logger } from '@sveltejs/app-utils/renderer/prerender';
 
-const manifest = require('./manifest.js');
-const client = require('./client.json');
+module.exports = async function adapter({
+	dir,
+	manifest,
+	log
+}: {
+	dir: string,
+	manifest: RouteManifest,
+	log: Logger
+}) {
+	const out = 'build'; // TODO implement adapter options
 
-const { PORT = 3000 } = process.env;
+	copy(`${dir}/client`, `${out}/assets/_app`, file => !!file && file[0] !== '.');
+	copy(`${dir}/server`, out);
+	copy(`${__dirname}/server.js`, `${out}/index.js`);
+	copy(`${dir}/client.json`, `${out}/client.json`);
+	copy('src/app.html', `${out}/app.html`);
 
-const mutable = dir => sirv(dir, {
-	etag: true,
-	maxAge: 0
-});
+	log.info('Prerendering static pages...');
 
-const static_handler = mutable('static');
-const prerendered_handler = fs.existsSync('build/prerendered')
-	? mutable('build/prerendered')
-	: (_req: http.IncomingMessage, _res: http.ServerResponse, next: () => void) => next();
-
-const assets_handler = sirv('build/assets', {
-	maxAge: 31536000,
-	immutable: true
-});
-
-const root = require('./root.js');
-const setup = require('./setup.js');
-const template = fs.readFileSync('build/app.html', 'utf-8');
-
-const server = http.createServer((req, res) => {
-	assets_handler(req, res, () => {
-		static_handler(req, res, () => {
-			prerendered_handler(req, res, async () => {
-				const parsed = parse(req.url);
-
-				const rendered = await render({
-					host: null, // TODO
-					method: req.method,
-					headers: req.headers,
-					path: parsed.pathname,
-					body: await get_body(req),
-					query: new URLSearchParams(parsed.query)
-				}, {
-					static_dir: 'static',
-					template,
-					manifest,
-					client,
-					root,
-					setup,
-					load: route => require(`./routes/${route.name}.js`),
-					dev: false
-				});
-
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					res.end(rendered.body);
-				} else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
-			});
-		});
+	await prerender({
+		force: true,
+		dir,
+		out: `${out}/prerendered`,
+		assets: `${out}/assets`,
+		manifest,
+		log
 	});
-});
 
-server.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
-});
+	// generate manifest
+	const written_manifest = `module.exports = {
+		layout: ${JSON.stringify(manifest.layout)},
+		error: ${JSON.stringify(manifest.error)},
+		components: ${JSON.stringify(manifest.components)},
+		pages: [
+			${manifest.pages.map(page => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`).join(',\n\t\t\t')}
+		],
+		endpoints: [
+			${manifest.endpoints.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
+		]
+	};`.replace(/^\t/gm, '');
+
+	fs.writeFileSync(`${out}/manifest.js`, written_manifest);
+};

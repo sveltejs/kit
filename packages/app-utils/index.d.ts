@@ -2,6 +2,13 @@ export {
 	EndpointManifest,
 	PageManifest,
 	PageComponentManifest,
+	RouteManifest,
 	SetupModule,
-	SSRComponentModule
+	SSRComponentModule,
+	Page,
+	PageContext,
+	Query,
+	Method,
+	Route,
+	RouteParams
 } from './src/types';

@@ -1,3 +1,6 @@
+import { Page } from '@sveltejs/app-utils';
+export { Page, Query, PageContext, Route, RouteParams } from '@sveltejs/app-utils';
+
 export interface HydratedTarget {
 	redirect?: Redirect;
 	preload_error?: any;
@@ -27,7 +30,7 @@ export interface ScrollPosition {
 
 export interface Target {
 	href: string;
-	route: any; // TODO Route;
+	route: Route;
 	match: RegExpExecArray;
 	page: Page;
 }
@@ -35,15 +38,4 @@ export interface Target {
 export interface Redirect {
 	statusCode: number;
 	location: string;
-}
-
-export interface Page {
-	host: string;
-	path: string;
-	params: Record<string, string>;
-	query: Record<string, string | string[]>;
-}
-
-export interface PageContext extends Page {
-	error?: Error
 }

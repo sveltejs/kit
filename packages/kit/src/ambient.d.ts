@@ -1,11 +1,20 @@
-declare module "MANIFEST" {
-  export const components: any[];
-  export const routes: any[];
-  export const layout: any;
-  export const ErrorComponent: any;
+declare module 'MANIFEST' {
+	import { SvelteComponent } from 'svelte';
+	import { Route } from '@sveltejs/app-utils';
+
+	export const components: Array<() => SvelteComponent>;
+	export const routes: Route[];
+	export const layout: SvelteComponent;
+	export const ErrorComponent: SvelteComponent;
 }
 
-declare module "ROOT" {
-  const root: any;
-  export default root;
+declare module 'ROOT' {
+	import { SvelteComponent } from 'svelte';
+
+	type Constructor<T> = {
+		new (...args: any[]): T;
+	};
+
+	const root: Constructor<SvelteComponent>;
+	export default root;
 }

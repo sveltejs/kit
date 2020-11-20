@@ -31,7 +31,7 @@ prog.command('dev')
 		const { dev } = await import('./api/dev');
 
 		try {
-			const watcher = dev({
+			const watcher = await dev({
 				port: opts.port
 			});
 

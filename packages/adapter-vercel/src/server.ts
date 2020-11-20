@@ -1,5 +1,8 @@
-const { URLSearchParams } = require('url');
-const { render } = require('@sveltejs/app-utils/renderer');
+import { URLSearchParams } from 'url';
+import { render } from '@sveltejs/app-utils/renderer';
+import type { APIGatewayProxyHandler } from 'aws-lambda';
+import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
+
 const client = require('./server/client.json');
 const manifest = require('./server/manifest.js');
 const root = require('./server/root.js');
@@ -8,7 +11,7 @@ const template = require('./server/template.js');
 
 // TODO: This is the same as netlify's render function, and basically just builds an AWS lambda.
 // We should extract it into some sort of lambda rendering package
-exports.handler = async function(event) {
+export const handler: APIGatewayProxyHandler = async (event) => {
 	const {
 		path,
 		httpMethod,
@@ -29,7 +32,7 @@ exports.handler = async function(event) {
 	const rendered = await render(
 		{
 			host: null, // TODO
-			method: httpMethod,
+			method: httpMethod as Method,
 			headers,
 			path,
 			query
@@ -41,8 +44,9 @@ exports.handler = async function(event) {
 			client,
 			root,
 			setup,
-			load: route => require(`./server/routes/${route.name}.js`),
-			dev: false
+			load: (route: PageComponentManifest | EndpointManifest) => require(`./server/routes/${route.name}.js`),
+			dev: false,
+			only_prerender: false
 		}
 	);
 

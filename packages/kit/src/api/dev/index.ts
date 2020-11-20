@@ -6,20 +6,20 @@ import * as ports from 'port-authority';
 import create_manifest_data from '../../core/create_manifest_data';
 import { createServer, Server } from 'http';
 import { create_app } from '../../core/create_app';
-import snowpack, {SnowpackDevServer} from 'snowpack';
+import snowpack, { SnowpackDevServer, SnowpackConfig } from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { ManifestData, ReadyEvent } from '../../interfaces';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
-import { SSRComponentModule, SetupModule } from '@sveltejs/app-utils';
+import { SSRComponentModule, SetupModule, Method } from '@sveltejs/app-utils';
 import { DevConfig, Loader } from './types';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
 
-export function dev(opts: DevConfig) {
-	return new Watcher(opts);
+export function dev(opts: DevConfig): Promise<Watcher> {
+	return new Watcher(opts).init();
 }
 
 class Watcher extends EventEmitter {
@@ -30,6 +30,7 @@ class Watcher extends EventEmitter {
 	cheapwatch: CheapWatch;
 
 	snowpack_port: number;
+	snowpack_config: SnowpackConfig;
 	snowpack: SnowpackDevServer;
 	server: Server;
 
@@ -45,8 +46,6 @@ class Watcher extends EventEmitter {
 		process.on('exit', () => {
 			this.close();
 		});
-
-		this.init();
 	}
 
 	async init() {
@@ -59,6 +58,8 @@ class Watcher extends EventEmitter {
 		this.emit('ready', {
 			port: this.opts.port
 		} as ReadyEvent);
+
+		return this;
 	}
 
 	async init_filewatcher() {
@@ -83,12 +84,14 @@ class Watcher extends EventEmitter {
 
 	async init_snowpack() {
 		this.snowpack_port = await ports.find(this.opts.port + 1);
+		this.snowpack_config = snowpack.loadAndValidateConfig({
+			config: 'snowpack.config.js',
+			port: this.snowpack_port
+		}, pkg);
+
 		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
-			config: snowpack.loadAndValidateConfig({
-				config: 'snowpack.config.js',
-				port: this.snowpack_port
-			}, pkg),
+			config: this.snowpack_config,
 			lockfile: null,
 			pkgManifest: pkg
 		});
@@ -97,7 +100,7 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		const { port } = this.opts;
 		const { snowpack_port } = this;
-		const load: Loader = loader(this.snowpack);
+		const load: Loader = loader(this.snowpack, this.snowpack_config);
 
 		this.server = createServer(async (req, res) => {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {

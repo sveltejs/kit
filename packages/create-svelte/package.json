@@ -8,12 +8,14 @@
 		"kleur": "^4.1.3",
 		"prompts": "^2.3.2",
 		"rollup": "^2.32.0",
-		"tiny-glob": "^0.2.6"
+		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "node scripts/update-versions && rollup -c",
-		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern bin/ '**/*.{ts,js,svelte}'",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern bin/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},

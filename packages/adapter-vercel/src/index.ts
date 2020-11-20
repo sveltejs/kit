@@ -1,18 +1,24 @@
-const { writeFileSync, readFileSync } = require('fs');
-const { resolve, join } = require('path');
-const { prerender, generate_manifest_module } = require('@sveltejs/app-utils/renderer');
-const { copy } = require('@sveltejs/app-utils/files');
+import { writeFileSync, readFileSync } from 'fs';
+import { resolve, join } from 'path';
+import { RouteManifest } from '@sveltejs/app-utils';
+import { copy } from '@sveltejs/app-utils/files';
+import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
+import { Logger } from '@sveltejs/app-utils/renderer/prerender';
 
-module.exports = async function builder({ dir, manifest, log }) {
+export async function builder({ dir, manifest, log }: {
+	dir: string,
+	manifest: RouteManifest,
+	log: Logger
+}) {
 	const lambda_directory = resolve('api');
 	const static_directory = resolve('public');
 	const server_directory = resolve(join('api', 'server'));
 
-	log.minor('Writing client application...');
+	log.info('Writing client application...');
 	copy('static', static_directory);
 	copy(resolve(dir, 'client'), join(static_directory, '_app'));
 
-	log.minor('Building lambda...');
+	log.info('Building lambda...');
 	copy(resolve(__dirname, 'src'), lambda_directory);
 	copy(join(resolve(dir), 'client.json'), join(server_directory, 'client.json'));
 	const written_manifest = generate_manifest_module(manifest);
@@ -24,19 +30,20 @@ module.exports = async function builder({ dir, manifest, log }) {
 		`module.exports = ${JSON.stringify(appHtml)};`
 	);
 
-	log.minor('Prerendering static pages...');
+	log.info('Prerendering static pages...');
 	await prerender({
+		force: true,
 		dir,
 		out: static_directory,
 		manifest,
 		log
 	});
 
-	log.minor('Writing server application...');
+	log.info('Writing server application...');
 	copy(resolve(dir, 'server'), server_directory);
 
 	// TODO: Merge this, rather than write it
-	log.minor('Rewriting vercel configuration...');
+	log.info('Rewriting vercel configuration...');
 	writeFileSync(
 		'vercel.json',
 		JSON.stringify({
