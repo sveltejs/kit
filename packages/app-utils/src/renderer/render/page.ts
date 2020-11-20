@@ -267,11 +267,11 @@ export default async function render_page(
 				import { start } from '/_app/${options.client.entry}';
 
 				start({
-					target: document.body
+					target: document.querySelector('#svelte')
 				});
 			</script>`.replace(/^\t{2}/gm, ''); // TODO add links
 
-		const body = `${rendered.html}
+		const body = `<div id="svelte">${rendered.html}</div>
 			<script>
 				__SVELTE__ = {
 					baseUrl: "${baseUrl}",
@@ -295,7 +295,7 @@ export default async function render_page(
 	} catch (thrown) {
 		console.error(thrown.stack);
 
-		if (!error) {	
+		if (!error) {
 			const status = thrown.status || 500;
 			return render_page(request, context, options, status, thrown);
 		} else {
