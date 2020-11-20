@@ -1,9 +1,4 @@
 {
-	"ts-node": {
-		"compilerOptions": {
-			"module": "commonjs"
-		}
-	},
 	"compilerOptions": {
 		"lib": ["es2020"],
 		// target node v8+ (https://node.green/)
