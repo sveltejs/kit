@@ -1,6 +1,6 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
 import { URLSearchParams } from 'url';
 import { render } from '@sveltejs/app-utils/renderer';
+import type { APIGatewayProxyHandler } from 'aws-lambda';
 import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
 
 const client = require('./server/client.json');

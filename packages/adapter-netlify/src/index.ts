@@ -1,14 +1,20 @@
-const fs = require('fs');
-const path = require('path');
-const toml = require('toml');
-const glob = require('tiny-glob/sync');
-const { prerender, generate_manifest_module } = require('@sveltejs/app-utils/renderer');
-const { mkdirp } = require('@sveltejs/app-utils/files');
+import fs from 'fs';
+import path from 'path';
+import toml from 'toml';
+import glob from 'tiny-glob/sync';
+import { RouteManifest } from '@sveltejs/app-utils';
+import { mkdirp } from '@sveltejs/app-utils/files';
+import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
+import { Logger } from '@sveltejs/app-utils/renderer/prerender';
 
 module.exports = async function builder({
 	dir,
 	manifest,
 	log
+}: {
+	dir: string,
+	manifest: RouteManifest,
+	log: Logger
 }) {
 	let netlify_config;
 
@@ -49,8 +55,9 @@ module.exports = async function builder({
 	});
 
 	// prerender
-	log.minor('Prerendering static pages...');
+	log.info('Prerendering static pages...');
 	await prerender({
+		force: true,
 		dir,
 		out: publish,
 		manifest,
