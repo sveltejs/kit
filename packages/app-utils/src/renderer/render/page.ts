@@ -261,10 +261,9 @@ export default async function render_page(
 		const serialized_preloads = `[${preloaded
 			.map((data) =>
 				try_serialize(data, (err: Error) => {
+					const path = '/' + segments.join('/');
 					console.error(
-						`Failed to serialize preloaded data to transmit to the client at the /${segments.join(
-							'/'
-						)} route: ${err.message}`
+						`Failed to serialize preloaded data to transmit to the client at the ${path} route: ${err.message}`
 					);
 					console.warn(
 						'The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information'
@@ -275,20 +274,17 @@ export default async function render_page(
 
 		const rendered = options.root.default.render(props);
 
-		const js_deps = new Set(
-			options.client.deps.__entry__ ? [...options.client.deps.__entry__.js] : []
-		);
-		const css_deps = new Set(
-			options.client.deps.__entry__ ? [...options.client.deps.__entry__.css] : []
-		);
+		const deps = options.client.deps;
+		const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
+		const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
 
 		(page.parts.filter(Boolean) as PageManifestPart[]).forEach((part) => {
-			const deps = options.client.deps[part.component.name];
+			const page_deps = deps[part.component.name];
 
-			if (!deps) return; // we don't have this info during dev
+			if (!page_deps) return; // we don't have this info during dev
 
-			deps.js.forEach((dep) => js_deps.add(dep));
-			deps.css.forEach((dep) => css_deps.add(dep));
+			page_deps.js.forEach((dep) => js_deps.add(dep));
+			page_deps.css.forEach((dep) => css_deps.add(dep));
 		});
 
 		const head = `${rendered.head}
