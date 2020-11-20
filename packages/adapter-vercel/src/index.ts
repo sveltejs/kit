@@ -1,66 +1,64 @@
-import { APIGatewayProxyHandler } from 'aws-lambda';
-import { URLSearchParams } from 'url';
-import { render } from '@sveltejs/app-utils/renderer';
-import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
+import { writeFileSync, readFileSync } from 'fs';
+import { resolve, join } from 'path';
+import { RouteManifest } from '@sveltejs/app-utils';
+import { copy } from '@sveltejs/app-utils/files';
+import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
+import { Logger } from '@sveltejs/app-utils/renderer/prerender';
 
-const client = require('./server/client.json');
-const manifest = require('./server/manifest.js');
-const root = require('./server/root.js');
-const setup = require('./server/setup.js');
-const template = require('./server/template.js');
+export async function builder({ dir, manifest, log }: {
+	dir: string,
+	manifest: RouteManifest,
+	log: Logger
+}) {
+	const lambda_directory = resolve('api');
+	const static_directory = resolve('public');
+	const server_directory = resolve(join('api', 'server'));
 
-// TODO: This is the same as netlify's render function, and basically just builds an AWS lambda.
-// We should extract it into some sort of lambda rendering package
-export const handler: APIGatewayProxyHandler = async (event) => {
-	const {
-		path,
-		httpMethod,
-		headers,
-		queryStringParameters
-		// body, // TODO pass this to renderer
-		// isBase64Encoded // TODO is this useful?
-	} = event;
+	log.info('Writing client application...');
+	copy('static', static_directory);
+	copy(resolve(dir, 'client'), join(static_directory, '_app'));
 
-	const query = new URLSearchParams();
-	for (const k in queryStringParameters) {
-		const value = queryStringParameters[k];
-		value.split(', ').forEach(v => {
-			query.append(k, v);
-		});
-	}
-
-	const rendered = await render(
-		{
-			host: null, // TODO
-			method: httpMethod as Method,
-			headers,
-			path,
-			query
-		},
-		{
-			static_dir: 'static',
-			template,
-			manifest,
-			client,
-			root,
-			setup,
-			load: (route: PageComponentManifest | EndpointManifest) => require(`./server/routes/${route.name}.js`),
-			dev: false,
-			only_prerender: false
-		}
+	log.info('Building lambda...');
+	copy(resolve(__dirname, 'src'), lambda_directory);
+	copy(join(resolve(dir), 'client.json'), join(server_directory, 'client.json'));
+	const written_manifest = generate_manifest_module(manifest);
+	const htmlPath = resolve('src', 'app.html');
+	const appHtml = readFileSync(htmlPath, 'utf-8');
+	writeFileSync(join(server_directory, 'manifest.js'), written_manifest);
+	writeFileSync(
+		join(server_directory, 'template.js'),
+		`module.exports = ${JSON.stringify(appHtml)};`
 	);
 
-	if (rendered) {
-		return {
-			isBase64Encoded: false,
-			statusCode: rendered.status,
-			headers: rendered.headers,
-			body: rendered.body
-		};
-	}
+	log.info('Prerendering static pages...');
+	await prerender({
+		force: true,
+		dir,
+		out: static_directory,
+		manifest,
+		log
+	});
 
-	return {
-		statusCode: 404,
-		body: 'Not found'
-	};
+	log.info('Writing server application...');
+	copy(resolve(dir, 'server'), server_directory);
+
+	// TODO: Merge this, rather than write it
+	log.info('Rewriting vercel configuration...');
+	writeFileSync(
+		'vercel.json',
+		JSON.stringify({
+			public: true,
+			build: {
+				env: {
+					NODEJS_AWS_HANDLER_NAME: 'handler'
+				}
+			},
+			rewrites: [
+				{
+					source: '/(.*)',
+					destination: '/api/render/'
+				}
+			]
+		})
+	);
 };

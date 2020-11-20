@@ -2,6 +2,7 @@ export {
 	EndpointManifest,
 	PageManifest,
 	PageComponentManifest,
+	RouteManifest,
 	SetupModule,
 	SSRComponentModule,
 	Page,
