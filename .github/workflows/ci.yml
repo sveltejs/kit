@@ -1,6 +1,12 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+env:
+  CI: true
 
 jobs:
   Tests:
@@ -18,9 +24,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm install -g pnpm
     - run: pnpm install
-#    - run: pnpm test
-      env:
-        CI: true
 #  Lint:
 #    runs-on: ubuntu-latest
 #    steps:
