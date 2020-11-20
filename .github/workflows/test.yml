@@ -1,25 +1,29 @@
 name: test
 
-on:
-  push:
-    branches:
-      - '*'
+on: [push, pull_request]
 
 jobs:
-  build:
+  Tests:
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 6
-    runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [10, 12, 14]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
+    - run: git config --global core.autocrlf false
     - uses: actions/checkout@v2
-
-    - name: Install dependencies
-      run:
-        npm i -g pnpm
-        pnpm install
-
-#    - name: Lint
-#      run: pnpm lint
-
-#    - name: Test
-#      run: pnpm test
+    - uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: pnpm install
+#    - run: pnpm test
+#      env:
+#        CI: true
+#  Lint:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v2
+#    - uses: actions/setup-node@v1
+#    - run: pnpm install
+#    - run: pnpm lint
