@@ -104,8 +104,8 @@ export async function prerender({
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const is_html =
-				response_type === REDIRECT || rendered.headers?.['content-type'] === 'text/html';
+			const headers = rendered.headers;
+			const is_html = response_type === REDIRECT || headers?.['content-type'] === 'text/html';
 
 			const parts = path.split('/');
 			if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -116,12 +116,12 @@ export async function prerender({
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const location = rendered.headers['location'];
+				const location = headers['location'];
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
 				fs.writeFileSync(
 					file,
-					`<script>window.location.href=${JSON.stringify(rendered.headers['location'])}</script>`
+					`<script>window.location.href=${JSON.stringify(headers['location'])}</script>`
 				);
 
 				return;
