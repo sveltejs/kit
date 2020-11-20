@@ -51,9 +51,9 @@ export function set_target(node: Node) {
 	target = node;
 }
 
-export default function start(opts: {
+export default async function start(opts: {
 	target: Node
-}): Promise<void> {
+}) {
 	set_target(opts.target);
 
 	init_router(initial_data.baseUrl, handle_target);
@@ -61,9 +61,7 @@ export default function start(opts: {
 	start_prefetching();
 
 	if (initial_data.error) {
-		return Promise.resolve().then(() => {
-			return handle_error();
-		});
+		return handle_error();
 	}
 
 	return load_current_page();
