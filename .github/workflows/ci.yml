@@ -8,7 +8,7 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        node-version: [10, 12, 14]
+        node-version: [12, 14]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
     - run: git config --global core.autocrlf false
@@ -19,8 +19,8 @@ jobs:
     - run: npm install -g pnpm
     - run: pnpm install
 #    - run: pnpm test
-#      env:
-#        CI: true
+      env:
+        CI: true
 #  Lint:
 #    runs-on: ubuntu-latest
 #    steps:
