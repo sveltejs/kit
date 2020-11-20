@@ -1,5 +1,5 @@
 import { Page } from '@sveltejs/app-utils';
-export { Page, Query, PageContext, Route, RouteParams } from '@sveltejs/app-utils';
+export { Page, Query, PageContext } from '@sveltejs/app-utils';
 
 export interface HydratedTarget {
 	redirect?: Redirect;
@@ -26,6 +26,16 @@ export interface InitialData {
 export interface ScrollPosition {
 	x: number;
 	y: number;
+}
+
+export type RouteParams = Record<string, string | string[]>;
+
+export interface Route {
+  pattern: RegExp;
+  parts: Array<{
+    params: (match: RegExpExecArray) => RouteParams,
+		i: number
+  }>;
 }
 
 export interface Target {
