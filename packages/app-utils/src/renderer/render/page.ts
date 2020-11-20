@@ -1,12 +1,21 @@
-import { URLSearchParams } from 'url';
-import { existsSync, createReadStream } from 'fs';
-import { readable, writable } from 'svelte/store';
-import { parse, resolve } from 'url';
 import devalue from 'devalue';
-import fetch, { Response } from 'node-fetch';
+import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
+import fetch, { Response } from 'node-fetch';
+import { readable, writable } from 'svelte/store';
+import { parse, resolve, URLSearchParams } from 'url';
+import {
+	EndpointResponse,
+	Headers,
+	IncomingRequest,
+	PageContext,
+	PageManifest,
+	PageManifestPart,
+	PageResponse,
+	RenderOptions,
+	RouteParams
+} from '../../types';
 import { render } from './index';
-import { IncomingRequest, RenderOptions, PageManifest, EndpointResponse, PageResponse, Headers } from '../../types';
 
 const noop = () => {};
 
@@ -19,7 +28,9 @@ type FetchOpts = {
 export default async function render_page(
 	request: IncomingRequest,
 	context: any,
-	options: RenderOptions
+	options: RenderOptions,
+	status: number = 200,
+	error: Error | null = null
 ): Promise<{
 	status: number,
 	body: string,
@@ -134,11 +145,8 @@ export default async function render_page(
 
 		const match = page.pattern.exec(request.path)!;
 
-		// TODO this logic is duplicated in several places
-		const params: Record<string, string> = {};
-		page.parts[page.parts.length - 1].params.forEach((name, i) => {
-			params[name] = match[i + 1];
-		});
+		// the last part has all parameters from any segment in the URL
+		const params = parts_to_params(match, page.parts[page.parts.length - 1] as PageManifestPart)
 
 		const preloaded: any[] = [];
 		let can_prerender = true;
@@ -153,10 +161,8 @@ export default async function render_page(
 				return;
 			}
 
-			const params: Record<string, string> = {};
-			part.params.forEach((name, i) => {
-				params[name] = match[i + 1];
-			});
+			// these are only the parameters up to the current URL segment
+			const params = parts_to_params(match, part)
 
 			const props = mod.preload
 				? await mod.preload.call(preload_context, {
@@ -191,16 +197,19 @@ export default async function render_page(
 			}
 		});
 
+		const pageContext: PageContext = {
+			host: request.host as string,
+			path: request.path,
+			query: search_params_to_map(request.query),
+			params,
+			error: error || undefined
+		};
+
 		const props: Record<string, any> = {
-			status: 200,
-			error: null,
+			status,
+			error,
 			stores: {
-				page: readable({
-					host: request.host,
-					path: request.path,
-					query: request.query,
-					params
-				}, noop),
+				page: readable(pageContext, noop),
 				preloading: readable(null, noop),
 				session: writable(session)
 			},
@@ -239,7 +248,7 @@ export default async function render_page(
 		const js_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.js] : []);
 		const css_deps = new Set(options.client.deps.__entry__ ? [...options.client.deps.__entry__.css] : []);
 
-		page.parts.filter(Boolean).forEach(part => {
+		(page.parts.filter(Boolean) as PageManifestPart[]).forEach(part => {
 			const deps = options.client.deps[part.component.name];
 
 			if (!deps) return; // we don't have this info during dev
@@ -266,8 +275,8 @@ export default async function render_page(
 			<script>
 				__SVELTE__ = {
 					baseUrl: "${baseUrl}",
-					status: 200,
-					error: null,
+					status: ${status},
+					error: ${serialize_error(error)},
 					preloaded: ${serialized_preloads},
 					session: ${serialized_session}
 				};
@@ -283,56 +292,38 @@ export default async function render_page(
 			body: html,
 			dependencies
 		};
-	} catch (error) {
-		console.error(error.stack);
+	} catch (thrown) {
+		console.error(thrown.stack);
 
-		const status = error.status || 500;
-
-		try {
-			const rendered = options.root.default.render({ status, error });
-
-			const head = `${rendered.head}
-				<script type="module">
-					import { start } from '/_app/${options.client.entry}';
-
-					start({
-						target: document.body
-					});
-				</script>`.replace(/^\t\t\t/gm, '');
-
-			const body = `${rendered.html}
-				<script>
-					__SVELTE__ = {
-						baseUrl: "${baseUrl}",
-						status: ${status},
-						error: ${serialize_error(error)},
-						preloaded: null,
-						session: ${serialized_session}
-					};
-				</script>`.replace(/^\t\t\t/gm, '');
-
-			const html = options.template
-				.replace('%svelte.head%', head)
-				.replace('%svelte.body%', body);
-
-			return {
-				status,
-				headers: {
-					'content-type': 'text/html'
-				},
-				body: html,
-				dependencies: {}
-			};
-		} catch (error) {
+		if (!error) {	
+			const status = thrown.status || 500;
+			return render_page(request, context, options, status, thrown);
+		} else {
 			// oh lawd now you've done it
 			return {
 				status: 500,
 				headers: {},
-				body: error.stack, // TODO probably not in prod?
+				body: thrown.stack, // TODO probably not in prod?
 				dependencies: {}
 			};
 		}
 	}
+}
+
+function parts_to_params(match: RegExpMatchArray, part: PageManifestPart): RouteParams {
+	const params: RouteParams = {};
+
+	part.params.forEach((name, i) => {
+		const is_spread = /^\.{3}.+$/.test(name)
+
+		if (is_spread) {
+			params[name.slice(3)] = match[i + 1].split('/');
+		} else {
+			params[name] = match[i + 1];
+		}
+	});
+
+	return params;
 }
 
 function try_serialize(data: any, fail?: (err: Error) => void) {
@@ -345,7 +336,7 @@ function try_serialize(data: any, fail?: (err: Error) => void) {
 }
 
 // Ensure we return something truthy so the client will not re-render the page over the error
-function serialize_error(error: Error) {
+function serialize_error(error?: Error|null) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
@@ -356,4 +347,16 @@ function serialize_error(error: Error) {
 		serialized = '{}';
 	}
 	return serialized;
+}
+
+function search_params_to_map(params: URLSearchParams) {
+	const map: Record<string, string | string[]> = {};
+
+	for (const key of params.keys()) {
+		const values = params.getAll(key);
+
+		map[key] = values.length > 1 ? values : values[0];
+	}
+
+	return map;
 }

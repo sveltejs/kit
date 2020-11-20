@@ -3,9 +3,9 @@ import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 
 export default {
-	input: 'src/render.ts',
+	input: 'src/index.ts',
 	output: {
-		file: 'render.js',
+		file: 'server.js',
 		format: 'cjs'
 	},
 	plugins: [

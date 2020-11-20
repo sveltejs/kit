@@ -1,5 +1,7 @@
+import { APIGatewayProxyHandler } from 'aws-lambda';
 import { URLSearchParams } from 'url';
 import { render } from '@sveltejs/app-utils/renderer';
+import type { PageComponentManifest, EndpointManifest, Method } from '@sveltejs/app-utils';
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');
@@ -10,7 +12,7 @@ const template = require('./template.js');
 // TODO this is a generic AWS lambda handler, and could be
 // reused by other adapters
 
-export async function handler(event) {
+export const handler: APIGatewayProxyHandler = async (event) => {
 	const {
 		path,
 		httpMethod,
@@ -30,7 +32,7 @@ export async function handler(event) {
 
 	const rendered = await render({
 		host: null, // TODO
-		method: httpMethod,
+		method: httpMethod as Method,
 		headers,
 		path,
 		query
@@ -41,8 +43,9 @@ export async function handler(event) {
 		client,
 		root,
 		setup,
-		load: route => require(`./routes/${route.name}.js`),
-		dev: false
+		load: (route: PageComponentManifest | EndpointManifest) => require(`./routes/${route.name}.js`),
+		dev: false,
+		only_prerender: false
 	});
 
 	if (rendered) {
@@ -58,4 +61,4 @@ export async function handler(event) {
 		statusCode: 404,
 		body: 'Not found'
 	};
-}
+};

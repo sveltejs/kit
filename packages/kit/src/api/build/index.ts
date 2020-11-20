@@ -67,9 +67,9 @@ export async function build(config: SvelteAppConfig) {
 			fs.writeFileSync(setup_file, '');
 		}
 
-		await exec(`${snowpack_bin} build --out=${unoptimized}/server --ssr`);
+		await exec(`node ${snowpack_bin} build --out=${unoptimized}/server --ssr`);
 		log.success('server');
-		await exec(`${snowpack_bin} build --out=${unoptimized}/client`);
+		await exec(`node ${snowpack_bin} build --out=${unoptimized}/client`);
 		log.success('client');
 	}
 

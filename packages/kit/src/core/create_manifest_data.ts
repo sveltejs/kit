@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { PageManifest, PageComponentManifest, EndpointManifest, ManifestData } from '../interfaces';
+import { ManifestData } from '../interfaces';
+import { PageManifest, PageComponentManifest, EndpointManifest } from '@sveltejs/app-utils';
 import { posixify, reserved_words } from '../utils';
 
 export default function create_manifest_data(cwd: string, extensions: string = '.svelte .html'): ManifestData {
@@ -295,7 +296,7 @@ function get_parts(part: string): Part[] {
 			return {
 				content,
 				dynamic,
-				spread: /^\.{3}.+$/.test(content),
+				spread: dynamic && /^\.{3}.+$/.test(content),
 				qualifier
 			};
 		})

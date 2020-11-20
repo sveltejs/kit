@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"lint": "pnpm -r lint"
+		"lint": "pnpm -r lint",
+		"format": "pnpm -r format"
 	},
 	"repository": {
 		"type": "git",
@@ -22,14 +23,15 @@
 		"@rollup/plugin-commonjs": "^15.1.0",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^9.0.0",
-		"@rollup/plugin-typescript": "^6.0.0",
-		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.5.0",
+		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.6.0",
 		"@typescript-eslint/eslint-plugin": "^4.6.0",
 		"@typescript-eslint/parser": "^4.6.0",
 		"eslint": "^7.11.0",
 		"eslint-plugin-import": "^2.22.1",
 		"eslint-plugin-svelte3": "^2.7.3",
+		"prettier": "2.1.2",
 		"rollup": "^2.32.0",
+		"rollup-plugin-typescript2": "^0.29.0",
 		"tslib": "^2.0.3",
 		"typescript": "^4.0.3"
 	}

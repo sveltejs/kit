@@ -3,6 +3,7 @@
 	"version": "0.0.11",
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
+		"@types/aws-lambda": "^8.10.64",
 		"devalue": "^2.0.1",
 		"rollup": "^2.32.0"
 	},
@@ -13,7 +14,9 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern render.js '**/*.{ts,js,svelte}'",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern render.js \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.prettierignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build"
 	},

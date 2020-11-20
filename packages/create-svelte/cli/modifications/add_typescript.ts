@@ -58,7 +58,11 @@ function add_tsconfig(cwd: string): void {
 		"sourceMap": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
+		"paths": {
+			"$components/*": ["./src/components/*"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules/*", ".svelte"]
@@ -69,7 +73,9 @@ function add_tsconfig(cwd: string): void {
 function add_d_ts_file(cwd: string): void {
 	fs.writeFileSync(
 		path.join(cwd, 'src', 'globals.d.ts'),
-		`//#region Ensure Svelte file endings have a type for TypeScript
+		`/// <reference types="@sveltejs/kit" />
+
+//#region Ensure Svelte file endings have a type for TypeScript
 /**
  * These declarations tell TypeScript that we allow import of Svelte files in TS files, e.g.
  * \`\`\`

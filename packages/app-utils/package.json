@@ -2,10 +2,12 @@
 	"name": "@sveltejs/app-utils",
 	"version": "0.0.17",
 	"scripts": {
-		"clean": "node rimraf.js common files http renderer",
+		"clean": "node rimraf.js common files http renderer types build",
 		"dev": "npm run clean && rollup -cw",
 		"build": "npm run clean && rollup -c",
-		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ --ignore-pattern files/ --ignore-pattern http/ --ignore-pattern renderer/ '**/*.{ts,js,svelte}'",
+		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ --ignore-pattern files/ --ignore-pattern http/ --ignore-pattern renderer/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path ../../.prettierignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.prettierignore",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run build",
 		"test": "uvu -r ts-node/register"
