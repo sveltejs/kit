@@ -60,8 +60,6 @@ export default async function start(opts: {
 
 	start_prefetching();
 
-	await Promise.resolve();
-
 	if (initial_data.error) {
 		return handle_error();
 	}
