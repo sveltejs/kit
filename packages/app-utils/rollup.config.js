@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const input = {};
-Object.keys(pkg.exports).forEach(key => {
+Object.keys(pkg.exports).forEach((key) => {
 	input[key.replace(/^\.\//, '')] = `src/${key}/index.ts`;
 });
 
@@ -46,7 +46,7 @@ export default {
 function copyRecursiveSync(src, dest) {
 	if (fs.existsSync(src) && fs.statSync(src).isDirectory()) {
 		fs.mkdirSync(dest, { recursive: true });
-		fs.readdirSync(src).forEach(file =>
+		fs.readdirSync(src).forEach((file) =>
 			copyRecursiveSync(path.join(src, file), path.join(dest, file))
 		);
 	} else {

@@ -2,11 +2,11 @@ import { IncomingMessage } from 'http';
 import { read_only_form_data } from './read_only_form_data';
 
 export function get_body(req: IncomingMessage) {
-	const has_body = (
+	const has_body =
 		req.headers['content-type'] !== undefined &&
 		// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
-		(req.headers['transfer-encoding'] !== undefined || !isNaN(Number(req.headers['content-length'])))
-	);
+		(req.headers['transfer-encoding'] !== undefined ||
+			!isNaN(Number(req.headers['content-length'])));
 
 	if (!has_body) return Promise.resolve(undefined);
 
@@ -26,7 +26,7 @@ export function get_body(req: IncomingMessage) {
 			return get_urlencoded(req);
 
 		case 'multipart/form-data':
-			const boundary = directives.find(directive => directive.startsWith('boundary='));
+			const boundary = directives.find((directive) => directive.startsWith('boundary='));
 			if (!boundary) throw new Error(`Missing boundary`);
 			return get_multipart(req, boundary.slice('boundary='.length));
 
@@ -44,10 +44,13 @@ async function get_urlencoded(req: IncomingMessage) {
 
 	const { data, append } = read_only_form_data();
 
-	text.replace(/\+/g, ' ').split('&').forEach(str => {
-		const [key, value] = str.split('=');
-		append(decodeURIComponent(key), decodeURIComponent(value));
-	});
+	text
+		.replace(/\+/g, ' ')
+		.split('&')
+		.forEach((str) => {
+			const [key, value] = str.split('=');
+			append(decodeURIComponent(key), decodeURIComponent(value));
+		});
 
 	return data;
 }
@@ -58,7 +61,7 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 
 	const nope = () => {
 		throw new Error('Malformed form data');
-	}
+	};
 
 	if (parts[0] !== '' || parts[parts.length - 1].trim() !== '--') {
 		nope();
@@ -66,7 +69,7 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 
 	const { data, append } = read_only_form_data();
 
-	parts.slice(1, -1).forEach(part => {
+	parts.slice(1, -1).forEach((part) => {
 		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part) as RegExpMatchArray;
 		const raw_headers = match[1];
 		const body = match[2].trim();
@@ -74,7 +77,7 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 		let key: string;
 
 		const headers: Record<string, string> = {};
-		raw_headers.split('\r\n').forEach(str => {
+		raw_headers.split('\r\n').forEach((str) => {
 			const [raw_header, ...raw_directives] = str.split('; ');
 			let [name, value] = raw_header.split(': ');
 
@@ -82,7 +85,7 @@ async function get_multipart(req: IncomingMessage, boundary: string) {
 			headers[name] = value;
 
 			const directives: Record<string, string> = {};
-			raw_directives.forEach(raw_directive => {
+			raw_directives.forEach((raw_directive) => {
 				const [name, value] = raw_directive.split('=');
 				directives[name] = JSON.parse(value); // TODO is this right?
 			});
@@ -115,7 +118,7 @@ function get_text(req: IncomingMessage): Promise<string> {
 
 		req.on('error', reject);
 
-		req.on('data', chunk => {
+		req.on('data', (chunk) => {
 			data += chunk;
 		});
 
@@ -131,7 +134,7 @@ function get_buffer(req: IncomingMessage): Promise<ArrayBuffer> {
 
 		req.on('error', reject);
 
-		req.on('data', chunk => {
+		req.on('data', (chunk) => {
 			const new_data = new Uint8Array(data.length + chunk.length);
 
 			for (let i = 0; i < data.length; i += 1) {

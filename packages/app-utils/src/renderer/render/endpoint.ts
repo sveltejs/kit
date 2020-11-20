@@ -5,39 +5,43 @@ export default function render_route(
 	context: any,
 	options: RenderOptions
 ): Promise<{
-	status: number,
-	body: string,
-	headers: Headers
+	status: number;
+	body: string;
+	headers: Headers;
 }> | null {
-	const route: EndpointManifest | undefined = options.manifest.endpoints.find(route => route.pattern.test(request.path));
+	const route: EndpointManifest | undefined = options.manifest.endpoints.find((route) =>
+		route.pattern.test(request.path)
+	);
 	if (!route) return null;
 
-	return Promise.resolve(options.load(route)).then(async mod => {
+	return Promise.resolve(options.load(route)).then(async (mod) => {
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
 			const params: Record<string, string> = {};
 			const match = route.pattern.exec(request.path)!;
 			route.params.forEach((name, i) => {
-				params[name] = match[i + 1]
+				params[name] = match[i + 1];
 			});
 
 			try {
-				let {
-					status = 200,
-					body,
-					headers = {}
-				} = await handler({
-					host: request.host,
-					path: request.path,
-					query: request.query,
-					body: request.body,
-					params
-				}, context);
+				let { status = 200, body, headers = {} } = await handler(
+					{
+						host: request.host,
+						path: request.path,
+						query: request.query,
+						body: request.body,
+						params
+					},
+					context
+				);
 
 				headers = lowercase_keys(headers);
 
-				if (typeof body === 'object' && !('content-type' in headers) || headers['content-type'] === 'application/json') {
+				if (
+					(typeof body === 'object' && !('content-type' in headers)) ||
+					headers['content-type'] === 'application/json'
+				) {
 					headers = { ...headers, 'content-type': 'application/json' };
 					body = JSON.stringify(body);
 				}

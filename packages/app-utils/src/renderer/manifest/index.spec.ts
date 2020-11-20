@@ -6,8 +6,8 @@ import { generate_manifest_module } from '.';
 const generate_manifest_module_suite = suite('#generate_manifest_module()');
 
 generate_manifest_module_suite('writes manifest', () => {
-  const actual = generate_manifest_module(exampleRouteManifest);
-  const expected = `
+	const actual = generate_manifest_module(exampleRouteManifest);
+	const expected = `
 module.exports = {
   layout: {"default":true,"type":"foo","name":"bar","file":"baz","url":"boo"},
   error: {"default":true,"type":"foo","name":"bar","file":"baz","url":"boo"},

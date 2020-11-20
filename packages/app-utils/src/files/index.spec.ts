@@ -36,7 +36,7 @@ suite_copy('filters out subdirectory contents', () => {
 	mkdirSync(join(source_dir, 'no-copy'));
 	writeFileSync(join(source_dir, 'no-copy', 'do-not-copy.js'), '');
 
-	copy(source_dir, dest_dir, f => f === 'source');
+	copy(source_dir, dest_dir, (f) => f === 'source');
 
 	const copied = readdirSync(dest_dir);
 
