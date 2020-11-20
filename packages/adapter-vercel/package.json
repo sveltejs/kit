@@ -12,9 +12,6 @@
 		"index.js",
 		"src/render.js"
 	],
-	"dependencies": {
-		"tiny-glob": "^0.2.6"
-	},
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
 		"@types/aws-lambda": "^8.10.64"

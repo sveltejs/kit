@@ -93,7 +93,7 @@ importers:
   packages/adapter-netlify:
     dependencies:
       kleur: 4.1.3
-      tiny-glob: 0.2.6
+      tiny-glob: 0.2.8
       toml: 3.0.0
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
@@ -106,7 +106,7 @@ importers:
       devalue: ^2.0.1
       kleur: ^4.1.3
       rollup: ^2.32.0
-      tiny-glob: ^0.2.6
+      tiny-glob: ^0.2.8
       toml: ^3.0.0
   packages/adapter-node:
     dependencies:
@@ -124,15 +124,12 @@ importers:
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
   packages/adapter-vercel:
-    dependencies:
-      tiny-glob: 0.2.6
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
       '@types/aws-lambda': 8.10.64
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
       '@types/aws-lambda': ^8.10.64
-      tiny-glob: ^0.2.6
   packages/app-utils:
     dependencies:
       mime: 2.4.6
@@ -164,14 +161,14 @@ importers:
       kleur: 4.1.3
       prompts: 2.3.2
       rollup: 2.32.0
-      tiny-glob: 0.2.6
+      tiny-glob: 0.2.8
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
       gitignore-parser: ^0.0.2
       kleur: ^4.1.3
       prompts: ^2.3.2
       rollup: ^2.32.0
-      tiny-glob: ^0.2.6
+      tiny-glob: ^0.2.8
   packages/kit:
     dependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
@@ -2033,9 +2030,9 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-BWICuzzDvDoH54NHKCseDanAhE3CeDorgDL5MT6LMXXj2WCnd9UC2szdk4AWLfjdgNBCXLUanXYcpBBKOSWGwg==
-  /globalyzer/0.1.4:
+  /globalyzer/0.1.0:
     resolution:
-      integrity: sha512-LeguVWaxgHN0MNbWC6YljNMzHkrCny9fzjmEUdnF1kQ7wATFD1RHFRqA1qxaX2tgxGENlcxjOflopBwj3YZiXA==
+      integrity: sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q==
   /globby/11.0.1:
     dependencies:
       array-union: 2.1.0
@@ -3825,12 +3822,12 @@ packages:
     dev: true
     resolution:
       integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
-  /tiny-glob/0.2.6:
+  /tiny-glob/0.2.8:
     dependencies:
-      globalyzer: 0.1.4
+      globalyzer: 0.1.0
       globrex: 0.1.2
     resolution:
-      integrity: sha512-A7ewMqPu1B5PWwC3m7KVgAu96Ch5LA0w4SnEN/LbDREj/gAD0nPWboRbn8YoP9ISZXqeNAlMvKSKoEuhcfK3Pw==
+      integrity: sha512-vkQP7qOslq63XRX9kMswlby99kyO5OvKptw7AMwBVMjXEI7Tb61eoI5DydyEMOseyGS5anDN1VPoVxEvH01q8w==
   /tmp/0.0.33:
     dependencies:
       os-tmpdir: 1.0.2
