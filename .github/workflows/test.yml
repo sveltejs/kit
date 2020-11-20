@@ -16,6 +16,7 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    - run: npm -g pnpm
     - run: pnpm install
 #    - run: pnpm test
 #      env:
@@ -25,5 +26,6 @@ jobs:
 #    steps:
 #    - uses: actions/checkout@v2
 #    - uses: actions/setup-node@v1
+#    - run: npm -g pnpm
 #    - run: pnpm install
 #    - run: pnpm lint
