@@ -2,15 +2,15 @@ import { IncomingMessage } from 'http';
 import { read_only_form_data } from './read_only_form_data';
 
 export function get_body(req: IncomingMessage) {
+	const headers = req.headers;
 	const has_body =
-		req.headers['content-type'] !== undefined &&
+		headers['content-type'] !== undefined &&
 		// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
-		(req.headers['transfer-encoding'] !== undefined ||
-			!isNaN(Number(req.headers['content-length'])));
+		(headers['transfer-encoding'] !== undefined || !isNaN(Number(headers['content-length'])));
 
 	if (!has_body) return Promise.resolve(undefined);
 
-	const [type, ...directives] = (req.headers['content-type'] as string).split(/;\s*/);
+	const [type, ...directives] = (headers['content-type'] as string).split(/;\s*/);
 
 	switch (type) {
 		case 'application/octet-stream':
