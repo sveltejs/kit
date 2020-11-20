@@ -18,8 +18,8 @@ jobs:
         npm i -g pnpm
         pnpm install
 
-    - name: Test
-      run: pnpm lint
+#    - name: Lint
+#      run: pnpm lint
 
-    - name: Test
-      run: pnpm test
+#    - name: Test
+#      run: pnpm test
