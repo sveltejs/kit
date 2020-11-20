@@ -8,7 +8,5 @@ export {
 	Page,
 	PageContext,
 	Query,
-	Method,
-	Route,
-	RouteParams
+	Method
 } from './src/types';
