@@ -27,6 +27,7 @@ exports.handler = async function http(req) {
 			method,
 			headers,
 			path,
+			// body, TODO: convert this file to typescript and utilize the body once we know what type it is and whether it first needs some conversion
 			query
 		},
 		{
