@@ -66,7 +66,7 @@ class Watcher extends EventEmitter {
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
 			dir: 'src/routes', // TODO make configurable...
-			filter: ({ path }) => path.split('/').every(part => !part.startsWith('_'))
+			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
 		await this.cheapwatch.init();
@@ -74,21 +74,24 @@ class Watcher extends EventEmitter {
 		await this.init_server();
 
 		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
-		(this.cheapwatch as any as EventEmitter).on('+', ({ isNew }) => {
+		((this.cheapwatch as any) as EventEmitter).on('+', ({ isNew }) => {
 			if (isNew) this.update();
 		});
 
-		(this.cheapwatch as any as EventEmitter).on('-', () => {
+		((this.cheapwatch as any) as EventEmitter).on('-', () => {
 			this.update();
 		});
 	}
 
 	async init_snowpack() {
 		this.snowpack_port = await ports.find(this.opts.port + 1);
-		this.snowpack_config = snowpack.loadAndValidateConfig({
-			config: 'snowpack.config.js',
-			port: this.snowpack_port
-		}, pkg);
+		this.snowpack_config = snowpack.loadAndValidateConfig(
+			{
+				config: 'snowpack.config.js',
+				port: this.snowpack_port
+			},
+			pkg
+		);
 
 		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
@@ -109,12 +112,12 @@ class Watcher extends EventEmitter {
 
 		this.server = createServer(async (req, res) => {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {
-					return this.snowpack.handleRequest(req, res);
+				return this.snowpack.handleRequest(req, res);
 			}
 
 			static_handler(req, res, async () => {
 				try {
-					await this.snowpack.handleRequest(req, res, {handleError: false});
+					await this.snowpack.handleRequest(req, res, { handleError: false });
 					return;
 				} catch (err) {
 					if (err.message !== 'NOT_FOUND') {
@@ -146,8 +149,7 @@ class Watcher extends EventEmitter {
 
 				try {
 					root = await load('/_app/main/generated/root.js');
-				}
-				catch (e) {
+				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.toString());
 					return;
@@ -155,34 +157,35 @@ class Watcher extends EventEmitter {
 
 				const body = await get_body(req);
 
-				const rendered = await render({
-					host: req.headers.host,
-					headers: req.headers as Record<string, string>,
-					method: req.method as Method,
-					path: parsed.pathname,
-					query: new URLSearchParams(parsed.query),
-					body
-				}, {
-					static_dir: 'static',
-					template,
-					manifest: this.manifest,
-					client: {
-						entry: 'main/runtime/navigation.js',
-						deps: {}
+				const rendered = await render(
+					{
+						host: req.headers.host,
+						headers: req.headers as Record<string, string>,
+						method: req.method as Method,
+						path: parsed.pathname,
+						query: new URLSearchParams(parsed.query),
+						body
 					},
-					dev: true,
-					root,
-					setup,
-					load: route => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
-					only_prerender: false
-				});
+					{
+						static_dir: 'static',
+						template,
+						manifest: this.manifest,
+						client: {
+							entry: 'main/runtime/navigation.js',
+							deps: {}
+						},
+						dev: true,
+						root,
+						setup,
+						load: (route) => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
+						only_prerender: false
+					}
+				);
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);
 					res.end(rendered.body);
-				}
-
-				else {
+				} else {
 					res.statusCode = 404;
 					res.end('Not found');
 				}

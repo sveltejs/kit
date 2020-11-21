@@ -15,7 +15,7 @@ export interface Route {
 	exec: (url: string) => Record<string, string>;
 	parts: string[];
 	params: string[];
-};
+}
 
 export interface Template {
 	render: (data: Record<string, string>) => string;

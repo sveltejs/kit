@@ -9,9 +9,7 @@ let config: SvelteAppConfig;
 try {
 	config = relative('./svelte.config.js', process.cwd());
 } catch (err) {
-	const adjective = err.code === 'ENOENT'
-		? 'Missing'
-		: 'Malformed';
+	const adjective = err.code === 'ENOENT' ? 'Missing' : 'Malformed';
 
 	console.error(colors.bold().red(`${adjective} svelte.config.js`));
 	console.error(colors.grey(err.stack));
@@ -20,14 +18,12 @@ try {
 
 const prog = sade('svelte').version(pkg.version);
 
-prog.command('dev')
+prog
+	.command('dev')
 	.describe('Start a development server')
 	.option('-p, --port', 'Dev server port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async (opts: {
-		port: number;
-		open: boolean;
-	}) => {
+	.action(async (opts: { port: number; open: boolean }) => {
 		const { dev } = await import('./api/dev');
 
 		try {
@@ -37,11 +33,11 @@ prog.command('dev')
 
 			let first = true;
 
-			watcher.on('stdout', data => {
+			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
 			});
 
-			watcher.on('stderr', data => {
+			watcher.on('stderr', (data) => {
 				process.stderr.write(data);
 			});
 
@@ -62,7 +58,8 @@ prog.command('dev')
 		}
 	});
 
-prog.command('build [dest]')
+prog
+	.command('build [dest]')
 	.describe('Create a deployment-ready version of your app')
 	.action(async () => {
 		const { build } = await import('./api/build');

@@ -5,10 +5,14 @@ import { copy } from '@sveltejs/app-utils/files';
 import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
 import { Logger } from '@sveltejs/app-utils/renderer/prerender';
 
-export async function builder({ dir, manifest, log }: {
-	dir: string,
-	manifest: RouteManifest,
-	log: Logger
+export async function builder({
+	dir,
+	manifest,
+	log
+}: {
+	dir: string;
+	manifest: RouteManifest;
+	log: Logger;
 }) {
 	const lambda_directory = resolve('api');
 	const static_directory = resolve('public');
@@ -61,4 +65,4 @@ export async function builder({ dir, manifest, log }: {
 			]
 		})
 	);
-};
+}

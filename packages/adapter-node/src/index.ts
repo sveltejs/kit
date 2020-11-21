@@ -9,13 +9,13 @@ module.exports = async function adapter({
 	manifest,
 	log
 }: {
-	dir: string,
-	manifest: RouteManifest,
-	log: Logger
+	dir: string;
+	manifest: RouteManifest;
+	log: Logger;
 }) {
 	const out = 'build'; // TODO implement adapter options
 
-	copy(`${dir}/client`, `${out}/assets/_app`, file => !!file && file[0] !== '.');
+	copy(`${dir}/client`, `${out}/assets/_app`, (file) => !!file && file[0] !== '.');
 	copy(`${dir}/server`, out);
 	copy(`${__dirname}/server.js`, `${out}/index.js`);
 	copy(`${dir}/client.json`, `${out}/client.json`);
@@ -38,10 +38,19 @@ module.exports = async function adapter({
 		error: ${JSON.stringify(manifest.error)},
 		components: ${JSON.stringify(manifest.components)},
 		pages: [
-			${manifest.pages.map(page => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`).join(',\n\t\t\t')}
+			${manifest.pages
+				.map((page) => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`)
+				.join(',\n\t\t\t')}
 		],
 		endpoints: [
-			${manifest.endpoints.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
+			${manifest.endpoints
+				.map(
+					(route) =>
+						`{ name: '${route.name}', pattern: ${route.pattern}, file: '${
+							route.file
+						}', params: ${JSON.stringify(route.params)} }`
+				)
+				.join(',\n\t\t\t')}
 		]
 	};`.replace(/^\t/gm, '');
 

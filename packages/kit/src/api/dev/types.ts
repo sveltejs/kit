@@ -15,7 +15,7 @@ export interface Response {
 	status?: number;
 	text?: string;
 	headers?: Record<string, string>;
-	body: any
+	body: any;
 }
 
 export interface ServerRoute {
@@ -27,14 +27,16 @@ export interface ServerRoute {
 
 export interface PageComponent {
 	default: {
-		render: (props: Record<string, any>) => {
+		render: (
+			props: Record<string, any>
+		) => {
 			html: string;
 			head: string;
 			css: {
 				code: string;
-				map: any // TODO
-			}
-		}
+				map: any; // TODO
+			};
+		};
 	};
 	preload?: (page?: Request, session?: any) => Record<string, any>;
 }

@@ -12,11 +12,14 @@ export function set_cid(n: number) {
 	cid = n;
 }
 
-const _history: History = typeof history !== 'undefined' ? history : {
-	pushState: () => {},
-	replaceState: () => {},
-	scrollRestoration: 'auto'
-} as Partial<History> as any;
+const _history: History =
+	typeof history !== 'undefined'
+		? history
+		: (({
+				pushState: () => {},
+				replaceState: () => {},
+				scrollRestoration: 'auto'
+		  } as Partial<History>) as any);
 export { _history as history };
 
 export const scroll_history: Record<string, ScrollPosition> = {};
@@ -61,12 +64,18 @@ export function init(base: string, handler: (dest: Target) => Promise<void>): vo
 export function extract_query(search: string): Query {
 	const query: Query = Object.create(null);
 
-	search.slice(1).split('&').filter(Boolean).forEach(searchParam => {
-		const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(decodeURIComponent(searchParam.replace(/\+/g, ' ')));
-		const prev = query[key];
+	search
+		.slice(1)
+		.split('&')
+		.filter(Boolean)
+		.forEach((searchParam) => {
+			const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(
+				decodeURIComponent(searchParam.replace(/\+/g, ' '))
+			);
+			const prev = query[key];
 
-		query[key] = (prev ? (typeof prev === 'string' ? [prev]: prev).concat(value) : value);
-	});
+			query[key] = prev ? (typeof prev === 'string' ? [prev] : prev).concat(value) : value;
+		});
 
 	return query;
 }
@@ -108,7 +117,7 @@ function handle_click(event: MouseEvent) {
 	if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 	if (event.defaultPrevented) return;
 
-	const a: HTMLAnchorElement | SVGAElement = <HTMLAnchorElement | SVGAElement>find_anchor(<Node>event.target);
+	const a = <HTMLAnchorElement | SVGAElement> find_anchor(<Node>event.target);
 	if (!a) return;
 
 	if (!a.href) return;
@@ -176,7 +185,12 @@ function handle_popstate(event: PopStateEvent) {
 	}
 }
 
-export async function navigate(dest: Target, id: number, noscroll?: boolean, hash?: string): Promise<void> {
+export async function navigate(
+	dest: Target,
+	id: number,
+	noscroll?: boolean,
+	hash?: string
+): Promise<void> {
 	const popstate = !!id;
 	if (popstate) {
 		cid = id;
@@ -191,7 +205,9 @@ export async function navigate(dest: Target, id: number, noscroll?: boolean, has
 	}
 
 	await handle_target(dest);
-	if (document.activeElement && (document.activeElement instanceof HTMLElement)) document.activeElement.blur();
+	if (document.activeElement && document.activeElement instanceof HTMLElement) {
+		document.activeElement.blur();
+	}
 
 	if (!noscroll) {
 		let scroll = scroll_history[id];

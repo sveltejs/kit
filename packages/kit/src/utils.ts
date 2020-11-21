@@ -27,7 +27,7 @@ export function elapsed(start: number) {
 }
 
 export function walk(cwd: string, dir = cwd, files: string[] = []) {
-	fs.readdirSync(dir).forEach(file => {
+	fs.readdirSync(dir).forEach((file) => {
 		const resolved = path.resolve(dir, file);
 		if (fs.statSync(resolved).isDirectory()) {
 			walk(cwd, resolved, files);
@@ -62,11 +62,7 @@ export function stringify(string: string, includeQuotes: boolean = true) {
 export function fudge_mtime(file: string) {
 	// need to fudge the mtime so that webpack doesn't go doolally
 	const { atime, mtime } = fs.statSync(file);
-	fs.utimesSync(
-		file,
-		new Date(atime.getTime() - 999999),
-		new Date(mtime.getTime() - 999999)
-	);
+	fs.utimesSync(file, new Date(atime.getTime() - 999999), new Date(mtime.getTime() - 999999));
 }
 
 export const reserved_words = new Set([

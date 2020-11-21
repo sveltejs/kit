@@ -26,7 +26,7 @@ export function page_store<T>(value: T): PageStore<T> {
 
 	function notify(): void {
 		ready = true;
-		store.update(val => val);
+		store.update((val) => val);
 	}
 
 	function set(new_value: T): void {
@@ -38,7 +38,7 @@ export function page_store<T>(value: T): PageStore<T> {
 		let old_value;
 		return store.subscribe((new_value) => {
 			if (old_value === undefined || (ready && new_value !== old_value)) {
-				run(old_value = new_value);
+				run((old_value = new_value));
 			}
 		});
 	}

@@ -43,13 +43,13 @@ export async function build(config: SvelteAppConfig) {
 		output: '.svelte/main'
 	});
 
-	const header = msg => console.log(colors.bold().cyan(`\n> ${msg}`));
+	const header = (msg) => console.log(colors.bold().cyan(`\n> ${msg}`));
 
-	const log = msg => console.log(msg.replace(/^/gm, '  '));
-	log.success = msg => log(colors.green(`✔ ${msg}`));
-	log.error = msg => log(colors.bold().red(msg));
-	log.warn = msg => log(colors.bold().yellow(msg));
-	log.minor = msg => log(colors.grey(msg));
+	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
+	log.success = (msg) => log(colors.green(`✔ ${msg}`));
+	log.error = (msg) => log(colors.bold().red(msg));
+	log.warn = (msg) => log(colors.bold().yellow(msg));
+	log.minor = (msg) => log(colors.grey(msg));
 	log.info = log;
 
 	const unoptimized = `.svelte/build/unoptimized`;
@@ -87,7 +87,7 @@ export async function build(config: SvelteAppConfig) {
 			manifest.layout, // TODO is this necessary? if so why isn't manifest.error?
 			...manifest.components,
 			...manifest.endpoints
-		].forEach(item => {
+		].forEach((item) => {
 			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
 				/\.\w+$/,
 				'.js'
@@ -96,7 +96,7 @@ export async function build(config: SvelteAppConfig) {
 
 		// https://github.com/snowpackjs/snowpack/discussions/1395
 		const re = /(\.\.\/)+_app\/main\/runtime\//;
-		const work_around_alias_bug = type => ({
+		const work_around_alias_bug = (type) => ({
 			name: 'work-around-alias-bug',
 			resolveId(imported) {
 				if (re.test(imported)) {
@@ -123,7 +123,7 @@ export async function build(config: SvelteAppConfig) {
 			onwarn,
 
 			// TODO ensure this works with external node modules (on server)
-			external: id => id[0] !== '.' && !path.isAbsolute(id)
+			external: (id) => id[0] !== '.' && !path.isAbsolute(id)
 		});
 
 		await server_chunks.write({
@@ -205,7 +205,7 @@ export async function build(config: SvelteAppConfig) {
 								const imports = (chunk as OutputChunk).imports;
 
 								if (imports) {
-									imports.forEach(key => {
+									imports.forEach((key) => {
 										if (key.endsWith('.css')) {
 											js.add(inject_styles);
 											css.add(key);
@@ -221,7 +221,7 @@ export async function build(config: SvelteAppConfig) {
 							return { js, css };
 						};
 
-						const get_deps = key => {
+						const get_deps = (key) => {
 							const js: Set<string> = new Set();
 							const css: Set<string> = new Set();
 
@@ -235,7 +235,7 @@ export async function build(config: SvelteAppConfig) {
 
 						client.deps.__entry__ = get_deps(client.entry);
 
-						manifest.components.forEach(component => {
+						manifest.components.forEach((component) => {
 							const file = component.file.replace(/\.svelte$/, '.js');
 							const key = reverse_lookup.get(file);
 
@@ -255,7 +255,7 @@ export async function build(config: SvelteAppConfig) {
 			onwarn,
 
 			// TODO ensure this works with external node modules (on server)
-			external: id => id[0] !== '.' && !path.isAbsolute(id)
+			external: (id) => id[0] !== '.' && !path.isAbsolute(id)
 		});
 
 		await client_chunks.write({
@@ -287,7 +287,7 @@ export async function build(config: SvelteAppConfig) {
 }
 
 async function rimraf(path: string): Promise<void> {
-	return new Promise(resolve => {
+	return new Promise((resolve) => {
 		((<any>fs).rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
 	});
 }
