@@ -29,27 +29,7 @@ export default {
 	],
 	plugins: [
 		nodeResolve(),
-		typescript({ useTsconfigDeclarationDir: true }),
-		{
-			name: 'copy-types',
-			resolveId: () => null,
-			load: () => null,
-			writeBundle: () => {
-				copyRecursiveSync('build/types', '.');
-				copyRecursiveSync('src/types', 'types');
-			}
-		}
+		typescript()
 	],
 	external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies)]
 };
-
-function copyRecursiveSync(src, dest) {
-	if (fs.existsSync(src) && fs.statSync(src).isDirectory()) {
-		fs.mkdirSync(dest, { recursive: true });
-		fs.readdirSync(src).forEach((file) =>
-			copyRecursiveSync(path.join(src, file), path.join(dest, file))
-		);
-	} else {
-		fs.copyFileSync(src, dest);
-	}
-}
