@@ -81,11 +81,10 @@ export const css_injection: Plugin = {
 	},
 	renderDynamicImport({ targetModuleId }) {
 		if (targetModuleId) {
+			const t = Buffer.from(targetModuleId).toString('hex');
 			return {
 				left: 'Promise.all([import(',
-				right: `), ___SVELTE_CSS_INJECTION___${Buffer.from(targetModuleId).toString(
-					'hex'
-				)}___]).then(function(x) { return x[0]; })`
+				right: `), ___SVELTE_CSS_INJECTION___${t}___]).then(function(x) { return x[0]; })`
 			};
 		} else {
 			return {
