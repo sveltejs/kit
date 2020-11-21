@@ -35,11 +35,11 @@
 	"files": [
 		"assets",
 		"dist",
-		"index.d.ts"
+		"client"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"build": "rollup -c && cd client && tsc",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ \"**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",

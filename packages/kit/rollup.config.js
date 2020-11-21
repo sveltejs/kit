@@ -31,7 +31,7 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			typescript({
+			typescript(/*{
 				tsconfigDefaults: {
 					compilerOptions: {
 						// create typings. these options do not apply to the other build target
@@ -41,13 +41,13 @@ export default [
 					}
 				},
 				useTsconfigDeclarationDir: true
-			}),
-			{
+			}*/),
+			/*{
 				name: 'adjust-typings',
 				resolveId: () => null,
 				load: () => null,
 				writeBundle: adjust_typings
-			}
+			}*/
 		]
 	},
 

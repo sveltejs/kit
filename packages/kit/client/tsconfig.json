@@ -1,0 +1,14 @@
+{
+	/* Generates the typings for client code */
+	"compilerOptions": {
+		"resolveJsonModule": true,
+		"module": "esnext",
+		"moduleResolution": "node",
+		"target": "ES6",
+		"esModuleInterop": true,
+		"declaration": true,
+		"outDir": "."
+	},
+	"include": ["../src/client/**/*", "../src/ambient.d.ts"],
+	"lib": ["ES2020", "dom", "node"]
+}
