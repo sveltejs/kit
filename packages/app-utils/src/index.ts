@@ -9,4 +9,4 @@ export {
 	PageContext,
 	Query,
 	Method
-} from './src/types';
+} from './types';

@@ -5,5 +5,4 @@ node_modules
 /files
 /http
 /renderer
-/types
-/build
+index.d.ts
