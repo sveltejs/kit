@@ -10,14 +10,18 @@ export function mkdirp(dir: string) {
 	}
 }
 
-export function copy(from: string, to: string, filter: (file?: string) => boolean = () => true): string[] {
+export function copy(
+	from: string,
+	to: string,
+	filter: (file?: string) => boolean = () => true
+): string[] {
 	if (!filter(path.basename(from))) return [];
 
 	const files = [];
 	const stats = fs.statSync(from);
 
 	if (stats.isDirectory()) {
-		fs.readdirSync(from).forEach(file => {
+		fs.readdirSync(from).forEach((file) => {
 			files.push(...copy(path.join(from, file), path.join(to, file)));
 		});
 	} else {

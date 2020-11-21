@@ -27,7 +27,7 @@ export interface PageResponse extends EndpointResponse {
 }
 
 export interface SetupModule<Context = any, Session = any> {
-	prepare?: (headers: Headers) => Promise<{ context: Context, headers: Headers }>;
+	prepare?: (headers: Headers) => Promise<{ context: Context; headers: Headers }>;
 	getSession?: (context: Context) => Promise<Session> | Session;
 	setSession?: (context: Context, session: Session) => Promise<Session> | Session;
 }
@@ -37,11 +37,13 @@ export interface SSRComponentModule {
 }
 
 export interface SSRComponent {
-	render(props: unknown): {
-		html: string
-		head: string
-		css: { code: string, map: unknown };
-	}
+	render(
+		props: unknown
+	): {
+		html: string;
+		head: string;
+		css: { code: string; map: unknown };
+	};
 }
 
 export interface RenderOptions {
@@ -100,7 +102,7 @@ export interface RouteManifest {
 
 export interface ClientManifest {
 	entry: string;
-	deps: Record<string, { js: string[], css: string[] }>
+	deps: Record<string, { js: string[]; css: string[] }>;
 }
 
 export type Loader = (item: PageComponentManifest | EndpointManifest) => Promise<any>; // TODO types for modules
@@ -115,5 +117,5 @@ export interface Page {
 }
 
 export interface PageContext extends Page {
-	error?: Error
+	error?: Error;
 }

@@ -34,7 +34,7 @@ function get_srcset_urls(attrs: string) {
 		// and should cover most reasonable cases.
 		const regex = /\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/gm;
 		let sub_matches;
-		while (sub_matches = regex.exec(attr_content)) {
+		while ((sub_matches = regex.exec(attr_content))) {
 			results.push(sub_matches[1]);
 		}
 	}
@@ -65,7 +65,7 @@ export async function prerender({
 	assets?: string;
 	manifest: RouteManifest;
 	force: boolean;
-	log: Logger
+	log: Logger;
 }) {
 	const seen = new Set();
 
@@ -80,34 +80,35 @@ export async function prerender({
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		const rendered = await render({
-			host: null, // TODO ???
-			method: 'GET',
-			headers: {},
-			path,
-			body: null,
-			query: new URLSearchParams()
-		}, {
-			only_prerender: !force,
-			template,
-			manifest,
-			client,
-			static_dir: 'static',
-			root,
-			setup,
-			load: route => require(`${server_root}/server/routes/${route.name}.js`),
-			dev: false
-		});
+		const rendered = await render(
+			{
+				host: null, // TODO ???
+				method: 'GET',
+				headers: {},
+				path,
+				body: null,
+				query: new URLSearchParams()
+			},
+			{
+				only_prerender: !force,
+				template,
+				manifest,
+				client,
+				static_dir: 'static',
+				root,
+				setup,
+				load: (route) => require(`${server_root}/server/routes/${route.name}.js`),
+				dev: false
+			}
+		);
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const is_html = (
-				response_type === REDIRECT ||
-				rendered.headers?.['content-type'] === 'text/html'
-			);
+			const headers = rendered.headers;
+			const is_html = response_type === REDIRECT || headers?.['content-type'] === 'text/html';
 
 			const parts = path.split('/');
-			if (is_html && (parts[parts.length - 1] !== 'index.html')) {
+			if (is_html && parts[parts.length - 1] !== 'index.html') {
 				parts.push('index.html');
 			}
 
@@ -115,10 +116,13 @@ export async function prerender({
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const location = rendered.headers['location'];
+				const location = headers['location'];
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
-				fs.writeFileSync(file, `<script>window.location.href=${JSON.stringify(rendered.headers['location'])}</script>`);
+				fs.writeFileSync(
+					file,
+					`<script>window.location.href=${JSON.stringify(headers['location'])}</script>`
+				);
 
 				return;
 			}
@@ -141,7 +145,7 @@ export async function prerender({
 					const is_html = result.headers['content-type'] === 'text/html';
 
 					const parts = path.split('/');
-					if (is_html && (parts[parts.length - 1] !== 'index.html')) {
+					if (is_html && parts[parts.length - 1] !== 'index.html') {
 						parts.push('index.html');
 					}
 
@@ -164,7 +168,7 @@ export async function prerender({
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
 
-				while (match = pattern.exec(cleaned)) {
+				while ((match = pattern.exec(cleaned))) {
 					let hrefs = [];
 					const element = match[1];
 					const attrs = match[2];
@@ -190,12 +194,11 @@ export async function prerender({
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						// TODO this feels iffy
-						const file_exists = (
+						const file_exists =
 							(assets && fs.existsSync(`${assets}${parsed.pathname}`)) ||
 							fs.existsSync(`${out}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||
-							fs.existsSync(`static${parsed.pathname}/index.html`)
-						);
+							fs.existsSync(`static${parsed.pathname}/index.html`);
 
 						if (file_exists) continue;
 
@@ -210,7 +213,7 @@ export async function prerender({
 		}
 	}
 
-	const entries = manifest.pages.map(page => page.path).filter(Boolean);
+	const entries = manifest.pages.map((page) => page.path).filter(Boolean);
 
 	for (const entry of entries) {
 		await crawl(entry);

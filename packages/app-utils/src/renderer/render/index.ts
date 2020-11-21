@@ -14,10 +14,8 @@ export async function render(
 	const { context, headers = {} } = (await options.setup.prepare?.(request.headers)) || {};
 
 	try {
-		const response = await (
-			render_endpoint(request, context, options) ||
-			render_page(request, context, options)
-		);
+		const response = await (render_endpoint(request, context, options) ||
+			render_page(request, context, options));
 
 		if (response) {
 			// inject ETags for 200 responses
