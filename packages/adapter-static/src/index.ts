@@ -8,9 +8,9 @@ module.exports = async function adapter({
 	manifest,
 	log
 }: {
-	dir: string,
-	manifest: RouteManifest,
-	log: Logger
+	dir: string;
+	manifest: RouteManifest;
+	log: Logger;
 }) {
 	const out = 'build'; // TODO implement adapter options
 

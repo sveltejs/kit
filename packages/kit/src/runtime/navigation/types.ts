@@ -31,11 +31,11 @@ export interface ScrollPosition {
 export type RouteParams = Record<string, string | string[]>;
 
 export interface Route {
-  pattern: RegExp;
-  parts: Array<{
-    params: (match: RegExpExecArray) => RouteParams,
-		i: number
-  }>;
+	pattern: RegExp;
+	parts: Array<{
+		params: (match: RegExpExecArray) => RouteParams;
+		i: number;
+	}>;
 }
 
 export interface Target {

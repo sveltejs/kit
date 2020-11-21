@@ -12,9 +12,9 @@ module.exports = async function builder({
 	manifest,
 	log
 }: {
-	dir: string,
-	manifest: RouteManifest,
-	log: Logger
+	dir: string;
+	manifest: RouteManifest;
+	log: Logger;
 }) {
 	let netlify_config;
 
@@ -26,11 +26,15 @@ module.exports = async function builder({
 			throw err;
 		}
 	} else {
-		throw new Error('Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration');
+		throw new Error(
+			'Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+		);
 	}
 
 	if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
-		throw new Error('You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/adapter-netlify#configuration');
+		throw new Error(
+			'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/adapter-netlify#configuration'
+		);
 	}
 
 	const publish = path.resolve(netlify_config.build.publish);
@@ -40,14 +44,14 @@ module.exports = async function builder({
 	mkdirp(`${functions}/render`);
 
 	// copy everything in `static`
-	glob('**/*', { cwd: 'static', filesOnly: true }).forEach(file => {
+	glob('**/*', { cwd: 'static', filesOnly: true }).forEach((file) => {
 		mkdirp(path.dirname(`${publish}/${file}`));
 		fs.copyFileSync(`static/${file}`, `${publish}/${file}`);
 	});
 
 	// copy client code
 	const client_code = path.resolve(dir, 'client');
-	glob('**/*', { cwd: client_code, filesOnly: true }).forEach(file => {
+	glob('**/*', { cwd: client_code, filesOnly: true }).forEach((file) => {
 		if (file[0] !== '.') {
 			mkdirp(path.dirname(`${publish}/_app/${file}`));
 			fs.copyFileSync(`${client_code}/${file}`, `${publish}/_app/${file}`);
@@ -66,7 +70,7 @@ module.exports = async function builder({
 
 	// copy server code
 	const server_code = path.resolve(dir, 'server');
-	glob('**/*', { cwd: server_code, filesOnly: true }).forEach(file => {
+	glob('**/*', { cwd: server_code, filesOnly: true }).forEach((file) => {
 		if (file[0] !== '.') {
 			mkdirp(path.dirname(`${functions}/render/${file}`));
 			fs.copyFileSync(`${server_code}/${file}`, `${functions}/render/${file}`);
@@ -76,14 +80,17 @@ module.exports = async function builder({
 	// copy the renderer
 	fs.copyFileSync(path.resolve(__dirname, 'render.js'), `${functions}/render/index.js`);
 
-  // write manifest
+	// write manifest
 	fs.writeFileSync(`${functions}/render/manifest.js`, generate_manifest_module(manifest));
 
 	// copy client manifest
 	fs.copyFileSync(`${dir}/client.json`, `${functions}/render/client.json`);
 
 	// copy template
-	fs.writeFileSync(`${functions}/render/template.js`, `module.exports = ${JSON.stringify(fs.readFileSync('src/app.html', 'utf-8'))};`);
+	fs.writeFileSync(
+		`${functions}/render/template.js`,
+		`module.exports = ${JSON.stringify(fs.readFileSync('src/app.html', 'utf-8'))};`
+	);
 
 	// create _redirects
 	fs.writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');

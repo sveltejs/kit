@@ -46,7 +46,7 @@ const find_css = (chunk: RenderedChunk, bundle: OutputBundle) => {
 		visited.add(c);
 
 		if (c.imports) {
-			c.imports.forEach(file => {
+			c.imports.forEach((file) => {
 				if (file.endsWith('.css')) {
 					css_files.add(file);
 				} else {
@@ -83,7 +83,9 @@ export const css_injection: Plugin = {
 		if (targetModuleId) {
 			return {
 				left: 'Promise.all([import(',
-				right: `), ___SVELTE_CSS_INJECTION___${Buffer.from(targetModuleId).toString('hex')}___]).then(function(x) { return x[0]; })`
+				right: `), ___SVELTE_CSS_INJECTION___${Buffer.from(targetModuleId).toString(
+					'hex'
+				)}___]).then(function(x) { return x[0]; })`
 			};
 		} else {
 			return {
@@ -92,8 +94,12 @@ export const css_injection: Plugin = {
 			};
 		}
 	},
-	async generateBundle(this: PluginContext, _options: NormalizedOutputOptions, bundle: OutputBundle): Promise<void> {
-		const inject_styles_file = Object.keys(bundle).find(f => f.startsWith('inject_styles'));
+	async generateBundle(
+		this: PluginContext,
+		_options: NormalizedOutputOptions,
+		bundle: OutputBundle
+	): Promise<void> {
+		const inject_styles_file = Object.keys(bundle).find((f) => f.startsWith('inject_styles'));
 
 		let has_css = false;
 		for (const name in bundle) {
@@ -104,8 +110,11 @@ export const css_injection: Plugin = {
 			if (chunk.code) {
 				chunk.code = chunk.code.replace(/___SVELTE_CSS_INJECTION___([0-9a-f]+)___/g, (_m, id) => {
 					id = Buffer.from(id, 'hex').toString();
-					const target = <OutputChunk>Object.values(bundle)
-						.find(c => (<OutputChunk>c).modules && (<OutputChunk>c).modules[id]);
+					const target = <OutputChunk>(
+						Object.values(bundle).find(
+							(c) => (<OutputChunk>c).modules && (<OutputChunk>c).modules[id]
+						)
+					);
 
 					if (target) {
 						const css_files = find_css(target, bundle);

@@ -26,7 +26,7 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		return Promise.resolve(load_node(imported));
 	};
 
-	const invalidate_all = path => {
+	const invalidate_all = (path) => {
 		cache.delete(path);
 
 		const dependents = graph.get(path);
@@ -35,18 +35,18 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		if (dependents) dependents.forEach(invalidate_all);
 	};
 
-  const absolute_mount = map_keys(config.mount, resolve);
+	const absolute_mount = map_keys(config.mount, resolve);
 
-  snowpack.onFileChange(callback => {
-    for (const abs_path in absolute_mount) {
-      if (callback.filePath.startsWith(abs_path)) {
-        const relative_path = relative(abs_path, callback.filePath);
-        const url = resolve(absolute_mount[abs_path].url, relative_path)
+	snowpack.onFileChange((callback) => {
+		for (const abs_path in absolute_mount) {
+			if (callback.filePath.startsWith(abs_path)) {
+				const relative_path = relative(abs_path, callback.filePath);
+				const url = resolve(absolute_mount[abs_path].url, relative_path);
 
-        invalidate_all(url);
-      }
-    }
-  });
+				invalidate_all(url);
+			}
+		}
+	});
 
 	async function load(url: string, url_stack: string[]) {
 		// TODO: meriyah (JS parser) doesn't support `import.meta.hot = ...` used in HMR setup code.
@@ -56,18 +56,18 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 
 		if (url_stack.includes(url)) {
 			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
-			return {}
+			return {};
 		}
 
 		if (cache.has(url)) return cache.get(url);
 
 		const exports = snowpack
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
-			.catch(err => {
+			.catch((err) => {
 				throw new Error(`Failed to load ${url}: ${err.message}`);
 			})
-			.then(result => initialize_module(url, result.contents, url_stack.concat(url)))
-			.catch(e => {
+			.then((result) => initialize_module(url, result.contents, url_stack.concat(url)))
+			.catch((e) => {
 				cache.delete(url);
 				console.error(e);
 				throw e;
@@ -89,7 +89,7 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		const export_from_identifiers = new Map();
 		let uid = 1;
 
-		ast.body.forEach(node => {
+		ast.body.forEach((node) => {
 			if (node.type === 'ImportDeclaration') {
 				imports.push(node);
 				code.remove(node.start, node.end);
@@ -100,7 +100,11 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 					export_from_identifiers.set(node.source, `__import${uid++}`);
 				}
 
-				code.overwrite(node.start, node.end, `Object.assign(exports, ${export_from_identifiers.get(node.source)})`)
+				code.overwrite(
+					node.start,
+					node.end,
+					`Object.assign(exports, ${export_from_identifiers.get(node.source)})`
+				);
 				imports.push(node);
 			}
 
@@ -126,25 +130,27 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 							? `${export_from_identifiers.get(node.source)}.${specifier.local.name}`
 							: specifier.local.name;
 
-						code.overwrite(specifier.start, specifier.end, `${lhs} = ${rhs}`)
+						code.overwrite(specifier.start, specifier.end, `${lhs} = ${rhs}`);
 					});
 
 					code.remove(node.specifiers[node.specifiers.length - 1].end, node.end);
-				}
-
-				else {
+				} else {
 					// `export const foo = ...` or `export function foo() {...}`
 					if (node.declaration.type === 'VariableDeclaration') {
 						code.remove(node.start, node.declaration.start);
 
 						const names = [];
-						node.declaration.declarations.forEach(declarator => {
+						node.declaration.declarations.forEach((declarator) => {
 							names.push(...extract_names(declarator.id as any));
 						});
 
-						code.appendLeft(node.end, names.map(name => ` exports.${name} = ${name};`).join(''));
+						code.appendLeft(node.end, names.map((name) => ` exports.${name} = ${name};`).join(''));
 					} else {
-						code.overwrite(node.start, node.declaration.start, `exports.${node.declaration.id.name} = `);
+						code.overwrite(
+							node.start,
+							node.declaration.start,
+							`exports.${node.declaration.id.name} = `
+						);
 					}
 				}
 			}
@@ -156,9 +162,7 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 				enter(node: any) {
 					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
 						code.overwrite(node.start, node.end, '__importmeta__');
-					}
-
-					else if (node.type === 'ImportExpression') {
+					} else if (node.type === 'ImportExpression') {
 						code.overwrite(node.start, node.start + 6, `__import__`);
 					}
 				}
@@ -166,7 +170,7 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		}
 
 		const deps = [];
-		imports.forEach(node => {
+		imports.forEach((node) => {
 			const promise = get_module(url, node.source.value, url_stack);
 
 			if (node.type === 'ExportAllDeclaration' || node.type === 'ExportNamedDeclaration') {
@@ -175,37 +179,43 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 					name: export_from_identifiers.get(node.source),
 					promise
 				});
-			}
-
-			else if (node.specifiers.length === 0) {
+			} else if (node.specifiers.length === 0) {
 				// bare import
 				deps.push({
 					name: null,
 					promise
 				});
-			}
-
-			else if (node.specifiers[0].type === 'ImportNamespaceSpecifier') {
+			} else if (node.specifiers[0].type === 'ImportNamespaceSpecifier') {
 				deps.push({
 					name: node.specifiers[0].local.name,
 					promise
 				});
-			}
-
-			else {
-				deps.push(...node.specifiers.map(specifier => ({
-					name: specifier.local.name,
-					promise: promise.then(exports => exports[specifier.imported ? specifier.imported.name : 'default'])
-				})));
+			} else {
+				deps.push(
+					...node.specifiers.map((specifier) => ({
+						name: specifier.local.name,
+						promise: promise.then(
+							(exports) => exports[specifier.imported ? specifier.imported.name : 'default']
+						)
+					}))
+				);
 			}
 		});
 
-		deps.sort((a, b) => !!a.name !== !!b.name ? a.name ? -1 : 1 : 0);
+		deps.sort((a, b) => (!!a.name !== !!b.name ? (a.name ? -1 : 1) : 0));
 
 		code.append(`\n//# sourceURL=${url}`);
 
-		const fn = new Function('exports', 'global', 'require', '__import__', '__importmeta__', ...deps.map(d => d.name).filter(Boolean), code.toString());
-		const values = await Promise.all(deps.map(d => d.promise));
+		const fn = new Function(
+			'exports',
+			'global',
+			'require',
+			'__import__',
+			'__importmeta__',
+			...deps.map((d) => d.name).filter(Boolean),
+			code.toString()
+		);
+		const values = await Promise.all(deps.map((d) => d.promise));
 
 		let exports = {};
 
@@ -214,13 +224,13 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 			global,
 
 			// require(...)
-			id => {
+			(id) => {
 				// TODO can/should this restriction be relaxed?
 				throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
 			},
 
 			// import(...)
-			source => get_module(url, source, url_stack),
+			(source) => get_module(url, source, url_stack),
 
 			// import.meta
 			{ url },
@@ -231,7 +241,7 @@ export default function loader(snowpack: SnowpackDevServer, config: SnowpackConf
 		return exports;
 	}
 
-	return url => load(url, []);
+	return (url) => load(url, []);
 }
 
 function load_node(source: string) {

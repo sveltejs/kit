@@ -24,7 +24,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 	const query = new URLSearchParams();
 	for (const k in queryStringParameters) {
 		const value = queryStringParameters[k];
-		value.split(', ').forEach(v => {
+		value.split(', ').forEach((v) => {
 			query.append(k, v);
 		});
 	}
@@ -44,7 +44,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 			client,
 			root,
 			setup,
-			load: (route: PageComponentManifest | EndpointManifest) => require(`./server/routes/${route.name}.js`),
+			load: (route: PageComponentManifest | EndpointManifest) =>
+				require(`./server/routes/${route.name}.js`),
 			dev: false,
 			only_prerender: false
 		}

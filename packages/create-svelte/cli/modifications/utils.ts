@@ -28,7 +28,7 @@ export function update_component(
 	const file = path.join(cwd, filepath);
 
 	let code = fs.readFileSync(file, 'utf-8');
-	replacements.forEach(replacement => (code = code.replace(replacement[0], replacement[1])));
+	replacements.forEach((replacement) => (code = code.replace(replacement[0], replacement[1])));
 
 	fs.writeFileSync(file, code);
 }

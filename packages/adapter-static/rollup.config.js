@@ -8,10 +8,6 @@ export default {
 		file: 'server.js',
 		format: 'cjs'
 	},
-	plugins: [
-		nodeResolve(),
-		commonjs(),
-		typescript()
-	],
+	plugins: [nodeResolve(), commonjs(), typescript()],
 	external: require('module').builtinModules
 };

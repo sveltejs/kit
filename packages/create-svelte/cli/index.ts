@@ -60,7 +60,7 @@ async function main(): Promise<void> {
 
 	const files = glob('**/*', { cwd }).filter(gitignore.accepts);
 
-	files.forEach(file => {
+	files.forEach((file) => {
 		const src = path.join(cwd, file);
 		const dest = path.join(target, file);
 

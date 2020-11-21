@@ -25,28 +25,32 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 	const query = new URLSearchParams();
 	for (const k in queryStringParameters) {
 		const value = queryStringParameters[k];
-		value.split(', ').forEach(v => {
+		value.split(', ').forEach((v) => {
 			query.append(k, v);
 		});
 	}
 
-	const rendered = await render({
-		host: null, // TODO
-		method: httpMethod as Method,
-		headers,
-		path,
-		query
-	}, {
-		static_dir: 'static',
-		template,
-		manifest,
-		client,
-		root,
-		setup,
-		load: (route: PageComponentManifest | EndpointManifest) => require(`./routes/${route.name}.js`),
-		dev: false,
-		only_prerender: false
-	});
+	const rendered = await render(
+		{
+			host: null, // TODO
+			method: httpMethod as Method,
+			headers,
+			path,
+			query
+		},
+		{
+			static_dir: 'static',
+			template,
+			manifest,
+			client,
+			root,
+			setup,
+			load: (route: PageComponentManifest | EndpointManifest) =>
+				require(`./routes/${route.name}.js`),
+			dev: false,
+			only_prerender: false
+		}
+	);
 
 	if (rendered) {
 		return {

@@ -36,7 +36,7 @@ exports.handler = async function http(req) {
 			client,
 			root: App,
 			setup,
-			load: route => require(`@architect/shared/routes/${route.name}.js`),
+			load: (route) => require(`@architect/shared/routes/${route.name}.js`),
 			dev: false
 		}
 	);

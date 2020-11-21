@@ -26,12 +26,7 @@ export default [
 				MANIFEST: '../generated/manifest.js'
 			}
 		},
-		external: [
-			'svelte',
-			'svelte/store',
-			'ROOT',
-			'MANIFEST'
-		],
+		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
@@ -42,10 +37,10 @@ export default [
 						// create typings. these options do not apply to the other build target
 						declaration: true,
 						emitDeclarationOnly: true,
-						outFile: "./index.js"
+						outFile: './index.js'
 					}
 				},
-				useTsconfigDeclarationDir: true 
+				useTsconfigDeclarationDir: true
 			}),
 			{
 				name: 'adjust-typings',
@@ -57,16 +52,14 @@ export default [
 	},
 
 	{
-		input: [
-			`src/cli.ts`
-		],
+		input: [`src/cli.ts`],
 		output: {
 			dir: 'dist',
 			format: 'cjs',
 			sourcemap: true,
 			chunkFileNames: '[name].js'
 		},
-		external: id => {
+		external: (id) => {
 			if (id.includes('snowpack/snowpack')) return true;
 			return external.includes(id);
 		},
@@ -83,7 +76,7 @@ export default [
 ];
 
 /**
- * Remove the typings that do not refer to the runtime and fix the module names 
+ * Remove the typings that do not refer to the runtime and fix the module names
  * (e.g. change "src/runtime/navigation/goto/index" to "$app/navigation/goto")
  */
 function adjust_typings() {
@@ -91,9 +84,9 @@ function adjust_typings() {
 
 	const typings_file = 'index.d.ts';
 
-	const only_runtime = code =>
+	const only_runtime = (code) =>
 		Array.from(code.matchAll(/declare module "src\/runtime\/.*?\n}/gms))
-			.map(m => m[0])
+			.map((m) => m[0])
 			.join('\n\n');
 
 	const code = only_runtime(readFileSync(typings_file, 'utf8')).replace(

@@ -4,20 +4,25 @@ import { ManifestData } from '../interfaces';
 import { PageManifest, PageComponentManifest, EndpointManifest } from '@sveltejs/app-utils';
 import { posixify, reserved_words } from '../utils';
 
-export default function create_manifest_data(cwd: string, extensions: string = '.svelte .html'): ManifestData {
+export default function create_manifest_data(
+	cwd: string,
+	extensions: string = '.svelte .html'
+): ManifestData {
 	const component_extensions = extensions.split(' ');
 
 	function find_layout(file_name: string, component_name: string, dir: string = '') {
-		const ext = component_extensions.find((ext) => fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`)));
+		const ext = component_extensions.find((ext) =>
+			fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`))
+		);
 		const file = posixify(path.join(dir, `${file_name}${ext}`));
 		const url = `/_app/routes/${file}`;
 
 		return ext
 			? {
-				name: component_name,
-				file,
-				url
-			}
+					name: component_name,
+					file,
+					url
+			  }
 			: null;
 	}
 
@@ -46,8 +51,9 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 			params: string[];
 		}>
 	) {
-		const items = fs.readdirSync(dir)
-			.map(basename => {
+		const items = fs
+			.readdirSync(dir)
+			.map((basename) => {
 				const resolved = path.join(dir, basename);
 				const file = path.relative(cwd, resolved);
 				const is_dir = fs.statSync(resolved).isDirectory();
@@ -59,9 +65,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 				if (basename[0] === '.' && basename !== '.well-known') return null;
 				if (!is_dir && !/^\.[a-z]+$/i.test(ext)) return null; // filter out tmp files etc
 
-				const segment = is_dir
-					? basename
-					: basename.slice(0, -ext.length);
+				const segment = is_dir ? basename : basename.slice(0, -ext.length);
 
 				if (/\]\[/.test(segment)) {
 					throw new Error(`Invalid route ${file} — parameters must be separated`);
@@ -72,7 +76,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 				const is_page = component_extensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
 
-				parts.forEach(part => {
+				parts.forEach((part) => {
 					if (part.qualifier && /[()?:]/.test(part.qualifier.slice(1, -1))) {
 						throw new Error(`Invalid route ${file} — cannot use (, ), ? or : in route qualifiers`);
 					}
@@ -92,7 +96,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 			.filter(Boolean)
 			.sort(comparator);
 
-		items.forEach(item => {
+		items.forEach((item) => {
 			const segments = parent_segments.slice();
 
 			if (item.is_index) {
@@ -120,7 +124,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 			}
 
 			const params = parent_params.slice();
-			params.push(...item.parts.filter(p => p.dynamic).map(p => p.content));
+			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
 				const component = find_layout('$layout', `${get_slug(item.file)}__layout`, item.file);
@@ -131,13 +135,9 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component
-						? stack.concat({ component, params })
-						: stack.concat(null)
+					component ? stack.concat({ component, params }) : stack.concat(null)
 				);
-			}
-
-			else if (item.is_page) {
+			} else if (item.is_page) {
 				const component = {
 					name: get_slug(item.file),
 					file: item.file,
@@ -146,13 +146,14 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 
 				components.push(component);
 
-				const parts = (item.is_index && stack[stack.length - 1] === null)
-					? stack.slice(0, -1).concat({ component, params })
-					: stack.concat({ component, params });
+				const parts =
+					item.is_index && stack[stack.length - 1] === null
+						? stack.slice(0, -1).concat({ component, params })
+						: stack.concat({ component, params });
 
-				const is_static = segments.every(segment => segment.length === 1 && !segment[0].dynamic);
+				const is_static = segments.every((segment) => segment.length === 1 && !segment[0].dynamic);
 				const path = is_static
-					? `/${segments.map(segment => segment[0].content).join('/')}`
+					? `/${segments.map((segment) => segment[0].content).join('/')}`
 					: null;
 
 				pages.push({
@@ -160,9 +161,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 					pattern: get_pattern(segments, true),
 					parts
 				});
-			}
-
-			else {
+			} else {
 				endpoints.push({
 					name: `route_${get_slug(item.file)}`,
 					pattern: get_pattern(segments, !item.route_suffix),
@@ -181,7 +180,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 
 	// check for clashes
 	const seen_pages: Map<string, PageManifest> = new Map();
-	pages.forEach(page => {
+	pages.forEach((page) => {
 		const pattern = page.pattern.toString();
 		if (seen_pages.has(pattern)) {
 			const file = page.parts.pop().component.file;
@@ -195,7 +194,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 	});
 
 	const seen_routes: Map<string, EndpointManifest> = new Map();
-	endpoints.forEach(route => {
+	endpoints.forEach((route) => {
 		const pattern = route.pattern.toString();
 		if (seen_routes.has(pattern)) {
 			const other_route = seen_routes.get(pattern);
@@ -227,8 +226,8 @@ function is_spread(path: string) {
 }
 
 function comparator(
-	a: { basename: string; parts: Part[]; file: string; is_index: boolean; },
-	b: { basename: string; parts: Part[]; file: string; is_index: boolean; }
+	a: { basename: string; parts: Part[]; file: string; is_index: boolean },
+	b: { basename: string; parts: Part[]; file: string; is_index: boolean }
 ) {
 	if (a.is_index !== b.is_index) {
 		if (a.is_index) return is_spread(a.file) ? 1 : -1;
@@ -259,7 +258,7 @@ function comparator(
 
 		if (!a_sub_part.dynamic && a_sub_part.content !== b_sub_part.content) {
 			return (
-				(b_sub_part.content.length - a_sub_part.content.length) ||
+				b_sub_part.content.length - a_sub_part.content.length ||
 				(a_sub_part.content < b_sub_part.content ? -1 : 1)
 			);
 		}
@@ -284,14 +283,13 @@ function comparator(
 }
 
 function get_parts(part: string): Part[] {
-	return part.split(/\[(.+?\(.+?\)|.+?)\]/)
+	return part
+		.split(/\[(.+?\(.+?\)|.+?)\]/)
 		.map((str, i) => {
 			if (!str) return null;
 			const dynamic = i % 2 === 1;
 
-			const [, content, qualifier] = dynamic
-				? /([^(]+)(\(.+\))?$/.exec(str)
-				: [null, str, null];
+			const [, content, qualifier] = dynamic ? /([^(]+)(\(.+\))?$/.exec(str) : [null, str, null];
 
 			return {
 				content,
@@ -309,7 +307,7 @@ function get_slug(file: string) {
 		.replace(/[/\\]/g, '_')
 		.replace(/\.\w+$/, '')
 		.replace(/\[([^(]+)(?:\([^(]+\))?\]/, '$$$1')
-		.replace(/[^a-zA-Z0-9_$]/g, c => {
+		.replace(/[^a-zA-Z0-9_$]/g, (c) => {
 			return c === '.' ? '_' : `$${c.charCodeAt(0)}`;
 		});
 
@@ -318,18 +316,22 @@ function get_slug(file: string) {
 }
 
 function get_pattern(segments: Part[][], add_trailing_slash: boolean) {
-	const path = segments.map(segment => {
-		return segment.map(part => {
-			return part.dynamic
-				? part.qualifier || (part.spread ? '(.+)' : '([^/]+?)')
-				: encodeURI(part.content.normalize())
-					.replace(/\?/g, '%3F')
-					.replace(/#/g, '%23')
-					.replace(/%5B/g, '[')
-					.replace(/%5D/g, ']')
-					.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		}).join('');
-	}).join('\\/');
+	const path = segments
+		.map((segment) => {
+			return segment
+				.map((part) => {
+					return part.dynamic
+						? part.qualifier || (part.spread ? '(.+)' : '([^/]+?)')
+						: encodeURI(part.content.normalize())
+								.replace(/\?/g, '%3F')
+								.replace(/#/g, '%23')
+								.replace(/%5B/g, '[')
+								.replace(/%5D/g, ']')
+								.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+				})
+				.join('');
+		})
+		.join('\\/');
 
 	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
 

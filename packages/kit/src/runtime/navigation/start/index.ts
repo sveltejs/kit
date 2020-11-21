@@ -27,7 +27,7 @@ const stores = {
 let $session: any;
 let session_dirty: boolean;
 
-stores.session.subscribe(async value => {
+stores.session.subscribe(async (value) => {
 	$session = value;
 
 	if (!ready) return;
@@ -35,7 +35,7 @@ stores.session.subscribe(async value => {
 
 	const dest = select_target(new URL(location.href));
 
-	const token = current_token = {};
+	const token = (current_token = {});
 	const { redirect, props, branch } = await hydrate_target(dest);
 	if (token !== current_token) return; // a secondary navigation happened while we were loading
 
@@ -51,9 +51,7 @@ export function set_target(node: Node) {
 	target = node;
 }
 
-export default async function start(opts: {
-	target: Node
-}) {
+export default async function start(opts: { target: Node }) {
 	set_target(opts.target);
 
 	init_router(initial_data.baseUrl, handle_target);
@@ -90,7 +88,6 @@ function handle_error() {
 			component: ErrorComponent
 		},
 		segments: preloaded
-
 	};
 	const query = extract_query(search);
 	render([], props, { host, path: pathname, query, params: {}, error });
@@ -107,7 +104,7 @@ async function handle_target(dest: Target): Promise<void> {
 
 	const hydrating = get_prefetched(dest);
 
-	const token = current_token = {};
+	const token = (current_token = {});
 	const hydrated_target = await hydrating;
 	const { redirect } = hydrated_target;
 	if (token !== current_token) return; // a secondary navigation happened while we were loading
@@ -190,12 +187,20 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 	};
 
 	if (!root_preloaded) {
-		root_preloaded = initial_data.preloaded[0] || (layout.preload ? layout.preload.call(preload_context, {
-			host: page.host,
-			path: page.path,
-			query: page.query,
-			params: {}
-		}, $session) : {});
+		root_preloaded =
+			initial_data.preloaded[0] ||
+			(layout.preload
+				? layout.preload.call(
+						preload_context,
+						{
+							host: page.host,
+							path: page.path,
+							query: page.query,
+							params: {}
+						},
+						$session
+				  )
+				: {});
 	}
 
 	let branch: Branch;
@@ -207,40 +212,51 @@ export async function hydrate_target(dest: Target): Promise<HydratedTarget> {
 
 		let segment_dirty = false;
 
-		branch = await Promise.all(route.parts.map(async (part, i) => {
-			const segment = segments[i];
+		branch = await Promise.all(
+			route.parts.map(async (part, i) => {
+				const segment = segments[i];
 
-			if (part_changed(i, segment, match, stringified_query)) segment_dirty = true;
+				if (part_changed(i, segment, match, stringified_query)) segment_dirty = true;
 
-			props.segments[l] = segments[i + 1]; // TODO make this less confusing
-			if (!part) return { segment };
+				props.segments[l] = segments[i + 1]; // TODO make this less confusing
+				if (!part) return { segment };
 
-			const j = l++;
+				const j = l++;
 
-			if (!session_dirty && !segment_dirty && current_branch[i] && current_branch[i].part === part.i) {
-				return current_branch[i];
-			}
+				if (
+					!session_dirty &&
+					!segment_dirty &&
+					current_branch[i] &&
+					current_branch[i].part === part.i
+				) {
+					return current_branch[i];
+				}
 
-			segment_dirty = false;
+				segment_dirty = false;
 
-			const { default: component, preload } = await components[part.i]();
+				const { default: component, preload } = await components[part.i]();
 
-			let preloaded: object;
-			if (ready || !initial_data.preloaded[i + 1]) {
-				preloaded = preload
-					? await preload.call(preload_context, {
-						host: page.host,
-						path: page.path,
-						query: page.query,
-						params: part.params ? part.params(dest.match) : {}
-					}, $session)
-					: {};
-			} else {
-				preloaded = initial_data.preloaded[i + 1];
-			}
+				let preloaded: object;
+				if (ready || !initial_data.preloaded[i + 1]) {
+					preloaded = preload
+						? await preload.call(
+								preload_context,
+								{
+									host: page.host,
+									path: page.path,
+									query: page.query,
+									params: part.params ? part.params(dest.match) : {}
+								},
+								$session
+						  )
+						: {};
+				} else {
+					preloaded = initial_data.preloaded[i + 1];
+				}
 
-			return (props[`level${j}`] = { component, props: preloaded, segment, match, part: part.i });
-		}));
+				return (props[`level${j}`] = { component, props: preloaded, segment, match, part: part.i });
+			})
+		);
 	} catch (error) {
 		props.error = error;
 		props.status = 500;

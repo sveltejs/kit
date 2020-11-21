@@ -3,10 +3,7 @@ import path from 'path';
 import { SourceMapConsumer, RawSourceMap } from 'source-map';
 
 function get_sourcemap_url(contents: string) {
-	const reversed = contents
-		.split('\n')
-		.reverse()
-		.join('\n');
+	const reversed = contents.split('\n').reverse().join('\n');
 
 	const match = /\/[/*]#[ \t]+sourceMappingURL=([^\s'"]+?)(?:[ \t]+|$)/gm.exec(reversed);
 	if (match) return match[1];
@@ -91,8 +88,5 @@ export function sourcemap_stacktrace(stack: string) {
 
 	file_cache.clear();
 
-	return stack
-		.split('\n')
-		.map(replace)
-		.join('\n');
+	return stack.split('\n').map(replace).join('\n');
 }
