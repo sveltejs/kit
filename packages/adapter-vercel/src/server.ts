@@ -16,8 +16,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 		path,
 		httpMethod,
 		headers,
-		queryStringParameters
-		// body, // TODO pass this to renderer
+		queryStringParameters,
+		body
 		// isBase64Encoded // TODO is this useful?
 	} = event;
 
@@ -35,6 +35,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 			method: httpMethod as Method,
 			headers,
 			path,
+			body,
 			query
 		},
 		{
