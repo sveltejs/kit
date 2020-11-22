@@ -3,4 +3,3 @@
 /dist
 /assets/runtime
 /client/**/*.d.ts
-index.d.ts
