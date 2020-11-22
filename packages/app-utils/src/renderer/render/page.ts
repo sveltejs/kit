@@ -301,7 +301,7 @@ export default async function render_page(
 				import { start } from '/_app/${options.client.entry}';
 
 				start({
-					target: document.body
+					target: document.querySelector('#svelte') || document.body
 				});
 			</script>`.replace(/^\t{2}/gm, ''); // TODO add links
 
