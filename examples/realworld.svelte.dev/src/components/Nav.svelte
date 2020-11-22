@@ -1,9 +1,7 @@
 <script>
-	// TODO `* as app` instead of `{ stores }` because of a cyclical dependency. fix
-	// TODO come up with a better alias, this isn't client-specific
-	import * as app from '$app/client.js';
+	import { getStores } from '/_app/main/runtime/stores';
 
-	const { page, session } = app.stores();
+	const { page, session } = getStores();
 </script>
 
 <nav class="navbar navbar-light">

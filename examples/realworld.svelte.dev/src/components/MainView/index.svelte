@@ -1,12 +1,12 @@
 <script>
-	import { stores } from '/_app/main/client';
+	import { getStores } from '/_app/main/runtime/stores';
 	import ArticleList from '../ArticleList/index.svelte';
 
 	export let tab = 'all';
 	export let tag = null;
 	export let p;
 
-	const { session } = stores();
+	const { session } = getStores();
 
 	function yourFeed() {
 		tab = "feed";

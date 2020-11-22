@@ -1,5 +1,5 @@
 <script>
-	import { stores } from '$app/client.js';
+	import { getStores } from '/_app/main/runtime/stores';
 	import ArticlePreview from './ArticlePreview.svelte';
 	import ListPagination from './ListPagination.svelte';
 	import * as api from '$common/api.js';
@@ -9,7 +9,7 @@
 	export let tag;
 	export let p;
 
-	const { session, page } = stores();
+	const { session, page } = getStores();
 
 	let query;
 	let articles;

@@ -1,5 +1,5 @@
 <script>
-	import { goto } from '$app/client.js';
+	import { goto } from '/_app/main/runtime/navigation';
 	import ArticleList from '$components/ArticleList/index.svelte';
 	import * as api from '$common/api.js';
 
