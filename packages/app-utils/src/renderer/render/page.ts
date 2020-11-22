@@ -267,11 +267,11 @@ export default async function render_page(
 				import { start } from '/_app/${options.client.entry}';
 
 				start({
-					target: document.querySelector('#svelte')
+					target: document.querySelector('#svelte') || document.body
 				});
 			</script>`.replace(/^\t{2}/gm, ''); // TODO add links
 
-		const body = `<div id="svelte">${rendered.html}</div>
+		const body = `${rendered.html}
 			<script>
 				__SVELTE__ = {
 					baseUrl: "${baseUrl}",
