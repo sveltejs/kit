@@ -15,7 +15,8 @@ jobs:
     strategy:
       matrix:
         node-version: [12, 14]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+        # don't include macOS-latest while repo is private because it is charged at 10x rate
+        os: [ubuntu-latest, windows-latest]
     steps:
     - run: git config --global core.autocrlf false
     - uses: actions/checkout@v2
@@ -32,7 +33,7 @@ jobs:
 #    strategy:
 #      matrix:
 #        node-version: [12, 14]
-#        os: [ubuntu-latest, windows-latest, macOS-latest]
+#        os: [ubuntu-latest, windows-latest]
 #    steps:
 #    - run: git config --global core.autocrlf false
 #    - uses: actions/checkout@v2
