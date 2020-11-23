@@ -18,7 +18,7 @@ as you can, including the following.
 
 - The output of `npx envinfo --system --npmPackages svelte,kit,rollup,webpack --binaries --browsers`
 - Your browser
-- Your adapter (i.e. Node, static, Vercel, Begin, etc...)
+- Your adapter (e.g. Node, static, Vercel, Begin, etc...)
 
 - *Repeatable steps to reproduce the issue*
 

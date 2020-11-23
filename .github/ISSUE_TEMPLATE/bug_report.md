@@ -41,7 +41,7 @@ If you have a stack trace to include, we recommend putting inside a `<details>` 
 
 - Your browser
 
-- Your adapter (i.e. Node, static, Vercel, Begin, etc...)
+- Your adapter (e.g. Node, static, Vercel, Begin, etc...)
 
 **Severity**
 How severe an issue is this bug to you? Is this annoying, blocking some users, blocking an upgrade or blocking your usage of SvelteKit entirely?
