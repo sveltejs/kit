@@ -43,22 +43,6 @@ importers:
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
-  examples/realworld.svelte.dev:
-    dependencies:
-      node-fetch: 2.6.1
-    devDependencies:
-      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
-      '@sveltejs/kit': 'link:../../packages/kit'
-      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
-      marked: 1.2.2
-      svelte: 3.29.0
-    specifiers:
-      '@sveltejs/adapter-node': 'workspace:*'
-      '@sveltejs/kit': 'workspace:*'
-      '@sveltejs/snowpack-config': 'workspace:*'
-      marked: ^1.2.2
-      node-fetch: ^2.6.1
-      svelte: ^3.29.0
   examples/sandbox:
     devDependencies:
       '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
@@ -2527,13 +2511,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-glc9y00wgtwcDmp7GaE/0b0OnxpNJsVf3ael/An6Fe2Q51LLwN1er6sdomLRzz5h0+yMpiYLhWYF5R7HeqVd4g==
-  /marked/1.2.2:
-    dev: true
-    engines:
-      node: '>= 8.16.2'
-    hasBin: true
-    resolution:
-      integrity: sha512-5jjKHVl/FPo0Z6ocP3zYhKiJLzkwJAw4CZoLjv57FkvbUuwOX4LIBBGGcXjAY6ATcd1q9B8UTj5T9Umauj0QYQ==
   /meow/6.1.1:
     dependencies:
       '@types/minimist': 1.2.0
@@ -2710,6 +2687,7 @@ packages:
     resolution:
       integrity: sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
   /node-fetch/2.6.1:
+    dev: true
     engines:
       node: 4.x || >=6.0.0
     resolution:
