@@ -37,7 +37,7 @@ If you have a stack trace to include, we recommend putting inside a `<details>` 
 
 **Information about your SvelteKit Installation:**
 
-- The output of `npx envinfo --system --npmPackages svelte,kit,rollup,webpack --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/snowpack-config --binaries --browsers`
 
 - Your browser
 
