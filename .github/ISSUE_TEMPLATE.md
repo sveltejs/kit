@@ -16,7 +16,7 @@ change, please create an [RFC](https://github.com/sveltejs/rfcs).
 If you're filing an issue about a bug please include as much information
 as you can, including the following.
 
-- The output of `npx envinfo --system --npmPackages svelte,kit,rollup,webpack --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/snowpack-config --binaries --browsers`
 - Your browser
 - Your adapter (e.g. Node, static, Vercel, Begin, etc...)
 
