@@ -1,7 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
-import typescript from 'rollup-plugin-typescript2';
+import sucrase from '@rollup/plugin-sucrase';
 import pkg from './package.json';
 import { readFileSync, writeFileSync } from 'fs';
 
@@ -31,7 +31,10 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			typescript(/*{
+			sucrase({
+				transforms: ['typescript']
+			})
+			/*typescript({
 				tsconfigDefaults: {
 					compilerOptions: {
 						// create typings. these options do not apply to the other build target
@@ -41,8 +44,8 @@ export default [
 					}
 				},
 				useTsconfigDeclarationDir: true
-			}*/),
-			/*{
+			}),
+			{
 				name: 'adjust-typings',
 				resolveId: () => null,
 				load: () => null,
@@ -69,7 +72,10 @@ export default [
 				extensions: ['.mjs', '.js', '.ts']
 			}),
 			commonjs(),
-			typescript()
+			sucrase({
+				transforms: ['typescript']
+			})
+			//typescript()
 		],
 		preserveEntrySignatures: false
 	}

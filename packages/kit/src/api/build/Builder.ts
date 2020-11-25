@@ -13,9 +13,9 @@ export type BuilderOptions = {
 export default class Builder {
 	log: Logger;
 
-	#generated_files: string;
-	#static_files: string;
-	#manifest: ManifestData;
+	private generated_files: string;
+	private static_files: string;
+	private manifest: ManifestData;
 
 	constructor({
 		generated_files,
@@ -23,19 +23,19 @@ export default class Builder {
 		log,
 		manifest
 	}: BuilderOptions) {
-		this.#generated_files = generated_files;
-		this.#static_files = static_files;
-		this.#manifest = manifest;
+		this.generated_files = generated_files;
+		this.static_files = static_files;
+		this.manifest = manifest;
 
 		this.log = log;
 	}
 
 	copy_generated_files(dest: string) {
-		copy(this.#generated_files, dest);
+		copy(this.generated_files, dest);
 	}
 
 	copy_static_files(dest: string) {
-		copy(this.#static_files, dest);
+		copy(this.static_files, dest);
 	}
 
 	prerender({
@@ -48,13 +48,13 @@ export default class Builder {
 		prerender({
 			out: dest,
 			force,
-			dir: this.#generated_files,
-			manifest: this.#manifest,
+			dir: this.generated_files,
+			manifest: this.manifest,
 			log: this.log
 		});
 	}
 
 	foo() {
-		console.log(this.#manifest);
+		console.log(this.manifest);
 	}
 }
