@@ -112,21 +112,21 @@ importers:
       '@types/node': 14.14.0
       '@types/node-fetch': 2.5.7
       devalue: 2.0.1
+      esm: 3.2.25
       node-fetch: 2.6.1
       rollup: 2.32.0
       svelte: 3.29.0
-      ts-node: 9.0.0
       uvu: 0.3.4
     specifiers:
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.0
       '@types/node-fetch': ^2.5.7
       devalue: ^2.0.1
+      esm: ^3.2.25
       mime: ^2.4.6
       node-fetch: ^2.6.1
       rollup: ^2.32.0
       svelte: ^3.29.0
-      ts-node: ^9.0.0
       uvu: ^0.3.4
   packages/create-svelte:
     devDependencies:
@@ -807,10 +807,6 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-mM8522psRCqzV+6LhomX5wgp25YVibjh8Wj23I5RPkPppSVSjyKD2A2mBJmWGa+KN7f2D6LNh9jkBCeyLktzjg==
-  /arg/4.1.3:
-    dev: true
-    resolution:
-      integrity: sha512-58S9QDqG0Xx27YwPSt9fJxivjYl432YCwfDMfZ+71RAqUrZef7LrKQZ3LHLOwCS4FLNBplP533Zx895SeOCHvA==
   /argparse/1.0.10:
     dependencies:
       sprintf-js: 1.0.3
@@ -1561,6 +1557,12 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-G9+qtYVCHaDi1ZuWzBsOWo2wSwd70TXnU6UHA3cTYHp7gCTXZcpggWFoUVAMRarg68qtPoNfFbzPh+VdOgmwmw==
+  /esm/3.2.25:
+    dev: true
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
   /espree/7.3.0:
     dependencies:
       acorn: 7.4.1
@@ -2376,10 +2378,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==
-  /make-error/1.3.6:
-    dev: true
-    resolution:
-      integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==
   /map-obj/1.0.1:
     dev: true
     engines:
@@ -3704,21 +3702,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-C4+gOpvmxaSMKuEf9Qc134F1ZuOHVXKRbtEflf4NTtuuJDEIJ9p5PXsalL8SkeRw+qit1Mo+yuvMPAKwWg/1hA==
-  /ts-node/9.0.0:
-    dependencies:
-      arg: 4.1.3
-      diff: 4.0.2
-      make-error: 1.3.6
-      source-map-support: 0.5.19
-      yn: 3.1.1
-    dev: true
-    engines:
-      node: '>=10.0.0'
-    hasBin: true
-    peerDependencies:
-      typescript: '>=2.7'
-    resolution:
-      integrity: sha512-/TqB4SnererCDR/vb4S/QvSZvzQMJN8daAslg7MeaiHvD8rDZsSfXmNeNumyZZzMned72Xoq/isQljYSt8Ynfg==
   /tsconfig-paths/3.9.0:
     dependencies:
       '@types/json5': 0.0.29
@@ -3956,12 +3939,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==
-  /yn/3.1.1:
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
   github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_9ee733401bef03657849a7355d21b2a8:
     dependencies:
       eslint: 7.11.0
