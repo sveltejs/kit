@@ -1,12 +1,9 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import typescript from 'rollup-plugin-typescript2';
 import pkg from './package.json';
-const fs = require('fs');
-const path = require('path');
 
 const input = {};
 Object.keys(pkg.exports).forEach((key) => {
-	input[key.replace(/^\.\//, '')] = `src/${key}/index.ts`;
+	input[key.replace(/^\.\//, '')] = `src/${key}/index.js`;
 });
 
 export default {
@@ -28,8 +25,7 @@ export default {
 		}
 	],
 	plugins: [
-		nodeResolve(),
-		typescript()
+		nodeResolve()
 	],
 	external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies)]
 };
