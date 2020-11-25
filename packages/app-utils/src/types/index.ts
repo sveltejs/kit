@@ -63,9 +63,9 @@ export type RouteParams = Record<string, string | string[]>;
 export interface PageComponentManifest {
 	default?: boolean;
 	type?: string;
+	file?: string;
 	url: string;
 	name: string;
-	file: string;
 }
 
 export interface PageManifestPart {

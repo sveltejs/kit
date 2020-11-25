@@ -167,6 +167,7 @@ importers:
       snowpack: 2.17.0
     devDependencies:
       '@types/node': 14.11.10
+      '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       estree-walker: 2.0.1
       kleur: 4.1.3
@@ -176,13 +177,17 @@ importers:
       periscopic: 2.0.2
       port-authority: 1.1.1
       require-relative: 0.8.7
+      rimraf: 3.0.2
       sirv: 1.0.7
       source-map-support: 0.5.19
       svelte: 3.29.0
+      tiny-glob: 0.2.8
+      ts-node: 9.0.0_typescript@4.0.5
       typescript: 4.0.5
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
       '@types/node': ^14.11.10
+      '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
       cheap-watch: ^1.0.2
       estree-walker: ^2.0.1
@@ -194,6 +199,7 @@ importers:
       periscopic: ^2.0.2
       port-authority: ^1.1.1
       require-relative: ^0.8.7
+      rimraf: ^3.0.2
       rollup: ^2.32.0
       rollup-dependency-tree: 0.0.14
       rollup-plugin-css-chunks: ^1.2.8
@@ -204,6 +210,8 @@ importers:
       snowpack: ^2.17.0
       source-map-support: ^0.5.19
       svelte: ^3.29.0
+      tiny-glob: ^0.2.8
+      ts-node: ^9.0.0
       typescript: ^4.0.5
   packages/snowpack-config:
     dependencies:
@@ -655,6 +663,13 @@ packages:
   /@types/estree/0.0.45:
     resolution:
       integrity: sha512-jnqIUKDUqJbDIUxm0Uj7bnlMnRm1T/eZ9N+AVMqhPgzrba2GhGG5o/jCTwmdPK709nEZsGoMzXEDUjcXHa3W0g==
+  /@types/glob/7.1.3:
+    dependencies:
+      '@types/minimatch': 3.0.3
+      '@types/node': 14.14.9
+    dev: true
+    resolution:
+      integrity: sha512-SEYeGAIQIQX8NN6LDKprLjbrd5dARM5EXsd8GI/A5l0apYI1fGMWgPHSe4ZKL4eozlAyI+doUE9XbYS4xCkQ1w==
   /@types/json-schema/7.0.6:
     dev: true
     resolution:
@@ -667,6 +682,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==
+  /@types/minimatch/3.0.3:
+    dev: true
+    resolution:
+      integrity: sha512-tHq6qdbT9U1IRSGf14CL0pUlULksvY9OZ+5eEgl1N7t+OA3tGvNpxJCzuKQlsNgCVwbAs670L1vcVQi8j9HjnA==
   /@types/minimist/1.2.0:
     dev: true
     resolution:
@@ -696,6 +715,10 @@ packages:
   /@types/node/14.14.5:
     resolution:
       integrity: sha512-H5Wn24s/ZOukBmDn03nnGTp18A60ny9AmCwnEcgJiTgSGsCO7k+NWP7zjCCbhlcnVCoI+co52dUAt9GMhOSULw==
+  /@types/node/14.14.9:
+    dev: true
+    resolution:
+      integrity: sha512-JsoLXFppG62tWTklIoO4knA+oDTYsmqWxHRvd4lpmfQRNhX6osheUOWETP2jMoV/2bEHuMra8Pp3Dmo/stBFcw==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
@@ -709,6 +732,13 @@ packages:
       '@types/node': 14.14.5
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
+  /@types/rimraf/3.0.0:
+    dependencies:
+      '@types/glob': 7.1.3
+      '@types/node': 14.14.9
+    dev: true
+    resolution:
+      integrity: sha512-7WhJ0MdpFgYQPXlF4Dx+DhgvlPCfz/x5mHaeDQAKhcenvQP1KCpLQ18JklAqeGMYSAT2PxLpzd0g2/HE7fj7hQ==
   /@types/sade/1.7.2:
     dependencies:
       '@types/mri': 1.1.0
@@ -3260,7 +3290,6 @@ packages:
   /rimraf/3.0.2:
     dependencies:
       glob: 7.1.6
-    dev: false
     hasBin: true
     resolution:
       integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==
@@ -3849,6 +3878,22 @@ packages:
       diff: 4.0.2
       make-error: 1.3.6
       source-map-support: 0.5.19
+      yn: 3.1.1
+    dev: true
+    engines:
+      node: '>=10.0.0'
+    hasBin: true
+    peerDependencies:
+      typescript: '>=2.7'
+    resolution:
+      integrity: sha512-/TqB4SnererCDR/vb4S/QvSZvzQMJN8daAslg7MeaiHvD8rDZsSfXmNeNumyZZzMned72Xoq/isQljYSt8Ynfg==
+  /ts-node/9.0.0_typescript@4.0.5:
+    dependencies:
+      arg: 4.1.3
+      diff: 4.0.2
+      make-error: 1.3.6
+      source-map-support: 0.5.19
+      typescript: 4.0.5
       yn: 3.1.1
     dev: true
     engines:

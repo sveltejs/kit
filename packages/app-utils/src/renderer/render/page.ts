@@ -49,7 +49,7 @@ export default async function render_page(
 
 	const baseUrl = ''; // TODO
 
-	const session = await options.setup.getSession?.(context);
+	const session = await (options.setup.getSession && options.setup.getSession(context));
 
 	const serialized_session = try_serialize(session, (err: Error) => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);

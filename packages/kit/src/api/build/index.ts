@@ -13,12 +13,13 @@ import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { SvelteAppConfig } from '../../interfaces';
 import { css_injection } from './css_injection';
+import Builder from './Builder';
 
 const exec = promisify(child_process.exec);
 
 const snowpack_main = require.resolve('snowpack');
 const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
-const snowpack_pkg = require(snowpack_pkg_file);
+const snowpack_pkg = require(snowpack_pkg_file); // eslint-disable-line
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
 
 const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY', 'MISSING_EXPORT']);
@@ -29,6 +30,9 @@ const onwarn = (warning, handler) => {
 	if (ignorable_warnings.has(warning.code)) return;
 	handler(warning);
 };
+
+// TODO adapters need access to Adapter/Builder types
+type Adapter = (builder: Builder) => void | Promise<void>;
 
 export async function build(config: SvelteAppConfig) {
 	if (!config.adapter) {
@@ -52,7 +56,7 @@ export async function build(config: SvelteAppConfig) {
 	log.minor = (msg) => log(colors.grey(msg));
 	log.info = log;
 
-	const unoptimized = `.svelte/build/unoptimized`;
+	const unoptimized = '.svelte/build/unoptimized';
 
 	{
 		// phase one — build with Snowpack
@@ -136,7 +140,7 @@ export async function build(config: SvelteAppConfig) {
 			sourcemap: true
 		});
 
-		log.success(`server`);
+		log.success('server');
 
 		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
 
@@ -267,20 +271,22 @@ export async function build(config: SvelteAppConfig) {
 			sourcemap: true
 		});
 
-		log.success(`client`);
+		log.success('client');
 	}
 
 	{
 		// phase three — adapter
 		header(`Generating app (${config.adapter})...`);
-		await rimraf('build'); // TODO customize
 
-		const adapter = relative(config.adapter);
-		await adapter({
-			dir: '.svelte/build/optimized',
+		const builder = new Builder({
+			generated_files: '.svelte/build/optimized',
+			static_files: 'static',
 			manifest,
 			log
 		});
+
+		const adapter: Adapter = relative(config.adapter);
+		await adapter(builder);
 	}
 
 	log.success('done');

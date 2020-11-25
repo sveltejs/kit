@@ -29,7 +29,7 @@ export const preloading = {
 	}
 };
 
-const error = (verb) => {
+const error = (verb: string) => {
 	throw new Error(
 		ssr
 			? `Can only ${verb} session store in browser`
@@ -48,10 +48,10 @@ export const session = {
 
 		return store.subscribe(fn);
 	},
-	set: (updater: Updater<any>) => {
+	set: (_value: any) => {
 		error('set');
 	},
-	update: (updater: Updater<any>) => {
+	update: (_updater: Updater<any>) => {
 		error('update');
 	}
 };

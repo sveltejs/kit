@@ -1,4 +1,5 @@
 {
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"resolveJsonModule": true,
 		"module": "esnext",
@@ -10,5 +11,10 @@
 	},
 	"include": ["src/**/*"],
 	"lib": ["ES2020", "dom", "node"],
-	"strict": true
+	"strict": true,
+	"ts-node": {
+		"compilerOptions": {
+			"module": "commonjs"
+		}
+	}
 }

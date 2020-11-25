@@ -32,13 +32,11 @@ export default function create_manifest_data(
 
 	const default_layout: PageComponentManifest = {
 		name: '$default_layout',
-		file: null,
 		url: '/_app/main/components/layout.svelte'
 	};
 
 	const default_error: PageComponentManifest = {
 		name: '$default_error',
-		file: null,
 		url: '/_app/main/components/error.svelte'
 	};
 
