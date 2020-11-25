@@ -1,5 +1,5 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
-import typescript from 'rollup-plugin-typescript2';
+import sucrase from '@rollup/plugin-sucrase';
 import pkg from './package.json';
 const fs = require('fs');
 const path = require('path');
@@ -29,7 +29,9 @@ export default {
 	],
 	plugins: [
 		nodeResolve(),
-		typescript()
+		sucrase({
+			transforms: ['typescript']
+		})
 	],
 	external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies)]
 };

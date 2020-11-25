@@ -9,7 +9,7 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu -r ts-node/register"
+		"test": "uvu -r sucrase/register/ts"
 	},
 	"dependencies": {
 		"mime": "^2.4.6"

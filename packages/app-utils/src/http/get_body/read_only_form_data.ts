@@ -17,26 +17,26 @@ export function read_only_form_data() {
 }
 
 class ReadOnlyFormData {
-	#map: FormDataMap;
+	private map: FormDataMap;
 
 	constructor(map: FormDataMap) {
-		this.#map = map;
+		this.map = map;
 	}
 
 	get(key: string) {
-		return this.#map.get(key)?.[0];
+		return this.map.get(key)?.[0];
 	}
 
 	getAll(key: string) {
-		return this.#map.get(key);
+		return this.map.get(key);
 	}
 
 	has(key: string) {
-		return this.#map.has(key);
+		return this.map.has(key);
 	}
 
 	*[Symbol.iterator]() {
-		for (const [key, value] of this.#map) {
+		for (const [key, value] of this.map) {
 			for (let i = 0; i < value.length; i += 1) {
 				yield [key, value[i]];
 			}
@@ -44,7 +44,7 @@ class ReadOnlyFormData {
 	}
 
 	*entries() {
-		for (const [key, value] of this.#map) {
+		for (const [key, value] of this.map) {
 			for (let i = 0; i < value.length; i += 1) {
 				yield [key, value[i]];
 			}
@@ -52,7 +52,7 @@ class ReadOnlyFormData {
 	}
 
 	*keys() {
-		for (const [key, value] of this.#map) {
+		for (const [key, value] of this.map) {
 			for (let i = 0; i < value.length; i += 1) {
 				yield key;
 			}
@@ -60,7 +60,7 @@ class ReadOnlyFormData {
 	}
 
 	*values() {
-		for (const [, value] of this.#map) {
+		for (const [, value] of this.map) {
 			for (let i = 0; i < value.length; i += 1) {
 				yield value;
 			}

@@ -1,6 +1,6 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
+import sucrase from '@rollup/plugin-sucrase';
 
 export default [
 	{
@@ -9,7 +9,9 @@ export default [
 			file: 'index.js',
 			format: 'cjs'
 		},
-		plugins: [nodeResolve(), commonjs(), typescript()],
+		plugins: [nodeResolve(), commonjs(), sucrase({
+			transforms: ['typescript']
+		})],
 		external: require('module').builtinModules
 	},
 	{
@@ -18,7 +20,9 @@ export default [
 			file: 'render.js',
 			format: 'cjs'
 		},
-		plugins: [nodeResolve(), commonjs(), typescript()],
+		plugins: [nodeResolve(), commonjs(), sucrase({
+			transforms: ['typescript']
+		})],
 		external: require('module').builtinModules
 	}
 ];

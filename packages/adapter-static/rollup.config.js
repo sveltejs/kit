@@ -1,6 +1,6 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
+import sucrase from '@rollup/plugin-sucrase';
 
 export default {
 	input: 'src/index.ts',
@@ -8,6 +8,8 @@ export default {
 		file: 'server.js',
 		format: 'cjs'
 	},
-	plugins: [nodeResolve(), commonjs(), typescript()],
+	plugins: [nodeResolve(), commonjs(), sucrase({
+		transforms: ['typescript']
+	})],
 	external: require('module').builtinModules
 };
