@@ -2,15 +2,10 @@ import * as fs from 'fs';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { stringify, walk, write_if_changed } from '../utils';
 
-
-
 export function create_app({
 	manifest_data,
 	output
-}
-
-
-) {
+}) {
 	if (!fs.existsSync(output)) mkdirp(output);
 
 	const client_manifest = generate_client_manifest(manifest_data);
@@ -26,12 +21,7 @@ export function create_serviceworker_manifest({
 	output,
 	client_files,
 	static_files
-}
-
-
-
-
-) {
+}) {
 	let files = ['service-worker-index.html'];
 
 	if (fs.existsSync(static_files)) {

@@ -1,19 +1,9 @@
 import { getContext } from 'svelte';
 
-
-
-// these Svelte types are not exported, so repeating them here.
-
-
-
 // const ssr = (import.meta as any).env.SSR;
 const ssr = typeof window === 'undefined'; // TODO why doesn't previous line work in build?
 
-export const getStores
-
-
-
- = () => getContext('__svelte__');
+export const getStores = () => getContext('__svelte__');
 
 export const page = {
 	subscribe(fn) {
@@ -48,7 +38,7 @@ export const session = {
 
 		return store.subscribe(fn);
 	},
-	set: (updater) => {
+	set: (value) => {
 		error('set');
 	},
 	update: (updater) => {

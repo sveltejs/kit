@@ -5,17 +5,14 @@ import { scorta } from 'scorta/sync';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
 import create_manifest_data from '../../core/create_manifest_data';
-import { createServer, } from 'http';
+import { createServer } from 'http';
 import { create_app } from '../../core/create_app';
-import snowpack, { } from 'snowpack';
+import snowpack from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
-
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
-
-
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
 
@@ -24,17 +21,6 @@ export function dev(opts) {
 }
 
 class Watcher extends EventEmitter {
-	
-	
-	
-
-	
-
-	
-	
-	
-	
-
 	constructor(opts) {
 		super();
 
@@ -74,11 +60,11 @@ class Watcher extends EventEmitter {
 		await this.init_server();
 
 		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
-		((this.cheapwatch ) ).on('+', ({ isNew }) => {
+		this.cheapwatch.on('+', ({ isNew }) => {
 			if (isNew) this.update();
 		});
 
-		((this.cheapwatch ) ).on('-', () => {
+		this.cheapwatch.on('-', () => {
 			this.update();
 		});
 	}
@@ -160,8 +146,8 @@ class Watcher extends EventEmitter {
 				const rendered = await render(
 					{
 						host: req.headers.host,
-						headers: req.headers ,
-						method: req.method ,
+						headers: req.headers,
+						method: req.method,
 						path: parsed.pathname,
 						query: new URLSearchParams(parsed.query),
 						body

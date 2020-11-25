@@ -1,7 +1,5 @@
-
 import { URLSearchParams } from 'url';
 import { render } from '@sveltejs/app-utils/renderer';
-
 
 const manifest = require('./manifest.js');
 const client = require('./client.json');
@@ -33,7 +31,7 @@ export const handler = async (event) => {
 	const rendered = await render(
 		{
 			host: null, // TODO
-			method: httpMethod ,
+			method: httpMethod,
 			headers,
 			path,
 			query

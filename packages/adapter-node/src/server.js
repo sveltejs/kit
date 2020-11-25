@@ -5,7 +5,6 @@ import sirv from 'sirv';
 import { render } from '@sveltejs/app-utils/renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 
-
 const manifest = require('./manifest.js');
 const client = require('./client.json');
 
@@ -40,9 +39,9 @@ const server = http.createServer((req, res) => {
 				const rendered = await render(
 					{
 						host: null, // TODO
-						method: req.method ,
-						headers: req.headers , // TODO: what about repeated headers, i.e. string[]
-						path: parsed.pathname ,
+						method: req.method,
+						headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+						path: parsed.pathname,
 						body: await get_body(req),
 						query: new URLSearchParams(parsed.query || '')
 					},

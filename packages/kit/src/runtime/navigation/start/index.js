@@ -1,13 +1,10 @@
 import { writable } from 'svelte/store';
 import { extract_query, init as init_router, load_current_page, select_target } from '../internal';
 import { get_prefetched, start as start_prefetching } from '../prefetch';
-
 import goto from '../goto';
 import { page_store } from './page_store';
 import { layout, ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
-
-
 
 export const initial_data = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
 

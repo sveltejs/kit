@@ -11,7 +11,6 @@ import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
-
 import { css_injection } from './css_injection';
 
 const exec = promisify(child_process.exec);
@@ -52,7 +51,7 @@ export async function build(config) {
 	log.minor = (msg) => log(colors.grey(msg));
 	log.info = log;
 
-	const unoptimized = `.svelte/build/unoptimized`;
+	const unoptimized = '.svelte/build/unoptimized';
 
 	{
 		// phase one — build with Snowpack
@@ -136,7 +135,7 @@ export async function build(config) {
 			sourcemap: true
 		});
 
-		log.success(`server`);
+		log.success('server');
 
 		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
 
@@ -167,10 +166,7 @@ export async function build(config) {
 						const reverse_lookup = new Map();
 
 						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
-						const client
-
-
- = {
+						const client = {
 							entry: null,
 							deps: {}
 						};
@@ -180,12 +176,12 @@ export async function build(config) {
 						for (const key in bundle) {
 							const chunk = bundle[key];
 
-							if ((chunk ).facadeModuleId === entry) {
+							if (chunk.facadeModuleId === entry) {
 								client.entry = key;
-							} else if ((chunk ).facadeModuleId === 'inject_styles.js') {
+							} else if (chunk.facadeModuleId === 'inject_styles.js') {
 								inject_styles = key;
-							} else if ((chunk ).modules) {
-								for (const id in (chunk ).modules) {
+							} else if (chunk.modules) {
+								for (const id in chunk.modules) {
 									if (id.startsWith(routes) && id.endsWith('.js')) {
 										const file = id.slice(routes.length + 1);
 										reverse_lookup.set(file, key);
@@ -202,7 +198,7 @@ export async function build(config) {
 							const chunk = bundle[key];
 
 							if (chunk) {
-								const imports = (chunk ).imports;
+								const imports = chunk.imports;
 
 								if (imports) {
 									imports.forEach((key) => {
@@ -267,7 +263,7 @@ export async function build(config) {
 			sourcemap: true
 		});
 
-		log.success(`client`);
+		log.success('client');
 	}
 
 	{

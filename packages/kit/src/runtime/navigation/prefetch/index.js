@@ -2,11 +2,7 @@ import { hydrate_target } from '../start'; // TODO does this belong here?
 import { select_target } from '../internal';
 import { find_anchor, get_base_uri } from '../utils';
 
-
-let prefetching
-
-
- = null;
+let prefetching = null;
 
 let mousemove_timeout;
 

@@ -1,29 +1,12 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import devalue from 'devalue';
+ import devalue from 'devalue';
 import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
 import { readable, writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
-
-
-
-
-
-
-
-
-
-
-
 import { render } from './index';
 
 const noop = () => {};
-
-
-
-
-
-
 
 export default async function render_page(
 	request,
@@ -31,15 +14,7 @@ export default async function render_page(
 	options,
 	status = 200,
 	error = null
-)
-
-
-
-
-
-
-
- {
+) {
 	let redirected;
 	let preload_error;
 
@@ -49,7 +24,7 @@ export default async function render_page(
 
 	const baseUrl = ''; // TODO
 
-	const session = await _optionalChain([options, 'access', _ => _.setup, 'access', _2 => _2.getSession, 'optionalCall', _3 => _3(context)]);
+	const session = await (options.setup.getSession && options.setup.getSession(context));
 
 	const serialized_session = try_serialize(session, (err) => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);
@@ -82,7 +57,7 @@ export default async function render_page(
 					redirected &&
 					(redirected.status !== status || redirected.headers.location !== location)
 				) {
-					throw new Error(`Conflicting redirects`);
+					throw new Error('Conflicting redirects');
 				}
 				location = location.replace(/^\//g, ''); // leading slash (only)
 				redirected = {
@@ -202,11 +177,7 @@ export default async function render_page(
 		if (preload_error) throw preload_error;
 		if (redirected) return redirected;
 
-		const branches
-
-
-
- = [];
+		const branches = [];
 		parts.forEach((part, i) => {
 			if (part) {
 				branches.push({

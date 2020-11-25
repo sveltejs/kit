@@ -1,25 +1,6 @@
-import { writable, } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 /** Callback to inform of a value updates. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function page_store(value) {
 	const store = writable(value);
 	let ready = true;

@@ -1,4 +1,3 @@
-
 import { find_anchor } from './utils';
 import { routes } from 'MANIFEST';
 

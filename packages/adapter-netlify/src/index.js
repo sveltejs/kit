@@ -2,20 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import toml from 'toml';
 import glob from 'tiny-glob/sync';
-
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
-
 
 module.exports = async function builder({
 	dir,
 	manifest,
 	log
-}
-
-
-
-) {
+}) {
 	let netlify_config;
 
 	if (fs.existsSync('netlify.toml')) {
