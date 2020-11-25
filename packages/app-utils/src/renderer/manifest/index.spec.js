@@ -1,7 +1,7 @@
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { exampleRouteManifest } from './index.spec.data';
-import { generate_manifest_module } from '.';
+import { generate_manifest_module } from '../../../renderer';
 
 const generate_manifest_module_suite = suite('#generate_manifest_module()');
 

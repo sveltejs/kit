@@ -3,12 +3,12 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { copy } from '.';
+import { copy } from '../../files';
 
 const suite_copy = suite('#copy()');
 
-let source_dir: string;
-let dest_dir: string;
+let source_dir;
+let dest_dir;
 
 suite_copy.before.each(() => {
 	const temp_dir = mkdtempSync(join(tmpdir(), 'app-utils-'));

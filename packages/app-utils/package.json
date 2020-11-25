@@ -9,7 +9,7 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu -r ts-node/register"
+		"test": "pnpm build && uvu -r esm"
 	},
 	"dependencies": {
 		"mime": "^2.4.6"
@@ -22,7 +22,6 @@
 		"node-fetch": "^2.6.1",
 		"rollup": "^2.32.0",
 		"svelte": "^3.29.0",
-		"ts-node": "^9.0.0",
 		"uvu": "^0.3.4"
 	},
 	"exports": {

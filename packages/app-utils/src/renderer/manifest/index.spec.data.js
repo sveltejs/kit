@@ -1,6 +1,4 @@
-import { PageComponentManifest, RouteManifest, PageManifest, EndpointManifest } from '../../types';
-
-const examplePageComponentManifest: PageComponentManifest = {
+const examplePageComponentManifest = {
 	default: true,
 	type: 'foo',
 	name: 'bar',
@@ -8,7 +6,7 @@ const examplePageComponentManifest: PageComponentManifest = {
 	url: 'boo'
 };
 
-const examplePageManifest: PageManifest = {
+const examplePageManifest = {
 	pattern: /a/,
 	path: 'qux',
 	parts: [
@@ -19,7 +17,7 @@ const examplePageManifest: PageManifest = {
 	]
 };
 
-const exampleEndpointManifest: EndpointManifest = {
+const exampleEndpointManifest = {
 	name: 'grault',
 	pattern: /b/,
 	file: 'garply',
@@ -27,7 +25,7 @@ const exampleEndpointManifest: EndpointManifest = {
 	params: ['waldo', 'fred']
 };
 
-export const exampleRouteManifest: RouteManifest = {
+export const exampleRouteManifest = {
 	layout: examplePageComponentManifest,
 	error: examplePageComponentManifest,
 	components: [examplePageComponentManifest, examplePageComponentManifest],
