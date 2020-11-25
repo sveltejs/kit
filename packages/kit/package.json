@@ -17,6 +17,7 @@
 		"@types/node": "^14.11.10",
 		"@types/rimraf": "^3.0.0",
 		"@types/sade": "^1.7.2",
+		"esm": "^3.2.25",
 		"estree-walker": "^2.0.1",
 		"kleur": "^4.1.3",
 		"magic-string": "^0.25.7",
@@ -29,9 +30,7 @@
 		"sirv": "^1.0.7",
 		"source-map-support": "^0.5.19",
 		"svelte": "^3.29.0",
-		"tiny-glob": "^0.2.8",
-		"ts-node": "^9.0.0",
-		"typescript": "^4.0.5"
+		"tiny-glob": "^0.2.8"
 	},
 	"bin": {
 		"svelte": "svelte-kit"
@@ -43,11 +42,11 @@
 	],
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "rollup -c && cd client && tsc",
+		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ \"**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu -r sucrase/register/ts"
+		"test": "uvu -r esm"
 	}
 }

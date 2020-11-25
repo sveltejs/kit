@@ -1,0 +1,81 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// export interface BuildEvent {
+// 	type: string;
+// 	errors: Array<{ file: string; message: string; duplicate: boolean }>;
+// 	warnings: Array<{ file: string; message: string; duplicate: boolean }>;
+// 	duration: number;
+// 	result: CompileResult;
+// }
