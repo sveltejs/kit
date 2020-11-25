@@ -282,7 +282,7 @@ export async function build(config) {
 			log
 		});
 
-		const adapter: Adapter = relative(config.adapter);
+		const adapter = relative(config.adapter);
 		await adapter(builder);
 	}
 

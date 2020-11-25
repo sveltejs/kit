@@ -29,7 +29,7 @@ export const preloading = {
 	}
 };
 
-const error = (verb: string) => {
+const error = (verb) => {
 	throw new Error(
 		ssr
 			? `Can only ${verb} session store in browser`
@@ -48,17 +48,10 @@ export const session = {
 
 		return store.subscribe(fn);
 	},
-<<<<<<< HEAD:packages/kit/src/runtime/stores/index.ts
-	set: (_value: any) => {
-		error('set');
-	},
-	update: (_updater: Updater<any>) => {
-=======
 	set: (updater) => {
 		error('set');
 	},
 	update: (updater) => {
->>>>>>> liberation:packages/kit/src/runtime/stores/index.js
 		error('update');
 	}
 };
