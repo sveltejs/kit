@@ -4,7 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 export default {
 	input: 'src/index.js',
 	output: {
-		file: 'server.js',
+		file: 'index.js',
 		format: 'cjs'
 	},
 	plugins: [nodeResolve(), commonjs()],
