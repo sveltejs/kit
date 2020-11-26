@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 0.0.26
+
+### Patch Changes
+
+- b475ed4: Overhaul adapter API - fixes #166
+- Updated dependencies [b475ed4]
+  - @sveltejs/app-utils@0.0.18
+
 ## 0.0.25
 
 ### Patch Changes

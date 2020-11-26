@@ -3,14 +3,14 @@
 </script>
 
 <script>
-	import { stores } from '/_app/main/client';
+	import { getStores } from '/_app/main/runtime/stores';
 	import Nav from '/_app/components/Nav.svelte';
 	import PreloadingIndicator from '/_app/components/PreloadingIndicator.svelte';
 	import ThemeToggler from '/_app/components/ThemeToggler.svelte';
 
 	export let segment;
 
-	const { preloading } = stores();
+	const { preloading } = getStores();
 </script>
 
 <Nav {segment}/>

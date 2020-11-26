@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 0.0.12
+
+### Patch Changes
+
+- b475ed4: Overhaul adapter API - fixes #166
+
 ## 0.0.11
 
 ### Patch Changes

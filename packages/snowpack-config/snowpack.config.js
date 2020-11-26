@@ -6,11 +6,14 @@ module.exports = {
 		externalPackage: require('module').builtinModules
 	},
 	plugins: [
-		['@snowpack/plugin-svelte', {
-			compilerOptions: {
-				hydratable: true
+		[
+			'@snowpack/plugin-svelte',
+			{
+				compilerOptions: {
+					hydratable: true
+				}
 			}
-		}]
+		]
 	],
 	devOptions: {
 		open: 'none'
@@ -25,7 +28,7 @@ module.exports = {
 		'src/setup': '/_app/setup'
 	},
 	alias: {
-		$app: '/_app/main/runtime',
+		$app: './.svelte/main/runtime',
 		$components: './src/components'
 	}
 };

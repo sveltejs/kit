@@ -1,42 +1,17 @@
-const fs = require('fs');
-const { prerender } = require('@sveltejs/app-utils/renderer');
-const { copy } = require('@sveltejs/app-utils/files');
+'use strict';
 
-module.exports = async function adapter({
-	dir,
-	manifest,
-	log
-}) {
+const fs = require('fs');
+
+module.exports = async function adapter(builder) {
 	const out = 'build'; // TODO implement adapter options
 
-	copy(`${dir}/client`, `${out}/assets/_app`, file => file[0] !== '.');
-	copy(`${dir}/server`, out);
-	copy(`${__dirname}/server.js`, `${out}/index.js`);
-	copy(`${dir}/client.json`, `${out}/client.json`);
-	copy('src/app.html', `${out}/app.html`);
+	builder.copy_server_files(out);
+	builder.copy_client_files(`${out}/assets/_app`);
 
-	log.minor('Prerendering static pages...');
+	fs.copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
 
-	await prerender({
-		dir,
-		out: `${out}/prerendered`,
-		assets: `${out}/assets`,
-		manifest,
-		log
+	builder.log.info('Prerendering static pages...');
+	await builder.prerender({
+		dest: `${out}/prerendered`
 	});
-
-	// generate manifest
-	const written_manifest = `module.exports = {
-		layout: ${JSON.stringify(manifest.layout)},
-		error: ${JSON.stringify(manifest.error)},
-		components: ${JSON.stringify(manifest.components)},
-		pages: [
-			${manifest.pages.map(page => `{ pattern: ${page.pattern}, parts: ${JSON.stringify(page.parts)} }`).join(',\n\t\t\t')}
-		],
-		endpoints: [
-			${manifest.endpoints.map(route => `{ name: '${route.name}', pattern: ${route.pattern}, file: '${route.file}', params: ${JSON.stringify(route.params)} }`).join(',\n\t\t\t')}
-		]
-	};`.replace(/^\t/gm, '');
-
-	fs.writeFileSync(`${out}/manifest.js`, written_manifest);
 };

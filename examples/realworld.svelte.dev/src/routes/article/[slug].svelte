@@ -11,7 +11,7 @@
 
 <script>
 	import { onMount } from 'svelte';
-	import { stores } from '$app/client.js';
+	import { session } from '$app/stores';
 	import marked from 'marked';
 
 	import ArticleMeta from './_ArticleMeta.svelte';
@@ -19,8 +19,6 @@
 
 	export let article;
 	export let slug;
-
-	const { session } = stores();
 
 	let commentErrors, comments = []; // we'll lazy-load these in onMount
 	$: markup = marked(article.body);
@@ -37,7 +35,6 @@
 </svelte:head>
 
 <div class="article-page">
-
 	<div class="banner">
 		<div class="container">
 			<h1>{article.title}</h1>

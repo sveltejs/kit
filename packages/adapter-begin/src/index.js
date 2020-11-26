@@ -9,12 +9,7 @@ const static_assets = require('@architect/shared/static_assets.js');
 const setup = require('@architect/shared/setup.js');
 
 exports.handler = async function http(req) {
-	const {
-		rawPath: path,
-		requestContext,
-		headers,
-		queryStringParameters: query
-	} = req;
+	const { rawPath: path, requestContext, headers, queryStringParameters: query } = req;
 
 	const { method, domainName } = requestContext.http;
 
@@ -32,6 +27,7 @@ exports.handler = async function http(req) {
 			method,
 			headers,
 			path,
+			// body, TODO: convert this file to typescript and utilize the body once we know what type it is and whether it first needs some conversion
 			query
 		},
 		{
@@ -39,9 +35,9 @@ exports.handler = async function http(req) {
 			template,
 			manifest,
 			client,
-      root: App,
-      setup,
-			load: route => require(`@architect/shared/routes/${route.name}.js`),
+			root: App,
+			setup,
+			load: (route) => require(`@architect/shared/routes/${route.name}.js`),
 			dev: false
 		}
 	);

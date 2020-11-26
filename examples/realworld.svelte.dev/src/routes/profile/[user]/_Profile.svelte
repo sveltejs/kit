@@ -1,5 +1,5 @@
 <script>
-	import { goto } from '$app/client.js';
+	import { goto } from '$app/navigation';
 	import ArticleList from '$components/ArticleList/index.svelte';
 	import * as api from '$common/api.js';
 
@@ -9,7 +9,7 @@
 
 	$: isUser = user && (profile.username === user.username);
 
-	async function toggleFollowing() {
+	async function toggle_following() {
 		if (!user) return goto('/login');
 
 		// optimistic UI
@@ -41,7 +41,7 @@
 					{:else}
 						<button
 							class='btn btn-sm action-btn {profile.following ? "btn-secondary" : "btn-outline-secondary"}'
-							on:click='{toggleFollowing}'
+							on:click={toggle_following}
 						>
 							<i class="ion-plus-round"></i>
 							{profile.following ? 'Unfollow' : 'Follow'} {profile.username}

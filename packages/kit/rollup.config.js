@@ -1,7 +1,6 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
-import typescript from '@rollup/plugin-typescript';
 import pkg from './package.json';
 
 const external = [].concat(
@@ -13,8 +12,8 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			navigation: 'src/runtime/navigation/index.ts',
-			stores: 'src/runtime/stores/index.ts'
+			navigation: 'src/runtime/navigation/index.js',
+			stores: 'src/runtime/stores/index.js'
 		},
 		output: {
 			dir: 'assets/runtime',
@@ -25,24 +24,29 @@ export default [
 				MANIFEST: '../generated/manifest.js'
 			}
 		},
-		external: [
-			'svelte',
-			'svelte/store',
-			'ROOT',
-			'MANIFEST'
-		],
+		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
-			}),
-			typescript()
+			})
 		]
 	},
 
 	{
-		input: [
-			`src/cli.ts`
-		],
+		input: 'src/renderer/index.js',
+		output: {
+			dir: 'assets/renderer',
+			format: 'cjs',
+			sourcemap: true
+		},
+		plugins: [
+			resolve(),
+			commonjs()
+		]
+	},
+
+	{
+		input: ['src/cli.js'],
 		output: {
 			dir: 'dist',
 			format: 'cjs',
@@ -50,7 +54,7 @@ export default [
 			chunkFileNames: '[name].js',
 			exports: 'named'
 		},
-		external: id => {
+		external: (id) => {
 			if (id.includes('snowpack/snowpack')) return true;
 			return external.includes(id);
 		},
@@ -59,10 +63,8 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			commonjs(),
-			typescript({
-				target: 'ES2018'
-			})
-		]
+			commonjs()
+		],
+		preserveEntrySignatures: false
 	}
 ];

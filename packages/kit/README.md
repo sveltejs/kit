@@ -8,7 +8,6 @@ It's currently missing a ton of stuff but I figured I'd throw it up on GitHub an
 
 There are no tests yet or anything like that. Some of the code has just been straight copied over from the existing Sapper repo, but a pleasing amount of it can safely be left behind.
 
-
 ## Trying it out
 
 Clone this repo, `npm install`, and `npm link`. That will create a global link to the `svelte` bin. You can then either `npm run build` or `npm run dev`, if you intend to make changes and see them immediately reflected.

@@ -1,5 +1,6 @@
 <script>
-	import { goto, stores } from '$app/client.js';
+	import { goto } from '$app/navigation';
+	import { session } from '$app/stores';
 	import ListErrors from '$components/ListErrors.svelte';
 	import * as api from '$common/api.js';
 
@@ -8,8 +9,6 @@
 
 	let inProgress = false;
 	let errors;
-
-	const { session } = stores();
 
 	function addTag(input) {
 		article.tagList = [...article.tagList, input.value];

@@ -7,11 +7,10 @@
 </script>
 
 <script>
-	import { goto, stores } from '$app/client.js';
-	import ListErrors from '$components/ListErrors.svelte';
+	import { session } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { post } from '$common/utils.js';
-
-	const { session } = stores();
+	import ListErrors from '$components/ListErrors.svelte';
 
 	let username = '';
 	let email = '';

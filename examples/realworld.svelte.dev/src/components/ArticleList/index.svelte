@@ -1,15 +1,13 @@
 <script>
-	import { stores } from '$app/client.js';
+	import { session, page } from '$app/stores';
+	import * as api from '$common/api.js';
 	import ArticlePreview from './ArticlePreview.svelte';
 	import ListPagination from './ListPagination.svelte';
-	import * as api from '$common/api.js';
 
 	export let tab, username = false;
 	export let favorites = false;
 	export let tag;
 	export let p;
-
-	const { session, page } = stores();
 
 	let query;
 	let articles;
