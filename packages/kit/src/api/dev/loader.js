@@ -67,7 +67,6 @@ export default function loader(snowpack, config) {
 			.then((result) => initialize_module(url, result.contents, url_stack.concat(url)))
 			.catch((e) => {
 				cache.delete(url);
-				console.error(e);
 				throw e;
 			});
 

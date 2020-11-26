@@ -11,7 +11,7 @@ import snowpack from 'snowpack';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { mkdirp } from '@sveltejs/app-utils/files';
-import { render } from '@sveltejs/app-utils/renderer';
+import { render } from '../../renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
 import { readFileSync } from 'fs';
@@ -134,7 +134,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = await load('/_app/main/generated/root.js');
+					root = (await load('/_app/main/generated/root.js')).default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.toString());

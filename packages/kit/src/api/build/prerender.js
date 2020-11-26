@@ -46,7 +46,8 @@ export async function prerender({
 	dir,
 	out,
 	manifest,
-	log
+	log,
+	force
 }) {
 	const seen = new Set();
 
@@ -64,6 +65,8 @@ export async function prerender({
 			path,
 			body: null,
 			query: new URLSearchParams()
+		}, {
+			only_prerender: !force
 		});
 
 		if (rendered) {

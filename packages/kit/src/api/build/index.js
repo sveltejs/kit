@@ -245,7 +245,7 @@ export async function build(config) {
 
 			const client = ${s(client)};
 
-			export function render(request) {
+			export function render(request, { only_prerender = false } = {}) {
 				return renderer.render(request, {
 					static_dir: 'static',
 					template,
@@ -255,7 +255,7 @@ export async function build(config) {
 					setup,
 					load: (route) => require(\`./routes/\${route.name}.js\`),
 					dev: false,
-					only_prerender: false
+					only_prerender
 				});
 			}
 		`.replace(/^\t{3}/gm, '').trim());
