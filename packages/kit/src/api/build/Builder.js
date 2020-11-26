@@ -20,7 +20,7 @@ export default class Builder {
 	}
 
 	copy_generated_files(dest) {
-		copy(this.#generated_files, dest);
+		copy(`${this.#generated_files}/client`, dest);
 	}
 
 	copy_static_files(dest) {
