@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 0.0.16
+
+### Patch Changes
+
+- Remove unnecessary prepublish script
+
 ## 0.0.15
 
 ### Patch Changes
