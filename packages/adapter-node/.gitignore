@@ -1,6 +1,3 @@
 .DS_Store
 node_modules
-index.js
-index.d.ts
-server.js
-server.d.ts
+/files

@@ -1,8 +1,7 @@
 import fs from 'fs';
 import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
-import { mkdirp } from '../../files';
-import { render } from '../render';
+import { mkdirp } from '@sveltejs/app-utils/files';
 
 function clean_html(html) {
 	return html
@@ -46,45 +45,29 @@ const REDIRECT = 3;
 export async function prerender({
 	dir,
 	out,
-	assets,
 	manifest,
-	force,
-	log
+	log,
+	force
 }) {
 	const seen = new Set();
 
-	const template = fs.readFileSync('src/app.html', 'utf-8');
-	const client = JSON.parse(fs.readFileSync(`${dir}/client.json`, 'utf-8'));
-
 	const server_root = resolve_path(dir);
-	const root = require(`${server_root}/server/root.js`);
-	const setup = require(`${server_root}/server/setup.js`);
+	const app = require(`${server_root}/server/app.js`);
 
 	async function crawl(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		const rendered = await render(
-			{
-				host: null, // TODO ???
-				method: 'GET',
-				headers: {},
-				path,
-				body: null,
-				query: new URLSearchParams()
-			},
-			{
-				only_prerender: !force,
-				template,
-				manifest,
-				client,
-				static_dir: 'static',
-				root,
-				setup,
-				load: (route) => require(`${server_root}/server/routes/${route.name}.js`),
-				dev: false
-			}
-		);
+		const rendered = await app.render({
+			host: null, // TODO ???
+			method: 'GET',
+			headers: {},
+			path,
+			body: null,
+			query: new URLSearchParams()
+		}, {
+			only_prerender: !force
+		});
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
@@ -178,9 +161,8 @@ export async function prerender({
 						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
-						// TODO this feels iffy
 						const file_exists =
-							(assets && fs.existsSync(`${assets}${parsed.pathname}`)) ||
+							(parsed.pathname.startsWith('/_app/') && fs.existsSync(`${dir}/client/${parsed.pathname.replace('/_app/', '')}`)) ||
 							fs.existsSync(`${out}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}/index.html`);
