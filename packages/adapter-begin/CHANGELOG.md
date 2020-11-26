@@ -1,5 +1,12 @@
 # @sveltejs/adapter-begin
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [b475ed4]
+  - @sveltejs/app-utils@0.0.18
+
 ## 0.0.3
 
 ### Patch Changes
