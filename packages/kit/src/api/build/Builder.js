@@ -1,5 +1,6 @@
+import { rollup } from 'rollup';
 import { copy } from '@sveltejs/app-utils/files';
-import { prerender } from '@sveltejs/app-utils/renderer';
+import { prerender } from './prerender';
 
 export default class Builder {
 	#generated_files;
@@ -19,28 +20,28 @@ export default class Builder {
 		this.log = log;
 	}
 
-	copy_generated_files(dest) {
-		copy(`${this.#generated_files}/client`, dest);
+	copy_client_files(dest) {
+		copy(`${this.#generated_files}/client`, dest, (file) => file[0] !== '.');
+	}
+
+	copy_server_files(dest) {
+		copy(`${this.#generated_files}/server`, dest, (file) => file[0] !== '.');
 	}
 
 	copy_static_files(dest) {
 		copy(this.#static_files, dest);
 	}
 
-	prerender({
+	async prerender({
 		force = false,
 		dest
 	}) {
-		prerender({
+		await prerender({
 			out: dest,
 			force,
 			dir: this.#generated_files,
 			manifest: this.#manifest,
 			log: this.log
 		});
-	}
-
-	foo() {
-		console.log(this.#manifest);
 	}
 }

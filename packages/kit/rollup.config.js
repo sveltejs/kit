@@ -33,6 +33,19 @@ export default [
 	},
 
 	{
+		input: 'src/renderer/index.js',
+		output: {
+			dir: 'assets/renderer',
+			format: 'cjs',
+			sourcemap: true
+		},
+		plugins: [
+			resolve(),
+			commonjs()
+		]
+	},
+
+	{
 		input: ['src/cli.js'],
 		output: {
 			dir: 'dist',

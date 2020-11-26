@@ -78,21 +78,14 @@ export async function build(config) {
 		header('Optimizing...');
 		await rimraf('.svelte/build/optimized');
 
-		const server_input = {
-			root: `${unoptimized}/server/_app/main/generated/root.js`,
-			setup: `${unoptimized}/server/_app/setup/index.js`
+		const s = JSON.stringify;
+
+		const client = {
+			entry: null,
+			deps: {}
 		};
 
-		[
-			manifest.layout, // TODO is this necessary? if so why isn't manifest.error?
-			...manifest.components,
-			...manifest.endpoints
-		].forEach((item) => {
-			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
-				/\.\w+$/,
-				'.js'
-			)}`;
-		});
+		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
 
 		// https://github.com/snowpackjs/snowpack/discussions/1395
 		const re = /(\.\.\/)+_app\/main\/runtime\//;
@@ -104,41 +97,6 @@ export async function build(config) {
 				}
 			}
 		});
-
-		const server_chunks = await rollup({
-			input: server_input,
-			plugins: [
-				work_around_alias_bug('server'),
-				{
-					name: 'remove-css',
-					load(id) {
-						if (/\.css\.proxy\.js$/.test(id)) return '';
-					}
-				},
-				// TODO add server manifest generation so we can prune
-				// imports before zipping for cloud functions
-				terser()
-			],
-
-			onwarn,
-
-			// TODO ensure this works with external node modules (on server)
-			external: (id) => id[0] !== '.' && !path.isAbsolute(id)
-		});
-
-		await server_chunks.write({
-			dir: '.svelte/build/optimized/server',
-			format: 'cjs', // TODO some adapters might want ESM?
-			exports: 'named',
-			entryFileNames: '[name].js',
-			chunkFileNames: 'chunks/[name].js',
-			assetFileNames: 'assets/[name].js',
-			sourcemap: true
-		});
-
-		log.success('server');
-
-		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
 
 		const client_chunks = await rollup({
 			input: {
@@ -167,10 +125,6 @@ export async function build(config) {
 						const reverse_lookup = new Map();
 
 						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
-						const client = {
-							entry: null,
-							deps: {}
-						};
 
 						let inject_styles;
 
@@ -238,12 +192,6 @@ export async function build(config) {
 
 							client.deps[component.name] = get_deps(key);
 						});
-
-						// not using this.emitFile because the manifest doesn't belong with client code
-						fs.writeFileSync(
-							'.svelte/build/optimized/client.json',
-							JSON.stringify(client, null, '  ')
-						);
 					}
 				},
 				terser()
@@ -265,6 +213,100 @@ export async function build(config) {
 		});
 
 		log.success('client');
+
+		fs.writeFileSync(`${unoptimized}/server/app.js`, `
+			import * as renderer from '@sveltejs/kit/assets/renderer';
+			import root from './_app/main/generated/root.js';
+			import * as setup from './_app/setup/index.js';
+
+			const template = ${s(fs.readFileSync('src/app.html' /* TODO parameterise */, 'utf-8'))};
+
+			const manifest = {
+				layout: ${s(manifest.layout)},
+				error: ${s(manifest.error)},
+				components: ${s(manifest.components)},
+				pages: [
+					${manifest.pages
+						.map(({ pattern, parts: json_parts }) => {
+							const parts = JSON.stringify(json_parts);
+							return `{ pattern: ${pattern}, parts: ${parts} }`;
+						})
+						.join(',')}
+				],
+				endpoints: [
+					${manifest.endpoints
+						.map(({ name, pattern, file, params: json_params }) => {
+							const params = JSON.stringify(json_params);
+							return `{ name: '${name}', pattern: ${pattern}, file: '${file}', params: ${params} }`;
+						})
+						.join(',')}
+				]
+			};
+
+			const client = ${s(client)};
+
+			export function render(request) {
+				return renderer.render(request, {
+					static_dir: 'static',
+					template,
+					manifest,
+					client,
+					root,
+					setup,
+					load: (route) => require(\`./routes/\${route.name}.js\`),
+					dev: false,
+					only_prerender: false
+				});
+			}
+		`.replace(/^\t{3}/gm, '').trim());
+
+		const server_input = {
+			app: `${unoptimized}/server/app.js`
+		};
+
+		[
+			manifest.layout, // TODO is this necessary? if so why isn't manifest.error?
+			...manifest.components,
+			...manifest.endpoints
+		].forEach((item) => {
+			server_input[`routes/${item.name}`] = `${unoptimized}/server${item.url.replace(
+				/\.\w+$/,
+				'.js'
+			)}`;
+		});
+
+		const server_chunks = await rollup({
+			input: server_input,
+			plugins: [
+				work_around_alias_bug('server'),
+				{
+					name: 'remove-css',
+					load(id) {
+						if (/\.css\.proxy\.js$/.test(id)) return '';
+					}
+				},
+				// TODO add server manifest generation so we can prune
+				// imports before zipping for cloud functions
+				terser()
+			],
+
+			onwarn,
+
+			// TODO ensure this works with external node modules (on server)
+			external: (id) => id[0] !== '.' && !path.isAbsolute(id)
+		});
+
+		await server_chunks.write({
+			dir: '.svelte/build/optimized/server',
+			format: 'cjs', // TODO some adapters might want ESM?
+			exports: 'named',
+			entryFileNames: '[name].js',
+			chunkFileNames: 'chunks/[name].js',
+			assetFileNames: 'assets/[name].js',
+			sourcemap: true
+		});
+
+		log.success('server');
 	}
 
 	{

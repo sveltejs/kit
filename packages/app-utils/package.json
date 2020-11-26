@@ -33,10 +33,6 @@
 		"./http": {
 			"require": "./http/index.js",
 			"import": "./http/index.mjs"
-		},
-		"./renderer": {
-			"require": "./renderer/index.js",
-			"import": "./renderer/index.mjs"
 		}
 	},
 	"files": [
