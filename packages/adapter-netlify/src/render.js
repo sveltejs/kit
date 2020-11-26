@@ -1,11 +1,6 @@
 import { URLSearchParams } from 'url';
-import { render } from '@sveltejs/app-utils/renderer';
 
-const manifest = require('./manifest.js');
-const client = require('./client.json');
-const root = require('./root.js');
-const setup = require('./setup.js');
-const template = require('./template.js');
+const app = require('./app.js');
 
 // TODO this is a generic AWS lambda handler, and could be
 // reused by other adapters
@@ -28,27 +23,13 @@ export const handler = async (event) => {
 		});
 	}
 
-	const rendered = await render(
-		{
-			host: null, // TODO
-			method: httpMethod,
-			headers,
-			path,
-			query
-		},
-		{
-			static_dir: 'static',
-			template,
-			manifest,
-			client,
-			root,
-			setup,
-			load: (route) =>
-				require(`./routes/${route.name}.js`),
-			dev: false,
-			only_prerender: false
-		}
-	);
+	const rendered = await app.render({
+		host: null, // TODO
+		method: httpMethod,
+		headers,
+		path,
+		query
+	});
 
 	if (rendered) {
 		return {
