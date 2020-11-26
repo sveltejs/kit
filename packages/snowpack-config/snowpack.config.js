@@ -28,7 +28,7 @@ module.exports = {
 		'src/setup': '/_app/setup'
 	},
 	alias: {
-		$app: '/_app/main/runtime',
+		$app: './.svelte/main/runtime',
 		$components: './src/components'
 	}
 };

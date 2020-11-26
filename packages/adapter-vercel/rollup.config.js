@@ -1,24 +1,23 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from 'rollup-plugin-typescript2';
 
 export default [
 	{
-		input: 'src/index.ts',
+		input: 'src/index.js',
 		output: {
 			file: 'index.js',
 			format: 'cjs'
 		},
-		plugins: [nodeResolve(), commonjs(), typescript()],
+		plugins: [nodeResolve(), commonjs()],
 		external: require('module').builtinModules
 	},
 	{
-		input: 'src/server.ts',
+		input: 'src/server.js',
 		output: {
 			file: 'server.js',
 			format: 'cjs'
 		},
-		plugins: [nodeResolve(), commonjs(), typescript()],
+		plugins: [nodeResolve(), commonjs()],
 		external: require('module').builtinModules
 	}
 ];

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-static
 
+## 0.0.16
+
+### Patch Changes
+
+- Remove unnecessary prepublish script
+
+## 0.0.15
+
+### Patch Changes
+
+- b475ed4: Overhaul adapter API - fixes #166
+
 ## 0.0.14
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 0.0.18
+
+### Patch Changes
+
+- b475ed4: Overhaul adapter API - fixes #166
+
 ## 0.0.17
 
 ### Patch Changes
