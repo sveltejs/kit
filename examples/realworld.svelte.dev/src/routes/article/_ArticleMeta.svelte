@@ -1,5 +1,5 @@
 <script>
-	import { goto } from '/_app/main/runtime/navigation';
+	import { goto } from '$app/navigation';
 	import * as api from '$common/api.js';
 
 	export let article;

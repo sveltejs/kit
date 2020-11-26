@@ -7,12 +7,10 @@
 </script>
 
 <script>
-	import { getStores } from '/_app/main/runtime/stores';
-	import { goto } from '/_app/main/runtime/navigation';
+	import { session } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import { post } from '$common/utils.js';
 	import ListErrors from '$components/ListErrors.svelte';
-
-	const { session } = getStores();
 
 	let username = '';
 	let email = '';

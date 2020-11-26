@@ -8,7 +8,7 @@
 
 
 <script>
-	import { goto } from '/_app/main/runtime/navigation';
+	import { goto } from '$app/navigation';
 	import ListErrors from '$components/ListErrors.svelte';
 	import SettingsForm from './_SettingsForm.svelte';
 	import { post } from '$common/utils.js';

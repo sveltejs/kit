@@ -1,7 +1,5 @@
 <script>
-	import { getStores } from '/_app/main/runtime/stores';
-
-	const { page, session } = getStores();
+	import { page, session } from '$app/stores';
 </script>
 
 <nav class="navbar navbar-light">
