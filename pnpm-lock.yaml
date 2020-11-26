@@ -86,10 +86,7 @@ importers:
       rollup: ^2.32.0
       sirv: ^1.0.7
   packages/adapter-static:
-    dependencies:
-      '@sveltejs/app-utils': 'link:../app-utils'
-    specifiers:
-      '@sveltejs/app-utils': 'workspace:*'
+    specifiers: {}
   packages/adapter-vercel:
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
