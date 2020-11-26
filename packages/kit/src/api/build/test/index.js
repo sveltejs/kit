@@ -52,10 +52,18 @@ suite('copy files', () => {
 	);
 
 	rimraf.sync(dest);
-	builder.copy_generated_files(dest);
+	builder.copy_client_files(dest);
 
 	assert.equal(
-		glob('**', { cwd: generated_files }),
+		glob('**', { cwd: `${generated_files}/client` }),
+		glob('**', { cwd: dest })
+	);
+
+	rimraf.sync(dest);
+	builder.copy_server_files(dest);
+
+	assert.equal(
+		glob('**', { cwd: `${generated_files}/server` }),
 		glob('**', { cwd: dest })
 	);
 });
