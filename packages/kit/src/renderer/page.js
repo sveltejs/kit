@@ -1,4 +1,4 @@
-import devalue from 'devalue';
+ import devalue from 'devalue';
 import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';

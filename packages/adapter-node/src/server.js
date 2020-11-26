@@ -4,8 +4,6 @@ import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 
-const app = require('./app.js');
-
 const { PORT = 3000 } = process.env;
 
 const mutable = (dir) =>
@@ -23,6 +21,8 @@ const assets_handler = sirv('build/assets', {
 	maxAge: 31536000,
 	immutable: true
 });
+
+const app = require('./app.js');
 
 const server = http.createServer((req, res) => {
 	assets_handler(req, res, () => {
