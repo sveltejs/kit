@@ -22,6 +22,8 @@ importers:
       eslint-plugin-svelte3: ^2.7.3
       prettier: 2.1.2
       rollup: ^2.32.0
+  ../../../../.nvm/versions/node/v12.18.3/pnpm-global:
+    specifiers: {}
   examples/hn.svelte.dev:
     devDependencies:
       '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
