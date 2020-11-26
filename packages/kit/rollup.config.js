@@ -1,9 +1,7 @@
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
-import typescript from 'rollup-plugin-typescript2';
 import pkg from './package.json';
-import { readFileSync, writeFileSync } from 'fs';
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
@@ -14,8 +12,8 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			navigation: 'src/runtime/navigation/index.ts',
-			stores: 'src/runtime/stores/index.ts'
+			navigation: 'src/runtime/navigation/index.js',
+			stores: 'src/runtime/stores/index.js'
 		},
 		output: {
 			dir: 'assets/runtime',
@@ -30,29 +28,12 @@ export default [
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
-			}),
-			typescript(/*{
-				tsconfigDefaults: {
-					compilerOptions: {
-						// create typings. these options do not apply to the other build target
-						declaration: true,
-						emitDeclarationOnly: true,
-						outFile: './index.js'
-					}
-				},
-				useTsconfigDeclarationDir: true
-			}*/),
-			/*{
-				name: 'adjust-typings',
-				resolveId: () => null,
-				load: () => null,
-				writeBundle: adjust_typings
-			}*/
+			})
 		]
 	},
 
 	{
-		input: [`src/cli.ts`],
+		input: ['src/cli.js'],
 		output: {
 			dir: 'dist',
 			format: 'cjs',
@@ -68,31 +49,8 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			commonjs(),
-			typescript()
+			commonjs()
 		],
 		preserveEntrySignatures: false
 	}
 ];
-
-/**
- * Remove the typings that do not refer to the runtime and fix the module names
- * (e.g. change "src/runtime/navigation/goto/index" to "$app/navigation/goto")
- */
-function adjust_typings() {
-	const alias = '$app';
-
-	const typings_file = 'index.d.ts';
-
-	const only_runtime = (code) =>
-		Array.from(code.matchAll(/declare module "src\/runtime\/.*?\n}/gms))
-			.map((m) => m[0])
-			.join('\n\n');
-
-	const code = only_runtime(readFileSync(typings_file, 'utf8')).replace(
-		/ (module|from) ['"]src\/runtime\/(.+?)(\/index)?['"]/g,
-		` $1 "${alias}/$2"`
-	);
-
-	writeFileSync(typings_file, code);
-}

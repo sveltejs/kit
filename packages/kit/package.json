@@ -26,8 +26,7 @@
 		"require-relative": "^0.8.7",
 		"sirv": "^1.0.7",
 		"source-map-support": "^0.5.19",
-		"svelte": "^3.29.0",
-		"typescript": "^4.0.5"
+		"svelte": "^3.29.0"
 	},
 	"bin": {
 		"svelte": "svelte-kit"
@@ -39,7 +38,7 @@
 	],
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "rollup -c && cd client && tsc",
+		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ --ignore-pattern dist/ \"**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
