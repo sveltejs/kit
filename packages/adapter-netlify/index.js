@@ -1,6 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import toml from 'toml';
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const toml = require('toml');
 
 module.exports = async function adapter(builder) {
 	let netlify_config;
@@ -13,6 +15,7 @@ module.exports = async function adapter(builder) {
 			throw err;
 		}
 	} else {
+		// TODO offer to create one?
 		throw new Error(
 			'Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
 		);
@@ -32,7 +35,7 @@ module.exports = async function adapter(builder) {
 	builder.copy_server_files(`${functions}/render`);
 
 	// copy the renderer
-	fs.copyFileSync(path.resolve(__dirname, 'render.js'), `${functions}/render/index.js`);
+	fs.copyFileSync(path.resolve(__dirname, 'files/render.js'), `${functions}/render/index.js`);
 
 	// create _redirects
 	fs.writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');

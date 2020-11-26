@@ -1,11 +1,9 @@
-import { URLSearchParams } from 'url';
+'use strict';
 
+const url = require('url');
 const app = require('./app.js');
 
-// TODO this is a generic AWS lambda handler, and could be
-// reused by other adapters
-
-export const handler = async (event) => {
+exports.handler = async (event) => {
 	const {
 		path,
 		httpMethod,
@@ -15,7 +13,7 @@ export const handler = async (event) => {
 		// isBase64Encoded // TODO is this useful?
 	} = event;
 
-	const query = new URLSearchParams();
+	const query = new url.URLSearchParams();
 	for (const k in queryStringParameters) {
 		const value = queryStringParameters[k];
 		value.split(', ').forEach((v) => {
