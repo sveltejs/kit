@@ -6,7 +6,7 @@ import colors from 'kleur';
 import relative from 'require-relative';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
-import { rollup, } from 'rollup';
+import { rollup } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
@@ -284,6 +284,6 @@ export async function build(config) {
 
 async function rimraf(path) {
 	return new Promise((resolve) => {
-		((fs).rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
+		(fs.rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
 	});
 }

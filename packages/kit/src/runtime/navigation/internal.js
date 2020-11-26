@@ -14,11 +14,11 @@ export function set_cid(n) {
 const _history =
 	typeof history !== 'undefined'
 		? history
-		: (({
-				pushState: () => {},
-				replaceState: () => {},
-				scrollRestoration: 'auto'
-		  } ) );
+		: {
+			pushState: () => {},
+			replaceState: () => {},
+			scrollRestoration: 'auto'
+		  };
 export { _history as history };
 
 export const scroll_history = {};
@@ -116,7 +116,7 @@ function handle_click(event) {
 	if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 	if (event.defaultPrevented) return;
 
-	const a =  find_anchor(event.target);
+	const a = find_anchor(event.target);
 	if (!a) return;
 
 	if (!a.href) return;
@@ -124,7 +124,7 @@ function handle_click(event) {
 	// check if link is inside an svg
 	// in this case, both href and target are always inside an object
 	const svg = typeof a.href === 'object' && a.href.constructor.name === 'SVGAnimatedString';
-	const href = String(svg ? (a).href.baseVal : a.href);
+	const href = String(svg ? a.href.baseVal : a.href);
 
 	if (href === location.href) {
 		if (!location.hash) event.preventDefault();

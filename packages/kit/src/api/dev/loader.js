@@ -139,7 +139,7 @@ export default function loader(snowpack, config) {
 
 						const names = [];
 						node.declaration.declarations.forEach((declarator) => {
-							names.push(...extract_names(declarator.id ));
+							names.push(...extract_names(declarator.id));
 						});
 
 						code.appendLeft(node.end, names.map((name) => ` exports.${name} = ${name};`).join(''));

@@ -16,7 +16,7 @@ let current_branch = [];
 let current_query = '{}';
 
 const stores = {
-	page: page_store({} ),
+	page: page_store({}),
 	preloading: writable(false),
 	session: writable(initial_data && initial_data.session)
 };

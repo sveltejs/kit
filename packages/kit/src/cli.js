@@ -3,7 +3,6 @@ import sade from 'sade';
 import colors from 'kleur';
 import * as pkg from '../package.json';
 
-
 let config;
 
 try {

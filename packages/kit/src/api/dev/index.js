@@ -44,7 +44,7 @@ class Watcher extends EventEmitter {
 
 		this.emit('ready', {
 			port: this.opts.port
-		} );
+		});
 
 		return this;
 	}

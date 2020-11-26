@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { SourceMapConsumer, } from 'source-map';
+import { SourceMapConsumer } from 'source-map';
 
 function get_sourcemap_url(contents) {
 	const reversed = contents.split('\n').reverse().join('\n');
@@ -22,7 +22,7 @@ function get_file_contents(path) {
 		const data = fs.readFileSync(path, 'utf8');
 		file_cache.set(path, data);
 		return data;
-	} catch (e) {
+	} catch {
 		return undefined;
 	}
 }
@@ -47,7 +47,7 @@ export function sourcemap_stacktrace(stack) {
 					const raw_data = sourcemap_url.slice(sourcemap_url.indexOf(',') + 1);
 					try {
 						sourcemap_data = Buffer.from(raw_data, 'base64').toString();
-					} catch (e2) {
+					} catch {
 						return input;
 					}
 				} else {
@@ -63,13 +63,13 @@ export function sourcemap_stacktrace(stack) {
 				let raw_sourcemap;
 				try {
 					raw_sourcemap = JSON.parse(sourcemap_data);
-				} catch (e3) {
+				} catch {
 					return input;
 				}
 
 				// TODO: according to typings, this code cannot work;
 				// the constructor returns a promise that needs to be awaited
-				const consumer = new (SourceMapConsumer )(raw_sourcemap);
+				const consumer = new SourceMapConsumer(raw_sourcemap);
 				const pos = consumer.originalPositionFor({
 					line: Number(line),
 					column: Number(column),
