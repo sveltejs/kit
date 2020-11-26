@@ -10,7 +10,6 @@ module.exports = {
 		'src/common': '/_app/common'
 	},
 	alias: {
-		$app: '/_app/main',
 		$common: './src/common'
 	}
 };

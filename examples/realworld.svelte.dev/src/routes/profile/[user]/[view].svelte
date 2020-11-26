@@ -10,11 +10,10 @@
 </script>
 
 <script>
-	import { stores, goto } from '$app/client.js';
+	import { session } from '$app/stores';
 	import Profile from './_Profile.svelte';
 
 	export let profile, favorites;
-	const { session } = stores();
 </script>
 
 <svelte:head>

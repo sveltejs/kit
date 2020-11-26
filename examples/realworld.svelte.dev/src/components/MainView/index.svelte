@@ -1,19 +1,17 @@
 <script>
-	import { stores } from '/_app/main/client';
+	import { session } from '$app/stores';
 	import ArticleList from '../ArticleList/index.svelte';
 
 	export let tab = 'all';
 	export let tag = null;
 	export let p;
 
-	const { session } = stores();
-
-	function yourFeed() {
+	function your_feed() {
 		tab = "feed";
 		tag = null;
 	}
 
-	function globalfeed() {
+	function global_feed() {
 		tab = "all";
 		tag = null;
 	}
@@ -24,7 +22,7 @@
 		<ul class="nav nav-pills outline-active">
 			{#if $session.user}
 				<li class="nav-item">
-					<a href="." class='nav-link {tab === "feed" ? "active" : "" }' on:click='{yourFeed}'>
+					<a href="." class='nav-link {tab === "feed" ? "active" : "" }' on:click={your_feed}>
 						Your Feed
 					</a>
 				</li>
@@ -37,7 +35,7 @@
 			{/if}
 
 			<li class="nav-item">
-				<a href="." class='nav-link {tab === "all" ? "active" : "" }' on:click='{globalfeed}'>
+				<a href="." class='nav-link {tab === "all" ? "active" : "" }' on:click={global_feed}>
 					Global Feed
 				</a>
 			</li>
