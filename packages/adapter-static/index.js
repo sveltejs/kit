@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = async function adapter(builder) {
 	// TODO implement adapter options, allow 'build' to be specified
 
