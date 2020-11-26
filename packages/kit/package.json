@@ -47,6 +47,6 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu -r esm"
+		"test": "uvu src \"(spec.js|test/index.js)\" -r esm"
 	}
 }

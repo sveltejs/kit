@@ -13,7 +13,7 @@ suite('builder ', () => {
 	assert.ok(Builder);
 });
 
-suite('copy_static_files', () => {
+suite('copy files', () => {
 	const generated_files = join(__dirname, 'fixtures/basic/.svelte/build/optimized');
 	const static_files = join(__dirname, 'fixtures/basic/static');
 
