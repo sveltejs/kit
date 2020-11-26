@@ -1,4 +1,3 @@
-import { rollup } from 'rollup';
 import { copy } from '@sveltejs/app-utils/files';
 import { prerender } from './prerender';
 

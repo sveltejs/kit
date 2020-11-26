@@ -298,8 +298,6 @@ export default async function render_page(
 			dependencies
 		};
 	} catch (thrown) {
-		console.error(thrown.stack);
-
 		if (!error) {
 			const status = thrown.status || 500;
 			return render_page(request, context, options, status, thrown);
