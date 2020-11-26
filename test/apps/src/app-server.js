@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { dev, build } = require('@sveltejs/kit/dist/cli');
+const { dev, build } = require('@sveltejs/kit/dist/api');
 
 const properties = ['name', 'message', 'stack', 'code', 'lineNumber', 'fileName'];
 
@@ -60,7 +60,7 @@ async function start_dev_server() {
 
 	const port = 3000;
 
-	const watcher = dev({
+	const watcher = await dev({
 		port
 	});
 
