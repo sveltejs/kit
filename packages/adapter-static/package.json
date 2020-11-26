@@ -6,8 +6,5 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
-	},
-	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*"
 	}
 }
