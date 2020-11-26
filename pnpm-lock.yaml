@@ -30,12 +30,12 @@ importers:
       typescript: ^4.1.2
   examples/hn.svelte.dev:
     devDependencies:
-      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/adapter-netlify': 'link:../../packages/adapter-netlify'
       '@sveltejs/kit': 'link:../../packages/kit'
       '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/adapter-netlify': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
@@ -72,21 +72,8 @@ importers:
       '@sveltejs/app-utils': 'workspace:*'
   packages/adapter-netlify:
     dependencies:
-      kleur: 4.1.3
-      tiny-glob: 0.2.8
       toml: 3.0.0
-    devDependencies:
-      '@sveltejs/app-utils': 'link:../app-utils'
-      '@types/aws-lambda': 8.10.64
-      devalue: 2.0.1
-      rollup: 2.32.0
     specifiers:
-      '@sveltejs/app-utils': 'workspace:*'
-      '@types/aws-lambda': ^8.10.64
-      devalue: ^2.0.1
-      kleur: ^4.1.3
-      rollup: ^2.32.0
-      tiny-glob: ^0.2.8
       toml: ^3.0.0
   packages/adapter-node:
     dependencies:
@@ -2051,6 +2038,7 @@ packages:
     resolution:
       integrity: sha512-BWICuzzDvDoH54NHKCseDanAhE3CeDorgDL5MT6LMXXj2WCnd9UC2szdk4AWLfjdgNBCXLUanXYcpBBKOSWGwg==
   /globalyzer/0.1.0:
+    dev: true
     resolution:
       integrity: sha512-40oNTM9UfG6aBmuKxk/giHn5nQ8RVz/SS4Ir6zgzOv9/qC3kKZ9v4etGTcJbEl/NyVQH7FGU7d+X1egr57Md2Q==
   /globby/11.0.1:
@@ -2067,6 +2055,7 @@ packages:
     resolution:
       integrity: sha512-iH9RmgwCmUJHi2z5o2l3eTtGBtXek1OYlHrbcxOYugyHLmAsZrPj43OtHThd62Buh/Vv6VyCBD2bdyWcGNQqoQ==
   /globrex/0.1.2:
+    dev: true
     resolution:
       integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==
   /graceful-fs/4.2.4:
@@ -3816,6 +3805,7 @@ packages:
     dependencies:
       globalyzer: 0.1.0
       globrex: 0.1.2
+    dev: true
     resolution:
       integrity: sha512-vkQP7qOslq63XRX9kMswlby99kyO5OvKptw7AMwBVMjXEI7Tb61eoI5DydyEMOseyGS5anDN1VPoVxEvH01q8w==
   /tmp/0.0.33:
