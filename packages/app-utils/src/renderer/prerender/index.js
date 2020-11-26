@@ -1,9 +1,8 @@
- function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }import fs from 'fs';
+import fs from 'fs';
 import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import { mkdirp } from '../../files';
 import { render } from '../render';
-
 
 function clean_html(html) {
 	return html
@@ -44,14 +43,6 @@ function get_srcset_urls(attrs) {
 const OK = 2;
 const REDIRECT = 3;
 
-
-
-
-
-
-
-
-
 export async function prerender({
 	dir,
 	out,
@@ -59,14 +50,7 @@ export async function prerender({
 	manifest,
 	force,
 	log
-}
-
-
-
-
-
-
-) {
+}) {
 	const seen = new Set();
 
 	const template = fs.readFileSync('src/app.html', 'utf-8');
@@ -105,7 +89,8 @@ export async function prerender({
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
 			const headers = rendered.headers;
-			const is_html = response_type === REDIRECT || _optionalChain([headers, 'optionalAccess', _ => _['content-type']]) === 'text/html';
+			const type = headers && headers['content-type'];
+			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const parts = path.split('/');
 			if (is_html && parts[parts.length - 1] !== 'index.html') {

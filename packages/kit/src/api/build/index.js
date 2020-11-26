@@ -6,12 +6,11 @@ import colors from 'kleur';
 import relative from 'require-relative';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
-import { rollup, } from 'rollup';
+import { rollup } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
-
 import { css_injection } from './css_injection';
 import Builder from './Builder';
 
@@ -168,10 +167,7 @@ export async function build(config) {
 						const reverse_lookup = new Map();
 
 						const routes = path.resolve(`${unoptimized}/client/_app/routes`);
-						const client
-
-
- = {
+						const client = {
 							entry: null,
 							deps: {}
 						};
@@ -181,12 +177,12 @@ export async function build(config) {
 						for (const key in bundle) {
 							const chunk = bundle[key];
 
-							if ((chunk ).facadeModuleId === entry) {
+							if (chunk.facadeModuleId === entry) {
 								client.entry = key;
-							} else if ((chunk ).facadeModuleId === 'inject_styles.js') {
+							} else if (chunk.facadeModuleId === 'inject_styles.js') {
 								inject_styles = key;
-							} else if ((chunk ).modules) {
-								for (const id in (chunk ).modules) {
+							} else if (chunk.modules) {
+								for (const id in chunk.modules) {
 									if (id.startsWith(routes) && id.endsWith('.js')) {
 										const file = id.slice(routes.length + 1);
 										reverse_lookup.set(file, key);
@@ -203,7 +199,7 @@ export async function build(config) {
 							const chunk = bundle[key];
 
 							if (chunk) {
-								const imports = (chunk ).imports;
+								const imports = chunk.imports;
 
 								if (imports) {
 									imports.forEach((key) => {
@@ -291,6 +287,6 @@ export async function build(config) {
 
 async function rimraf(path) {
 	return new Promise((resolve) => {
-		((fs).rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
+		(fs.rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
 	});
 }

@@ -1,5 +1,3 @@
-
-
 const array_item_delimiter = ',';
 
 function map_pages(pages) {

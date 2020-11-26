@@ -1,7 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-
-
 import { posixify, reserved_words } from '../utils';
 
 export default function create_manifest_data(
@@ -45,9 +43,6 @@ export default function create_manifest_data(
 		parent_segments,
 		parent_params,
 		stack
-
-
-
 	) {
 		const items = fs
 			.readdirSync(dir)
@@ -211,22 +206,12 @@ export default function create_manifest_data(
 	};
 }
 
-
-
-
-
-
-
-
 function is_spread(path) {
 	const spread_pattern = /\[\.{3}/g;
 	return spread_pattern.test(path);
 }
 
-function comparator(
-	a,
-	b
-) {
+function comparator(a, b) {
 	if (a.is_index !== b.is_index) {
 		if (a.is_index) return is_spread(a.file) ? 1 : -1;
 

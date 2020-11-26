@@ -1,5 +1,3 @@
-
-
 const examplePageComponentManifest = {
 	default: true,
 	type: 'foo',

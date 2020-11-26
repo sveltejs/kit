@@ -1,18 +1,12 @@
 import fs from 'fs';
-
 import { copy } from '@sveltejs/app-utils/files';
 import { prerender } from '@sveltejs/app-utils/renderer';
-
 
 module.exports = async function adapter({
 	dir,
 	manifest,
 	log
-}
-
-
-
-) {
+}) {
 	const out = 'build'; // TODO implement adapter options
 
 	copy(`${dir}/client`, `${out}/assets/_app`, (file) => !!file && file[0] !== '.');

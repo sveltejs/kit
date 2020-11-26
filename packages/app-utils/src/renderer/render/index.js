@@ -2,7 +2,6 @@ import { createHash } from 'crypto';
 import render_page from './page';
 import render_endpoint from './endpoint';
 
-
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
 }

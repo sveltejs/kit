@@ -3,8 +3,6 @@ import { resolve, relative } from 'path';
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
 import { extract_names } from 'periscopic';
-
-
 import { walk } from 'estree-walker';
 
 // This function makes it possible to load modules from the 'server'
@@ -141,7 +139,7 @@ export default function loader(snowpack, config) {
 
 						const names = [];
 						node.declaration.declarations.forEach((declarator) => {
-							names.push(...extract_names(declarator.id ));
+							names.push(...extract_names(declarator.id));
 						});
 
 						code.appendLeft(node.end, names.map((name) => ` exports.${name} = ${name};`).join(''));
@@ -217,7 +215,7 @@ export default function loader(snowpack, config) {
 		);
 		const values = await Promise.all(deps.map((d) => d.promise));
 
-		let exports = {};
+		const exports = {};
 
 		fn(
 			exports,
@@ -261,5 +259,5 @@ function map_keys(object, map) {
 		new_object[map(k)] = v;
 
 		return new_object;
-	}, {} );
+	}, {});
 }
