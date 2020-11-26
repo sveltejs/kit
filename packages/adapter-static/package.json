@@ -4,7 +4,6 @@
 	"scripts": {
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"prepublishOnly": "npm run build"
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	}
 }
