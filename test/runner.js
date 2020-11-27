@@ -24,7 +24,7 @@ export function runner(callback) {
 		suite.before(before);
 		suite.after(after);
 
-		callback(suite);
+		callback(suite, is_dev);
 
 		suite.run();
 	}
