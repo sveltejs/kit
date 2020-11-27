@@ -1,6 +1,7 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import * as uvu from 'uvu';
+import * as ports from 'port-authority';
 import { chromium } from 'playwright';
 import { dev, build } from '@sveltejs/kit/dist/api';
 
@@ -30,9 +31,9 @@ export function runner(callback) {
 
 	run(true, {
 		async before(context) {
-			try {
-				const port = 3000;
+			const port = await ports.find(3000);
 
+			try {
 				context.watcher = await dev({ port });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
@@ -48,12 +49,12 @@ export function runner(callback) {
 
 	run(false, {
 		async before(context) {
+			const port = await ports.find(3000);
+
 			await build({
 				// TODO implement `svelte start` so we don't need to use this adapter
 				adapter: '@sveltejs/adapter-node'
 			});
-
-			const port = 3000;
 
 			// start server
 			context.proc = child_process.fork(path.join(process.cwd(), 'build/index.js'), {

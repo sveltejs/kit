@@ -21,7 +21,7 @@ runner((test, is_dev) => {
 	// error handling
 	if (is_dev) {
 		test('client-side errors', async ({ visit, contains }) => {
-			await visit('/crash-clientside');
+			await visit('/errors/clientside');
 
 			// this is the Snowpack error overlay (TODO dev mode only)
 			assert.ok(await contains('Crashing now'));
@@ -29,35 +29,35 @@ runner((test, is_dev) => {
 	}
 
 	test('server-side errors', async ({ visit, contains }) => {
-		await visit('/crash-serverside');
+		await visit('/errors/serverside');
 
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
 
 	test('client-side preload errors', async ({ visit, contains }) => {
-		await visit('/crash-preload-client');
+		await visit('/errors/preload-client');
 
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
 
 	test('server-side preload errors', async ({ visit, contains }) => {
-		await visit('/crash-preload-server');
+		await visit('/errors/preload-server');
 
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
 
 	test('client-side module context errors', async ({ visit, contains }) => {
-		await visit('/crash-module-scope-client');
+		await visit('/errors/module-scope-client');
 
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
 
 	test('server-side module context errors', async ({ visit, contains }) => {
-		await visit('/crash-module-scope-server');
+		await visit('/errors/module-scope-server');
 
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));

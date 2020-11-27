@@ -3,5 +3,8 @@
 	"private": true,
 	"dependencies": {
 		"@sveltejs/kit": "workspace:*"
+	},
+	"devDependencies": {
+		"port-authority": "^1.1.2"
 	}
 }
