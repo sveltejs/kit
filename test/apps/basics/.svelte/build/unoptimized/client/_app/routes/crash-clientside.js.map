@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["crash-clientside.svelte"],"sourcesContent":["<script>\n\tif (typeof window !== 'undefined') {\n\t\tthrow new Error('Crashing now');\n\t}\n</script>\n"],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;YACY,MAAM,KAAK,WAAW;YACtB,KAAK,CAAC,cAAc;;;;;;;;;;;;;;;;;;;;;;;;;;"}

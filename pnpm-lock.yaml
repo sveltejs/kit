@@ -11,6 +11,8 @@ importers:
       eslint: 7.11.0
       eslint-plugin-import: 2.22.1_eslint@7.11.0
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
+      esm: 3.2.25
+      playwright: 1.6.2
       prettier: 2.1.2
       rollup: 2.32.0
       typescript: 4.1.2
@@ -25,6 +27,8 @@ importers:
       eslint: ^7.11.0
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^2.7.3
+      esm: ^3.2.25
+      playwright: ^1.6.2
       prettier: 2.1.2
       rollup: ^2.32.0
       typescript: ^4.1.2
@@ -38,6 +42,22 @@ importers:
       '@sveltejs/adapter-netlify': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'
       '@sveltejs/snowpack-config': 'workspace:*'
+      svelte: ^3.29.0
+  examples/realworld.svelte.dev:
+    dependencies:
+      node-fetch: 2.6.1
+    devDependencies:
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
+      marked: 1.2.5
+      svelte: 3.29.0
+    specifiers:
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
+      marked: ^1.2.2
+      node-fetch: ^2.6.1
       svelte: ^3.29.0
   examples/sandbox:
     devDependencies:
@@ -196,6 +216,22 @@ importers:
       '@snowpack/plugin-svelte': 3.0.0
     specifiers:
       '@snowpack/plugin-svelte': ^3.0.0
+  test:
+    dependencies:
+      '@sveltejs/kit': 'link:../packages/kit'
+    specifiers:
+      '@sveltejs/kit': 'workspace:*'
+  test/apps/basics:
+    devDependencies:
+      '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../../packages/snowpack-config'
+      svelte: 3.29.0
+    specifiers:
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
+      svelte: ^3.29.0
 lockfileVersion: 5.2
 packages:
   /@architect/parser/2.3.0:
@@ -690,6 +726,11 @@ packages:
     dev: true
     resolution:
       integrity: sha512-BfbIHP9IapdupGhq/hc+jT5dyiBVZ2DdeC5WwJWQWDb0GijQlzUFAeIQn/2GtvZcd2HVUU7An8felIICFTC2qg==
+  /@types/node/14.14.10:
+    dev: true
+    optional: true
+    resolution:
+      integrity: sha512-J32dgx2hw8vXrSbu4ZlVhn1Nm3GbeCFNw2FWL8S5QKucHGY0cyNwjdQdO+KMBZ4wpmC7KhLCiNsdk1RFRIYUQQ==
   /@types/node/14.14.5:
     resolution:
       integrity: sha512-H5Wn24s/ZOukBmDn03nnGTp18A60ny9AmCwnEcgJiTgSGsCO7k+NWP7zjCCbhlcnVCoI+co52dUAt9GMhOSULw==
@@ -723,6 +764,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-RxAwYt4rGwK5GyoRwuP0jT6ZHAVTdz2EqgsHmX0PYNjGsko+OeT4WFXXTs/lM3teJUJodM+SNtAL5/pXIJ61IQ==
+  /@types/yauzl/2.9.1:
+    dependencies:
+      '@types/node': 14.14.10
+    dev: true
+    optional: true
+    resolution:
+      integrity: sha512-A1b8SU4D10uoPjwb0lnHmmu8wZhR9d+9o2PKBQT2jU5YPTKsxac6M2qGAdY7VcL+dHHhARVUDmeg0rOrcd9EjA==
   /@typescript-eslint/eslint-plugin/4.8.2_f9d49e058d7a244a64cfc7d6f997e32c:
     dependencies:
       '@typescript-eslint/experimental-utils': 4.8.2_eslint@7.11.0+typescript@4.1.2
@@ -849,6 +897,14 @@ packages:
       node: '>= 0.12.0'
     resolution:
       integrity: sha512-aT6camzM4xEA54YVJYSqxz1kv4IHnQZRtThJJHhUMRExaU5spC7jX5ugSwTaTgJliIgs4VhZOk7htClvQ/LmRA==
+  /agent-base/6.0.2:
+    dependencies:
+      debug: 4.3.1
+    dev: true
+    engines:
+      node: '>= 6.0.0'
+    resolution:
+      integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==
   /aggregate-error/3.1.0:
     dependencies:
       clean-stack: 2.2.0
@@ -1029,6 +1085,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-ex5W9DoOQ/LUEU3PMdLs9ua/CYZl1678NUkKOdUSi8Aw5F1idieaiRURCBFJCwVcrD1J8Iy3vfWSloaMwO2qFg==
+  /buffer-crc32/0.2.13:
+    dev: true
+    resolution:
+      integrity: sha1-DTM+PwDqxQqhRUq9MO+MKl2ackI=
   /buffer-from/1.1.1:
     resolution:
       integrity: sha512-MQcXEUbCKtEo7bhqEs6560Hyd4XaovZlO/k9V3hjVUF/zwW7KBVdSK4gIt/bzwS9MbR5qob+F5jusZsb0YQK2A==
@@ -1469,7 +1529,6 @@ packages:
   /end-of-stream/1.4.4:
     dependencies:
       once: 1.4.0
-    dev: false
     resolution:
       integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==
   /enquirer/2.3.6:
@@ -1816,6 +1875,19 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==
+  /extract-zip/2.0.1:
+    dependencies:
+      debug: 4.3.1
+      get-stream: 5.2.0
+      yauzl: 2.10.0
+    dev: true
+    engines:
+      node: '>= 10.17.0'
+    hasBin: true
+    optionalDependencies:
+      '@types/yauzl': 2.9.1
+    resolution:
+      integrity: sha512-GDhU9ntwuKyGXdZBUgTIe+vXnWj0fppUEtMDL0+idd5Sta8TGpHssn/eusA9mrPr9qNDym6SxAYZjNvCn/9RBg==
   /fast-deep-equal/3.1.3:
     dev: true
     resolution:
@@ -1851,6 +1923,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-SMIZoZdLh/fgofivvIkmknUXyPnvxRE3DhtZ5Me3Mrsk5gyPL42F0xr51TdRXskBxHfMp+07bcYzfsYEsSQA9Q==
+  /fd-slicer/1.1.0:
+    dependencies:
+      pend: 1.2.0
+    dev: true
+    resolution:
+      integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=
   /file-entry-cache/5.0.1:
     dependencies:
       flat-cache: 2.0.1
@@ -1998,7 +2076,6 @@ packages:
   /get-stream/5.2.0:
     dependencies:
       pump: 3.0.0
-    dev: false
     engines:
       node: '>=8'
     resolution:
@@ -2126,6 +2203,15 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-VQ82oXG95oY1fQw/XecHuvcFBA+lZQ9Vwj1RfLcO8a7HpDd4cc2ukwpJt+TUlFaLUAzZErylxWu6wclJ1rUhUQ==
+  /https-proxy-agent/5.0.0:
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.3.1
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-EkYm5BcKUGiduxzSt3Eppko+PiNWNEpa4ySk9vTC6wDsQJW9rHSa+UhGNJoRYp7bz6Ht1eaRIa6QaJqO5rCFbA==
   /human-id/1.0.2:
     dev: true
     resolution:
@@ -2369,6 +2455,10 @@ packages:
       node: '>= 10.13.0'
     resolution:
       integrity: sha512-kTw66Dn4ZX7WpjZ7T/SUDgRhapFRKWmisVAF0Rv4Fu8SLFD7eLbqpLvbxVqYhSgaWa7I+bW7pHnbyfNsH6stug==
+  /jpeg-js/0.4.2:
+    dev: true
+    resolution:
+      integrity: sha512-+az2gi/hvex7eLTMTlbRLOhH6P6WFdk2ITI8HJsaH2VqYO0I594zXSYEP+tf4FW+8Cy68ScDXoAsQdyQanv3sw==
   /js-tokens/4.0.0:
     resolution:
       integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==
@@ -2530,6 +2620,13 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-glc9y00wgtwcDmp7GaE/0b0OnxpNJsVf3ael/An6Fe2Q51LLwN1er6sdomLRzz5h0+yMpiYLhWYF5R7HeqVd4g==
+  /marked/1.2.5:
+    dev: true
+    engines:
+      node: '>= 8.16.2'
+    hasBin: true
+    resolution:
+      integrity: sha512-2AlqgYnVPOc9WDyWu7S5DJaEZsfk6dNh/neatQ3IHUW4QLutM/VPSH9lG7bif+XjFWc9K9XR3QvR+fXuECmfdA==
   /meow/6.1.1:
     dependencies:
       '@types/minimist': 1.2.0
@@ -2706,7 +2803,6 @@ packages:
     resolution:
       integrity: sha1-Sr6/7tdUHywnrPspvbvRXI1bpPc=
   /node-fetch/2.6.1:
-    dev: true
     engines:
       node: 4.x || >=6.0.0
     resolution:
@@ -2986,6 +3082,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
+  /pend/1.2.0:
+    dev: true
+    resolution:
+      integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=
   /periscopic/2.0.2:
     dependencies:
       estree-walker: 1.0.1
@@ -3025,6 +3125,31 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==
+  /playwright/1.6.2:
+    dependencies:
+      debug: 4.3.1
+      extract-zip: 2.0.1
+      https-proxy-agent: 5.0.0
+      jpeg-js: 0.4.2
+      mime: 2.4.6
+      pngjs: 5.0.0
+      progress: 2.0.3
+      proper-lockfile: 4.1.1
+      proxy-from-env: 1.1.0
+      rimraf: 3.0.2
+      ws: 7.4.0
+    dev: true
+    engines:
+      node: '>=10.17.0'
+    requiresBuild: true
+    resolution:
+      integrity: sha512-KiMmQuANG4O/ozpwxP8EwBBap0/liS3+wwkGo6nBJ4O4951y4ZsRPR1dqwsMOUD9wjsWf3ER+bAmQH5XmEO4Ig==
+  /pngjs/5.0.0:
+    dev: true
+    engines:
+      node: '>=10.13.0'
+    resolution:
+      integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==
   /port-authority/1.1.1:
     dev: true
     resolution:
@@ -3116,6 +3241,18 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-Q06uKs2CkNYVID0VqwfAl9mipo99zkBv/n2JtWY89Yxa3ZabWSrs0e2KTudKVa3peLUvYXMefDqIleLPVUBZMA==
+  /proper-lockfile/4.1.1:
+    dependencies:
+      graceful-fs: 4.2.4
+      retry: 0.12.0
+      signal-exit: 3.0.3
+    dev: true
+    resolution:
+      integrity: sha512-1w6rxXodisVpn7QYvLk706mzprPTAPCYAqxMvctmPN3ekuRk/kuGkGc82pangZiAt4R3lwSuUzheTTn0/Yb7Zg==
+  /proxy-from-env/1.1.0:
+    dev: true
+    resolution:
+      integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==
   /pseudomap/1.0.2:
     dev: true
     resolution:
@@ -3124,7 +3261,6 @@ packages:
     dependencies:
       end-of-stream: 1.4.4
       once: 1.4.0
-    dev: false
     resolution:
       integrity: sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==
   /punycode/2.1.1:
@@ -3256,6 +3392,12 @@ packages:
       path-parse: 1.0.6
     resolution:
       integrity: sha512-lDfCPaMKfOJXjy0dPayzPdF1phampNWr3qFCjAu+rw/qbQmr5jWH5xN2hwh9QKfw9E5v4hwV7A+jrCmL8yjjqA==
+  /retry/0.12.0:
+    dev: true
+    engines:
+      node: '>= 4'
+    resolution:
+      integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=
   /reusify/1.0.4:
     dev: true
     engines:
@@ -4050,6 +4192,20 @@ packages:
         optional: true
     resolution:
       integrity: sha512-D3RuNkynyHmEJIpD2qrgVkc9DQ23OrN/moAwZX4L8DfvszsJxpjQuUq3LMx6HoYji9fbIOBY18XWBsAux1ZZUA==
+  /ws/7.4.0:
+    dev: true
+    engines:
+      node: '>=8.3.0'
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ^5.0.2
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+    resolution:
+      integrity: sha512-kyFwXuV/5ymf+IXhS6f0+eAFvydbaBW3zjpT6hUdAh/hbVjTIB5EHBGi0bPoCLSK2wcuz3BrEkB9LrYv1Nm4NQ==
   /y18n/4.0.0:
     dev: true
     resolution:
@@ -4101,6 +4257,13 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==
+  /yauzl/2.10.0:
+    dependencies:
+      buffer-crc32: 0.2.13
+      fd-slicer: 1.1.0
+    dev: true
+    resolution:
+      integrity: sha1-x+sXyT4RLLEIb6bY5R+wZnt5pfk=
   github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_1b15e19ea7698126a709280ea6e700d3:
     dependencies:
       '@typescript-eslint/eslint-plugin': 4.8.2_f9d49e058d7a244a64cfc7d6f997e32c

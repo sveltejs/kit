@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["dynamic-[slug].svelte"],"sourcesContent":["<script>\n\timport { page } from '/_app/main/runtime/stores';\n</script>\n\n<h1>Slug: {$page.params.slug}</h1>\n"],"mappings":";;;SACU,IAAI,QAAQ,2BAA2B;;;;4BAGtC,KAAK,CAAC,MAAM,CAAC,IAAI;;;"}
