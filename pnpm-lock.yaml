@@ -219,8 +219,11 @@ importers:
   test:
     dependencies:
       '@sveltejs/kit': 'link:../packages/kit'
+    devDependencies:
+      port-authority: 1.1.2
     specifiers:
       '@sveltejs/kit': 'workspace:*'
+      port-authority: ^1.1.2
   test/apps/basics:
     devDependencies:
       '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
@@ -3154,6 +3157,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-fujlIFaI7psRY8uLQY7hHtdoO7nKQ1z4kYsPpKUielsZ6RDJbhC+LFXFBafZIbM8z/GoEbsKxZQHC+TBo9KLVQ==
+  /port-authority/1.1.2:
+    dev: true
+    resolution:
+      integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==
   /postcss-modules-extract-imports/1.1.0:
     dependencies:
       postcss: 6.0.1
