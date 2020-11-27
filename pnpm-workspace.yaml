@@ -1,3 +1,5 @@
 packages:
   - 'packages/*'
   - 'examples/*'
+  - 'test/apps/*'
+  - 'test'

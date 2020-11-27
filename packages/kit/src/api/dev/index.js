@@ -41,6 +41,8 @@ class Watcher extends EventEmitter {
 		copy_assets();
 
 		await this.init_filewatcher();
+		await this.init_snowpack();
+		await this.init_server();
 
 		this.emit('ready', {
 			port: this.opts.port
@@ -56,8 +58,6 @@ class Watcher extends EventEmitter {
 		});
 
 		await this.cheapwatch.init();
-		await this.init_snowpack();
-		await this.init_server();
 
 		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
 		this.cheapwatch.on('+', ({ isNew }) => {
@@ -191,6 +191,11 @@ class Watcher extends EventEmitter {
 	}
 
 	close() {
-		if (this.server) this.server.close();
+		if (this.closed) return;
+		this.closed = true;
+
+		this.server.close();
+		this.cheapwatch.close();
+		this.snowpack.shutdown();
 	}
 }

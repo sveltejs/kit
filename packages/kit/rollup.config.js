@@ -46,7 +46,10 @@ export default [
 	},
 
 	{
-		input: ['src/cli.js'],
+		input: {
+			cli: 'src/cli.js',
+			api: 'src/api/index.js'
+		},
 		output: {
 			dir: 'dist',
 			format: 'cjs',
@@ -64,6 +67,6 @@ export default [
 			}),
 			commonjs()
 		],
-		preserveEntrySignatures: false
+		preserveEntrySignatures: true
 	}
 ];
