@@ -1,2 +1,0 @@
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0});var e=require("../chunks/index-87331406.js");const o=e.create_ssr_component(((o,r,t,n)=>{let{foo:s}=r;return void 0===r.foo&&t.foo&&void 0!==s&&t.foo(s),`<h1>bar == ${e.escape(s)}?</h1>`}));exports.default=o,exports.preload=function(e){return"undefined"!=typeof window&&(window.pageContext=e),{foo:"bar"}};
-//# sourceMappingURL=preload.js.map

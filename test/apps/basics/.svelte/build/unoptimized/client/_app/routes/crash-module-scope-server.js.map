@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["crash-module-scope-server.svelte"],"sourcesContent":["<script context=\"module\">\n\tthrow new Error('Crashing now');\n</script>\n"],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;UACW,KAAK,CAAC,cAAc;;;;;;;;;;;;;;;;;;;;;;;;;;;;"}

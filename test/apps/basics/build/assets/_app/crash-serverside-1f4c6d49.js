@@ -1,2 +1,0 @@
-import{S as e,i as s,d as t,s as o,v as n,n as r}from"./navigation-6fb20970.js";function a(e){const s={c:r,l:r,m:r,p:r,i:r,o:r,d:r};return t("SvelteRegisterBlock",{block:s,id:a.name,type:"component",source:"",ctx:e}),s}function i(e,s){let{$$slots:t={},$$scope:o}=s;throw n("Crash_serverside",t,[]),new Error("Crashing now")}export default class extends e{constructor(e){super(e),s(this,e,i,a,o,{}),t("SvelteRegisterComponent",{component:this,tagName:"Crash_serverside",options:e,id:a.name})}}
-//# sourceMappingURL=crash-serverside-1f4c6d49.js.map

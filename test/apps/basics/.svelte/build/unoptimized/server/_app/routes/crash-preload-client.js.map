@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["crash-preload-client.svelte"],"sourcesContent":["<script context=\"module\">\n\texport async function preload() {\n\t\tif (typeof window !== 'undefined') {\n\t\t\tthrow new Error('Crashing now');\n\t\t}\n\t}\n</script>\n"],"mappings":";;;eACuB,OAAO;YACjB,MAAM,KAAK,WAAW;YACtB,KAAK,CAAC,cAAc;;;;;;;;;"}

@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["crash-serverside.svelte"],"sourcesContent":["<script>\n\tthrow new Error('Crashing now');\n</script>\n"],"mappings":";;;;WACW,KAAK,CAAC,cAAc;;;;"}

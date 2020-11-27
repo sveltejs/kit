@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["crash-preload-server.svelte"],"sourcesContent":["<script context=\"module\">\n\texport async function preload() {\n\t\tthrow new Error('Crashing now');\n\t}\n</script>\n"],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;eACuB,OAAO;WAClB,KAAK,CAAC,cAAc;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"}

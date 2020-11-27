@@ -1,1 +1,0 @@
-{"version":3,"names":[],"sources":["crash-module-scope-client.svelte"],"sourcesContent":["<script context=\"module\">\n\tif (typeof window !== 'undefined') {\n\t\tthrow new Error('Crashing now');\n\t}\n</script>\n"],"mappings":";;;WACY,MAAM,KAAK,WAAW;WACtB,KAAK,CAAC,cAAc;;;;;;;"}

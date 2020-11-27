@@ -3,6 +3,8 @@ node_modules
 dist
 package-lock.json
 yarn.lock
-/examples/*/.svelte
-/examples/*/build
+/examples/**/.svelte
+/examples/**/build
+/test/**/.svelte
+/test/**/build
 /packages/create-svelte/template/CHANGELOG.md
