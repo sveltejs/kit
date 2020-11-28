@@ -265,7 +265,8 @@ export async function build(config) {
 		};
 
 		[
-			manifest.layout, // TODO is this necessary? if so why isn't manifest.error?
+			manifest.layout,
+			manifest.error,
 			...manifest.components,
 			...manifest.endpoints
 		].forEach((item) => {
