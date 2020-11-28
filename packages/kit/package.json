@@ -33,7 +33,7 @@
 		"tiny-glob": "^0.2.8"
 	},
 	"bin": {
-		"svelte": "svelte-kit"
+		"svelte-kit": "svelte-kit"
 	},
 	"files": [
 		"assets",
