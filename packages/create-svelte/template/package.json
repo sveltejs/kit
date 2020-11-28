@@ -2,8 +2,8 @@
 	"name": "~TODO~",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "svelte dev",
-		"build": "svelte build"
+		"dev": "svelte-kit dev",
+		"build": "svelte-kit build"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",

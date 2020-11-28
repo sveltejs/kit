@@ -3,8 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "svelte dev",
-		"build": "svelte build",
+		"dev": "svelte-kit dev",
+		"build": "svelte-kit build",
 		"test": "uvu -r esm"
 	},
 	"devDependencies": {
