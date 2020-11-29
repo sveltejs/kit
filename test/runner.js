@@ -8,12 +8,14 @@ import { dev, build } from '@sveltejs/kit/dist/api';
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
+	const baseUrl = `http://localhost:${port}`;
 
 	return {
 		browser,
 		page,
-		visit: path => page.goto(`http://localhost:${port}${path}`),
-		contains: async str => (await page.innerHTML('body')).includes(str)
+		visit: path => page.goto(baseUrl + path),
+		contains: async str => (await page.innerHTML('body')).includes(str),
+		baseUrl
 	};
 }
 

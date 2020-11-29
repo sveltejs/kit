@@ -301,9 +301,13 @@ export default async function render_page(
 
 	try {
 		if (!page) {
-			const error = new Error(`Not found: ${request.path}`);
-			error.status = 404;
-			throw error;
+			// TODO: What should the body look like? Use error page?
+			return {
+				status: 404,
+				headers: {},
+				error: new Error(`Not found: ${request.path}`),
+				dependencies: {}
+			};
 		}
 
 		return await get_response({
