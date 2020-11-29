@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "pnpm build --filter=\"@sveltejs/*\"",
-		"test": "pnpm -r test",
+		"test": "pnpm -r test --workspace-concurrency=1",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
 		"publish-all": "pnpm publish --filter=\"@sveltejs/*\" && pnpm publish --filter=\"create-svelte\" --tag=next",
