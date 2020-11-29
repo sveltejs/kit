@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
+		"build": "pnpm build --filter=\"@sveltejs/*\"",
 		"test": "pnpm -r test",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format"
