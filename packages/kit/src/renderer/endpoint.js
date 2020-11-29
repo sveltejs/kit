@@ -33,7 +33,11 @@ export default function render_route(
 				if (typeof response !== 'object' || response.body == null) {
 					return {
 						status: 500,
-						body: `Invalid response from route ${request.path}`,
+						body: `Invalid response from route ${request.path}; ${
+							response.body == null
+								? 'body is missing'
+								: `expected an object, got ${typeof response}`
+						}`,
 						headers: {}
 					};		
 				}
