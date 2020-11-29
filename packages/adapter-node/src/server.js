@@ -14,10 +14,11 @@ const mutable = (dir) =>
 		maxAge: 0
 	});
 
-const static_handler = mutable(app.paths.static);
+const noop_handler = (_req, _res, next) => next();
+const static_handler = fs.existsSync(app.paths.static) ? mutable(app.paths.static) : noop_handler;
 const prerendered_handler = fs.existsSync('build/prerendered')
 	? mutable('build/prerendered')
-	: (_req, _res, next) => next();
+	: noop_handler;
 
 const assets_handler = sirv('build/assets', {
 	maxAge: 31536000,
