@@ -63,6 +63,7 @@ export function runner(callback) {
 		},
 		async after(context) {
 			context.server.close();
+			await context.browser.close();
 		}
 	});
 }
