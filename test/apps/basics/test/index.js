@@ -1,6 +1,5 @@
 import * as assert from 'uvu/assert';
 import { runner } from '../../../runner'; // TODO make this a package?
-import fetch from 'node-fetch';
 
 runner((test, is_dev) => {
 	// basics
@@ -73,15 +72,15 @@ runner((test, is_dev) => {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('invalid route response is handled', async ({ baseUrl }) => {
-		const res = await fetch(`${baseUrl}/errors/invalid-route-response`);
+	test('invalid route response is handled', async ({ fetch }) => {
+		const res = await fetch(`/errors/invalid-route-response`);
 
 		assert.equal(res.status, 500);
 		assert.match(await res.text(), /body is missing/);
 	});
 
-	test('unhandled http method', async ({ baseUrl }) => {
-		const res = await fetch(`${baseUrl}/errors/invalid-route-response`, {method: 'PUT'});
+	test('unhandled http method', async ({ fetch }) => {
+		const res = await fetch(`/errors/invalid-route-response`, { method: 'PUT' });
 
 		assert.equal(res.status, 501);
 
