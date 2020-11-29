@@ -79,4 +79,12 @@ runner((test, is_dev) => {
 		assert.equal(res.status, 500);
 		assert.match(await res.text(), /body is missing/);
 	});
+
+	test('unhandled http method', async ({ baseUrl }) => {
+		const res = await fetch(`${baseUrl}/errors/invalid-route-response`, {method: 'PUT'});
+
+		assert.equal(res.status, 501);
+
+		assert.match(await res.text(), /PUT is not implemented/);
+	});
 });
