@@ -12,8 +12,8 @@ async function setup({ port }) {
 		
 	const defaultTimeout = 2000;
 
-	const queryText = async (selector) => page.textContent(selector);
-	const waitForQueryTextToEqual = async (selector, expectedValue) => {
+	const query_text = async (selector) => page.textContent(selector);
+	const wait_for_query_text_to_equal = async (selector, expectedValue) => {
 		await page
 			.waitForFunction(
 				({ expectedValue, selector }) =>
@@ -25,7 +25,7 @@ async function setup({ port }) {
 				if (!e.message.match(/Timeout.*exceeded/)) throw e;
 			});
 
-		assert.equal(await queryText(selector), expectedValue);
+		assert.equal(await query_text(selector), expectedValue);
 	};
 
 	const capture_requests = async (operations) => {
@@ -48,22 +48,21 @@ async function setup({ port }) {
 		baseUrl: `http://localhost:${port}`,
 		visit: (path) => page.goto(`http://localhost:${port}${path}`),
 		contains: async (str) => (await page.innerHTML('body')).includes(str),
-		queryText,
+		query_text,
 		evaluate: (fn) => page.evaluate(fn),
 		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
 		click: (selector, options) => page.click(selector, options),
-		prefetchRoutes: () => page.evaluate(() => prefetchRoutes()),
+		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
 		// only available if preload calls this.prevent_start()
 		start: () => page.evaluate(() => start({
 			target: document.querySelector('#svelte') || document.body
 		})),
-		// TODO: snake case
-		waitForQueryTextToEqual,
-		waitForSelector: (selector, options) =>
+		wait_for_query_text_to_equal,
+		wait_for_selector: (selector, options) =>
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
-		waitForFunction: (fn, arg, options) =>
+		wait_for_function: (fn, arg, options) =>
 			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests
 	};
