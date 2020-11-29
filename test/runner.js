@@ -4,16 +4,46 @@ import * as uvu from 'uvu';
 import * as ports from 'port-authority';
 import { chromium } from 'playwright';
 import { dev, build } from '@sveltejs/kit/dist/api';
+import * as assert from 'uvu/assert';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
+		
+	const defaultTimeout = 2000;
+
+	const queryText = async (selector) => page.textContent(selector);
+	const waitForQueryTextToEqual = async (selector, expectedValue) => {
+		await page
+			.waitForFunction(
+				({ expectedValue, selector }) =>
+					document.querySelector(selector).textContent === expectedValue,
+				{ expectedValue, selector },
+				{ timeout: defaultTimeout }
+			)
+			.catch((e) => {
+				if (!e.message.match(/Timeout.*exceeded/)) throw e;
+			});
+
+		assert.equal(await queryText(selector), expectedValue);
+	};
 
 	return {
 		browser,
 		page,
-		visit: path => page.goto(`http://localhost:${port}${path}`),
-		contains: async str => (await page.innerHTML('body')).includes(str)
+		baseUrl: `http://localhost:${port}`,
+		visit: (path) => page.goto(`http://localhost:${port}${path}`),
+		contains: async (str) => (await page.innerHTML('body')).includes(str),
+		queryText,
+		evaluate: (fn) => page.evaluate(fn),
+		goto: (url) => page.evaluate((url) => goto(url), url),
+		prefetchRoutes: () => page.evaluate(() => prefetchRoutes()),
+		click: (selector, options) => page.click(selector, options),
+		waitForQueryTextToEqual,
+		waitForSelector: (selector, options) =>
+			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
+		waitForFunction: (fn, arg, options) =>
+			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options })
 	};
 }
 
@@ -66,7 +96,7 @@ export function runner(callback) {
 			Object.assign(context, await setup({ port }));
 		},
 		async after(context) {
-			context.proc.kill();
+			if (context.proc) context.proc.kill();
 		}
 	});
 }

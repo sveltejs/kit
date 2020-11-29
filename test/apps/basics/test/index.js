@@ -2,23 +2,35 @@ import * as assert from 'uvu/assert';
 import { runner } from '../../../runner'; // TODO make this a package?
 
 runner((test, is_dev) => {
+	const assertCustomLayout = async (contains) => assert.ok(await contains('Custom layout'));
+
 	// basics
 	test('serves /', async ({ visit, contains }) => {
-		await visit('/');
-		assert.ok(await contains('Custom layout'));
+		await visit('/old/');
+		await assertCustomLayout(contains);
 		assert.ok(await contains('You\'re on index.svelte'));
 	});
 
 	test('serves dynamic route', async ({ visit, contains }) => {
-		await visit('/dynamic-abc');
-		assert.ok(await contains('Custom layout'));
+		await visit('/old/dynamic-abc');
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Slug: abc'));
 	});
 
-	test('serves /', async ({ visit, contains }) => {
-		await visit('/preload');
-		assert.ok(await contains('Custom layout'));
+	test('preloads', async ({ visit, contains }) => {
+		await visit('/old/preload');
+		await assertCustomLayout(contains);
 		assert.ok(await contains('bar == bar'));
+	});
+
+	test('serves static files in root', async ({ visit, contains }) => {
+		await visit('/static.json');
+		assert.ok(await contains('static file'));
+	});
+
+	test('serves static files in subdirectories', async ({ visit, contains }) => {
+		await visit('/subdirectory/static.json');
+		assert.ok(await contains('subdirectory file'));
 	});
 
 	// error handling
@@ -27,7 +39,7 @@ runner((test, is_dev) => {
 			await visit('/errors/clientside');
 
 			// this is the Snowpack error overlay (TODO dev mode only)
-			assert.ok(await contains('Custom layout'));
+			await assertCustomLayout(contains);
 			assert.ok(await contains('Crashing now'));
 		});
 	}
@@ -35,7 +47,7 @@ runner((test, is_dev) => {
 	test('server-side errors', async ({ visit, contains }) => {
 		await visit('/errors/serverside');
 
-		assert.ok(await contains('Custom layout'));
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
@@ -43,7 +55,7 @@ runner((test, is_dev) => {
 	test('client-side preload errors', async ({ visit, contains }) => {
 		await visit('/errors/preload-client');
 
-		assert.ok(await contains('Custom layout'));
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
@@ -51,7 +63,7 @@ runner((test, is_dev) => {
 	test('server-side preload errors', async ({ visit, contains }) => {
 		await visit('/errors/preload-server');
 
-		assert.ok(await contains('Custom layout'));
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
@@ -59,7 +71,7 @@ runner((test, is_dev) => {
 	test('client-side module context errors', async ({ visit, contains }) => {
 		await visit('/errors/module-scope-client');
 
-		assert.ok(await contains('Custom layout'));
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
@@ -67,7 +79,7 @@ runner((test, is_dev) => {
 	test('server-side module context errors', async ({ visit, contains }) => {
 		await visit('/errors/module-scope-server');
 
-		assert.ok(await contains('Custom layout'));
+		await assertCustomLayout(contains);
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
