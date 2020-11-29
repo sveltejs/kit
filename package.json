@@ -8,7 +8,8 @@
 		"test": "pnpm -r test",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"publish": "pnpm publish --filter=\"@sveltejs/*\" && pnpm publish --filter=\"create-svelte\" --tag=next"
+		"publish": "pnpm publish --filter=\"@sveltejs/*\" && pnpm publish --filter=\"create-svelte\" --tag=next",
+		"prepublish": "pnpm build"
 	},
 	"repository": {
 		"type": "git",
