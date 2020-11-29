@@ -1,5 +1,11 @@
 # @sveltejs/snowpack-config
 
+## 0.0.7
+
+### Patch Changes
+
+- Make paths and target configurable
+
 ## 0.0.6
 
 ### Patch Changes

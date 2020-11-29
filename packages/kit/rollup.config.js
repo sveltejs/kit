@@ -16,7 +16,7 @@ export default [
 			stores: 'src/runtime/stores/index.js'
 		},
 		output: {
-			dir: 'assets/runtime',
+			dir: 'assets/app',
 			format: 'esm',
 			sourcemap: true,
 			paths: {

@@ -4,7 +4,9 @@ import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 
-const { PORT = 3000 } = process.env;
+const app = require('./app.js');
+
+const { PORT = 3000 } = process.env; // TODO configure via svelte.config.js
 
 const mutable = (dir) =>
 	sirv(dir, {
@@ -13,7 +15,7 @@ const mutable = (dir) =>
 	});
 
 const noop_handler = (_req, _res, next) => next();
-const static_handler = fs.existsSync('static') ? mutable('static') : noop_handler;
+const static_handler = fs.existsSync(app.paths.static) ? mutable(app.paths.static) : noop_handler;
 const prerendered_handler = fs.existsSync('build/prerendered')
 	? mutable('build/prerendered')
 	: noop_handler;
@@ -22,8 +24,6 @@ const assets_handler = sirv('build/assets', {
 	maxAge: 31536000,
 	immutable: true
 });
-
-const app = require('./app.js');
 
 const server = http.createServer((req, res) => {
 	assets_handler(req, res, () => {

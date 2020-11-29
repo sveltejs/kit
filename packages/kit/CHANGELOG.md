@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 0.0.27
+
+### Patch Changes
+
+- rename CLI to svelte-kit
+- 0904e22: rename svelte CLI to svelte-kit
+- Validate route responses
+- Make paths and target configurable
+
 ## 0.0.26
 
 ### Patch Changes
