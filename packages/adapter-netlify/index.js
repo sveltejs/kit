@@ -31,7 +31,7 @@ module.exports = async function adapter(builder) {
 	const functions = path.resolve(netlify_config.build.functions);
 
 	builder.copy_static_files(publish);
-	builder.copy_client_files(`${publish}/_app`);
+	builder.copy_client_files(publish);
 	builder.copy_server_files(`${functions}/render`);
 
 	// copy the renderer

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"main": "index.js",
 	"files": [
 		"files"
