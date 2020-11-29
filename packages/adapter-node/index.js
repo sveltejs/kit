@@ -6,7 +6,7 @@ module.exports = async function adapter(builder) {
 	const out = 'build'; // TODO implement adapter options
 
 	builder.copy_server_files(out);
-	builder.copy_client_files(`${out}/assets/_app`);
+	builder.copy_client_files(`${out}/assets`);
 
 	fs.copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
 

@@ -1,5 +1,4 @@
 import * as child_process from 'child_process';
-import * as path from 'path';
 import * as uvu from 'uvu';
 import * as ports from 'port-authority';
 import fetch from 'node-fetch';
