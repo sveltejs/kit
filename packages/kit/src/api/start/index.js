@@ -11,7 +11,7 @@ const mutable = (dir) =>
 		maxAge: 0
 	});
 
-export function start({ port, config }) {
+export function start({ port }) {
 	return new Promise((fulfil) => {
 		const app = relative('./.svelte/build/optimized/server/app.js');
 
@@ -49,6 +49,8 @@ export function start({ port, config }) {
 			});
 		});
 
-		server.listen(port, fulfil);
+		server.listen(port, () => {
+			fulfil(server);
+		});
 	});
 }
