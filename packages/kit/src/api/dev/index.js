@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
@@ -14,18 +16,18 @@ import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
-import { readFileSync } from 'fs';
 
 export function dev(opts) {
 	return new Watcher(opts).init();
 }
 
 class Watcher extends EventEmitter {
-	constructor(opts) {
+	constructor({ port, config }) {
 		super();
 
 		this.cachedir = scorta('svelte') ;
-		this.opts = opts;
+		this.port = port;
+		this.config = config;
 		this.update();
 
 		process.env.NODE_ENV = 'development';
@@ -45,7 +47,7 @@ class Watcher extends EventEmitter {
 		await this.init_server();
 
 		this.emit('ready', {
-			port: this.opts.port
+			port: this.port
 		});
 
 		return this;
@@ -53,7 +55,7 @@ class Watcher extends EventEmitter {
 
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
-			dir: 'src/routes', // TODO make configurable...
+			dir: this.config.paths.routes,
 			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
@@ -70,7 +72,7 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_snowpack() {
-		this.snowpack_port = await ports.find(this.opts.port + 1);
+		this.snowpack_port = await ports.find(this.port + 1);
 		this.snowpack_config = snowpack.loadAndValidateConfig(
 			{
 				config: 'snowpack.config.js',
@@ -78,6 +80,9 @@ class Watcher extends EventEmitter {
 			},
 			pkg
 		);
+
+		this.snowpack_config.mount[resolve(this.config.paths.routes)] = { url: '/_app/routes', static: false, resolve: true };
+		this.snowpack_config.mount[resolve(this.config.paths.setup)] = { url: '/_app/setup', static: false, resolve: true };
 
 		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
@@ -88,11 +93,9 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
-		const { port } = this.opts;
-		const { snowpack_port } = this;
 		const load = loader(this.snowpack, this.snowpack_config);
 
-		const static_handler = sirv('static', {
+		const static_handler = sirv(this.config.paths.static, {
 			dev: true
 		});
 
@@ -112,10 +115,10 @@ class Watcher extends EventEmitter {
 					}
 				}
 
-				const template = readFileSync('src/app.html', 'utf-8').replace(
+				const template = readFileSync(this.config.paths.template, 'utf-8').replace(
 					'</head>',
 					`
-						<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${snowpack_port}\`;</script>
+						<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${this.snowpack_port}\`;</script>
 						<script type="module" src="http://localhost:3000/__snowpack__/hmr-client.js"></script>
 						<script type="module" src="http://localhost:3000/__snowpack__/hmr-error-overlay.js"></script>
 					</head>`.replace(/^\t{6}/gm, '')
@@ -134,7 +137,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await load('/_app/main/generated/root.js')).default;
+					root = (await load('/_app/assets/generated/root.js')).default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.toString());
@@ -153,11 +156,12 @@ class Watcher extends EventEmitter {
 						body
 					},
 					{
-						static_dir: 'static',
+						static_dir: this.config.paths.static,
 						template,
 						manifest: this.manifest,
+						target: this.config.target,
 						client: {
-							entry: 'main/runtime/navigation.js',
+							entry: 'assets/app/navigation.js',
 							deps: {}
 						},
 						dev: true,
@@ -178,15 +182,15 @@ class Watcher extends EventEmitter {
 			});
 		});
 
-		this.server.listen(port);
+		this.server.listen(this.port);
 	}
 
 	update() {
-		this.manifest = create_manifest_data('src/routes'); // TODO make configurable, without breaking Snowpack config
+		this.manifest = create_manifest_data(this.config.paths.routes);
 
 		create_app({
 			manifest_data: this.manifest,
-			output: '.svelte/main'
+			output: '.svelte/assets'
 		});
 	}
 

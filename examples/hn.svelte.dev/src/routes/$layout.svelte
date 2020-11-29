@@ -3,10 +3,10 @@
 </script>
 
 <script>
-	import { getStores } from '/_app/main/runtime/stores';
-	import Nav from '/_app/components/Nav.svelte';
-	import PreloadingIndicator from '/_app/components/PreloadingIndicator.svelte';
-	import ThemeToggler from '/_app/components/ThemeToggler.svelte';
+	import { getStores } from '$app/stores';
+	import Nav from '$components/Nav.svelte';
+	import PreloadingIndicator from '$components/PreloadingIndicator.svelte';
+	import ThemeToggler from '$components/ThemeToggler.svelte';
 
 	export let segment;
 

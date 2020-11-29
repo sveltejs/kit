@@ -263,7 +263,7 @@ async function get_response({
 			import { start } from '/_app/${options.client.entry}';
 
 			start({
-				target: document.querySelector('#svelte') || document.body
+				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'}
 			});
 		</script>`.replace(/^\t{2}/gm, ''); // TODO add links
 

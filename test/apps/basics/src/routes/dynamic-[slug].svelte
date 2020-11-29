@@ -1,5 +1,5 @@
 <script>
-	import { page } from '/_app/main/runtime/stores';
+	import { page } from '$app/stores';
 </script>
 
 <h1>Slug: {$page.params.slug}</h1>
