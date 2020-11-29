@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-alpha.18
+
+### Patch Changes
+
+- rename CLI to svelte-kit
+- 0904e22: rename svelte CLI to svelte-kit
+
 ## 2.0.0-alpha.16
 
 ### Patch Changes

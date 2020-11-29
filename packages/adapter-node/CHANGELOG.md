@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 0.0.16
+
+### Patch Changes
+
+- Make paths and target configurable
+
 ## 0.0.15
 
 ### Patch Changes
