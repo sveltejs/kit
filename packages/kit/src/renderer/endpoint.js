@@ -19,7 +19,7 @@ export default function render_route(
 			});
 
 			try {
-				let { status = 200, body, headers = {} } = await handler(
+				const response = await handler(
 					{
 						host: request.host,
 						path: request.path,
@@ -29,6 +29,20 @@ export default function render_route(
 					},
 					context
 				);
+
+				if (typeof response !== 'object' || response.body == null) {
+					return {
+						status: 500,
+						body: `Invalid response from route ${request.path}; ${
+							response.body == null
+								? 'body is missing'
+								: `expected an object, got ${typeof response}`
+						}`,
+						headers: {}
+					};		
+				}
+
+				let { status = 200, body, headers = {} } = response;
 
 				headers = lowercase_keys(headers);
 

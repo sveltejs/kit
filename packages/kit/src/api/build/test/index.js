@@ -23,11 +23,11 @@ suite('copy files', () => {
 		manifest: {
 			error: {
 				name: '$default_error',
-				url: '/_app/main/components/error.svelte'
+				url: '/_app/assets/components/error.svelte'
 			},
 			layout: {
 				name: '$default_layout',
-				url: '/_app/main/components/layout.svelte'
+				url: '/_app/assets/components/layout.svelte'
 			},
 			components: [],
 			pages: [],

@@ -7,9 +7,11 @@ module.exports = {
 		]
 	},
 	mount: {
-		'src/common': '/_app/common'
+		'src/components': '/_components',
+		'src/common': '/common'
 	},
 	alias: {
-		$common: './src/common'
+		'$common': './src/common',
+		'$components': './src/components'
 	}
 };
