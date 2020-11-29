@@ -38,6 +38,8 @@ async function get_response({
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
+	let do_start = true;
+
 	const preload_context = {
 		redirect: (status, location) => {
 			if (
@@ -117,7 +119,8 @@ async function get_response({
 					status: 404
 				});
 			}
-		}
+		},
+		prevent_start: () => do_start = false
 	};
 
 	const match = page.pattern.exec(request.path);
@@ -258,14 +261,16 @@ async function get_response({
 			.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
 			.join('\n\t\t\t')}
 		${options.dev ? `<style>${rendered.css.code}</style>` : ''}
-
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
-
+		${do_start ? `
 			start({
 				target: document.querySelector('#svelte') || document.body
-			});
-		</script>`.replace(/^\t{2}/gm, ''); // TODO add links
+			});` : 
+			'window.start = start'
+		}
+		</script>
+		`.replace(/^\t{2}/gm, ''); // TODO add links
 
 	const body = `${rendered.html}
 		<script>

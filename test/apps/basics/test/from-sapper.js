@@ -100,19 +100,15 @@ runner((test, is_dev) => {
 		assert.equal(await evaluate(() => deleted.id), '42');
 	});
 
-	// test('hydrates initial route', async ({ visit, queryText }) => {
-	// 	await visit('/routing/');
+	test('hydrates', async ({ visit, queryText, start }) => {
+		await visit('/routing/hydrate-test');
 
-	// 	await r.page.evaluate(() => {
-	// 		el = document.querySelector('.hydrate-test');
-	// 	});
+		assert.equal(await queryText('h1'), 'Hi from server');
 
-	// 	await r.sapper.start();
+		await start();
 
-	// 	assert.ok(await r.page.evaluate(() => {
-	// 		return document.querySelector('.hydrate-test') === el;
-	// 	}));
-	// });
+		assert.equal(await queryText('h1'), 'Hi from browser');
+	});
 
 	/** @todo this fails and shows "custom layout" instead. It's probably a bug. */
 	test.skip('does not attempt client-side navigation to server routes', async ({

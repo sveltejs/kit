@@ -50,11 +50,16 @@ async function setup({ port }) {
 		contains: async (str) => (await page.innerHTML('body')).includes(str),
 		queryText,
 		evaluate: (fn) => page.evaluate(fn),
+		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		// TODO: snake case
-		prefetchRoutes: () => page.evaluate(() => prefetchRoutes()),
 		click: (selector, options) => page.click(selector, options),
+		prefetchRoutes: () => page.evaluate(() => prefetchRoutes()),
+		// only available if preload calls this.prevent_start()
+		start: () => page.evaluate(() => start({
+			target: document.querySelector('#svelte') || document.body
+		})),
+		// TODO: snake case
 		waitForQueryTextToEqual,
 		waitForSelector: (selector, options) =>
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
