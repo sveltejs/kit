@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 import { runner } from '../../../runner'; // TODO make this a package?
+import fetch from 'node-fetch';
 
 runner((test, is_dev) => {
 	// basics
@@ -71,6 +72,14 @@ runner((test, is_dev) => {
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
+
+	test('404', async ({ visit, contains }) => {
+		const res = await visit(`/why/would/anyone/fetch/this/url`);
+
+		assert.ok(await contains('Custom layout'), 'Should show custom layout');
+		assert.ok(await contains('custom error page'), 'Should show custom error page');
+		assert.equal(res.status(), 404);
+  });
 
 	test('invalid route response is handled', async ({ fetch }) => {
 		const res = await fetch(`/errors/invalid-route-response`);
