@@ -22,16 +22,6 @@ async function get_response({
 
 	const baseUrl = ''; // TODO
 
-	// TODO make this less confusing
-	const layout_segments = [segments[0]];
-	let l = 1;
-
-	page.parts.forEach((part, i) => {
-		layout_segments[l] = segments[i + 1];
-		if (!part) return;
-		l++;
-	});
-
 	const dependencies = {};
 
 	const serialized_session = try_serialize(session, (err) => {
@@ -120,10 +110,10 @@ async function get_response({
 		}
 	};
 
-	const match = page.pattern.exec(request.path);
+	const match = page && page.pattern.exec(request.path);
 
 	// the last part has all parameters from any segment in the URL
-	const params = parts_to_params(match, page.parts[page.parts.length - 1] );
+	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1] ) : {};
 
 	const preloaded = [];
 	let can_prerender = true;
@@ -187,6 +177,18 @@ async function get_response({
 		error
 	};
 
+	// TODO make this less confusing
+	const layout_segments = [segments[0]];
+	let l = 1;
+
+	if (page) {
+		page.parts.forEach((part, i) => {
+			layout_segments[l] = segments[i + 1];
+			if (!part) return;
+			l++;
+		});
+	}
+
 	const props = {
 		status,
 		error,
@@ -240,14 +242,17 @@ async function get_response({
 	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
 	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
 
-	(page.parts.filter(Boolean) ).forEach((part) => {
-		const page_deps = deps[part.component.name];
+	if (page) {
+		// TODO handle error page deps
+		(page.parts.filter(Boolean) ).forEach((part) => {
+			const page_deps = deps[part.component.name];
 
-		if (!page_deps) return; // we don't have this info during dev
+			if (!page_deps) return; // we don't have this info during dev
 
-		page_deps.js.forEach((dep) => js_deps.add(dep));
-		page_deps.css.forEach((dep) => css_deps.add(dep));
-	});
+			page_deps.js.forEach((dep) => js_deps.add(dep));
+			page_deps.css.forEach((dep) => css_deps.add(dep));
+		});
+	}
 
 	const head = `${rendered.head}
 
@@ -279,7 +284,7 @@ async function get_response({
 		</script>`.replace(/^\t{3}/gm, '');
 
 	return {
-		status: 200,
+		status,
 		headers: {
 			'content-type': 'text/html'
 		},
@@ -301,13 +306,9 @@ export default async function render_page(
 
 	try {
 		if (!page) {
-			// TODO: What should the body look like? Use error page?
-			return {
-				status: 404,
-				headers: {},
-				error: new Error(`Not found: ${request.path}`),
-				dependencies: {}
-			};
+			const error = new Error(`Not found: ${request.path}`);
+			error.status = 404;
+			throw error;
 		}
 
 		return await get_response({

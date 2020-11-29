@@ -73,9 +73,11 @@ runner((test, is_dev) => {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('404', async ({ baseUrl }) => {
-		const res = await fetch(`${baseUrl}/why/would/anyone/fetch/this/url`);
+	test('404', async ({ visit, contains }) => {
+		const res = await visit(`/why/would/anyone/fetch/this/url`);
 
-		assert.equal(res.status, 404);
+		assert.ok(await contains('Custom layout'), 'Should show custom layout');
+		assert.ok(await contains('custom error page'), 'Should show custom error page');
+		assert.equal(res.status(), 404);
 	});
 });
