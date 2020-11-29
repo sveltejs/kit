@@ -1,12 +1,12 @@
-import relative from 'require-relative';
 import sade from 'sade';
 import colors from 'kleur';
+import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
 let config;
 
 try {
-	config = relative('./svelte.config.js', process.cwd());
+	config = load_config();
 } catch (err) {
 	const adjective = err.code === 'ENOENT' ? 'Missing' : 'Malformed';
 
@@ -27,7 +27,8 @@ prog
 
 		try {
 			const watcher = await dev({
-				port: opts.port
+				port: opts.port,
+				config
 			});
 
 			let first = true;

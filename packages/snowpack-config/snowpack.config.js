@@ -22,13 +22,9 @@ module.exports = {
 		sourceMaps: true
 	},
 	mount: {
-		'.svelte/main': '/_app/main',
-		'src/components': '/_app/components',
-		'src/routes': '/_app/routes',
-		'src/setup': '/_app/setup'
+		'.svelte/assets': '/_app/assets'
 	},
 	alias: {
-		$app: './.svelte/main/runtime',
-		$components: './src/components'
+		$app: './.svelte/assets/app'
 	}
 };
