@@ -2,18 +2,22 @@ import * as child_process from 'child_process';
 import * as path from 'path';
 import * as uvu from 'uvu';
 import * as ports from 'port-authority';
+import fetch from 'node-fetch';
 import { chromium } from 'playwright';
 import { dev, build } from '@sveltejs/kit/dist/api';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
+	const base = `http://localhost:${port}`;
 
 	return {
 		browser,
 		page,
-		visit: path => page.goto(`http://localhost:${port}${path}`),
-		contains: async str => (await page.innerHTML('body')).includes(str)
+		base,
+		visit: path => page.goto(base + path),
+		contains: async str => (await page.innerHTML('body')).includes(str),
+		fetch: (url, opts) => fetch(`${base}${url}`, opts)
 	};
 }
 
