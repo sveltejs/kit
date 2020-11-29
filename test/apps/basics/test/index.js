@@ -73,7 +73,7 @@ runner((test, is_dev) => {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('404', ({ baseUrl }) => {
+	test('404', async ({ baseUrl }) => {
 		const res = await fetch(`${baseUrl}/why/would/anyone/fetch/this/url`);
 
 		assert.equal(res.status, 404);
