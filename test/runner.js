@@ -28,6 +28,20 @@ async function setup({ port }) {
 		assert.equal(await queryText(selector), expectedValue);
 	};
 
+	const capture_requests = async (operations) => {
+		const requests = [];
+		const on_request = request => requests.push(request.url());
+		page.on('request', on_request);
+
+		try {
+			await operations();
+		} finally {
+			page.off('request', on_request);
+		}
+
+		return requests;
+	};
+
 	return {
 		browser,
 		page,
@@ -37,13 +51,16 @@ async function setup({ port }) {
 		queryText,
 		evaluate: (fn) => page.evaluate(fn),
 		goto: (url) => page.evaluate((url) => goto(url), url),
+		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
+		// TODO: snake case
 		prefetchRoutes: () => page.evaluate(() => prefetchRoutes()),
 		click: (selector, options) => page.click(selector, options),
 		waitForQueryTextToEqual,
 		waitForSelector: (selector, options) =>
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
 		waitForFunction: (fn, arg, options) =>
-			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options })
+			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
+		capture_requests
 	};
 }
 

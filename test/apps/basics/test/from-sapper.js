@@ -44,24 +44,27 @@ runner((test, is_dev) => {
 		assert.equal(await queryText('h1'), 'test-slug');
 	});
 
-	// test('navigates to a new page without reloading', async ({ visit, queryText }) => {
-	// 	await visit('/routing/');
-	// 	await r.sapper.start();
-	// 	await r.sapper.prefetchRoutes();
+	test('navigates to a new page without reloading', async ({ 
+			visit, queryText, prefetchRoutes, capture_requests, click, waitForFunction 
+		}) => {
+		await visit('/routing/');
 
-	// 	const requests = await r.capture_requests(async ({ visit, queryText }) => {
-	// 		await r.page.click('a[href="a"]');
-	// 		await r.wait();
-	// 	});
+		await prefetchRoutes().catch(e => {
+			// from error handler tests; ignore
+			if (!e.message.includes('Crashing now')) throw e;
+		});
 
-	// 	assert.deepEqual(requests, []);
+		const requests = await capture_requests(async () => {
+			await click('a[href="a"]');
 
-	// 	assert.equal(
-	// 		await queryText('h1'),
-	// 		'a'
-	// 	);
-	// });
+			await waitForFunction(() => document.location.pathname == '/routing/a');
 
+			assert.equal(await queryText('h1'), 'a');
+		});
+
+		assert.equal(requests, []);
+	});
+	
 	test('navigates programmatically', async ({ visit, queryText, goto }) => {
 		await visit('/routing/a');
 
@@ -70,31 +73,23 @@ runner((test, is_dev) => {
 		assert.equal(await queryText('h1'), 'b');
 	});
 
-	// test('prefetches programmatically', async ({ visit, queryText }) => {
-	// 	await visit('/routing/a');
-	// 	await r.sapper.start();
+	test('prefetches programmatically', async ({ visit, baseUrl, capture_requests, prefetch }) => {
+		await visit('/routing/a');
 
-	// 	const requests = await r.capture_requests(() => r.sapper.prefetch('b'));
+		const requests = await capture_requests( () => prefetch('b'));
 
-	// 	assert.equal(requests.length, 2);
-	// 	assert.equal(requests[1], `${r.base}/b.json`);
-	// });
+		assert.equal(requests.length, 2);
+		assert.equal(requests[1], `${baseUrl}/routing/b.json`);
+	});
 
-	// TODO equivalent test for a webpack app
-	// test('sets Content-Type, Link...modulepreload', async ({ visit, queryText }) => {
-	// 	const { headers } = await get(r.base);
+	test('sets Content-Type', async ({ baseUrl }) => {
+		const { headers } = await fetch(`${baseUrl}/routing`);
 
-	// 	assert.equal(
-	// 		headers['content-type'],
-	// 		'text/html'
-	// 	);
-
-	// 	// TODO preload more than just the entry point
-	// 	const regex = /<\/client\/client\.\w+\.js>;rel="modulepreload"/;
-	// 	const link = <string>headers['link'];
-
-	// 	assert.ok(regex.test(link), link);
-	// });
+		assert.equal(
+			headers.get('content-type'),
+			'text/html'
+		);
+	});
 
 	test('calls a delete handler', async ({ visit, waitForFunction, click, evaluate }) => {
 		await visit('/routing/delete-test');
@@ -327,7 +322,4 @@ runner((test, is_dev) => {
 		await waitForQueryTextToEqual('h1', 'Result');
 		await waitForQueryTextToEqual('h2', 'Called 1 time');
 	});
-
-	/** @todo */
-	//test('gives a good error message on expected route handler response')
 });
