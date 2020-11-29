@@ -1,6 +1,14 @@
 # test
 
 ## null
+
+### Patch Changes
+
+- Updated dependencies [undefined]
+  - @sveltejs/kit@0.0.28
+
+## null
+
 ### Patch Changes
 
 - Updated dependencies [undefined]

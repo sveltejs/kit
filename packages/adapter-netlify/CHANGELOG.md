@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 0.0.13
+
+### Patch Changes
+
+- Add svelte-kit start command
+
 ## 0.0.12
 
 ### Patch Changes

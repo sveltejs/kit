@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0
+
+### Patch Changes
+
+- Add svelte-kit start command
+
 ## 2.0.0-alpha.18
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
 	"name": "test",
-	"version": "1",
+	"version": null,
 	"private": true,
 	"dependencies": {
 		"@sveltejs/kit": "workspace:*"
