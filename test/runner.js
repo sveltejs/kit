@@ -11,12 +11,12 @@ async function setup({ port }) {
 		
 	const defaultTimeout = 2000;
 
-	const query_text = async (selector) => page.textContent(selector);
-	const wait_for_query_text_to_equal = async (selector, expectedValue) => {
+	const text = async (selector) => page.textContent(selector, { timeout: defaultTimeout });
+	const wait_for_text = async (selector, expectedValue) => {
 		await page
 			.waitForFunction(
 				({ expectedValue, selector }) =>
-					document.querySelector(selector).textContent === expectedValue,
+					document.querySelector(selector) && document.querySelector(selector).textContent === expectedValue,
 				{ expectedValue, selector },
 				{ timeout: defaultTimeout }
 			)
@@ -24,7 +24,7 @@ async function setup({ port }) {
 				if (!e.message.match(/Timeout.*exceeded/)) throw e;
 			});
 
-		assert.equal(await query_text(selector), expectedValue);
+		assert.equal(await text(selector), expectedValue);
 	};
 
 	const capture_requests = async (operations) => {
@@ -46,9 +46,9 @@ async function setup({ port }) {
 		base,
 		visit: path => page.goto(base + path),
 		contains: async str => (await page.innerHTML('body')).includes(str),
-		html: async selector => await page.innerHTML(selector),
+		html: async selector => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
-		query_text,
+		text,
 		evaluate: (fn) => page.evaluate(fn),
 		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
@@ -59,7 +59,7 @@ async function setup({ port }) {
 		start: () => page.evaluate(() => start({
 			target: document.querySelector('#svelte') || document.body
 		})),
-		wait_for_query_text_to_equal,
+		wait_for_text,
 		wait_for_selector: (selector, options) =>
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
 		wait_for_function: (fn, arg, options) =>
@@ -96,7 +96,7 @@ export function runner(callback) {
 		},
 		async after(context) {
 			await context.watcher.close();
-			await context.browser.close();
+			if (context.browser) await context.browser.close();
 		}
 	});
 
@@ -112,7 +112,7 @@ export function runner(callback) {
 		},
 		async after(context) {
 			context.server.close();
-			await context.browser.close();
+			if (context.browser) await context.browser.close();
 		}
 	});
 }

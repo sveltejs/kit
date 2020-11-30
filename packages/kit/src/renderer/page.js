@@ -28,8 +28,6 @@ async function get_response({
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
-	let do_start = true;
-
 	const preload_context = {
 		redirect: (status, location) => {
 			if (
@@ -109,8 +107,7 @@ async function get_response({
 					status: 404
 				});
 			}
-		},
-		prevent_start: () => do_start = false
+		}
 	};
 
 	const match = page && page.pattern.exec(request.path);
@@ -258,7 +255,6 @@ async function get_response({
 	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
-		${do_start ? `
 			start({
 				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
 				baseUrl: "${baseUrl}",
@@ -267,7 +263,6 @@ async function get_response({
 				preloaded: ${serialized_preloads},
 				session: ${serialized_session}
 			});
-		`: ''}
 		</script>`.replace(/^\t{3}/gm, '');
 
 	return {
