@@ -15,12 +15,13 @@ async function setup({ port }) {
 		base,
 		visit: path => page.goto(base + path),
 		contains: async str => (await page.innerHTML('body')).includes(str),
+		html: async selector => await page.innerHTML(selector),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts)
 	};
 }
 
 export function runner(callback) {
-	async function run(is_dev, { before, after }) {
+	function run(is_dev, { before, after }) {
 		const suite = uvu.suite(is_dev ? 'dev' : 'build');
 
 		suite.before(before);
