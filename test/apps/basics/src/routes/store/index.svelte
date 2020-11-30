@@ -20,4 +20,4 @@
 
 <h1>Test</h1>
 <h2>Called {call_count} time</h2>
-<a href="store/result">results</a>
+<a href="result">results</a>

@@ -9,6 +9,6 @@
 	export let two;
 </script>
 
-<h1>{one}:{two}</h1>
+<h1>{one}/{two}</h1>
 
-<a href="/routing/skipped/y/1">/routing/skipped/y/1</a>
+<a href="../y/1" id="goto-y1">next</a>

@@ -76,38 +76,10 @@ runner((test, is_dev) => {
 	test('prefetches programmatically', async ({ visit, baseUrl, capture_requests, prefetch }) => {
 		await visit('/routing/a');
 
-		const requests = await capture_requests( () => prefetch('b'));
+		const requests = await capture_requests(() => prefetch('b'));
 
 		assert.equal(requests.length, 2);
 		assert.equal(requests[1], `${baseUrl}/routing/b.json`);
-	});
-
-	test('sets Content-Type', async ({ baseUrl }) => {
-		const { headers } = await fetch(`${baseUrl}/routing`);
-
-		assert.equal(
-			headers.get('content-type'),
-			'text/html'
-		);
-	});
-
-	test('calls a delete handler', async ({ visit, wait_for_function, click, evaluate }) => {
-		await visit('/routing/delete-test');
-
-		await click('.del');
-		await wait_for_function(() => deleted);
-
-		assert.equal(await evaluate(() => deleted.id), '42');
-	});
-
-	test('hydrates', async ({ visit, query_text, start }) => {
-		await visit('/routing/hydrate-test');
-
-		assert.equal(await query_text('h1'), 'Hi from server');
-
-		await start();
-
-		assert.equal(await query_text('h1'), 'Hi from browser');
 	});
 
 	/** @todo this fails and shows "custom layout" instead. It's probably a bug. */
@@ -133,74 +105,12 @@ runner((test, is_dev) => {
 		assert.equal(await query_text('h1'), 'reserved words are okay as routes');
 	});
 
-	test('accepts value-less query string parameter on server', async ({
-		visit,
-		query_text,
-		wait_for_selector
-	}) => {
-		await visit('/routing/echo-query?message');
-
-		await wait_for_selector('.echo-query');
-
-		assert.equal(await query_text('h1'), '{"message":""}');
-	});
-
-	test('accepts value-less query string parameter on client', async ({
-		visit,
-		query_text,
-		wait_for_selector,
-		click
-	}) => {
-		await visit('/routing/');
-
-		await click('a[href="echo-query?message"]');
-		await wait_for_selector('.echo-query');
-
-		assert.equal(await query_text('h1'), '{"message":""}');
-	});
-
-	test('accepts duplicated query string parameter on server', async ({ visit, query_text }) => {
-		await visit('/routing/echo-query?p=one&p=two');
-
-		assert.equal(await query_text('h1'), '{"p":["one","two"]}');
-	});
-
-	test('accepts duplicated query string parameter on client', async ({
-		visit,
-		click,
-		wait_for_selector,
-		query_text
-	}) => {
-		await visit('/routing/');
-
-		await click('a[href="echo-query?p=one&p=two"]');
-		await wait_for_selector('.echo-query');
-
-		assert.equal(await query_text('h1'), '{"p":["one","two"]}');
-	});
-
-	/** @todo Host is not passed. this is a bug. */
-	test.skip('can access host through page store', async ({ visit, start, query_text }) => {
-		await visit('/routing/host');
-		assert.equal(await query_text('h1'), 'localhost');
-
-		await start();
-		assert.equal(await query_text('h1'), 'localhost');
-	});
-
 	test('resets the active element after navigation', async ({ visit, click, wait_for_function }) => {
 		await visit('/routing/');
 
 		await click('[href="a"]');
 
 		await wait_for_function(() => document.activeElement.nodeName == 'BODY');
-	});
-
-	/** @todo The body is "$& %svelte.body%"" which seems like a bug */
-	test.skip('replaces %sapper.xxx% tags safely', async ({ visit, query_text }) => {
-		await visit('/routing/unsafe-replacement');
-
-		assert.match(await query_text('body'), '$& $&');
 	});
 
 	test('navigates between routes with empty parts', async ({
@@ -282,9 +192,58 @@ runner((test, is_dev) => {
 		await wait_for_query_text_to_equal('h1', 'Nested regexp page 234');
 	});
 
+	test('invalidates page when a segment is skipped', async ({ visit, click, wait_for_query_text_to_equal }) => {
+		await visit('/routing/skipped/x/1');
+
+		await wait_for_query_text_to_equal('h1', 'x/1');
+
+		await click('#goto-y1');
+		
+		await wait_for_query_text_to_equal('h1', 'y/1');
+	});
+
+	test('accepts value-less query string parameter on server', async ({
+		visit,
+		wait_for_query_text_to_equal
+	}) => {
+		await visit('/query/echo?message');
+
+		await wait_for_query_text_to_equal('h1', '{"message":""}');
+	});
+
+	test('accepts value-less query string parameter on client', async ({
+		visit,
+		wait_for_query_text_to_equal,
+		click
+	}) => {
+		await visit('/query/');
+
+		await click('#no-value');
+
+		await wait_for_query_text_to_equal('h1', '{"message":""}');
+	});
+
+	test('accepts duplicated query string parameter on server', async ({ visit, query_text }) => {
+		await visit('/query/echo?p=one&p=two');
+
+		assert.equal(await query_text('h1'), '{"p":["one","two"]}');
+	});
+
+	test('accepts duplicated query string parameter on client', async ({
+		visit,
+		click,
+		wait_for_query_text_to_equal
+	}) => {
+		await visit('/query/');
+
+		await click('#duplicate');
+
+		await wait_for_query_text_to_equal('h1', '{"p":["one","two"]}');
+	});
+
 	/** @todo Kit is not exposing the headers. Should probably be added to req */
 	test.skip('runs server route handlers before page handlers, if they match', async ({ baseUrl }) => {
-		const res = await fetch(`${baseUrl}/routing/middleware`, {
+		const res = await fetch(`${baseUrl}/middleware`, {
 			headers: {
 				Accept: 'application/json'
 			}
@@ -297,23 +256,57 @@ runner((test, is_dev) => {
 		assert.ok((await html.text()).indexOf('<h1>HTML</h1>') !== -1);
 	});
 
-	test('invalidates page when a segment is skipped', async ({ visit, click, wait_for_query_text_to_equal }) => {
-		await visit('/routing/skipped/x/1');
+	/** @todo Host is not passed. this is a bug. */
+	test.skip('can access host through page store', async ({ visit, start, query_text }) => {
+		await visit('/host');
+		assert.equal(await query_text('h1'), 'localhost');
 
-		await click('a[href="/routing/skipped/y/1"]');
-		
-		await wait_for_query_text_to_equal('h1', 'y:1');
+		await start();
+		assert.equal(await query_text('h1'), 'localhost');
+	});
+
+	/** @todo The body is "$& %svelte.body%"" which seems like a bug */
+	test.skip('replaces %sapper.xxx% tags safely', async ({ visit, query_text }) => {
+		await visit('/unsafe-replacement');
+
+		assert.match(await query_text('body'), '$& $&');
 	});
 
 	test('page store functions as expected', async ({ visit, click, query_text, wait_for_query_text_to_equal }) => {
-		await visit('/routing/store');
+		await visit('/store/');
 
 		assert.equal(await query_text('h1'), 'Test');
 		assert.equal(await query_text('h2'), 'Called 1 time');
 
-		await click('a[href="store/result"]');
+		await click('a[href="result"]');
 
 		await wait_for_query_text_to_equal('h1', 'Result');
 		await wait_for_query_text_to_equal('h2', 'Called 1 time');
+	});
+
+	test('sets Content-Type', async ({ baseUrl }) => {
+		const { headers } = await fetch(`${baseUrl}/content-type-header`);
+
+		assert.equal(
+			headers.get('content-type'),
+			'text/html'
+		);
+	});
+
+	test('calls a delete handler', async ({ visit, wait_for_query_text_to_equal, click }) => {
+		await visit('/delete-route');
+
+		await click('.del');
+		await wait_for_query_text_to_equal('h1', 'deleted 42');
+	});
+
+	test('hydrates', async ({ visit, query_text, start }) => {
+		await visit('/hydrate');
+
+		assert.equal(await query_text('h1'), 'Hi from server');
+
+		await start();
+
+		assert.equal(await query_text('h1'), 'Hi from browser');
 	});
 });
