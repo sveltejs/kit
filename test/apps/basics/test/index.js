@@ -1,11 +1,11 @@
-import fs from 'fs';
 import path from 'path';
-import { runner } from '../../../runner'; // TODO make this a package?
+import glob from 'tiny-glob/sync';
+import { runner } from '../../../runner' // TODO make this a package?
 
 runner((test, is_dev) => {
-	const dir = path.join(__dirname, 'tests');
-	const modules = fs.readdirSync(dir);
+	const cwd = path.join(__dirname, '../src/routes');
+	const modules = glob('**/__tests__.js', { cwd });
 	for (const module of modules) {
-		require(`./tests/${module}`).default(test, is_dev);
+		require(`../src/routes/${module}`).default(test, is_dev);
 	}
 });
