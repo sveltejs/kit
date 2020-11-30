@@ -206,7 +206,7 @@ export async function build(config) {
 		});
 
 		await client_chunks.write({
-			dir: '.svelte/build/optimized/client',
+			dir: '.svelte/build/optimized/client/_app',
 			entryFileNames: '[name]-[hash].js',
 			chunkFileNames: '[name]-[hash].js',
 			assetFileNames: '[name]-[hash].js', // TODO CSS filenames aren't hashed?

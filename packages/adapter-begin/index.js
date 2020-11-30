@@ -36,7 +36,7 @@ module.exports = async function builder({ dir, manifest, log }) {
 
 	log.minor('Writing client application...' + static_directory);
 	const static_assets = copy('static', static_directory);
-	const client_assets = copy(resolve(dir, 'client'), join(static_directory, '_app'));
+	const client_assets = copy(resolve(dir, 'client'), join(static_directory));
 
 	log.minor('Prerendering static pages...');
 	await prerender({

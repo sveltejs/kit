@@ -1,10 +1,8 @@
-import * as child_process from 'child_process';
-import * as path from 'path';
 import * as uvu from 'uvu';
 import * as ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build, load_config } from '@sveltejs/kit/dist/api';
+import { dev, build, start, load_config } from '@sveltejs/kit/dist/api';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
@@ -60,17 +58,12 @@ export function runner(callback) {
 			// TODO implement `svelte start` so we don't need to use an adapter
 			await build(config);
 
-			// start server
-			context.proc = child_process.fork('build/index.js', {
-				env: {
-					PORT: String(port)
-				}
-			});
-
+			context.server = await start({ port });
 			Object.assign(context, await setup({ port }));
 		},
 		async after(context) {
-			context.proc.kill();
+			context.server.close();
+			await context.browser.close();
 		}
 	});
 }

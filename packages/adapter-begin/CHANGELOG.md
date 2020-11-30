@@ -1,5 +1,11 @@
 # @sveltejs/adapter-begin
 
+## 0.0.5
+
+### Patch Changes
+
+- Add svelte-kit start command
+
 ## 0.0.4
 
 ### Patch Changes
