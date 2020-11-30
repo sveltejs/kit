@@ -1,7 +1,6 @@
 import * as assert from 'uvu/assert';
 
 export default function(test, is_dev) {
-	// error handling
 	if (is_dev) {
 		test('client-side errors', async ({ visit, contains }) => {
 			await visit('/errors/clientside');

@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
-		"test": "uvu -r esm"
+		"test": "uvu test -r esm"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
