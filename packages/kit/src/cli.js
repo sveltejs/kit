@@ -39,8 +39,6 @@ prog
 		try {
 			const watcher = await dev({ port, config });
 
-			let first = true;
-
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
 			});
@@ -49,13 +47,8 @@ prog
 				process.stderr.write(data);
 			});
 
-			watcher.on('ready', async (event) => {
-				if (first) {
-					console.log(colors.bold().cyan(`> Listening on http://localhost:${event.port}`));
-					if (open) launch(event.port);
-					first = false;
-				}
-			});
+			console.log(colors.bold().cyan(`> Listening on http://localhost:${watcher.port}`));
+			if (open) launch(watcher.port);
 		} catch (error) {
 			handle_error(error);
 		}
