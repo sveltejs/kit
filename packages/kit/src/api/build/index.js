@@ -189,7 +189,7 @@ export async function build(config) {
 						client.deps.__entry__ = get_deps(client.entry);
 
 						manifest.components.forEach((component) => {
-							const file = component.file.replace(/\.svelte$/, '.js');
+							const file = path.normalize(component.file.replace(/\.svelte$/, '.js'));
 							const key = reverse_lookup.get(file);
 
 							client.deps[component.name] = get_deps(key);
