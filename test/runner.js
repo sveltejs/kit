@@ -55,10 +55,6 @@ async function setup({ port }) {
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
 		click: (selector, options) => page.click(selector, options),
 		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
-		// only available if preload calls this.prevent_start()
-		start: () => page.evaluate(() => start({
-			target: document.querySelector('#svelte') || document.body
-		})),
 		wait_for_text,
 		wait_for_selector: (selector, options) =>
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
