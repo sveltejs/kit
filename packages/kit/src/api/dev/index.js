@@ -25,7 +25,7 @@ class Watcher extends EventEmitter {
 	constructor({ port, config }) {
 		super();
 
-		this.cachedir = scorta('svelte') ;
+		this.cachedir = scorta('svelte');
 		this.port = port;
 		this.config = config;
 		this.update();
@@ -45,10 +45,6 @@ class Watcher extends EventEmitter {
 		await this.init_filewatcher();
 		await this.init_snowpack();
 		await this.init_server();
-
-		this.emit('ready', {
-			port: this.port
-		});
 
 		return this;
 	}
