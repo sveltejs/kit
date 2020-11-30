@@ -180,16 +180,14 @@ runner((test, is_dev) => {
 	});
 
 	/** @todo Host is not passed. this is a bug. */
-	test.skip('can access host through page store', async ({ visit, query_text }) => {
+	test.skip('can access host through page store', async ({ visit, start, query_text }) => {
 		await visit('/routing/host');
-
 		assert.equal(await query_text('h1'), 'localhost');
 
-		// await r.sapper.start();
-		// assert.equal(await query_text('h1'), 'localhost');
+		await start();
+		assert.equal(await query_text('h1'), 'localhost');
 	});
 
-	// skipped because Nightmare doesn't seem to focus the <a> correctly
 	test('resets the active element after navigation', async ({ visit, click, wait_for_function }) => {
 		await visit('/routing/');
 
