@@ -53,7 +53,7 @@ export default function(test, is_dev) {
 	});
 
 	test('404', async ({ visit, contains }) => {
-		const res = await visit(`/why/would/anyone/fetch/this/url`);
+		const res = await visit('/why/would/anyone/fetch/this/url');
 
 		assert.ok(await contains('Custom layout'), 'Should show custom layout');
 		assert.ok(await contains('custom error page'), 'Should show custom error page');
@@ -61,14 +61,14 @@ export default function(test, is_dev) {
 	});
 
 	test('invalid route response is handled', async ({ fetch }) => {
-		const res = await fetch(`/errors/invalid-route-response`);
+		const res = await fetch('/errors/invalid-route-response');
 
 		assert.equal(res.status, 500);
 		assert.match(await res.text(), /body is missing/);
 	});
 
 	test('unhandled http method', async ({ fetch }) => {
-		const res = await fetch(`/errors/invalid-route-response`, { method: 'PUT' });
+		const res = await fetch('/errors/invalid-route-response', { method: 'PUT' });
 
 		assert.equal(res.status, 501);
 

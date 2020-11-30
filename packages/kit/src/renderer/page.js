@@ -255,7 +255,6 @@ async function get_response({
 	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
-
 			start({
 				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
 				baseUrl: "${baseUrl}",

@@ -2,4 +2,4 @@
 	import { page } from '$app/stores';
 </script>
 
-<h1>Slug: {$page.params.slug}</h1>
+<h1>Nested regexp page {$page.params.id}</h1>
