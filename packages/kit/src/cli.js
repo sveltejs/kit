@@ -48,7 +48,7 @@ prog
 			});
 
 			console.log(colors.bold().cyan(`> Listening on http://localhost:${watcher.port}`));
-			launch(watcher.port);
+			if (open) launch(watcher.port);
 		} catch (error) {
 			handle_error(error);
 		}
