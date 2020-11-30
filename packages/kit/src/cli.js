@@ -23,7 +23,7 @@ function handle_error(error) {
 
 async function launch(port) {
 	const { exec } = await import('child_process');
-	exec(`open http://localhost:${port}`);
+	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
 }
 
 const prog = sade('svelte').version(pkg.version);
