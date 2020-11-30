@@ -30,12 +30,12 @@ export default function create_manifest_data(
 
 	const default_layout = {
 		name: '$default_layout',
-		url: '/_app/main/components/layout.svelte'
+		url: '/_app/assets/components/layout.svelte'
 	};
 
 	const default_error = {
 		name: '$default_error',
-		url: '/_app/main/components/error.svelte'
+		url: '/_app/assets/components/error.svelte'
 	};
 
 	function walk(

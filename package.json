@@ -4,9 +4,12 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"test": "pnpm -r test",
+		"build": "pnpm build --filter=\"@sveltejs/*\"",
+		"test": "pnpm -r test --workspace-concurrency=1",
 		"lint": "pnpm -r lint",
-		"format": "pnpm -r format"
+		"format": "pnpm -r format",
+		"publish-all": "pnpm publish --filter=\"@sveltejs/*\" && pnpm publish --filter=\"create-svelte\" --tag=next",
+		"prepublish-all": "pnpm build"
 	},
 	"repository": {
 		"type": "git",

@@ -1,18 +1,29 @@
-import relative from 'require-relative';
 import sade from 'sade';
 import colors from 'kleur';
+import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
 let config;
 
 try {
-	config = relative('./svelte.config.js', process.cwd());
-} catch (err) {
-	const adjective = err.code === 'ENOENT' ? 'Missing' : 'Malformed';
+	config = load_config();
+} catch (error) {
+	const adjective = error.code === 'ENOENT' ? 'Missing' : 'Malformed';
 
 	console.error(colors.bold().red(`${adjective} svelte.config.js`));
-	console.error(colors.grey(err.stack));
+	console.error(colors.grey(error.stack));
 	process.exit(1);
+}
+
+function handle_error(error) {
+	console.log(colors.bold().red(`> ${error.message}`));
+	console.log(colors.gray(error.stack));
+	process.exit(1);
+}
+
+async function launch(port) {
+	const { exec } = await import('child_process');
+	exec(`open http://localhost:${port}`);
 }
 
 const prog = sade('svelte').version(pkg.version);
@@ -20,15 +31,13 @@ const prog = sade('svelte').version(pkg.version);
 prog
 	.command('dev')
 	.describe('Start a development server')
-	.option('-p, --port', 'Dev server port', 3000)
+	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async (opts) => {
+	.action(async ({ port, open }) => {
 		const { dev } = await import('./api/dev');
 
 		try {
-			const watcher = await dev({
-				port: opts.port
-			});
+			const watcher = await dev({ port, config });
 
 			let first = true;
 
@@ -43,32 +52,43 @@ prog
 			watcher.on('ready', async (event) => {
 				if (first) {
 					console.log(colors.bold().cyan(`> Listening on http://localhost:${event.port}`));
-					if (opts.open) {
-						const { exec } = await import('child_process');
-						exec(`open http://localhost:${event.port}`);
-					}
+					if (open) launch(event.port);
 					first = false;
 				}
 			});
-		} catch (err) {
-			console.log(colors.bold().red(`> ${err.message}`));
-			console.log(colors.gray(err.stack));
-			process.exit(1);
+		} catch (error) {
+			handle_error(error);
 		}
 	});
 
 prog
-	.command('build [dest]')
+	.command('build')
 	.describe('Create a deployment-ready version of your app')
 	.action(async () => {
 		const { build } = await import('./api/build');
 
 		try {
 			await build(config);
-		} catch (err) {
-			console.log(colors.bold().red(`> ${err.message}`));
-			console.log(colors.gray(err.stack));
-			process.exit(1);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
+
+prog
+	.command('start')
+	.describe('Serve an already-built app')
+	.option('-p, --port', 'Port', 3000)
+	.option('-o, --open', 'Open a browser tab', false)
+	.action(async ({ port, open }) => {
+		const { start } = await import('./api/start');
+
+		try {
+			await start({ port, config });
+
+			console.log(colors.bold().cyan(`> Listening on http://localhost:${port}`));
+			if (open) if (open) launch(port);
+		} catch (error) {
+			handle_error(error);
 		}
 	});
 

@@ -1,9 +1,8 @@
-import * as child_process from 'child_process';
-import * as path from 'path';
 import * as uvu from 'uvu';
 import * as ports from 'port-authority';
+import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build } from '@sveltejs/kit/dist/api';
+import { dev, build, start, load_config } from '@sveltejs/kit/dist/api';
 import * as assert from 'uvu/assert';
 
 async function setup({ port }) {
@@ -41,13 +40,14 @@ async function setup({ port }) {
 
 		return requests;
 	};
+	const base = `http://localhost:${port}`;
 
 	return {
-		browser,
-		page,
-		baseUrl: `http://localhost:${port}`,
-		visit: (path) => page.goto(`http://localhost:${port}${path}`),
-		contains: async (str) => (await page.innerHTML('body')).includes(str),
+		base,
+		visit: path => page.goto(base + path),
+		contains: async str => (await page.innerHTML('body')).includes(str),
+		html: async selector => await page.innerHTML(selector),
+		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		query_text,
 		evaluate: (fn) => page.evaluate(fn),
 		// these are assumed to have been put in the global scope by the layout
@@ -69,7 +69,7 @@ async function setup({ port }) {
 }
 
 export function runner(callback) {
-	async function run(is_dev, { before, after }) {
+	function run(is_dev, { before, after }) {
 		const suite = uvu.suite(is_dev ? 'dev' : 'build');
 
 		suite.before(before);
@@ -80,12 +80,14 @@ export function runner(callback) {
 		suite.run();
 	}
 
+	const config = load_config();
+
 	run(true, {
 		async before(context) {
 			const port = await ports.find(3000);
 
 			try {
-				context.watcher = await dev({ port });
+				context.watcher = await dev({ port, config });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
 				console.log(e.message);
@@ -102,22 +104,15 @@ export function runner(callback) {
 		async before(context) {
 			const port = await ports.find(3000);
 
-			await build({
-				// TODO implement `svelte start` so we don't need to use this adapter
-				adapter: '@sveltejs/adapter-node'
-			});
+			// TODO implement `svelte start` so we don't need to use an adapter
+			await build(config);
 
-			// start server
-			context.proc = child_process.fork(path.join(process.cwd(), 'build/index.js'), {
-				env: {
-					PORT: String(port)
-				}
-			});
-
+			context.server = await start({ port });
 			Object.assign(context, await setup({ port }));
 		},
 		async after(context) {
-			if (context.proc) context.proc.kill();
+			context.server.close();
+			await context.browser.close();
 		}
 	});
 }

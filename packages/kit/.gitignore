@@ -1,6 +1,6 @@
 .DS_Store
 /node_modules
 /dist
-/assets/runtime
+/assets/app
 /assets/renderer
 /client/**/*.d.ts

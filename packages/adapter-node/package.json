@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "0.0.15",
+	"version": "0.0.17",
 	"main": "index.js",
 	"files": [
 		"server.js"

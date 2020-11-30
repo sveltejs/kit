@@ -22,16 +22,6 @@ async function get_response({
 
 	const baseUrl = ''; // TODO
 
-	// TODO make this less confusing
-	const layout_segments = [segments[0]];
-	let l = 1;
-
-	page.parts.forEach((part, i) => {
-		layout_segments[l] = segments[i + 1];
-		if (!part) return;
-		l++;
-	});
-
 	const dependencies = {};
 
 	const serialized_session = try_serialize(session, (err) => {
@@ -123,10 +113,10 @@ async function get_response({
 		prevent_start: () => do_start = false
 	};
 
-	const match = page.pattern.exec(request.path);
+	const match = page && page.pattern.exec(request.path);
 
 	// the last part has all parameters from any segment in the URL
-	const params = parts_to_params(match, page.parts[page.parts.length - 1] );
+	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1] ) : {};
 
 	const preloaded = [];
 	let can_prerender = true;
@@ -171,36 +161,34 @@ async function get_response({
 
 	if (redirected) return redirected;
 
-	const branches = [];
-	parts.forEach((part, i) => {
-		if (part) {
-			branches.push({
-				component: part.component,
-				props: preloaded[i],
-				segment: segments[i]
-			});
-		}
-	});
+	// TODO make this less confusing
+	const layout_segments = [segments[0]];
+	let l = 1;
 
-	const pageContext = {
-		host: request.host ,
-		path: request.path,
-		query: search_params_to_map(request.query),
-		params,
-		error
-	};
+	if (page) {
+		page.parts.forEach((part, i) => {
+			layout_segments[l] = segments[i + 1];
+			if (!part) return;
+			l++;
+		});
+	}
 
 	const props = {
 		status,
 		error,
 		stores: {
-			page: readable(pageContext, noop),
+			page: readable({
+				host: request.host,
+				path: request.path,
+				query: request.query,
+				params,
+				error
+			}, noop),
 			preloading: readable(null, noop),
 			session: writable(session)
 		},
 		// TODO stores, status, segments, notify, CONTEXT_KEY
 		segments: layout_segments,
-		branches,
 		level0: {
 			props: preloaded[0]
 		},
@@ -210,7 +198,8 @@ async function get_response({
 		}
 	};
 
-	// TODO this is highly confusing. replace the leveln thing with an array of branches
+	// leveln (instead of levels[n]) makes it easy to avoid
+	// unnecessary updates for layout components
 	l = 1;
 	for (let i = 1; i < parts.length; i += 1) {
 		const part = parts[i];
@@ -243,48 +232,46 @@ async function get_response({
 	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
 	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
 
-	(page.parts.filter(Boolean) ).forEach((part) => {
-		const page_deps = deps[part.component.name];
+	if (page) {
+		// TODO handle error page deps
+		(page.parts.filter(Boolean) ).forEach((part) => {
+			const page_deps = deps[part.component.name];
 
-		if (!page_deps) return; // we don't have this info during dev
+			if (!page_deps) return; // we don't have this info during dev
 
-		page_deps.js.forEach((dep) => js_deps.add(dep));
-		page_deps.css.forEach((dep) => css_deps.add(dep));
-	});
+			page_deps.js.forEach((dep) => js_deps.add(dep));
+			page_deps.css.forEach((dep) => css_deps.add(dep));
+		});
+	}
 
 	const head = `${rendered.head}
 
-		${Array.from(js_deps)
-			.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
-			.join('\n\t\t\t')}
-		${Array.from(css_deps)
-			.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
-			.join('\n\t\t\t')}
-		${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+			${Array.from(js_deps)
+				.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
+				.join('\n\t\t\t')}
+			${Array.from(css_deps)
+				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
+				.join('\n\t\t\t')}
+			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+	`.replace(/^\t{2}/gm, ''); // TODO add links
+
+	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
 		${do_start ? `
 			start({
-				target: document.querySelector('#svelte') || document.body
-			});` : 
-			'window.start = start'
-		}
-		</script>
-		`.replace(/^\t{2}/gm, ''); // TODO add links
-
-	const body = `${rendered.html}
-		<script>
-			__SVELTE__ = {
+				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
 				baseUrl: "${baseUrl}",
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},
 				session: ${serialized_session}
-			};
+			});
+		`: ''}
 		</script>`.replace(/^\t{3}/gm, '');
 
 	return {
-		status: 200,
+		status,
 		headers: {
 			'content-type': 'text/html'
 		},
@@ -380,16 +367,4 @@ function serialize_error(error) {
 		serialized = '{}';
 	}
 	return serialized;
-}
-
-function search_params_to_map(params) {
-	const map = {};
-
-	for (const key of params.keys()) {
-		const values = params.getAll(key);
-
-		map[key] = values.length > 1 ? values : values[0];
-	}
-
-	return map;
 }

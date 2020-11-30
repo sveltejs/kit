@@ -25,7 +25,7 @@ const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY', 'MISS
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
 	// squelching these warnings (it happens when e.g. the root layout imports
-	// from /_app/main/runtime/navigation)
+	// from $app/navigation)
 	if (ignorable_warnings.has(warning.code)) return;
 	handler(warning);
 };
@@ -35,12 +35,12 @@ export async function build(config) {
 		throw new Error('No adapter specified');
 	}
 
-	const manifest = create_manifest_data('src/routes'); // TODO make configurable, without breaking Snowpack config
+	const manifest = create_manifest_data(config.paths.routes);
 
-	mkdirp('.svelte/main');
+	mkdirp('.svelte/assets');
 	create_app({
 		manifest_data: manifest,
-		output: '.svelte/main'
+		output: '.svelte/assets'
 	});
 
 	const header = (msg) => console.log(colors.bold().cyan(`\n> ${msg}`));
@@ -67,9 +67,11 @@ export async function build(config) {
 			fs.writeFileSync(setup_file, '');
 		}
 
-		await exec(`node ${snowpack_bin} build --out=${unoptimized}/server --ssr`);
+		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`
+
+		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/server --ssr`);
 		log.success('server');
-		await exec(`node ${snowpack_bin} build --out=${unoptimized}/client`);
+		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/client`);
 		log.success('client');
 	}
 
@@ -85,15 +87,15 @@ export async function build(config) {
 			deps: {}
 		};
 
-		const entry = path.resolve(`${unoptimized}/client/_app/main/runtime/navigation.js`);
+		const entry = path.resolve(`${unoptimized}/client/_app/assets/app/navigation.js`);
 
 		// https://github.com/snowpackjs/snowpack/discussions/1395
-		const re = /(\.\.\/)+_app\/main\/runtime\//;
+		const re = /(\.\.\/)+_app\/assets\/app\//;
 		const work_around_alias_bug = (type) => ({
 			name: 'work-around-alias-bug',
 			resolveId(imported) {
 				if (re.test(imported)) {
-					return path.resolve(`${unoptimized}/${type}/_app/main/runtime`, imported.replace(re, ''));
+					return path.resolve(`${unoptimized}/${type}/_app/assets/app`, imported.replace(re, ''));
 				}
 			}
 		});
@@ -204,7 +206,7 @@ export async function build(config) {
 		});
 
 		await client_chunks.write({
-			dir: '.svelte/build/optimized/client',
+			dir: '.svelte/build/optimized/client/_app',
 			entryFileNames: '[name]-[hash].js',
 			chunkFileNames: '[name]-[hash].js',
 			assetFileNames: '[name]-[hash].js', // TODO CSS filenames aren't hashed?
@@ -216,10 +218,10 @@ export async function build(config) {
 
 		fs.writeFileSync(`${unoptimized}/server/app.js`, `
 			import * as renderer from '@sveltejs/kit/assets/renderer';
-			import root from './_app/main/generated/root.js';
+			import root from './_app/assets/generated/root.js';
 			import * as setup from './_app/setup/index.js';
 
-			const template = ${s(fs.readFileSync('src/app.html' /* TODO parameterise */, 'utf-8'))};
+			const template = ${s(fs.readFileSync(config.paths.template, 'utf-8'))};
 
 			const manifest = {
 				layout: ${s(manifest.layout)},
@@ -245,11 +247,16 @@ export async function build(config) {
 
 			const client = ${s(client)};
 
+			export const paths = {
+				static: ${s(config.paths.static)}
+			};
+
 			export function render(request, { only_prerender = false } = {}) {
 				return renderer.render(request, {
-					static_dir: 'static',
+					static_dir: paths.static,
 					template,
 					manifest,
+					target: ${s(config.target)},
 					client,
 					root,
 					setup,
@@ -316,7 +323,7 @@ export async function build(config) {
 
 		const builder = new Builder({
 			generated_files: '.svelte/build/optimized',
-			static_files: 'static',
+			static_files: config.paths.static,
 			manifest,
 			log
 		});

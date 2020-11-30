@@ -162,7 +162,7 @@ export async function prerender({
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						const file_exists =
-							(parsed.pathname.startsWith('/_app/') && fs.existsSync(`${dir}/client/${parsed.pathname.replace('/_app/', '')}`)) ||
+							(parsed.pathname.startsWith('/_app/') && fs.existsSync(`${dir}/client/${parsed.pathname}`)) ||
 							fs.existsSync(`${out}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}/index.html`);
