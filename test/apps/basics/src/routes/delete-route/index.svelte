@@ -1,10 +1,4 @@
 <script>
-	import { onMount } from 'svelte';
-
-	onMount(() => {
-		window.deleted = null;
-	});
-
 	let status;
 
 	function del() {
