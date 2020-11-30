@@ -158,17 +158,6 @@ async function get_response({
 
 	if (redirected) return redirected;
 
-	const branches = [];
-	parts.forEach((part, i) => {
-		if (part) {
-			branches.push({
-				component: part.component,
-				props: preloaded[i],
-				segment: segments[i]
-			});
-		}
-	});
-
 	const pageContext = {
 		host: request.host ,
 		path: request.path,
@@ -199,7 +188,6 @@ async function get_response({
 		},
 		// TODO stores, status, segments, notify, CONTEXT_KEY
 		segments: layout_segments,
-		branches,
 		level0: {
 			props: preloaded[0]
 		},
@@ -209,7 +197,8 @@ async function get_response({
 		}
 	};
 
-	// TODO this is highly confusing. replace the leveln thing with an array of branches
+	// leveln (instead of levels[n]) makes it easy to avoid
+	// unnecessary updates for layout components
 	l = 1;
 	for (let i = 1; i < parts.length; i += 1) {
 		const part = parts[i];
@@ -256,31 +245,27 @@ async function get_response({
 
 	const head = `${rendered.head}
 
-		${Array.from(js_deps)
-			.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
-			.join('\n\t\t\t')}
-		${Array.from(css_deps)
-			.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
-			.join('\n\t\t\t')}
-		${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+			${Array.from(js_deps)
+				.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
+				.join('\n\t\t\t')}
+			${Array.from(css_deps)
+				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
+				.join('\n\t\t\t')}
+			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+	`.replace(/^\t{2}/gm, ''); // TODO add links
 
+	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
 
 			start({
-				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'}
-			});
-		</script>`.replace(/^\t{2}/gm, ''); // TODO add links
-
-	const body = `${rendered.html}
-		<script>
-			__SVELTE__ = {
+				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
 				baseUrl: "${baseUrl}",
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},
 				session: ${serialized_session}
-			};
+			});
 		</script>`.replace(/^\t{3}/gm, '');
 
 	return {

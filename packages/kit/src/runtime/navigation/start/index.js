@@ -6,11 +6,10 @@ import { page_store } from './page_store';
 import { layout, ErrorComponent, components } from 'MANIFEST';
 import root from 'ROOT';
 
-export const initial_data = typeof __SVELTE__ !== 'undefined' && __SVELTE__;
-
 let ready = false;
 let root_component;
 let current_token;
+let initial_preloaded_data;
 let root_preloaded;
 let current_branch = [];
 let current_query = '{}';
@@ -18,7 +17,7 @@ let current_query = '{}';
 const stores = {
 	page: page_store({}),
 	preloading: writable(false),
-	session: writable(initial_data && initial_data.session)
+	session: writable(null)
 };
 
 let $session;
@@ -51,24 +50,24 @@ export function set_target(node) {
 export default async function start(opts) {
 	set_target(opts.target);
 
-	init_router(initial_data.baseUrl, handle_target);
+	init_router(opts.baseUrl, handle_target);
 
 	start_prefetching();
 
-	if (initial_data.error) {
-		return handle_error();
+	initial_preloaded_data = opts.preloaded;
+	root_preloaded = initial_preloaded_data[0];
+
+	stores.session.set(opts.session);
+
+	if (opts.error) {
+		return handle_error(opts);
 	}
 
 	return load_current_page();
 }
 
-function handle_error() {
+function handle_error({ session, preloaded, status, error }) {
 	const { host, pathname, search } = location;
-	const { session, preloaded, status, error } = initial_data;
-
-	if (!root_preloaded) {
-		root_preloaded = preloaded && preloaded[0];
-	}
 
 	const props = {
 		error,
@@ -185,7 +184,6 @@ export async function hydrate_target(dest) {
 
 	if (!root_preloaded) {
 		root_preloaded =
-			initial_data.preloaded[0] ||
 			(layout.preload
 				? layout.preload.call(
 						preload_context,
@@ -234,7 +232,7 @@ export async function hydrate_target(dest) {
 				const { default: component, preload } = await components[part.i]();
 
 				let preloaded;
-				if (ready || !initial_data.preloaded[i + 1]) {
+				if (ready || !initial_preloaded_data[i + 1]) {
 					preloaded = preload
 						? await preload.call(
 								preload_context,
@@ -248,7 +246,7 @@ export async function hydrate_target(dest) {
 						  )
 						: {};
 				} else {
-					preloaded = initial_data.preloaded[i + 1];
+					preloaded = initial_preloaded_data[i + 1];
 				}
 
 				return (props[`level${j}`] = { component, props: preloaded, segment, match, part: part.i });
