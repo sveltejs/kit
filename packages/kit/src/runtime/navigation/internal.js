@@ -60,25 +60,6 @@ export function init(base, handler) {
 	addEventListener('popstate', handle_popstate);
 }
 
-export function extract_query(search) {
-	const query = Object.create(null);
-
-	search
-		.slice(1)
-		.split('&')
-		.filter(Boolean)
-		.forEach((searchParam) => {
-			const [, key, value = ''] = /([^=]*)(?:=(.*))?/.exec(
-				decodeURIComponent(searchParam.replace(/\+/g, ' '))
-			);
-			const prev = query[key];
-
-			query[key] = prev ? (typeof prev === 'string' ? [prev] : prev).concat(value) : value;
-		});
-
-	return query;
-}
-
 export function select_target(url) {
 	if (url.origin !== location.origin) return null;
 	if (!url.pathname.startsWith(base_url)) return null;
@@ -98,7 +79,7 @@ export function select_target(url) {
 		const match = route.pattern.exec(path);
 
 		if (match) {
-			const query = extract_query(url.search);
+			const query = new URLSearchParams(url.search);
 			const part = route.parts[route.parts.length - 1];
 			const params = part.params ? part.params(match) : {};
 

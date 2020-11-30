@@ -158,14 +158,6 @@ async function get_response({
 
 	if (redirected) return redirected;
 
-	const pageContext = {
-		host: request.host ,
-		path: request.path,
-		query: search_params_to_map(request.query),
-		params,
-		error
-	};
-
 	// TODO make this less confusing
 	const layout_segments = [segments[0]];
 	let l = 1;
@@ -182,7 +174,13 @@ async function get_response({
 		status,
 		error,
 		stores: {
-			page: readable(pageContext, noop),
+			page: readable({
+				host: request.host,
+				path: request.path,
+				query: request.query,
+				params,
+				error
+			}, noop),
 			preloading: readable(null, noop),
 			session: writable(session)
 		},
@@ -365,16 +363,4 @@ function serialize_error(error) {
 		serialized = '{}';
 	}
 	return serialized;
-}
-
-function search_params_to_map(params) {
-	const map = {};
-
-	for (const key of params.keys()) {
-		const values = params.getAll(key);
-
-		map[key] = values.length > 1 ? values : values[0];
-	}
-
-	return map;
 }
