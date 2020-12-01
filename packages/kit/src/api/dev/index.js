@@ -139,7 +139,7 @@ class Watcher extends EventEmitter {
 					root = (await load('/_app/assets/generated/root.js')).default;
 				} catch (e) {
 					res.statusCode = 500;
-					res.end(e.toString());
+					res.end(e.stack);
 					return;
 				}
 
@@ -162,7 +162,7 @@ class Watcher extends EventEmitter {
 						manifest: this.manifest,
 						target: this.config.target,
 						client: {
-							entry: 'assets/app/navigation.js',
+							entry: 'assets/runtime/internal/start.js',
 							deps: {}
 						},
 						dev: true,

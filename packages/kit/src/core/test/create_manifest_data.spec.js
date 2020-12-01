@@ -184,8 +184,7 @@ test('fails on clashes', () => {
 	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte pages clash/);
 
 	assert.throws(() => {
-		const { server_routes } = create_manifest_data(path.join(__dirname, 'samples/clash-routes'));
-		console.log(server_routes);
+		create_manifest_data(path.join(__dirname, 'samples/clash-routes'));
 	}, /The \[bar\]\/index\.js and \[foo\]\.js routes clash/);
 });
 

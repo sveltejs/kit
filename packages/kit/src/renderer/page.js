@@ -20,7 +20,7 @@ async function get_response({
 
 	const segments = request.path.split('/').filter(Boolean);
 
-	const baseUrl = ''; // TODO
+	const base = ''; // TODO
 
 	const dependencies = {};
 
@@ -136,18 +136,16 @@ async function get_response({
 			// these are only the parameters up to the current URL segment
 			const params = parts_to_params(match, part);
 
-			const props = mod.preload
-				? await mod.preload.call(
-						preload_context,
-						{
-							host: request.host,
-							path: request.path,
-							query: request.query,
-							params
-						},
-						session
-					)
-				: {};
+			const props = mod.preload ? await mod.preload.call(
+				preload_context,
+				{
+					host: request.host,
+					path: request.path,
+					query: request.query,
+					params
+				},
+				session
+			) : {};
 
 			preloaded[i] = props;
 			return { component: mod.default, props };
@@ -157,18 +155,6 @@ async function get_response({
 	if (options.only_prerender && !can_prerender) return;
 
 	if (redirected) return redirected;
-
-	// TODO make this less confusing
-	const layout_segments = [segments[0]];
-	let l = 1;
-
-	if (page) {
-		page.parts.forEach((part, i) => {
-			layout_segments[l] = segments[i + 1];
-			if (!part) return;
-			l++;
-		});
-	}
 
 	const props = {
 		status,
@@ -184,30 +170,15 @@ async function get_response({
 			preloading: readable(null, noop),
 			session: writable(session)
 		},
-		// TODO stores, status, segments, notify, CONTEXT_KEY
-		segments: layout_segments,
-		level0: {
-			props: preloaded[0]
-		},
-		level1: {
-			segment: segments[0],
-			props: {}
-		}
+		layout_props: preloaded[0],
+		components: parts.slice(1).map(part => part.component)
 	};
 
 	// leveln (instead of levels[n]) makes it easy to avoid
 	// unnecessary updates for layout components
-	l = 1;
-	for (let i = 1; i < parts.length; i += 1) {
-		const part = parts[i];
-		if (!part) continue;
-
-		props[`level${l++}`] = {
-			component: part.component,
-			props: preloaded[i] || {},
-			segment: segments[i]
-		};
-	}
+	parts.slice(1).forEach((part, i) => {
+		props[`props_${i}`] = part.props;
+	});
 
 	const serialized_preloads = `[${preloaded
 		.map((data) =>
@@ -257,7 +228,7 @@ async function get_response({
 			import { start } from '/_app/${options.client.entry}';
 			start({
 				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
-				baseUrl: "${baseUrl}",
+				base: "${base}",
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},

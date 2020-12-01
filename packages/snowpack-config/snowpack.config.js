@@ -25,6 +25,6 @@ module.exports = {
 		'.svelte/assets': '/_app/assets'
 	},
 	alias: {
-		$app: './.svelte/assets/app'
+		$app: './.svelte/assets/runtime/app'
 	}
 };

@@ -8,7 +8,7 @@ import * as assert from 'uvu/assert';
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
-	const defaultTimeout = 2000;
+	const defaultTimeout = 500;
 
 	const text = async (selector) => page.textContent(selector, { timeout: defaultTimeout });
 	const wait_for_text = async (selector, expectedValue) => {
