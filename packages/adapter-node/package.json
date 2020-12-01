@@ -3,7 +3,7 @@
 	"version": "0.0.17",
 	"main": "index.js",
 	"files": [
-		"server.js"
+		"files"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
