@@ -1,16 +1,17 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	/** @todo Kit is not exposing the headers. Should probably be added to req */
+	// We decided not to keep this behaviour. Leaving the skipped test here for now
+	// in case we change our minds
 	test.skip('runs server route handlers before page handlers, if they match', async ({ fetch }) => {
 		const res = await fetch('/middleware', {
 			headers: { Accept: 'application/json' }
 		});
 
-		assert.equal(await res.json(), { json: true });
+		assert.equal(await res.json(), { json: true }, 'Expected a JSON response');
 
 		const html = await fetch('/middleware');
 
-		assert.ok((await html.text()).indexOf('<h1>HTML</h1>') !== -1);
+		assert.ok((await html.text()).indexOf('<h1>HTML</h1>') !== -1, 'Expected an HTML response');
 	});
 }
