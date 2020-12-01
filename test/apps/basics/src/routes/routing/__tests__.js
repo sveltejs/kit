@@ -42,8 +42,8 @@ export default function (test) {
 		assert.equal(await text('h1'), 'test-slug');
 	});
 
-	test('navigates to a new page without reloading', async ({ 
-			visit, text, prefetch_routes, capture_requests, click, wait_for_function 
+	test('navigates to a new page without reloading', async ({
+			visit, text, prefetch_routes, capture_requests, click, wait_for_function
 		}) => {
 		await visit('/routing/');
 
@@ -157,8 +157,7 @@ export default function (test) {
 
 		await click('[href="/routing/xyz/abc/qwe/deep.json"]');
 
-		/** @todo Bug: req.params.rest is not an array */
-		// await wait_for_text('body', 'xyz,abc,qwe');
+		await wait_for_text('body', 'xyz,abc,qwe');
 	});
 
 	test('navigates between dynamic routes with same segments', async ({
@@ -196,7 +195,7 @@ export default function (test) {
 		await wait_for_text('h1', 'x/1');
 
 		await click('#goto-y1');
-		
+
 		await wait_for_text('h1', 'y/1');
 	});
 }

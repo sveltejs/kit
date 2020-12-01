@@ -54,6 +54,12 @@ function create_param_match(param, i) {
 }
 
 function generate_client_manifest(manifest_data) {
+	const page_ids = new Set(manifest_data.pages.map(page =>
+		page.pattern.toString()));
+
+	const endpoints_to_ignore = manifest_data.endpoints.filter(route =>
+		!page_ids.has(route.pattern.toString()));
+
 	const component_indexes = {};
 
 	const components = `[
@@ -105,6 +111,8 @@ function generate_client_manifest(manifest_data) {
 		import * as layout from ${JSON.stringify(manifest_data.layout.url)};
 		export { layout };
 		export { default as ErrorComponent } from ${JSON.stringify(manifest_data.error.url)};
+
+		export const ignore = [${endpoints_to_ignore.map(route => route.pattern).join(', ')}];
 
 		export const components = ${components};
 

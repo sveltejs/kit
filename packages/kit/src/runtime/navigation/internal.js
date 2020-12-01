@@ -1,5 +1,5 @@
 import { find_anchor } from './utils';
-import { routes } from 'MANIFEST';
+import { ignore, routes } from 'MANIFEST';
 
 export let uid = 1;
 export function set_uid(n) {
@@ -71,7 +71,7 @@ export function select_target(url) {
 	}
 
 	// avoid accidental clashes between server routes and page routes
-	// if (ignore.some(pattern => pattern.test(path))) return;
+	if (ignore.some(pattern => pattern.test(path))) return;
 
 	for (let i = 0; i < routes.length; i += 1) {
 		const route = routes[i];
