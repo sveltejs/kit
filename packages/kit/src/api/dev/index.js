@@ -156,7 +156,9 @@ class Watcher extends EventEmitter {
 					},
 					{
 						static_dir: this.config.paths.static,
-						template,
+						template: ({ head, body }) => template
+							.replace('%svelte.head%', () => head)
+							.replace('%svelte.body%', () => body),
 						manifest: this.manifest,
 						target: this.config.target,
 						client: {
