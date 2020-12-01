@@ -270,7 +270,7 @@ async function get_response({
 		headers: {
 			'content-type': 'text/html'
 		},
-		body: options.template.replace('%svelte.head%', head).replace('%svelte.body%', body),
+		body: options.template({ head, body }),
 		dependencies
 	};
 }

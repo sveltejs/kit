@@ -221,7 +221,9 @@ export async function build(config) {
 			import root from './_app/assets/generated/root.js';
 			import * as setup from './_app/setup/index.js';
 
-			const template = ${s(fs.readFileSync(config.paths.template, 'utf-8'))};
+			const template = ({ head, body }) => ${s(fs.readFileSync(config.paths.template, 'utf-8'))
+				.replace('%svelte.head%', '" + head + "')
+				.replace('%svelte.body%', '" + body + "')};
 
 			const manifest = {
 				layout: ${s(manifest.layout)},
