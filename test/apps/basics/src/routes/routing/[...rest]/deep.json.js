@@ -1,3 +1,3 @@
-export function get(req, res) {
-	return { body: req.params.rest.join(',') };
+export function get({ params }) {
+	return { body: params.rest.join(',') };
 }

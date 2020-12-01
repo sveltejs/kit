@@ -15,7 +15,11 @@ export default function render_route(
 			const params = {};
 			const match = route.pattern.exec(request.path);
 			route.params.forEach((name, i) => {
-				params[name] = match[i + 1];
+				if (name.startsWith('...')) {
+					params[name.slice(3)] = match[i + 1].split('/');
+				} else {
+					params[name] = match[i + 1];
+				}
 			});
 
 			try {
@@ -39,7 +43,7 @@ export default function render_route(
 								: `expected an object, got ${typeof response}`
 						}`,
 						headers: {}
-					};		
+					};
 				}
 
 				let { status = 200, body, headers = {} } = response;

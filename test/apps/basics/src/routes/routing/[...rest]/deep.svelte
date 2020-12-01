@@ -1,5 +1,5 @@
 <script context="module">
-	export function preload({ query, params }) {
+	export function preload({ params }) {
 		const { rest } = params;
 		return { rest };
 	}
