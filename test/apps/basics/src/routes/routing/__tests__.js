@@ -80,16 +80,13 @@ export default function (test) {
 		assert.equal(requests[1], `${base}/routing/b.json`);
 	});
 
-	/** @todo this fails and shows "custom layout" instead. It's probably a bug. */
-	test.skip('does not attempt client-side navigation to server routes', async ({
+	test('does not attempt client-side navigation to server routes', async ({
 		visit,
 		text,
-		prefetch_routes,
 		click,
 		wait_for_function
 	}) => {
 		await visit('/routing/');
-		await prefetch_routes();
 
 		await click('[href="ambiguous/ok.json"]');
 		await wait_for_function(() => document.location.pathname == '/routing/ambiguous/ok.json');
