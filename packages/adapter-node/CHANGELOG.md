@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 0.0.18
+
+### Patch Changes
+
+- b3ac507: Add missing pkg.files
+
 ## 0.0.17
 
 ### Patch Changes

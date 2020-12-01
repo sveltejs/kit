@@ -4,6 +4,13 @@
 
 ### Patch Changes
 
+- Updated dependencies [10872cc]
+  - @sveltejs/kit@0.0.29
+
+## null
+
+### Patch Changes
+
 - Updated dependencies [undefined]
   - @sveltejs/kit@0.0.28
 

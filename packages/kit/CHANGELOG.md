@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 0.0.29
+
+### Patch Changes
+
+- 10872cc: Normalize request.query
+
 ## 0.0.28
 
 ### Patch Changes
