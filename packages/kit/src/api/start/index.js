@@ -25,10 +25,10 @@ export function start({ port }) {
 		});
 
 		const server = http.createServer((req, res) => {
+			const parsed = parse(req.url || '');
+
 			assets_handler(req, res, () => {
 				static_handler(req, res, async () => {
-					const parsed = parse(req.url || '');
-
 					const rendered = await app.render({
 						host: null, // TODO
 						method: req.method,
