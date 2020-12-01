@@ -100,6 +100,8 @@ class Watcher extends EventEmitter {
 				return this.snowpack.handleRequest(req, res);
 			}
 
+			const parsed = parse(req.url);
+
 			static_handler(req, res, async () => {
 				try {
 					await this.snowpack.handleRequest(req, res, { handleError: false });
@@ -111,6 +113,8 @@ class Watcher extends EventEmitter {
 					}
 				}
 
+				if (req.url === '/favicon.ico') return;
+
 				const template = readFileSync(this.config.paths.template, 'utf-8').replace(
 					'</head>',
 					`
@@ -120,7 +124,6 @@ class Watcher extends EventEmitter {
 					</head>`.replace(/^\t{6}/gm, '')
 				);
 
-				const parsed = parse(req.url);
 				let setup;
 
 				try {
