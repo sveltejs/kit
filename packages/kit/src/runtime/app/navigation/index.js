@@ -30,17 +30,7 @@ export function goto(href, { noscroll = false, replaceState = false } = {}) {
 }
 
 export function prefetch(href) {
-	const page = router.select(new URL(href, get_base_uri(document)));
-
-	return renderer.prefetch(page);
-
-	// if (page) {
-	// 	if (!prefetching || href !== prefetching.href) {
-	// 		prefetching = { href, promise: hydrate_target(page) };
-	// 	}
-
-	// 	return prefetching.promise;
-	// }
+	return renderer.prefetch(new URL(href, get_base_uri(document)));
 }
 
 export async function prefetchRoutes(pathnames) {

@@ -171,13 +171,12 @@ async function get_response({
 			params,
 			error
 		},
-		layout_props: preloaded[0],
-		components: parts.slice(1).map(part => part.component)
+		components: parts.map(part => part.component)
 	};
 
 	// leveln (instead of levels[n]) makes it easy to avoid
 	// unnecessary updates for layout components
-	parts.slice(1).forEach((part, i) => {
+	parts.forEach((part, i) => {
 		props[`props_${i}`] = part.props;
 	});
 

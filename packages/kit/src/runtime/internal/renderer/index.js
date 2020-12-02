@@ -4,6 +4,7 @@ import { find_anchor } from '../utils';
 export class Renderer {
 	constructor({
 		Root,
+		layout,
 		target,
 		error,
 		status,
@@ -11,6 +12,7 @@ export class Renderer {
 		session
 	}) {
 		this.Root = Root;
+		this.layout = layout;
 
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
@@ -19,6 +21,13 @@ export class Renderer {
 			preloaded,
 			error,
 			status
+		};
+
+		this.current_branch = [];
+
+		this.prefetching = {
+			href: null,
+			promise: null
 		};
 
 		this.stores = {
@@ -75,72 +84,74 @@ export class Renderer {
 		ready = true;
 	}
 
-	async augment_props(props, page) {
-		try {
-			const promises = [];
+	// async augment_props(props, page) {
+	// 	try {
+	// 		const promises = [];
 
-			const match = page.route.pattern.exec(page.page.path);
+	// 		const match = page.route.pattern.exec(page.page.path);
 
-			page.route.parts.forEach(([loader, get_params], i) => {
-				const part_params = props.params = get_params ? get_params(match) : {};
+	// 		page.route.parts.forEach(([loader, get_params], i) => {
+	// 			const part_params = props.params = get_params ? get_params(match) : {};
 
-				promises.push(loader().then(async mod => {
-					props.components[i] = mod.default;
+	// 			promises.push(loader().then(async mod => {
+	// 				props.components[i] = mod.default;
 
-					if (mod.preload) {
-						props[`props_${i}`] = (this.initial && this.initial.preloaded[i + 1]) || (
-							await mod.preload.call(
-								{
-									fetch: (url, opts) => {
-										// TODO resolve against target URL?
-										return fetch(url, opts);
-									},
-									redirect: (status, location) => {
-										// TODO handle redirects somehow
-									},
-									error: (status, error) => {
-										if (typeof error === 'string') {
-											error = new Error(error);
-										}
+	// 				if (mod.preload) {
+	// 					props[`props_${i}`] = (this.initial && this.initial.preloaded[i + 1]) || (
+	// 						await mod.preload.call(
+	// 							{
+	// 								fetch: (url, opts) => {
+	// 									// TODO resolve against target URL?
+	// 									return fetch(url, opts);
+	// 								},
+	// 								redirect: (status, location) => {
+	// 									// TODO handle redirects somehow
+	// 								},
+	// 								error: (status, error) => {
+	// 									if (typeof error === 'string') {
+	// 										error = new Error(error);
+	// 									}
 
-										error.status = status;
-										throw error;
-									}
-								},
-								{
-									// TODO tidy this up
-									...page.page,
-									params: part_params
-								},
-								this.$session
-							)
-						);
-					}
-				}));
-			});
+	// 									error.status = status;
+	// 									throw error;
+	// 								}
+	// 							},
+	// 							{
+	// 								// TODO tidy this up
+	// 								...page.page,
+	// 								params: part_params
+	// 							},
+	// 							this.$session
+	// 						)
+	// 					);
+	// 				}
+	// 			}));
+	// 		});
 
-			await Promise.all(promises);
-		} catch (error) {
-			props.error = error;
-			props.status = error.status || 500;
-		}
-	}
+	// 		await Promise.all(promises);
+	// 	} catch (error) {
+	// 		props.error = error;
+	// 		props.status = error.status || 500;
+	// 	}
+	// }
 
 	async start(page) {
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
-			status: this.initial.status,
-			layout_props: this.initial.preloaded[0], // TODO or call layout preload, if serialisation failed
-			components: [],
-			page: {
-				...page.page, // TODO ugh
-				params: null
-			}
+			status: this.initial.status
 		};
 
 		if (!this.initial.error) {
-			await this.augment_props(props, page);
+			const hydrated = await this.hydrate(page);
+
+			if (hydrated.redirect) {
+				throw new Error('TODO client-side redirects');
+			}
+
+			Object.assign(props, hydrated.props);
+			this.current_branch = hydrated.branch;
+			this.current_query = hydrated.query; // TODO
 		}
 
 		this.root = new this.Root({
@@ -160,22 +171,13 @@ export class Renderer {
 
 		this.stores.preloading.set(true);
 
-		const props = {
-			error: null,
-			status: 200,
-			components: [],
-			page: {
-				...page.page, // TODO ugh
-				params: null
-			}
-		};
-
-		await this.augment_props(props, page);
+		const hydrated = await this.hydrate(page);
 
 		if (this.token === token) { // check render wasn't aborted
-			this.root.$set(props);
-			// TODO set this.path (path through route DAG) so we can avoid updating unchanged branches
-			// TODO set this.query, for the same reason
+			this.root.$set(hydrated.props);
+
+			this.current_branch = hydrated.branch;
+			this.current_query = hydrated.query; // TODO
 
 			this.stores.preloading.set(false);
 		}
@@ -196,7 +198,15 @@ export class Renderer {
 
 		let redirect = null;
 
-		const props = { error: null, status: 200, segments: [segments[0]] };
+		const props = {
+			error: null,
+			status: 200,
+			components: [],
+			page: {
+				...page,
+				params: null
+			}
+		};
 
 		const preload_context = {
 			fetch: (url, opts) => fetch(url, opts),
@@ -212,57 +222,54 @@ export class Renderer {
 			}
 		};
 
-		if (!root_preloaded) {
-			root_preloaded =
-				(layout.preload
-					? layout.preload.call(
-							preload_context,
-							{
-								host: page.host,
-								path: page.path,
-								query: page.query,
-								params: {}
-							},
-							$session
-					)
-					: {});
-		}
+		const query = page.query.toString();
 
 		let branch;
-		let l = 1;
 
 		try {
-			const stringified_query = JSON.stringify(page.query);
 			const match = route.pattern.exec(page.path);
 
 			let segment_dirty = false;
 
+			const part_changed = (i, segment, match) => {
+				// TODO only check query string changes for preload functions
+				// that do in fact depend on it (using static analysis or
+				// runtime instrumentation). Ditto for session
+				if (query !== this.current_query) return true;
+
+				const previous = this.current_branch[i];
+
+				if (!previous) return false;
+				if (segment !== previous.segment) return true;
+				if (previous.match) {
+					// TODO what the hell is this
+					if (JSON.stringify(previous.match.slice(1, i + 2)) !== JSON.stringify(match.slice(1, i + 2))) {
+						return true;
+					}
+				}
+			};
+
 			branch = await Promise.all(
-				route.parts.map(async (part, i) => {
+				[[() => this.layout, () => {}], ...route.parts].map(async (part, i) => {
 					const segment = segments[i];
 
-					if (part_changed(i, segment, match, stringified_query)) segment_dirty = true;
-
-					props.segments[l] = segments[i + 1]; // TODO make this less confusing
-					if (!part) return { segment };
-
-					const j = l++;
+					if (part_changed(i, segment, match)) segment_dirty = true;
 
 					if (
-						!session_dirty &&
+						!this.session_dirty &&
 						!segment_dirty &&
-						current_branch[i] &&
-						current_branch[i].part === part.i
+						this.current_branch[i] &&
+						this.current_branch[i].part === part.i
 					) {
-						return current_branch[i];
+						return this.current_branch[i];
 					}
 
 					segment_dirty = false;
 
-					const { default: component, preload } = await components[part.i]();
+					const { default: component, preload } = await part[0]();
 
 					let preloaded;
-					if (ready || !initial_preloaded_data[i + 1]) {
+					if (!this.initial || !this.initial.preloaded[i]) {
 						preloaded = preload
 							? await preload.call(
 								preload_context,
@@ -272,14 +279,17 @@ export class Renderer {
 									query: page.query,
 									params: part[1] ? part[1](match) : {}
 								},
-								$session
+								this.$session
 							)
 							: {};
 					} else {
-						preloaded = initial_preloaded_data[i + 1];
+						preloaded = this.initial.preloaded[i];
 					}
 
-					return (props[`level${j}`] = { component, props: preloaded, segment, match, part: part.i });
+					props.components[i] = component;
+					props[`props_${i}`] = preloaded;
+
+					return { component, props: preloaded, segment, match, part: part.i };
 				})
 			);
 		} catch (error) {
@@ -288,6 +298,20 @@ export class Renderer {
 			branch = [];
 		}
 
-		return { redirect, props, branch };
+		return { redirect, props, branch, query };
+	}
+
+	async prefetch(url) {
+		const page = this.router.select(url);
+
+		if (page) {
+			if (url.href !== this.prefetching.href) {
+				this.prefetching = { href: url.href, promise: this.hydrate(page) };
+			}
+
+			return this.prefetching.promise;
+		} else {
+			throw new Error(`Could not prefetch ${url.href}`);
+		}
 	}
 }
