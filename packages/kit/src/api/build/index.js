@@ -87,7 +87,7 @@ export async function build(config) {
 			deps: {}
 		};
 
-		const entry = path.resolve(`${unoptimized}/client/_app/assets/app/navigation.js`);
+		const entry = path.resolve(`${unoptimized}/client/_app/assets/runtime/internal/start.js`);
 
 		// https://github.com/snowpackjs/snowpack/discussions/1395
 		const re = /(\.\.\/)+_app\/assets\/app\//;

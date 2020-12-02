@@ -11,7 +11,6 @@
 	});
 
 	const unsubscribe = page.subscribe($page => {
-		console.trace('call_count++', $page);
 		call_count++;
 		session.set(call_count);
 	});

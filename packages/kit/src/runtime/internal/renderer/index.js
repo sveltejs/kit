@@ -283,7 +283,6 @@ export class Renderer {
 			);
 
 			if (page.path !== this.current_path) {
-				console.trace('>>>here', page.path, this.current_path);
 				props.page = {
 					...page,
 					params: branch[branch.length - 1].params
