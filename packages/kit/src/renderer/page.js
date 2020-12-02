@@ -16,8 +16,6 @@ async function get_response({
 }) {
 	let redirected;
 
-	const segments = request.path.split('/').filter(Boolean);
-
 	const base = ''; // TODO
 
 	const dependencies = {};
@@ -181,9 +179,8 @@ async function get_response({
 	const serialized_preloads = `[${preloaded
 		.map((data) =>
 			try_serialize(data, (err) => {
-				const path = '/' + segments.join('/');
 				console.error(
-					`Failed to serialize preloaded data to transmit to the client at the ${path} route: ${err.message}`
+					`Failed to serialize preloaded data to transmit to the client at the ${request.path} route: ${err.message}`
 				);
 				console.warn(
 					'The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information'
