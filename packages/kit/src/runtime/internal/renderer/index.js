@@ -192,9 +192,8 @@ export class Renderer {
 
 					const params = get_params ? get_params(match) : {};
 
-					let preloaded;
-					if (!this.initial || !this.initial.preloaded[i]) {
-						preloaded = preload
+					const preloaded = this.initial?.preloaded[i] || (
+						preload
 							? await preload.call(
 								preload_context,
 								{
@@ -205,10 +204,8 @@ export class Renderer {
 								},
 								this.$session
 							)
-							: {};
-					} else {
-						preloaded = this.initial.preloaded[i];
-					}
+							: {}
+					);
 
 					props.components[i] = component;
 					props[`props_${i}`] = preloaded;
