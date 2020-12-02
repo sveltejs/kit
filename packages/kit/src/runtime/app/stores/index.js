@@ -20,8 +20,14 @@ export const getStores = () => {
 		page: {
 			subscribe: stores.page.subscribe
 		},
-		preloading: {
-			subscribe: stores.preloading.subscribe
+		navigating: {
+			subscribe: stores.navigating.subscribe
+		},
+		get preloading() {
+			console.error('stores.preloading is deprecated; use stores.navigating instead');
+			return {
+				subscribe: stores.navigating.subscribe
+			};
 		},
 		session: stores.session
 	};
@@ -34,9 +40,9 @@ export const page = {
 	}
 };
 
-export const preloading = {
+export const navigating = {
 	subscribe(fn) {
-		const store = getStores().preloading;
+		const store = getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
