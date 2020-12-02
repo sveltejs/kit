@@ -1,8 +1,9 @@
 module.exports = {
-	// By default, `npm run build` will create a standard Node app.
-	// You can create optimized builds for different platforms by
-	// specifying a different adapter
+	// TODO adapterless builds
 	adapter: '@sveltejs/adapter-node',
 
+	// this creates `window.start` which starts the app, instead of
+	// it starting automatically — allows test runner to control
+	// when hydration occurs
 	startGlobal: 'start'
 };
