@@ -84,8 +84,9 @@ export function runner(callback) {
 						...context,
 						js: true,
 						visit: async (path) => {
-							await context.visit(path);
+							const res = await context.visit(path);
 							await context.evaluate(() => window.start());
+							return res;
 						}
 					});
 				});
