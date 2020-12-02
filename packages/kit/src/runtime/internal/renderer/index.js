@@ -121,7 +121,7 @@ export class Renderer {
 	}
 
 	async hydrate({ route, page }) {
-		const segments = page.path.split('/').filter(Boolean);
+		const segments = page.path.split('/');
 
 		let redirect = null;
 
@@ -152,54 +152,41 @@ export class Renderer {
 		try {
 			const match = route.pattern.exec(page.path);
 
-			let segment_dirty = false;
-
-			const part_changed = (i, segment, match) => {
-				// TODO only check query string changes for preload functions
-				// that do in fact depend on it (using static analysis or
-				// runtime instrumentation). Ditto for session
-				if (query !== this.current_query) return true;
-
-				const previous = this.current_branch[i];
-
-				if (!previous) return false;
-				if (segment !== previous.segment) return true;
-				if (previous.match) {
-					// TODO what the hell is this
-					if (JSON.stringify(previous.match.slice(1, i + 2)) !== JSON.stringify(match.slice(1, i + 2))) {
-						return true;
-					}
-				}
-			};
-
 			branch = await Promise.all(
 				[[() => this.layout], ...route.parts].map(async ([loader, get_params], i) => {
-					const segment = segments[i];
+					const params = get_params ? get_params(match) : {};
+					const stringified_params = JSON.stringify(params);
 
-					if (part_changed(i, segment, match)) segment_dirty = true;
+					const previous = this.current_branch[i];
+					if (previous) {
+						const changed = (
+							(previous.loader !== loader) ||
+							(previous.uses_session && this.session_dirty) ||
+							(previous.uses_query && query_dirty) ||
+							(previous.stringified_params !== stringified_params)
+						);
 
-					if (
-						!this.session_dirty &&
-						!segment_dirty &&
-						this.current_branch[i]?.loader === loader
-					) {
-						return this.current_branch[i];
+						if (!changed) {
+							return previous;
+						}
 					}
-
-					segment_dirty = false;
 
 					const { default: component, preload } = await loader();
 
-					const params = get_params ? get_params(match) : {};
+					const uses_session = preload && preload.length > 1;
+					let uses_query = false;
 
 					const preloaded = this.initial?.preloaded[i] || (
 						preload
 							? await preload.call(
 								preload_context,
 								{
+									get query() {
+										uses_query = true;
+										return page.query;
+									},
 									host: page.host,
 									path: page.path,
-									query: page.query,
 									params
 								},
 								this.$session
@@ -210,7 +197,16 @@ export class Renderer {
 					props.components[i] = component;
 					props[`props_${i}`] = preloaded;
 
-					return { component, params, props: preloaded, segment, match, loader };
+					return {
+						component,
+						params,
+						stringified_params,
+						props: preloaded,
+						match,
+						loader,
+						uses_session,
+						uses_query
+					};
 				})
 			);
 
