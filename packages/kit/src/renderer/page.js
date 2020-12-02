@@ -216,12 +216,12 @@ async function get_response({
 				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
-	`.replace(/^\t{2}/gm, ''); // TODO add links
+	`.replace(/^\t{2}/gm, '');
 
 	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
-			start({
+			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
 				base: "${base}",
 				status: ${status},

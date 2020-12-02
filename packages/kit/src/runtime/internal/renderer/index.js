@@ -104,10 +104,16 @@ export class Renderer {
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
-			status: this.initial.status
+			status: this.initial.status,
+			page: {
+				...page.page,
+				params: {}
+			}
 		};
 
-		if (!this.initial.error) {
+		if (this.initial.error) {
+			props.components = [this.layout.default];
+		} else {
 			const hydrated = await this.hydrate(page);
 
 			if (hydrated.redirect) {
@@ -221,6 +227,9 @@ export class Renderer {
 							: {}
 					);
 
+					// TODO weird to have side-effects inside a map, but
+					// if they're not here, then setting props_n objects
+					// only for changed parts becomes trickier
 					props.components[i] = component;
 					props[`props_${i}`] = preloaded;
 

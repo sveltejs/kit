@@ -43,7 +43,6 @@ async function setup({ port }) {
 
 	return {
 		base,
-		page,
 		visit: path => page.goto(base + path),
 		contains: async str => (await page.innerHTML('body')).includes(str),
 		html: async selector => await page.innerHTML(selector, { timeout: defaultTimeout }),
@@ -71,7 +70,34 @@ export function runner(callback) {
 		suite.before(before);
 		suite.after(after);
 
-		callback(suite, is_dev);
+		const duplicate = (test_fn) => {
+			return (name, callback) => {
+				test_fn(`${name} [no js]`, async context => {
+					await callback({
+						...context,
+						js: false
+					});
+				});
+
+				test_fn(`${name} [js]`, async context => {
+					await callback({
+						...context,
+						js: true,
+						visit: async (path) => {
+							const res = await context.visit(path);
+							await context.evaluate(() => window.start());
+							return res;
+						}
+					});
+				});
+			}
+		}
+
+		const test = duplicate(suite);
+		test.skip = duplicate(suite.skip);
+		test.only = duplicate(suite.only);
+
+		callback(test, is_dev);
 
 		suite.run();
 	}

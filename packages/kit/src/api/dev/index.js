@@ -169,7 +169,8 @@ class Watcher extends EventEmitter {
 						root,
 						setup,
 						load: (route) => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
-						only_prerender: false
+						only_prerender: false,
+						start_global: this.config.startGlobal
 					}
 				);
 

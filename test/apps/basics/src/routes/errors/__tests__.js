@@ -2,12 +2,18 @@ import * as assert from 'uvu/assert';
 
 export default function(test, is_dev) {
 	if (is_dev) {
-		test('client-side errors', async ({ visit, contains }) => {
-			await visit('/errors/clientside');
-
-			// this is the Snowpack error overlay (TODO dev mode only)
-			assert.ok(await contains('Custom layout'));
-			assert.ok(await contains('Crashing now'));
+		test('client-side errors', async ({ visit, contains, js }) => {
+			if (js) {
+				try {
+					await visit('/errors/clientside');
+				} catch (error) {
+					assert.ok(/Crashing now/.test(error.message));
+				} finally {
+					// this is the Snowpack error overlay
+					assert.ok(await contains('Custom layout'));
+					assert.ok(await contains('Crashing now'));
+				}
+			}
 		});
 	}
 
@@ -19,12 +25,14 @@ export default function(test, is_dev) {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('client-side preload errors', async ({ visit, contains }) => {
-		await visit('/errors/preload-client');
+	test('client-side preload errors', async ({ visit, contains, js }) => {
+		if (js) {
+			await visit('/errors/preload-client');
 
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('Crashing now'));
-		assert.ok(await contains('custom error page'));
+			assert.ok(await contains('Custom layout'));
+			assert.ok(await contains('Crashing now'));
+			assert.ok(await contains('custom error page'));
+		}
 	});
 
 	test('server-side preload errors', async ({ visit, contains }) => {
@@ -35,12 +43,14 @@ export default function(test, is_dev) {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('client-side module context errors', async ({ visit, contains }) => {
-		await visit('/errors/module-scope-client');
+	test('client-side module context errors', async ({ visit, contains, js }) => {
+		if (js) {
+			await visit('/errors/module-scope-client');
 
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('Crashing now'));
-		assert.ok(await contains('custom error page'));
+			assert.ok(await contains('Custom layout'));
+			assert.ok(await contains('Crashing now'));
+			assert.ok(await contains('custom error page'));
+		}
 	});
 
 	test('server-side module context errors', async ({ visit, contains }) => {
