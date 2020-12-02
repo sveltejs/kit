@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 0.0.31-next.0
+
+### Patch Changes
+
+- ffd7bba: Fix SSR cache invalidation
+
 ## 0.0.30
 
 ### Patch Changes

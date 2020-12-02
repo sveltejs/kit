@@ -1,0 +1,25 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@sveltejs/adapter-begin": "0.0.5",
+    "@sveltejs/adapter-netlify": "0.0.13",
+    "@sveltejs/adapter-node": "0.0.18",
+    "@sveltejs/adapter-static": "0.0.17",
+    "@sveltejs/adapter-vercel": "0.0.3",
+    "@sveltejs/app-utils": "0.0.18",
+    "create-svelte": "2.0.0-alpha.19",
+    "@sveltejs/kit": "0.0.30",
+    "@sveltejs/snowpack-config": "0.0.7",
+    "test": "1",
+    "test-basics": "0.0.2",
+    "test-options": "0.0.1",
+    "hn.svelte.dev": "1.0.0",
+    "realworld.svelte.dev": "1.0.0",
+    "sandbox": "1.0.0",
+    "svelte-kit-demo": "1.0.0"
+  },
+  "changesets": [
+    "smart-pears-accept"
+  ]
+}

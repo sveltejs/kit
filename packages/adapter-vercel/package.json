@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "0.0.3",
+	"version": "1.0.0-next.0",
 	"scripts": {
 		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",

@@ -1,5 +1,12 @@
 # test
 
+## 1.0.1-next.0
+
+### Patch Changes
+
+- Updated dependencies [ffd7bba]
+  - @sveltejs/kit@0.0.31-next.0
+
 ## null
 
 ### Patch Changes

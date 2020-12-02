@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "0.0.17",
+	"version": "1.0.0-next.0",
 	"scripts": {
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",

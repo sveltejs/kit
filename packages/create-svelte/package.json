@@ -1,9 +1,12 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-alpha.19",
+	"version": "2.0.0-next.20",
 	"bin": "./bin",
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/snowpack-config": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.3",
 		"prompts": "^2.3.2",

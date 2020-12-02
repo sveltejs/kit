@@ -1,5 +1,5 @@
 export default {
-	"@sveltejs/adapter-node": "0.0.18",
-	"@sveltejs/kit": "0.0.30",
-	"@sveltejs/snowpack-config": "0.0.7"
+	"@sveltejs/adapter-node": "1.0.0-next.0",
+	"@sveltejs/kit": "1.0.0-next.0",
+	"@sveltejs/snowpack-config": "1.0.0-next.0"
 };
