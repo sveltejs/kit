@@ -10,14 +10,22 @@
 		session.set(call_count);
 	});
 
-	const unsubscribe = page.subscribe(() => {
+	const unsubscribe = page.subscribe($page => {
 		call_count++;
 		session.set(call_count);
 	});
 
 	onDestroy(unsubscribe);
+
+	const throw_error = () => {
+		throw new Error('This should not happen');
+	}
 </script>
 
 <h1>Test</h1>
 <h2>Called {call_count} time</h2>
 <a href="result">results</a>
+
+{#if $page.path === '/store/result'}
+	{console.log(window.oops = 'this should not happen')}
+{/if}

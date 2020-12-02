@@ -8,7 +8,7 @@ import * as assert from 'uvu/assert';
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
-	const defaultTimeout = 2000;
+	const defaultTimeout = 500;
 
 	const text = async (selector) => page.textContent(selector, { timeout: defaultTimeout });
 	const wait_for_text = async (selector, expectedValue) => {
@@ -43,6 +43,7 @@ async function setup({ port }) {
 
 	return {
 		base,
+		page,
 		visit: path => page.goto(base + path),
 		contains: async str => (await page.innerHTML('body')).includes(str),
 		html: async selector => await page.innerHTML(selector, { timeout: defaultTimeout }),
@@ -52,7 +53,7 @@ async function setup({ port }) {
 		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		click: (selector, options) => page.click(selector, options),
+		click: (selector, options) => page.click(selector, { timeout: defaultTimeout, ...options }),
 		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
 		wait_for_text,
 		wait_for_selector: (selector, options) =>

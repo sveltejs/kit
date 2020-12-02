@@ -47,7 +47,6 @@ test('creates routes', () => {
 			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			parts: [
-				null,
 				{ component: blog_$slug, params: ['slug'] }
 			]
 		}
@@ -119,16 +118,16 @@ test('sorts routes correctly', () => {
 		['index.svelte'],
 		['about.svelte'],
 		['post/index.svelte'],
-		[null, 'post/bar.svelte'],
-		[null, 'post/foo.svelte'],
-		[null, 'post/f[xx].svelte'],
-		[null, 'post/[id([0-9-a-z]{3,})].svelte'],
-		[null, 'post/[id].svelte'],
+		['post/bar.svelte'],
+		['post/foo.svelte'],
+		['post/f[xx].svelte'],
+		['post/[id([0-9-a-z]{3,})].svelte'],
+		['post/[id].svelte'],
 		['[wildcard].svelte'],
-		[null, null, null, '[...spread]/deep/[...deep_spread]/xyz.svelte'],
-		[null, null, '[...spread]/deep/[...deep_spread]/index.svelte'],
-		[null, '[...spread]/deep/index.svelte'],
-		[null, '[...spread]/abc.svelte'],
+		['[...spread]/deep/[...deep_spread]/xyz.svelte'],
+		['[...spread]/deep/[...deep_spread]/index.svelte'],
+		['[...spread]/deep/index.svelte'],
+		['[...spread]/abc.svelte'],
 		['[...spread]/index.svelte']
 	]);
 });
@@ -184,8 +183,7 @@ test('fails on clashes', () => {
 	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte pages clash/);
 
 	assert.throws(() => {
-		const { server_routes } = create_manifest_data(path.join(__dirname, 'samples/clash-routes'));
-		console.log(server_routes);
+		create_manifest_data(path.join(__dirname, 'samples/clash-routes'));
 	}, /The \[bar\]\/index\.js and \[foo\]\.js routes clash/);
 });
 
@@ -257,7 +255,6 @@ test('works with custom extensions' , () => {
 			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			parts: [
-				null,
 				{ component: blog_$slug, params: ['slug'] }
 			]
 		}

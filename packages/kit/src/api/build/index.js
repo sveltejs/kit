@@ -67,7 +67,7 @@ export async function build(config) {
 			fs.writeFileSync(setup_file, '');
 		}
 
-		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`
+		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`;
 
 		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/server --ssr`);
 		log.success('server');
@@ -87,7 +87,7 @@ export async function build(config) {
 			deps: {}
 		};
 
-		const entry = path.resolve(`${unoptimized}/client/_app/assets/app/navigation.js`);
+		const entry = path.resolve(`${unoptimized}/client/_app/assets/runtime/internal/start.js`);
 
 		// https://github.com/snowpackjs/snowpack/discussions/1395
 		const re = /(\.\.\/)+_app\/assets\/app\//;

@@ -128,7 +128,7 @@ export default function create_manifest_data(
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat({ component, params }) : stack.concat(null)
+					component ? stack.concat({ component, params }) : stack
 				);
 			} else if (item.is_page) {
 				const component = {
