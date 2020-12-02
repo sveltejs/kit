@@ -3,7 +3,19 @@ import { getContext } from 'svelte';
 // const ssr = (import.meta as any).env.SSR;
 const ssr = typeof window === 'undefined'; // TODO why doesn't previous line work in build?
 
-export const getStores = () => getContext('__svelte__');
+export const getStores = () => {
+	const stores = getContext('__svelte__');
+
+	return {
+		page: {
+			subscribe: stores.page.subscribe
+		},
+		preloading: {
+			subscribe: stores.preloading.subscribe
+		},
+		session: stores.session
+	}
+};
 
 export const page = {
 	subscribe(fn) {

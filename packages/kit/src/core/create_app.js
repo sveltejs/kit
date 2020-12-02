@@ -166,15 +166,7 @@ function generate_app(manifest_data) {
 
 			const Layout = components[0];
 
-			setContext('__svelte__', {
-				page: {
-					subscribe: stores.page.subscribe
-				},
-				preloading: {
-					subscribe: stores.preloading.subscribe
-				},
-				session: stores.session
-			});
+			setContext('__svelte__', stores);
 
 			$: stores.page.set(page);
 		</script>

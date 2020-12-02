@@ -67,19 +67,8 @@ export class Renderer {
 			if (!ready) return;
 			this.session_dirty = true;
 
-			await this.render(this.page);
-
-			const dest = select_target(new URL(location.href));
-
-			const token = (current_token = {});
-			const { redirect, props, branch } = await hydrate_target(dest);
-			if (token !== current_token) return; // a secondary navigation happened while we were loading
-
-			if (redirect) {
-				await goto(redirect.location, { replaceState: true });
-			} else {
-				await render(branch, props, buildPageContext(props, dest.page));
-			}
+			const page = this.router.select(new URL(location.href));
+			this.render(page);
 		});
 		ready = true;
 	}
@@ -151,7 +140,8 @@ export class Renderer {
 
 			Object.assign(props, hydrated.props);
 			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query; // TODO
+			this.current_query = hydrated.query;
+			this.current_path = hydrated.path;
 		}
 
 		this.root = new this.Root({
@@ -174,10 +164,11 @@ export class Renderer {
 		const hydrated = await this.hydrate(page);
 
 		if (this.token === token) { // check render wasn't aborted
-			this.root.$set(hydrated.props);
-
 			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query; // TODO
+			this.current_query = hydrated.query;
+			this.current_path = hydrated.path;
+
+			this.root.$set(hydrated.props);
 
 			this.stores.preloading.set(false);
 		}
@@ -201,11 +192,7 @@ export class Renderer {
 		const props = {
 			error: null,
 			status: 200,
-			components: [],
-			page: {
-				...page,
-				params: null
-			}
+			components: []
 		};
 
 		const preload_context = {
@@ -250,7 +237,7 @@ export class Renderer {
 			};
 
 			branch = await Promise.all(
-				[[() => this.layout, () => {}], ...route.parts].map(async (part, i) => {
+				[[() => this.layout, () => {}], ...route.parts].map(async ([loader, get_params], i) => {
 					const segment = segments[i];
 
 					if (part_changed(i, segment, match)) segment_dirty = true;
@@ -259,14 +246,16 @@ export class Renderer {
 						!this.session_dirty &&
 						!segment_dirty &&
 						this.current_branch[i] &&
-						this.current_branch[i].part === part[0]
+						this.current_branch[i].loader === loader
 					) {
 						return this.current_branch[i];
 					}
 
 					segment_dirty = false;
 
-					const { default: component, preload } = await part[0]();
+					const { default: component, preload } = await loader();
+
+					const params = get_params ? get_params(match) : {};
 
 					let preloaded;
 					if (!this.initial || !this.initial.preloaded[i]) {
@@ -277,7 +266,7 @@ export class Renderer {
 									host: page.host,
 									path: page.path,
 									query: page.query,
-									params: part[1] ? part[1](match) : {}
+									params
 								},
 								this.$session
 							)
@@ -289,16 +278,24 @@ export class Renderer {
 					props.components[i] = component;
 					props[`props_${i}`] = preloaded;
 
-					return { component, props: preloaded, segment, match, part: part[0] };
+					return { component, params, props: preloaded, segment, match, loader };
 				})
 			);
+
+			if (page.path !== this.current_path) {
+				console.trace('>>>here', page.path, this.current_path);
+				props.page = {
+					...page,
+					params: branch[branch.length - 1].params
+				};
+			}
 		} catch (error) {
 			props.error = error;
 			props.status = 500;
 			branch = [];
 		}
 
-		return { redirect, props, branch, query };
+		return { redirect, props, branch, query, path: page.path };
 	}
 
 	async prefetch(url) {
