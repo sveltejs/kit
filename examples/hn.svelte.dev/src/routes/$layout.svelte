@@ -3,19 +3,17 @@
 </script>
 
 <script>
-	import { getStores } from '$app/stores';
+	import { page, navigating } from '$app/stores';
 	import Nav from '$components/Nav.svelte';
 	import PreloadingIndicator from '$components/PreloadingIndicator.svelte';
 	import ThemeToggler from '$components/ThemeToggler.svelte';
 
-	export let segment;
-
-	const { preloading } = getStores();
+	$: section = $page.path.split('/')[1];
 </script>
 
-<Nav {segment}/>
+<Nav {section}/>
 
-{#if $preloading}
+{#if $navigating}
 	<PreloadingIndicator/>
 {/if}
 

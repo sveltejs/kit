@@ -1,18 +1,18 @@
 <script>
-	export let segment;
+	export let section;
 </script>
 
 <nav>
 	<img alt="Svelte Hacker News logo" class="icon" src="/favicon.png">
 
 	<ul>
-		<li><a rel="prefetch" href="/top/1" class:selected={segment === "top"}>top</a></li>
-		<li><a rel="prefetch" href="/new/1" class:selected={segment === "new"}>new</a></li>
-		<li><a rel="prefetch" href="/show/1" class:selected={segment === "show"}>show</a></li>
-		<li><a rel="prefetch" href="/ask/1" class:selected={segment === "ask"}>ask</a></li>
-		<li><a rel="prefetch" href="/jobs/1" class:selected={segment === "jobs"}>jobs</a></li>
+		<li><a rel="prefetch" href="/top/1" class:selected={section === "top"}>top</a></li>
+		<li><a rel="prefetch" href="/new/1" class:selected={section === "new"}>new</a></li>
+		<li><a rel="prefetch" href="/show/1" class:selected={section === "show"}>show</a></li>
+		<li><a rel="prefetch" href="/ask/1" class:selected={section === "ask"}>ask</a></li>
+		<li><a rel="prefetch" href="/jobs/1" class:selected={section === "jobs"}>jobs</a></li>
 
-		<li class="about"><a rel="prefetch" href="/about" class:selected={segment === "about"}>about</a></li>
+		<li class="about"><a rel="prefetch" href="/about" class:selected={section === "about"}>about</a></li>
 	</ul>
 </nav>
 
