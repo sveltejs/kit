@@ -160,15 +160,16 @@ async function get_response({
 		status,
 		error,
 		stores: {
-			page: readable({
-				host: request.host,
-				path: request.path,
-				query: request.query,
-				params,
-				error
-			}, noop),
-			preloading: readable(null, noop),
+			page: writable(null),
+			preloading: writable(false),
 			session: writable(session)
+		},
+		page: {
+			host: request.host,
+			path: request.path,
+			query: request.query,
+			params,
+			error
 		},
 		layout_props: preloaded[0],
 		components: parts.slice(1).map(part => part.component)

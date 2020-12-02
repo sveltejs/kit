@@ -19,6 +19,7 @@ export class Router {
 
 		this.uid = 1;
 		this.cid = null;
+		this.scroll_history = {};
 
 		this.history = window.history || {
 			pushState: () => {},
@@ -93,7 +94,7 @@ export class Router {
 		});
 
 		addEventListener('popstate', event => {
-			this.scroll_history[cid] = scroll_state();
+			this.scroll_history[this.cid] = scroll_state();
 
 			if (event.state) {
 				const url = new URL(location.href);
@@ -116,6 +117,7 @@ export class Router {
 		const { hash, href } = location;
 
 		this.history.replaceState({ id: this.uid }, '', href);
+		this.scroll_history[this.uid] = scroll_state();
 
 		const page = this.select(new URL(location.href));
 		// if (page) return this.navigate(page, this.uid, true, hash);

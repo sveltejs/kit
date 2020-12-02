@@ -43,8 +43,13 @@ export default function (test) {
 	});
 
 	test('navigates to a new page without reloading', async ({
-			visit, text, prefetch_routes, capture_requests, click, wait_for_function
-		}) => {
+		visit,
+		text,
+		prefetch_routes,
+		capture_requests,
+		click,
+		wait_for_function
+	}) => {
 		await visit('/routing/');
 
 		await prefetch_routes().catch(e => {

@@ -1,33 +1,6 @@
 import { writable } from 'svelte/store';
 import { find_anchor } from '../utils';
 
-// TODO this seems weird
-function page_store(value) {
-	const store = writable(value);
-	let ready = true;
-
-	function notify() {
-		ready = true;
-		store.update((val) => val);
-	}
-
-	function set(new_value) {
-		ready = false;
-		store.set(new_value);
-	}
-
-	function subscribe(run) {
-		let old_value;
-		return store.subscribe((new_value) => {
-			if (old_value === undefined || (ready && new_value !== old_value)) {
-				run((old_value = new_value));
-			}
-		});
-	}
-
-	return { notify, set, subscribe };
-}
-
 export class Renderer {
 	constructor({
 		Root,
@@ -49,7 +22,7 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: page_store({}),
+			page: writable({}),
 			preloading: writable(false),
 			session: writable(session)
 		};
@@ -102,53 +75,73 @@ export class Renderer {
 		ready = true;
 	}
 
+	async augment_props(props, page) {
+		try {
+			const promises = [];
+
+			const match = page.route.pattern.exec(page.page.path);
+
+			page.route.parts.forEach(([loader, get_params], i) => {
+				const part_params = props.params = get_params ? get_params(match) : {};
+
+				promises.push(loader().then(async mod => {
+					props.components[i] = mod.default;
+
+					if (mod.preload) {
+						props[`props_${i}`] = (this.initial && this.initial.preloaded[i + 1]) || (
+							await mod.preload.call(
+								{
+									fetch: (url, opts) => {
+										// TODO resolve against target URL?
+										return fetch(url, opts);
+									},
+									redirect: (status, location) => {
+										// TODO handle redirects somehow
+									},
+									error: (status, error) => {
+										if (typeof error === 'string') {
+											error = new Error(error);
+										}
+
+										error.status = status;
+										throw error;
+									}
+								},
+								{
+									// TODO tidy this up
+									...page.page,
+									params: part_params
+								},
+								this.$session
+							)
+						);
+					}
+				}));
+			});
+
+			await Promise.all(promises);
+		} catch (error) {
+			props.error = error;
+			props.status = error.status || 500;
+		}
+	}
+
 	async start(page) {
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
 			status: this.initial.status,
-			notify: this.stores.page.notify, // TODO this is weird
-			layout_props: this.initial.preloaded[0], // TODO or call preload, if serialisation failed
-			components: []
+			layout_props: this.initial.preloaded[0], // TODO or call layout preload, if serialisation failed
+			components: [],
+			page: {
+				...page.page, // TODO ugh
+				params: null
+			}
 		};
 
-		let params = {};
-
 		if (!this.initial.error) {
-			try {
-				const promises = [];
-
-				const match = page.route.pattern.exec(page.page.path);
-
-				page.route.parts.forEach(([loader, get_params], i) => {
-					const part_params = params = get_params ? get_params(match) : {};
-
-					promises.push(loader().then(async mod => {
-						props.components[i] = mod.default;
-
-						if (mod.preload) {
-							props[`props_${i}`] = this.initial.preloaded[i + 1] || (
-								await mod.preload({
-									// TODO tidy this up
-									...page.page,
-									params: part_params
-								}, this.$session)
-							);
-						}
-					}));
-				});
-
-				await Promise.all(promises);
-			} catch (error) {
-				props.error = error;
-				props.status = error.status || 500;
-			}
+			await this.augment_props(props, page);
 		}
-
-		this.stores.page.set({
-			...page.page,
-			params
-		}); // TODO need to rename some stuff
 
 		this.root = new this.Root({
 			target: this.target,
@@ -162,6 +155,33 @@ export class Renderer {
 		this.initial = null;
 	}
 
+	async render(page) {
+		const token = this.token = {};
+
+		this.stores.preloading.set(true);
+
+		const props = {
+			error: null,
+			status: 200,
+			components: [],
+			page: {
+				...page.page, // TODO ugh
+				params: null
+			}
+		};
+
+		await this.augment_props(props, page);
+
+		if (this.token === token) { // check render wasn't aborted
+			this.root.$set(props);
+			// TODO set this.path (path through route DAG) so we can avoid updating unchanged branches
+			// TODO set this.query, for the same reason
+
+			this.stores.preloading.set(false);
+		}
+	}
+
+	// TODO is this used?
 	async error(error, status) {
 		this.root.$set({
 			error,
@@ -171,28 +191,7 @@ export class Renderer {
 		this.path = [];
 	}
 
-	async render(page) {
-		throw new Error('nope');
-		const token = this.token = {};
-
-		this.stores.page.set(page);
-		this.stores.preloading.set(false);
-
-		const props = {
-			error: null,
-			status: 200
-		};
-
-		// TODO level1, level2 etc
-
-		if (this.token === token) { // check render wasn't aborted
-			this.root.$set(props);
-			// TODO set this.path (path through route DAG) so we can avoid updating unchanged branches
-			// TODO set this.query, for the same reason
-		}
-	}
-
-	async hydrate({ route, page, match }) {
+	async hydrate({ route, page }) {
 		const segments = page.path.split('/').filter(Boolean);
 
 		let redirect = null;

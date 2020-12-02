@@ -52,7 +52,7 @@ async function setup({ port }) {
 		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		click: (selector, options) => page.click(selector, options),
+		click: (selector, options) => page.click(selector, { timeout: defaultTimeout, ...options }),
 		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
 		wait_for_text,
 		wait_for_selector: (selector, options) =>
