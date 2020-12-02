@@ -181,8 +181,7 @@ export class Renderer {
 					if (
 						!this.session_dirty &&
 						!segment_dirty &&
-						this.current_branch[i] &&
-						this.current_branch[i].loader === loader
+						this.current_branch[i]?.loader === loader
 					) {
 						return this.current_branch[i];
 					}
