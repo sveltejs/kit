@@ -6,8 +6,10 @@ export default function(test, is_dev) {
 			if (js) {
 				try {
 					await visit('/errors/clientside');
+				} catch (error) {
+					assert.ok(/Crashing now/.test(error.message));
 				} finally {
-					// this is the Snowpack error overlay (TODO dev mode only)
+					// this is the Snowpack error overlay
 					assert.ok(await contains('Custom layout'));
 					assert.ok(await contains('Crashing now'));
 				}

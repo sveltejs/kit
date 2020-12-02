@@ -4,26 +4,22 @@
 
 	const { page, session } = getStores();
 
-	let call_count = 0;
+	let calls = 0;
 
 	onMount(() => {
-		session.set(call_count);
+		session.set(calls);
 	});
 
 	const unsubscribe = page.subscribe($page => {
-		call_count++;
-		session.set(call_count);
+		calls++;
+		session.set(calls);
 	});
 
 	onDestroy(unsubscribe);
-
-	const throw_error = () => {
-		throw new Error('This should not happen');
-	}
 </script>
 
 <h1>Test</h1>
-<h2>Called {call_count} time</h2>
+<h2>Calls: {calls}</h2>
 <a href="result">results</a>
 
 {#if $page.path === '/store/result'}

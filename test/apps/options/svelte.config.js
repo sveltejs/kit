@@ -1,4 +1,5 @@
 module.exports = {
+	// TODO adapterless builds
 	adapter: '@sveltejs/adapter-node',
 
 	paths: {
@@ -7,5 +8,10 @@ module.exports = {
 		template: 'source/template.html'
 	},
 
-	target: '#content-goes-here'
+	target: '#content-goes-here',
+
+	// this creates `window.start` which starts the app, instead of
+	// it starting automatically — allows test runner to control
+	// when hydration occurs
+	startGlobal: 'start'
 };

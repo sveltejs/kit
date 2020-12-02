@@ -4,13 +4,13 @@
 	import { get } from 'svelte/store';
 
 	const { session } = getStores();
-	
-	let call_count = 0;
+
+	let calls = 0;
 
 	onMount(() => {
-		call_count = get(session);
+		calls = get(session);
 	});
 </script>
 
 <h1>Result</h1>
-<h2>Called {call_count} time</h2>
+<h2>Calls: {calls}</h2>
