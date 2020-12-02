@@ -1,4 +1,4 @@
-import { find_anchor } from "../utils";
+import { find_anchor } from '../utils';
 
 function which(event) {
 	return event.which === null ? event.button : event.which;
@@ -114,9 +114,7 @@ export class Router {
 		});
 
 		// load current page
-		const { hash, href } = location;
-
-		this.history.replaceState({ id: this.uid }, '', href);
+		this.history.replaceState({ id: this.uid }, '', location.href);
 		this.scroll_history[this.uid] = scroll_state();
 
 		const page = this.select(new URL(location.href));

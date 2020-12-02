@@ -160,7 +160,7 @@ export default function loader(snowpack, config) {
 					if (node.type === 'MetaProperty' && node.meta.name === 'import') {
 						code.overwrite(node.start, node.end, '__importmeta__');
 					} else if (node.type === 'ImportExpression') {
-						code.overwrite(node.start, node.start + 6, `__import__`);
+						code.overwrite(node.start, node.start + 6, '__import__');
 					}
 				}
 			});

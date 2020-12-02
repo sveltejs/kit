@@ -41,21 +41,21 @@ export class Renderer {
 
 		this.root = null;
 
-		function trigger_prefetch(event) {
+		const trigger_prefetch = (event) => {
 			const a = find_anchor(event.target);
 
 			if (a && a.rel === 'prefetch') { // TODO make this svelte-prefetch or something
-				prefetch(a.href);
+				this.prefetch(new URL(a.href));
 			}
-		}
+		};
 
 		let mousemove_timeout;
-		function handle_mousemove(event) {
+		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
 				trigger_prefetch(event);
 			}, 20);
-		}
+		};
 
 		addEventListener('touchstart', trigger_prefetch);
 		addEventListener('mousemove', handle_mousemove);

@@ -14,7 +14,7 @@ export const getStores = () => {
 			subscribe: stores.preloading.subscribe
 		},
 		session: stores.session
-	}
+	};
 };
 
 export const page = {

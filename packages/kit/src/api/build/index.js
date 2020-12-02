@@ -67,7 +67,7 @@ export async function build(config) {
 			fs.writeFileSync(setup_file, '');
 		}
 
-		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`
+		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`;
 
 		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/server --ssr`);
 		log.success('server');

@@ -2,11 +2,9 @@
 import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
-import { readable, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
-
-const noop = () => {};
 
 async function get_response({
 	request,
