@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 0.0.30
+
+### Patch Changes
+
+- Add back stores(), but with deprecation warning
+- Rename stores.preloading to stores.navigating
+- Rewrite routing logic
+
 ## 0.0.29
 
 ### Patch Changes
