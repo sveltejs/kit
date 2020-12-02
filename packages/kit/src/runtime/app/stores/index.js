@@ -3,6 +3,16 @@ import { getContext } from 'svelte';
 // const ssr = (import.meta as any).env.SSR;
 const ssr = typeof window === 'undefined'; // TODO why doesn't previous line work in build?
 
+// TODO remove this (for 1.0? after 1.0?)
+let warned = false;
+export function stores() {
+	if (!warned) {
+		console.error('stores() is deprecated; use getStores() instead');
+		warned = true;
+	}
+	return getStores();
+}
+
 export const getStores = () => {
 	const stores = getContext('__svelte__');
 
