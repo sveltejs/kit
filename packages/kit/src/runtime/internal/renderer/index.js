@@ -259,7 +259,7 @@ export class Renderer {
 						!this.session_dirty &&
 						!segment_dirty &&
 						this.current_branch[i] &&
-						this.current_branch[i].part === part.i
+						this.current_branch[i].part === part[0]
 					) {
 						return this.current_branch[i];
 					}
@@ -289,7 +289,7 @@ export class Renderer {
 					props.components[i] = component;
 					props[`props_${i}`] = preloaded;
 
-					return { component, props: preloaded, segment, match, part: part.i };
+					return { component, props: preloaded, segment, match, part: part[0] };
 				})
 			);
 		} catch (error) {
