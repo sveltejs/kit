@@ -1,5 +1,6 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 
 export default {
 	input: 'cli/index.js',
@@ -12,6 +13,7 @@ export default {
 	plugins: [
 		nodeResolve(),
 		commonjs(),
+		json(),
 		{
 			transform(code, id) {
 				if (id.endsWith('.gitignore')) {

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.21
+
+### Patch Changes
+
+- Show create-svelte version when starting a new project
+
 ## 2.0.0-alpha.19
 
 ### Patch Changes

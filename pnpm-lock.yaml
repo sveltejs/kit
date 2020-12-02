@@ -140,6 +140,7 @@ importers:
       uvu: ^0.3.4
   packages/create-svelte:
     devDependencies:
+      '@rollup/plugin-json': 4.1.0_rollup@2.32.0
       '@sveltejs/adapter-node': 'link:../adapter-node'
       '@sveltejs/app-utils': 'link:../app-utils'
       '@sveltejs/kit': 'link:../kit'
@@ -150,6 +151,7 @@ importers:
       rollup: 2.32.0
       tiny-glob: 0.2.8
     specifiers:
+      '@rollup/plugin-json': ^4.1.0
       '@sveltejs/adapter-node': 'workspace:*'
       '@sveltejs/app-utils': 'workspace:*'
       '@sveltejs/kit': 'workspace:*'

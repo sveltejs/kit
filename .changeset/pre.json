@@ -20,6 +20,7 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
-    "smart-pears-accept"
+    "smart-pears-accept",
+    "tricky-wolves-confess"
   ]
 }
