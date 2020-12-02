@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "pnpm build --filter=\"@sveltejs/*\"",
+		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
 		"test": "pnpm -r test --workspace-concurrency=1",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
