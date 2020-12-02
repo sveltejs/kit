@@ -258,7 +258,7 @@ export async function build(config) {
 					static_dir: paths.static,
 					template,
 					manifest,
-					target: ${s(config.target)},${config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)}` : ''}
+					target: ${s(config.target)},${config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''}
 					client,
 					root,
 					setup,

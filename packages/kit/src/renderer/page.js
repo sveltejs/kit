@@ -216,7 +216,7 @@ async function get_response({
 				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
-	`.replace(/^\t{2}/gm, ''); // TODO add links
+	`.replace(/^\t{2}/gm, '');
 
 	const body = `${rendered.html}
 		<script type="module">

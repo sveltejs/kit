@@ -48,41 +48,48 @@ export default function (test) {
 		prefetch_routes,
 		capture_requests,
 		click,
-		wait_for_function
+		wait_for_function,
+		js
 	}) => {
-		await visit('/routing/');
+		if (js) {
+			await visit('/routing/');
 
-		await prefetch_routes().catch(e => {
-			// from error handler tests; ignore
-			if (!e.message.includes('Crashing now')) throw e;
-		});
+			await prefetch_routes().catch(e => {
+				// from error handler tests; ignore
+				if (!e.message.includes('Crashing now')) throw e;
+			});
 
-		const requests = await capture_requests(async () => {
-			await click('a[href="a"]');
+			const requests = await capture_requests(async () => {
+				await click('a[href="a"]');
 
-			await wait_for_function(() => document.location.pathname == '/routing/a');
+				await wait_for_function(() => document.location.pathname == '/routing/a');
 
-			assert.equal(await text('h1'), 'a');
-		});
+				assert.equal(await text('h1'), 'a');
+			});
 
-		assert.equal(requests, []);
+			assert.equal(requests, []);
+		}
 	});
 
-	test('navigates programmatically', async ({ visit, text, goto }) => {
-		await visit('/routing/a');
+	test('navigates programmatically', async ({ visit, text, goto, js }) => {
+		if (js) {
+			await visit('/routing/a');
 
-		await goto('/routing/b');
+			await goto('/routing/b');
 
-		assert.equal(await text('h1'), 'b');
+			assert.equal(await text('h1'), 'b');
+		}
 	});
 
-	test('prefetches programmatically', async ({ visit, base, capture_requests, prefetch }) => {
-		await visit('/routing/a');
+	test('prefetches programmatically', async ({ visit, base, capture_requests, prefetch, js }) => {
+		if (js) {
+			await visit('/routing/a');
 
-		const requests = await capture_requests(() => prefetch('b'));
+			const requests = await capture_requests(() => prefetch('b'));
 
-		assert.equal(requests.length, 2);
-		assert.equal(requests[1], `${base}/routing/b.json`);
+			assert.equal(requests.length, 2);
+			assert.equal(requests[1], `${base}/routing/b.json`);
+		}
 	});
 
 	test('does not attempt client-side navigation to server routes', async ({

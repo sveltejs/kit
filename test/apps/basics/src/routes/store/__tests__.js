@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('page store functions as expected', async ({ visit, page, click, text, wait_for_text }) => {
+	test('page store functions as expected', async ({ visit, evaluate, click, text, wait_for_text, js }) => {
 		await visit('/store/');
 
 		assert.equal(await text('h1'), 'Test');
@@ -12,7 +12,7 @@ export default function (test) {
 		await wait_for_text('h1', 'Result');
 		await wait_for_text('h2', 'Called 1 time');
 
-		const oops = await page.evaluate(() => window.oops);
+		const oops = await evaluate(() => window.oops);
 		assert.ok(!oops, oops);
 	});
 }
