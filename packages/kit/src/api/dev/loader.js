@@ -35,11 +35,11 @@ export default function loader(snowpack, config) {
 
 	const absolute_mount = map_keys(config.mount, resolve);
 
-	snowpack.onFileChange((callback) => {
-		for (const abs_path in absolute_mount) {
-			if (callback.filePath.startsWith(abs_path)) {
-				const relative_path = relative(abs_path, callback.filePath);
-				const url = resolve(absolute_mount[abs_path].url, relative_path);
+	snowpack.onFileChange(({ filePath }) => {
+		for (const path in absolute_mount) {
+			if (filePath.startsWith(path)) {
+				const relative_path = relative(path, filePath.replace(/\.\w+?$/, '.js'));
+				const url = resolve(absolute_mount[path].url, relative_path);
 
 				invalidate_all(url);
 			}
