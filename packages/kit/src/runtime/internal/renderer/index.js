@@ -1,6 +1,32 @@
 import { writable } from 'svelte/store';
 import { find_anchor } from '../utils';
 
+function page_store(value) {
+	const store = writable(value);
+	let ready = true;
+
+	function notify() {
+		ready = true;
+		store.update((val) => val);
+	}
+
+	function set(new_value) {
+		ready = false;
+		store.set(new_value);
+	}
+
+	function subscribe(run) {
+		let old_value;
+		return store.subscribe((new_value) => {
+			if (old_value === undefined || (ready && new_value !== old_value)) {
+				run((old_value = new_value));
+			}
+		});
+	}
+
+	return { notify, set, subscribe };
+}
+
 export class Renderer {
 	constructor({
 		Root,
@@ -13,6 +39,7 @@ export class Renderer {
 	}) {
 		this.Root = Root;
 		this.layout = layout;
+		this.layout_loader = () => layout;
 
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
@@ -31,7 +58,7 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: writable({}),
+			page: page_store({}),
 			preloading: writable(false),
 			session: writable(session)
 		};
@@ -121,8 +148,6 @@ export class Renderer {
 	}
 
 	async hydrate({ route, page }) {
-		const segments = page.path.split('/');
-
 		let redirect = null;
 
 		const props = {
@@ -133,11 +158,11 @@ export class Renderer {
 
 		const preload_context = {
 			fetch: (url, opts) => fetch(url, opts),
-			redirect: (statusCode, location) => {
-				if (redirect && (redirect.statusCode !== statusCode || redirect.location !== location)) {
+			redirect: (status, location) => {
+				if (redirect && (redirect.status !== status || redirect.location !== location)) {
 					throw new Error('Conflicting redirects');
 				}
-				redirect = { statusCode, location };
+				redirect = { status, location };
 			},
 			error: (status, error) => {
 				props.error = typeof error === 'string' ? new Error(error) : error;
@@ -146,6 +171,7 @@ export class Renderer {
 		};
 
 		const query = page.query.toString();
+		const query_dirty = query !== this.current_query;
 
 		let branch;
 
@@ -153,7 +179,7 @@ export class Renderer {
 			const match = route.pattern.exec(page.path);
 
 			branch = await Promise.all(
-				[[() => this.layout], ...route.parts].map(async ([loader, get_params], i) => {
+				[[this.layout_loader], ...route.parts].map(async ([loader, get_params], i) => {
 					const params = get_params ? get_params(match) : {};
 					const stringified_params = JSON.stringify(params);
 
@@ -167,6 +193,7 @@ export class Renderer {
 						);
 
 						if (!changed) {
+							props.components[i] = previous.component;
 							return previous;
 						}
 					}
