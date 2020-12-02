@@ -73,57 +73,6 @@ export class Renderer {
 		ready = true;
 	}
 
-	// async augment_props(props, page) {
-	// 	try {
-	// 		const promises = [];
-
-	// 		const match = page.route.pattern.exec(page.page.path);
-
-	// 		page.route.parts.forEach(([loader, get_params], i) => {
-	// 			const part_params = props.params = get_params ? get_params(match) : {};
-
-	// 			promises.push(loader().then(async mod => {
-	// 				props.components[i] = mod.default;
-
-	// 				if (mod.preload) {
-	// 					props[`props_${i}`] = (this.initial && this.initial.preloaded[i + 1]) || (
-	// 						await mod.preload.call(
-	// 							{
-	// 								fetch: (url, opts) => {
-	// 									// TODO resolve against target URL?
-	// 									return fetch(url, opts);
-	// 								},
-	// 								redirect: (status, location) => {
-	// 									// TODO handle redirects somehow
-	// 								},
-	// 								error: (status, error) => {
-	// 									if (typeof error === 'string') {
-	// 										error = new Error(error);
-	// 									}
-
-	// 									error.status = status;
-	// 									throw error;
-	// 								}
-	// 							},
-	// 							{
-	// 								// TODO tidy this up
-	// 								...page.page,
-	// 								params: part_params
-	// 							},
-	// 							this.$session
-	// 						)
-	// 					);
-	// 				}
-	// 			}));
-	// 		});
-
-	// 		await Promise.all(promises);
-	// 	} catch (error) {
-	// 		props.error = error;
-	// 		props.status = error.status || 500;
-	// 	}
-	// }
-
 	async start(page) {
 		const props = {
 			stores: this.stores,
@@ -150,9 +99,6 @@ export class Renderer {
 			hydrate: true
 		});
 
-		// TODO set this.path (path through route DAG) so we can avoid updating unchanged branches
-		// TODO set this.query, for the same reason
-
 		this.initial = null;
 	}
 
@@ -172,16 +118,6 @@ export class Renderer {
 
 			this.stores.preloading.set(false);
 		}
-	}
-
-	// TODO is this used?
-	async error(error, status) {
-		this.root.$set({
-			error,
-			status
-		});
-
-		this.path = [];
 	}
 
 	async hydrate({ route, page }) {
