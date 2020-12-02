@@ -70,28 +70,31 @@ export function runner(callback) {
 		suite.before(before);
 		suite.after(after);
 
-		const test = (name, fn) => {
-			suite(`${name} [no js]`, async context => {
-				await fn({
-					...context,
-					js: false
+		const duplicate = (test_fn) => {
+			return (name, callback) => {
+				test_fn(`${name} [no js]`, async context => {
+					await callback({
+						...context,
+						js: false
+					});
 				});
-			});
 
-			suite(`${name} [js]`, async context => {
-				await fn({
-					...context,
-					js: true,
-					visit: async (path) => {
-						await context.visit(path);
-						await context.evaluate(() => window.start());
-					}
+				test_fn(`${name} [js]`, async context => {
+					await callback({
+						...context,
+						js: true,
+						visit: async (path) => {
+							await context.visit(path);
+							await context.evaluate(() => window.start());
+						}
+					});
 				});
-			});
-		};
+			}
+		}
 
-		test.skip = suite.skip;
-		test.only = suite.only;
+		const test = duplicate(suite);
+		test.skip = duplicate(suite.skip);
+		test.only = duplicate(suite.only);
 
 		callback(test, is_dev);
 
