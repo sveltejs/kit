@@ -173,7 +173,7 @@ export class Renderer {
 			};
 
 			branch = await Promise.all(
-				[[() => this.layout, () => {}], ...route.parts].map(async ([loader, get_params], i) => {
+				[[() => this.layout], ...route.parts].map(async ([loader, get_params], i) => {
 					const segment = segments[i];
 
 					if (part_changed(i, segment, match)) segment_dirty = true;
