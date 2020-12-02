@@ -59,7 +59,7 @@ export class Renderer {
 
 		this.stores = {
 			page: page_store({}),
-			preloading: writable(false),
+			navigating: writable(false),
 			session: writable(session)
 		};
 
@@ -132,7 +132,7 @@ export class Renderer {
 	async render(page) {
 		const token = this.token = {};
 
-		this.stores.preloading.set(true);
+		this.stores.navigating.set(true);
 
 		const hydrated = await this.hydrate(page);
 
@@ -143,7 +143,7 @@ export class Renderer {
 
 			this.root.$set(hydrated.props);
 
-			this.stores.preloading.set(false);
+			this.stores.navigating.set(false);
 		}
 	}
 

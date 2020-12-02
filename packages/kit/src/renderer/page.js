@@ -157,7 +157,7 @@ async function get_response({
 		error,
 		stores: {
 			page: writable(null),
-			preloading: writable(false),
+			navigating: writable(false),
 			session: writable(session)
 		},
 		page: {
