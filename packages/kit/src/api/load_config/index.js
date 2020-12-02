@@ -2,6 +2,7 @@ import relative from 'require-relative';
 
 const default_config = {
 	target: null,
+	startGlobal: null, // used for testing
 	paths: {
 		static: 'static',
 		routes: 'src/routes',
