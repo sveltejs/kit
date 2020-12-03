@@ -137,7 +137,7 @@ function generate_app(manifest_data) {
 
 	while (l-- > 1) {
 		pyramid = `
-			<svelte:component this={level${l}.component} {...(props_${l} || {})}>
+			<svelte:component this={components[${l}]} {...(props_${l} || {})}>
 				{#if components[${l + 1}]}
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
 				{/if}
