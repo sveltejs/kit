@@ -5,7 +5,7 @@ import { transform } from './transform';
 function compare(a, b) {
 	assert.equal(
 		a.replace(/^\t+/gm, '').trim(),
-		b.replace(/^\t+/gm, '').trim(),
+		b.replace(/^\t+/gm, '').trim()
 	);
 }
 
