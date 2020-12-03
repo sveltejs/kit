@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.22
+
+### Patch Changes
+
+- Bump kit version
+
 ## 2.0.0-next.21
 
 ### Patch Changes

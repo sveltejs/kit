@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- a4bc090: Transform exported functions correctly
+- 00bbf98: Fix nested layouts
+
 ## 0.0.31-next.0
 
 ### Patch Changes
