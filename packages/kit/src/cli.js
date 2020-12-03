@@ -56,7 +56,7 @@ prog
 
 prog
 	.command('build')
-	.describe('Create a deployment-ready version of your app')
+	.describe('Create a production build of your app')
 	.action(async () => {
 		const { build } = await import('./api/build');
 
@@ -80,6 +80,19 @@ prog
 
 			console.log(colors.bold().cyan(`> Listening on http://localhost:${port}`));
 			if (open) if (open) launch(port);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
+
+prog
+	.command('adapt')
+	.describe('Customise your production build for different platforms')
+	.action(async () => {
+		const { adapt } = await import('./api/adapt');
+
+		try {
+			await adapt(config);
 		} catch (error) {
 			handle_error(error);
 		}

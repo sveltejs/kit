@@ -3,16 +3,14 @@ import path from 'path';
 import child_process from 'child_process';
 import { promisify } from 'util';
 import colors from 'kleur';
-import relative from 'require-relative';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
 import { rollup } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
-import { copy_assets } from '../utils';
+import { copy_assets, logger } from '../utils';
 import { create_app } from '../../core/create_app';
 import { css_injection } from './css_injection';
-import Builder from './Builder';
 
 const exec = promisify(child_process.exec);
 
@@ -21,7 +19,7 @@ const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
 const snowpack_pkg = require(snowpack_pkg_file); // eslint-disable-line
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
 
-const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'CIRCULAR_DEPENDENCY', 'MISSING_EXPORT']);
+const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'MISSING_EXPORT']);
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
 	// squelching these warnings (it happens when e.g. the root layout imports
@@ -31,10 +29,6 @@ const onwarn = (warning, handler) => {
 };
 
 export async function build(config) {
-	if (!config.adapter) {
-		throw new Error('No adapter specified');
-	}
-
 	const manifest = create_manifest_data(config.paths.routes);
 
 	mkdirp('.svelte/assets');
@@ -43,20 +37,15 @@ export async function build(config) {
 		output: '.svelte/assets'
 	});
 
-	const header = (msg) => console.log(colors.bold().cyan(`\n> ${msg}`));
+	const header = (msg) => console.log(colors.bold().cyan(`> ${msg}`));
 
-	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
-	log.success = (msg) => log(colors.green(`✔ ${msg}`));
-	log.error = (msg) => log(colors.bold().red(msg));
-	log.warn = (msg) => log(colors.bold().yellow(msg));
-	log.minor = (msg) => log(colors.grey(msg));
-	log.info = log;
+	const log = logger();
 
 	const unoptimized = '.svelte/build/unoptimized';
 
 	{
 		// phase one — build with Snowpack
-		header('Creating unoptimized build...');
+		header('Transforming...');
 		await rimraf('.svelte/build/unoptimized');
 
 		copy_assets();
@@ -69,10 +58,11 @@ export async function build(config) {
 
 		const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`;
 
-		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/server --ssr`);
-		log.success('server');
 		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/client`);
 		log.success('client');
+
+		await exec(`node ${snowpack_bin} build ${mount} --out=${unoptimized}/server --ssr`);
+		log.success('server');
 	}
 
 	{
@@ -204,16 +194,8 @@ export async function build(config) {
 
 		log.success('client');
 
-		fs.writeFileSync(`${unoptimized}/server/app.js`, `
-			import * as renderer from '@sveltejs/kit/assets/renderer';
-			import root from './_app/assets/generated/root.js';
-			import * as setup from './_app/setup/index.js';
-
-			const template = ({ head, body }) => ${s(fs.readFileSync(config.paths.template, 'utf-8'))
-				.replace('%svelte.head%', '" + head + "')
-				.replace('%svelte.body%', '" + body + "')};
-
-			const manifest = {
+		const stringified_manifest = `
+			{
 				layout: ${s(manifest.layout)},
 				error: ${s(manifest.error)},
 				components: ${s(manifest.components)},
@@ -233,7 +215,21 @@ export async function build(config) {
 						})
 						.join(',')}
 				]
-			};
+			}
+		`.replace(/^\t{3}/gm, '').trim();
+
+		fs.writeFileSync('.svelte/build/manifest.js', `export default ${stringified_manifest};`);
+		fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);
+
+		fs.writeFileSync(`${unoptimized}/server/app.js`, `
+			import * as renderer from '@sveltejs/kit/assets/renderer';
+			import root from './_app/assets/generated/root.js';
+			import * as setup from './_app/setup/index.js';
+			import manifest from '../../manifest.js';
+
+			const template = ({ head, body }) => ${s(fs.readFileSync(config.paths.template, 'utf-8'))
+				.replace('%svelte.head%', '" + head + "')
+				.replace('%svelte.body%', '" + body + "')};
 
 			const client = ${s(client)};
 
@@ -306,22 +302,7 @@ export async function build(config) {
 		log.success('server');
 	}
 
-	{
-		// phase three — adapter
-		header(`Generating app (${config.adapter})...`);
-
-		const builder = new Builder({
-			generated_files: '.svelte/build/optimized',
-			static_files: config.paths.static,
-			manifest,
-			log
-		});
-
-		const adapter = relative(config.adapter);
-		await adapter(builder);
-	}
-
-	log.success('done');
+	console.log();
 }
 
 async function rimraf(path) {
