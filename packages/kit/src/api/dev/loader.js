@@ -71,7 +71,7 @@ export default function loader(snowpack, config) {
 	}
 
 	async function initialize_module(url, data, url_stack) {
-		const { code, deps } = transform(url, data);
+		const { code, deps } = transform(data);
 
 		const fn = new Function(
 			'exports',
@@ -84,8 +84,8 @@ export default function loader(snowpack, config) {
 		);
 
 		const promises = deps.map(async (dep) => {
-			const mod = await get_module(url, dep.source);
-			return dep.prop ? mod[dep.prop] : dep;
+			const mod = await get_module(url, dep.source, url_stack);
+			return dep.prop ? mod[dep.prop] : mod;
 		});
 
 		const values = await Promise.all(promises);
