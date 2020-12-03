@@ -8,7 +8,7 @@ import create_manifest_data from '../../core/create_manifest_data';
 import { rollup } from 'rollup';
 import { terser } from 'rollup-plugin-terser';
 import css_chunks from 'rollup-plugin-css-chunks';
-import { copy_assets, logger } from '../utils';
+import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { css_injection } from './css_injection';
 
