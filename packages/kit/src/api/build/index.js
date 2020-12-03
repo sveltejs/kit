@@ -79,23 +79,11 @@ export async function build(config) {
 
 		const entry = path.resolve(`${unoptimized}/client/_app/assets/runtime/internal/start.js`);
 
-		// https://github.com/snowpackjs/snowpack/discussions/1395
-		const re = /(\.\.\/)+_app\/assets\/app\//;
-		const work_around_alias_bug = (type) => ({
-			name: 'work-around-alias-bug',
-			resolveId(imported) {
-				if (re.test(imported)) {
-					return path.resolve(`${unoptimized}/${type}/_app/assets/app`, imported.replace(re, ''));
-				}
-			}
-		});
-
 		const client_chunks = await rollup({
 			input: {
 				entry
 			},
 			plugins: [
-				work_around_alias_bug('client'),
 				{
 					name: 'deproxy-css',
 					async resolveId(importee, importer) {
@@ -284,7 +272,6 @@ export async function build(config) {
 		const server_chunks = await rollup({
 			input: server_input,
 			plugins: [
-				work_around_alias_bug('server'),
 				{
 					name: 'remove-css',
 					load(id) {
