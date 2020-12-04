@@ -103,7 +103,7 @@ export async function prerender({
 				log.error(`${rendered.status} ${path}`);
 			}
 
-			const { dependencies } = rendered ;
+			const { dependencies } = rendered;
 
 			if (dependencies) {
 				for (const path in dependencies) {

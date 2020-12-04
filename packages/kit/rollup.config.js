@@ -11,6 +11,8 @@ const external = [].concat(
 
 export default [
 	{
+		// TODO could we just put `start.js` in `assets`, and everything
+		// else gets installed to `/web_modules`?
 		input: {
 			'internal/start': 'src/runtime/internal/start.js',
 			'internal/singletons': 'src/runtime/internal/singletons.js',
@@ -35,22 +37,10 @@ export default [
 	},
 
 	{
-		input: 'src/renderer/index.js',
-		output: {
-			dir: 'assets/renderer',
-			format: 'cjs',
-			sourcemap: true
-		},
-		plugins: [
-			resolve(),
-			commonjs()
-		]
-	},
-
-	{
 		input: {
 			cli: 'src/cli.js',
-			api: 'src/api/index.js'
+			api: 'src/api/index.js',
+			renderer: 'src/renderer/index.js'
 		},
 		output: {
 			dir: 'dist',

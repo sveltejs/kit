@@ -2,5 +2,4 @@
 /node_modules
 /dist
 /assets/runtime
-/assets/renderer
 /client/**/*.d.ts

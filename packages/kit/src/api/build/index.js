@@ -250,7 +250,7 @@ export async function build(config) {
 	fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);
 
 	fs.writeFileSync(`${UNOPTIMIZED}/server/app.js`, `
-		import * as renderer from '@sveltejs/kit/assets/renderer';
+		import * as renderer from '@sveltejs/kit/dist/renderer';
 		import root from './_app/assets/generated/root.js';
 		import * as setup from './_app/setup/index.js';
 		import manifest from '../../manifest.js';
