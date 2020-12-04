@@ -3,3 +3,6 @@ node_modules
 /.svelte
 /build
 /functions
+
+# re-enable this once we're out of prerelease
+/cli/versions.js
