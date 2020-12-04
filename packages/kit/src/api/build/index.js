@@ -29,7 +29,7 @@ const onwarn = (warning, handler) => {
 };
 
 const DIR = '.svelte';
-const ASSETS = `${DIR}/assets;`
+const ASSETS = `${DIR}/assets`;
 const UNOPTIMIZED = `${DIR}/build/unoptimized`;
 const OPTIMIZED = `${DIR}/build/optimized`;
 

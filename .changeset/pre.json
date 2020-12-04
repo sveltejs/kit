@@ -20,6 +20,8 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
+    "cyan-roses-act",
+    "dull-tigers-type",
     "smart-pears-accept",
     "tame-forks-happen",
     "tasty-donkeys-wait",

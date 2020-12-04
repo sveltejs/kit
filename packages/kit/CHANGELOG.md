@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- Fix typo causing misnamed assets folder
+
 ## 1.0.0-next.1
 
 ### Patch Changes

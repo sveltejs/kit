@@ -8,7 +8,7 @@ import glob from 'tiny-glob/sync';
 import gitignore_contents from '../template/.gitignore';
 import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
-import versions from './versions';
+// import versions from './versions';
 import { version } from '../package.json';
 
 const disclaimer = `
@@ -81,15 +81,15 @@ async function main() {
 	const pkg_json = fs
 		.readFileSync(pkg_file, 'utf-8')
 		.replace('~TODO~', name)
-		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "${versions[name]}"`);
+		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "next"`); // TODO ^${versions[name]}
 
 	fs.writeFileSync(pkg_file, pkg_json);
 
-	console.log(bold(green(`✔ Copied project files`)));
+	console.log(bold(green('✔ Copied project files')));
 
 	await prompt_modifications(target);
 
-	console.log(`\nNext steps:`);
+	console.log('\nNext steps:');
 	let i = 1;
 
 	const relative = path.relative(process.cwd(), target);

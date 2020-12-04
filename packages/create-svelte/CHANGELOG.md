@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.23
+
+### Patch Changes
+
+- Use next tag for all packages
+
 ## 2.0.0-next.22
 
 ### Patch Changes
