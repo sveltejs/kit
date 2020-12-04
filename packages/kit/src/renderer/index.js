@@ -37,7 +37,8 @@ export async function render(
 			return {
 				status: response.status,
 				headers: { ...headers, ...response.headers },
-				body: response.body
+				body: response.body,
+				dependencies: response.dependencies
 			};
 		}
 	} catch (err) {

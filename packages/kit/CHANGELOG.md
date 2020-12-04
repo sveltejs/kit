@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- Return dependencies from render
+
 ## 1.0.0-next.4
 
 ### Patch Changes
