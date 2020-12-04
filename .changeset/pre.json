@@ -20,6 +20,7 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
+    "chilled-starfishes-jog",
     "cyan-roses-act",
     "dull-tigers-type",
     "silver-hounds-clean",

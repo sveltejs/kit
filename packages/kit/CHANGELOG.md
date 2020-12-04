@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- af01b0d: Move renderer out of app assets folder
+
 ## 1.0.0-next.3
 
 ### Patch Changes
