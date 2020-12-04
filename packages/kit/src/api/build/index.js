@@ -219,29 +219,32 @@ export async function build(config) {
 		fs.writeFileSync(setup_file, '');
 	}
 
+	// TODO do we need component file names in build?
+	const stringify_component = (c) => `{ name: ${s(c.name)}, file: ${s(c.file)}, url: ${s(c.url)} }`;
+
 	const stringified_manifest = `
 		{
-			layout: ${s(manifest.layout)},
-			error: ${s(manifest.error)},
-			components: ${s(manifest.components)},
+			layout: ${stringify_component(manifest.layout)},
+			error: ${stringify_component(manifest.error)},
+			components: [
+				${manifest.components.map(c => stringify_component(c)).join(',\n\t\t\t\t')}
+			],
 			pages: [
 				${manifest.pages
-					.map(({ pattern, parts: json_parts }) => {
-						const parts = JSON.stringify(json_parts);
-						return `{ pattern: ${pattern}, parts: ${parts} }`;
+					.map(({ path, pattern, parts }) => {
+						return `{ path: ${s(path)}, pattern: ${pattern}, parts: ${s(parts)} }`;
 					})
-					.join(',')}
+					.join(',\n\t\t\t\t')}
 			],
 			endpoints: [
 				${manifest.endpoints
-					.map(({ name, pattern, file, params: json_params }) => {
-						const params = JSON.stringify(json_params);
-						return `{ name: '${name}', pattern: ${pattern}, file: '${file}', params: ${params} }`;
+					.map(({ name, pattern, file, params }) => {
+						return `{ name: ${s(name)}, pattern: ${pattern}, file: ${s(file)}, params: ${s(params)} }`;
 					})
-					.join(',')}
+					.join(',\n\t\t\t\t')}
 			]
 		}
-	`.replace(/^\t{3}/gm, '').trim();
+	`.replace(/^\t{2}/gm, '').trim();
 
 	fs.writeFileSync('.svelte/build/manifest.js', `export default ${stringified_manifest};`);
 	fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);

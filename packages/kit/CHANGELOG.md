@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- Add paths to manifest, for static prerendering
+
 ## 1.0.0-next.2
 
 ### Patch Changes
