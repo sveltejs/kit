@@ -7,13 +7,13 @@ const ssr = typeof window === 'undefined'; // TODO why doesn't previous line wor
 let warned = false;
 export function stores() {
 	if (!warned) {
-		console.error('stores() is deprecated; use getStores() instead');
+		console.error('stores() is deprecated; import the desired store instead');
 		warned = true;
 	}
 	return getStores();
 }
 
-export const getStores = () => {
+const getStores = () => {
 	const stores = getContext('__svelte__');
 
 	return {
