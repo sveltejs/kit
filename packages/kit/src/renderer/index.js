@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page';
 import render_endpoint from './endpoint';
+import { log, timer } from '../logging';
 
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
@@ -13,10 +14,14 @@ export async function render(
 	const { context, headers = {} } = (await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
 
 	try {
+		const time = timer();
+
 		const response = await (render_endpoint(request, context, options) ||
 			render_page(request, context, options));
 
 		if (response) {
+			log.debug(`${response.status} ${request.method} ${request.path} in ${time()}`);
+
 			// inject ETags for 200 responses
 			if (response.status === 200) {
 				if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
@@ -42,6 +47,7 @@ export async function render(
 			};
 		}
 	} catch (err) {
+		log.debug(err.stack);
 		return {
 			status: 500,
 			headers: {},

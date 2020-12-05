@@ -2,6 +2,8 @@ import fs from 'fs';
 import { dirname, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import { mkdirp } from '@sveltejs/app-utils/files';
+import { log } from '../../logging';
+import { bold, red } from 'kleur/colors';
 
 function clean_html(html) {
 	return html
@@ -46,7 +48,6 @@ export async function prerender({
 	dir,
 	out,
 	manifest,
-	log,
 	force
 }) {
 	const seen = new Set();
@@ -96,7 +97,7 @@ export async function prerender({
 			}
 
 			if (response_type === OK) {
-				log.info(`${rendered.status} ${path}`);
+				log.minor(`${rendered.status} ${path}`);
 				fs.writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else {
 				// TODO should this fail the build?
@@ -123,7 +124,7 @@ export async function prerender({
 					fs.writeFileSync(file, result.body);
 
 					if (response_type === OK) {
-						log.info(`${result.status} ${path}`);
+						log.minor(`${result.status} ${path}`);
 					} else {
 						log.error(`${result.status} ${path}`);
 					}

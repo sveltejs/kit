@@ -1,8 +1,8 @@
 import { existsSync } from 'fs';
-import colors from 'kleur';
+import { bold, cyan, green } from 'kleur/colors';
 import { resolve } from 'path';
 import relative from 'require-relative';
-import { logger } from '../utils';
+import { log } from '../../logging';
 import Builder from './Builder';
 
 export async function adapt(config) {
@@ -15,9 +15,7 @@ export async function adapt(config) {
 		throw new Error('Adapter must be a string');
 	}
 
-	const log = logger();
-
-	console.log(colors.bold().cyan(`\n> Using ${config.adapter}`));
+	console.log(bold(cyan(`\n> Using ${config.adapter}`)));
 
 	const manifest_file = resolve('.svelte/build/manifest.cjs');
 
@@ -37,5 +35,5 @@ export async function adapt(config) {
 	const adapter = relative(config.adapter);
 	await adapter(builder);
 
-	log.success('done');
+	log.info(`${bold(green('✔'))} done`);
 }

@@ -2,9 +2,10 @@
 	"name": "@sveltejs/kit",
 	"version": "1.0.0-next.5",
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*",
+		"@sveltejs/app-utils": "next",
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
+		"pretty-ms": "^7.0.1",
 		"rollup": "^2.32.0",
 		"rollup-dependency-tree": "0.0.14",
 		"rollup-plugin-css-chunks": "^1.2.8",
