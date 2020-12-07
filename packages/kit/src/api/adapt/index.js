@@ -6,18 +6,15 @@ import { logger } from '../utils';
 import Builder from './Builder';
 
 export async function adapt(config) {
-	if (!config.adapter) {
-		throw new Error('No adapter specified');
-	}
+	const [adapter, options] = config.adapter;
 
-	if (typeof config.adapter !== 'string') {
-		// TODO
-		throw new Error('Adapter must be a string');
+	if (!adapter) {
+		throw new Error('No adapter specified');
 	}
 
 	const log = logger();
 
-	console.log(colors.bold().cyan(`\n> Using ${config.adapter}`));
+	console.log(colors.bold().cyan(`\n> Using ${adapter}`));
 
 	const manifest_file = resolve('.svelte/build/manifest.cjs');
 
@@ -34,8 +31,8 @@ export async function adapt(config) {
 		log
 	});
 
-	const adapter = relative(config.adapter);
-	await adapter(builder);
+	const fn = relative(adapter);
+	await fn(builder, options);
 
 	log.success('done');
 }

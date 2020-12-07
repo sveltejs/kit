@@ -1,14 +1,14 @@
 export default {
 	adapter: {
 		default: [null],
-		validate: option => {
-			if (!option) return [null];
-
+		validate: (option, keypath) => {
+			// support both `adapter: 'foo'` and `adapter: ['foo', opts]`
 			if (!Array.isArray(option)) {
 				option = [option];
 			}
 
-			assert_is_string(option[0], 'kit.adapter');
+			// TODO allow inline functions
+			assert_is_string(option[0], keypath);
 
 			return option;
 		}
