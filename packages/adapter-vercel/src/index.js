@@ -29,7 +29,7 @@ module.exports = async function adapter (builder) {
       routes: [
         {
           src: '/.*',
-          dest: '/functions/node/render'
+          dest: '/functions/render'
         }
       ]
     })
