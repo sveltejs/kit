@@ -12,14 +12,14 @@ const default_options = {
 };
 
 export function load_config({ cwd = process.cwd() } = {}) {
-	const { kitOptions = {} } = relative('./svelte.config.js', cwd);
+	const { kit = {} } = relative('./svelte.config.js', cwd);
 
 	return {
 		...default_options,
-		...kitOptions,
+		...kit,
 		paths: {
 			...default_options.paths,
-			...kitOptions.paths
+			...kit.paths
 		}
 	};
 }

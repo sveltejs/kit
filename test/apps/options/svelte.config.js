@@ -1,5 +1,5 @@
 module.exports = {
-	kitOptions: {
+	kit: {
 		// TODO adapterless builds
 		adapter: '@sveltejs/adapter-node',
 
