@@ -13,25 +13,36 @@ function get_sourcemap_url(contents) {
 
 const file_cache = new Map();
 
-function get_file_contents(path) {
-	if (file_cache.has(path)) {
-		return file_cache.get(path);
+function get_file_contents(file_path) {
+	if (file_cache.has(file_path)) {
+		return file_cache.get(file_path);
 	}
 
 	try {
-		const data = fs.readFileSync(path, 'utf8');
-		file_cache.set(path, data);
+		const data = fs.readFileSync(file_path, 'utf8');
+		file_cache.set(file_path, data);
 		return data;
 	} catch {
 		return undefined;
 	}
 }
 
-export function sourcemap_stacktrace(stack) {
+async function replace_async(str, regex, asyncFn) {
+    const promises = [];
+    str.replace(regex, (match, ...args) => {
+        const promise = asyncFn(match, ...args);
+        promises.push(promise);
+    });
+    const data = await Promise.all(promises);
+    return str.replace(regex, () => data.shift());
+}
+
+export async function sourcemap_stacktrace(stack) {
 	const replace = (line) =>
-		line.replace(
+		replace_async(
+			line,
 			/^ {4}at (?:(.+?)\s+\()?(?:(.+?):(\d+)(?::(\d+))?)\)?/,
-			(input, var_name, file_path, line, column) => {
+			async (input, var_name, file_path, line_number, column) => {
 				if (!file_path) return input;
 
 				const contents = get_file_contents(file_path);
@@ -69,9 +80,9 @@ export function sourcemap_stacktrace(stack) {
 
 				// TODO: according to typings, this code cannot work;
 				// the constructor returns a promise that needs to be awaited
-				const consumer = new SourceMapConsumer(raw_sourcemap);
+				const consumer = await new SourceMapConsumer(raw_sourcemap);
 				const pos = consumer.originalPositionFor({
-					line: Number(line),
+					line: Number(line_number),
 					column: Number(column),
 					bias: SourceMapConsumer.LEAST_UPPER_BOUND
 				});
@@ -88,5 +99,5 @@ export function sourcemap_stacktrace(stack) {
 
 	file_cache.clear();
 
-	return stack.split('\n').map(replace).join('\n');
+	return (await Promise.all(stack.split('\n').map(replace))).join('\n');
 }
