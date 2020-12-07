@@ -24,8 +24,6 @@ export default {
 			sourcemap: true
 		}
 	],
-	plugins: [
-		nodeResolve()
-	],
+	plugins: [nodeResolve()],
 	external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies)]
 };

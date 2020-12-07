@@ -77,8 +77,16 @@ class Watcher extends EventEmitter {
 			pkg
 		);
 
-		this.snowpack_config.mount[resolve(this.config.paths.routes)] = { url: '/_app/routes', static: false, resolve: true };
-		this.snowpack_config.mount[resolve(this.config.paths.setup)] = { url: '/_app/setup', static: false, resolve: true };
+		this.snowpack_config.mount[resolve(this.config.paths.routes)] = {
+			url: '/_app/routes',
+			static: false,
+			resolve: true
+		};
+		this.snowpack_config.mount[resolve(this.config.paths.setup)] = {
+			url: '/_app/setup',
+			static: false,
+			resolve: true
+		};
 
 		this.snowpack = await snowpack.startDevServer({
 			cwd: process.cwd(),
@@ -156,9 +164,8 @@ class Watcher extends EventEmitter {
 					},
 					{
 						static_dir: this.config.paths.static,
-						template: ({ head, body }) => template
-							.replace('%svelte.head%', () => head)
-							.replace('%svelte.body%', () => body),
+						template: ({ head, body }) =>
+							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
 						manifest: this.manifest,
 						target: this.config.target,
 						client: {

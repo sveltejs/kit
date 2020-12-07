@@ -10,11 +10,7 @@ export function mkdirp(dir) {
 	}
 }
 
-export function copy(
-	from,
-	to,
-	filter = () => true
-) {
+export function copy(from, to, filter = () => true) {
 	if (!filter(path.basename(from))) return [];
 
 	const files = [];

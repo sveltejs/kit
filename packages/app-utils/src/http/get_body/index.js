@@ -1,4 +1,3 @@
-
 import { read_only_form_data } from './read_only_form_data';
 
 export function get_body(req) {
@@ -10,7 +9,7 @@ export function get_body(req) {
 
 	if (!has_body) return Promise.resolve(undefined);
 
-	const [type, ...directives] = (headers['content-type'] ).split(/;\s*/);
+	const [type, ...directives] = headers['content-type'].split(/;\s*/);
 
 	switch (type) {
 		case 'application/octet-stream':
@@ -70,7 +69,7 @@ async function get_multipart(req, boundary) {
 	const { data, append } = read_only_form_data();
 
 	parts.slice(1, -1).forEach((part) => {
-		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part) ;
+		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part);
 		const raw_headers = match[1];
 		const body = match[2].trim();
 

@@ -6,12 +6,7 @@ export default class Builder {
 	#static_files;
 	#manifest;
 
-	constructor({
-		generated_files,
-		static_files,
-		log,
-		manifest
-	}) {
+	constructor({ generated_files, static_files, log, manifest }) {
 		this.#generated_files = generated_files;
 		this.#static_files = static_files;
 		this.#manifest = manifest;
@@ -31,10 +26,7 @@ export default class Builder {
 		copy(this.#static_files, dest);
 	}
 
-	async prerender({
-		force = false,
-		dest
-	}) {
+	async prerender({ force = false, dest }) {
 		await prerender({
 			out: dest,
 			force,

@@ -43,8 +43,7 @@ export const handler = async (event) => {
 			client,
 			root,
 			setup,
-			load: (route) =>
-				require(`./server/routes/${route.name}.js`),
+			load: (route) => require(`./server/routes/${route.name}.js`),
 			dev: false,
 			only_prerender: false
 		}

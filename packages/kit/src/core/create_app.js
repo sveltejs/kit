@@ -2,10 +2,7 @@ import * as fs from 'fs';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { stringify, walk, write_if_changed } from '../utils';
 
-export function create_app({
-	manifest_data,
-	output
-}) {
+export function create_app({ manifest_data, output }) {
 	if (!fs.existsSync(output)) mkdirp(output);
 
 	const client_manifest = generate_client_manifest(manifest_data);
@@ -48,11 +45,11 @@ export function create_serviceworker_manifest({
 }
 
 function generate_client_manifest(manifest_data) {
-	const page_ids = new Set(manifest_data.pages.map(page =>
-		page.pattern.toString()));
+	const page_ids = new Set(manifest_data.pages.map((page) => page.pattern.toString()));
 
-	const endpoints_to_ignore = manifest_data.endpoints.filter(route =>
-		!page_ids.has(route.pattern.toString()));
+	const endpoints_to_ignore = manifest_data.endpoints.filter(
+		(route) => !page_ids.has(route.pattern.toString())
+	);
 
 	const component_indexes = {};
 
@@ -87,7 +84,9 @@ function generate_client_manifest(manifest_data) {
 											? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
 											: `${param}: d(m[${i + 1}])`;
 									});
-									return `[components[${component_indexes[part.component.name]}], m => ({ ${props.join(', ')} })]`;
+									return `[components[${
+										component_indexes[part.component.name]
+									}], m => ({ ${props.join(', ')} })]`;
 								}
 
 								return `[components[${component_indexes[part.component.name]}]]`;
@@ -95,7 +94,9 @@ function generate_client_manifest(manifest_data) {
 							.filter(Boolean)
 							.join(',\n\t\t\t\t')}
 					]
-		}`).join(',\n\n\t\t')}
+		}`
+			)
+			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
 
 	if (needs_decode) {
@@ -110,7 +111,7 @@ function generate_client_manifest(manifest_data) {
 		export const pages = ${pages};
 
 		export const ignore = [
-			${endpoints_to_ignore.map(route => route.pattern).join(',\n\t\t\t')}
+			${endpoints_to_ignore.map((route) => route.pattern).join(',\n\t\t\t')}
 		];
 
 		export { layout };

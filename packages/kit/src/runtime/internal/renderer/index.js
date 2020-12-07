@@ -28,15 +28,7 @@ function page_store(value) {
 }
 
 export class Renderer {
-	constructor({
-		Root,
-		layout,
-		target,
-		error,
-		status,
-		preloaded,
-		session
-	}) {
+	constructor({ Root, layout, target, error, status, preloaded, session }) {
 		this.Root = Root;
 		this.layout = layout;
 		this.layout_loader = () => layout;
@@ -71,7 +63,8 @@ export class Renderer {
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(event.target);
 
-			if (a && a.rel === 'prefetch') { // TODO make this svelte-prefetch or something
+			if (a && a.rel === 'prefetch') {
+				// TODO make this svelte-prefetch or something
 				this.prefetch(new URL(a.href));
 			}
 		};
@@ -136,13 +129,14 @@ export class Renderer {
 	}
 
 	async render(page) {
-		const token = this.token = {};
+		const token = (this.token = {});
 
 		this.stores.navigating.set(true);
 
 		const hydrated = await this.hydrate(page);
 
-		if (this.token === token) { // check render wasn't aborted
+		if (this.token === token) {
+			// check render wasn't aborted
 			this.current_branch = hydrated.branch;
 			this.current_query = hydrated.query;
 			this.current_path = hydrated.path;
@@ -191,12 +185,11 @@ export class Renderer {
 
 					const previous = this.current_branch[i];
 					if (previous) {
-						const changed = (
-							(previous.loader !== loader) ||
+						const changed =
+							previous.loader !== loader ||
 							(previous.uses_session && this.session_dirty) ||
 							(previous.uses_query && query_dirty) ||
-							(previous.stringified_params !== stringified_params)
-						);
+							previous.stringified_params !== stringified_params;
 
 						if (!changed) {
 							props.components[i] = previous.component;
@@ -209,23 +202,23 @@ export class Renderer {
 					const uses_session = preload && preload.length > 1;
 					let uses_query = false;
 
-					const preloaded = this.initial?.preloaded[i] || (
-						preload
+					const preloaded =
+						this.initial?.preloaded[i] ||
+						(preload
 							? await preload.call(
-								preload_context,
-								{
-									get query() {
-										uses_query = true;
-										return page.query;
+									preload_context,
+									{
+										get query() {
+											uses_query = true;
+											return page.query;
+										},
+										host: page.host,
+										path: page.path,
+										params
 									},
-									host: page.host,
-									path: page.path,
-									params
-								},
-								this.$session
-							)
-							: {}
-					);
+									this.$session
+							  )
+							: {});
 
 					// TODO weird to have side-effects inside a map, but
 					// if they're not here, then setting props_n objects

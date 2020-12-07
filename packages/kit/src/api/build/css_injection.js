@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 const inject_styles = `
 export default function(files) {
 	return Promise.all(files.map(function(file) { return new Promise(function(fulfil, reject) {
@@ -93,11 +84,7 @@ export const css_injection = {
 			};
 		}
 	},
-	async generateBundle(
-		
-		_options,
-		bundle
-	) {
+	async generateBundle(_options, bundle) {
 		const inject_styles_file = Object.keys(bundle).find((f) => f.startsWith('inject_styles'));
 
 		let has_css = false;
@@ -109,11 +96,7 @@ export const css_injection = {
 			if (chunk.code) {
 				chunk.code = chunk.code.replace(/___SVELTE_CSS_INJECTION___([0-9a-f]+)___/g, (_m, id) => {
 					id = Buffer.from(id, 'hex').toString();
-					const target = (
-						Object.values(bundle).find(
-							(c) => (c).modules && (c).modules[id]
-						)
-					);
+					const target = Object.values(bundle).find((c) => c.modules && c.modules[id]);
 
 					if (target) {
 						const css_files = find_css(target, bundle);

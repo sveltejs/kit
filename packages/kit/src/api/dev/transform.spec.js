@@ -3,10 +3,7 @@ import * as assert from 'uvu/assert';
 import { transform } from './transform';
 
 function compare(a, b) {
-	assert.equal(
-		a.replace(/^\t+/gm, '').trim(),
-		b.replace(/^\t+/gm, '').trim()
-	);
+	assert.equal(a.replace(/^\t+/gm, '').trim(), b.replace(/^\t+/gm, '').trim());
 }
 
 test('extracts imports', () => {
@@ -19,9 +16,12 @@ test('extracts imports', () => {
 		console.log(foo, bar, baz);
 	`);
 
-	compare(code, `
+	compare(
+		code,
+		`
 		console.log(foo, bar, baz);
-	`);
+	`
+	);
 
 	assert.equal(deps, [
 		{ name: 'foo', prop: 'default', source: './foo.js' },
@@ -42,7 +42,9 @@ test('transforms exported functions safely', () => {
 		}
 	`);
 
-	compare(code, `
+	compare(
+		code,
+		`
 		function foo() {
 			console.log('foo');
 		} exports.foo = foo;
@@ -50,7 +52,8 @@ test('transforms exported functions safely', () => {
 		function bar() {
 			foo();
 		} exports.bar = bar;
-	`);
+	`
+	);
 
 	assert.equal(deps, []);
 });
