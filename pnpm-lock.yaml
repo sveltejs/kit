@@ -110,10 +110,8 @@ importers:
   packages/adapter-vercel:
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
-      '@types/aws-lambda': 8.10.64
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
-      '@types/aws-lambda': ^8.10.64
   packages/app-utils:
     dependencies:
       mime: 2.4.6
@@ -710,10 +708,6 @@ packages:
       svelte: ^3.21.0
     resolution:
       integrity: sha512-SOZPSBoTK23OvfJQNmQ5s7JYg10Tj+eeDyGbdDXIKGZL4dI1xNSahQUq35nCQAre0Y166mKs1xnFXZnbHM6MZw==
-  /@types/aws-lambda/8.10.64:
-    dev: true
-    resolution:
-      integrity: sha512-LRKk2UQCSi7BsO5TlfSI8cTNpOGz+MH6+RXEWtuZmxJficQgxwEYJDiKVirzgyiHce0L0F4CqCVvKTwblAeOUw==
   /@types/estree/0.0.39:
     resolution:
       integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
