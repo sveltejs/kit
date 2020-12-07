@@ -49,7 +49,7 @@ export class Router {
 			this.history.scrollRestoration = 'manual';
 		});
 
-		addEventListener('click', event => {
+		addEventListener('click', (event) => {
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
 			if (which(event) !== 1) return;
@@ -77,7 +77,7 @@ export class Router {
 			if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
 
 			// Ignore if <a> has a target
-			if (svg ? (a).target.baseVal : a.target) return;
+			if (svg ? a.target.baseVal : a.target) return;
 
 			const url = new URL(href);
 
@@ -93,7 +93,7 @@ export class Router {
 			}
 		});
 
-		addEventListener('popstate', event => {
+		addEventListener('popstate', (event) => {
 			this.scroll_history[this.cid] = scroll_state();
 
 			if (event.state) {
@@ -133,7 +133,7 @@ export class Router {
 		}
 
 		// avoid accidental clashes between server routes and page routes
-		if (this.ignore.some(pattern => pattern.test(path))) return;
+		if (this.ignore.some((pattern) => pattern.test(path))) return;
 
 		for (const route of this.pages) {
 			const match = route.pattern.exec(path);
@@ -150,12 +150,7 @@ export class Router {
 		}
 	}
 
-	async navigate(
-		page,
-		id,
-		noscroll,
-		hash
-	) {
+	async navigate(page, id, noscroll, hash) {
 		const popstate = !!id;
 		if (popstate) {
 			this.cid = id;

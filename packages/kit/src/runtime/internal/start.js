@@ -4,14 +4,7 @@ import { Router } from './router';
 import { Renderer } from './renderer';
 import { init } from './singletons';
 
-export async function start({
-	base,
-	target,
-	session,
-	preloaded,
-	error,
-	status
-}) {
+export async function start({ base, target, session, preloaded, error, status }) {
 	const router = new Router({
 		base,
 		pages,

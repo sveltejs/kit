@@ -190,6 +190,7 @@ importers:
       require-relative: 0.8.7
       rimraf: 3.0.2
       sirv: 1.0.7
+      source-map: 0.7.3
       source-map-support: 0.5.19
       svelte: 3.29.0
       tiny-glob: 0.2.8
@@ -220,6 +221,7 @@ importers:
       scorta: ^1.0.0
       sirv: ^1.0.7
       snowpack: ^2.17.0
+      source-map: ^0.7.3
       source-map-support: ^0.5.19
       svelte: ^3.29.0
       tiny-glob: ^0.2.8
@@ -3803,7 +3805,6 @@ packages:
     resolution:
       integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==
   /source-map/0.7.3:
-    dev: false
     engines:
       node: '>= 8'
     resolution:

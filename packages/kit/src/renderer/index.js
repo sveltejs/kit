@@ -7,11 +7,9 @@ function md5(body) {
 	return createHash('md5').update(body).digest('hex');
 }
 
-export async function render(
-	request,
-	options
-) {
-	const { context, headers = {} } = (await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
+export async function render(request, options) {
+	const { context, headers = {} } =
+		(await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
 
 	try {
 		const time = timer();

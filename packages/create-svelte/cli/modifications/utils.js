@@ -20,11 +20,7 @@ export function update_package_json(cwd, newDevDeps) {
 /**
  * Updates a Svelte component, doing all given replacements.
  */
-export function update_component(
-	cwd,
-	filepath,
-	replacements
-) {
+export function update_component(cwd, filepath, replacements) {
 	const file = path.join(cwd, filepath);
 
 	let code = fs.readFileSync(file, 'utf-8');

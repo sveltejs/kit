@@ -3,11 +3,7 @@ import { resolve, join } from 'path';
 import { copy } from '@sveltejs/app-utils/files';
 import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
 
-export async function builder({
-	dir,
-	manifest,
-	log
-}) {
+export async function builder({ dir, manifest, log }) {
 	const lambda_directory = resolve('api');
 	const static_directory = resolve('public');
 	const server_directory = resolve(join('api', 'server'));
