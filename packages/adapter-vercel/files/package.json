@@ -1,6 +1,6 @@
 {
-  "dependencies": {
-    "@sveltejs/kit": "*",
-    "@sveltejs/app-utils": "*"
-  }
+	"dependencies": {
+		"@sveltejs/kit": "*",
+		"@sveltejs/app-utils": "*"
+	}
 }

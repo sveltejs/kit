@@ -11,8 +11,8 @@
 	"main": "src/index.js",
 	"files": [
 		"src/index.js",
-    "files/index.js",
-    "files/package.json"
+		"files/index.js",
+		"files/package.json"
 	],
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*"
