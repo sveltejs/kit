@@ -1,6 +1,6 @@
 import relative from 'require-relative';
 
-const default_config = {
+const default_options = {
 	target: null,
 	startGlobal: null, // used for testing
 	paths: {
@@ -12,14 +12,14 @@ const default_config = {
 };
 
 export function load_config({ cwd = process.cwd() } = {}) {
-	const config = relative('./svelte.config.js', cwd);
+	const { kitOptions = {} } = relative('./svelte.config.js', cwd);
 
 	return {
-		...default_config,
-		...config,
+		...default_options,
+		...kitOptions,
 		paths: {
-			...default_config.paths,
-			...config.paths
+			...default_options.paths,
+			...kitOptions.paths
 		}
 	};
 }
