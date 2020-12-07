@@ -8,9 +8,15 @@ let config;
 try {
 	config = load_config();
 } catch (error) {
-	const adjective = error.code === 'ENOENT' ? 'Missing' : 'Malformed';
+	let message = error.message;
 
-	console.error(colors.bold().red(`${adjective} svelte.config.js`));
+	if (error.code === 'ENOENT') {
+		message = 'Missing svelte.config.js';
+	} else if (error.name === 'SyntaxError') {
+		message = 'Malformed svelte.config.js';
+	}
+
+	console.error(colors.bold().red(message));
 	console.error(colors.grey(error.stack));
 	process.exit(1);
 }

@@ -51,7 +51,7 @@ class Watcher extends EventEmitter {
 
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
-			dir: this.config.paths.routes,
+			dir: this.config.files.routes,
 			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
@@ -77,12 +77,12 @@ class Watcher extends EventEmitter {
 			pkg
 		);
 
-		this.snowpack_config.mount[resolve(this.config.paths.routes)] = {
+		this.snowpack_config.mount[resolve(this.config.files.routes)] = {
 			url: '/_app/routes',
 			static: false,
 			resolve: true
 		};
-		this.snowpack_config.mount[resolve(this.config.paths.setup)] = {
+		this.snowpack_config.mount[resolve(this.config.files.setup)] = {
 			url: '/_app/setup',
 			static: false,
 			resolve: true
@@ -99,7 +99,7 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		const load = loader(this.snowpack, this.snowpack_config);
 
-		const static_handler = sirv(this.config.paths.static, {
+		const static_handler = sirv(this.config.files.static, {
 			dev: true
 		});
 
@@ -123,7 +123,7 @@ class Watcher extends EventEmitter {
 
 				if (req.url === '/favicon.ico') return;
 
-				const template = readFileSync(this.config.paths.template, 'utf-8').replace(
+				const template = readFileSync(this.config.files.template, 'utf-8').replace(
 					'</head>',
 					`
 						<script>window.HMR_WEBSOCKET_URL = \`ws://localhost:${this.snowpack_port}\`;</script>
@@ -163,7 +163,7 @@ class Watcher extends EventEmitter {
 						body
 					},
 					{
-						static_dir: this.config.paths.static,
+						static_dir: this.config.files.static,
 						template: ({ head, body }) =>
 							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
 						manifest: this.manifest,
@@ -195,7 +195,7 @@ class Watcher extends EventEmitter {
 	}
 
 	update() {
-		this.manifest = create_manifest_data(this.config.paths.routes);
+		this.manifest = create_manifest_data(this.config.files.routes);
 
 		create_app({
 			manifest_data: this.manifest,

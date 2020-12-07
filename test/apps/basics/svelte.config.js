@@ -1,9 +1,11 @@
 module.exports = {
-	// TODO adapterless builds
-	adapter: '@sveltejs/adapter-node',
+	kit: {
+		// TODO adapterless builds
+		adapter: '@sveltejs/adapter-node',
 
-	// this creates `window.start` which starts the app, instead of
-	// it starting automatically — allows test runner to control
-	// when hydration occurs
-	startGlobal: 'start'
+		// this creates `window.start` which starts the app, instead of
+		// it starting automatically — allows test runner to control
+		// when hydration occurs
+		startGlobal: 'start'
+	}
 };
