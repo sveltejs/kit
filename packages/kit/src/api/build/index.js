@@ -277,13 +277,14 @@ export async function build(config) {
 
 		const client = ${s(client)};
 
-		export const paths = {
+		export const files = {
 			static: ${s(config.files.static)}
 		};
 
 		export function render(request, { only_prerender = false } = {}) {
 			return renderer.render(request, {
-				static_dir: paths.static,
+				static_dir: files.static,
+				paths: ${s(config.paths)},
 				template,
 				manifest,
 				target: ${s(config.target)},${

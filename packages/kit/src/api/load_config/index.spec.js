@@ -14,6 +14,11 @@ test('fills in defaults', () => {
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
+		},
+		paths: {
+			base: '',
+			assets: '/.',
+			generated: '/_app'
 		}
 	});
 });
@@ -58,8 +63,107 @@ test('fills in partial blanks', () => {
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
+		},
+		paths: {
+			base: '',
+			assets: '/.',
+			generated: '/_app'
 		}
 	});
+});
+
+test('fails if paths.base is not root-relative', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					base: 'https://example.com/somewhere/else'
+				}
+			}
+		});
+	}, /^kit\.paths\.base must be a root-relative path$/);
+});
+
+function validate_paths(name, input, output) {
+	test(name, () => {
+		assert.equal(
+			validate_config({
+				kit: {
+					paths: input
+				}
+			}).paths,
+			output
+		);
+	});
+}
+
+validate_paths('assets relative to empty string', {
+	assets: 'path/to/assets'
+}, {
+	base: '',
+	assets: '/path/to/assets',
+	generated: '/path/to/assets/_app'
+});
+
+validate_paths('assets relative to base path', {
+	base: '/path/to/base',
+	assets: 'path/to/assets'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/base/path/to/assets',
+	generated: '/path/to/base/path/to/assets/_app'
+});
+
+validate_paths('empty assets relative to base path', {
+	base: '/path/to/base'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/base',
+	generated: '/path/to/base/_app'
+});
+
+validate_paths('root-relative assets', {
+	assets: '/path/to/assets'
+}, {
+	base: '',
+	assets: '/path/to/assets',
+	generated: '/path/to/assets/_app'
+});
+
+validate_paths('root-relative assets with base path', {
+	base: '/path/to/base',
+	assets: '/path/to/assets'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/assets',
+	generated: '/path/to/assets/_app'
+});
+
+validate_paths('external assets', {
+	assets: 'https://cdn.example.com'
+}, {
+	base: '',
+	assets: 'https://cdn.example.com',
+	generated: 'https://cdn.example.com/_app'
+});
+
+validate_paths('external assets with base', {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com'
+}, {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com',
+	generated: 'https://cdn.example.com/_app'
+});
+
+validate_paths('external assets/generated with base', {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com',
+	generated: 'generated'
+}, {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com',
+	generated: 'https://cdn.example.com/generated'
 });
 
 test.run();

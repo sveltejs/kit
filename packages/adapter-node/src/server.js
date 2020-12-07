@@ -15,7 +15,7 @@ const mutable = (dir) =>
 	});
 
 const noop_handler = (_req, _res, next) => next();
-const static_handler = fs.existsSync(app.paths.static) ? mutable(app.paths.static) : noop_handler;
+const static_handler = fs.existsSync(app.files.static) ? mutable(app.files.static) : noop_handler;
 const prerendered_handler = fs.existsSync('build/prerendered')
 	? mutable('build/prerendered')
 	: noop_handler;

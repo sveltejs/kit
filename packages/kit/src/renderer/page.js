@@ -10,8 +10,6 @@ import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace'
 async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
 
-	const base = ''; // TODO
-
 	const dependencies = {};
 
 	const serialized_session = try_serialize(session, (err) => {
@@ -221,7 +219,7 @@ async function get_response({ request, options, session, page, status = 200, err
 						? `document.querySelector(${JSON.stringify(options.target)})`
 						: 'document.body'
 				},
-				base: "${base}",
+				base: "${options.base}",
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},

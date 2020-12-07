@@ -15,8 +15,8 @@ export function start({ port }) {
 	return new Promise((fulfil) => {
 		const app = relative('./.svelte/build/optimized/server/app.js');
 
-		const static_handler = fs.existsSync(app.paths.static)
-			? mutable(app.paths.static)
+		const static_handler = fs.existsSync(app.files.static)
+			? mutable(app.files.static)
 			: (_req, _res, next) => next();
 
 		const assets_handler = sirv('.svelte/build/optimized/client', {
