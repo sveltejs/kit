@@ -11,10 +11,10 @@
 	"main": "src/index.js",
 	"files": [
 		"src/index.js",
-		"files/render.js"
+    "files/index.js",
+    "files/package.json"
 	],
 	"devDependencies": {
-		"@sveltejs/app-utils": "workspace:*",
-		"@types/aws-lambda": "^8.10.64"
+		"@sveltejs/app-utils": "workspace:*"
 	}
 }
