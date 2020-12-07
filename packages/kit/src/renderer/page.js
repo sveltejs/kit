@@ -1,4 +1,4 @@
- import devalue from 'devalue';
+import devalue from 'devalue';
 import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
@@ -6,14 +6,7 @@ import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
-async function get_response({
-	request,
-	options,
-	session,
-	page,
-	status = 200,
-	error
-}) {
+async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
 
 	const base = ''; // TODO
@@ -109,14 +102,12 @@ async function get_response({
 	const match = page && page.pattern.exec(request.path);
 
 	// the last part has all parameters from any segment in the URL
-	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1] ) : {};
+	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1]) : {};
 
 	const preloaded = [];
 	let can_prerender = true;
 
-	const page_parts = error
-		? [{ component: options.manifest.error, params: [] }]
-		: page.parts;
+	const page_parts = error ? [{ component: options.manifest.error, params: [] }] : page.parts;
 
 	const parts = await Promise.all(
 		[{ component: options.manifest.layout, params: [] }, ...page_parts].map(async (part, i) => {
@@ -132,16 +123,18 @@ async function get_response({
 			// these are only the parameters up to the current URL segment
 			const params = parts_to_params(match, part);
 
-			const props = mod.preload ? await mod.preload.call(
-				preload_context,
-				{
-					host: request.host,
-					path: request.path,
-					query: request.query,
-					params
-				},
-				session
-			) : {};
+			const props = mod.preload
+				? await mod.preload.call(
+						preload_context,
+						{
+							host: request.host,
+							path: request.path,
+							query: request.query,
+							params
+						},
+						session
+				  )
+				: {};
 
 			preloaded[i] = props;
 			return { component: mod.default, props };
@@ -167,7 +160,7 @@ async function get_response({
 			params,
 			error
 		},
-		components: parts.map(part => part.component)
+		components: parts.map((part) => part.component)
 	};
 
 	// leveln (instead of levels[n]) makes it easy to avoid
@@ -197,7 +190,7 @@ async function get_response({
 
 	if (page) {
 		// TODO handle error page deps
-		(page.parts.filter(Boolean) ).forEach((part) => {
+		page.parts.filter(Boolean).forEach((part) => {
 			const page_deps = deps[part.component.name];
 
 			if (!page_deps) return; // we don't have this info during dev
@@ -222,7 +215,11 @@ async function get_response({
 		<script type="module">
 			import { start } from '/_app/${options.client.entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
-				target: ${options.target ? `document.querySelector(${JSON.stringify(options.target)})` : 'document.body'},
+				target: ${
+					options.target
+						? `document.querySelector(${JSON.stringify(options.target)})`
+						: 'document.body'
+				},
 				base: "${base}",
 				status: ${status},
 				error: ${serialize_error(error)},
@@ -241,14 +238,8 @@ async function get_response({
 	};
 }
 
-export default async function render_page(
-	request,
-	context,
-	options
-) {
-	const page = options.manifest.pages.find((page) =>
-		page.pattern.test(request.path)
-	);
+export default async function render_page(request, context, options) {
+	const page = options.manifest.pages.find((page) => page.pattern.test(request.path));
 
 	const session = await (options.setup.getSession && options.setup.getSession(context));
 

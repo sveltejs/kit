@@ -2,10 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { posixify, reserved_words } from '../utils';
 
-export default function create_manifest_data(
-	cwd,
-	extensions = '.svelte .html'
-) {
+export default function create_manifest_data(cwd, extensions = '.svelte .html') {
 	const component_extensions = extensions.split(' ');
 
 	function find_layout(file_name, component_name, dir = '') {
@@ -38,12 +35,7 @@ export default function create_manifest_data(
 		url: '/_app/assets/components/error.svelte'
 	};
 
-	function walk(
-		dir,
-		parent_segments,
-		parent_params,
-		stack
-	) {
+	function walk(dir, parent_segments, parent_params, stack) {
 		const items = fs
 			.readdirSync(dir)
 			.map((basename) => {

@@ -59,25 +59,35 @@ export async function build(config) {
 	process.stdout.write('\x1b[s');
 
 	const tick = bold(green('✔'));
-	const render = () => process.stdout.write('\x1b[u' + `
+	const render = () =>
+		process.stdout.write(
+			'\x1b[u' +
+				`
 	${bold(cyan('Transforming...'))}
 	  ${progress.transformed_client ? `${tick} client` : gray('⧗ client')}
 	  ${progress.transformed_server ? `${tick} server` : gray('⧗ server')}
 	${bold(cyan('Optimizing...'))}
 	  ${progress.optimized_client ? `${tick} client ` : gray('⧗ client')}
 	  ${progress.optimized_server ? `${tick} server ` : gray('⧗ server')}
-	`.replace(/^\t/gm, '').trimStart());
+	`
+					.replace(/^\t/gm, '')
+					.trimStart()
+		);
 
 	render();
 
 	const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`;
 
 	const promises = {
-		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`).then(() => {
-			progress.transformed_client = true;
-			render();
-		}),
-		transform_server: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`).then(() => {
+		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`).then(
+			() => {
+				progress.transformed_client = true;
+				render();
+			}
+		),
+		transform_server: exec(
+			`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`
+		).then(() => {
 			progress.transformed_server = true;
 			render();
 		})
@@ -227,7 +237,7 @@ export async function build(config) {
 			layout: ${stringify_component(manifest.layout)},
 			error: ${stringify_component(manifest.error)},
 			components: [
-				${manifest.components.map(c => stringify_component(c)).join(',\n\t\t\t\t')}
+				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
 			],
 			pages: [
 				${manifest.pages
@@ -239,17 +249,23 @@ export async function build(config) {
 			endpoints: [
 				${manifest.endpoints
 					.map(({ name, pattern, file, params }) => {
-						return `{ name: ${s(name)}, pattern: ${pattern}, file: ${s(file)}, params: ${s(params)} }`;
+						return `{ name: ${s(name)}, pattern: ${pattern}, file: ${s(file)}, params: ${s(
+							params
+						)} }`;
 					})
 					.join(',\n\t\t\t\t')}
 			]
 		}
-	`.replace(/^\t{2}/gm, '').trim();
+	`
+		.replace(/^\t{2}/gm, '')
+		.trim();
 
 	fs.writeFileSync('.svelte/build/manifest.js', `export default ${stringified_manifest};`);
 	fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);
 
-	fs.writeFileSync(`${UNOPTIMIZED}/server/app.js`, `
+	fs.writeFileSync(
+		`${UNOPTIMIZED}/server/app.js`,
+		`
 		import * as renderer from '@sveltejs/kit/dist/renderer';
 		import root from './_app/assets/generated/root.js';
 		import * as setup from './_app/setup/index.js';
@@ -270,7 +286,9 @@ export async function build(config) {
 				static_dir: paths.static,
 				template,
 				manifest,
-				target: ${s(config.target)},${config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''}
+				target: ${s(config.target)},${
+			config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
+		}
 				client,
 				root,
 				setup,
@@ -279,23 +297,23 @@ export async function build(config) {
 				only_prerender
 			});
 		}
-	`.replace(/^\t{3}/gm, '').trim());
+	`
+			.replace(/^\t{3}/gm, '')
+			.trim()
+	);
 
 	const server_input = {
 		app: `${UNOPTIMIZED}/server/app.js`
 	};
 
-	[
-		manifest.layout,
-		manifest.error,
-		...manifest.components,
-		...manifest.endpoints
-	].forEach((item) => {
-		server_input[`routes/${item.name}`] = `${UNOPTIMIZED}/server${item.url.replace(
-			/\.\w+$/,
-			'.js'
-		)}`;
-	});
+	[manifest.layout, manifest.error, ...manifest.components, ...manifest.endpoints].forEach(
+		(item) => {
+			server_input[`routes/${item.name}`] = `${UNOPTIMIZED}/server${item.url.replace(
+				/\.\w+$/,
+				'.js'
+			)}`;
+		}
+	);
 
 	const server_chunks = await rollup({
 		input: server_input,

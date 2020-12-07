@@ -4,7 +4,7 @@ export function read_only_form_data() {
 	return {
 		append(key, value) {
 			if (map.has(key)) {
-				(map.get(key) ).push(value);
+				map.get(key).push(value);
 			} else {
 				map.set(key, [value]);
 			}
@@ -15,7 +15,7 @@ export function read_only_form_data() {
 }
 
 class ReadOnlyFormData {
-	#map
+	#map;
 
 	constructor(map) {
 		this.#map = map;
