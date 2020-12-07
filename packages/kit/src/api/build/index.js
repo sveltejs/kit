@@ -36,7 +36,7 @@ const OPTIMIZED = `${DIR}/build/optimized`;
 const s = JSON.stringify;
 
 export async function build(config) {
-	const manifest = create_manifest_data(config.paths.routes);
+	const manifest = create_manifest_data(config.files.routes);
 
 	mkdirp(ASSETS);
 	await rimraf(UNOPTIMIZED);
@@ -76,7 +76,7 @@ export async function build(config) {
 
 	render();
 
-	const mount = `--mount.${config.paths.routes}=/_app/routes --mount.${config.paths.setup}=/_app/setup`;
+	const mount = `--mount.${config.files.routes}=/_app/routes --mount.${config.files.setup}=/_app/setup`;
 
 	const promises = {
 		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`).then(
@@ -271,14 +271,14 @@ export async function build(config) {
 		import * as setup from './_app/setup/index.js';
 		import manifest from '../../manifest.js';
 
-		const template = ({ head, body }) => ${s(fs.readFileSync(config.paths.template, 'utf-8'))
+		const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
 			.replace('%svelte.head%', '" + head + "')
 			.replace('%svelte.body%', '" + body + "')};
 
 		const client = ${s(client)};
 
 		export const paths = {
-			static: ${s(config.paths.static)}
+			static: ${s(config.files.static)}
 		};
 
 		export function render(request, { only_prerender = false } = {}) {

@@ -3,8 +3,8 @@ module.exports = {
 		// TODO adapterless builds
 		adapter: '@sveltejs/adapter-node',
 
-		paths: {
-			static: 'public',
+		files: {
+			assets: 'public',
 			routes: 'source/pages',
 			template: 'source/template.html'
 		},

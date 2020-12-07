@@ -7,5 +7,7 @@ module.exports = {
 		// it starting automatically — allows test runner to control
 		// when hydration occurs
 		startGlobal: 'start'
-	}
+	},
+
+	blah: 42
 };

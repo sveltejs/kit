@@ -29,7 +29,7 @@ export async function adapt(config) {
 
 	const builder = new Builder({
 		generated_files: '.svelte/build/optimized',
-		static_files: config.paths.static,
+		static_files: config.files.static,
 		manifest,
 		log
 	});
