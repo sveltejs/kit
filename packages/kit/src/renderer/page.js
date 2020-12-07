@@ -5,6 +5,7 @@ import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
+import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace'
 
 async function get_response({
 	request,
@@ -284,7 +285,7 @@ export default async function render_page(
 			return {
 				status: 500,
 				headers: {},
-				body: error.stack, // TODO probably not in prod?
+				body: await sourcemap_stacktrace(error.stack), // TODO probably not in prod?
 				dependencies: {}
 			};
 		}
