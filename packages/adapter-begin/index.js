@@ -24,7 +24,7 @@ function parse_arc(arcPath) {
 	}
 }
 
-module.exports = async function adatper(builder) {
+module.exports = async function adapter(builder) {
 	builder.log.minor('Parsing app.arc file');
 	const { static: static_mount_point } = parse_arc('app.arc');
 
@@ -32,18 +32,18 @@ module.exports = async function adatper(builder) {
 	const static_directory = resolve(static_mount_point);
 	const server_directory = resolve(join('src', 'shared'));
 
-	builder.log.minor('Writing client application...' + static_directory);
+	builder.log.minor('Writing client application...');
 	builder.copy_static_files(static_directory);
 	builder.copy_client_files(static_directory);
 
-  builder.log.minor('Building lambda...' + lambda_directory);
+  builder.log.minor('Building lambda...');
   const local_lambda_dir = resolve(__dirname, 'files');
   const lambda_files = [ 'index.js', 'package.json' ]
   lambda_files.forEach(f => {
     copyFileSync(join(local_lambda_dir, f), join(lambda_directory, f));
   });
 
-  builder.log.minor('Installing lambda dependencies...' + lambda_directory);
+  builder.log.minor('Installing lambda dependencies...');
 	child_process.execSync('npm install', {
 		stdio: [0, 1, 2],
 		cwd: lambda_directory
