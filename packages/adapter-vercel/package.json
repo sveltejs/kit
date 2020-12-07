@@ -8,10 +8,10 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
-	"main": "index.js",
+	"main": "src/index.js",
 	"files": [
-		"index.js",
-		"src/render.js"
+		"src/index.js",
+		"files/render.js"
 	],
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",

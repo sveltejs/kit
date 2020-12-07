@@ -1,43 +1,25 @@
-import { writeFileSync, readFileSync } from 'fs';
-import { resolve, join } from 'path';
-import { copy } from '@sveltejs/app-utils/files';
-import { prerender, generate_manifest_module } from '@sveltejs/app-utils/renderer';
+const { writeFileSync, copyFileSync } = require('fs');
+const { resolve, join } = require('path');
 
-export async function builder({ dir, manifest, log }) {
-	const lambda_directory = resolve('api');
+module.exports = async function adapter (builder) {
+  const lambda_directory = resolve(join('functions', 'node', 'render'));
 	const static_directory = resolve('public');
-	const server_directory = resolve(join('api', 'server'));
+  const server_directory = resolve(join(lambda_directory, 'server'));
+  
+  builder.log.info('Writing client application...');
+  builder.copy_static_files(static_directory);
 
-	log.info('Writing client application...');
-	copy('static', static_directory);
-	copy(resolve(dir, 'client'), join(static_directory, '_app'));
+  builder.log.info('Building lambda...');
+  builder.copy_server_files(server_directory);
+  const local_lambda_path = resolve(join(__dirname, '..', 'files', 'render.js'));
+  copyFileSync(local_lambda_path, join(lambda_directory, 'index.js'));
 
-	log.info('Building lambda...');
-	copy(resolve(__dirname, 'src'), lambda_directory);
-	copy(join(resolve(dir), 'client.json'), join(server_directory, 'client.json'));
-	const written_manifest = generate_manifest_module(manifest);
-	const htmlPath = resolve('src', 'app.html');
-	const appHtml = readFileSync(htmlPath, 'utf-8');
-	writeFileSync(join(server_directory, 'manifest.js'), written_manifest);
-	writeFileSync(
-		join(server_directory, 'template.js'),
-		`module.exports = ${JSON.stringify(appHtml)};`
-	);
-
-	log.info('Prerendering static pages...');
-	await prerender({
-		force: true,
-		dir,
-		out: static_directory,
-		manifest,
-		log
+  builder.log.info('Prerendering static pages...');
+	await builder.prerender({
+		dest: static_directory
 	});
 
-	log.info('Writing server application...');
-	copy(resolve(dir, 'server'), server_directory);
-
-	// TODO: Merge this, rather than write it
-	log.info('Rewriting vercel configuration...');
+  builder.log.info('Rewriting vercel configuration...');
 	writeFileSync(
 		'vercel.json',
 		JSON.stringify({
@@ -55,4 +37,4 @@ export async function builder({ dir, manifest, log }) {
 			]
 		})
 	);
-}
+};
