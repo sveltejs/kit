@@ -9,11 +9,11 @@ module.exports = async function adapter(builder) {
 	const lambda_directory = join(vercel_output_directory, 'functions', 'node', 'render');
 	const server_directory = join(lambda_directory, 'server');
 
-	builder.log.info('Writing client application...');
+	builder.log.minor('Writing client application...');
 	builder.copy_static_files(static_directory);
 	builder.copy_client_files(static_directory);
 
-	builder.log.info('Building lambda...');
+	builder.log.minor('Building lambda...');
 	builder.copy_server_files(server_directory);
 	const fileList = ['index.js', 'package.json'];
 	fileList.forEach((f) =>
@@ -24,12 +24,12 @@ module.exports = async function adapter(builder) {
 		stdio: [1, 2, 3]
 	});
 
-	builder.log.info('Prerendering static pages...');
+	builder.log.minor('Prerendering static pages...');
 	await builder.prerender({
 		dest: static_directory
 	});
 
-	builder.log.info('Writing routes...');
+	builder.log.minor('Writing routes...');
 	mkdirSync(config_directory);
 	writeFileSync(
 		join(config_directory, 'routes.json'),
