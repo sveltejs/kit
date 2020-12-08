@@ -34,9 +34,9 @@ module.exports = async function adapter(builder) {
 	writeFileSync(
 		join(config_directory, 'routes.json'),
 		JSON.stringify([
-      {
-        handle: 'filesystem'
-      },
+			{
+				handle: 'filesystem'
+			},
 			{
 				src: '/.*',
 				dest: '.vercel/functions/render'
