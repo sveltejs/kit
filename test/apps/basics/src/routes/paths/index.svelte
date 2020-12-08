@@ -1,5 +1,5 @@
 <script>
-	import { base, assets, generated } from '$app/paths';
+	import { base, assets } from '$app/paths';
 </script>
 
-<pre>{JSON.stringify({ base, assets, generated })}</pre>
+<pre>{JSON.stringify({ base, assets })}</pre>

@@ -17,9 +17,9 @@ test('fills in defaults', () => {
 		},
 		paths: {
 			base: '',
-			assets: '/.',
-			generated: '/_app'
-		}
+			assets: '/.'
+		},
+		appDir: '_app'
 	});
 });
 
@@ -66,10 +66,20 @@ test('fills in partial blanks', () => {
 		},
 		paths: {
 			base: '',
-			assets: '/.',
-			generated: '/_app'
-		}
+			assets: '/.'
+		},
+		appDir: '_app'
 	});
+});
+
+test('fails if kit.appDir is blank', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				appDir: ''
+			}
+		});
+	}, /^kit\.appDir cannot be empty$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -101,8 +111,7 @@ validate_paths('assets relative to empty string', {
 	assets: 'path/to/assets'
 }, {
 	base: '',
-	assets: '/path/to/assets',
-	generated: '/path/to/assets/_app'
+	assets: '/path/to/assets'
 });
 
 validate_paths('assets relative to base path', {
@@ -110,24 +119,21 @@ validate_paths('assets relative to base path', {
 	assets: 'path/to/assets'
 }, {
 	base: '/path/to/base',
-	assets: '/path/to/base/path/to/assets',
-	generated: '/path/to/base/path/to/assets/_app'
+	assets: '/path/to/base/path/to/assets'
 });
 
 validate_paths('empty assets relative to base path', {
 	base: '/path/to/base'
 }, {
 	base: '/path/to/base',
-	assets: '/path/to/base',
-	generated: '/path/to/base/_app'
+	assets: '/path/to/base'
 });
 
 validate_paths('root-relative assets', {
 	assets: '/path/to/assets'
 }, {
 	base: '',
-	assets: '/path/to/assets',
-	generated: '/path/to/assets/_app'
+	assets: '/path/to/assets'
 });
 
 validate_paths('root-relative assets with base path', {
@@ -135,16 +141,14 @@ validate_paths('root-relative assets with base path', {
 	assets: '/path/to/assets'
 }, {
 	base: '/path/to/base',
-	assets: '/path/to/assets',
-	generated: '/path/to/assets/_app'
+	assets: '/path/to/assets'
 });
 
 validate_paths('external assets', {
 	assets: 'https://cdn.example.com'
 }, {
 	base: '',
-	assets: 'https://cdn.example.com',
-	generated: 'https://cdn.example.com/_app'
+	assets: 'https://cdn.example.com'
 });
 
 validate_paths('external assets with base', {
@@ -152,18 +156,7 @@ validate_paths('external assets with base', {
 	assets: 'https://cdn.example.com'
 }, {
 	base: '/path/to/base',
-	assets: 'https://cdn.example.com',
-	generated: 'https://cdn.example.com/_app'
-});
-
-validate_paths('external assets/generated with base', {
-	base: '/path/to/base',
-	assets: 'https://cdn.example.com',
-	generated: 'generated'
-}, {
-	base: '/path/to/base',
-	assets: 'https://cdn.example.com',
-	generated: 'https://cdn.example.com/generated'
+	assets: 'https://cdn.example.com'
 });
 
 test.run();

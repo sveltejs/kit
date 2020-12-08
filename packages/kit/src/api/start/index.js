@@ -11,12 +11,12 @@ const mutable = (dir) =>
 		maxAge: 0
 	});
 
-export function start({ port }) {
+export function start({ port, config }) {
 	return new Promise((fulfil) => {
 		const app = relative('./.svelte/build/optimized/server/app.js');
 
-		const static_handler = fs.existsSync(app.files.static)
-			? mutable(app.files.static)
+		const static_handler = fs.existsSync(config.files.static)
+			? mutable(config.files.static)
 			: (_req, _res, next) => next();
 
 		const assets_handler = sirv('.svelte/build/optimized/client', {
@@ -36,6 +36,12 @@ export function start({ port }) {
 						path: parsed.pathname,
 						body: await get_body(req),
 						query: new URLSearchParams(parsed.query || '')
+					}, {
+						paths: {
+							base: '',
+							assets: '/.',
+							app: '/_app'
+						}
 					});
 
 					if (rendered) {

@@ -199,6 +199,8 @@ async function get_response({ request, options, session, page, status = 200, err
 		});
 	}
 
+	const entry = `${options.paths.assets}/${options.app_dir}/${options.client.entry}`.replace(/^\/\./, '');
+
 	const head = `${rendered.head}
 
 			${Array.from(js_deps)
@@ -212,20 +214,20 @@ async function get_response({ request, options, session, page, status = 200, err
 
 	const body = `${rendered.html}
 		<script type="module">
-			import { start } from '/_app/${options.client.entry}';
+			import { start } from '${entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${
 					options.target
 						? `document.querySelector(${JSON.stringify(options.target)})`
 						: 'document.body'
 				},
-				base: "${options.base}",
+				paths: ${JSON.stringify(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},
 				session: ${serialized_session}
 			});
-		</script>`.replace(/^\t{3}/gm, '');
+		</script>`.replace(/^\t{2}/gm, '');
 
 	return {
 		status,

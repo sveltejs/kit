@@ -31,10 +31,11 @@ export default {
 	paths: {
 		default: {
 			base: expect_string(''),
-			assets: expect_string(''),
-			generated: expect_string('_app')
+			assets: expect_string('')
 		}
-	}
+	},
+
+	appDir: expect_string('_app')
 };
 
 function expect_string(string) {

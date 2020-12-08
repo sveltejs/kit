@@ -99,6 +99,9 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		const load = loader(this.snowpack, this.snowpack_config);
 
+		const { set_paths } = await load('/_app/assets/runtime/internal/singletons.js');
+		set_paths(this.config.paths);
+
 		const static_handler = sirv(this.config.files.static, {
 			dev: true
 		});
@@ -164,6 +167,7 @@ class Watcher extends EventEmitter {
 					},
 					{
 						static_dir: this.config.files.static,
+						paths: this.config.paths,
 						template: ({ head, body }) =>
 							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
 						manifest: this.manifest,
@@ -178,7 +182,7 @@ class Watcher extends EventEmitter {
 						load: (route) => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
 						only_prerender: false,
 						start_global: this.config.startGlobal,
-						paths: this.config.paths
+						app_dir: this.config.appDir
 					}
 				);
 

@@ -266,39 +266,46 @@ export async function build(config) {
 	fs.writeFileSync(
 		`${UNOPTIMIZED}/server/app.js`,
 		`
-		import * as renderer from '@sveltejs/kit/dist/renderer';
-		import root from './_app/assets/generated/root.js';
-		import * as setup from './_app/setup/index.js';
-		import manifest from '../../manifest.js';
+			import * as renderer from '@sveltejs/kit/dist/renderer';
+			import root from './_app/assets/generated/root.js';
+			import { set_paths } from './_app/assets/runtime/internal/singletons.js';
+			import * as setup from './_app/setup/index.js';
+			import manifest from '../../manifest.js';
 
-		const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
-			.replace('%svelte.head%', '" + head + "')
-			.replace('%svelte.body%', '" + body + "')};
+			const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
+				.replace('%svelte.head%', '" + head + "')
+				.replace('%svelte.body%', '" + body + "')};
 
-		const client = ${s(client)};
+			const client = ${s(client)};
 
-		export const files = {
-			static: ${s(config.files.static)}
-		};
+			set_paths(${s(config.paths)});
 
-		export function render(request, { only_prerender = false } = {}) {
-			return renderer.render(request, {
-				static_dir: files.static,
-				paths: ${s(config.paths)},
-				template,
-				manifest,
-				target: ${s(config.target)},${
-			config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
-		}
-				client,
-				root,
-				setup,
-				load: (route) => require(\`./routes/\${route.name}.js\`),
-				dev: false,
-				only_prerender
-			});
-		}
-	`
+			// allow paths to be overridden in svelte-kit start
+			export function init({ paths }) {
+				set_paths(paths);
+			}
+
+			init({ paths: ${s(config.paths)} });
+
+			export function render(request, { paths = ${s(config.paths)}, only_prerender = false } = {}) {
+				return renderer.render(request, {
+					static_dir: files.static,
+					paths,
+					template,
+					manifest,
+					target: ${s(config.target)},${
+				config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
+			}
+					client,
+					root,
+					setup,
+					load: (route) => require(\`./routes/\${route.name}.js\`),
+					dev: false,
+					only_prerender,
+					app_dir: ${s(config.appDir)}
+				});
+			}
+		`
 			.replace(/^\t{3}/gm, '')
 			.trim()
 	);

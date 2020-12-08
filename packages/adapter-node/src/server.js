@@ -15,6 +15,9 @@ const mutable = (dir) =>
 	});
 
 const noop_handler = (_req, _res, next) => next();
+
+// TODO how to handle the case where `paths.assets !== ''` and `paths.generated !== '/app'`?
+// Does that even make sense in the context of adapter-node?
 const static_handler = fs.existsSync(app.files.static) ? mutable(app.files.static) : noop_handler;
 const prerendered_handler = fs.existsSync('build/prerendered')
 	? mutable('build/prerendered')

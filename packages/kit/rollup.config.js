@@ -17,7 +17,8 @@ export default [
 			'internal/start': 'src/runtime/internal/start.js',
 			'internal/singletons': 'src/runtime/internal/singletons.js',
 			'app/navigation': 'src/runtime/app/navigation/index.js',
-			'app/stores': 'src/runtime/app/stores/index.js'
+			'app/stores': 'src/runtime/app/stores/index.js',
+			'app/paths': 'src/runtime/app/paths/index.js'
 		},
 		output: {
 			dir: 'assets/runtime',
