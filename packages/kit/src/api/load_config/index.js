@@ -45,7 +45,7 @@ function validate(definition, option, keypath) {
 }
 
 function resolve(from, to) {
-	// the `./` is weird, but allows `${assets}/images/blah.jpg` to work
+	// the `/.` is weird, but allows `${assets}/images/blah.jpg` to work
 	// when `assets` is empty
 	return remove_trailing_slash(
 		url.resolve(add_trailing_slash(from), to)
