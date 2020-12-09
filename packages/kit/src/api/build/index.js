@@ -272,6 +272,7 @@ export async function build(config) {
 	fs.writeFileSync('.svelte/build/manifest.js', `export default ${stringified_manifest};`);
 	fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);
 
+	// prettier-ignore
 	fs.writeFileSync(
 		`${UNOPTIMIZED}/server/app.js`,
 		`
