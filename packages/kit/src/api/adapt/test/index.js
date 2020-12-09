@@ -17,7 +17,7 @@ suite('copy files', () => {
 	const generated_files = join(__dirname, 'fixtures/basic/.svelte/build/optimized');
 	const config = {
 		files: {
-			static: join(__dirname, 'fixtures/basic/static')
+			assets: join(__dirname, 'fixtures/basic/static')
 		},
 		appDir: '_app'
 	};
@@ -51,7 +51,7 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	builder.copy_static_files(dest);
 
-	assert.equal(glob('**', { cwd: config.files.static }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: config.files.assets }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	builder.copy_client_files(dest);
