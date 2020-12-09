@@ -84,7 +84,9 @@ export default function loader(snowpack, config) {
 				name: 'require',
 				value: (id) => {
 					// TODO can/should this restriction be relaxed?
-					throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
+					throw new Error(
+						`Use import instead of require (attempted to load '${id}' from '${url}')`
+					);
 				}
 			},
 			{
@@ -116,18 +118,17 @@ export default function loader(snowpack, config) {
 				value: { url }
 			},
 
-			...await Promise.all(deps.map(async (dep) => {
-				return {
-					name: dep.name,
-					value: await get_module(url, dep.source, url_stack)
-				};
-			}))
+			...(await Promise.all(
+				deps.map(async (dep) => {
+					return {
+						name: dep.name,
+						value: await get_module(url, dep.source, url_stack)
+					};
+				})
+			))
 		];
 
-		const fn = new Function(
-			...args.map((d) => d.name),
-			`${code}\n//# sourceURL=${url}`
-		);
+		const fn = new Function(...args.map((d) => d.name), `${code}\n//# sourceURL=${url}`);
 
 		fn(...args.map((d) => d.value));
 

@@ -28,13 +28,13 @@ function get_file_contents(file_path) {
 }
 
 async function replace_async(str, regex, asyncFn) {
-    const promises = [];
-    str.replace(regex, (match, ...args) => {
-        const promise = asyncFn(match, ...args);
-        promises.push(promise);
-    });
-    const data = await Promise.all(promises);
-    return str.replace(regex, () => data.shift());
+	const promises = [];
+	str.replace(regex, (match, ...args) => {
+		const promise = asyncFn(match, ...args);
+		promises.push(promise);
+	});
+	const data = await Promise.all(promises);
+	return str.replace(regex, () => data.shift());
 }
 
 export async function sourcemap_stacktrace(stack) {

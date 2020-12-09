@@ -44,14 +44,15 @@ export function transform(data) {
 
 	ast.body.forEach((node) => {
 		if (node.type === 'ImportDeclaration') {
-			const is_namespace = node.specifiers[0] && node.specifiers[0].type === 'ImportNamespaceSpecifier';
-			const default_specifier = node.specifiers.find(specifier => !specifier.imported);
+			const is_namespace =
+				node.specifiers[0] && node.specifiers[0].type === 'ImportNamespaceSpecifier';
+			const default_specifier = node.specifiers.find((specifier) => !specifier.imported);
 
 			const name = is_namespace
 				? node.specifiers[0].local.name
 				: default_specifier
-					? default_specifier.local.name
-					: get_import_name();
+				? default_specifier.local.name
+				: get_import_name();
 
 			const source = node.source.value;
 
@@ -73,11 +74,7 @@ export function transform(data) {
 
 			deps.push({ name, source });
 
-			code.overwrite(
-				node.start,
-				node.end,
-				`${__export_all}(${name})`
-			);
+			code.overwrite(node.start, node.end, `${__export_all}(${name})`);
 		}
 
 		if (node.type === 'ExportDefaultDeclaration') {
@@ -91,9 +88,11 @@ export function transform(data) {
 
 				deps.push({ name, source });
 
-				const export_block = node.specifiers.map(specifier => {
-					return `${__export}('${specifier.exported.name}', () => ${name}.${specifier.local.name})`;
-				}).join('; ');
+				const export_block = node.specifiers
+					.map((specifier) => {
+						return `${__export}('${specifier.exported.name}', () => ${name}.${specifier.local.name})`;
+					})
+					.join('; ');
 
 				code.overwrite(node.start, node.end, export_block);
 			} else if (node.declaration) {
@@ -123,7 +122,8 @@ export function transform(data) {
 						code.overwrite(
 							specifier.start,
 							specifier.end,
-							`${__export}('${specifier.exported.name}', () => ${specifier.local.name})`);
+							`${__export}('${specifier.exported.name}', () => ${specifier.local.name})`
+						);
 					});
 
 					code.remove(node.specifiers[node.specifiers.length - 1].end, node.end);

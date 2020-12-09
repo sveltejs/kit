@@ -2,15 +2,9 @@ import * as fs from 'fs';
 import { stringify, walk, write_if_changed } from '../utils';
 
 export function create_app({ manifest_data, output }) {
-	write_if_changed(
-		`${output}/generated/manifest.js`,
-		generate_client_manifest(manifest_data)
-	);
+	write_if_changed(`${output}/generated/manifest.js`, generate_client_manifest(manifest_data));
 
-	write_if_changed(
-		`${output}/generated/root.svelte`,
-		generate_app(manifest_data)
-	);
+	write_if_changed(`${output}/generated/root.svelte`, generate_app(manifest_data));
 }
 
 function trim(str) {

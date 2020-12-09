@@ -82,21 +82,27 @@ export async function build(config) {
 	];
 
 	const promises = {
-		transform_client: execFile(process.argv[0], [snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/client`], {
-			env: {
-				SVELTE_KIT_APP_DIR: config.appDir
+		transform_client: execFile(
+			process.argv[0],
+			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/client`],
+			{
+				env: {
+					SVELTE_KIT_APP_DIR: config.appDir
+				}
 			}
-		}).then(
-			() => {
-				progress.transformed_client = true;
-				render();
+		).then(() => {
+			progress.transformed_client = true;
+			render();
+		}),
+		transform_server: execFile(
+			process.argv[0],
+			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'],
+			{
+				env: {
+					SVELTE_KIT_APP_DIR: config.appDir
+				}
 			}
-		),
-		transform_server: execFile(process.argv[0], [snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'], {
-			env: {
-				SVELTE_KIT_APP_DIR: config.appDir
-			}
-		}).then(() => {
+		).then(() => {
 			progress.transformed_server = true;
 			render();
 		})
@@ -111,7 +117,9 @@ export async function build(config) {
 		deps: {}
 	};
 
-	const entry = path.resolve(`${UNOPTIMIZED}/client/${config.appDir}/assets/runtime/internal/start.js`);
+	const entry = path.resolve(
+		`${UNOPTIMIZED}/client/${config.appDir}/assets/runtime/internal/start.js`
+	);
 
 	const client_chunks = await rollup({
 		input: {

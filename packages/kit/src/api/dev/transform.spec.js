@@ -90,9 +90,7 @@ test('creates live bindings', () => {
 	`
 	);
 
-	assert.equal(deps, [
-		{ name: '__import0', source: './a.js' }
-	]);
+	assert.equal(deps, [{ name: '__import0', source: './a.js' }]);
 });
 
 test('handles shorthand object properties', () => {
@@ -130,9 +128,7 @@ test('deconflicts with __importn and __export', () => {
 	`
 	);
 
-	assert.equal(deps, [
-		{ name: '__import0_', source: './a.js' }
-	]);
+	assert.equal(deps, [{ name: '__import0_', source: './a.js' }]);
 });
 
 test.run();

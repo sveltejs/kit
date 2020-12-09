@@ -108,7 +108,9 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		const load = loader(this.snowpack, this.snowpack_config);
 
-		const { set_paths } = await load(`/${this.config.appDir}/assets/runtime/internal/singletons.js`);
+		const { set_paths } = await load(
+			`/${this.config.appDir}/assets/runtime/internal/singletons.js`
+		);
 		set_paths(this.config.paths);
 
 		const static_handler = sirv(this.config.files.static, {
