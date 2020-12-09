@@ -12,7 +12,7 @@ import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import { css_injection } from './css_injection';
 
-const exec = promisify(child_process.exec);
+const execFile = promisify(child_process.execFile);
 
 const snowpack_main = require.resolve('snowpack');
 const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
@@ -79,12 +79,11 @@ export async function build(config) {
 	const mount = [
 		`--mount.${config.files.routes}=/${config.appDir}/routes`,
 		`--mount.${config.files.setup}=/${config.appDir}/setup`
-	].join(' ');
+	];
 
 	const promises = {
-		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`, {
+		transform_client: execFile(process.argv[0], [snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/client`], {
 			env: {
-				...process.env,
 				SVELTE_KIT_APP_DIR: config.appDir
 			}
 		}).then(
@@ -93,9 +92,8 @@ export async function build(config) {
 				render();
 			}
 		),
-		transform_server: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`, {
+		transform_server: execFile(process.argv[0], [snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'], {
 			env: {
-				...process.env,
 				SVELTE_KIT_APP_DIR: config.appDir
 			}
 		}).then(() => {
