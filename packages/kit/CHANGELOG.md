@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- 76705b0: make HMR work outside localhost
+
 ## 1.0.0-next.6
 
 ### Patch Changes
