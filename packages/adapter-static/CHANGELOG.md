@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Support options
+
 ## 0.0.17
 
 ### Patch Changes
