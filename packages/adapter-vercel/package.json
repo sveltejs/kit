@@ -1,18 +1,21 @@
 {
 	"name": "@sveltejs/adapter-vercel",
 	"version": "1.0.0-next.0",
+	"main": "index.js",
+	"files": [
+		"files"
+	],
 	"scripts": {
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"prepublishOnly": "npm run build"
 	},
-	"main": "src/index.js",
-	"files": [
-		"src/index.js",
-		"files/index.js",
-		"files/package.json"
-	],
 	"devDependencies": {
-		"@sveltejs/app-utils": "workspace:*"
+		"@sveltejs/app-utils": "workspace:*",
+		"rollup": "^2.32.0",
+		"sirv": "^1.0.7"
 	}
 }

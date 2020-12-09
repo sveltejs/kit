@@ -96,9 +96,8 @@ importers:
     specifiers:
       toml: ^3.0.0
   packages/adapter-node:
-    dependencies:
-      '@sveltejs/app-utils': 'link:../app-utils'
     devDependencies:
+      '@sveltejs/app-utils': 'link:../app-utils'
       rollup: 2.32.0
       sirv: 1.0.7
     specifiers:
@@ -110,8 +109,12 @@ importers:
   packages/adapter-vercel:
     devDependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
+      rollup: 2.34.2
+      sirv: 1.0.7
     specifiers:
       '@sveltejs/app-utils': 'workspace:*'
+      rollup: ^2.32.0
+      sirv: ^1.0.7
   packages/app-utils:
     dependencies:
       mime: 2.4.6
@@ -3914,7 +3917,6 @@ packages:
     resolution:
       integrity: sha512-0FIG1jY88uhCP2yP4CfvtKEqPDRmsUwfY1kEOOM+DH/KOGATgaIFd/is1+fQOxsvh62ELzcFfKonwKWnHhrqmw==
   /rollup/2.34.2:
-    dev: false
     engines:
       node: '>=10.0.0'
     hasBin: true
