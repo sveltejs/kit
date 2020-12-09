@@ -107,8 +107,9 @@ importers:
   packages/adapter-static:
     specifiers: {}
   packages/adapter-vercel:
-    devDependencies:
+    dependencies:
       '@sveltejs/app-utils': 'link:../app-utils'
+    devDependencies:
       rollup: 2.34.2
       sirv: 1.0.7
     specifiers:
