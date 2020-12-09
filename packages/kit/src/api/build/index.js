@@ -303,8 +303,8 @@ export async function build(config) {
 					template,
 					manifest,
 					target: ${s(config.target)},${
-				config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
-			}
+						config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
+					}
 					client,
 					root,
 					setup,
