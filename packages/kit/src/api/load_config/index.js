@@ -2,7 +2,6 @@ import relative from 'require-relative';
 import { bold, yellow } from 'kleur/colors';
 import options from './options';
 import * as url from 'url';
-import { existsSync, statSync } from 'fs';
 
 function warn(msg) {
 	console.log(bold(yellow(msg)));

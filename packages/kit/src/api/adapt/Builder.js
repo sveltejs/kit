@@ -23,7 +23,7 @@ export default class Builder {
 	}
 
 	copy_static_files(dest) {
-		copy(this.#config.files.static, dest);
+		copy(this.#config.files.assets, dest);
 	}
 
 	async prerender({ force = false, dest }) {

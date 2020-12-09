@@ -16,7 +16,8 @@ module.exports = {
 		]
 	],
 	devOptions: {
-		open: 'none'
+		open: 'none',
+		output: 'stream'
 	},
 	buildOptions: {
 		sourceMaps: true
