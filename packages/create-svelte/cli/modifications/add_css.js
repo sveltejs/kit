@@ -3,7 +3,7 @@ import { add_svelte_prepocess_to_config, update_component, update_package_json }
 
 export default async function add_css(cwd, which) {
 	if (which === 'css') {
-		console.log(`You can add support for CSS preprocessors like SCSS/Less/PostCSS later.`);
+		console.log('You can add support for CSS preprocessors like SCSS/Less/PostCSS later.');
 	} else if (which === 'less') {
 		update_package_json(cwd, {
 			less: '^3.0.0',
@@ -15,8 +15,8 @@ export default async function add_css(cwd, which) {
 		console.log(
 			bold(
 				green(
-					`✔ Added Less support. ` +
-						`To use it inside Svelte components, add lang="less" to the attributes of a style tag.`
+					'✔ Added Less support. ' +
+						'To use it inside Svelte components, add lang="less" to the attributes of a style tag.'
 				)
 			)
 		);
@@ -31,8 +31,8 @@ export default async function add_css(cwd, which) {
 		console.log(
 			bold(
 				green(
-					`✔ Added SCSS support. ` +
-						`To use it inside Svelte components, add lang="scss" to the attributes of a style tag.`
+					'✔ Added SCSS support. ' +
+						'To use it inside Svelte components, add lang="scss" to the attributes of a style tag.'
 				)
 			)
 		);

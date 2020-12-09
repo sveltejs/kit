@@ -107,7 +107,7 @@ test('handles shorthand object properties', () => {
 		`
 		console.log({ a: __import0.a });
 		`
-	)
+	);
 });
 
 test('deconflicts with __importn and __export', () => {

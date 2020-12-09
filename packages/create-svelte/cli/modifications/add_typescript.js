@@ -28,13 +28,13 @@ export default async function add_typescript(cwd, yes) {
 		console.log(
 			bold(
 				green(
-					`✔ Added TypeScript support. ` +
-						`To use it inside Svelte components, add lang="ts" to the attributes of a script tag.`
+					'✔ Added TypeScript support. ' +
+						'To use it inside Svelte components, add lang="ts" to the attributes of a script tag.'
 				)
 			)
 		);
 	} else {
-		console.log(`You can add TypeScript support later. We'll let you know soon how to do it.`);
+		console.log("You can add TypeScript support later. We'll let you know soon how to do it.");
 	}
 }
 

@@ -24,11 +24,11 @@ export function get_body(req) {
 		case 'application/x-www-form-urlencoded':
 			return get_urlencoded(req);
 
-		case 'multipart/form-data':
+		case 'multipart/form-data': {
 			const boundary = directives.find((directive) => directive.startsWith('boundary='));
-			if (!boundary) throw new Error(`Missing boundary`);
+			if (!boundary) throw new Error('Missing boundary');
 			return get_multipart(req, boundary.slice('boundary='.length));
-
+		}
 		default:
 			throw new Error(`Invalid Content-Type ${type}`);
 	}

@@ -67,7 +67,7 @@ export function add_snowpack_plugin_to_config(cwd, pluginname) {
 		config = config.replace('plugins: [', `plugins: ['${pluginname}', `);
 	} else {
 		config = config.replace(
-			`extends: '@sveltejs/snowpack-config'`,
+			"extends: '@sveltejs/snowpack-config'",
 			`extends: '@sveltejs/snowpack-config',
 	plugins: ['${pluginname}']`
 		);
