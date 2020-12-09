@@ -14,7 +14,6 @@ export default {
 		}
 	},
 
-	// TODO check that the selector is present in the provided template
 	target: expect_string(null),
 
 	// used for testing
@@ -22,13 +21,21 @@ export default {
 
 	files: {
 		default: {
-			// TODO check these files exist when the config is loaded?
 			assets: expect_string('static'),
 			routes: expect_string('src/routes'),
 			setup: expect_string('src/setup'),
 			template: expect_string('src/app.html')
 		}
-	}
+	},
+
+	paths: {
+		default: {
+			base: expect_string(''),
+			assets: expect_string('')
+		}
+	},
+
+	appDir: expect_string('_app')
 };
 
 function expect_string(string) {

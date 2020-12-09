@@ -1,6 +1,7 @@
 import relative from 'require-relative';
 import { bold, yellow } from 'kleur/colors';
 import options from './options';
+import * as url from 'url';
 
 function warn(msg) {
 	console.log(bold(yellow(msg)));
@@ -42,11 +43,32 @@ function validate(definition, option, keypath) {
 	return merged;
 }
 
+function resolve(from, to) {
+	// the `/.` is weird, but allows `${assets}/images/blah.jpg` to work
+	// when `assets` is empty
+	return remove_trailing_slash(
+		url.resolve(add_trailing_slash(from), to)
+	) || '/.';
+}
+
+function add_trailing_slash(str) {
+	return str.endsWith('/') ? str : `${str}/`;
+}
+
+function remove_trailing_slash(str) {
+	return str.endsWith('/') ? str.slice(0, -1) : str;
+}
+
 const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
 
 export function load_config({ cwd = process.cwd() } = {}) {
 	const config = relative('./svelte.config.js', cwd);
-	return validate_config(config);
+	const validated = validate_config(config);
+
+	// TODO check all the `files` exist when the config is loaded?
+	// TODO check that `target` is present in the provided template
+
+	return validated;
 }
 
 export function validate_config(config) {
@@ -58,5 +80,18 @@ export function validate_config(config) {
 
 	const { kit = {} } = config;
 
-	return validate(options, kit, 'kit');
+	const validated = validate(options, kit, 'kit');
+
+	if (validated.appDir === '') {
+		throw new Error('kit.appDir cannot be empty');
+	}
+
+	// resolve paths
+	if (validated.paths.base !== '' && !validated.paths.base.startsWith('/')) {
+		throw new Error('kit.paths.base must be a root-relative path');
+	}
+
+	validated.paths.assets = resolve(validated.paths.base, validated.paths.assets);
+
+	return validated;
 }

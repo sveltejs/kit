@@ -3,10 +3,15 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import create_manifest_data from '../create_manifest_data';
 
+const get_config = (dir) => ({
+	files: {
+		routes: path.join(__dirname, dir)
+	},
+	appDir: '_app'
+});
+
 test('creates routes', () => {
-	const { components, pages, endpoints } = create_manifest_data(
-		path.join(__dirname, 'samples/basic')
-	);
+	const { components, pages, endpoints } = create_manifest_data(get_config('samples/basic'));
 
 	const index = { name: 'index', file: 'index.svelte', url: '/_app/routes/index.svelte' };
 	const about = { name: 'about', file: 'about.svelte', url: '/_app/routes/about.svelte' };
@@ -73,7 +78,7 @@ test('creates routes', () => {
 });
 
 test('encodes invalid characters', () => {
-	const { components, pages } = create_manifest_data(path.join(__dirname, 'samples/encoding'));
+	const { components, pages } = create_manifest_data(get_config('samples/encoding'));
 
 	// had to remove ? and " because windows
 
@@ -98,7 +103,7 @@ test('encodes invalid characters', () => {
 });
 
 test('allows regex qualifiers', () => {
-	const { pages } = create_manifest_data(path.join(__dirname, 'samples/qualifiers'));
+	const { pages } = create_manifest_data(get_config('samples/qualifiers'));
 
 	assert.equal(
 		pages.map((p) => p.pattern),
@@ -107,7 +112,7 @@ test('allows regex qualifiers', () => {
 });
 
 test('sorts routes correctly', () => {
-	const { pages } = create_manifest_data(path.join(__dirname, 'samples/sorting'));
+	const { pages } = create_manifest_data(get_config('samples/sorting'));
 
 	assert.equal(
 		pages.map((p) => p.parts.map((part) => part && part.component.file)),
@@ -131,7 +136,7 @@ test('sorts routes correctly', () => {
 });
 
 test('ignores files and directories with leading underscores', () => {
-	const { endpoints } = create_manifest_data(path.join(__dirname, 'samples/hidden-underscore'));
+	const { endpoints } = create_manifest_data(get_config('samples/hidden-underscore'));
 
 	assert.equal(
 		endpoints.map((r) => r.file),
@@ -140,7 +145,7 @@ test('ignores files and directories with leading underscores', () => {
 });
 
 test('ignores files and directories with leading dots except .well-known', () => {
-	const { endpoints } = create_manifest_data(path.join(__dirname, 'samples/hidden-dot'));
+	const { endpoints } = create_manifest_data(get_config('samples/hidden-dot'));
 
 	assert.equal(
 		endpoints.map((r) => r.file),
@@ -149,7 +154,7 @@ test('ignores files and directories with leading dots except .well-known', () =>
 });
 
 test('allows multiple slugs', () => {
-	const { endpoints } = create_manifest_data(path.join(__dirname, 'samples/multiple-slugs'));
+	const { endpoints } = create_manifest_data(get_config('samples/multiple-slugs'));
 
 	assert.equal(endpoints, [
 		{
@@ -164,7 +169,7 @@ test('allows multiple slugs', () => {
 
 test('allows multiple slugs with nested square brackets', () => {
 	const { endpoints } = create_manifest_data(
-		path.join(__dirname, 'samples/nested-square-brackets')
+		get_config('samples/nested-square-brackets')
 	);
 
 	assert.equal(endpoints, [
@@ -180,28 +185,28 @@ test('allows multiple slugs with nested square brackets', () => {
 
 test('fails on clashes', () => {
 	assert.throws(() => {
-		create_manifest_data(path.join(__dirname, 'samples/clash-pages'));
+		create_manifest_data(get_config('samples/clash-pages'));
 	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte pages clash/);
 
 	assert.throws(() => {
-		create_manifest_data(path.join(__dirname, 'samples/clash-routes'));
+		create_manifest_data(get_config('samples/clash-routes'));
 	}, /The \[bar\]\/index\.js and \[foo\]\.js routes clash/);
 });
 
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
-		create_manifest_data(path.join(__dirname, 'samples/invalid-params'));
+		create_manifest_data(get_config('samples/invalid-params'));
 	}, /Invalid route \[foo\]\[bar\]\.js — parameters must be separated/);
 });
 
 test('errors when trying to use reserved characters in route regexp', () => {
 	assert.throws(() => {
-		create_manifest_data(path.join(__dirname, 'samples/invalid-qualifier'));
+		create_manifest_data(get_config('samples/invalid-qualifier'));
 	}, /Invalid route \[foo\(\[a-z\]\(\[0-9\]\)\)\].js — cannot use \(, \), \? or : in route qualifiers/);
 });
 
 test('ignores things that look like lockfiles', () => {
-	const { endpoints } = create_manifest_data(path.join(__dirname, 'samples/lockfiles'));
+	const { endpoints } = create_manifest_data(get_config('samples/lockfiles'));
 
 	assert.equal(endpoints, [
 		{
@@ -216,7 +221,7 @@ test('ignores things that look like lockfiles', () => {
 
 test('works with custom extensions', () => {
 	const { components, pages, endpoints } = create_manifest_data(
-		path.join(__dirname, 'samples/custom-extension'),
+		get_config('samples/custom-extension'),
 		'.jazz .beebop .funk .svelte'
 	);
 

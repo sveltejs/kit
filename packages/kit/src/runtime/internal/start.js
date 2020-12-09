@@ -2,11 +2,11 @@ import Root from 'ROOT';
 import { pages, ignore, layout } from 'MANIFEST';
 import { Router } from './router';
 import { Renderer } from './renderer';
-import { init } from './singletons';
+import { init, set_paths } from './singletons';
 
-export async function start({ base, target, session, preloaded, error, status }) {
+export async function start({ paths, target, session, preloaded, error, status }) {
 	const router = new Router({
-		base,
+		base: paths.base,
 		pages,
 		ignore
 	});
@@ -22,6 +22,7 @@ export async function start({ base, target, session, preloaded, error, status })
 	});
 
 	init({ router, renderer });
+	set_paths(paths);
 
 	await router.init({ renderer });
 }

@@ -129,7 +129,7 @@ export function runner(callback) {
 			// TODO implement `svelte start` so we don't need to use an adapter
 			await build(config);
 
-			context.server = await start({ port });
+			context.server = await start({ port, config });
 			Object.assign(context, await setup({ port }));
 		},
 		async after(context) {

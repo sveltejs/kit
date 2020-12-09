@@ -42,7 +42,7 @@ function get_srcset_urls(attrs) {
 const OK = 2;
 const REDIRECT = 3;
 
-export async function prerender({ dir, out, manifest, log, force }) {
+export async function prerender({ dir, out, manifest, log, config, force }) {
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
@@ -159,7 +159,7 @@ export async function prerender({ dir, out, manifest, log, force }) {
 						if (parts[parts.length - 1] === 'index.html') parts.pop();
 
 						const file_exists =
-							(parsed.pathname.startsWith('/_app/') &&
+							(parsed.pathname.startsWith(`/${config.appDir}/`) &&
 								fs.existsSync(`${dir}/client/${parsed.pathname}`)) ||
 							fs.existsSync(`${out}${parsed.pathname}`) ||
 							fs.existsSync(`static${parsed.pathname}`) ||

@@ -10,8 +10,6 @@ import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace'
 async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
 
-	const base = ''; // TODO
-
 	const dependencies = {};
 
 	const serialized_session = try_serialize(session, (err) => {
@@ -201,33 +199,37 @@ async function get_response({ request, options, session, page, status = 200, err
 		});
 	}
 
+	const path_to = (asset) => `${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
+
+	const entry = path_to(options.client.entry);
+
 	const head = `${rendered.head}
 
 			${Array.from(js_deps)
-				.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
+				.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${Array.from(css_deps)
-				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
+				.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
 	`.replace(/^\t{2}/gm, '');
 
 	const body = `${rendered.html}
 		<script type="module">
-			import { start } from '/_app/${options.client.entry}';
+			import { start } from '${entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${
 					options.target
 						? `document.querySelector(${JSON.stringify(options.target)})`
 						: 'document.body'
 				},
-				base: "${base}",
+				paths: ${JSON.stringify(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},
 				session: ${serialized_session}
 			});
-		</script>`.replace(/^\t{3}/gm, '');
+		</script>`.replace(/^\t{2}/gm, '');
 
 	return {
 		status,

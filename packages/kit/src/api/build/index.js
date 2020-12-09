@@ -36,7 +36,7 @@ const OPTIMIZED = `${DIR}/build/optimized`;
 const s = JSON.stringify;
 
 export async function build(config) {
-	const manifest = create_manifest_data(config.files.routes);
+	const manifest = create_manifest_data(config);
 
 	mkdirp(ASSETS);
 	await rimraf(UNOPTIMIZED);
@@ -76,18 +76,27 @@ export async function build(config) {
 
 	render();
 
-	const mount = `--mount.${config.files.routes}=/_app/routes --mount.${config.files.setup}=/_app/setup`;
+	const mount = [
+		`--mount.${config.files.routes}=/${config.appDir}/routes`,
+		`--mount.${config.files.setup}=/${config.appDir}/setup`
+	].join(' ');
 
 	const promises = {
-		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`).then(
+		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`, {
+			env: {
+				SVELTE_KIT_APP_DIR: config.appDir
+			}
+		}).then(
 			() => {
 				progress.transformed_client = true;
 				render();
 			}
 		),
-		transform_server: exec(
-			`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`
-		).then(() => {
+		transform_server: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`, {
+			env: {
+				SVELTE_KIT_APP_DIR: config.appDir
+			}
+		}).then(() => {
 			progress.transformed_server = true;
 			render();
 		})
@@ -102,7 +111,7 @@ export async function build(config) {
 		deps: {}
 	};
 
-	const entry = path.resolve(`${UNOPTIMIZED}/client/_app/assets/runtime/internal/start.js`);
+	const entry = path.resolve(`${UNOPTIMIZED}/client/${config.appDir}/assets/runtime/internal/start.js`);
 
 	const client_chunks = await rollup({
 		input: {
@@ -129,7 +138,7 @@ export async function build(config) {
 				generateBundle(_options, bundle) {
 					const reverse_lookup = new Map();
 
-					const routes = path.resolve(`${UNOPTIMIZED}/client/_app/routes`);
+					const routes = path.resolve(`${UNOPTIMIZED}/client/${config.appDir}/routes`);
 
 					let inject_styles;
 
@@ -209,7 +218,7 @@ export async function build(config) {
 	});
 
 	await client_chunks.write({
-		dir: `${OPTIMIZED}/client/_app`,
+		dir: `${OPTIMIZED}/client/${config.appDir}`,
 		entryFileNames: '[name]-[hash].js',
 		chunkFileNames: '[name]-[hash].js',
 		assetFileNames: '[name]-[hash].js', // TODO CSS filenames aren't hashed?
@@ -223,7 +232,7 @@ export async function build(config) {
 	// just in case the server is still transforming...
 	await promises.transform_server;
 
-	const setup_file = `${UNOPTIMIZED}/server/_app/setup/index.js`;
+	const setup_file = `${UNOPTIMIZED}/server/${config.appDir}/setup/index.js`;
 	if (!fs.existsSync(setup_file)) {
 		mkdirp(path.dirname(setup_file));
 		fs.writeFileSync(setup_file, '');
@@ -266,38 +275,46 @@ export async function build(config) {
 	fs.writeFileSync(
 		`${UNOPTIMIZED}/server/app.js`,
 		`
-		import * as renderer from '@sveltejs/kit/dist/renderer';
-		import root from './_app/assets/generated/root.js';
-		import * as setup from './_app/setup/index.js';
-		import manifest from '../../manifest.js';
+			import * as renderer from '@sveltejs/kit/dist/renderer';
+			import root from './${config.appDir}/assets/generated/root.js';
+			import { set_paths } from './${config.appDir}/assets/runtime/internal/singletons.js';
+			import * as setup from './${config.appDir}/setup/index.js';
+			import manifest from '../../manifest.js';
 
-		const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
-			.replace('%svelte.head%', '" + head + "')
-			.replace('%svelte.body%', '" + body + "')};
+			const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
+				.replace('%svelte.head%', '" + head + "')
+				.replace('%svelte.body%', '" + body + "')};
 
-		const client = ${s(client)};
+			const client = ${s(client)};
 
-		export const paths = {
-			static: ${s(config.files.static)}
-		};
+			set_paths(${s(config.paths)});
 
-		export function render(request, { only_prerender = false } = {}) {
-			return renderer.render(request, {
-				static_dir: paths.static,
-				template,
-				manifest,
-				target: ${s(config.target)},${
-			config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
-		}
-				client,
-				root,
-				setup,
-				load: (route) => require(\`./routes/\${route.name}.js\`),
-				dev: false,
-				only_prerender
-			});
-		}
-	`
+			// allow paths to be overridden in svelte-kit start
+			export function init({ paths }) {
+				set_paths(paths);
+			}
+
+			init({ paths: ${s(config.paths)} });
+
+			export function render(request, { paths = ${s(config.paths)}, only_prerender = false } = {}) {
+				return renderer.render(request, {
+					static_dir: ${s(config.files.static)},
+					paths,
+					template,
+					manifest,
+					target: ${s(config.target)},${
+				config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
+			}
+					client,
+					root,
+					setup,
+					load: (route) => require(\`./routes/\${route.name}.js\`),
+					dev: false,
+					only_prerender,
+					app_dir: ${s(config.appDir)}
+				});
+			}
+		`
 			.replace(/^\t{3}/gm, '')
 			.trim()
 	);
