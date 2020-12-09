@@ -1,9 +1,12 @@
+const path = require('path');
+const pkg = require(path.join(process.cwd(), 'package.json'));
+
 // Consult https://www.snowpack.dev to learn about these options
 module.exports = {
 	install: ['svelte'],
 	installOptions: {
 		// ignore `import fs from 'fs'` etc
-		externalPackage: require('module').builtinModules
+		externalPackage: [...require('module').builtinModules, ...Object.keys(pkg.dependencies || {})]
 	},
 	plugins: [
 		[
