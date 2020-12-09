@@ -1,6 +1,7 @@
 'use strict';
 
-const { readFileSync, existsSync, copyFileSync } = require('fs');
+const { readFileSync, existsSync } = require('fs');
+const { copy } = require('@sveltejs/app-utils/files');
 const { resolve, join } = require('path');
 const parse = require('@architect/parser');
 const child_process = require('child_process');
@@ -37,11 +38,7 @@ module.exports = async function adapter(builder) {
 	builder.copy_client_files(static_directory);
 
   builder.log.minor('Building lambda...');
-  const local_lambda_dir = resolve(__dirname, 'files');
-  const lambda_files = [ 'index.js', 'package.json' ]
-  lambda_files.forEach(f => {
-    copyFileSync(join(local_lambda_dir, f), join(lambda_directory, f));
-  });
+  copy(join(__dirname, 'files'), lambda_directory);
 
   builder.log.minor('Installing lambda dependencies...');
 	child_process.execSync('npm install', {

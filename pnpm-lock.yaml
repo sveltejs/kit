@@ -83,11 +83,14 @@ importers:
       svelte: ^3.32.1
   packages/adapter-begin:
     dependencies:
-      '@architect/parser': 2.3.0
       '@sveltejs/app-utils': link:../app-utils
+    devDependencies:
+      rollup: 2.39.1
+      sirv: 1.0.11
     specifiers:
-      '@architect/parser': ^2.3.0
       '@sveltejs/app-utils': workspace:*
+      rollup: ^2.34.2
+      sirv: ^1.0.10
   packages/adapter-netlify:
     dependencies:
       toml: 3.0.0
@@ -269,12 +272,6 @@ importers:
       svelte: ^3.32.1
 lockfileVersion: 5.2
 packages:
-  /@architect/parser/2.3.0:
-    dev: false
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-5VnJNg4O49QSAW2hYPpG0pkgwBF5xGzQTn2fiNifztCynLrGNgyaloFrn1eVMIGDjq85+x6a5jai+zKN+dKUSA==
   /@babel/code-frame/7.10.4:
     dependencies:
       '@babel/highlight': 7.10.4

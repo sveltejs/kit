@@ -1,5 +1,6 @@
 'use strict';
 
+<<<<<<< HEAD
 const { render } = require('@sveltejs/app-utils/renderer');
 const client = require('@architect/shared/client.json');
 const manifest = require('@architect/shared/manifest.js');
@@ -40,6 +41,37 @@ exports.handler = async function http(req) {
 			dev: false
 		}
 	);
+=======
+const url = require('url');
+const app = require('@architect/shared/app.js');
+
+exports.handler = async (event) => {
+
+	const {
+		rawPath: path,
+		httpMethod,
+		headers,
+		queryStringParameters
+		// body, // TODO pass this to renderer
+		// isBase64Encoded // TODO is this useful?
+	} = event;
+
+	const query = new url.URLSearchParams();
+	for (const k in queryStringParameters) {
+		const value = queryStringParameters[k];
+		value.split(', ').forEach((v) => {
+			query.append(k, v);
+		});
+	}
+
+	const rendered = await app.render({
+		host: null, // TODO
+		method: httpMethod,
+		headers,
+		path,
+		query
+	});
+>>>>>>> build the lambda
 
 	if (rendered) {
 		return {
@@ -52,6 +84,10 @@ exports.handler = async function http(req) {
 
 	return {
 		statusCode: 404,
+<<<<<<< HEAD
 		body: 'Not Found'
+=======
+		body: 'Not found'
+>>>>>>> build the lambda
 	};
 };
