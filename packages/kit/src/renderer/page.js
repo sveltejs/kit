@@ -5,7 +5,7 @@ import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
-import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace'
+import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace';
 
 async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
