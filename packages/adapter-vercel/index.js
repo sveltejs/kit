@@ -1,6 +1,6 @@
-const { copyFileSync, writeFileSync, mkdirSync } = require('fs');
+const { writeFileSync, mkdirSync } = require('fs');
 const { resolve, join } = require('path');
-const { exec } = require('child_process');
+const { copy } = require('@sveltejs/app-utils/files');
 
 module.exports = async function adapter(builder) {
 	const vercel_output_directory = resolve('.vercel_build_output');
@@ -15,14 +15,8 @@ module.exports = async function adapter(builder) {
 
 	builder.log.minor('Building lambda...');
 	builder.copy_server_files(server_directory);
-	const fileList = ['index.js', 'package.json'];
-	fileList.forEach((f) =>
-		copyFileSync(resolve(join(__dirname, '..', 'files', f)), join(lambda_directory, f))
-	);
-	exec('npm install', {
-		cwd: lambda_directory,
-		stdio: [1, 2, 3]
-	});
+
+	copy(join(__dirname, '../files'), lambda_directory);
 
 	builder.log.minor('Prerendering static pages...');
 	await builder.prerender({
