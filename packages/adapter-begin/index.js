@@ -38,7 +38,8 @@ module.exports = async function adapter(builder) {
 	builder.copy_client_files(static_directory);
 
   builder.log.minor('Building lambda...');
-  copy(join(__dirname, 'files'), lambda_directory);
+  const local_lambda_dir = join(__dirname, 'files');
+  copy(local_lambda_dir, lambda_directory);
 
   builder.log.minor('Installing lambda dependencies...');
 	child_process.execSync('npm install', {
