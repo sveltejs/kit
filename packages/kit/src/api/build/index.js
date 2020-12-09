@@ -84,6 +84,7 @@ export async function build(config) {
 	const promises = {
 		transform_client: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/client`, {
 			env: {
+				...process.env,
 				SVELTE_KIT_APP_DIR: config.appDir
 			}
 		}).then(
@@ -94,6 +95,7 @@ export async function build(config) {
 		),
 		transform_server: exec(`node ${snowpack_bin} build ${mount} --out=${UNOPTIMIZED}/server --ssr`, {
 			env: {
+				...process.env,
 				SVELTE_KIT_APP_DIR: config.appDir
 			}
 		}).then(() => {
