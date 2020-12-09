@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { posixify, reserved_words } from '../utils';
 
-export default function create_manifest_data(cwd, extensions = '.svelte .html') {
+export default function create_manifest_data(config, extensions = '.svelte') { // TODO support .svelte.md etc?
+	const cwd = config.files.routes;
 	const component_extensions = extensions.split(' ');
 
 	function find_layout(file_name, component_name, dir = '') {
@@ -10,7 +11,7 @@ export default function create_manifest_data(cwd, extensions = '.svelte .html') 
 			fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`))
 		);
 		const file = posixify(path.join(dir, `${file_name}${ext}`));
-		const url = `/_app/routes/${file}`;
+		const url = `/${config.appDir}/routes/${file}`;
 
 		return ext
 			? {
@@ -27,12 +28,12 @@ export default function create_manifest_data(cwd, extensions = '.svelte .html') 
 
 	const default_layout = {
 		name: '$default_layout',
-		url: '/_app/assets/components/layout.svelte'
+		url: `/${config.appDir}/assets/components/layout.svelte`
 	};
 
 	const default_error = {
 		name: '$default_error',
-		url: '/_app/assets/components/error.svelte'
+		url: `/${config.appDir}/assets/components/error.svelte`
 	};
 
 	function walk(dir, parent_segments, parent_params, stack) {
@@ -126,7 +127,7 @@ export default function create_manifest_data(cwd, extensions = '.svelte .html') 
 				const component = {
 					name: get_slug(item.file),
 					file: item.file,
-					url: `/_app/routes/${item.file}`
+					url: `/${config.appDir}/routes/${item.file}`
 				};
 
 				components.push(component);
@@ -151,7 +152,7 @@ export default function create_manifest_data(cwd, extensions = '.svelte .html') 
 					name: `route_${get_slug(item.file)}`,
 					pattern: get_pattern(segments, !item.route_suffix),
 					file: item.file,
-					url: `/_app/routes/${item.file}`,
+					url: `/${config.appDir}/routes/${item.file}`,
 					params
 				});
 			}

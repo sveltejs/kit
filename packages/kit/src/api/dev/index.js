@@ -68,6 +68,8 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_snowpack() {
+		process.env.SVELTE_KIT_APP_DIR = this.config.appDir;
+
 		this.snowpack_port = await ports.find(this.port + 1);
 		this.snowpack_config = snowpack.loadAndValidateConfig(
 			{
@@ -77,13 +79,20 @@ class Watcher extends EventEmitter {
 			pkg
 		);
 
-		this.snowpack_config.mount[resolve(this.config.files.routes)] = {
-			url: '/_app/routes',
+		this.snowpack_config.mount[resolve('.svelte/assets')] = {
+			url: `/${this.config.appDir}/assets`,
 			static: false,
 			resolve: true
 		};
+
+		this.snowpack_config.mount[resolve(this.config.files.routes)] = {
+			url: `/${this.config.appDir}/routes`,
+			static: false,
+			resolve: true
+		};
+
 		this.snowpack_config.mount[resolve(this.config.files.setup)] = {
-			url: '/_app/setup',
+			url: `/${this.config.appDir}/setup`,
 			static: false,
 			resolve: true
 		};
@@ -98,6 +107,9 @@ class Watcher extends EventEmitter {
 
 	async init_server() {
 		const load = loader(this.snowpack, this.snowpack_config);
+
+		const { set_paths } = await load(`/${this.config.appDir}/assets/runtime/internal/singletons.js`);
+		set_paths(this.config.paths);
 
 		const static_handler = sirv(this.config.files.static, {
 			dev: true
@@ -135,7 +147,7 @@ class Watcher extends EventEmitter {
 				let setup;
 
 				try {
-					setup = await load('/_app/setup/index.js');
+					setup = await load(`/${this.config.appDir}/setup/index.js`);
 				} catch (err) {
 					if (!err.message.endsWith('NOT_FOUND')) throw err;
 					setup = {};
@@ -144,7 +156,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await load('/_app/assets/generated/root.js')).default;
+					root = (await load(`/${this.config.appDir}/assets/generated/root.js`)).default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.stack);
@@ -164,6 +176,7 @@ class Watcher extends EventEmitter {
 					},
 					{
 						static_dir: this.config.files.static,
+						paths: this.config.paths,
 						template: ({ head, body }) =>
 							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
 						manifest: this.manifest,
@@ -175,9 +188,10 @@ class Watcher extends EventEmitter {
 						dev: true,
 						root,
 						setup,
-						load: (route) => load(route.url.replace(/\.\w+$/, '.js')), // TODO is the replace still necessary?
+						load: (route) => load(route.url.replace(/\.\w+$/, '.js')),
 						only_prerender: false,
-						start_global: this.config.startGlobal
+						start_global: this.config.startGlobal,
+						app_dir: this.config.appDir
 					}
 				);
 
@@ -195,7 +209,7 @@ class Watcher extends EventEmitter {
 	}
 
 	update() {
-		this.manifest = create_manifest_data(this.config.files.routes);
+		this.manifest = create_manifest_data(this.config);
 
 		create_app({
 			manifest_data: this.manifest,

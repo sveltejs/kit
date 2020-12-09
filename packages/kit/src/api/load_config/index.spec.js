@@ -14,7 +14,12 @@ test('fills in defaults', () => {
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
-		}
+		},
+		paths: {
+			base: '',
+			assets: '/.'
+		},
+		appDir: '_app'
 	});
 });
 
@@ -58,8 +63,100 @@ test('fills in partial blanks', () => {
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
-		}
+		},
+		paths: {
+			base: '',
+			assets: '/.'
+		},
+		appDir: '_app'
 	});
+});
+
+test('fails if kit.appDir is blank', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				appDir: ''
+			}
+		});
+	}, /^kit\.appDir cannot be empty$/);
+});
+
+test('fails if paths.base is not root-relative', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					base: 'https://example.com/somewhere/else'
+				}
+			}
+		});
+	}, /^kit\.paths\.base must be a root-relative path$/);
+});
+
+function validate_paths(name, input, output) {
+	test(name, () => {
+		assert.equal(
+			validate_config({
+				kit: {
+					paths: input
+				}
+			}).paths,
+			output
+		);
+	});
+}
+
+validate_paths('assets relative to empty string', {
+	assets: 'path/to/assets'
+}, {
+	base: '',
+	assets: '/path/to/assets'
+});
+
+validate_paths('assets relative to base path', {
+	base: '/path/to/base',
+	assets: 'path/to/assets'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/base/path/to/assets'
+});
+
+validate_paths('empty assets relative to base path', {
+	base: '/path/to/base'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/base'
+});
+
+validate_paths('root-relative assets', {
+	assets: '/path/to/assets'
+}, {
+	base: '',
+	assets: '/path/to/assets'
+});
+
+validate_paths('root-relative assets with base path', {
+	base: '/path/to/base',
+	assets: '/path/to/assets'
+}, {
+	base: '/path/to/base',
+	assets: '/path/to/assets'
+});
+
+validate_paths('external assets', {
+	assets: 'https://cdn.example.com'
+}, {
+	base: '',
+	assets: 'https://cdn.example.com'
+});
+
+validate_paths('external assets with base', {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com'
+}, {
+	base: '/path/to/base',
+	assets: 'https://cdn.example.com'
 });
 
 test.run();

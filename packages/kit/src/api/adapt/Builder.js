@@ -3,12 +3,12 @@ import { prerender } from './prerender';
 
 export default class Builder {
 	#generated_files;
-	#static_files;
+	#config;
 	#manifest;
 
-	constructor({ generated_files, static_files, log, manifest }) {
+	constructor({ generated_files, config, log, manifest }) {
 		this.#generated_files = generated_files;
-		this.#static_files = static_files;
+		this.#config = config;
 		this.#manifest = manifest;
 
 		this.log = log;
@@ -23,7 +23,7 @@ export default class Builder {
 	}
 
 	copy_static_files(dest) {
-		copy(this.#static_files, dest);
+		copy(this.#config.files.assets, dest);
 	}
 
 	async prerender({ force = false, dest }) {
@@ -32,6 +32,7 @@ export default class Builder {
 			force,
 			dir: this.#generated_files,
 			manifest: this.#manifest,
+			config: this.#config,
 			log: this.log
 		});
 	}
