@@ -39,8 +39,7 @@ export function start({ port, config }) {
 					}, {
 						paths: {
 							base: '',
-							assets: '/.',
-							app: '/_app'
+							assets: '/.'
 						}
 					});
 

@@ -22,7 +22,7 @@ module.exports = {
 		sourceMaps: true
 	},
 	mount: {
-		'.svelte/assets': '/_app/assets'
+		'.svelte/assets': `/${process.env.SVELTE_KIT_APP_DIR}/assets`
 	},
 	alias: {
 		$app: './.svelte/assets/runtime/app'

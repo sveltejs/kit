@@ -15,11 +15,16 @@ suite('builder ', () => {
 
 suite('copy files', () => {
 	const generated_files = join(__dirname, 'fixtures/basic/.svelte/build/optimized');
-	const static_files = join(__dirname, 'fixtures/basic/static');
+	const config = {
+		files: {
+			static: join(__dirname, 'fixtures/basic/static')
+		},
+		appDir: '_app'
+	};
 
 	const builder = new Builder({
 		generated_files,
-		static_files,
+		config,
 		manifest: {
 			error: {
 				name: '$default_error',
@@ -46,7 +51,7 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	builder.copy_static_files(dest);
 
-	assert.equal(glob('**', { cwd: static_files }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: config.files.static }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	builder.copy_client_files(dest);

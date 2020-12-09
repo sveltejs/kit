@@ -59,6 +59,10 @@ export default function (test) {
 				if (!e.message.includes('Crashing now')) throw e;
 			});
 
+			// weird flakiness — without this, some requests are
+			// reported after prefetch_routes has finished
+			await new Promise(f => setTimeout(f, 100));
+
 			const requests = await capture_requests(async () => {
 				await click('a[href="a"]');
 

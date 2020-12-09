@@ -199,15 +199,17 @@ async function get_response({ request, options, session, page, status = 200, err
 		});
 	}
 
-	const entry = `${options.paths.assets}/${options.app_dir}/${options.client.entry}`.replace(/^\/\./, '');
+	const path_to = (asset) => `${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
+
+	const entry = path_to(options.client.entry);
 
 	const head = `${rendered.head}
 
 			${Array.from(js_deps)
-				.map((dep) => `<link rel="modulepreload" href="/_app/${dep}">`)
+				.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${Array.from(css_deps)
-				.map((dep) => `<link rel="stylesheet" href="/_app/${dep}">`)
+				.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
 	`.replace(/^\t{2}/gm, '');
