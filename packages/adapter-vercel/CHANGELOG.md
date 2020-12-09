@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Update to new adapter API
+
 ## 0.0.3
 
 ### Patch Changes

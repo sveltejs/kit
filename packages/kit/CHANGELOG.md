@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- 0e45255: Move options behind kit namespace, change paths -> kit.files
+- fa7f2b2: Implement live bindings for SSR code
+
 ## 1.0.0-next.5
 
 ### Patch Changes

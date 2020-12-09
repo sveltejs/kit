@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.24
+
+### Patch Changes
+
+- 0e45255: Move options behind kit namespace, change paths -> kit.files
+
 ## 2.0.0-next.23
 
 ### Patch Changes
