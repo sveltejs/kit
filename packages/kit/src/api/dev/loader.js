@@ -71,45 +71,65 @@ export default function loader(snowpack, config) {
 	}
 
 	async function initialize_module(url, data, url_stack) {
-		const { code, deps } = transform(data);
-
-		const fn = new Function(
-			'exports',
-			'global',
-			'require',
-			'__import__',
-			'__importmeta__',
-			...deps.map((d) => d.name).filter(Boolean),
-			`${code}\n//# sourceURL=${url}`
-		);
-
-		const promises = deps.map(async (dep) => {
-			const mod = await get_module(url, dep.source, url_stack);
-			return dep.prop ? mod[dep.prop] : mod;
-		});
-
-		const values = await Promise.all(promises);
+		const { code, deps, names } = transform(data);
 
 		const exports = {};
 
-		fn(
-			exports,
-			global,
-
-			// require(...)
-			(id) => {
-				// TODO can/should this restriction be relaxed?
-				throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
+		const args = [
+			{
+				name: 'global',
+				value: global
+			},
+			{
+				name: 'require',
+				value: (id) => {
+					// TODO can/should this restriction be relaxed?
+					throw new Error(`Use import instead of require (attempted to load '${id}' from '${url}')`);
+				}
+			},
+			{
+				name: names.exports,
+				value: exports
+			},
+			{
+				name: names.__export,
+				value: (name, get) => {
+					Object.defineProperty(exports, name, { get });
+				}
+			},
+			{
+				name: names.__export_all,
+				value: (mod) => {
+					for (const name in mod) {
+						Object.defineProperty(exports, name, {
+							get: () => mod[name]
+						});
+					}
+				}
+			},
+			{
+				name: names.__import,
+				value: (source) => get_module(url, source, url_stack)
+			},
+			{
+				name: names.__import_meta,
+				value: { url }
 			},
 
-			// import(...)
-			(source) => get_module(url, source, url_stack),
+			...await Promise.all(deps.map(async (dep) => {
+				return {
+					name: dep.name,
+					value: await get_module(url, dep.source, url_stack)
+				};
+			}))
+		];
 
-			// import.meta
-			{ url },
-
-			...values
+		const fn = new Function(
+			...args.map((d) => d.name),
+			`${code}\n//# sourceURL=${url}`
 		);
+
+		fn(...args.map((d) => d.value));
 
 		return exports;
 	}
