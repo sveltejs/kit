@@ -50,10 +50,12 @@ export async function build(config) {
 	copy_assets();
 
 	// TODO use import.meta.env.SSR upon resolution of https://github.com/snowpackjs/snowpack/discussions/1889
-	writeFileSync('.svelte/assets/runtime/app/env.js', [
-		'export const browser = typeof window !== "undefined";',
-		'export const dev = false;'
-	].join('\n'));
+	writeFileSync(
+		'.svelte/assets/runtime/app/env.js',
+		['export const browser = typeof window !== "undefined";', 'export const dev = false;'].join(
+			'\n'
+		)
+	);
 
 	const progress = {
 		transformed_client: false,
