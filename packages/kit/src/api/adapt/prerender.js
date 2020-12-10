@@ -81,12 +81,12 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const location = headers['location'];
+				const { location } = headers;
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
 				fs.writeFileSync(
 					file,
-					`<script>window.location.href=${JSON.stringify(headers['location'])}</script>`
+					`<meta http-equiv="refresh" content="0;url=${location}">`
 				);
 
 				return;
