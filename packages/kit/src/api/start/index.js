@@ -29,19 +29,22 @@ export function start({ port, config }) {
 
 			assets_handler(req, res, () => {
 				static_handler(req, res, async () => {
-					const rendered = await app.render({
-						host: null, // TODO
-						method: req.method,
-						headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-						path: parsed.pathname,
-						body: await get_body(req),
-						query: new URLSearchParams(parsed.query || '')
-					}, {
-						paths: {
-							base: '',
-							assets: '/.'
+					const rendered = await app.render(
+						{
+							host: null, // TODO
+							method: req.method,
+							headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+							path: parsed.pathname,
+							body: await get_body(req),
+							query: new URLSearchParams(parsed.query || '')
+						},
+						{
+							paths: {
+								base: '',
+								assets: '/.'
+							}
 						}
-					});
+					);
 
 					if (rendered) {
 						res.writeHead(rendered.status, rendered.headers);

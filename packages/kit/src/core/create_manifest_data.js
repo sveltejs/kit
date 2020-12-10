@@ -2,7 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { posixify, reserved_words } from '../utils';
 
-export default function create_manifest_data(config, extensions = '.svelte') { // TODO support .svelte.md etc?
+export default function create_manifest_data(config, extensions = '.svelte') {
+	// TODO support .svelte.md etc?
 	const cwd = config.files.routes;
 	const component_extensions = extensions.split(' ');
 

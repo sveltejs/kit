@@ -168,9 +168,7 @@ test('allows multiple slugs', () => {
 });
 
 test('allows multiple slugs with nested square brackets', () => {
-	const { endpoints } = create_manifest_data(
-		get_config('samples/nested-square-brackets')
-	);
+	const { endpoints } = create_manifest_data(get_config('samples/nested-square-brackets'));
 
 	assert.equal(endpoints, [
 		{

@@ -199,7 +199,8 @@ async function get_response({ request, options, session, page, status = 200, err
 		});
 	}
 
-	const path_to = (asset) => `${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
+	const path_to = (asset) =>
+		`${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
 
 	const entry = path_to(options.client.entry);
 

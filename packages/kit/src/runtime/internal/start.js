@@ -1,5 +1,5 @@
-import Root from 'ROOT';
-import { pages, ignore, layout } from 'MANIFEST';
+import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
+import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router';
 import { Renderer } from './renderer';
 import { init, set_paths } from './singletons';

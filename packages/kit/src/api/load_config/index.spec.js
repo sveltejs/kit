@@ -107,56 +107,84 @@ function validate_paths(name, input, output) {
 	});
 }
 
-validate_paths('assets relative to empty string', {
-	assets: 'path/to/assets'
-}, {
-	base: '',
-	assets: '/path/to/assets'
-});
+validate_paths(
+	'assets relative to empty string',
+	{
+		assets: 'path/to/assets'
+	},
+	{
+		base: '',
+		assets: '/path/to/assets'
+	}
+);
 
-validate_paths('assets relative to base path', {
-	base: '/path/to/base',
-	assets: 'path/to/assets'
-}, {
-	base: '/path/to/base',
-	assets: '/path/to/base/path/to/assets'
-});
+validate_paths(
+	'assets relative to base path',
+	{
+		base: '/path/to/base',
+		assets: 'path/to/assets'
+	},
+	{
+		base: '/path/to/base',
+		assets: '/path/to/base/path/to/assets'
+	}
+);
 
-validate_paths('empty assets relative to base path', {
-	base: '/path/to/base'
-}, {
-	base: '/path/to/base',
-	assets: '/path/to/base'
-});
+validate_paths(
+	'empty assets relative to base path',
+	{
+		base: '/path/to/base'
+	},
+	{
+		base: '/path/to/base',
+		assets: '/path/to/base'
+	}
+);
 
-validate_paths('root-relative assets', {
-	assets: '/path/to/assets'
-}, {
-	base: '',
-	assets: '/path/to/assets'
-});
+validate_paths(
+	'root-relative assets',
+	{
+		assets: '/path/to/assets'
+	},
+	{
+		base: '',
+		assets: '/path/to/assets'
+	}
+);
 
-validate_paths('root-relative assets with base path', {
-	base: '/path/to/base',
-	assets: '/path/to/assets'
-}, {
-	base: '/path/to/base',
-	assets: '/path/to/assets'
-});
+validate_paths(
+	'root-relative assets with base path',
+	{
+		base: '/path/to/base',
+		assets: '/path/to/assets'
+	},
+	{
+		base: '/path/to/base',
+		assets: '/path/to/assets'
+	}
+);
 
-validate_paths('external assets', {
-	assets: 'https://cdn.example.com'
-}, {
-	base: '',
-	assets: 'https://cdn.example.com'
-});
+validate_paths(
+	'external assets',
+	{
+		assets: 'https://cdn.example.com'
+	},
+	{
+		base: '',
+		assets: 'https://cdn.example.com'
+	}
+);
 
-validate_paths('external assets with base', {
-	base: '/path/to/base',
-	assets: 'https://cdn.example.com'
-}, {
-	base: '/path/to/base',
-	assets: 'https://cdn.example.com'
-});
+validate_paths(
+	'external assets with base',
+	{
+		base: '/path/to/base',
+		assets: 'https://cdn.example.com'
+	},
+	{
+		base: '/path/to/base',
+		assets: 'https://cdn.example.com'
+	}
+);
 
 test.run();

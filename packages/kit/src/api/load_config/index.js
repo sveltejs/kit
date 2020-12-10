@@ -21,7 +21,8 @@ function validate(definition, option, keypath) {
 		const actual = option[key];
 
 		const child_keypath = `${keypath}.${key}`;
-		const has_children = expected.default && typeof expected.default === 'object' && !Array.isArray(expected.default);
+		const has_children =
+			expected.default && typeof expected.default === 'object' && !Array.isArray(expected.default);
 
 		if (key in option) {
 			if (has_children) {
@@ -34,9 +35,7 @@ function validate(definition, option, keypath) {
 				merged[key] = expected.validate(actual, child_keypath);
 			}
 		} else {
-			merged[key] = has_children
-				? validate(expected.default, {}, child_keypath)
-				: expected.default;
+			merged[key] = has_children ? validate(expected.default, {}, child_keypath) : expected.default;
 		}
 	}
 
@@ -46,9 +45,7 @@ function validate(definition, option, keypath) {
 function resolve(from, to) {
 	// the `/.` is weird, but allows `${assets}/images/blah.jpg` to work
 	// when `assets` is empty
-	return remove_trailing_slash(
-		url.resolve(add_trailing_slash(from), to)
-	) || '/.';
+	return remove_trailing_slash(url.resolve(add_trailing_slash(from), to)) || '/.';
 }
 
 function add_trailing_slash(str) {
