@@ -6,7 +6,7 @@
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
 		"rollup": "^2.32.0",
-		"rollup-plugin-css-chunks": "^1.2.8",
+		"rollup-plugin-css-chunks": "^2.0.2",
 		"rollup-plugin-terser": "^7.0.2",
 		"sade": "^1.7.4",
 		"scorta": "^1.0.0",
