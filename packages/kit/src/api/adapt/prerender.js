@@ -86,7 +86,7 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 				log.warn(`${rendered.status} ${path} -> ${location}`);
 				fs.writeFileSync(
 					file,
-					`<meta http-equiv="refresh" content="0;url=${location}">`
+					`<meta http-equiv="refresh" content="0;url=${escape(location)}">`
 				);
 
 				return;
