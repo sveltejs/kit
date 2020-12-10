@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
@@ -41,6 +41,12 @@ class Watcher extends EventEmitter {
 		mkdirp('.svelte');
 
 		copy_assets();
+
+		// TODO use import.meta.env.SSR upon resolution of https://github.com/snowpackjs/snowpack/discussions/1889
+		writeFileSync('.svelte/assets/runtime/app/env.js', [
+			'export const browser = typeof window !== "undefined";',
+			'export const dev = true;'
+		].join('\n'));
 
 		await this.init_filewatcher();
 		await this.init_snowpack();
