@@ -43,6 +43,7 @@ class Watcher extends EventEmitter {
 		copy_assets();
 
 		// TODO use import.meta.env.SSR upon resolution of https://github.com/snowpackjs/snowpack/discussions/1889
+		// prettier-ignore
 		writeFileSync('.svelte/assets/runtime/app/env.js', [
 			'export const browser = typeof window !== "undefined";',
 			'export const dev = true;'
