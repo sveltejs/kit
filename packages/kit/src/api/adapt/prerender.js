@@ -84,7 +84,10 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 				const { location } = headers;
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
-				fs.writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+				fs.writeFileSync(
+					file,
+					`<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`
+				);
 
 				return;
 			}
