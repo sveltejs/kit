@@ -120,7 +120,7 @@ class Watcher extends EventEmitter {
 		);
 		set_paths(this.config.paths);
 
-		const static_handler = sirv(this.config.files.static, {
+		const static_handler = sirv(this.config.files.assets, {
 			dev: true
 		});
 
@@ -184,7 +184,7 @@ class Watcher extends EventEmitter {
 						body
 					},
 					{
-						static_dir: this.config.files.static,
+						static_dir: this.config.files.assets,
 						paths: this.config.paths,
 						template: ({ head, body }) =>
 							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
