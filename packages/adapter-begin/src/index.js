@@ -23,7 +23,6 @@ exports.handler = async function http(req) {
 
 	const rendered = await render(
 		{
-			host: domainName,
 			method,
 			headers,
 			path,

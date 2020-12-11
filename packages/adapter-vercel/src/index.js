@@ -7,7 +7,6 @@ export default async (req, res) => {
 	const { pathname, query = '' } = parse(req.url || '');
 
 	const rendered = await app.render({
-		host: null, // TODO
 		method: req.method,
 		headers: req.headers,
 		path: pathname,
