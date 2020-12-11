@@ -328,7 +328,8 @@ export async function build(config) {
 					dev: false,
 					only_prerender,
 					app_dir: ${s(config.appDir)},
-					host: ${s(config.host)}
+					host: ${s(config.host)},
+					host_header: ${s(config.hostHeader)}
 				});
 			}
 		`

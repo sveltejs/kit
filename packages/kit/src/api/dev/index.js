@@ -176,7 +176,6 @@ class Watcher extends EventEmitter {
 
 				const rendered = await render(
 					{
-						host: this.config.host || req.headers.host,
 						headers: req.headers,
 						method: req.method,
 						path: parsed.pathname,
@@ -201,7 +200,8 @@ class Watcher extends EventEmitter {
 						only_prerender: false,
 						start_global: this.config.startGlobal,
 						app_dir: this.config.appDir,
-						host: this.config.host
+						host: this.config.host,
+						host_header: this.config.hostHeader
 					}
 				);
 
