@@ -14,11 +14,8 @@ module.exports = async function adapter(builder, { pages = 'build', assets = 'bu
   builder.log.minor('Connecting to IPFS...');
   const ipfs = IpfsHttpClient(node);
 
-  builder.log.minor('Uploading files...');
-  const static_dirs = [ pages, assets ];
-  const uploaded_files = await Promise.all(
-    static_dirs.map(async dir => ipfs.add(IpfsHttpClient.globSource(dir, { recursive: true })))
-  );
-  
-  console.log(uploaded_files.flat());
+  for (const dir of new Set([ pages, assets ])) {
+    const { path, size, cid } = await ipfs.add(IpfsHttpClient.globSource(dir, { recursive: true }));
+    builder.log.minor(`Uploaded ${path}... ${size}b @ ${cid}`);
+  }
 };
