@@ -327,7 +327,8 @@ export async function build(config) {
 					load: (route) => require(\`./routes/\${route.name}.js\`),
 					dev: false,
 					only_prerender,
-					app_dir: ${s(config.appDir)}
+					app_dir: ${s(config.appDir)},
+					host: ${s(config.host)}
 				});
 			}
 		`

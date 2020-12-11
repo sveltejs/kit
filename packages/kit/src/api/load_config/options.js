@@ -35,7 +35,9 @@ export default {
 		}
 	},
 
-	appDir: expect_string('_app')
+	appDir: expect_string('_app'),
+
+	host: expect_string(null)
 };
 
 function expect_string(string) {

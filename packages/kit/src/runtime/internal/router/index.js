@@ -12,8 +12,9 @@ function scroll_state() {
 }
 
 export class Router {
-	constructor({ base, pages, ignore }) {
+	constructor({ base, host, pages, ignore }) {
 		this.base = base;
+		this.host = host;
 		this.pages = pages;
 		this.ignore = ignore;
 
@@ -143,7 +144,7 @@ export class Router {
 				const part = route.parts[route.parts.length - 1];
 				const params = part.params ? part.params(match) : {};
 
-				const page = { host: location.host, path, query, params };
+				const page = { host: this.host, path, query, params };
 
 				return { href: url.href, route, match, page };
 			}

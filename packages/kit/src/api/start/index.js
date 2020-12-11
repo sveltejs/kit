@@ -31,7 +31,7 @@ export function start({ port, config }) {
 				static_handler(req, res, async () => {
 					const rendered = await app.render(
 						{
-							host: null, // TODO
+							host: config.host || req.headers.host,
 							method: req.method,
 							headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 							path: parsed.pathname,

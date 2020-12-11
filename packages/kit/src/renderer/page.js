@@ -215,16 +215,19 @@ async function get_response({ request, options, session, page, status = 200, err
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
 	`.replace(/^\t{2}/gm, '');
 
+	const s = JSON.stringify;
+
 	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '${entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${
 					options.target
-						? `document.querySelector(${JSON.stringify(options.target)})`
+						? `document.querySelector(${s(options.target)})`
 						: 'document.body'
 				},
-				paths: ${JSON.stringify(options.paths)},
+				host: ${options.host ? s(options.host) : 'location.host'},
+				paths: ${s(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},
