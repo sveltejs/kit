@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 15dd751: Use meta http-equiv=refresh
+- be7e031: Fix handling of static files
+- ed6b8fd: Implement \$app/env
+
 ## 1.0.0-next.7
 
 ### Patch Changes
