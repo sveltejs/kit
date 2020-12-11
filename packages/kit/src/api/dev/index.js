@@ -120,7 +120,7 @@ class Watcher extends EventEmitter {
 		);
 		set_paths(this.config.paths);
 
-		const static_handler = sirv(this.config.files.static, {
+		const static_handler = sirv(this.config.files.assets, {
 			dev: true
 		});
 
