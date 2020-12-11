@@ -19,7 +19,9 @@ test('fills in defaults', () => {
 			base: '',
 			assets: '/.'
 		},
-		appDir: '_app'
+		appDir: '_app',
+		host: null,
+		hostHeader: null
 	});
 });
 
@@ -68,7 +70,9 @@ test('fills in partial blanks', () => {
 			base: '',
 			assets: '/.'
 		},
-		appDir: '_app'
+		appDir: '_app',
+		host: null,
+		hostHeader: null
 	});
 });
 
