@@ -314,7 +314,7 @@ export async function build(config) {
 
 			export function render(request, { paths = ${s(config.paths)}, only_prerender = false } = {}) {
 				return renderer.render(request, {
-					static_dir: ${s(config.files.static)},
+					static_dir: ${s(config.files.assets)},
 					paths,
 					template,
 					manifest,
