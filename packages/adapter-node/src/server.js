@@ -35,7 +35,6 @@ const server = http.createServer((req, res) => {
 		static_handler(req, res, () => {
 			prerendered_handler(req, res, async () => {
 				const rendered = await app.render({
-					host: null, // TODO
 					method: req.method,
 					headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 					path: parsed.pathname,

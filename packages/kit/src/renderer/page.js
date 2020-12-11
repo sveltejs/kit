@@ -10,6 +10,8 @@ import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace';
 async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
 
+	const host = options.host || request.headers[options.host_header];
+
 	const dependencies = {};
 
 	const serialized_session = try_serialize(session, (err) => {
@@ -126,7 +128,7 @@ async function get_response({ request, options, session, page, status = 200, err
 				? await mod.preload.call(
 						preload_context,
 						{
-							host: request.host,
+							host,
 							path: request.path,
 							query: request.query,
 							params
@@ -153,11 +155,10 @@ async function get_response({ request, options, session, page, status = 200, err
 			session: writable(session)
 		},
 		page: {
-			host: request.host,
+			host: host || request.headers.host,
 			path: request.path,
 			query: request.query,
-			params,
-			error
+			params
 		},
 		components: parts.map((part) => part.component)
 	};
@@ -215,16 +216,15 @@ async function get_response({ request, options, session, page, status = 200, err
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
 	`.replace(/^\t{2}/gm, '');
 
+	const s = JSON.stringify;
+
 	const body = `${rendered.html}
 		<script type="module">
 			import { start } from '${entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
-				target: ${
-					options.target
-						? `document.querySelector(${JSON.stringify(options.target)})`
-						: 'document.body'
-				},
-				paths: ${JSON.stringify(options.paths)},
+				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+				host: ${host ? s(host) : 'location.host'},
+				paths: ${s(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
 				preloaded: ${serialized_preloads},

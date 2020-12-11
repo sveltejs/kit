@@ -54,7 +54,7 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 
 		const rendered = await app.render(
 			{
-				host: null, // TODO ???
+				host: config.host,
 				method: 'GET',
 				headers: {},
 				path,

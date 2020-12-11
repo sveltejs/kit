@@ -59,7 +59,8 @@ async function setup({ port }) {
 			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
 		wait_for_function: (fn, arg, options) =>
 			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
-		capture_requests
+		capture_requests,
+		set_extra_http_headers: headers => page.setExtraHTTPHeaders(headers)
 	};
 }
 

@@ -15,6 +15,8 @@ module.exports = {
 
 		target: '#content-goes-here',
 
+		host: 'example.com',
+
 		// this creates `window.start` which starts the app, instead of
 		// it starting automatically — allows test runner to control
 		// when hydration occurs

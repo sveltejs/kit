@@ -22,7 +22,6 @@ exports.handler = async (event) => {
 	}
 
 	const rendered = await app.render({
-		host: null, // TODO
 		method: httpMethod,
 		headers,
 		path,

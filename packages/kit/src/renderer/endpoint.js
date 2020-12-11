@@ -19,7 +19,7 @@ export default function render_route(request, context, options) {
 			try {
 				const response = await handler(
 					{
-						host: request.host,
+						host: options.host || request.headers[options.host_header || 'host'],
 						path: request.path,
 						headers: request.headers,
 						query: request.query,

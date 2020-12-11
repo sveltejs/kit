@@ -31,9 +31,8 @@ export function start({ port, config }) {
 				static_handler(req, res, async () => {
 					const rendered = await app.render(
 						{
-							host: null, // TODO
 							method: req.method,
-							headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+							headers: req.headers,
 							path: parsed.pathname,
 							body: await get_body(req),
 							query: new URLSearchParams(parsed.query || '')
