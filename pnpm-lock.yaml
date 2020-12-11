@@ -169,7 +169,7 @@ importers:
       cheap-watch: 1.0.2
       http-proxy: 1.18.1
       rollup: 2.32.0
-      rollup-plugin-css-chunks: 1.2.8_rollup@2.32.0
+      rollup-plugin-css-chunks: 2.0.2_rollup@2.32.0
       rollup-plugin-terser: 7.0.2_rollup@2.32.0
       sade: 1.7.4
       scorta: 1.0.0
@@ -215,7 +215,7 @@ importers:
       require-relative: ^0.8.7
       rimraf: ^3.0.2
       rollup: ^2.32.0
-      rollup-plugin-css-chunks: ^1.2.8
+      rollup-plugin-css-chunks: ^2.0.2
       rollup-plugin-terser: ^7.0.2
       sade: ^1.7.4
       scorta: ^1.0.0
@@ -3849,16 +3849,17 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==
-  /rollup-plugin-css-chunks/1.2.8_rollup@2.32.0:
+  /rollup-plugin-css-chunks/2.0.2_rollup@2.32.0:
     dependencies:
       rollup: 2.32.0
       rollup-pluginutils: 2.8.2
       sourcemap-codec: 1.4.8
+      url-join: 4.0.1
     dev: false
     peerDependencies:
-      rollup: '>=1.19.0 <2.0.0 || >=2.21.0'
+      rollup: '>=2.29.0'
     resolution:
-      integrity: sha512-ix78x56xpeO0hfRYkVSB3OJDc9FSKrojNr4lSZUrd19MADwcqNYR2l03sCWCHwYBawf1bMVwzuXXBsFjZiRRiQ==
+      integrity: sha512-Cg/J6ZGPOWgMeGqqdp7fxnmDMr3Y+9V3fJekaFqWp+ceLr7l14Ua3FYtKJ/+m/DnSYYs009PrCt2pitOjYwWxw==
   /rollup-plugin-inject/3.0.2:
     dependencies:
       estree-walker: 0.6.1
@@ -4530,6 +4531,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-B0yRTzYdUCCn9n+F4+Gh4yIDtMQcaJsmYBDsTSG8g/OejKBodLQ2IHfN3bM7jUsRXndopT7OIXWdYqc1fjmV6g==
+  /url-join/4.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==
   /util-deprecate/1.0.2:
     dev: false
     resolution:
