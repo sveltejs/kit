@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { SourceMapConsumer } from 'source-map';
 
@@ -11,22 +10,6 @@ function get_sourcemap_url(contents) {
 	return undefined;
 }
 
-const file_cache = new Map();
-
-function get_file_contents(file_path) {
-	if (file_cache.has(file_path)) {
-		return file_cache.get(file_path);
-	}
-
-	try {
-		const data = fs.readFileSync(file_path, 'utf8');
-		file_cache.set(file_path, data);
-		return data;
-	} catch {
-		return undefined;
-	}
-}
-
 async function replace_async(str, regex, asyncFn) {
 	const promises = [];
 	str.replace(regex, (match, ...args) => {
@@ -37,21 +20,23 @@ async function replace_async(str, regex, asyncFn) {
 	return str.replace(regex, () => data.shift());
 }
 
-export async function sourcemap_stacktrace(stack) {
+// TODO does Snowpack compose sourcemaps, or will this only undo
+// the last in a series of transformations?
+export async function sourcemap_stacktrace(stack, load_contents) {
 	const replace = (line) =>
 		replace_async(
 			line,
 			/^ {4}at (?:(.+?)\s+\()?(?:(.+?):(\d+)(?::(\d+))?)\)?/,
-			async (input, var_name, file_path, line_number, column) => {
-				if (!file_path) return input;
+			async (input, var_name, address, line, column) => {
+				if (!address) return input;
 
-				const contents = get_file_contents(file_path);
+				const contents = await load_contents(address);
 				if (!contents) return input;
 
 				const sourcemap_url = get_sourcemap_url(contents);
 				if (!sourcemap_url) return input;
 
-				let dir = path.dirname(file_path);
+				let dir = path.dirname(address);
 				let sourcemap_data;
 
 				if (/^data:application\/json[^,]+base64,/.test(sourcemap_url)) {
@@ -63,7 +48,7 @@ export async function sourcemap_stacktrace(stack) {
 					}
 				} else {
 					const sourcemap_path = path.resolve(dir, sourcemap_url);
-					const data = get_file_contents(sourcemap_path);
+					const data = await load_contents(sourcemap_path);
 
 					if (!data) return input;
 
@@ -81,8 +66,9 @@ export async function sourcemap_stacktrace(stack) {
 				// TODO: according to typings, this code cannot work;
 				// the constructor returns a promise that needs to be awaited
 				const consumer = await new SourceMapConsumer(raw_sourcemap);
+
 				const pos = consumer.originalPositionFor({
-					line: Number(line_number),
+					line: Number(line),
 					column: Number(column),
 					bias: SourceMapConsumer.LEAST_UPPER_BOUND
 				});
@@ -96,8 +82,6 @@ export async function sourcemap_stacktrace(stack) {
 				return `    at ${var_name} (${source})`;
 			}
 		);
-
-	file_cache.clear();
 
 	return (await Promise.all(stack.split('\n').map(replace))).join('\n');
 }

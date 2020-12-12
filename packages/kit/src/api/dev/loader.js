@@ -1,4 +1,6 @@
+import { existsSync, readFileSync } from 'fs';
 import { URL } from 'url';
+import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
 // This function makes it possible to load modules from the 'server'
@@ -48,24 +50,24 @@ export default function loader(snowpack, config) {
 			return {};
 		}
 
-		if (cache.has(url)) return cache.get(url).then(module => module.exports);
+		if (cache.has(url)) return cache.get(url);
 
 		const promise = snowpack
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
-			.then((result) => initialize_module(url, result, url_stack.concat(url)))
+			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
 			.catch((e) => {
 				cache.delete(url);
 				throw e;
 			});
 
 		cache.set(url, promise);
-		return promise.then(module => module.exports);
+		return promise;
 	}
 
 	async function initialize_module(url, loaded, url_stack) {
 		const { code, deps, names } = transform(loaded.contents);
 
-		const module = { ...loaded, exports: {} };
+		const exports = {};
 
 		const args = [
 			{
@@ -83,19 +85,19 @@ export default function loader(snowpack, config) {
 			},
 			{
 				name: names.exports,
-				value: module.exports
+				value: exports
 			},
 			{
 				name: names.__export,
 				value: (name, get) => {
-					Object.defineProperty(module.exports, name, { get });
+					Object.defineProperty(exports, name, { get });
 				}
 			},
 			{
 				name: names.__export_all,
 				value: (mod) => {
 					for (const name in mod) {
-						Object.defineProperty(module.exports, name, {
+						Object.defineProperty(exports, name, {
 							get: () => mod[name]
 						});
 					}
@@ -122,9 +124,27 @@ export default function loader(snowpack, config) {
 
 		const fn = new Function(...args.map((d) => d.name), `${code}\n//# sourceURL=${url}`);
 
-		fn(...args.map((d) => d.value));
+		try {
+			fn(...args.map((d) => d.value));
+		} catch (e) {
+			e.stack = await sourcemap_stacktrace(e.stack, async (address) => {
+				if (existsSync(address)) {
+					// it's a filepath
+					return readFileSync(address, 'utf-8');
+				}
 
-		return module;
+				try {
+					const { contents } = await snowpack.loadUrl(address, { isSSR: true, encoding: 'utf8' });
+					return contents;
+				} catch {
+					// fail gracefully
+				}
+			});
+
+			throw e;
+		}
+
+		return exports;
 	}
 
 	return (url) => load(url, []);
