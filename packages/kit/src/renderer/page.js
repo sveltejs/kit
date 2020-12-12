@@ -1,5 +1,5 @@
 import devalue from 'devalue';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, fstat, readFileSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
@@ -265,6 +265,12 @@ export default async function render_page(request, context, options) {
 	} catch (error) {
 		try {
 			const status = error.status || 500;
+			error.stack = await sourcemap_stacktrace(error.stack, address => {
+				// TODO this won't work in all environments
+				if (existsSync(address)) {
+					return readFileSync(address, 'utf-8');
+				}
+			});
 
 			return await get_response({
 				request,
@@ -279,7 +285,7 @@ export default async function render_page(request, context, options) {
 			return {
 				status: 500,
 				headers: {},
-				body: await sourcemap_stacktrace(error.stack), // TODO probably not in prod?
+				body: error.stack, // TODO probably not in prod?
 				dependencies: {}
 			};
 		}
