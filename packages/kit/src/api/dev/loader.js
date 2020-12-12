@@ -1,5 +1,4 @@
 import { URL } from 'url';
-import { resolve, relative } from 'path';
 import { transform } from './transform';
 
 // This function makes it possible to load modules from the 'server'
@@ -30,17 +29,13 @@ export default function loader(snowpack, config) {
 		if (dependents) dependents.forEach(invalidate_all);
 	};
 
-	const absolute_mount = map_keys(config.mount, resolve);
-
 	snowpack.onFileChange(({ filePath }) => {
-		for (const path in absolute_mount) {
-			if (filePath.startsWith(path)) {
-				const relative_path = relative(path, filePath.replace(/\.\w+?$/, '.js'));
-				const url = resolve(absolute_mount[path].url, relative_path);
-
+		cache.forEach(async (promise, url) => {
+			const module = await promise;
+			if (module.originalFileLoc === filePath) {
 				invalidate_all(url);
 			}
-		}
+		});
 	});
 
 	async function load(url, url_stack) {
@@ -145,12 +140,4 @@ function load_node(source) {
 			return mod[prop];
 		}
 	});
-}
-
-function map_keys(object, map) {
-	return Object.entries(object).reduce((new_object, [k, v]) => {
-		new_object[map(k)] = v;
-
-		return new_object;
-	}, {});
 }
