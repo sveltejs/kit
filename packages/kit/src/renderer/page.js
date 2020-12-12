@@ -267,6 +267,7 @@ export default async function render_page(request, context, options) {
 			const status = error.status || 500;
 			error.stack = await sourcemap_stacktrace(error.stack, address => {
 				// TODO this won't work in all environments
+				// TODO sourcemaps are broken due to https://github.com/snowpackjs/snowpack/discussions/1941
 				if (existsSync(address)) {
 					return readFileSync(address, 'utf-8');
 				}
