@@ -53,27 +53,24 @@ export default function loader(snowpack, config) {
 			return {};
 		}
 
-		if (cache.has(url)) return cache.get(url);
+		if (cache.has(url)) return cache.get(url).then(module => module.exports);
 
-		const exports = snowpack
+		const promise = snowpack
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
-			.catch((err) => {
-				throw new Error(`Failed to load ${url}: ${err.message}`);
-			})
-			.then((result) => initialize_module(url, result.contents, url_stack.concat(url)))
+			.then((result) => initialize_module(url, result, url_stack.concat(url)))
 			.catch((e) => {
 				cache.delete(url);
 				throw e;
 			});
 
-		cache.set(url, exports);
-		return exports;
+		cache.set(url, promise);
+		return promise.then(module => module.exports);
 	}
 
-	async function initialize_module(url, data, url_stack) {
-		const { code, deps, names } = transform(data);
+	async function initialize_module(url, loaded, url_stack) {
+		const { code, deps, names } = transform(loaded.contents);
 
-		const exports = {};
+		const module = { ...loaded, exports: {} };
 
 		const args = [
 			{
@@ -91,19 +88,19 @@ export default function loader(snowpack, config) {
 			},
 			{
 				name: names.exports,
-				value: exports
+				value: module.exports
 			},
 			{
 				name: names.__export,
 				value: (name, get) => {
-					Object.defineProperty(exports, name, { get });
+					Object.defineProperty(module.exports, name, { get });
 				}
 			},
 			{
 				name: names.__export_all,
 				value: (mod) => {
 					for (const name in mod) {
-						Object.defineProperty(exports, name, {
+						Object.defineProperty(module.exports, name, {
 							get: () => mod[name]
 						});
 					}
@@ -132,7 +129,7 @@ export default function loader(snowpack, config) {
 
 		fn(...args.map((d) => d.value));
 
-		return exports;
+		return module;
 	}
 
 	return (url) => load(url, []);
