@@ -1,5 +1,5 @@
 import devalue from 'devalue';
-import { createReadStream, existsSync, readFileSync } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
