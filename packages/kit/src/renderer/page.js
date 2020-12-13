@@ -5,7 +5,6 @@ import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
-import { sourcemap_stacktrace } from '../api/dev/sourcemap_stacktrace';
 
 async function get_response({ request, options, session, page, status = 200, error }) {
 	let redirected;
@@ -265,13 +264,8 @@ export default async function render_page(request, context, options) {
 	} catch (error) {
 		try {
 			const status = error.status || 500;
-			error.stack = await sourcemap_stacktrace(error.stack, (address) => {
-				// TODO this won't work in all environments
-				// TODO sourcemaps are broken due to https://github.com/snowpackjs/snowpack/discussions/1941
-				if (existsSync(address)) {
-					return readFileSync(address, 'utf-8');
-				}
-			});
+
+			// TODO sourcemapped stacktrace? https://github.com/sveltejs/kit/pull/266
 
 			return await get_response({
 				request,
