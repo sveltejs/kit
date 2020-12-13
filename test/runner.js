@@ -41,6 +41,19 @@ async function setup({ port }) {
 	};
 	const base = `http://localhost:${port}`;
 
+	// Uncomment this for debugging
+	// page.on('console', msg => {
+	// 	const type = msg.type();
+	// 	const text = msg.text();
+
+	// 	if (text.startsWith('[ESM-HMR]')) return;
+
+	// 	// TODO would be nice if this warning didn't happen
+	// 	if (/received an unexpected slot "default"/.test(text)) return;
+
+	// 	(console[type] || console.log).call(console, text);
+	// });
+
 	return {
 		base,
 		visit: path => page.goto(base + path),

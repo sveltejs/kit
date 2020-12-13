@@ -1,22 +1,46 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('redirects from /routing/ to /routing', async ({ visit, text, pathname }) => {
-		await visit('/routing/');
+	test('redirects from /routing/ to /routing', async ({ errors, visit, click, sleep, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/"]');
 		assert.equal(await pathname(), '/routing');
 		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/');
+			assert.equal(await pathname(), '/routing');
+			assert.equal(await text('h1'), 'Great success!');
+		}
 	});
 
-	test('redirects from /routing/? to /routing', async ({ visit, text, pathname }) => {
-		await visit('/routing/?');
+	test('redirects from /routing/? to /routing', async ({ visit, click, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/?"]');
 		assert.equal(await pathname(), '/routing');
 		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/?');
+			assert.equal(await pathname(), '/routing');
+			assert.equal(await text('h1'), 'Great success!');
+		}
 	});
 
-	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({ visit, text, pathname }) => {
-		await visit('/routing/?foo=bar');
+	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({ visit, click, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/?foo=bar"]');
 		assert.equal(await pathname(), '/routing?foo=bar');
 		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/?foo=bar');
+			assert.equal(await pathname(), '/routing?foo=bar');
+			assert.equal(await text('h1'), 'Great success!');
+		}
 	});
 
 	test('serves static route', async ({ visit, text }) => {
