@@ -1,7 +1,7 @@
 <script context="module">
-	export function preload({ params }) {
+	export function load({ params }) {
 		const { rest } = params;
-		return { rest };
+		return { props: { rest } };
 	}
 </script>
 

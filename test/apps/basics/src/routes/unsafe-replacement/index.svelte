@@ -1,6 +1,6 @@
 <script context="module">
-	export function preload() {
-		return { escape: '$&' };
+	export function load() {
+		return { props: { escape: '$&' } };
 	}
 </script>
 
