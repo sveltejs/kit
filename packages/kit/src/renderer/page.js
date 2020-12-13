@@ -7,8 +7,6 @@ import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
 async function get_response({ request, options, session, page, status = 200, error }) {
-	let redirected;
-
 	const host = options.host || request.headers[options.host_header];
 
 	const dependencies = {};
@@ -17,29 +15,11 @@ async function get_response({ request, options, session, page, status = 200, err
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
-	const preload_context = {
-		redirect: (status, location) => {
-			if (
-				redirected &&
-				(redirected.status !== status || redirected.headers.location !== location)
-			) {
-				throw new Error('Conflicting redirects');
-			}
-			location = location.replace(/^\//g, ''); // leading slash (only)
-			redirected = {
-				status,
-				headers: { location },
-				body: null,
-				dependencies: {}
-			};
-		},
-		error: (status, error) => {
-			if (typeof error === 'string') {
-				error = new Error(error);
-			}
-			error.status = status;
-			throw error;
-		},
+	const serialized_data = [];
+
+	const load_context = {
+		page, // TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
+		session,
 		fetch: async (url, opts = {}) => {
 			const parsed = parse(url);
 
@@ -100,50 +80,60 @@ async function get_response({ request, options, session, page, status = 200, err
 	};
 
 	const match = page && page.pattern.exec(request.path);
+	const params = page && parts_to_params(match, page.params);
 
-	// the last part has all parameters from any segment in the URL
-	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1]) : {};
+	const parts = error
+		? [options.manifest.layout]
+		: [options.manifest.layout, ...page.parts];
 
-	const preloaded = [];
-	let can_prerender = true;
+	const component_promises = parts.map(part => options.load(part));
+	const components = [];
+	const props_promises = [];
 
-	const page_parts = error ? [{ component: options.manifest.error, params: [] }] : page.parts;
+	let context = {};
+	let load_error;
+	let maxage;
 
-	const parts = await Promise.all(
-		[{ component: options.manifest.layout, params: [] }, ...page_parts].map(async (part, i) => {
-			if (!part) return null;
+	for (let i = 0; i < component_promises.length; i += 1) {
+		const mod = await component_promises[i];
+		components[i] = mod.default;
 
-			const mod = await options.load(part.component);
+		if (options.only_prerender && !mod.prerender) {
+			return;
+		}
 
-			if (options.only_prerender && !mod.prerender) {
-				can_prerender = false;
-				return;
+		const loaded = mod.load && await mod.load.call(null, {
+			...load_context,
+			context: { ...context }
+		});
+
+		if (loaded) {
+			if (loaded.error) {
+				load_error = loaded.error;
+				break;
 			}
 
-			// these are only the parameters up to the current URL segment
-			const params = parts_to_params(match, part);
+			if (loaded.redirect) {
+				return {
+					status: loaded.redirect.status,
+					headers: {
+						location: loaded.redirect.to
+					}
+				};
+			}
 
-			const props = mod.preload
-				? await mod.preload.call(
-						preload_context,
-						{
-							host,
-							path: request.path,
-							query: request.query,
-							params
-						},
-						session
-				  )
-				: {};
+			if (loaded.context) {
+				context = {
+					...context,
+					...loaded.context
+				};
+			}
 
-			preloaded[i] = props;
-			return { component: mod.default, props };
-		})
-	);
+			maxage = loaded.maxage || 0;
 
-	if (options.only_prerender && !can_prerender) return;
-
-	if (redirected) return redirected;
+			props_promises[i] = loaded.props;
+		}
+	}
 
 	const props = {
 		status,
@@ -159,27 +149,14 @@ async function get_response({ request, options, session, page, status = 200, err
 			query: request.query,
 			params
 		},
-		components: parts.map((part) => part.component)
+		components
 	};
 
 	// leveln (instead of levels[n]) makes it easy to avoid
 	// unnecessary updates for layout components
-	parts.forEach((part, i) => {
-		props[`props_${i}`] = part.props;
-	});
-
-	const serialized_preloads = `[${preloaded
-		.map((data) =>
-			try_serialize(data, (err) => {
-				console.error(
-					`Failed to serialize preloaded data to transmit to the client at the ${request.path} route: ${err.message}`
-				);
-				console.warn(
-					'The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information'
-				);
-			})
-		)
-		.join(',')}]`;
+	for (let i = 0; i < props_promises.length; i += 1) {
+		props[`props_${i}`] = await props_promises[i];
+	}
 
 	const rendered = options.root.render(props);
 
@@ -190,7 +167,7 @@ async function get_response({ request, options, session, page, status = 200, err
 	if (page) {
 		// TODO handle error page deps
 		page.parts.filter(Boolean).forEach((part) => {
-			const page_deps = deps[part.component.name];
+			const page_deps = deps[part.name];
 
 			if (!page_deps) return; // we don't have this info during dev
 
@@ -226,7 +203,7 @@ async function get_response({ request, options, session, page, status = 200, err
 				paths: ${s(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
-				preloaded: ${serialized_preloads},
+				preloaded: [], // TODO replace with serialized_data
 				session: ${serialized_session}
 			});
 		</script>`.replace(/^\t{2}/gm, '');
@@ -287,10 +264,10 @@ export default async function render_page(request, context, options) {
 	}
 }
 
-function parts_to_params(match, part) {
+function parts_to_params(match, array) {
 	const params = {};
 
-	part.params.forEach((name, i) => {
+	array.forEach((name, i) => {
 		const is_spread = /^\.{3}.+$/.test(name);
 
 		if (is_spread) {
