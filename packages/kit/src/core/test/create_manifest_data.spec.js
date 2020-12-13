@@ -28,25 +28,29 @@ test('creates routes', () => {
 		{
 			path: '/',
 			pattern: /^\/$/,
-			parts: [{ component: index, params: [] }]
+			params: [],
+			parts: [index]
 		},
 
 		{
 			path: '/about',
 			pattern: /^\/about\/?$/,
-			parts: [{ component: about, params: [] }]
+			params: [],
+			parts: [about]
 		},
 
 		{
 			path: '/blog',
 			pattern: /^\/blog\/?$/,
-			parts: [{ component: blog, params: [] }]
+			params: [],
+			parts: [blog]
 		},
 
 		{
 			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			parts: [{ component: blog_$slug, params: ['slug'] }]
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 
@@ -115,7 +119,7 @@ test('sorts routes correctly', () => {
 	const { pages } = create_manifest_data(get_config('samples/sorting'));
 
 	assert.equal(
-		pages.map((p) => p.parts.map((part) => part && part.component.file)),
+		pages.map((p) => p.parts.map((part) => part && part.file)),
 		[
 			['index.svelte'],
 			['about.svelte'],
@@ -238,25 +242,29 @@ test('works with custom extensions', () => {
 		{
 			path: '/',
 			pattern: /^\/$/,
-			parts: [{ component: index, params: [] }]
+			params: [],
+			parts: [index]
 		},
 
 		{
 			path: '/about',
 			pattern: /^\/about\/?$/,
-			parts: [{ component: about, params: [] }]
+			params: [],
+			parts: [about]
 		},
 
 		{
 			path: '/blog',
 			pattern: /^\/blog\/?$/,
-			parts: [{ component: blog, params: [] }]
+			params: [],
+			parts: [blog]
 		},
 
 		{
 			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			parts: [{ component: blog_$slug, params: ['slug'] }]
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 
