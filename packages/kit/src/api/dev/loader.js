@@ -1,5 +1,6 @@
+import { existsSync, readFileSync } from 'fs';
 import { URL } from 'url';
-import { resolve, relative } from 'path';
+import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
 // This function makes it possible to load modules from the 'server'
@@ -30,17 +31,13 @@ export default function loader(snowpack, config) {
 		if (dependents) dependents.forEach(invalidate_all);
 	};
 
-	const absolute_mount = map_keys(config.mount, resolve);
-
 	snowpack.onFileChange(({ filePath }) => {
-		for (const path in absolute_mount) {
-			if (filePath.startsWith(path)) {
-				const relative_path = relative(path, filePath.replace(/\.\w+?$/, '.js'));
-				const url = resolve(absolute_mount[path].url, relative_path);
-
+		cache.forEach(async (promise, url) => {
+			const module = await promise;
+			if (module.originalFileLoc === filePath) {
 				invalidate_all(url);
 			}
-		}
+		});
 	});
 
 	async function load(url, url_stack) {
@@ -55,23 +52,20 @@ export default function loader(snowpack, config) {
 
 		if (cache.has(url)) return cache.get(url);
 
-		const exports = snowpack
+		const promise = snowpack
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
-			.catch((err) => {
-				throw new Error(`Failed to load ${url}: ${err.message}`);
-			})
-			.then((result) => initialize_module(url, result.contents, url_stack.concat(url)))
+			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
 			.catch((e) => {
 				cache.delete(url);
 				throw e;
 			});
 
-		cache.set(url, exports);
-		return exports;
+		cache.set(url, promise);
+		return promise;
 	}
 
-	async function initialize_module(url, data, url_stack) {
-		const { code, deps, names } = transform(data);
+	async function initialize_module(url, loaded, url_stack) {
+		const { code, deps, names } = transform(loaded.contents);
 
 		const exports = {};
 
@@ -130,7 +124,25 @@ export default function loader(snowpack, config) {
 
 		const fn = new Function(...args.map((d) => d.name), `${code}\n//# sourceURL=${url}`);
 
-		fn(...args.map((d) => d.value));
+		try {
+			fn(...args.map((d) => d.value));
+		} catch (e) {
+			e.stack = await sourcemap_stacktrace(e.stack, async (address) => {
+				if (existsSync(address)) {
+					// it's a filepath
+					return readFileSync(address, 'utf-8');
+				}
+
+				try {
+					const { contents } = await snowpack.loadUrl(address, { isSSR: true, encoding: 'utf8' });
+					return contents;
+				} catch {
+					// fail gracefully
+				}
+			});
+
+			throw e;
+		}
 
 		return exports;
 	}
@@ -148,12 +160,4 @@ function load_node(source) {
 			return mod[prop];
 		}
 	});
-}
-
-function map_keys(object, map) {
-	return Object.entries(object).reduce((new_object, [k, v]) => {
-		new_object[map(k)] = v;
-
-		return new_object;
-	}, {});
 }
