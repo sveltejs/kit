@@ -122,7 +122,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat({ component, params }) : stack
+					component ? stack.concat(component) : stack
 				);
 			} else if (item.is_page) {
 				const component = {
@@ -135,8 +135,8 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 
 				const parts =
 					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat({ component, params })
-						: stack.concat({ component, params });
+						? stack.slice(0, -1).concat(component)
+						: stack.concat(component);
 
 				const is_static = segments.every((segment) => segment.length === 1 && !segment[0].dynamic);
 				const path = is_static
@@ -146,6 +146,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 				pages.push({
 					path,
 					pattern: get_pattern(segments, true),
+					params,
 					parts
 				});
 			} else {
@@ -170,9 +171,9 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	pages.forEach((page) => {
 		const pattern = page.pattern.toString();
 		if (seen_pages.has(pattern)) {
-			const file = page.parts.pop().component.file;
+			const file = page.parts.pop().file;
 			const other_page = seen_pages.get(pattern);
-			const other_file = other_page.parts.pop().component.file;
+			const other_file = other_page.parts.pop().file;
 
 			throw new Error(`The ${other_file} and ${file} pages clash`);
 		}
