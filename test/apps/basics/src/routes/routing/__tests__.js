@@ -1,16 +1,46 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('serves /', async ({ visit, text }) => {
-		await visit('/routing/');
-
+	test('redirects from /routing/ to /routing', async ({ errors, visit, click, sleep, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/"]');
+		assert.equal(await pathname(), '/routing');
 		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/');
+			assert.equal(await pathname(), '/routing');
+			assert.equal(await text('h1'), 'Great success!');
+		}
 	});
 
-	test('serves /?', async ({ visit, text }) => {
-		await visit('/routing/?');
-
+	test('redirects from /routing/? to /routing', async ({ visit, click, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/?"]');
+		assert.equal(await pathname(), '/routing');
 		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/?');
+			assert.equal(await pathname(), '/routing');
+			assert.equal(await text('h1'), 'Great success!');
+		}
+	});
+
+	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({ visit, click, goto, text, pathname, js }) => {
+		await visit('/routing/slashes');
+		await click('a[href="/routing/?foo=bar"]');
+		assert.equal(await pathname(), '/routing?foo=bar');
+		assert.equal(await text('h1'), 'Great success!');
+
+		if (js) {
+			await visit('/routing/slashes');
+			await goto('/routing/?foo=bar');
+			assert.equal(await pathname(), '/routing?foo=bar');
+			assert.equal(await text('h1'), 'Great success!');
+		}
 	});
 
 	test('serves static route', async ({ visit, text }) => {
@@ -52,7 +82,7 @@ export default function (test) {
 		js
 	}) => {
 		if (js) {
-			await visit('/routing/');
+			await visit('/routing');
 
 			await prefetch_routes().catch(e => {
 				// from error handler tests; ignore
@@ -64,7 +94,7 @@ export default function (test) {
 			await new Promise(f => setTimeout(f, 100));
 
 			const requests = await capture_requests(async () => {
-				await click('a[href="a"]');
+				await click('a[href="/routing/a"]');
 
 				await wait_for_function(() => document.location.pathname == '/routing/a');
 
@@ -102,9 +132,9 @@ export default function (test) {
 		click,
 		wait_for_function
 	}) => {
-		await visit('/routing/');
+		await visit('/routing');
 
-		await click('[href="ambiguous/ok.json"]');
+		await click('[href="/routing/ambiguous/ok.json"]');
 		await wait_for_function(() => document.location.pathname == '/routing/ambiguous/ok.json');
 
 		assert.equal(await text('body'), 'ok');
@@ -117,9 +147,9 @@ export default function (test) {
 	});
 
 	test('resets the active element after navigation', async ({ visit, click, wait_for_function }) => {
-		await visit('/routing/');
+		await visit('/routing');
 
-		await click('[href="a"]');
+		await click('[href="/routing/a"]');
 
 		await wait_for_function(() => document.activeElement.nodeName == 'BODY');
 	});

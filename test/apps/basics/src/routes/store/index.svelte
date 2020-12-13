@@ -20,7 +20,7 @@
 
 <h1>Test</h1>
 <h2>Calls: {calls}</h2>
-<a href="result">results</a>
+<a href="/store/result">results</a>
 
 {#if $page.path === '/store/result'}
 	{console.log(window.oops = 'this should not happen')}

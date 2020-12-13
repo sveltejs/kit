@@ -41,6 +41,19 @@ async function setup({ port }) {
 	};
 	const base = `http://localhost:${port}`;
 
+	// Uncomment this for debugging
+	// page.on('console', msg => {
+	// 	const type = msg.type();
+	// 	const text = msg.text();
+
+	// 	if (text.startsWith('[ESM-HMR]')) return;
+
+	// 	// TODO would be nice if this warning didn't happen
+	// 	if (/received an unexpected slot "default"/.test(text)) return;
+
+	// 	(console[type] || console.log).call(console, text);
+	// });
+
 	return {
 		base,
 		visit: path => page.goto(base + path),
@@ -60,7 +73,8 @@ async function setup({ port }) {
 		wait_for_function: (fn, arg, options) =>
 			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests,
-		set_extra_http_headers: headers => page.setExtraHTTPHeaders(headers)
+		set_extra_http_headers: headers => page.setExtraHTTPHeaders(headers),
+		pathname: () => page.url().replace(base, '')
 	};
 }
 

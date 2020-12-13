@@ -88,9 +88,9 @@ export class Router {
 			const page = this.select(url);
 			if (page) {
 				const noscroll = a.hasAttribute('sapper:noscroll');
+				this.history.pushState({ id: this.cid }, '', url.href);
 				this.navigate(page, null, noscroll, url.hash);
 				event.preventDefault();
-				this.history.pushState({ id: this.cid }, '', url.href);
 			}
 		});
 
@@ -152,6 +152,15 @@ export class Router {
 	}
 
 	async navigate(page, id, noscroll, hash) {
+		// remove trailing slashes
+		if (location.pathname.endsWith('/') && location.pathname !== '/') {
+			history.replaceState(
+				{ id: this.cid },
+				'',
+				`${location.pathname.slice(0, -1)}${location.search}`
+			);
+		}
+
 		const popstate = !!id;
 		if (popstate) {
 			this.cid = id;
