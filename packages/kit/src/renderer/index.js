@@ -7,6 +7,17 @@ function md5(body) {
 }
 
 export async function render(request, options) {
+	if (request.path.endsWith('/') && request.path !== '/') {
+		const q = request.query.toString();
+
+		return {
+			status: 301,
+			headers: {
+				location: request.path.slice(0, -1) + (q ? `?${q}` : '')
+			}
+		};
+	}
+
 	const { context, headers = {} } =
 		(await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
 
