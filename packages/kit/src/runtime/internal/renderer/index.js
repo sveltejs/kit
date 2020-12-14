@@ -111,9 +111,7 @@ export class Renderer {
 			}
 
 			Object.assign(props, hydrated.props);
-			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query;
-			this.current_path = hydrated.path;
+			this.current = hydrated.state;
 		}
 
 		this.root = new this.Root({
@@ -132,14 +130,10 @@ export class Renderer {
 
 		const hydrated = await this.hydrate(selected);
 
-		if (this.token === token) {
-			// check render wasn't aborted
-			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query;
-			this.current_path = hydrated.path;
+		if (this.token === token) { // check render wasn't aborted
+			this.current = hydrated.state;
 
 			this.root.$set(hydrated.props);
-
 			this.stores.navigating.set(false);
 		}
 	}
@@ -158,6 +152,7 @@ export class Renderer {
 		};
 
 		const state = {
+			path: page.path,
 			params: JSON.stringify(page.params),
 			query: page.query.toString(),
 			nodes: []
@@ -215,11 +210,15 @@ export class Renderer {
 
 			const new_props = await Promise.all(props_promises);
 
-			new_props.forEach((props, i) => {
-				if (props) {
-					props[`props_${i}`] = props;
+			new_props.forEach((p, i) => {
+				if (p) {
+					props[`props_${i}`] = p;
 				}
 			});
+
+			if (!this.current || (state.path !== this.current.path)) {
+				props.page = page;
+			}
 		} catch (error) {
 			props.error = error;
 			props.status = 500;

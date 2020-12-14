@@ -62,7 +62,7 @@ function generate_client_manifest(manifest_data) {
 	const pages = `[
 		${manifest_data.pages.map((page) => {
 			const params = page.params.length
-				? '() => ({ ' + page.params.map((param, i) => {
+				? '(m) => ({ ' + page.params.map((param, i) => {
 					return param.startsWith('...')
 						? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
 						: `${param}: d(m[${i + 1}])`;

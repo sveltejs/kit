@@ -389,7 +389,7 @@ async function rimraf(path) {
 
 function get_params(array) {
 	return array.length
-		? '() => ({ ' + array.map((param, i) => {
+		? '(m) => ({ ' + array.map((param, i) => {
 			return param.startsWith('...')
 				? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
 				: `${param}: d(m[${i + 1}])`;

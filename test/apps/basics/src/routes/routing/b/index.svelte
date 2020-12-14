@@ -1,6 +1,6 @@
 <script context="module">
 	export async function load({ fetch }) {
-		const letter = fetch('/routing/b.json').then(r => r.json());
+		const letter = await fetch('/routing/b.json').then(r => r.json());
 		return { props: { letter } };
 	}
 </script>

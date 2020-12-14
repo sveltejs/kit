@@ -38,7 +38,7 @@ export async function prefetchRoutes(pathnames) {
 		? router.pages.filter((page) => pathnames.some((pathname) => page.pattern.test(pathname)))
 		: router.pages;
 
-	const promises = path_routes.map((r) => Promise.all(r.parts.map((p) => p[0]())));
+	const promises = path_routes.map((r) => Promise.all(r.parts.map((load) => load())));
 
 	await Promise.all(promises);
 }

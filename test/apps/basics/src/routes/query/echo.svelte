@@ -17,7 +17,7 @@
 		return values;
 	}
 
-	export function load(page) {
+	export function load({ page }) {
 		return {
 			props: {
 				values: to_pojo(page.query)

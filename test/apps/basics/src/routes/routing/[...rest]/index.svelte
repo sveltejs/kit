@@ -1,6 +1,6 @@
 <script context="module">
-	export function load({ params }) {
-		const { rest } = params;
+	export function load({ page }) {
+		const { rest } = page.params;
 		return { props: { rest } };
 	}
 </script>
