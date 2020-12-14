@@ -110,12 +110,12 @@ class Watcher extends EventEmitter {
 			lockfile: null,
 			pkgManifest: pkg
 		});
+
+		this.load = loader(this.snowpack, this.snowpack_config);
 	}
 
 	async init_server() {
-		const load = loader(this.snowpack, this.snowpack_config);
-
-		const { set_paths } = await load(
+		const { set_paths } = await this.load(
 			`/${this.config.appDir}/assets/runtime/internal/singletons.js`
 		);
 		set_paths(this.config.paths);
@@ -156,7 +156,7 @@ class Watcher extends EventEmitter {
 				let setup;
 
 				try {
-					setup = await load(`/${this.config.appDir}/setup/index.js`);
+					setup = await this.load(`/${this.config.appDir}/setup/index.js`);
 				} catch (err) {
 					if (!err.message.endsWith('NOT_FOUND')) throw err;
 					setup = {};
@@ -165,7 +165,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await load(`/${this.config.appDir}/assets/generated/root.js`)).default;
+					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.stack);
@@ -196,7 +196,6 @@ class Watcher extends EventEmitter {
 						dev: true,
 						root,
 						setup,
-						load: (route) => load(route.url.replace(/\.\w+$/, '.js')),
 						only_prerender: false,
 						start_global: this.config.startGlobal,
 						app_dir: this.config.appDir,
@@ -219,12 +218,29 @@ class Watcher extends EventEmitter {
 	}
 
 	update() {
-		this.manifest = create_manifest_data(this.config);
+		const manifest_data = create_manifest_data(this.config);
 
 		create_app({
-			manifest_data: this.manifest,
+			manifest_data,
 			output: '.svelte/assets'
 		});
+
+		const load = (url) => this.load(url.replace(/\.\w+$/, '.js'));
+
+		this.manifest = {
+			layout: () => load(manifest_data.layout.url),
+			error: () => load(manifest_data.error.url),
+			pages: manifest_data.pages.map((data) => ({
+				pattern: data.pattern,
+				params: get_params(data.params),
+				parts: data.parts.map(({ url }) => () => load(url))
+			})),
+			endpoints: manifest_data.endpoints.map((data) => ({
+				pattern: data.pattern,
+				params: get_params(data.params),
+				load: () => load(data.url)
+			}))
+		};
 	}
 
 	close() {
@@ -235,4 +251,18 @@ class Watcher extends EventEmitter {
 		this.cheapwatch.close();
 		this.snowpack.shutdown();
 	}
+}
+
+function get_params(array) {
+	return (match) => {
+		const params = {};
+		array.forEach((key, i) => {
+			if (key.startsWith('...')) {
+				params[key.slice(3)] = decodeURIComponent(match[i + 1]).split('/');
+			} else {
+				params[key] = decodeURIComponent(match[i + 1]);
+			}
+		});
+		return params;
+	};
 }

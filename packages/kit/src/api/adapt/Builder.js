@@ -4,12 +4,10 @@ import { prerender } from './prerender';
 export default class Builder {
 	#generated_files;
 	#config;
-	#manifest;
 
-	constructor({ generated_files, config, log, manifest }) {
+	constructor({ generated_files, config, log }) {
 		this.#generated_files = generated_files;
 		this.#config = config;
-		this.#manifest = manifest;
 
 		this.log = log;
 	}
@@ -31,7 +29,6 @@ export default class Builder {
 			out: dest,
 			force,
 			dir: this.#generated_files,
-			manifest: this.#manifest,
 			config: this.#config,
 			log: this.log
 		});

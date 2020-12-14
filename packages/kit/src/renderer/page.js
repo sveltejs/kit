@@ -6,7 +6,7 @@ import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
-async function get_response({ request, options, session, page, status = 200, error }) {
+async function get_response({ request, options, session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
 	const dependencies = {};
@@ -15,10 +15,24 @@ async function get_response({ request, options, session, page, status = 200, err
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
-	const serialized_data = [];
+	const match = route && route.pattern.exec(request.path);
+	const params = route && route.params(match);
+
+	const page = {
+		host,
+		path: request.path,
+		query: request.query,
+		params
+	};
 
 	const load_context = {
-		page, // TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
+		// TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
+		page: {
+			host,
+			path: request.path,
+			query: request.query,
+			params
+		},
 		session,
 		fetch: async (url, opts = {}) => {
 			const parsed = parse(url);
@@ -79,19 +93,15 @@ async function get_response({ request, options, session, page, status = 200, err
 		}
 	};
 
-	const match = page && page.pattern.exec(request.path);
-	const params = page && parts_to_params(match, page.params);
-
 	const parts = error
 		? [options.manifest.layout]
-		: [options.manifest.layout, ...page.parts];
+		: [options.manifest.layout, ...route.parts];
 
-	const component_promises = parts.map(part => options.load(part));
+	const component_promises = parts.map(loader => loader());
 	const components = [];
 	const props_promises = [];
 
 	let context = {};
-	let load_error;
 	let maxage;
 
 	for (let i = 0; i < component_promises.length; i += 1) {
@@ -109,8 +119,9 @@ async function get_response({ request, options, session, page, status = 200, err
 
 		if (loaded) {
 			if (loaded.error) {
-				load_error = loaded.error;
-				break;
+				const error = new Error(loaded.error.message);
+				error.status = loaded.error.status;
+				throw error;
 			}
 
 			if (loaded.redirect) {
@@ -129,6 +140,7 @@ async function get_response({ request, options, session, page, status = 200, err
 				};
 			}
 
+			// TODO use this
 			maxage = loaded.maxage || 0;
 
 			props_promises[i] = loaded.props;
@@ -143,12 +155,7 @@ async function get_response({ request, options, session, page, status = 200, err
 			navigating: writable(false),
 			session: writable(session)
 		},
-		page: {
-			host: host || request.headers.host,
-			path: request.path,
-			query: request.query,
-			params
-		},
+		page,
 		components
 	};
 
@@ -164,9 +171,9 @@ async function get_response({ request, options, session, page, status = 200, err
 	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
 	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
 
-	if (page) {
+	if (route) {
 		// TODO handle error page deps
-		page.parts.filter(Boolean).forEach((part) => {
+		route.parts.filter(Boolean).forEach((part) => {
 			const page_deps = deps[part.name];
 
 			if (!page_deps) return; // we don't have this info during dev
@@ -219,12 +226,12 @@ async function get_response({ request, options, session, page, status = 200, err
 }
 
 export default async function render_page(request, context, options) {
-	const page = options.manifest.pages.find((page) => page.pattern.test(request.path));
+	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
 	const session = await (options.setup.getSession && options.setup.getSession(context));
 
 	try {
-		if (!page) {
+		if (!route) {
 			const error = new Error(`Not found: ${request.path}`);
 			error.status = 404;
 			throw error;
@@ -234,7 +241,7 @@ export default async function render_page(request, context, options) {
 			request,
 			options,
 			session,
-			page,
+			route,
 			status: 200,
 			error: null
 		});
@@ -248,7 +255,7 @@ export default async function render_page(request, context, options) {
 				request,
 				options,
 				session,
-				page,
+				route,
 				status,
 				error
 			});

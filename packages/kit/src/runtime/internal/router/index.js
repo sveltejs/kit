@@ -85,11 +85,11 @@ export class Router {
 			// Don't handle hash changes
 			if (url.pathname === location.pathname && url.search === location.search) return;
 
-			const page = this.select(url);
-			if (page) {
+			const selected = this.select(url);
+			if (selected) {
 				const noscroll = a.hasAttribute('sapper:noscroll');
 				this.history.pushState({ id: this.cid }, '', url.href);
-				this.navigate(page, null, noscroll, url.hash);
+				this.navigate(selected, null, noscroll, url.hash);
 				event.preventDefault();
 			}
 		});
@@ -99,9 +99,9 @@ export class Router {
 
 			if (event.state) {
 				const url = new URL(location.href);
-				const page = this.select(url);
-				if (page) {
-					this.navigate(page, event.state.id);
+				const selected = this.select(url);
+				if (selected) {
+					this.navigate(selected, event.state.id);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -118,9 +118,8 @@ export class Router {
 		this.history.replaceState({ id: this.uid }, '', location.href);
 		this.scroll_history[this.uid] = scroll_state();
 
-		const page = this.select(new URL(location.href));
-		// if (page) return this.navigate(page, this.uid, true, hash);
-		if (page) return this.renderer.start(page);
+		const selected = this.select(new URL(location.href));
+		if (selected) return this.renderer.start(selected);
 	}
 
 	select(url) {
@@ -141,8 +140,7 @@ export class Router {
 
 			if (match) {
 				const query = new URLSearchParams(url.search);
-				const part = route.parts[route.parts.length - 1];
-				const params = part.params ? part.params(match) : {};
+				const params = route.params(match);
 
 				const page = { host: this.host, path, query, params };
 
@@ -151,7 +149,7 @@ export class Router {
 		}
 	}
 
-	async navigate(page, id, noscroll, hash) {
+	async navigate(selected, id, noscroll, hash) {
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState(
@@ -174,7 +172,7 @@ export class Router {
 			this.scroll_history[this.cid] = noscroll ? current_scroll : { x: 0, y: 0 };
 		}
 
-		await this.renderer.render(page);
+		await this.renderer.render(selected);
 
 		if (document.activeElement instanceof HTMLElement) {
 			document.activeElement.blur();

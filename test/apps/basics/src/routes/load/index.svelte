@@ -6,7 +6,9 @@
 			window.pageContext = pageContext;
 		}
 
-		return { foo: 'bar' };
+		return {
+			props: { foo: 'bar' }
+		};
 	}
 </script>
 

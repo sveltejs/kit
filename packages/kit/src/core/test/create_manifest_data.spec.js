@@ -26,28 +26,24 @@ test('creates routes', () => {
 
 	assert.equal(pages, [
 		{
-			path: '/',
 			pattern: /^\/$/,
 			params: [],
 			parts: [index]
 		},
 
 		{
-			path: '/about',
 			pattern: /^\/about\/?$/,
 			params: [],
 			parts: [about]
 		},
 
 		{
-			path: '/blog',
 			pattern: /^\/blog\/?$/,
 			params: [],
 			parts: [blog]
 		},
 
 		{
-			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
 			parts: [blog_$slug]
@@ -240,28 +236,24 @@ test('works with custom extensions', () => {
 
 	assert.equal(pages, [
 		{
-			path: '/',
 			pattern: /^\/$/,
 			params: [],
 			parts: [index]
 		},
 
 		{
-			path: '/about',
 			pattern: /^\/about\/?$/,
 			params: [],
 			parts: [about]
 		},
 
 		{
-			path: '/blog',
 			pattern: /^\/blog\/?$/,
 			params: [],
 			parts: [blog]
 		},
 
 		{
-			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
 			parts: [blog_$slug]

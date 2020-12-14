@@ -87,27 +87,24 @@ export class Renderer {
 			if (!ready) return;
 			this.session_dirty = true;
 
-			const page = this.router.select(new URL(location.href));
-			this.render(page);
+			const selected = this.router.select(new URL(location.href));
+			this.render(selected);
 		});
 		ready = true;
 	}
 
-	async start(page) {
+	async start(selected) {
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
 			status: this.initial.status,
-			page: {
-				...page.page,
-				params: {}
-			}
+			page: selected.page
 		};
 
 		if (this.initial.error) {
 			props.components = [this.layout.default];
 		} else {
-			const hydrated = await this.hydrate(page);
+			const hydrated = await this.hydrate(selected);
 
 			if (hydrated.redirect) {
 				throw new Error('TODO client-side redirects');
@@ -128,12 +125,12 @@ export class Renderer {
 		this.initial = null;
 	}
 
-	async render(page) {
+	async render(selected) {
 		const token = (this.token = {});
 
 		this.stores.navigating.set(true);
 
-		const hydrated = await this.hydrate(page);
+		const hydrated = await this.hydrate(selected);
 
 		if (this.token === token) {
 			// check render wasn't aborted
@@ -148,110 +145,88 @@ export class Renderer {
 	}
 
 	async hydrate({ route, page }) {
-		let redirect = null;
-
 		const props = {
 			error: null,
 			status: 200,
 			components: []
 		};
 
-		const preload_context = {
-			fetch: (url, opts) => fetch(url, opts),
-			redirect: (status, location) => {
-				if (redirect && (redirect.status !== status || redirect.location !== location)) {
-					throw new Error('Conflicting redirects');
-				}
-				redirect = { status, location };
-			},
-			error: (status, error) => {
-				props.error = typeof error === 'string' ? new Error(error) : error;
-				props.status = status;
-			}
+		const load_context = {
+			page, // TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
+			session: this.$session,
+			fetch: (url, opts) => fetch(url, opts)
 		};
 
-		const query = page.query.toString();
-		const query_dirty = query !== this.current_query;
+		const state = {
+			params: JSON.stringify(page.params),
+			query: page.query.toString(),
+			nodes: []
+		};
 
-		let branch;
+		const component_promises = [
+			this.layout_loader(),
+			...route.parts.map(loader => loader())
+		];
+		const props_promises = [];
+
+		let context = {};
+		let redirect;
 
 		try {
-			const match = route.pattern.exec(page.path);
+			for (let i = 0; i < component_promises.length; i += 1) {
+				// TODO skip if unchanged
+				// state.nodes[i] = this.current.nodes[i];
 
-			branch = await Promise.all(
-				[[this.layout_loader], ...route.parts].map(async ([loader, get_params], i) => {
-					const params = get_params ? get_params(match) : {};
-					const stringified_params = JSON.stringify(params);
+				const mod = await component_promises[i];
+				props.components[i] = mod.default;
 
-					const previous = this.current_branch[i];
-					if (previous) {
-						const changed =
-							previous.loader !== loader ||
-							(previous.uses_session && this.session_dirty) ||
-							(previous.uses_query && query_dirty) ||
-							previous.stringified_params !== stringified_params;
+				const loaded = mod.load && await mod.load.call(null, {
+					...load_context,
+					context: { ...context }
+				});
 
-						if (!changed) {
-							props.components[i] = previous.component;
-							return previous;
-						}
+				if (loaded) {
+					if (loaded.error) {
+						const error = new Error(loaded.error.message);
+						error.status = loaded.error.status;
+						throw error;
 					}
 
-					const { default: component, preload } = await loader();
+					if (loaded.redirect) {
+						redirect = loaded.redirect;
+						break;
+					}
 
-					const uses_session = preload && preload.length > 1;
-					let uses_query = false;
+					if (loaded.context) {
+						context = {
+							...context,
+							...loaded.context
+						};
+					}
 
-					const preloaded =
-						this.initial?.preloaded[i] ||
-						(preload
-							? await preload.call(
-									preload_context,
-									{
-										get query() {
-											uses_query = true;
-											return page.query;
-										},
-										host: page.host,
-										path: page.path,
-										params
-									},
-									this.$session
-							  )
-							: {});
+					if (loaded.maxage) {
+						// TODO cache for subsequent navigation back
+						// to this node
+					}
 
-					// TODO weird to have side-effects inside a map, but
-					// if they're not here, then setting props_n objects
-					// only for changed parts becomes trickier
-					props.components[i] = component;
-					props[`props_${i}`] = preloaded;
-
-					return {
-						component,
-						params,
-						stringified_params,
-						props: preloaded,
-						match,
-						loader,
-						uses_session,
-						uses_query
-					};
-				})
-			);
-
-			if (page.path !== this.current_path) {
-				props.page = {
-					...page,
-					params: branch[branch.length - 1].params
-				};
+					props_promises[i] = loaded.props;
+				}
 			}
+
+			const new_props = await Promise.all(props_promises);
+
+			new_props.forEach((props, i) => {
+				if (props) {
+					props[`props_${i}`] = props;
+				}
+			});
 		} catch (error) {
 			props.error = error;
 			props.status = 500;
-			branch = [];
+			state.nodes = [];
 		}
 
-		return { redirect, props, branch, query, path: page.path };
+		return { redirect, props, state };
 	}
 
 	async prefetch(url) {

@@ -13,14 +13,14 @@ function get_base_uri(window_document) {
 
 export function goto(href, { noscroll = false, replaceState = false } = {}) {
 	const url = new URL(href, get_base_uri(document));
-	const page = router.select(url);
+	const selected = router.select(url);
 
-	if (page) {
+	if (selected) {
 		// TODO this logic probably belongs inside router? cid should be private
 		history[replaceState ? 'replaceState' : 'pushState']({ id: router.cid }, '', href);
 
 		// TODO shouldn't need to pass the hash here
-		return router.navigate(page, null, noscroll, url.hash);
+		return router.navigate(selected, null, noscroll, url.hash);
 	}
 
 	location.href = href;

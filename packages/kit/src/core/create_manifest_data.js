@@ -138,13 +138,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 						? stack.slice(0, -1).concat(component)
 						: stack.concat(component);
 
-				const is_static = segments.every((segment) => segment.length === 1 && !segment[0].dynamic);
-				const path = is_static
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: null;
-
 				pages.push({
-					path,
 					pattern: get_pattern(segments, true),
 					params,
 					parts
