@@ -1,11 +1,13 @@
 <script context="module">
-	export async function preload(page) {
-		const res = await this.fetch('/host.json');
+	export async function load({ page, fetch }) {
+		const res = await fetch('/host.json');
 		const data = await res.json();
 
 		return {
-			host: page.host,
-			data
+			props: {
+				host: page.host,
+				data
+			}
 		};
 	}
 </script>

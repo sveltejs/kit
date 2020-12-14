@@ -260,7 +260,7 @@ export async function build(config) {
 		component_indexes.set(c.file, i);
 	});
 
-	const stringify_component = (c) => `() => import(${JSON.stringify(`./_app/routes/${c.file.replace(/\.\w+$/, '.js')}`)})`;
+	const stringify_component = (c) => `() => import(${JSON.stringify(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -298,21 +298,21 @@ export async function build(config) {
 				error: ${stringify_component(manifest.error)},
 				pages: [
 					${manifest.pages
-						.map((page) => {
-							const params = get_params(page.params);
-							const parts = page.parts.map(c => `components[${component_indexes.get(c.file)}]`);
+						.map((data) => {
+							const params = get_params(data.params);
+							const parts = data.parts.map(c => `components[${component_indexes.get(c.file)}]`);
 
-							return `{ pattern: ${page.pattern}, params: ${params}, parts: [${parts.join(', ')}] }`;
+							return `{ pattern: ${data.pattern}, params: ${params}, parts: [${parts.join(', ')}] }`;
 						})
 						.join(',\n\t\t\t\t\t')}
 				],
 				endpoints: [
 					${manifest.endpoints
-						.map((page) => {
-							const params = get_params(page.params);
-							const load = `() => import(${JSON.stringify(`./_app/routes/${page.file.replace(/\.\w+$/, '.js')}`)})`;
+						.map((data) => {
+							const params = get_params(data.params);
+							const load = `() => import(${JSON.stringify(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
 
-							return `{ pattern: ${page.pattern}, params: ${params}, load: ${load} }`;
+							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
 						.join(',\n\t\t\t\t\t')}
 				]
