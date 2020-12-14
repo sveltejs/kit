@@ -27,6 +27,17 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	const pages = [];
 	const endpoints = [];
 
+	const seen = new Map();
+	const check_pattern = (pattern, file) => {
+		pattern = pattern.toString();
+
+		if (seen.has(pattern)) {
+			throw new Error(`The ${seen.get(pattern)} and ${file} routes clash`);
+		}
+
+		seen.set(pattern, file);
+	};
+
 	const default_layout = {
 		name: '$default_layout',
 		url: `/${config.appDir}/assets/components/layout.svelte`
@@ -138,15 +149,21 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 						? stack.slice(0, -1).concat(component)
 						: stack.concat(component);
 
+				const pattern = get_pattern(segments, true);
+				check_pattern(pattern, item.file);
+
 				pages.push({
-					pattern: get_pattern(segments, true),
+					pattern,
 					params,
 					parts
 				});
 			} else {
+				const pattern = get_pattern(segments, !item.route_suffix);
+				check_pattern(pattern, item.file);
+
 				endpoints.push({
 					name: `route_${get_slug(item.file)}`,
-					pattern: get_pattern(segments, !item.route_suffix),
+					pattern,
 					file: item.file,
 					url: `/${config.appDir}/routes/${item.file}`,
 					params
@@ -159,32 +176,6 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	const error = find_layout('$error', 'error') || default_error;
 
 	walk(cwd, [], [], []);
-
-	// check for clashes
-	const seen_pages = new Map();
-	pages.forEach((page) => {
-		const pattern = page.pattern.toString();
-		if (seen_pages.has(pattern)) {
-			const file = page.parts.pop().file;
-			const other_page = seen_pages.get(pattern);
-			const other_file = other_page.parts.pop().file;
-
-			throw new Error(`The ${other_file} and ${file} pages clash`);
-		}
-
-		seen_pages.set(pattern, page);
-	});
-
-	const seen_routes = new Map();
-	endpoints.forEach((route) => {
-		const pattern = route.pattern.toString();
-		if (seen_routes.has(pattern)) {
-			const other_route = seen_routes.get(pattern);
-			throw new Error(`The ${other_route.file} and ${route.file} routes clash`);
-		}
-
-		seen_routes.set(pattern, route);
-	});
 
 	return {
 		layout,

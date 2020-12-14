@@ -52,14 +52,6 @@ test('creates routes', () => {
 
 	assert.equal(endpoints, [
 		{
-			name: 'route_index',
-			pattern: /^\/$/,
-			file: 'index.js',
-			url: '/_app/routes/index.js',
-			params: []
-		},
-
-		{
 			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
 			file: 'blog/index.json.js',
@@ -140,7 +132,7 @@ test('ignores files and directories with leading underscores', () => {
 
 	assert.equal(
 		endpoints.map((r) => r.file),
-		['index.js', 'e/f/g/h.js']
+		['e/f/g/h.js']
 	);
 });
 
@@ -184,7 +176,7 @@ test('allows multiple slugs with nested square brackets', () => {
 test('fails on clashes', () => {
 	assert.throws(() => {
 		create_manifest_data(get_config('samples/clash-pages'));
-	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte pages clash/);
+	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte routes clash/);
 
 	assert.throws(() => {
 		create_manifest_data(get_config('samples/clash-routes'));
