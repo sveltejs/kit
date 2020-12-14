@@ -60,22 +60,28 @@ function generate_client_manifest(manifest_data) {
 	]`.replace(/^\t/gm, '');
 
 	const pages = `[
-		${manifest_data.pages.map((page) => {
-			const params = page.params.length
-				? '(m) => ({ ' + page.params.map((param, i) => {
-					return param.startsWith('...')
-						? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
-						: `${param}: d(m[${i + 1}])`;
-				}).join(', ') + '})'
-				: 'empty';
+		${manifest_data.pages
+			.map((page) => {
+				const params = page.params.length
+					? '(m) => ({ ' +
+					  page.params
+							.map((param, i) => {
+								return param.startsWith('...')
+									? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+									: `${param}: d(m[${i + 1}])`;
+							})
+							.join(', ') +
+					  '})'
+					: 'empty';
 
-			return `{
+				return `{
 					// ${page.parts[page.parts.length - 1].file}
 					pattern: ${page.pattern},
 					params: ${params},
 					parts: [${page.parts.map((part) => `components[${component_indexes[part.name]}]`).join(', ')}]
 				}`;
-		}).join(',\n\n\t\t')}
+			})
+			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
 
 	return trim(`

@@ -93,11 +93,9 @@ async function get_response({ request, options, session, route, status = 200, er
 		}
 	};
 
-	const parts = error
-		? [options.manifest.layout]
-		: [options.manifest.layout, ...route.parts];
+	const parts = error ? [options.manifest.layout] : [options.manifest.layout, ...route.parts];
 
-	const component_promises = parts.map(loader => loader());
+	const component_promises = parts.map((loader) => loader());
 	const components = [];
 	const props_promises = [];
 
@@ -112,10 +110,12 @@ async function get_response({ request, options, session, route, status = 200, er
 			return;
 		}
 
-		const loaded = mod.load && await mod.load.call(null, {
-			...load_context,
-			context: { ...context }
-		});
+		const loaded =
+			mod.load &&
+			(await mod.load.call(null, {
+				...load_context,
+				context: { ...context }
+			}));
 
 		if (loaded) {
 			if (loaded.error) {

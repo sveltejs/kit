@@ -130,7 +130,8 @@ export class Renderer {
 
 		const hydrated = await this.hydrate(selected);
 
-		if (this.token === token) { // check render wasn't aborted
+		if (this.token === token) {
+			// check render wasn't aborted
 			this.current = hydrated.state;
 
 			this.root.$set(hydrated.props);
@@ -158,10 +159,7 @@ export class Renderer {
 			nodes: []
 		};
 
-		const component_promises = [
-			this.layout_loader(),
-			...route.parts.map(loader => loader())
-		];
+		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
 		const props_promises = [];
 
 		let context = {};
@@ -175,10 +173,12 @@ export class Renderer {
 				const mod = await component_promises[i];
 				props.components[i] = mod.default;
 
-				const loaded = mod.load && await mod.load.call(null, {
-					...load_context,
-					context: { ...context }
-				});
+				const loaded =
+					mod.load &&
+					(await mod.load.call(null, {
+						...load_context,
+						context: { ...context }
+					}));
 
 				if (loaded) {
 					if (loaded.error) {
@@ -216,7 +216,7 @@ export class Renderer {
 				}
 			});
 
-			if (!this.current || (state.path !== this.current.path)) {
+			if (!this.current || state.path !== this.current.path) {
 				props.page = page;
 			}
 		} catch (error) {

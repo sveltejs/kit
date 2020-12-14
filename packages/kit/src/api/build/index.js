@@ -260,7 +260,8 @@ export async function build(config) {
 		component_indexes.set(c.file, i);
 	});
 
-	const stringify_component = (c) => `() => import(${JSON.stringify(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
+	const stringify_component = (c) =>
+		`() => import(${JSON.stringify(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -389,10 +390,14 @@ async function rimraf(path) {
 
 function get_params(array) {
 	return array.length
-		? '(m) => ({ ' + array.map((param, i) => {
-			return param.startsWith('...')
-				? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
-				: `${param}: d(m[${i + 1}])`;
-		}).join(', ') + '})'
+		? '(m) => ({ ' +
+				array
+					.map((param, i) => {
+						return param.startsWith('...')
+							? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+							: `${param}: d(m[${i + 1}])`;
+					})
+					.join(', ') +
+				'})'
 		: 'empty';
 }
