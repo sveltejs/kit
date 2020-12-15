@@ -154,7 +154,7 @@ export class Renderer {
 					const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
 					if (script) {
 						const { body, ...init } = JSON.parse(script.textContent);
-						return new Response(body, init);
+						return Promise.resolve(new Response(body, init));
 					}
 				}
 
