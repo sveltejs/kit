@@ -392,6 +392,9 @@ async function rimraf(path) {
 	});
 }
 
+// given an array of params like `['x', 'y', 'z']` for
+// src/routes/[x]/[y]/[z]/svelte, create a function
+// that turns a RexExpMatchArray into ({ x, y, z })
 function get_params(array) {
 	return array.length
 		? '(m) => ({ ' +
