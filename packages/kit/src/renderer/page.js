@@ -224,27 +224,36 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const s = JSON.stringify;
 
-	const head = `${rendered.head}
-			${Array.from(js_deps)
-				.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`)
-				.join('\n\t\t\t')}
-			${Array.from(css_deps)
-				.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
-				.join('\n\t\t\t')}
-			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+	// TODO instead of rendered.css.code, the loader should track dependencies.
+	// otherwise we'll miss manually imported CSS
+	const links = options.amp
+		? `<style amp-custom>${rendered.css.code}</style>`
+		: options.dev
+		? `<style>${rendered.css.code}</style>`
+		: [
+				...Array.from(js_deps).map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`),
+				...Array.from(css_deps).map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
+		  ].join('\n\t\t\t');
 
-			<script type="module">
-				import { start } from '${entry}';
-				${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
-					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-					host: ${host ? s(host) : 'location.host'},
-					paths: ${s(options.paths)},
-					status: ${status},
-					error: ${serialize_error(error)},
-					session: ${serialized_session}
-				});
-			</script>
-	`.replace(/^\t{2}/gm, '');
+	const init = options.amp
+		? `
+		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
+		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+		<script async src="https://cdn.ampproject.org/v0.js"></script>`
+		: `
+		<script type="module">
+			import { start } from '${entry}';
+			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+				host: ${host ? s(host) : 'location.host'},
+				paths: ${s(options.paths)},
+				status: ${status},
+				error: ${serialize_error(error)},
+				session: ${serialized_session}
+			});
+		</script>`;
+
+	const head = [rendered.head, links, init].join('\n\n');
 
 	const body = `${rendered.html}
 

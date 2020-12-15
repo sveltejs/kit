@@ -38,7 +38,9 @@ export default {
 	appDir: expect_string('_app'),
 
 	host: expect_string(null),
-	hostHeader: expect_string(null)
+	hostHeader: expect_string(null),
+
+	amp: expect_boolean(false)
 };
 
 function expect_string(string) {
@@ -46,6 +48,18 @@ function expect_string(string) {
 		default: string,
 		validate: (option, keypath) => {
 			assert_is_string(option, keypath);
+			return option;
+		}
+	};
+}
+
+function expect_boolean(boolean) {
+	return {
+		default: boolean,
+		validate: (option, keypath) => {
+			if (typeof option !== 'boolean') {
+				throw new Error(`${keypath} should be true or false, if specified`);
+			}
 			return option;
 		}
 	};

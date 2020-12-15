@@ -53,7 +53,8 @@ export async function build(config) {
 	// prettier-ignore
 	writeFileSync('.svelte/assets/runtime/app/env.js', [
 		'export const browser = typeof window !== "undefined";',
-		'export const dev = false;'
+		'export const dev = false;',
+		`export const amp = ${config.amp};`
 	].join('\n'));
 
 	const progress = {
@@ -335,6 +336,7 @@ export async function build(config) {
 					root,
 					setup,
 					dev: false,
+					amp: ${config.amp},
 					only_prerender,
 					app_dir: ${s(config.appDir)},
 					host: ${s(config.host)},

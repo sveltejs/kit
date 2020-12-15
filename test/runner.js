@@ -78,7 +78,7 @@ async function setup({ port }) {
 	};
 }
 
-export function runner(callback) {
+export function runner(callback, options = {}) {
 	function run(is_dev, { before, after }) {
 		const suite = uvu.suite(is_dev ? 'dev' : 'build');
 
@@ -94,17 +94,19 @@ export function runner(callback) {
 					});
 				});
 
-				test_fn(`${name} [js]`, async context => {
-					await callback({
-						...context,
-						js: true,
-						visit: async (path) => {
-							const res = await context.visit(path);
-							await context.evaluate(() => window.start());
-							return res;
-						}
+				if (!options.amp) {
+					test_fn(`${name} [js]`, async context => {
+						await callback({
+							...context,
+							js: true,
+							visit: async (path) => {
+								const res = await context.visit(path);
+								await context.evaluate(() => window.start());
+								return res;
+							}
+						});
 					});
-				});
+				}
 			}
 		}
 
