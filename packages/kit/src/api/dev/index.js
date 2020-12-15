@@ -6,10 +6,11 @@ import CheapWatch from 'cheap-watch';
 import { scorta } from 'scorta/sync';
 import * as ports from 'port-authority';
 import sirv from 'sirv';
-import create_manifest_data from '../../core/create_manifest_data';
+import amp_validator from 'amphtml-validator';
 import { createServer } from 'http';
-import { create_app } from '../../core/create_app';
 import snowpack from 'snowpack';
+import create_manifest_data from '../../core/create_manifest_data';
+import { create_app } from '../../core/create_app';
 import pkg from '../../../package.json';
 import loader from './loader';
 import { mkdirp } from '@sveltejs/app-utils/files';
@@ -46,7 +47,8 @@ class Watcher extends EventEmitter {
 		// prettier-ignore
 		writeFileSync('.svelte/assets/runtime/app/env.js', [
 			'export const browser = typeof window !== "undefined";',
-			'export const dev = true;'
+			'export const dev = true;',
+			`export const amp = ${this.config.amp};`
 		].join('\n'));
 
 		await this.init_filewatcher();
@@ -124,6 +126,8 @@ class Watcher extends EventEmitter {
 			dev: true
 		});
 
+		const validator = this.config.amp && (await amp_validator.getInstance());
+
 		this.server = createServer(async (req, res) => {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {
 				return this.snowpack.handleRequest(req, res);
@@ -144,14 +148,7 @@ class Watcher extends EventEmitter {
 
 				if (req.url === '/favicon.ico') return;
 
-				const template = readFileSync(this.config.files.template, 'utf-8').replace(
-					'</head>',
-					`
-						<script>window.HMR_WEBSOCKET_URL = \`ws://\${location.hostname}:${this.snowpack_port}\`;</script>
-						<script type="module" src="/__snowpack__/hmr-client.js"></script>
-						<script type="module" src="/__snowpack__/hmr-error-overlay.js"></script>
-					</head>`.replace(/^\t{6}/gm, '')
-				);
+				const template = readFileSync(this.config.files.template, 'utf-8');
 
 				let setup;
 
@@ -184,8 +181,59 @@ class Watcher extends EventEmitter {
 					},
 					{
 						paths: this.config.paths,
-						template: ({ head, body }) =>
-							template.replace('%svelte.head%', () => head).replace('%svelte.body%', () => body),
+						template: ({ head, body }) => {
+							let rendered = template
+								.replace('%svelte.head%', () => head)
+								.replace('%svelte.body%', () => body);
+
+							if (validator) {
+								const result = validator.validateString(rendered);
+
+								if (result.status !== 'PASS') {
+									const lines = rendered.split('\n');
+
+									const len = String(lines.length).length;
+									const pad = (n) => {
+										n = String(n);
+										while (n.length < len) n = ` ${n}`;
+										return n;
+									};
+
+									const escape = (str) =>
+										str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+									// TODO make this look pretty (a bit of CSS would go a long way)
+
+									head = '';
+									body = `
+										<h1>AMP validation failed</h1>
+
+										${result.errors
+											.map(
+												(error) => `
+											<h2>${error.severity}</h2>
+											<p>${error.message} (<a href="${error.specUrl}">${error.code}</a>)</p>
+											<pre>${pad(error.line)}: ${escape(lines[error.line - 1])}</pre>
+										`
+											)
+											.join('\n\n')}
+									`;
+
+									rendered = template
+										.replace('%svelte.head%', () => head)
+										.replace('%svelte.body%', () => body);
+								}
+							}
+
+							return rendered.replace(
+								'</head>',
+								`
+									<script>window.HMR_WEBSOCKET_URL = \`ws://\${location.hostname}:${this.snowpack_port}\`;</script>
+									<script type="module" src="/__snowpack__/hmr-client.js"></script>
+									<script type="module" src="/__snowpack__/hmr-error-overlay.js"></script>
+								</head>`.replace(/^\t{6}/gm, '')
+							);
+						},
 						manifest: this.manifest,
 						target: this.config.target,
 						client: {
@@ -193,6 +241,7 @@ class Watcher extends EventEmitter {
 							deps: {}
 						},
 						dev: true,
+						amp: this.config.amp,
 						root,
 						setup,
 						only_prerender: false,

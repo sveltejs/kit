@@ -17,6 +17,7 @@
 		"@types/node": "^14.11.10",
 		"@types/rimraf": "^3.0.0",
 		"@types/sade": "^1.7.2",
+		"amphtml-validator": "^1.0.33",
 		"eslint": "^7.14.0",
 		"esm": "^3.2.25",
 		"estree-walker": "^2.0.1",

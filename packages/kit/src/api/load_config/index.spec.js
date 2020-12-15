@@ -21,7 +21,8 @@ test('fills in defaults', () => {
 		},
 		appDir: '_app',
 		host: null,
-		hostHeader: null
+		hostHeader: null,
+		amp: false
 	});
 });
 
@@ -72,7 +73,8 @@ test('fills in partial blanks', () => {
 		},
 		appDir: '_app',
 		host: null,
-		hostHeader: null
+		hostHeader: null,
+		amp: false
 	});
 });
 

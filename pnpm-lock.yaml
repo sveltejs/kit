@@ -179,6 +179,7 @@ importers:
       '@types/node': 14.11.10
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
+      amphtml-validator: 1.0.33
       eslint: 7.14.0
       esm: 3.2.25
       estree-walker: 2.0.1
@@ -200,6 +201,7 @@ importers:
       '@types/node': ^14.11.10
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
+      amphtml-validator: ^1.0.33
       cheap-watch: ^1.0.2
       eslint: ^7.14.0
       esm: ^3.2.25
@@ -1024,6 +1026,15 @@ packages:
     dev: true
     resolution:
       integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==
+  /amphtml-validator/1.0.33:
+    dependencies:
+      colors: 1.2.5
+      commander: 2.15.1
+      promise: 8.0.1
+    dev: true
+    hasBin: true
+    resolution:
+      integrity: sha512-NAamUl3flAku2DLc/OKEPpR2BQJBQTG+iW7HFeJDDvsZ0YwCmGsMAV97/HPaKAvUowzjA+79QjWr4z0Pscg+8g==
   /ansi-align/2.0.0:
     dependencies:
       string-width: 2.1.1
@@ -1114,6 +1125,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-iYUI2iIm84DfkEcoRWhJwVAaSw0=
+  /asap/2.0.6:
+    dev: true
+    resolution:
+      integrity: sha1-5QNHYR1+aQlDIIu9r+vLwvuGbUY=
   /astral-regex/1.0.0:
     dev: true
     engines:
@@ -1411,6 +1426,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-puCDz0CzydiSYOrnXpz/PKd69zRrribezjtE9yd4zvytoRc8+RY/KJPvtPFKZS3E3wP6neGyMe0vOTlHO5L3Pw==
+  /colors/1.2.5:
+    dev: true
+    engines:
+      node: '>=0.1.90'
+    resolution:
+      integrity: sha512-erNRLao/Y3Fv54qUa0LBB+//Uf3YwMUmdJinN20yMXm9zdKKqH9wt7R9IIVZ+K7ShzfpLV/Zg8+VyrBJYB4lpg==
   /combined-stream/1.0.8:
     dependencies:
       delayed-stream: 1.0.0
@@ -1419,6 +1440,10 @@ packages:
       node: '>= 0.8'
     resolution:
       integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==
+  /commander/2.15.1:
+    dev: true
+    resolution:
+      integrity: sha512-VlfT9F3V0v+jr4yxPc5gg9s62/fIVWsd2Bk2iD435um1NlGMYdVCq+MjcXnhYq2icNOizHr1kK+5TI6H0Hy0ag==
   /commander/2.20.3:
     dev: false
     resolution:
@@ -3640,6 +3665,12 @@ packages:
     dev: false
     resolution:
       integrity: sha1-mEcocL8igTL8vdhoEputEsPAKeM=
+  /promise/8.0.1:
+    dependencies:
+      asap: 2.0.6
+    dev: true
+    resolution:
+      integrity: sha1-5F1osAoXZHttpxG/he1u1HII9FA=
   /prompts/2.3.2:
     dependencies:
       kleur: 3.0.3
