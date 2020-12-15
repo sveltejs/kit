@@ -20,6 +20,8 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
+    "calm-pens-prove",
+    "chatty-mangos-raise",
     "chilled-starfishes-jog",
     "cyan-roses-act",
     "dirty-ligers-protect",
@@ -28,6 +30,7 @@
     "fuzzy-ghosts-call",
     "gorgeous-radios-tan",
     "hot-keys-walk",
+    "long-moles-fold",
     "mighty-pumpkins-stare",
     "pretty-drinks-cough",
     "silver-hounds-clean",
@@ -35,6 +38,7 @@
     "smart-pears-accept",
     "tame-forks-happen",
     "tasty-donkeys-wait",
+    "thick-meals-attend",
     "three-dingos-scream",
     "tricky-wolves-confess"
   ]

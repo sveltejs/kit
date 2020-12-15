@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- f5fa223: AMP support
+- 47f2ee1: Always remove trailing slashes
+- 1becb94: Replace preload with load
+
 ## 1.0.0-next.8
 
 ### Patch Changes

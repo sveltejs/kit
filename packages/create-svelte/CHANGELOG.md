@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.25
+
+### Patch Changes
+
+- c9d8d4f: Render to #svelte by default
+
 ## 2.0.0-next.24
 
 ### Patch Changes
