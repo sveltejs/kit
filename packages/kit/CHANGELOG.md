@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- a31f218: Fix SSR loader invalidation
+
 ## 1.0.0-next.10
 
 ### Patch Changes
