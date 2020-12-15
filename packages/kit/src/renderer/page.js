@@ -255,7 +255,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const head = [rendered.head, links, init].join('\n\n');
 
-	const body = `${rendered.html}
+	const body = options.amp
+		? rendered.html
+		: `${rendered.html}
 
 			${serialized_data
 				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)
