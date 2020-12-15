@@ -74,7 +74,8 @@ async function setup({ port }) {
 			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests,
 		set_extra_http_headers: headers => page.setExtraHTTPHeaders(headers),
-		pathname: () => page.url().replace(base, '')
+		pathname: () => page.url().replace(base, ''),
+		$: selector => page.$(selector)
 	};
 }
 
