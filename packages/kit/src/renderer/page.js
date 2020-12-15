@@ -15,6 +15,8 @@ async function get_response({ request, options, session, route, status = 200, er
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
+	const serialized_data = [];
+
 	const match = route && route.pattern.exec(request.path);
 	const params = route && route.params(match);
 
@@ -26,70 +28,107 @@ async function get_response({ request, options, session, route, status = 200, er
 	};
 
 	const load_context = {
-		// TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
-		page: {
-			host,
-			path: request.path,
-			query: request.query,
-			params
-		},
+		page,
 		session,
 		fetch: async (url, opts = {}) => {
 			const parsed = parse(url);
 
+			let response;
+
 			if (parsed.protocol) {
 				// external fetch
-				return fetch(parsed.href, opts);
-			}
+				response = fetch(parsed.href, opts);
+			} else {
+				// otherwise we're dealing with an internal fetch
+				const resolved = resolve(request.path, parsed.pathname);
 
-			// otherwise we're dealing with an internal fetch. TODO there's
-			// probably no advantage to using fetch here — we should replace
-			// `this.fetch` with `this.load` or whatever
+				if (options.get_static_file) {
+					// options.get_static_file should be a function that takes a
+					// path relative to `static` and returns a { contents, type }
+					// object. `contents` can be a string, buffer or stream
+					const file = options.get_static_file(resolved.slice(1));
+					if (file) {
+						response = new Response(file.contents, {
+							headers: {
+								'content-type': file.type
+							}
+						});
+					}
+				}
 
-			const resolved = resolve(request.path, parsed.pathname);
+				if (!response) {
+					const rendered = await render(
+						{
+							host: request.host,
+							method: opts.method || 'GET',
+							headers: opts.headers || {}, // TODO inject credentials...
+							path: resolved,
+							body: opts.body,
+							query: new URLSearchParams(parsed.query || '')
+						},
+						options
+					);
 
-			// edge case — fetching a static file
-			const candidates = [
-				`${options.static_dir}${resolved}`,
-				`${options.static_dir}${resolved}/index.html`
-			];
-			for (const file of candidates) {
-				if (existsSync(file)) {
-					return new Response(createReadStream(file), {
-						headers: {
-							'content-type': mime.getType(file)
-						}
+					if (rendered) {
+						// TODO this is primarily for the benefit of the static case,
+						// but could it be used elsewhere?
+						dependencies[resolved] = rendered;
+
+						response = new Response(rendered.body, {
+							status: rendered.status,
+							headers: rendered.headers
+						});
+					}
+				}
+
+				const rendered = await render(
+					{
+						host: request.host,
+						method: opts.method || 'GET',
+						headers: opts.headers || {}, // TODO inject credentials...
+						path: resolved,
+						body: opts.body,
+						query: new URLSearchParams(parsed.query || '')
+					},
+					options
+				);
+
+				if (rendered) {
+					// TODO this is primarily for the benefit of the static case,
+					// but could it be used elsewhere?
+					dependencies[resolved] = rendered;
+
+					response = new Response(rendered.body, {
+						status: rendered.status,
+						headers: rendered.headers
 					});
 				}
 			}
 
-			// TODO this doesn't take account of opts.body
-			const rendered = await render(
-				{
-					host: request.host,
-					method: opts.method || 'GET',
-					headers: opts.headers || {}, // TODO inject credentials...
-					path: resolved,
-					body: opts.body,
-					query: new URLSearchParams(parsed.query || '')
-				},
-				options
-			);
+			if (response) {
+				const clone = response.clone();
 
-			if (rendered) {
-				// TODO this is primarily for the benefit of the static case,
-				// but could it be used elsewhere?
-				dependencies[resolved] = rendered;
+				const headers = {};
+				clone.headers.forEach((value, key) => {
+					if (key !== 'etag') headers[key] = value;
+				});
 
-				return new Response(rendered.body, {
-					status: rendered.status,
-					headers: rendered.headers
+				const payload = JSON.stringify({
+					status: clone.status,
+					statusText: clone.statusText,
+					headers,
+					body: await clone.text() // TODO handle binary data
 				});
-			} else {
-				return new Response('Not found', {
-					status: 404
-				});
+
+				// TODO i guess we need to sanitize/escape this... somehow?
+				serialized_data.push({ url, payload });
+
+				return response;
 			}
+
+			return new Response('Not found', {
+				status: 404
+			});
 		}
 	};
 
@@ -188,8 +227,9 @@ async function get_response({ request, options, session, route, status = 200, er
 
 	const entry = path_to(options.client.entry);
 
-	const head = `${rendered.head}
+	const s = JSON.stringify;
 
+	const head = `${rendered.head}
 			${Array.from(js_deps)
 				.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
@@ -197,23 +237,24 @@ async function get_response({ request, options, session, route, status = 200, er
 				.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+
+			<script type="module">
+				import { start } from '${entry}';
+				${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+					host: ${host ? s(host) : 'location.host'},
+					paths: ${s(options.paths)},
+					status: ${status},
+					error: ${serialize_error(error)},
+					session: ${serialized_session}
+				});
+			</script>
 	`.replace(/^\t{2}/gm, '');
 
-	const s = JSON.stringify;
-
 	const body = `${rendered.html}
-		<script type="module">
-			import { start } from '${entry}';
-			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
-				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				host: ${host ? s(host) : 'location.host'},
-				paths: ${s(options.paths)},
-				status: ${status},
-				error: ${serialize_error(error)},
-				preloaded: [], // TODO replace with serialized_data
-				session: ${serialized_session}
-			});
-		</script>`.replace(/^\t{2}/gm, '');
+
+			${serialized_data.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`).join('\n\n\t\t\t')}
+		`.replace(/^\t{2}/gm, '');
 
 	return {
 		status,

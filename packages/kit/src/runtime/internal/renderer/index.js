@@ -147,9 +147,19 @@ export class Renderer {
 		};
 
 		const load_context = {
-			page, // TODO `...page` or `page`? https://github.com/sveltejs/kit/issues/268#issuecomment-744050319
+			page,
 			session: this.$session,
-			fetch: (url, opts) => fetch(url, opts)
+			fetch: (url, opts) => {
+				if (this.initial) {
+					const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+					if (script) {
+						const { body, ...init } = JSON.parse(script.textContent);
+						return new Response(body, init);
+					}
+				}
+
+				return fetch(url, opts);
+			}
 		};
 
 		const state = {
