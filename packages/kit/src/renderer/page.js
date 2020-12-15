@@ -271,22 +271,6 @@ export default async function render_page(request, context, options) {
 	}
 }
 
-function parts_to_params(match, array) {
-	const params = {};
-
-	array.forEach((name, i) => {
-		const is_spread = /^\.{3}.+$/.test(name);
-
-		if (is_spread) {
-			params[name.slice(3)] = match[i + 1].split('/');
-		} else {
-			params[name] = match[i + 1];
-		}
-	});
-
-	return params;
-}
-
 function try_serialize(data, fail) {
 	try {
 		return devalue(data);
