@@ -179,7 +179,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	walk(cwd, [], [], []);
 
 	return {
-		assets: list_files(config.files.assets, ''),
+		assets: fs.existsSync(config.files.assets) ? list_files(config.files.assets, '') : [],
 		layout,
 		error,
 		components,
