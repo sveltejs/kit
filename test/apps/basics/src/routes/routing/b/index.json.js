@@ -1,3 +1,3 @@
-export function get(req, res) {
+export function get() {
 	return { body: JSON.stringify('b') };
 }

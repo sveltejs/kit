@@ -1,6 +1,7 @@
-import fs from 'fs';
-import { dirname, resolve as resolve_path } from 'path';
+import fs, { createReadStream } from 'fs';
+import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
+import glob from 'tiny-glob/sync';
 import { mkdirp } from '@sveltejs/app-utils/files';
 
 function clean_html(html) {
@@ -42,7 +43,7 @@ function get_srcset_urls(attrs) {
 const OK = 2;
 const REDIRECT = 3;
 
-export async function prerender({ dir, out, manifest, log, config, force }) {
+export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
@@ -62,7 +63,8 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 				query: new URLSearchParams()
 			},
 			{
-				only_prerender: !force
+				only_prerender: !force,
+				get_static_file: (file) => createReadStream(join(config.files.assets, file))
 			}
 		);
 
@@ -178,7 +180,21 @@ export async function prerender({ dir, out, manifest, log, config, force }) {
 		}
 	}
 
-	const entries = manifest.pages.map((page) => page.path).filter(Boolean);
+	// TODO support other extensions, e.g. .svelte.md?
+	const entries = glob('**/*.svelte', { cwd: config.files.routes })
+		.map((file) => {
+			const parts = file.split('/'); // TODO is this true for glob results on windows?
+
+			if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
+				return null;
+			}
+
+			parts[parts.length - 1] = parts[parts.length - 1].replace(/\.svelte$/, '');
+			if (parts[parts.length - 1] === 'index') parts.pop();
+
+			return `/${parts.join('/')}`;
+		})
+		.filter(Boolean);
 
 	for (const entry of entries) {
 		await crawl(entry);

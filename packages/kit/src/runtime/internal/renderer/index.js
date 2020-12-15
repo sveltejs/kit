@@ -42,7 +42,15 @@ export class Renderer {
 			status
 		};
 
-		this.current_branch = [];
+		this.current = {
+			params: {},
+			path: null,
+			query: null,
+			session_changed: false,
+			nodes: []
+		};
+
+		this.caches = new Map();
 
 		this.prefetching = {
 			href: null,
@@ -56,7 +64,6 @@ export class Renderer {
 		};
 
 		this.$session = null;
-		this.session_dirty = false;
 
 		this.root = null;
 
@@ -85,38 +92,33 @@ export class Renderer {
 			this.$session = value;
 
 			if (!ready) return;
-			this.session_dirty = true;
+			this.current.session_changed = true;
 
-			const page = this.router.select(new URL(location.href));
-			this.render(page);
+			const selected = this.router.select(new URL(location.href));
+			this.render(selected);
 		});
 		ready = true;
 	}
 
-	async start(page) {
+	async start(selected) {
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
 			status: this.initial.status,
-			page: {
-				...page.page,
-				params: {}
-			}
+			page: selected.page
 		};
 
 		if (this.initial.error) {
 			props.components = [this.layout.default];
 		} else {
-			const hydrated = await this.hydrate(page);
+			const hydrated = await this.hydrate(selected);
 
 			if (hydrated.redirect) {
 				throw new Error('TODO client-side redirects');
 			}
 
 			Object.assign(props, hydrated.props);
-			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query;
-			this.current_path = hydrated.path;
+			this.current = hydrated.state;
 		}
 
 		this.root = new this.Root({
@@ -128,130 +130,218 @@ export class Renderer {
 		this.initial = null;
 	}
 
-	async render(page) {
+	async render(selected) {
 		const token = (this.token = {});
 
 		this.stores.navigating.set(true);
 
-		const hydrated = await this.hydrate(page);
+		const hydrated = await this.hydrate(selected);
 
 		if (this.token === token) {
 			// check render wasn't aborted
-			this.current_branch = hydrated.branch;
-			this.current_query = hydrated.query;
-			this.current_path = hydrated.path;
+			this.current = hydrated.state;
 
 			this.root.$set(hydrated.props);
-
 			this.stores.navigating.set(false);
 		}
 	}
 
 	async hydrate({ route, page }) {
-		let redirect = null;
-
 		const props = {
 			error: null,
 			status: 200,
 			components: []
 		};
 
-		const preload_context = {
-			fetch: (url, opts) => fetch(url, opts),
-			redirect: (status, location) => {
-				if (redirect && (redirect.status !== status || redirect.location !== location)) {
-					throw new Error('Conflicting redirects');
+		const fetcher = (url, opts) => {
+			if (this.initial) {
+				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+				if (script) {
+					const { body, ...init } = JSON.parse(script.textContent);
+					return Promise.resolve(new Response(body, init));
 				}
-				redirect = { status, location };
-			},
-			error: (status, error) => {
-				props.error = typeof error === 'string' ? new Error(error) : error;
-				props.status = status;
 			}
+
+			return fetch(url, opts);
 		};
 
-		const query = page.query.toString();
-		const query_dirty = query !== this.current_query;
+		const state = {
+			path: page.path,
+			params: page.params,
+			query: page.query.toString(),
+			session_changed: false,
+			nodes: []
+		};
 
-		let branch;
+		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
+		const props_promises = [];
+
+		let context = {};
+		let redirect;
+
+		const changed = {
+			params: Object.keys(page.params).filter((key) => {
+				return this.current.params[key] !== page.params[key];
+			}),
+			query: state.query !== this.current.query,
+			session: this.current.session_changed,
+			context: false
+		};
 
 		try {
-			const match = route.pattern.exec(page.path);
+			for (let i = 0; i < component_promises.length; i += 1) {
+				const previous = this.current.nodes[i];
 
-			branch = await Promise.all(
-				[[this.layout_loader], ...route.parts].map(async ([loader, get_params], i) => {
-					const params = get_params ? get_params(match) : {};
-					const stringified_params = JSON.stringify(params);
+				const { default: component, load } = await component_promises[i];
+				props.components[i] = component;
 
-					const previous = this.current_branch[i];
-					if (previous) {
-						const changed =
-							previous.loader !== loader ||
-							(previous.uses_session && this.session_dirty) ||
-							(previous.uses_query && query_dirty) ||
-							previous.stringified_params !== stringified_params;
+				const changed_since_last_render =
+					!previous ||
+					component !== previous.component ||
+					changed.params.some((param) => previous.uses.params.has(param)) ||
+					(changed.query && previous.uses.query) ||
+					(changed.session && previous.uses.session) ||
+					(changed.context && previous.uses.context);
 
-						if (!changed) {
-							props.components[i] = previous.component;
-							return previous;
+				if (changed_since_last_render) {
+					// see if we have some cached data
+					const cache = this.caches.get(component);
+					const cached = cache && cache.get(state.path + state.query);
+
+					let node;
+					let loaded;
+
+					if (cached && (!changed.context || !cached.node.uses.context)) {
+						({ node, loaded } = cached);
+					} else {
+						node = {
+							component,
+							uses: {
+								params: new Set(),
+								query: false,
+								session: false,
+								context: false
+							}
+						};
+
+						const params = {};
+						for (const key in page.params) {
+							Object.defineProperty(params, key, {
+								get() {
+									node.uses.params.add(key);
+									return page.params[key];
+								},
+								enumerable: true
+							});
 						}
+
+						const session = this.$session;
+
+						loaded =
+							load &&
+							(await load.call(null, {
+								page: {
+									...page,
+									params,
+									get query() {
+										node.uses.query = true;
+										return page.query;
+									}
+								},
+								get session() {
+									node.uses.session = true;
+									return session;
+								},
+								get context() {
+									node.uses.context = true;
+									return { ...context };
+								},
+								fetch: fetcher
+							}));
 					}
 
-					const { default: component, preload } = await loader();
+					if (loaded) {
+						if (loaded.error) {
+							const error = new Error(loaded.error.message);
+							error.status = loaded.error.status;
+							throw error;
+						}
 
-					const uses_session = preload && preload.length > 1;
-					let uses_query = false;
+						if (loaded.redirect) {
+							redirect = loaded.redirect;
+							break;
+						}
 
-					const preloaded =
-						this.initial?.preloaded[i] ||
-						(preload
-							? await preload.call(
-									preload_context,
-									{
-										get query() {
-											uses_query = true;
-											return page.query;
-										},
-										host: page.host,
-										path: page.path,
-										params
-									},
-									this.$session
-							  )
-							: {});
+						if (loaded.context) {
+							changed.context = true;
 
-					// TODO weird to have side-effects inside a map, but
-					// if they're not here, then setting props_n objects
-					// only for changed parts becomes trickier
-					props.components[i] = component;
-					props[`props_${i}`] = preloaded;
+							context = {
+								...context,
+								...loaded.context
+							};
+						}
 
-					return {
-						component,
-						params,
-						stringified_params,
-						props: preloaded,
-						match,
-						loader,
-						uses_session,
-						uses_query
-					};
-				})
-			);
+						if (loaded.maxage) {
+							if (!this.caches.has(component)) {
+								this.caches.set(component, new Map());
+							}
 
-			if (page.path !== this.current_path) {
-				props.page = {
-					...page,
-					params: branch[branch.length - 1].params
-				};
+							const cache = this.caches.get(component);
+							const cached = { node, loaded };
+
+							const key = state.path + state.query;
+
+							cache.set(key, cached);
+
+							let ready = false;
+
+							const timeout = setTimeout(() => {
+								clear();
+							}, loaded.maxage * 1000);
+
+							const clear = () => {
+								if (cache.get(key) === cached) {
+									cache.delete(key);
+								}
+
+								unsubscribe();
+								clearTimeout(timeout);
+							};
+
+							const unsubscribe = this.stores.session.subscribe(() => {
+								if (ready) clear();
+							});
+
+							ready = true;
+						}
+
+						props_promises[i] = loaded.props;
+					}
+
+					state.nodes[i] = node;
+				} else {
+					state.nodes[i] = previous;
+				}
+			}
+
+			const new_props = await Promise.all(props_promises);
+
+			new_props.forEach((p, i) => {
+				if (p) {
+					props[`props_${i}`] = p;
+				}
+			});
+
+			if (!this.current || state.path !== this.current.path) {
+				props.page = page;
 			}
 		} catch (error) {
 			props.error = error;
 			props.status = 500;
-			branch = [];
+			state.nodes = [];
 		}
 
-		return { redirect, props, branch, query, path: page.path };
+		return { redirect, props, state };
 	}
 
 	async prefetch(url) {

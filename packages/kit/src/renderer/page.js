@@ -1,149 +1,184 @@
 import devalue from 'devalue';
-import { createReadStream, existsSync } from 'fs';
-import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
-async function get_response({ request, options, session, page, status = 200, error }) {
-	let redirected;
-
+async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
 	const dependencies = {};
 
-	const serialized_session = try_serialize(session, (err) => {
+	const serialized_session = try_serialize($session, (err) => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
-	const preload_context = {
-		redirect: (status, location) => {
-			if (
-				redirected &&
-				(redirected.status !== status || redirected.headers.location !== location)
-			) {
-				throw new Error('Conflicting redirects');
-			}
-			location = location.replace(/^\//g, ''); // leading slash (only)
-			redirected = {
-				status,
-				headers: { location },
-				body: null,
-				dependencies: {}
-			};
-		},
-		error: (status, error) => {
-			if (typeof error === 'string') {
-				error = new Error(error);
-			}
-			error.status = status;
-			throw error;
-		},
-		fetch: async (url, opts = {}) => {
-			const parsed = parse(url);
+	const serialized_data = [];
 
-			if (parsed.protocol) {
-				// external fetch
-				return fetch(parsed.href, opts);
-			}
+	const match = route && route.pattern.exec(request.path);
+	const params = route && route.params(match);
 
-			// otherwise we're dealing with an internal fetch. TODO there's
-			// probably no advantage to using fetch here — we should replace
-			// `this.fetch` with `this.load` or whatever
+	const page = {
+		host,
+		path: request.path,
+		query: request.query,
+		params
+	};
 
+	let uses_credentials = false;
+
+	const fetcher = async (url, opts = {}) => {
+		const parsed = parse(url);
+
+		if (opts.credentials !== 'omit') {
+			uses_credentials = true;
+		}
+
+		let response;
+
+		if (parsed.protocol) {
+			// external fetch
+			response = fetch(parsed.href, opts);
+		} else {
+			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
 
-			// edge case — fetching a static file
-			const candidates = [
-				`${options.static_dir}${resolved}`,
-				`${options.static_dir}${resolved}/index.html`
-			];
-			for (const file of candidates) {
-				if (existsSync(file)) {
-					return new Response(createReadStream(file), {
+			// is this a request for a static asset?
+			const filename = resolved.slice(1);
+			const filename_html = `${filename}/index.html`;
+			const asset = options.manifest.assets.find(
+				(d) => d.file === filename || d.file === filename_html
+			);
+
+			if (asset) {
+				if (options.get_static_file) {
+					response = new Response(options.get_static_file(asset.file), {
 						headers: {
-							'content-type': mime.getType(file)
+							'content-type': asset.type
 						}
 					});
+				} else {
+					// TODO we need to know what protocol to use
+					response = fetch(`http://${page.host}/${asset.file}`, opts);
 				}
 			}
 
-			// TODO this doesn't take account of opts.body
-			const rendered = await render(
-				{
-					host: request.host,
-					method: opts.method || 'GET',
-					headers: opts.headers || {}, // TODO inject credentials...
-					path: resolved,
-					body: opts.body,
-					query: new URLSearchParams(parsed.query || '')
-				},
-				options
-			);
+			if (!response) {
+				const rendered = await render(
+					{
+						host: request.host,
+						method: opts.method || 'GET',
+						headers: opts.headers || {}, // TODO inject credentials...
+						path: resolved,
+						body: opts.body,
+						query: new URLSearchParams(parsed.query || '')
+					},
+					options
+				);
 
-			if (rendered) {
-				// TODO this is primarily for the benefit of the static case,
-				// but could it be used elsewhere?
-				dependencies[resolved] = rendered;
+				if (rendered) {
+					// TODO this is primarily for the benefit of the static case,
+					// but could it be used elsewhere?
+					dependencies[resolved] = rendered;
 
-				return new Response(rendered.body, {
-					status: rendered.status,
-					headers: rendered.headers
-				});
-			} else {
-				return new Response('Not found', {
-					status: 404
-				});
+					response = new Response(rendered.body, {
+						status: rendered.status,
+						headers: rendered.headers
+					});
+				}
 			}
 		}
+
+		if (response) {
+			const clone = response.clone();
+
+			const headers = {};
+			clone.headers.forEach((value, key) => {
+				if (key !== 'etag') headers[key] = value;
+			});
+
+			const payload = JSON.stringify({
+				status: clone.status,
+				statusText: clone.statusText,
+				headers,
+				body: await clone.text() // TODO handle binary data
+			});
+
+			// TODO i guess we need to sanitize/escape this... somehow?
+			serialized_data.push({ url, payload });
+
+			return response;
+		}
+
+		return new Response('Not found', {
+			status: 404
+		});
 	};
 
-	const match = page && page.pattern.exec(request.path);
+	const parts = error ? [options.manifest.layout] : [options.manifest.layout, ...route.parts];
 
-	// the last part has all parameters from any segment in the URL
-	const params = page ? parts_to_params(match, page.parts[page.parts.length - 1]) : {};
+	const component_promises = parts.map((loader) => loader());
+	const components = [];
+	const props_promises = [];
 
-	const preloaded = [];
-	let can_prerender = true;
+	let context = {};
+	let maxage;
 
-	const page_parts = error ? [{ component: options.manifest.error, params: [] }] : page.parts;
+	for (let i = 0; i < component_promises.length; i += 1) {
+		const mod = await component_promises[i];
+		components[i] = mod.default;
 
-	const parts = await Promise.all(
-		[{ component: options.manifest.layout, params: [] }, ...page_parts].map(async (part, i) => {
-			if (!part) return null;
+		if (options.only_prerender && !mod.prerender) {
+			return;
+		}
 
-			const mod = await options.load(part.component);
+		const loaded =
+			mod.load &&
+			(await mod.load.call(null, {
+				page,
+				get session() {
+					uses_credentials = true;
+					return $session;
+				},
+				fetch: fetcher,
+				context: { ...context }
+			}));
 
-			if (options.only_prerender && !mod.prerender) {
-				can_prerender = false;
-				return;
+		if (loaded) {
+			if (loaded.error) {
+				const error = new Error(loaded.error.message);
+				error.status = loaded.error.status;
+				throw error;
 			}
 
-			// these are only the parameters up to the current URL segment
-			const params = parts_to_params(match, part);
+			if (loaded.redirect) {
+				return {
+					status: loaded.redirect.status,
+					headers: {
+						location: loaded.redirect.to
+					}
+				};
+			}
 
-			const props = mod.preload
-				? await mod.preload.call(
-						preload_context,
-						{
-							host,
-							path: request.path,
-							query: request.query,
-							params
-						},
-						session
-				  )
-				: {};
+			if (loaded.context) {
+				context = {
+					...context,
+					...loaded.context
+				};
+			}
 
-			preloaded[i] = props;
-			return { component: mod.default, props };
-		})
-	);
+			maxage = loaded.maxage || 0;
 
-	if (options.only_prerender && !can_prerender) return;
+			props_promises[i] = loaded.props;
+		}
+	}
 
-	if (redirected) return redirected;
+	const session = writable($session);
+	let session_tracking_active = false;
+	const unsubscribe = session.subscribe(() => {
+		if (session_tracking_active) uses_credentials = true;
+	});
+	session_tracking_active = true;
 
 	const props = {
 		status,
@@ -151,46 +186,29 @@ async function get_response({ request, options, session, page, status = 200, err
 		stores: {
 			page: writable(null),
 			navigating: writable(false),
-			session: writable(session)
+			session
 		},
-		page: {
-			host: host || request.headers.host,
-			path: request.path,
-			query: request.query,
-			params
-		},
-		components: parts.map((part) => part.component)
+		page,
+		components
 	};
 
 	// leveln (instead of levels[n]) makes it easy to avoid
 	// unnecessary updates for layout components
-	parts.forEach((part, i) => {
-		props[`props_${i}`] = part.props;
-	});
-
-	const serialized_preloads = `[${preloaded
-		.map((data) =>
-			try_serialize(data, (err) => {
-				console.error(
-					`Failed to serialize preloaded data to transmit to the client at the ${request.path} route: ${err.message}`
-				);
-				console.warn(
-					'The client will re-render over the server-rendered page fresh instead of continuing where it left off. See https://sapper.svelte.dev/docs#Return_value for more information'
-				);
-			})
-		)
-		.join(',')}]`;
+	for (let i = 0; i < props_promises.length; i += 1) {
+		props[`props_${i}`] = await props_promises[i];
+	}
 
 	const rendered = options.root.render(props);
+	unsubscribe();
 
 	const deps = options.client.deps;
 	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
 	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
 
-	if (page) {
+	if (route) {
 		// TODO handle error page deps
-		page.parts.filter(Boolean).forEach((part) => {
-			const page_deps = deps[part.component.name];
+		route.parts.filter(Boolean).forEach((part) => {
+			const page_deps = deps[part.name];
 
 			if (!page_deps) return; // we don't have this info during dev
 
@@ -204,8 +222,9 @@ async function get_response({ request, options, session, page, status = 200, err
 
 	const entry = path_to(options.client.entry);
 
-	const head = `${rendered.head}
+	const s = JSON.stringify;
 
+	const head = `${rendered.head}
 			${Array.from(js_deps)
 				.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
@@ -213,41 +232,50 @@ async function get_response({ request, options, session, page, status = 200, err
 				.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
 				.join('\n\t\t\t')}
 			${options.dev ? `<style>${rendered.css.code}</style>` : ''}
+
+			<script type="module">
+				import { start } from '${entry}';
+				${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+					host: ${host ? s(host) : 'location.host'},
+					paths: ${s(options.paths)},
+					status: ${status},
+					error: ${serialize_error(error)},
+					session: ${serialized_session}
+				});
+			</script>
 	`.replace(/^\t{2}/gm, '');
 
-	const s = JSON.stringify;
-
 	const body = `${rendered.html}
-		<script type="module">
-			import { start } from '${entry}';
-			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
-				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				host: ${host ? s(host) : 'location.host'},
-				paths: ${s(options.paths)},
-				status: ${status},
-				error: ${serialize_error(error)},
-				preloaded: ${serialized_preloads},
-				session: ${serialized_session}
-			});
-		</script>`.replace(/^\t{2}/gm, '');
+
+			${serialized_data
+				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)
+				.join('\n\n\t\t\t')}
+		`.replace(/^\t{2}/gm, '');
+
+	const headers = {
+		'content-type': 'text/html'
+	};
+
+	if (maxage) {
+		headers['cache-control'] = `${uses_credentials ? 'private' : 'public'}, max-age=${maxage}`;
+	}
 
 	return {
 		status,
-		headers: {
-			'content-type': 'text/html'
-		},
+		headers,
 		body: options.template({ head, body }),
 		dependencies
 	};
 }
 
 export default async function render_page(request, context, options) {
-	const page = options.manifest.pages.find((page) => page.pattern.test(request.path));
+	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
-	const session = await (options.setup.getSession && options.setup.getSession(context));
+	const $session = await (options.setup.getSession && options.setup.getSession(context));
 
 	try {
-		if (!page) {
+		if (!route) {
 			const error = new Error(`Not found: ${request.path}`);
 			error.status = 404;
 			throw error;
@@ -256,8 +284,8 @@ export default async function render_page(request, context, options) {
 		return await get_response({
 			request,
 			options,
-			session,
-			page,
+			$session,
+			route,
 			status: 200,
 			error: null
 		});
@@ -270,8 +298,8 @@ export default async function render_page(request, context, options) {
 			return await get_response({
 				request,
 				options,
-				session,
-				page,
+				$session,
+				route,
 				status,
 				error
 			});
@@ -285,22 +313,6 @@ export default async function render_page(request, context, options) {
 			};
 		}
 	}
-}
-
-function parts_to_params(match, part) {
-	const params = {};
-
-	part.params.forEach((name, i) => {
-		const is_spread = /^\.{3}.+$/.test(name);
-
-		if (is_spread) {
-			params[name.slice(3)] = match[i + 1].split('/');
-		} else {
-			params[name] = match[i + 1];
-		}
-	});
-
-	return params;
 }
 
 function try_serialize(data, fail) {

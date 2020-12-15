@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
+		"start": "svelte-kit start",
 		"test": "uvu test -r esm"
 	},
 	"devDependencies": {

@@ -1,11 +1,13 @@
 <script context="module">
 	import * as api from '$common/api.js';
 
-	export async function preload({ params }) {
-		const { slug } = params;
-		const { article } = await api.get(`articles/${params.slug}`, null);
+	export async function load({ page }) {
+		const { slug } = page.params;
+		const { article } = await api.get(`articles/${slug}`, null);
 
-		return { article, slug };
+		return {
+			props: { article, slug }
+		};
 	}
 </script>
 

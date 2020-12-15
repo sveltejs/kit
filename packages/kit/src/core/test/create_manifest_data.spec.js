@@ -5,6 +5,7 @@ import create_manifest_data from '../create_manifest_data';
 
 const get_config = (dir) => ({
 	files: {
+		assets: path.join(__dirname, 'static'),
 		routes: path.join(__dirname, dir)
 	},
 	appDir: '_app'
@@ -26,39 +27,31 @@ test('creates routes', () => {
 
 	assert.equal(pages, [
 		{
-			path: '/',
 			pattern: /^\/$/,
-			parts: [{ component: index, params: [] }]
+			params: [],
+			parts: [index]
 		},
 
 		{
-			path: '/about',
 			pattern: /^\/about\/?$/,
-			parts: [{ component: about, params: [] }]
+			params: [],
+			parts: [about]
 		},
 
 		{
-			path: '/blog',
 			pattern: /^\/blog\/?$/,
-			parts: [{ component: blog, params: [] }]
+			params: [],
+			parts: [blog]
 		},
 
 		{
-			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			parts: [{ component: blog_$slug, params: ['slug'] }]
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 
 	assert.equal(endpoints, [
-		{
-			name: 'route_index',
-			pattern: /^\/$/,
-			file: 'index.js',
-			url: '/_app/routes/index.js',
-			params: []
-		},
-
 		{
 			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
@@ -115,7 +108,7 @@ test('sorts routes correctly', () => {
 	const { pages } = create_manifest_data(get_config('samples/sorting'));
 
 	assert.equal(
-		pages.map((p) => p.parts.map((part) => part && part.component.file)),
+		pages.map((p) => p.parts.map((part) => part && part.file)),
 		[
 			['index.svelte'],
 			['about.svelte'],
@@ -140,7 +133,7 @@ test('ignores files and directories with leading underscores', () => {
 
 	assert.equal(
 		endpoints.map((r) => r.file),
-		['index.js', 'e/f/g/h.js']
+		['e/f/g/h.js']
 	);
 });
 
@@ -184,7 +177,7 @@ test('allows multiple slugs with nested square brackets', () => {
 test('fails on clashes', () => {
 	assert.throws(() => {
 		create_manifest_data(get_config('samples/clash-pages'));
-	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte pages clash/);
+	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte routes clash/);
 
 	assert.throws(() => {
 		create_manifest_data(get_config('samples/clash-routes'));
@@ -236,27 +229,27 @@ test('works with custom extensions', () => {
 
 	assert.equal(pages, [
 		{
-			path: '/',
 			pattern: /^\/$/,
-			parts: [{ component: index, params: [] }]
+			params: [],
+			parts: [index]
 		},
 
 		{
-			path: '/about',
 			pattern: /^\/about\/?$/,
-			parts: [{ component: about, params: [] }]
+			params: [],
+			parts: [about]
 		},
 
 		{
-			path: '/blog',
 			pattern: /^\/blog\/?$/,
-			parts: [{ component: blog, params: [] }]
+			params: [],
+			parts: [blog]
 		},
 
 		{
-			path: null,
 			pattern: /^\/blog\/([^/]+?)\/?$/,
-			parts: [{ component: blog_$slug, params: ['slug'] }]
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 
@@ -274,6 +267,23 @@ test('works with custom extensions', () => {
 			file: 'blog/[slug].json.js',
 			url: '/_app/routes/blog/[slug].json.js',
 			params: ['slug']
+		}
+	]);
+});
+
+test('lists static assets', () => {
+	const { assets } = create_manifest_data(get_config('samples/basic'));
+
+	assert.equal(assets, [
+		{
+			file: 'bar/baz.txt',
+			size: 14,
+			type: 'text/plain'
+		},
+		{
+			file: 'foo.txt',
+			size: 9,
+			type: 'text/plain'
 		}
 	]);
 });

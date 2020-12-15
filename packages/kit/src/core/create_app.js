@@ -59,50 +59,38 @@ function generate_client_manifest(manifest_data) {
 			.join(',\n\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	let needs_decode = false;
-
-	let pages = `[
+	const pages = `[
 		${manifest_data.pages
-			.map(
-				(page) => `{
-					// ${page.parts[page.parts.length - 1].component.file}
-					pattern: ${page.pattern},
-					parts: [
-						${page.parts
-							.map((part) => {
-								const missing_layout = !part;
-								if (missing_layout) return null;
-
-								if (part.params.length > 0) {
-									needs_decode = true;
-									const props = part.params.map((param, i) => {
-										return param.startsWith('...')
-											? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
-											: `${param}: d(m[${i + 1}])`;
-									});
-									return `[components[${
-										component_indexes[part.component.name]
-									}], m => ({ ${props.join(', ')} })]`;
-								}
-
-								return `[components[${component_indexes[part.component.name]}]]`;
+			.map((page) => {
+				const params = page.params.length
+					? '(m) => ({ ' +
+					  page.params
+							.map((param, i) => {
+								return param.startsWith('...')
+									? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+									: `${param}: d(m[${i + 1}])`;
 							})
-							.filter(Boolean)
-							.join(',\n\t\t\t\t')}
-					]
-		}`
-			)
+							.join(', ') +
+					  '})'
+					: 'empty';
+
+				return `{
+					// ${page.parts[page.parts.length - 1].file}
+					pattern: ${page.pattern},
+					params: ${params},
+					parts: [${page.parts.map((part) => `components[${component_indexes[part.name]}]`).join(', ')}]
+				}`;
+			})
 			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
-
-	if (needs_decode) {
-		pages = `(d => ${pages})(decodeURIComponent)`;
-	}
 
 	return trim(`
 		import * as layout from ${JSON.stringify(manifest_data.layout.url)};
 
 		const components = ${components};
+
+		const d = decodeURIComponent;
+		const empty = () => ({});
 
 		export const pages = ${pages};
 

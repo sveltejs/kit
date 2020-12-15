@@ -2,19 +2,12 @@ export default function render_route(request, context, options) {
 	const route = options.manifest.endpoints.find((route) => route.pattern.test(request.path));
 	if (!route) return null;
 
-	return Promise.resolve(options.load(route)).then(async (mod) => {
+	return route.load().then(async (mod) => {
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
-			const params = {};
 			const match = route.pattern.exec(request.path);
-			route.params.forEach((name, i) => {
-				if (name.startsWith('...')) {
-					params[name.slice(3)] = match[i + 1].split('/');
-				} else {
-					params[name] = match[i + 1];
-				}
-			});
+			const params = route.params(match);
 
 			try {
 				const response = await handler(

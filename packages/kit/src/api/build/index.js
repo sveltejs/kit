@@ -253,49 +253,23 @@ export async function build(config) {
 		fs.writeFileSync(setup_file, '');
 	}
 
-	// TODO do we need component file names in build?
-	const stringify_component = (c) => `{ name: ${s(c.name)}, file: ${s(c.file)}, url: ${s(c.url)} }`;
+	const app_file = `${UNOPTIMIZED}/server/app.js`;
 
-	const stringified_manifest = `
-		{
-			layout: ${stringify_component(manifest.layout)},
-			error: ${stringify_component(manifest.error)},
-			components: [
-				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
-			],
-			pages: [
-				${manifest.pages
-					.map(({ path, pattern, parts }) => {
-						return `{ path: ${s(path)}, pattern: ${pattern}, parts: ${s(parts)} }`;
-					})
-					.join(',\n\t\t\t\t')}
-			],
-			endpoints: [
-				${manifest.endpoints
-					.map(({ name, pattern, file, params }) => {
-						return `{ name: ${s(name)}, pattern: ${pattern}, file: ${s(file)}, params: ${s(
-							params
-						)} }`;
-					})
-					.join(',\n\t\t\t\t')}
-			]
-		}
-	`
-		.replace(/^\t{2}/gm, '')
-		.trim();
+	const component_indexes = new Map();
+	manifest.components.forEach((c, i) => {
+		component_indexes.set(c.file, i);
+	});
 
-	fs.writeFileSync('.svelte/build/manifest.js', `export default ${stringified_manifest};`);
-	fs.writeFileSync('.svelte/build/manifest.cjs', `module.exports = ${stringified_manifest};`);
+	const stringify_component = (c) => `() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
 	// prettier-ignore
 	fs.writeFileSync(
-		`${UNOPTIMIZED}/server/app.js`,
+		app_file,
 		`
 			import * as renderer from '@sveltejs/kit/dist/renderer';
 			import root from './${config.appDir}/assets/generated/root.js';
 			import { set_paths } from './${config.appDir}/assets/runtime/internal/singletons.js';
 			import * as setup from './${config.appDir}/setup/index.js';
-			import manifest from '../../manifest.js';
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
@@ -312,9 +286,45 @@ export async function build(config) {
 
 			init({ paths: ${s(config.paths)} });
 
-			export function render(request, { paths = ${s(config.paths)}, only_prerender = false } = {}) {
+			const d = decodeURIComponent;
+			const empty = () => ({});
+
+			const components = [
+				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
+			];
+
+			const manifest = {
+				assets: ${s(manifest.assets)},
+				layout: ${stringify_component(manifest.layout)},
+				error: ${stringify_component(manifest.error)},
+				pages: [
+					${manifest.pages
+						.map((data) => {
+							const params = get_params(data.params);
+							const parts = data.parts.map(c => `components[${component_indexes.get(c.file)}]`);
+
+							return `{ pattern: ${data.pattern}, params: ${params}, parts: [${parts.join(', ')}] }`;
+						})
+						.join(',\n\t\t\t\t\t')}
+				],
+				endpoints: [
+					${manifest.endpoints
+						.map((data) => {
+							const params = get_params(data.params);
+							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
+
+							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
+						})
+						.join(',\n\t\t\t\t\t')}
+				]
+			};
+
+			export function render(request, {
+				paths = ${s(config.paths)},
+				only_prerender = false,
+				get_static_file
+			} = {}) {
 				return renderer.render(request, {
-					static_dir: ${s(config.files.assets)},
 					paths,
 					template,
 					manifest,
@@ -324,12 +334,12 @@ export async function build(config) {
 					client,
 					root,
 					setup,
-					load: (route) => require(\`./routes/\${route.name}.js\`),
 					dev: false,
 					only_prerender,
 					app_dir: ${s(config.appDir)},
 					host: ${s(config.host)},
-					host_header: ${s(config.hostHeader)}
+					host_header: ${s(config.hostHeader)},
+					get_static_file
 				});
 			}
 		`
@@ -340,15 +350,6 @@ export async function build(config) {
 	const server_input = {
 		app: `${UNOPTIMIZED}/server/app.js`
 	};
-
-	[manifest.layout, manifest.error, ...manifest.components, ...manifest.endpoints].forEach(
-		(item) => {
-			server_input[`routes/${item.name}`] = `${UNOPTIMIZED}/server${item.url.replace(
-				/\.\w+$/,
-				'.js'
-			)}`;
-		}
-	);
 
 	const server_chunks = await rollup({
 		input: server_input,
@@ -389,4 +390,21 @@ async function rimraf(path) {
 	return new Promise((resolve) => {
 		(fs.rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
 	});
+}
+
+// given an array of params like `['x', 'y', 'z']` for
+// src/routes/[x]/[y]/[z]/svelte, create a function
+// that turns a RexExpMatchArray into ({ x, y, z })
+function get_params(array) {
+	return array.length
+		? '(m) => ({ ' +
+				array
+					.map((param, i) => {
+						return param.startsWith('...')
+							? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+							: `${param}: d(m[${i + 1}])`;
+					})
+					.join(', ') +
+				'})'
+		: 'empty';
 }

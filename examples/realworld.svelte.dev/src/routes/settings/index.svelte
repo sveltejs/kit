@@ -1,11 +1,12 @@
 <script context="module">
-	export function preload({ params }, { user }) {
-		if (!user) {
-			this.redirect(302, `/login`);
+	export function load({ session }) {
+		if (!session.user) {
+			return {
+				redirect: { to: '/login', status: 302 }
+			};
 		}
 	}
 </script>
-
 
 <script>
 	import { goto } from '$app/navigation';

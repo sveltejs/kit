@@ -13,14 +13,14 @@ function get_base_uri(window_document) {
 
 export function goto(href, { noscroll = false, replaceState = false } = {}) {
 	const url = new URL(href, get_base_uri(document));
-	const page = router.select(url);
+	const selected = router.select(url);
 
-	if (page) {
+	if (selected) {
 		// TODO this logic probably belongs inside router? cid should be private
 		history[replaceState ? 'replaceState' : 'pushState']({ id: router.cid }, '', href);
 
 		// TODO shouldn't need to pass the hash here
-		return router.navigate(page, null, noscroll, url.hash);
+		return router.navigate(selected, null, noscroll, url.hash);
 	}
 
 	location.href = href;
@@ -38,7 +38,7 @@ export async function prefetchRoutes(pathnames) {
 		? router.pages.filter((page) => pathnames.some((pathname) => page.pattern.test(pathname)))
 		: router.pages;
 
-	const promises = path_routes.map((r) => Promise.all(r.parts.map((p) => p[0]())));
+	const promises = path_routes.map((r) => Promise.all(r.parts.map((load) => load())));
 
 	await Promise.all(promises);
 }

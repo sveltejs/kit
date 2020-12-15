@@ -1,9 +1,10 @@
 <script context="module">
-	export function preload({ params }, { user }) {
-		if (user) {
-			this.redirect(302, `/profile/@${user.username}`);
-		} else {
-			this.redirect(302, `/login`);
-		}
+	export function load({ session }) {
+		return {
+			redirect: {
+				to: session.user ? `/profile/@${user.username}` : '/login',
+				status: 302
+			}
+		};
 	}
 </script>

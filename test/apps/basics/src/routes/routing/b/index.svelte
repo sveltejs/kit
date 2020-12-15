@@ -1,8 +1,7 @@
 <script context="module">
-	export function preload() {
-		return this.fetch('/routing/b.json').then(r => r.json()).then(letter => {
-			return { letter };
-		});
+	export async function load({ fetch }) {
+		const letter = await fetch('/routing/b.json').then(r => r.json());
+		return { props: { letter } };
 	}
 </script>
 

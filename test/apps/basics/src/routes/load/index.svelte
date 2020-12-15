@@ -1,10 +1,14 @@
 <script context="module">
-	export function preload(pageContext) {
-		if (typeof window !== 'undefined') {
+	import { browser } from '$app/env';
+
+	export function load(pageContext) {
+		if (browser) {
 			window.pageContext = pageContext;
 		}
 
-		return { foo: 'bar' };
+		return {
+			props: { foo: 'bar' }
+		};
 	}
 </script>
 

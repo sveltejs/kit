@@ -17,9 +17,11 @@
 		return values;
 	}
 
-	export function preload(page) {
+	export function load({ page }) {
 		return {
-			values: to_pojo(page.query)
+			props: {
+				values: to_pojo(page.query)
+			}
 		};
 	}
 </script>

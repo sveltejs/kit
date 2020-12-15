@@ -1,14 +1,6 @@
-<script context="module">
-	export function preload({ params }) {
-		return {
-			p: +params.p
-		};
-	}
-</script>
-
 <script>
+	import { page } from '$app/stores';
 	import Home from '$components/Home.svelte';
-	export let p;
 </script>
 
-<Home {p}/>
+<Home p={+$page.params.p}/>

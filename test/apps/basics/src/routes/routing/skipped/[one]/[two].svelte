@@ -1,6 +1,6 @@
 <script context="module">
-	export function preload({ params }) {
-		return params;
+	export function load({ page }) {
+		return { props: page.params };
 	}
 </script>
 

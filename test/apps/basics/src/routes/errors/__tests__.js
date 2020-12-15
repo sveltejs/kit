@@ -25,9 +25,9 @@ export default function(test, is_dev) {
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('client-side preload errors', async ({ visit, contains, js }) => {
+	test('client-side load errors', async ({ visit, contains, js }) => {
 		if (js) {
-			await visit('/errors/preload-client');
+			await visit('/errors/load-client');
 
 			assert.ok(await contains('Custom layout'));
 			assert.ok(await contains('Crashing now'));
@@ -35,8 +35,8 @@ export default function(test, is_dev) {
 		}
 	});
 
-	test('server-side preload errors', async ({ visit, contains }) => {
-		await visit('/errors/preload-server');
+	test('server-side load errors', async ({ visit, contains }) => {
+		await visit('/errors/load-server');
 
 		assert.ok(await contains('Custom layout'));
 		assert.ok(await contains('Crashing now'));

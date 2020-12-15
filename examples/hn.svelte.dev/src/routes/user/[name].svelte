@@ -1,11 +1,13 @@
 <script context="module">
-	export async function preload({ params }) {
-		const res = await this.fetch(`https://api.hnpwa.com/v0/user/${params.name}.json`);
+	export async function load({ page, fetch }) {
+		const res = await fetch(`https://api.hnpwa.com/v0/user/${page.params.name}.json`);
 		const user = await res.json();
 
 		return {
-			name: params.name,
-			user
+			props: {
+				name: page.params.name,
+				user
+			}
 		};
 	}
 </script>

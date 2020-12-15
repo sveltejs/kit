@@ -1,5 +1,7 @@
 <script context="module">
-	export function preload() {
-		this.redirect(301, '/top/1');
+	export function load() {
+		return {
+			redirect: { to: '/top/1', status: 301 }
+		};
 	}
 </script>

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as mime from 'mime';
 import { posixify, reserved_words } from '../utils';
 
 export default function create_manifest_data(config, extensions = '.svelte') {
@@ -26,6 +27,17 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	const components = [];
 	const pages = [];
 	const endpoints = [];
+
+	const seen = new Map();
+	const check_pattern = (pattern, file) => {
+		pattern = pattern.toString();
+
+		if (seen.has(pattern)) {
+			throw new Error(`The ${seen.get(pattern)} and ${file} routes clash`);
+		}
+
+		seen.set(pattern, file);
+	};
 
 	const default_layout = {
 		name: '$default_layout',
@@ -122,7 +134,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat({ component, params }) : stack
+					component ? stack.concat(component) : stack
 				);
 			} else if (item.is_page) {
 				const component = {
@@ -135,23 +147,24 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 
 				const parts =
 					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat({ component, params })
-						: stack.concat({ component, params });
+						? stack.slice(0, -1).concat(component)
+						: stack.concat(component);
 
-				const is_static = segments.every((segment) => segment.length === 1 && !segment[0].dynamic);
-				const path = is_static
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: null;
+				const pattern = get_pattern(segments, true);
+				check_pattern(pattern, item.file);
 
 				pages.push({
-					path,
-					pattern: get_pattern(segments, true),
+					pattern,
+					params,
 					parts
 				});
 			} else {
+				const pattern = get_pattern(segments, !item.route_suffix);
+				check_pattern(pattern, item.file);
+
 				endpoints.push({
 					name: `route_${get_slug(item.file)}`,
-					pattern: get_pattern(segments, !item.route_suffix),
+					pattern,
 					file: item.file,
 					url: `/${config.appDir}/routes/${item.file}`,
 					params
@@ -165,33 +178,8 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 
 	walk(cwd, [], [], []);
 
-	// check for clashes
-	const seen_pages = new Map();
-	pages.forEach((page) => {
-		const pattern = page.pattern.toString();
-		if (seen_pages.has(pattern)) {
-			const file = page.parts.pop().component.file;
-			const other_page = seen_pages.get(pattern);
-			const other_file = other_page.parts.pop().component.file;
-
-			throw new Error(`The ${other_file} and ${file} pages clash`);
-		}
-
-		seen_pages.set(pattern, page);
-	});
-
-	const seen_routes = new Map();
-	endpoints.forEach((route) => {
-		const pattern = route.pattern.toString();
-		if (seen_routes.has(pattern)) {
-			const other_route = seen_routes.get(pattern);
-			throw new Error(`The ${other_route.file} and ${route.file} routes clash`);
-		}
-
-		seen_routes.set(pattern, route);
-	});
-
 	return {
+		assets: list_files(config.files.assets, ''),
 		layout,
 		error,
 		components,
@@ -313,4 +301,26 @@ function get_pattern(segments, add_trailing_slash) {
 	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
 
 	return new RegExp(`^\\/${path}${trailing}`);
+}
+
+function list_files(dir, path, files = []) {
+	fs.readdirSync(dir).forEach((file) => {
+		const full = `${dir}/${file}`;
+
+		const stats = fs.statSync(full);
+		const joined = path ? `${path}/${file}` : file;
+
+		if (stats.isDirectory()) {
+			list_files(full, joined, files);
+		} else {
+			if (file === '.DS_Store') return;
+			files.push({
+				file: joined,
+				size: stats.size,
+				type: mime.getType(joined)
+			});
+		}
+	});
+
+	return files;
 }

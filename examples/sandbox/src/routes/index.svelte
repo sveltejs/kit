@@ -1,7 +1,9 @@
 <script context="module">
-	export function preload(page, session) {
+	export function load({ session }) {
 		return {
-			answer: session.answer
+			props: {
+				answer: session.answer
+			}
 		};
 	}
 </script>
