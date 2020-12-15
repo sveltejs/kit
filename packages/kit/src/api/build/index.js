@@ -326,7 +326,6 @@ export async function build(config) {
 				get_static_file
 			} = {}) {
 				return renderer.render(request, {
-					static_dir: ${s(config.files.assets)},
 					paths,
 					template,
 					manifest,

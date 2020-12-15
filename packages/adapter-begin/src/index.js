@@ -31,7 +31,6 @@ exports.handler = async function http(req) {
 			query
 		},
 		{
-			static_dir: '_static',
 			template,
 			manifest,
 			client,
