@@ -4,6 +4,7 @@ import relative from 'require-relative';
 import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
+import { join } from 'path';
 
 const mutable = (dir) =>
 	sirv(dir, {
@@ -41,7 +42,8 @@ export function start({ port, config }) {
 							paths: {
 								base: '',
 								assets: '/.'
-							}
+							},
+							get_static_file: file => fs.createReadStream(join(config.files.assets, file))
 						}
 					);
 

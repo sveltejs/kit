@@ -25,4 +25,9 @@ export default function(test, is_dev) {
 
 		assert.ok(!requests.some(r => r.endsWith('/load/serialization.json')), 'Should not load JSON over the wire');
 	});
+
+	test('prefers static data over endpoint', async ({ visit, text }) => {
+		await visit('/load/foo');
+		assert.equal(await text('h1'), 'static file');
+	});
 }

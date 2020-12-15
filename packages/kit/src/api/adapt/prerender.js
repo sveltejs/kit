@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { dirname, resolve as resolve_path } from 'path';
+import fs, { createReadStream } from 'fs';
+import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync';
 import { mkdirp } from '@sveltejs/app-utils/files';
@@ -63,7 +63,8 @@ export async function prerender({ dir, out, log, config, force }) {
 				query: new URLSearchParams()
 			},
 			{
-				only_prerender: !force
+				only_prerender: !force,
+				get_static_file: file => createReadStream(join(config.files.assets, file))
 			}
 		);
 

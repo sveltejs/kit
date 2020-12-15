@@ -42,17 +42,21 @@ async function get_response({ request, options, session, route, status = 200, er
 				// otherwise we're dealing with an internal fetch
 				const resolved = resolve(request.path, parsed.pathname);
 
-				if (options.get_static_file) {
-					// options.get_static_file should be a function that takes a
-					// path relative to `static` and returns a { contents, type }
-					// object. `contents` can be a string, buffer or stream
-					const file = options.get_static_file(resolved.slice(1));
-					if (file) {
-						response = new Response(file.contents, {
+				// is this a request for a static asset?
+				const filename = resolved.slice(1);
+				const filename_html = `${filename}/index.html`;
+				const asset = options.manifest.assets.find(d => d.file === filename || d.file === filename_html);
+
+				if (asset) {
+					if (options.get_static_file) {
+						response = new Response(options.get_static_file(asset.file), {
 							headers: {
-								'content-type': file.type
+								'content-type': asset.type
 							}
 						});
+					} else {
+						// TODO we need to know what protocol to use
+						response = fetch(`http://${page.host}/${asset.file}`, opts);
 					}
 				}
 
@@ -79,29 +83,6 @@ async function get_response({ request, options, session, route, status = 200, er
 							headers: rendered.headers
 						});
 					}
-				}
-
-				const rendered = await render(
-					{
-						host: request.host,
-						method: opts.method || 'GET',
-						headers: opts.headers || {}, // TODO inject credentials...
-						path: resolved,
-						body: opts.body,
-						query: new URLSearchParams(parsed.query || '')
-					},
-					options
-				);
-
-				if (rendered) {
-					// TODO this is primarily for the benefit of the static case,
-					// but could it be used elsewhere?
-					dependencies[resolved] = rendered;
-
-					response = new Response(rendered.body, {
-						status: rendered.status,
-						headers: rendered.headers
-					});
 				}
 			}
 

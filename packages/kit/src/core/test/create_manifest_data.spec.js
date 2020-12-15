@@ -5,6 +5,7 @@ import create_manifest_data from '../create_manifest_data';
 
 const get_config = (dir) => ({
 	files: {
+		assets: path.join(__dirname, 'static'),
 		routes: path.join(__dirname, dir)
 	},
 	appDir: '_app'
@@ -266,6 +267,23 @@ test('works with custom extensions', () => {
 			file: 'blog/[slug].json.js',
 			url: '/_app/routes/blog/[slug].json.js',
 			params: ['slug']
+		}
+	]);
+});
+
+test('lists static assets', () => {
+	const { assets } = create_manifest_data(get_config('samples/basic'));
+
+	assert.equal(assets, [
+		{
+			file: 'bar/baz.txt',
+			size: 14,
+			type: 'text/plain'
+		},
+		{
+			file: 'foo.txt',
+			size: 9,
+			type: 'text/plain'
 		}
 	]);
 });

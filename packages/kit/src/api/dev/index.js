@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { createReadStream, readFileSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
@@ -200,7 +200,8 @@ class Watcher extends EventEmitter {
 						start_global: this.config.startGlobal,
 						app_dir: this.config.appDir,
 						host: this.config.host,
-						host_header: this.config.hostHeader
+						host_header: this.config.hostHeader,
+						get_static_file: file => createReadStream(join(this.config.files.assets, file))
 					}
 				);
 
@@ -228,6 +229,7 @@ class Watcher extends EventEmitter {
 		const load = (url) => this.load(url.replace(/\.\w+$/, '.js'));
 
 		this.manifest = {
+			assets: manifest_data.assets,
 			layout: () => load(manifest_data.layout.url),
 			error: () => load(manifest_data.error.url),
 			pages: manifest_data.pages.map((data) => ({

@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as mime from 'mime';
 import { posixify, reserved_words } from '../utils';
 
 export default function create_manifest_data(config, extensions = '.svelte') {
@@ -178,6 +179,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 	walk(cwd, [], [], []);
 
 	return {
+		assets: list_files(config.files.assets, ''),
 		layout,
 		error,
 		components,
@@ -299,4 +301,26 @@ function get_pattern(segments, add_trailing_slash) {
 	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
 
 	return new RegExp(`^\\/${path}${trailing}`);
+}
+
+function list_files(dir, path, files = []) {
+	fs.readdirSync(dir).forEach(file => {
+		const full = `${dir}/${file}`;
+
+		const stats = fs.statSync(full);
+		const joined = path ? `${path}/${file}` : file;
+
+		if (stats.isDirectory()) {
+			list_files(full, joined, files);
+		} else {
+			if (file === '.DS_Store') return;
+			files.push({
+				file: joined,
+				size: stats.size,
+				type: mime.getType(joined)
+			});
+		}
+	});
+
+	return files;
 }

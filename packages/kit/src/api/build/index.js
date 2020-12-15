@@ -261,7 +261,7 @@ export async function build(config) {
 	});
 
 	const stringify_component = (c) =>
-		`() => import(${JSON.stringify(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
+		`() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -295,6 +295,7 @@ export async function build(config) {
 			];
 
 			const manifest = {
+				assets: ${s(manifest.assets)},
 				layout: ${stringify_component(manifest.layout)},
 				error: ${stringify_component(manifest.error)},
 				pages: [
@@ -311,7 +312,7 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${JSON.stringify(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
+							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
@@ -319,7 +320,11 @@ export async function build(config) {
 				]
 			};
 
-			export function render(request, { paths = ${s(config.paths)}, only_prerender = false } = {}) {
+			export function render(request, {
+				paths = ${s(config.paths)},
+				only_prerender = false,
+				get_static_file
+			} = {}) {
 				return renderer.render(request, {
 					static_dir: ${s(config.files.assets)},
 					paths,
@@ -335,7 +340,8 @@ export async function build(config) {
 					only_prerender,
 					app_dir: ${s(config.appDir)},
 					host: ${s(config.host)},
-					host_header: ${s(config.hostHeader)}
+					host_header: ${s(config.hostHeader)},
+					get_static_file
 				});
 			}
 		`
