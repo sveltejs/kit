@@ -230,7 +230,8 @@ export class Renderer {
 								get() {
 									node.uses.params.add(key);
 									return page.params[key];
-								}
+								},
+								enumerable: true
 							});
 						}
 
