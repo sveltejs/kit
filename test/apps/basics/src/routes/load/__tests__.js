@@ -30,4 +30,14 @@ export default function(test, is_dev) {
 		await visit('/load/foo');
 		assert.equal(await text('h1'), 'static file');
 	});
+
+	test('context is inherited', async ({ visit, text }) => {
+		await visit('/load/context/a/b/c');
+		assert.equal(await text('h1'), 'message: original + new');
+		assert.equal(await text('pre'), JSON.stringify({
+			x: 'a',
+			y: 'b',
+			z: 'c'
+		}));
+	});
 }
