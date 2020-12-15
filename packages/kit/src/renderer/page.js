@@ -4,12 +4,12 @@ import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
-async function get_response({ request, options, session, route, status = 200, error }) {
+async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
 	const dependencies = {};
 
-	const serialized_session = try_serialize(session, (err) => {
+	const serialized_session = try_serialize($session, (err) => {
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
@@ -25,92 +25,90 @@ async function get_response({ request, options, session, route, status = 200, er
 		params
 	};
 
-	const load_context = {
-		page,
-		session,
-		fetch: async (url, opts = {}) => {
-			const parsed = parse(url);
+	let uses_session = false;
 
-			let response;
+	const fetcher = async (url, opts = {}) => {
+		const parsed = parse(url);
 
-			if (parsed.protocol) {
-				// external fetch
-				response = fetch(parsed.href, opts);
-			} else {
-				// otherwise we're dealing with an internal fetch
-				const resolved = resolve(request.path, parsed.pathname);
+		let response;
 
-				// is this a request for a static asset?
-				const filename = resolved.slice(1);
-				const filename_html = `${filename}/index.html`;
-				const asset = options.manifest.assets.find(
-					(d) => d.file === filename || d.file === filename_html
+		if (parsed.protocol) {
+			// external fetch
+			response = fetch(parsed.href, opts);
+		} else {
+			// otherwise we're dealing with an internal fetch
+			const resolved = resolve(request.path, parsed.pathname);
+
+			// is this a request for a static asset?
+			const filename = resolved.slice(1);
+			const filename_html = `${filename}/index.html`;
+			const asset = options.manifest.assets.find(
+				(d) => d.file === filename || d.file === filename_html
+			);
+
+			if (asset) {
+				if (options.get_static_file) {
+					response = new Response(options.get_static_file(asset.file), {
+						headers: {
+							'content-type': asset.type
+						}
+					});
+				} else {
+					// TODO we need to know what protocol to use
+					response = fetch(`http://${page.host}/${asset.file}`, opts);
+				}
+			}
+
+			if (!response) {
+				const rendered = await render(
+					{
+						host: request.host,
+						method: opts.method || 'GET',
+						headers: opts.headers || {}, // TODO inject credentials...
+						path: resolved,
+						body: opts.body,
+						query: new URLSearchParams(parsed.query || '')
+					},
+					options
 				);
 
-				if (asset) {
-					if (options.get_static_file) {
-						response = new Response(options.get_static_file(asset.file), {
-							headers: {
-								'content-type': asset.type
-							}
-						});
-					} else {
-						// TODO we need to know what protocol to use
-						response = fetch(`http://${page.host}/${asset.file}`, opts);
-					}
-				}
+				if (rendered) {
+					// TODO this is primarily for the benefit of the static case,
+					// but could it be used elsewhere?
+					dependencies[resolved] = rendered;
 
-				if (!response) {
-					const rendered = await render(
-						{
-							host: request.host,
-							method: opts.method || 'GET',
-							headers: opts.headers || {}, // TODO inject credentials...
-							path: resolved,
-							body: opts.body,
-							query: new URLSearchParams(parsed.query || '')
-						},
-						options
-					);
-
-					if (rendered) {
-						// TODO this is primarily for the benefit of the static case,
-						// but could it be used elsewhere?
-						dependencies[resolved] = rendered;
-
-						response = new Response(rendered.body, {
-							status: rendered.status,
-							headers: rendered.headers
-						});
-					}
+					response = new Response(rendered.body, {
+						status: rendered.status,
+						headers: rendered.headers
+					});
 				}
 			}
-
-			if (response) {
-				const clone = response.clone();
-
-				const headers = {};
-				clone.headers.forEach((value, key) => {
-					if (key !== 'etag') headers[key] = value;
-				});
-
-				const payload = JSON.stringify({
-					status: clone.status,
-					statusText: clone.statusText,
-					headers,
-					body: await clone.text() // TODO handle binary data
-				});
-
-				// TODO i guess we need to sanitize/escape this... somehow?
-				serialized_data.push({ url, payload });
-
-				return response;
-			}
-
-			return new Response('Not found', {
-				status: 404
-			});
 		}
+
+		if (response) {
+			const clone = response.clone();
+
+			const headers = {};
+			clone.headers.forEach((value, key) => {
+				if (key !== 'etag') headers[key] = value;
+			});
+
+			const payload = JSON.stringify({
+				status: clone.status,
+				statusText: clone.statusText,
+				headers,
+				body: await clone.text() // TODO handle binary data
+			});
+
+			// TODO i guess we need to sanitize/escape this... somehow?
+			serialized_data.push({ url, payload });
+
+			return response;
+		}
+
+		return new Response('Not found', {
+			status: 404
+		});
 	};
 
 	const parts = error ? [options.manifest.layout] : [options.manifest.layout, ...route.parts];
@@ -120,7 +118,7 @@ async function get_response({ request, options, session, route, status = 200, er
 	const props_promises = [];
 
 	let context = {};
-	// let maxage;
+	let maxage;
 
 	for (let i = 0; i < component_promises.length; i += 1) {
 		const mod = await component_promises[i];
@@ -133,7 +131,12 @@ async function get_response({ request, options, session, route, status = 200, er
 		const loaded =
 			mod.load &&
 			(await mod.load.call(null, {
-				...load_context,
+				page,
+				get session() {
+					uses_session = true;
+					return $session;
+				},
+				fetch: fetcher,
 				context: { ...context }
 			}));
 
@@ -160,12 +163,18 @@ async function get_response({ request, options, session, route, status = 200, er
 				};
 			}
 
-			// TODO use this
-			// maxage = loaded.maxage || 0;
+			maxage = loaded.maxage || 0;
 
 			props_promises[i] = loaded.props;
 		}
 	}
+
+	const session = writable($session);
+	let session_tracking_active = false;
+	const unsubscribe = session.subscribe(() => {
+		if (session_tracking_active) uses_session = true;
+	});
+	session_tracking_active = true;
 
 	const props = {
 		status,
@@ -173,7 +182,7 @@ async function get_response({ request, options, session, route, status = 200, er
 		stores: {
 			page: writable(null),
 			navigating: writable(false),
-			session: writable(session)
+			session
 		},
 		page,
 		components
@@ -186,6 +195,7 @@ async function get_response({ request, options, session, route, status = 200, er
 	}
 
 	const rendered = options.root.render(props);
+	unsubscribe();
 
 	const deps = options.client.deps;
 	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
@@ -239,11 +249,17 @@ async function get_response({ request, options, session, route, status = 200, er
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
+	const headers = {
+		'content-type': 'text/html'
+	};
+
+	if (maxage) {
+		headers['cache-control'] = `${uses_session ? 'private' : 'public'}, max-age=${maxage}`;
+	}
+
 	return {
 		status,
-		headers: {
-			'content-type': 'text/html'
-		},
+		headers,
 		body: options.template({ head, body }),
 		dependencies
 	};
@@ -252,7 +268,7 @@ async function get_response({ request, options, session, route, status = 200, er
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
-	const session = await (options.setup.getSession && options.setup.getSession(context));
+	const $session = await (options.setup.getSession && options.setup.getSession(context));
 
 	try {
 		if (!route) {
@@ -264,7 +280,7 @@ export default async function render_page(request, context, options) {
 		return await get_response({
 			request,
 			options,
-			session,
+			$session,
 			route,
 			status: 200,
 			error: null
@@ -278,7 +294,7 @@ export default async function render_page(request, context, options) {
 			return await get_response({
 				request,
 				options,
-				session,
+				$session,
 				route,
 				status,
 				error
