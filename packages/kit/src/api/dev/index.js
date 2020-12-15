@@ -186,7 +186,7 @@ class Watcher extends EventEmitter {
 								.replace('%svelte.head%', () => head)
 								.replace('%svelte.body%', () => body);
 
-							if (validator) {
+							if (this.config.amp) {
 								const result = validator.validateString(rendered);
 
 								if (result.status !== 'PASS') {
