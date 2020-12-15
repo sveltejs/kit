@@ -42,7 +42,13 @@ export class Renderer {
 			status
 		};
 
-		this.current_branch = [];
+		this.current = {
+			params: {},
+			path: null,
+			query: null,
+			session_changed: false,
+			nodes: []
+		};
 
 		this.prefetching = {
 			href: null,
@@ -56,7 +62,6 @@ export class Renderer {
 		};
 
 		this.$session = null;
-		this.session_dirty = false;
 
 		this.root = null;
 
@@ -85,7 +90,7 @@ export class Renderer {
 			this.$session = value;
 
 			if (!ready) return;
-			this.session_dirty = true;
+			this.current.session_changed = true;
 
 			const selected = this.router.select(new URL(location.href));
 			this.render(selected);
@@ -164,8 +169,9 @@ export class Renderer {
 
 		const state = {
 			path: page.path,
-			params: JSON.stringify(page.params),
+			params: page.params,
 			query: page.query.toString(),
+			session_changed: false,
 			nodes: []
 		};
 
@@ -175,46 +181,109 @@ export class Renderer {
 		let context = {};
 		let redirect;
 
+		const changed = {
+			params: Object.keys(page.params).filter((key) => {
+				return this.current.params[key] !== page.params[key];
+			}),
+			query: state.query !== this.current.query,
+			session: this.current.session_changed,
+			context: false
+		};
+
 		try {
 			for (let i = 0; i < component_promises.length; i += 1) {
 				// TODO skip if unchanged
 				// state.nodes[i] = this.current.nodes[i];
 
-				const mod = await component_promises[i];
-				props.components[i] = mod.default;
+				const previous = this.current.nodes[i];
 
-				const loaded =
-					mod.load &&
-					(await mod.load.call(null, {
-						...load_context,
-						context: { ...context }
-					}));
+				const { default: component, load } = await component_promises[i];
+				props.components[i] = component;
 
-				if (loaded) {
-					if (loaded.error) {
-						const error = new Error(loaded.error.message);
-						error.status = loaded.error.status;
-						throw error;
+				const changed_since_last_render =
+					!previous ||
+					component !== previous.component ||
+					changed.params.some((param) => previous.uses.params.has(param)) ||
+					(changed.query && previous.uses.query) ||
+					(changed.session && previous.uses.session) ||
+					(changed.context && previous.uses.context);
+
+				if (changed_since_last_render) {
+					const node = {
+						component,
+						uses: {
+							params: new Set(),
+							query: false,
+							session: false,
+							context: false
+						}
+					};
+
+					const params = {};
+					for (const key in page.params) {
+						Object.defineProperty(params, key, {
+							get() {
+								node.uses.params.add(key);
+								return page.params[key];
+							}
+						});
 					}
 
-					if (loaded.redirect) {
-						redirect = loaded.redirect;
-						break;
+					const session = this.$session;
+
+					const loaded =
+						load &&
+						(await load.call(null, {
+							page: {
+								...page,
+								params,
+								get query() {
+									node.uses.query = true;
+									return page.query;
+								}
+							},
+							get session() {
+								node.uses.session = true;
+								return session;
+							},
+							get context() {
+								node.uses.context = true;
+								return { ...context };
+							}
+						}));
+
+					if (loaded) {
+						if (loaded.error) {
+							const error = new Error(loaded.error.message);
+							error.status = loaded.error.status;
+							throw error;
+						}
+
+						if (loaded.redirect) {
+							redirect = loaded.redirect;
+							break;
+						}
+
+						if (loaded.context) {
+							changed.context = true;
+
+							context = {
+								...context,
+								...loaded.context
+							};
+						}
+
+						if (loaded.maxage) {
+							// TODO cache for subsequent navigation back
+							// to this node
+						}
+
+						props_promises[i] = loaded.props;
 					}
 
-					if (loaded.context) {
-						context = {
-							...context,
-							...loaded.context
-						};
-					}
-
-					if (loaded.maxage) {
-						// TODO cache for subsequent navigation back
-						// to this node
-					}
-
-					props_promises[i] = loaded.props;
+					state.nodes[i] = node;
+				} else {
+					state.nodes[i] = previous;
 				}
 			}
 

@@ -40,4 +40,14 @@ export default function(test, is_dev) {
 			z: 'c'
 		}));
 	});
+
+	test.only('load function is only called when necessary', async ({ visit, goto, text, js }) => {
+		await visit('/load/change-detection/one/a');
+		assert.equal(await text('h1'), 'a: 1');
+
+		if (js) {
+			await goto('/load/change-detection/one/a?unused=whatever');
+			assert.equal(await text('h1'), 'a: 1');
+		}
+	});
 }
