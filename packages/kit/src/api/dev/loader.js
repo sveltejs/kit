@@ -1,11 +1,12 @@
 import { existsSync, readFileSync } from 'fs';
 import { URL } from 'url';
+import snowpack from 'snowpack';
 import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(snowpack, config) {
+export default function loader(sp, config) {
 	const cache = new Map();
 	const graph = new Map();
 
@@ -31,13 +32,10 @@ export default function loader(snowpack, config) {
 		if (dependents) dependents.forEach(invalidate_all);
 	};
 
-	snowpack.onFileChange(({ filePath }) => {
-		cache.forEach(async (promise, url) => {
-			const module = await promise;
-			if (module.originalFileLoc === filePath) {
-				invalidate_all(url);
-			}
-		});
+	sp.onFileChange(({ filePath }) => {
+		// TODO seems odd that getUrlForFile isn't a property of the `sp` instance!
+		const url = snowpack.getUrlForFile(filePath, config);
+		if (url) invalidate_all(url);
 	});
 
 	async function load(url, url_stack) {
@@ -52,7 +50,7 @@ export default function loader(snowpack, config) {
 
 		if (cache.has(url)) return cache.get(url);
 
-		const promise = snowpack
+		const promise = sp
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
 			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
 			.catch((e) => {
@@ -134,7 +132,7 @@ export default function loader(snowpack, config) {
 				}
 
 				try {
-					const { contents } = await snowpack.loadUrl(address, { isSSR: true, encoding: 'utf8' });
+					const { contents } = await sp.loadUrl(address, { isSSR: true, encoding: 'utf8' });
 					return contents;
 				} catch {
 					// fail gracefully
