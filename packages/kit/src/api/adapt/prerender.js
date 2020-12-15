@@ -64,7 +64,7 @@ export async function prerender({ dir, out, log, config, force }) {
 			},
 			{
 				only_prerender: !force,
-				get_static_file: file => createReadStream(join(config.files.assets, file))
+				get_static_file: (file) => createReadStream(join(config.files.assets, file))
 			}
 		);
 

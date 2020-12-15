@@ -260,8 +260,7 @@ export async function build(config) {
 		component_indexes.set(c.file, i);
 	});
 
-	const stringify_component = (c) =>
-		`() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
+	const stringify_component = (c) => `() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
 	// prettier-ignore
 	fs.writeFileSync(

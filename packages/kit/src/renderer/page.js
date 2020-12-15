@@ -1,6 +1,4 @@
 import devalue from 'devalue';
-import { createReadStream, existsSync } from 'fs';
-import * as mime from 'mime';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
@@ -45,7 +43,9 @@ async function get_response({ request, options, session, route, status = 200, er
 				// is this a request for a static asset?
 				const filename = resolved.slice(1);
 				const filename_html = `${filename}/index.html`;
-				const asset = options.manifest.assets.find(d => d.file === filename || d.file === filename_html);
+				const asset = options.manifest.assets.find(
+					(d) => d.file === filename || d.file === filename_html
+				);
 
 				if (asset) {
 					if (options.get_static_file) {
@@ -120,7 +120,7 @@ async function get_response({ request, options, session, route, status = 200, er
 	const props_promises = [];
 
 	let context = {};
-	let maxage;
+	// let maxage;
 
 	for (let i = 0; i < component_promises.length; i += 1) {
 		const mod = await component_promises[i];
@@ -161,7 +161,7 @@ async function get_response({ request, options, session, route, status = 200, er
 			}
 
 			// TODO use this
-			maxage = loaded.maxage || 0;
+			// maxage = loaded.maxage || 0;
 
 			props_promises[i] = loaded.props;
 		}
@@ -234,7 +234,9 @@ async function get_response({ request, options, session, route, status = 200, er
 
 	const body = `${rendered.html}
 
-			${serialized_data.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`).join('\n\n\t\t\t')}
+			${serialized_data
+				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)
+				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
 	return {

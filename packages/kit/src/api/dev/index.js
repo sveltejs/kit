@@ -200,7 +200,7 @@ class Watcher extends EventEmitter {
 						app_dir: this.config.appDir,
 						host: this.config.host,
 						host_header: this.config.hostHeader,
-						get_static_file: file => createReadStream(join(this.config.files.assets, file))
+						get_static_file: (file) => createReadStream(join(this.config.files.assets, file))
 					}
 				);
 

@@ -304,7 +304,7 @@ function get_pattern(segments, add_trailing_slash) {
 }
 
 function list_files(dir, path, files = []) {
-	fs.readdirSync(dir).forEach(file => {
+	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;
 
 		const stats = fs.statSync(full);
