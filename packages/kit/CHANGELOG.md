@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- 8b14d29: Omit svelte-data scripts from AMP pages
+
 ## 1.0.0-next.9
 
 ### Patch Changes
