@@ -1,8 +1,8 @@
 <script context="module">
 	import * as api from '$common/api.js';
 
-	export async function preload({ params }, { user }) {
-		const username = params.user.slice(1);
+	export async function load({ page, session: { user } }) {
+		const username = page.params.user.slice(1);
 
 		const { profile } = await api.get(`profiles/${username}`, user && user.token);
 		return { profile, favorites: params.view === 'favorites' };

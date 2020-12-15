@@ -1,7 +1,7 @@
 <script context="module">
 	const valid_lists = new Set(['news', 'newest', 'show', 'ask', 'jobs']);
 
-	export async function preload({ params }) {
+	export async function load({ page: { params }, fetch }) {
 		const list = (
 			params.list === 'top' ? 'news' :
 			params.list === 'new' ? 'newest' :
@@ -10,19 +10,25 @@
 
 		if (!valid_lists.has(list)) {
 			console.log('invalid');
-			this.error(404, 'Not found');
-			return;
+			return {
+				error: {
+					status: 404,
+					message: 'Not found'
+				}
+			};
 		}
 
 		const page = +params.page;
 
-		const res = await this.fetch(`https://api.hnpwa.com/v0/${list}/${page}.json`);
+		const res = await fetch(`https://api.hnpwa.com/v0/${list}/${page}.json`);
 		const items = await res.json();
 
 		return {
-			page,
-			list,
-			items
+			props: {
+				page,
+				list,
+				items
+			}
 		};
 	}
 </script>

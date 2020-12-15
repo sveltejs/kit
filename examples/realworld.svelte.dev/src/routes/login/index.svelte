@@ -1,7 +1,9 @@
 <script context="module">
-	export async function preload({ params }, { user }) {
-		if (user) {
-			this.redirect(302, `/`);
+	export async function load({ session }) {
+		if (session.user) {
+			return {
+				redirect: { to: '/', status: 302 }
+			};
 		}
 	}
 </script>

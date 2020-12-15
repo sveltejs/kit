@@ -1,14 +1,18 @@
 <script context="module">
 	import * as api from '$common/api.js';
 
-	export async function preload({ params }, { user }) {
-		if (!user) {
-			this.redirect(302, `/login`);
+	export async function load({ page, session }) {
+		if (!session.user) {
+			return {
+				redirect: { to: `/login`, status: 302 }
+			};
 		}
 
-		const { slug } = params;
+		const { slug } = page.params;
 		const { article } = await api.get(`articles/${slug}`, null);
-		return { article, slug };
+		return {
+			props: { article, slug }
+		};
 	}
 </script>
 

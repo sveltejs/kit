@@ -1,10 +1,12 @@
 <script context="module">
 	export const prerender = true;
 
-	export async function preload() {
-		const res = await this.fetch('/blog.json');
+	export async function load({ fetch }) {
+		const res = await fetch('/blog.json');
 		return {
-			posts: await res.json()
+			props: {
+				posts: await res.json()
+			}
 		};
 	}
 </script>
