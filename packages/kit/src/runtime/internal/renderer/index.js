@@ -151,20 +151,16 @@ export class Renderer {
 			components: []
 		};
 
-		const load_context = {
-			page,
-			session: this.$session,
-			fetch: (url, opts) => {
-				if (this.initial) {
-					const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
-					if (script) {
-						const { body, ...init } = JSON.parse(script.textContent);
-						return Promise.resolve(new Response(body, init));
-					}
+		const fetcher = (url, opts) => {
+			if (this.initial) {
+				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+				if (script) {
+					const { body, ...init } = JSON.parse(script.textContent);
+					return Promise.resolve(new Response(body, init));
 				}
-
-				return fetch(url, opts);
 			}
+
+			return fetch(url, opts);
 		};
 
 		const state = {
@@ -249,7 +245,8 @@ export class Renderer {
 							get context() {
 								node.uses.context = true;
 								return { ...context };
-							}
+							},
+							fetch: fetcher
 						}));
 
 					if (loaded) {

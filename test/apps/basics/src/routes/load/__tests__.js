@@ -41,7 +41,7 @@ export default function(test, is_dev) {
 		}));
 	});
 
-	test.only('load function is only called when necessary', async ({ visit, goto, text, js }) => {
+	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {
 		await visit('/load/change-detection/one/a');
 		assert.equal(await text('h1'), 'a: 1');
 
