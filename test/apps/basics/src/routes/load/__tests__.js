@@ -43,11 +43,20 @@ export default function(test, is_dev) {
 
 	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {
 		await visit('/load/change-detection/one/a');
-		assert.equal(await text('h1'), 'a: 1');
+		assert.equal(await text('h1'), 'x: a: 1');
 
 		if (js) {
 			await goto('/load/change-detection/one/a?unused=whatever');
-			assert.equal(await text('h1'), 'a: 1');
+			assert.equal(await text('h1'), 'x: a: 1');
+
+			await goto('/load/change-detection/two/b');
+			assert.equal(await text('h1'), 'y: b: 1');
+
+			await goto('/load/change-detection/one/a');
+			assert.equal(await text('h1'), 'x: a: 1');
+
+			await goto('/load/change-detection/one/b');
+			assert.equal(await text('h1'), 'x: b: 2');
 		}
 	});
 }

@@ -5,7 +5,7 @@
 		loads += 1;
 
 		return {
-			maxage: 30,
+			maxage: 5,
 			props: {
 				x: page.params.x,
 				loads
@@ -19,4 +19,4 @@
 	export let loads;
 </script>
 
-<h1>{x}: {loads}</h1>
+<h1>x: {x}: {loads}</h1>

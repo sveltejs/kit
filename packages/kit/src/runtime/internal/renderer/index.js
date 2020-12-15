@@ -50,6 +50,8 @@ export class Renderer {
 			nodes: []
 		};
 
+		this.caches = new Map();
+
 		this.prefetching = {
 			href: null,
 			promise: null
@@ -188,9 +190,6 @@ export class Renderer {
 
 		try {
 			for (let i = 0; i < component_promises.length; i += 1) {
-				// TODO skip if unchanged
-				// state.nodes[i] = this.current.nodes[i];
-
 				const previous = this.current.nodes[i];
 
 				const { default: component, load } = await component_promises[i];
@@ -205,49 +204,60 @@ export class Renderer {
 					(changed.context && previous.uses.context);
 
 				if (changed_since_last_render) {
-					const node = {
-						component,
-						uses: {
-							params: new Set(),
-							query: false,
-							session: false,
-							context: false
-						}
-					};
+					// see if we have some cached data
+					const cache = this.caches.get(component);
+					const cached = cache && cache.get(state.path + state.query);
 
-					const params = {};
-					for (const key in page.params) {
-						Object.defineProperty(params, key, {
-							get() {
-								node.uses.params.add(key);
-								return page.params[key];
+					let node;
+					let loaded;
+
+					if (cached && (!changed.context || !cached.node.uses.context)) {
+						({ node, loaded } = cached);
+					} else {
+						node = {
+							component,
+							uses: {
+								params: new Set(),
+								query: false,
+								session: false,
+								context: false
 							}
-						});
-					}
+						};
 
-					const session = this.$session;
-
-					const loaded =
-						load &&
-						(await load.call(null, {
-							page: {
-								...page,
-								params,
-								get query() {
-									node.uses.query = true;
-									return page.query;
+						const params = {};
+						for (const key in page.params) {
+							Object.defineProperty(params, key, {
+								get() {
+									node.uses.params.add(key);
+									return page.params[key];
 								}
-							},
-							get session() {
-								node.uses.session = true;
-								return session;
-							},
-							get context() {
-								node.uses.context = true;
-								return { ...context };
-							},
-							fetch: fetcher
-						}));
+							});
+						}
+
+						const session = this.$session;
+
+						loaded =
+							load &&
+							(await load.call(null, {
+								page: {
+									...page,
+									params,
+									get query() {
+										node.uses.query = true;
+										return page.query;
+									}
+								},
+								get session() {
+									node.uses.session = true;
+									return session;
+								},
+								get context() {
+									node.uses.context = true;
+									return { ...context };
+								},
+								fetch: fetcher
+							}));
+					}
 
 					if (loaded) {
 						if (loaded.error) {
@@ -271,8 +281,37 @@ export class Renderer {
 						}
 
 						if (loaded.maxage) {
-							// TODO cache for subsequent navigation back
-							// to this node
+							if (!this.caches.has(component)) {
+								this.caches.set(component, new Map());
+							}
+
+							const cache = this.caches.get(component);
+							const cached = { node, loaded };
+
+							const key = state.path + state.query;
+
+							cache.set(key, cached);
+
+							let ready = false;
+
+							const timeout = setTimeout(() => {
+								clear();
+							}, loaded.maxage * 1000);
+
+							const clear = () => {
+								if (cache.get(key) === cached) {
+									cache.delete(key);
+								}
+
+								unsubscribe();
+								clearTimeout(timeout);
+							};
+
+							const unsubscribe = this.stores.session.subscribe(() => {
+								if (ready) clear();
+							});
+
+							ready = true;
 						}
 
 						props_promises[i] = loaded.props;

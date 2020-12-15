@@ -25,10 +25,14 @@ async function get_response({ request, options, $session, route, status = 200, e
 		params
 	};
 
-	let uses_session = false;
+	let uses_credentials = false;
 
 	const fetcher = async (url, opts = {}) => {
 		const parsed = parse(url);
+
+		if (opts.credentials !== 'omit') {
+			uses_credentials = true;
+		}
 
 		let response;
 
@@ -133,7 +137,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			(await mod.load.call(null, {
 				page,
 				get session() {
-					uses_session = true;
+					uses_credentials = true;
 					return $session;
 				},
 				fetch: fetcher,
@@ -172,7 +176,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const session = writable($session);
 	let session_tracking_active = false;
 	const unsubscribe = session.subscribe(() => {
-		if (session_tracking_active) uses_session = true;
+		if (session_tracking_active) uses_credentials = true;
 	});
 	session_tracking_active = true;
 
@@ -254,7 +258,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	};
 
 	if (maxage) {
-		headers['cache-control'] = `${uses_session ? 'private' : 'public'}, max-age=${maxage}`;
+		headers['cache-control'] = `${uses_credentials ? 'private' : 'public'}, max-age=${maxage}`;
 	}
 
 	return {
