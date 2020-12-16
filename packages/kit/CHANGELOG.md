@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 1ea4d6b: More robust CSS extraction
+
 ## 1.0.0-next.12
 
 ### Patch Changes
