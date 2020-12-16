@@ -117,9 +117,9 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
-		const { set_paths } = await this.load(
-			`/${this.config.appDir}/assets/runtime/internal/singletons.js`
-		);
+		const {
+			exports: { set_paths }
+		} = await this.load(`/${this.config.appDir}/assets/runtime/internal/singletons.js`);
 		set_paths(this.config.paths);
 
 		const static_handler = sirv(this.config.files.assets, {
@@ -153,7 +153,7 @@ class Watcher extends EventEmitter {
 				let setup;
 
 				try {
-					setup = await this.load(`/${this.config.appDir}/setup/index.js`);
+					setup = (await this.load(`/${this.config.appDir}/setup/index.js`)).exports;
 				} catch (err) {
 					if (!err.message.endsWith('NOT_FOUND')) throw err;
 					setup = {};
@@ -162,7 +162,8 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).default;
+					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).exports
+						.default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.stack);
@@ -240,10 +241,7 @@ class Watcher extends EventEmitter {
 						},
 						manifest: this.manifest,
 						target: this.config.target,
-						client: {
-							entry: 'assets/runtime/internal/start.js',
-							deps: {}
-						},
+						entry: 'assets/runtime/internal/start.js',
 						dev: true,
 						amp: this.config.amp,
 						root,
@@ -253,7 +251,8 @@ class Watcher extends EventEmitter {
 						app_dir: this.config.appDir,
 						host: this.config.host,
 						host_header: this.config.hostHeader,
-						get_static_file: (file) => createReadStream(join(this.config.files.assets, file))
+						get_static_file: (file) => createReadStream(join(this.config.files.assets, file)),
+						get_css: (url) => this.snowpack.loadUrl(url, { encoding: 'utf-8' })
 					}
 				);
 
@@ -280,19 +279,44 @@ class Watcher extends EventEmitter {
 
 		const load = (url) => this.load(url.replace(/\.\w+$/, '.js'));
 
+		const common_css_deps = new Set();
+
 		this.manifest = {
 			assets: manifest_data.assets,
-			layout: () => load(manifest_data.layout.url),
-			error: () => load(manifest_data.error.url),
-			pages: manifest_data.pages.map((data) => ({
-				pattern: data.pattern,
-				params: get_params(data.params),
-				parts: data.parts.map(({ url }) => () => load(url))
-			})),
+			layout: async () => {
+				const { exports, css } = await load(manifest_data.layout.url);
+				css.forEach((dep) => common_css_deps.add(dep));
+				return exports;
+			},
+			error: async () => {
+				const { exports, css } = await load(manifest_data.error.url);
+				css.forEach((dep) => common_css_deps.add(dep));
+				return exports;
+			},
+			pages: manifest_data.pages.map((data) => {
+				// This is a bit of a hack, but it means we can inject the correct <link>
+				// elements without needing to do any analysis before loading
+				const css_deps = new Set();
+
+				return {
+					pattern: data.pattern,
+					params: get_params(data.params),
+					parts: data.parts.map(({ url }) => async () => {
+						const { exports, css } = await load(url);
+						common_css_deps.forEach((url) => css_deps.add(url));
+						css.forEach((url) => css_deps.add(url));
+						return exports;
+					}),
+					get css() {
+						return Array.from(css_deps);
+					},
+					js: []
+				};
+			}),
 			endpoints: manifest_data.endpoints.map((data) => ({
 				pattern: data.pattern,
 				params: get_params(data.params),
-				load: () => load(data.url)
+				load: () => load(data.url).then(({ exports }) => exports)
 			}))
 		};
 	}

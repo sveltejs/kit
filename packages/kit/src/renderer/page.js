@@ -201,38 +201,25 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const rendered = options.root.render(props);
 	unsubscribe();
 
-	const deps = options.client.deps;
-	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
-	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
-
-	if (route) {
-		// TODO handle error page deps
-		route.parts.filter(Boolean).forEach((part) => {
-			const page_deps = deps[part.name];
-
-			if (!page_deps) return; // we don't have this info during dev
-
-			page_deps.js.forEach((dep) => js_deps.add(dep));
-			page_deps.css.forEach((dep) => css_deps.add(dep));
-		});
-	}
-
-	const path_to = (asset) =>
-		`${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
-
-	const entry = path_to(options.client.entry);
+	// TODO all the `route &&` stuff is messy
+	const js_deps = route ? route.js : [];
+	const css_deps = route ? route.css : [];
 
 	const s = JSON.stringify;
 
-	// TODO instead of rendered.css.code, the loader should track dependencies.
-	// otherwise we'll miss manually imported CSS
+	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
-		? `<style amp-custom>${rendered.css.code}</style>`
-		: options.dev
-		? `<style>${rendered.css.code}</style>`
+		? `<style amp-custom>${(
+				await Promise.all(
+					css_deps.map(async (dep) => {
+						const loaded = await options.get_css(dep);
+						return loaded.contents;
+					})
+				)
+		  ).join('\n')}</style>`
 		: [
-				...Array.from(js_deps).map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`),
-				...Array.from(css_deps).map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
+				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
+				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
 		  ].join('\n\t\t\t');
 
 	const init = options.amp
@@ -242,7 +229,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`
 		: `
 		<script type="module">
-			import { start } from '${entry}';
+			import { start } from '${options.paths.assets}/${options.app_dir}/${options.entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				host: ${host ? s(host) : 'location.host'},
