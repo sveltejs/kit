@@ -90,7 +90,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			const clone = response.clone();
+			const clone = (await response).clone();
 
 			const headers = {};
 			clone.headers.forEach((value, key) => {
