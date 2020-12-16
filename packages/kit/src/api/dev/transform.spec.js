@@ -131,4 +131,15 @@ test('deconflicts with __importn and __export', () => {
 	assert.equal(deps, [{ name: '__import0_', source: './a.js' }]);
 });
 
+test('extracts imported CSS', () => {
+	const { code, deps, css } = transform(`
+		import './styles.css.proxy.js';
+	`);
+
+	compare(code, '');
+
+	assert.equal(deps, []);
+	assert.equal(css, ['./styles.css']);
+});
+
 test.run();

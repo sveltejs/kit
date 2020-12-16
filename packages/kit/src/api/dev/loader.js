@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
-import { URL } from 'url';
+import { resolve } from 'url';
 import snowpack from 'snowpack';
 import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
@@ -10,14 +10,14 @@ export default function loader(sp, config) {
 	const cache = new Map();
 	const graph = new Map();
 
-	const get_module = (importer, imported, css, url_stack) => {
+	const get_module = (importer, imported, url_stack) => {
 		if (imported[0] === '/' || imported[0] === '.') {
-			const { pathname } = new URL(imported, `http://localhost${importer}`);
+			const pathname = resolve(importer, imported);
 
 			if (!graph.has(pathname)) graph.set(pathname, new Set());
 			graph.get(pathname).add(importer);
 
-			return load(pathname, css, url_stack);
+			return load(pathname, url_stack);
 		}
 
 		return Promise.resolve(load_node(imported));
@@ -38,12 +38,7 @@ export default function loader(sp, config) {
 		if (url) invalidate_all(url);
 	});
 
-	async function load(url, css, url_stack) {
-		if (url.endsWith('.css.proxy.js')) {
-			css.add(url.replace(/\.proxy\.js$/, ''));
-			return null;
-		}
-
+	async function load(url, url_stack) {
 		if (url_stack.includes(url)) {
 			console.warn(`Circular dependency: ${url_stack.join(' -> ')} -> ${url}`);
 			return {};
@@ -53,7 +48,7 @@ export default function loader(sp, config) {
 
 		const promise = sp
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
-			.then((loaded) => initialize_module(url, loaded, css, url_stack.concat(url)))
+			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
 			.catch((e) => {
 				cache.delete(url);
 				throw e;
@@ -63,10 +58,11 @@ export default function loader(sp, config) {
 		return promise;
 	}
 
-	async function initialize_module(url, loaded, css, url_stack) {
-		const { code, deps, names } = transform(loaded.contents);
+	async function initialize_module(url, loaded, url_stack) {
+		const { code, deps, css, names } = transform(loaded.contents);
 
 		const exports = {};
+		const all_css = new Set(css.map((relative) => resolve(url, relative)));
 
 		const args = [
 			{
@@ -104,7 +100,7 @@ export default function loader(sp, config) {
 			},
 			{
 				name: names.__import,
-				value: (source) => get_module(url, source, css, url_stack)
+				value: (source) => get_module(url, source, url_stack).then((mod) => mod.exports)
 			},
 			{
 				name: names.__import_meta,
@@ -113,9 +109,12 @@ export default function loader(sp, config) {
 
 			...(await Promise.all(
 				deps.map(async (dep) => {
+					const module = await get_module(url, dep.source, url_stack);
+					module.css.forEach((dep) => all_css.add(dep));
+
 					return {
 						name: dep.name,
-						value: await get_module(url, dep.source, css, url_stack)
+						value: module.exports
 					};
 				})
 			))
@@ -143,14 +142,13 @@ export default function loader(sp, config) {
 			throw e;
 		}
 
-		return exports;
+		return {
+			exports,
+			css: Array.from(all_css)
+		};
 	}
 
-	return async (url) => {
-		const css = new Set();
-		const module = await load(url, css, []);
-		return { module, css };
-	};
+	return async (url) => load(url, []);
 }
 
 function load_node(source) {

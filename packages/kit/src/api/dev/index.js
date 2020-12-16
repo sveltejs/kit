@@ -117,9 +117,9 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
-		const { module: { set_paths } } = await this.load(
-			`/${this.config.appDir}/assets/runtime/internal/singletons.js`
-		);
+		const {
+			exports: { set_paths }
+		} = await this.load(`/${this.config.appDir}/assets/runtime/internal/singletons.js`);
 		set_paths(this.config.paths);
 
 		const static_handler = sirv(this.config.files.assets, {
@@ -153,7 +153,7 @@ class Watcher extends EventEmitter {
 				let setup;
 
 				try {
-					setup = (await this.load(`/${this.config.appDir}/setup/index.js`)).module;
+					setup = (await this.load(`/${this.config.appDir}/setup/index.js`)).exports;
 				} catch (err) {
 					if (!err.message.endsWith('NOT_FOUND')) throw err;
 					setup = {};
@@ -162,7 +162,8 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).module.default;
+					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).exports
+						.default;
 				} catch (e) {
 					res.statusCode = 500;
 					res.end(e.stack);
@@ -218,7 +219,9 @@ class Watcher extends EventEmitter {
 											.map(
 												(error) => `
 											<h2>${error.severity}</h2>
-											<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${error.code}</a>)</p>
+											<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
+													error.code
+												}</a>)</p>
 											<pre>${escape(lines[error.line - 1])}</pre>
 										`
 											)
@@ -280,14 +283,14 @@ class Watcher extends EventEmitter {
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: async () => {
-				const { module, css } = await load(manifest_data.layout.url);
-				css.forEach(dep => common_css_deps.add(dep));
-				return module;
+				const { exports, css } = await load(manifest_data.layout.url);
+				css.forEach((dep) => common_css_deps.add(dep));
+				return exports;
 			},
 			error: async () => {
-				const { module, css } = await load(manifest_data.error.url);
-				css.forEach(dep => common_css_deps.add(dep));
-				return module;
+				const { exports, css } = await load(manifest_data.error.url);
+				css.forEach((dep) => common_css_deps.add(dep));
+				return exports;
 			},
 			pages: manifest_data.pages.map((data) => {
 				// This is a bit of a hack, but it means we can inject the correct <link>
@@ -298,10 +301,10 @@ class Watcher extends EventEmitter {
 					pattern: data.pattern,
 					params: get_params(data.params),
 					parts: data.parts.map(({ url }) => async () => {
-						const { module, css } = await load(url);
-						common_css_deps.forEach(url => css_deps.add(url));
-						css.forEach(url => css_deps.add(url));
-						return module;
+						const { exports, css } = await load(url);
+						common_css_deps.forEach((url) => css_deps.add(url));
+						css.forEach((url) => css_deps.add(url));
+						return exports;
 					}),
 					get css() {
 						return Array.from(css_deps);
@@ -312,7 +315,7 @@ class Watcher extends EventEmitter {
 			endpoints: manifest_data.endpoints.map((data) => ({
 				pattern: data.pattern,
 				params: get_params(data.params),
-				load: () => load(data.url).then(({ module }) => module)
+				load: () => load(data.url).then(({ exports }) => exports)
 			}))
 		};
 	}
