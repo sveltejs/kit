@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- e7c88dd: Tweak AMP validation screen
+
 ## 1.0.0-next.11
 
 ### Patch Changes
