@@ -273,12 +273,14 @@ export async function build(config) {
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c.file)}]`);
 
+							const path_to_dep = dep => `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
+
 							const js_deps = new Set();
 							const css_deps = new Set();
 							data.parts.forEach(c => {
 								const deps = client.deps[c.name];
-								deps.js.forEach(dep => js_deps.add(dep));
-								deps.css.forEach(dep => css_deps.add(dep));
+								deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
+								deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
 							});
 
 							return `{

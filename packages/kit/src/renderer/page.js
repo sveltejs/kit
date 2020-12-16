@@ -205,22 +205,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const js_deps = route && route.js;
 	const css_deps = route && route.css;
 
-	const path_to = (asset) =>
-		`${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
-
-	const entry = path_to(options.entry);
-
 	const s = JSON.stringify;
 
 	// TODO instead of rendered.css.code, the loader should track dependencies.
 	// otherwise we'll miss manually imported CSS
 	const links = options.amp
 		? `<style amp-custom>${rendered.css.code}</style>`
-		: options.dev
-		? `<style>${rendered.css.code}</style>`
 		: [
-				...js_deps.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`),
-				...css_deps.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
+				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
+				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
 		  ].join('\n\t\t\t');
 
 	const init = options.amp
@@ -230,7 +223,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`
 		: `
 		<script type="module">
-			import { start } from '${entry}';
+			import { start } from '${options.paths.assets}/${options.app_dir}/${options.entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				host: ${host ? s(host) : 'location.host'},
