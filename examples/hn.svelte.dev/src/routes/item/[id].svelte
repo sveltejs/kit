@@ -1,6 +1,6 @@
 <script context="module">
 	export async function load({ page, fetch }) {
-		const res = await fetch(`https://api.hnpwa.com/v0/item/${page/params.id}.json`);
+		const res = await fetch(`https://api.hnpwa.com/v0/item/${page.params.id}.json`);
 		const item = await res.json();
 
 		return { props: { item } };
