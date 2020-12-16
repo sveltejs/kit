@@ -202,15 +202,17 @@ async function get_response({ request, options, $session, route, status = 200, e
 	unsubscribe();
 
 	// TODO all the `route &&` stuff is messy
-	const js_deps = route && route.js;
-	const css_deps = route && route.css;
+	const js_deps = route ? route.js : [];
+	const css_deps = route ? route.css : [];
 
 	const s = JSON.stringify;
 
-	// TODO instead of rendered.css.code, the loader should track dependencies.
-	// otherwise we'll miss manually imported CSS
+	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
-		? `<style amp-custom>${rendered.css.code}</style>`
+		? `<style amp-custom>${(await Promise.all(css_deps.map(async (dep) => {
+			const loaded = await options.get_css(dep);
+			return loaded.contents;
+		}))).join('\n')}</style>`
 		: [
 				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
 				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
