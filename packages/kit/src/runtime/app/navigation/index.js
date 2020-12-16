@@ -1,32 +1,8 @@
 import { router, renderer } from '../../internal/singletons';
+import { get_base_uri } from '../../internal/utils';
 
-function get_base_uri(window_document) {
-	let baseURI = window_document.baseURI;
-
-	if (!baseURI) {
-		const baseTags = window_document.getElementsByTagName('base');
-		baseURI = baseTags.length ? baseTags[0].href : window_document.URL;
-	}
-
-	return baseURI;
-}
-
-export function goto(href, { noscroll = false, replaceState = false } = {}) {
-	const url = new URL(href, get_base_uri(document));
-	const selected = router.select(url);
-
-	if (selected) {
-		// TODO this logic probably belongs inside router? cid should be private
-		history[replaceState ? 'replaceState' : 'pushState']({ id: router.cid }, '', href);
-
-		// TODO shouldn't need to pass the hash here
-		return router.navigate(selected, null, noscroll, url.hash);
-	}
-
-	location.href = href;
-	return new Promise(() => {
-		/* never resolves */
-	});
+export async function goto(href, opts) {
+	return router.goto(href, opts);
 }
 
 export function prefetch(href) {
