@@ -238,10 +238,7 @@ class Watcher extends EventEmitter {
 						},
 						manifest: this.manifest,
 						target: this.config.target,
-						client: {
-							entry: 'assets/runtime/internal/start.js',
-							deps: {}
-						},
+						entry: 'assets/runtime/internal/start.js',
 						dev: true,
 						amp: this.config.amp,
 						root,

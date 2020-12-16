@@ -201,26 +201,14 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const rendered = options.root.render(props);
 	unsubscribe();
 
-	const deps = options.client.deps;
-	const js_deps = new Set(deps.__entry__ ? [...deps.__entry__.js] : []);
-	const css_deps = new Set(deps.__entry__ ? [...deps.__entry__.css] : []);
-
-	if (route) {
-		// TODO handle error page deps
-		route.parts.filter(Boolean).forEach((part) => {
-			const page_deps = deps[part.name];
-
-			if (!page_deps) return; // we don't have this info during dev
-
-			page_deps.js.forEach((dep) => js_deps.add(dep));
-			page_deps.css.forEach((dep) => css_deps.add(dep));
-		});
-	}
+	// TODO all the `route &&` stuff is messy
+	const js_deps = route && route.js;
+	const css_deps = route && route.css;
 
 	const path_to = (asset) =>
 		`${options.paths.assets}/${options.app_dir}/${asset}`.replace(/^\/\./, '');
 
-	const entry = path_to(options.client.entry);
+	const entry = path_to(options.entry);
 
 	const s = JSON.stringify;
 
@@ -231,8 +219,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: options.dev
 		? `<style>${rendered.css.code}</style>`
 		: [
-				...Array.from(js_deps).map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`),
-				...Array.from(css_deps).map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
+				...js_deps.map((dep) => `<link rel="modulepreload" href="${path_to(dep)}">`),
+				...css_deps.map((dep) => `<link rel="stylesheet" href="${path_to(dep)}">`)
 		  ].join('\n\t\t\t');
 
 	const init = options.amp

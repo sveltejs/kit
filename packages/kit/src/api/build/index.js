@@ -189,8 +189,6 @@ export async function build(config) {
 						};
 					};
 
-					client.deps.__entry__ = get_deps(client.entry);
-
 					manifest.components.forEach((component) => {
 						const file = path.normalize(component.file.replace(/\.svelte$/, '.js'));
 						const key = reverse_lookup.get(file);
@@ -247,7 +245,7 @@ export async function build(config) {
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			const client = ${s(client)};
+			const entry = ${s(client.entry)};
 
 			set_paths(${s(config.paths)});
 
@@ -275,7 +273,21 @@ export async function build(config) {
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c.file)}]`);
 
-							return `{ pattern: ${data.pattern}, params: ${params}, parts: [${parts.join(', ')}] }`;
+							const js_deps = new Set();
+							const css_deps = new Set();
+							data.parts.forEach(c => {
+								const deps = client.deps[c.name];
+								deps.js.forEach(dep => js_deps.add(dep));
+								deps.css.forEach(dep => css_deps.add(dep));
+							});
+
+							return `{
+								pattern: ${data.pattern},
+								params: ${params},
+								parts: [${parts.join(', ')}],
+								css: [${Array.from(css_deps).map(s).join(', ')}],
+								js: [${Array.from(js_deps).map(s).join(', ')}]
+							}`;
 						})
 						.join(',\n\t\t\t\t\t')}
 				],
@@ -303,7 +315,7 @@ export async function build(config) {
 					target: ${s(config.target)},${
 						config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
 					}
-					client,
+					entry,
 					root,
 					setup,
 					dev: false,
