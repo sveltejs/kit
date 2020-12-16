@@ -119,7 +119,5 @@ export const css_injection = {
 		if (!has_css) {
 			delete bundle[inject_styles_file];
 		}
-
-		// console.log(bundle);
 	}
 };

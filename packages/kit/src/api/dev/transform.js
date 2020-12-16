@@ -41,6 +41,7 @@ export function transform(data) {
 
 	const replacements = new Map();
 	const deps = [];
+	const css = [];
 
 	ast.body.forEach((node) => {
 		if (node.type === 'ImportDeclaration') {
@@ -56,13 +57,17 @@ export function transform(data) {
 
 			const source = node.source.value;
 
-			deps.push({ name, source });
+			if (source.endsWith('.css.proxy.js')) {
+				css.push(source.replace(/\.proxy\.js$/, ''));
+			} else {
+				deps.push({ name, source });
 
-			if (!is_namespace) {
-				node.specifiers.forEach((specifier) => {
-					const prop = specifier.imported ? specifier.imported.name : 'default';
-					replacements.set(specifier.local.name, `${name}.${prop}`);
-				});
+				if (!is_namespace) {
+					node.specifiers.forEach((specifier) => {
+						const prop = specifier.imported ? specifier.imported.name : 'default';
+						replacements.set(specifier.local.name, `${name}.${prop}`);
+					});
+				}
 			}
 
 			code.remove(node.start, node.end);
@@ -185,6 +190,7 @@ export function transform(data) {
 	return {
 		code: code.toString(),
 		deps,
+		css,
 		names: { exports, __import, __import_meta, __export, __export_all }
 	};
 }
