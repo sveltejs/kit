@@ -1,5 +1,5 @@
 <script>
-	import './styles.css';
+	import './_styles.css';
 </script>
 
 <div class="styled">
