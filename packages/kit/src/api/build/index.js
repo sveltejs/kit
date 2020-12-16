@@ -1,5 +1,6 @@
 import fs, { writeFileSync } from 'fs';
 import path from 'path';
+import util from 'util';
 import child_process from 'child_process';
 import { promisify } from 'util';
 import { green, gray, bold, cyan } from 'kleur/colors';
@@ -57,32 +58,8 @@ export async function build(config) {
 		`export const amp = ${config.amp};`
 	].join('\n'));
 
-	const progress = {
-		transformed_client: false,
-		transformed_server: false,
-		optimized_client: false,
-		optimized_server: false
-	};
-
-	process.stdout.write('\x1b[s');
-
 	const tick = bold(green('✔'));
-	const render = () =>
-		process.stdout.write(
-			'\x1b[u' +
-				`
-	${bold(cyan('Transforming...'))}
-	  ${progress.transformed_client ? `${tick} client` : gray('⧗ client')}
-	  ${progress.transformed_server ? `${tick} server` : gray('⧗ server')}
-	${bold(cyan('Optimizing...'))}
-	  ${progress.optimized_client ? `${tick} client ` : gray('⧗ client')}
-	  ${progress.optimized_server ? `${tick} server ` : gray('⧗ server')}
-	`
-					.replace(/^\t/gm, '')
-					.trimStart()
-		);
-
-	render();
+	console.log(bold(cyan('Transforming...')));
 
 	const mount = [
 		`--mount.${config.files.routes}=/${config.appDir}/routes`,
@@ -98,10 +75,7 @@ export async function build(config) {
 					SVELTE_KIT_APP_DIR: config.appDir
 				}
 			}
-		).then(() => {
-			progress.transformed_client = true;
-			render();
-		}),
+		),
 		transform_server: execFile(
 			process.argv[0],
 			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'],
@@ -110,15 +84,16 @@ export async function build(config) {
 					SVELTE_KIT_APP_DIR: config.appDir
 				}
 			}
-		).then(() => {
-			progress.transformed_server = true;
-			render();
-		})
+		)
 	};
 
-	// we await this promise because we can't start optimizing the server
-	// until client optimization is complete
 	await promises.transform_client;
+	console.log(`  ${tick} client`);
+
+	await promises.transform_server;
+	console.log(`  ${tick} server`);
+
+	console.log(bold(cyan('Optimizing...')));
 
 	const client = {
 		entry: null,
@@ -242,11 +217,7 @@ export async function build(config) {
 		sourcemap: true
 	});
 
-	progress.optimized_client = true;
-	render();
-
-	// just in case the server is still transforming...
-	await promises.transform_server;
+	console.log(`  ${tick} client`);
 
 	const setup_file = `${UNOPTIMIZED}/server/${config.appDir}/setup/index.js`;
 	if (!fs.existsSync(setup_file)) {
@@ -383,9 +354,7 @@ export async function build(config) {
 		sourcemap: true
 	});
 
-	progress.optimized_server = true;
-	render();
-	console.log();
+	console.log(`  ${tick} server\n`);
 }
 
 async function rimraf(path) {
