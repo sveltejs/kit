@@ -38,7 +38,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		if (parsed.protocol) {
 			// external fetch
-			response = fetch(parsed.href, opts);
+			response = await fetch(parsed.href, opts);
 		} else {
 			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
@@ -59,7 +59,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					});
 				} else {
 					// TODO we need to know what protocol to use
-					response = fetch(`http://${page.host}/${asset.file}`, opts);
+					response = await fetch(`http://${page.host}/${asset.file}`, opts);
 				}
 			}
 
