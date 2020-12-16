@@ -155,10 +155,13 @@ function load_node(source) {
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
 	//  import { readFileSync } from 'fs';
-	return new Proxy(require(source), {
-		get(mod, prop) {
-			if (prop === 'default') return mod;
-			return mod[prop];
-		}
-	});
+	return {
+		exports: new Proxy(require(source), {
+			get(mod, prop) {
+				if (prop === 'default') return mod;
+				return mod[prop];
+			}
+		}),
+		css: []
+	};
 }

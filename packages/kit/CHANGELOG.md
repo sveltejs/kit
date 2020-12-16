@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- Fix dev loader
+
 ## 1.0.0-next.13
 
 ### Patch Changes
