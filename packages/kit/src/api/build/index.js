@@ -1,9 +1,8 @@
 import fs, { writeFileSync } from 'fs';
 import path from 'path';
-import util from 'util';
 import child_process from 'child_process';
 import { promisify } from 'util';
-import { green, gray, bold, cyan } from 'kleur/colors';
+import { green, bold, cyan } from 'kleur/colors';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
 import { rollup } from 'rollup';
