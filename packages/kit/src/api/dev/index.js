@@ -192,36 +192,38 @@ class Watcher extends EventEmitter {
 								if (result.status !== 'PASS') {
 									const lines = rendered.split('\n');
 
-									const len = String(lines.length).length;
-									const pad = (n) => {
-										n = String(n);
-										while (n.length < len) n = ` ${n}`;
-										return n;
-									};
-
 									const escape = (str) =>
 										str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-									// TODO make this look pretty (a bit of CSS would go a long way)
+									rendered = `<!doctype html>
+										<head>
+											<meta charset="utf-8" />
+											<meta name="viewport" content="width=device-width, initial-scale=1" />
+											<style>
+												body {
+													font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+													color: #333;
+												}
 
-									head = '';
-									body = `
+												pre {
+													background: #f4f4f4;
+													padding: 1em;
+													overflow-x: auto;
+												}
+											</style>
+										</head>
 										<h1>AMP validation failed</h1>
 
 										${result.errors
 											.map(
 												(error) => `
 											<h2>${error.severity}</h2>
-											<p>${error.message} (<a href="${error.specUrl}">${error.code}</a>)</p>
-											<pre>${pad(error.line)}: ${escape(lines[error.line - 1])}</pre>
+											<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${error.code}</a>)</p>
+											<pre>${escape(lines[error.line - 1])}</pre>
 										`
 											)
 											.join('\n\n')}
 									`;
-
-									rendered = template
-										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body);
 								}
 							}
 
