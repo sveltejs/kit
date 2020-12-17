@@ -230,10 +230,10 @@ export async function build(config) {
 	// something better, we could use it for non-AMP documents too, as
 	// critical CSS below a certain threshold _should_ be inlined
 	const css_lookup = {};
-	manifest.pages.forEach(data => {
-		data.parts.forEach(c => {
+	manifest.pages.forEach((data) => {
+		data.parts.forEach((c) => {
 			const deps = client.deps[c.name];
-			deps.css.forEach(dep => {
+			deps.css.forEach((dep) => {
 				const url = `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
 				const file = `${OPTIMIZED}/client/${config.appDir}/${dep}`;
 

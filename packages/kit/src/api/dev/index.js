@@ -254,7 +254,8 @@ class Watcher extends EventEmitter {
 						host: this.config.host,
 						host_header: this.config.hostHeader,
 						get_static_file: (file) => createReadStream(join(this.config.files.assets, file)),
-						get_amp_css: (url) => this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
+						get_amp_css: (url) =>
+							this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
 					}
 				);
 
