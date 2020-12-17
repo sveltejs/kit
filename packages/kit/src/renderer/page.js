@@ -211,10 +211,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const links = options.amp
 		? `<style amp-custom>${(
 				await Promise.all(
-					css_deps.map(async (dep) => {
-						const loaded = await options.get_css(dep);
-						return loaded.contents;
-					})
+					css_deps.map(dep => options.get_amp_css(dep))
 				)
 		  ).join('\n')}</style>`
 		: [

@@ -1,4 +1,4 @@
-import fs, { writeFileSync } from 'fs';
+import fs, { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import child_process from 'child_process';
 import { promisify } from 'util';
@@ -65,24 +65,18 @@ export async function build(config) {
 		`--mount.${config.files.setup}=/${config.appDir}/setup`
 	];
 
+	const env = { ...process.env, SVELTE_KIT_APP_DIR: config.appDir };
+
 	const promises = {
 		transform_client: execFile(
 			process.argv[0],
 			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/client`],
-			{
-				env: {
-					SVELTE_KIT_APP_DIR: config.appDir
-				}
-			}
+			{ env }
 		),
 		transform_server: execFile(
 			process.argv[0],
 			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'],
-			{
-				env: {
-					SVELTE_KIT_APP_DIR: config.appDir
-				}
-			}
+			{ env }
 		)
 	};
 
@@ -231,6 +225,23 @@ export async function build(config) {
 
 	const stringify_component = (c) => `() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
 
+	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
+	// way to be able to inline CSS into AMP documents. if we come up with
+	// something better, we could use it for non-AMP documents too, as
+	// critical CSS below a certain threshold _should_ be inlined
+	const css_lookup = {};
+	manifest.pages.forEach(data => {
+		data.parts.forEach(c => {
+			const deps = client.deps[c.name];
+			deps.css.forEach(dep => {
+				const url = `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
+				const file = `${OPTIMIZED}/client/${config.appDir}/${dep}`;
+
+				css_lookup[url] = readFileSync(file, 'utf-8');
+			});
+		});
+	});
+
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
@@ -261,6 +272,9 @@ export async function build(config) {
 			const components = [
 				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
 			];
+
+			${config.amp ? `
+			const css_lookup = ${s(css_lookup)};` : ''}
 
 			const manifest = {
 				assets: ${s(manifest.assets)},
@@ -325,7 +339,8 @@ export async function build(config) {
 					app_dir: ${s(config.appDir)},
 					host: ${s(config.host)},
 					host_header: ${s(config.hostHeader)},
-					get_static_file
+					get_static_file,
+					get_amp_css: dep => css_lookup[dep]
 				});
 			}
 		`
