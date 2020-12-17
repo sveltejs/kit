@@ -1,4 +1,4 @@
-import { find_anchor } from '../utils';
+import { find_anchor, get_base_uri } from '../utils';
 
 function which(event) {
 	return event.which === null ? event.button : event.which;
@@ -147,6 +147,24 @@ export class Router {
 				return { href: url.href, route, match, page };
 			}
 		}
+	}
+
+	async goto(href, { noscroll = false, replaceState = false } = {}) {
+		const url = new URL(href, get_base_uri(document));
+		const selected = this.select(url);
+
+		if (selected) {
+			history[replaceState ? 'replaceState' : 'pushState']({ id: this.cid }, '', href);
+
+			// TODO shouldn't need to pass the hash here
+			return this.navigate(selected, null, noscroll, url.hash);
+		}
+
+		location.href = href;
+
+		return new Promise(() => {
+			/* never resolves */
+		});
 	}
 
 	async navigate(selected, id, noscroll, hash) {
