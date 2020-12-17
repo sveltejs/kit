@@ -79,8 +79,6 @@ class Watcher extends EventEmitter {
 	async init_snowpack() {
 		process.env.SVELTE_KIT_APP_DIR = this.config.appDir;
 
-		console.log('process.env.AMP', process.env.AMP);
-
 		this.snowpack_port = await ports.find(this.port + 1);
 		this.snowpack_config = snowpack.loadAndValidateConfig(
 			{
