@@ -210,12 +210,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? `<style amp-custom>${(
-				await Promise.all(
-					css_deps.map(async (dep) => {
-						const loaded = await options.get_css(dep);
-						return loaded.contents;
-					})
-				)
+				await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))
 		  ).join('\n')}</style>`
 		: [
 				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),

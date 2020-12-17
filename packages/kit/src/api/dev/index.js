@@ -79,6 +79,8 @@ class Watcher extends EventEmitter {
 	async init_snowpack() {
 		process.env.SVELTE_KIT_APP_DIR = this.config.appDir;
 
+		console.log('process.env.AMP', process.env.AMP);
+
 		this.snowpack_port = await ports.find(this.port + 1);
 		this.snowpack_config = snowpack.loadAndValidateConfig(
 			{
@@ -252,7 +254,8 @@ class Watcher extends EventEmitter {
 						host: this.config.host,
 						host_header: this.config.hostHeader,
 						get_static_file: (file) => createReadStream(join(this.config.files.assets, file)),
-						get_css: (url) => this.snowpack.loadUrl(url, { encoding: 'utf-8' })
+						get_amp_css: (url) =>
+							this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
 					}
 				);
 
