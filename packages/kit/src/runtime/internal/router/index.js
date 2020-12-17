@@ -18,10 +18,6 @@ export class Router {
 		this.pages = pages;
 		this.ignore = ignore;
 
-		this.uid = 1;
-		this.cid = null;
-		this.scroll_history = {};
-
 		this.history = window.history || {
 			pushState: () => {},
 			replaceState: () => {},
@@ -48,6 +44,22 @@ export class Router {
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
 			this.history.scrollRestoration = 'manual';
+		});
+
+		// There's no API to capture the scroll location right before the user
+		// hits the back/forward button, so we listen for scroll events
+		let scroll_timer;
+		addEventListener('scroll', () => {
+			clearTimeout(scroll_timer);
+			scroll_timer = setTimeout(() => {
+				// Store the scroll location in the history
+				// This will persist even if we navigate away from the site and come back
+				const new_state = {
+					...(history.state || {}),
+					scroll: scroll_state()
+				};
+				history.replaceState(new_state, document.title, window.location);
+			}, 50);
 		});
 
 		addEventListener('click', (event) => {
@@ -88,35 +100,27 @@ export class Router {
 			const selected = this.select(url);
 			if (selected) {
 				const noscroll = a.hasAttribute('sapper:noscroll');
-				this.history.pushState({ id: this.cid }, '', url.href);
-				this.navigate(selected, null, noscroll, url.hash);
+				this.history.pushState({}, '', url.href);
+				this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 				event.preventDefault();
 			}
 		});
 
 		addEventListener('popstate', (event) => {
-			this.scroll_history[this.cid] = scroll_state();
-
 			if (event.state) {
 				const url = new URL(location.href);
 				const selected = this.select(url);
 				if (selected) {
-					this.navigate(selected, event.state.id);
+					this.navigate(selected, event.state.scroll);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
 				}
-			} else {
-				// hashchange
-				this.uid += 1;
-				this.cid = this.uid;
-				this.history.replaceState({ id: this.cid }, '', location.href);
 			}
 		});
 
 		// load current page
-		this.history.replaceState({ id: this.uid }, '', location.href);
-		this.scroll_history[this.uid] = scroll_state();
+		this.history.replaceState({}, '', location.href);
 
 		const selected = this.select(new URL(location.href));
 		if (selected) return this.renderer.start(selected);
@@ -154,40 +158,20 @@ export class Router {
 		const selected = this.select(url);
 
 		if (selected) {
-			history[replaceState ? 'replaceState' : 'pushState']({ id: this.cid }, '', href);
-
 			// TODO shouldn't need to pass the hash here
-			return this.navigate(selected, null, noscroll, url.hash);
+			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 		}
 
 		location.href = href;
-
 		return new Promise(() => {
 			/* never resolves */
 		});
 	}
 
-	async navigate(selected, id, noscroll, hash) {
+	async navigate(selected, scroll, hash) {
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
-			history.replaceState(
-				{ id: this.cid },
-				'',
-				`${location.pathname.slice(0, -1)}${location.search}`
-			);
-		}
-
-		const popstate = !!id;
-		if (popstate) {
-			this.cid = id;
-		} else {
-			const current_scroll = scroll_state();
-
-			// clicked on a link. preserve scroll state
-			this.scroll_history[this.cid] = current_scroll;
-
-			this.cid = id = ++this.uid;
-			this.scroll_history[this.cid] = noscroll ? current_scroll : { x: 0, y: 0 };
+			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
 		await this.renderer.render(selected);
@@ -196,28 +180,14 @@ export class Router {
 			document.activeElement.blur();
 		}
 
-		if (!noscroll) {
-			let scroll = this.scroll_history[id];
-
-			let deep_linked;
-			if (hash) {
-				// scroll is an element id (from a hash), we need to compute y.
-				deep_linked = document.getElementById(hash.slice(1));
-
-				if (deep_linked) {
-					scroll = {
-						x: 0,
-						y: deep_linked.getBoundingClientRect().top + scrollY
-					};
-				}
-			}
-
-			this.scroll_history[this.cid] = scroll;
-			if (popstate || deep_linked) {
-				scrollTo(scroll.x, scroll.y);
-			} else {
-				scrollTo(0, 0);
-			}
+		const deep_linked = hash && document.getElementById(hash.slice(1));
+		if (scroll) {
+			scrollTo(scroll.x, scroll.y);
+		} else if (deep_linked) {
+			// scroll is an element id (from a hash), we need to compute y
+			scrollTo(0, deep_linked.getBoundingClientRect().top + scrollY);
+		} else {
+			scrollTo(0, 0);
 		}
 	}
 }
