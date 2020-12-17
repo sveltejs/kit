@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 6d1bb11: Fix AMP CSS
+- d8b53af: Ignore $layout and $error files when finding static paths
+- Better scroll tracking
+
 ## 1.0.0-next.14
 
 ### Patch Changes
