@@ -70,8 +70,7 @@ export class Renderer {
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(event.target);
 
-			if (a && a.rel === 'prefetch') {
-				// TODO make this svelte-prefetch or something
+			if (a && a.hasAttribute('sveltekit:prefetch')) {
 				this.prefetch(new URL(a.href));
 			}
 		};
