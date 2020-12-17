@@ -192,6 +192,10 @@ export async function prerender({ dir, out, log, config, force }) {
 			parts[parts.length - 1] = parts[parts.length - 1].replace(/\.svelte$/, '');
 			if (parts[parts.length - 1] === 'index') parts.pop();
 
+			if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
+				return null;
+			}
+
 			return `/${parts.join('/')}`;
 		})
 		.filter(Boolean);
