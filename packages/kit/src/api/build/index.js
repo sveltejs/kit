@@ -113,7 +113,6 @@ export async function build(config) {
 				}
 			},
 			css_chunks({
-				injectImports: true,
 				sourcemap: true
 			}),
 			css_injection,
