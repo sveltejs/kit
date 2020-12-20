@@ -15,6 +15,7 @@
 		"svelte": "^3.29.0"
 	},
 	"dependencies": {
+		"cookie": "^0.4.1",
 		"node-fetch": "^2.6.1"
 	}
 }

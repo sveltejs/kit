@@ -1,12 +1,28 @@
+import * as cookie from 'cookie';
+
 export function prepare(headers) {
-	// TODO
+	const cookies = cookie.parse(headers.cookie);
+	const jwt = cookies.jwt && Buffer(cookies.jwt, 'base64').toString('utf-8');
+
 	return {
-		context: {},
+		context: {
+			user: jwt && JSON.parse(jwt)
+		},
 		headers: {}
 	};
 }
 
 export function getSession(context) {
-	// TODO
-	return context;
+	if (context.user) {
+		const { email, username, bio, image } = context.user;
+
+		return {
+			user: {
+				email,
+				username,
+				bio,
+				image
+			}
+		};
+	}
 }

@@ -1,15 +1,13 @@
 import * as api from '$common/api.js';
+import { respond } from './_respond';
 
-export function post(req, res) {
-	const user = req.body;
+export async function post(request) {
+	const user = request.body;
 
-	api.post('users', { user }).then(response => {
-		if (response.user) {
-			req.session.user = response.user;
-		}
+	// TODO individual properties
+	console.log('user', user);
 
-		res.setHeader('Content-Type', 'application/json');
+	const body = await api.post('users', { user });
 
-		res.end(JSON.stringify(response));
-	});
+	return respond(body);
 }
