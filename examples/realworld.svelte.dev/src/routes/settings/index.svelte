@@ -9,15 +9,14 @@
 </script>
 
 <script>
+	import { session } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import ListErrors from '$components/ListErrors.svelte';
 	import SettingsForm from './_SettingsForm.svelte';
 	import { post } from '$common/utils.js';
 
-	let inProgress;
+	let in_progress;
 	let errors;
-
-	const { session } = stores();
 
 	async function logout() {
 		await post(`auth/logout`);
@@ -26,14 +25,14 @@
 	}
 
 	async function save(event) {
-		inProgress = true;
+		in_progress = true;
 
 		const response = await post(`auth/save`, event.detail);
 
 		errors = response.errors;
 		if (response.user) $session.user = response.user;
 
-		inProgress = false;
+		in_progress = false;
 	}
 </script>
 
@@ -45,18 +44,15 @@
 	<div class="container page">
 		<div class="row">
 			<div class="col-md-6 offset-md-3 col-xs-12">
-
 				<h1 class="text-xs-center">Your Settings</h1>
 
-				<ListErrors {errors}/>
+				<ListErrors {errors} />
 
-				<SettingsForm on:save={save} {...$session.user} {inProgress}/>
+				<SettingsForm on:save={save} {...$session.user} {in_progress} />
 
 				<hr />
 
-				<button class="btn btn-outline-danger" on:click={logout}>
-					Or click here to logout.
-				</button>
+				<button class="btn btn-outline-danger" on:click={logout}> Or click here to logout. </button>
 			</div>
 		</div>
 	</div>

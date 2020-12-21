@@ -1,6 +1,6 @@
 <script context="module">
 	import { create_load } from './_load.js';
-	export const load = create_load('author');
+	export const load = create_load('favorited');
 </script>
 
 <script>
