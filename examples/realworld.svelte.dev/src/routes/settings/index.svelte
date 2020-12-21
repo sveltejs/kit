@@ -17,7 +17,6 @@
 <script>
 	import { session } from '$app/stores';
 	import ListErrors from '$components/ListErrors.svelte';
-	import SettingsForm from './_SettingsForm.svelte';
 	import { post } from '$common/utils.js';
 
 	export let user;
@@ -57,8 +56,6 @@
 
 				<ListErrors {errors} />
 
-				<SettingsForm on:save={save} {...user} {in_progress} />
-
 				<form on:submit|preventDefault={save}>
 					<fieldset>
 						<fieldset class="form-group">
@@ -66,7 +63,8 @@
 								class="form-control"
 								type="text"
 								placeholder="URL of profile picture"
-								bind:value={user.image} />
+								bind:value={user.image}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
@@ -74,7 +72,8 @@
 								class="form-control form-control-lg"
 								type="text"
 								placeholder="Username"
-								bind:value={user.username} />
+								bind:value={user.username}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
@@ -82,7 +81,8 @@
 								class="form-control form-control-lg"
 								rows="8"
 								placeholder="Short bio about you"
-								bind:value={user.bio} />
+								bind:value={user.bio}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
@@ -90,7 +90,8 @@
 								class="form-control form-control-lg"
 								type="email"
 								placeholder="Email"
-								bind:value={user.email} />
+								bind:value={user.email}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
@@ -98,13 +99,15 @@
 								class="form-control form-control-lg"
 								type="password"
 								placeholder="New Password"
-								bind:value={user.password} />
+								bind:value={user.password}
+							/>
 						</fieldset>
 
 						<button
 							class="btn btn-lg btn-primary pull-xs-right"
 							type="submit"
-							disabled={in_progress}>
+							disabled={in_progress}
+						>
 							Update Settings
 						</button>
 					</fieldset>
