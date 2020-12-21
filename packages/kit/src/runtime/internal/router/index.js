@@ -55,10 +55,10 @@ export class Router {
 				// Store the scroll location in the history
 				// This will persist even if we navigate away from the site and come back
 				const new_state = {
-					...(history.state || {}),
+					...(this.history.state || {}),
 					scroll: scroll_state()
 				};
-				history.replaceState(new_state, document.title, window.location);
+				this.history.replaceState(new_state, document.title, window.location);
 			}, 50);
 		});
 
@@ -159,6 +159,7 @@ export class Router {
 
 		if (selected) {
 			// TODO shouldn't need to pass the hash here
+			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', url.href);
 			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 		}
 
