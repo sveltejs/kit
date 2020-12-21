@@ -49,6 +49,16 @@
 			<div class="col-md-9">
 				<div class="feed-toggle">
 					<ul class="nav nav-pills outline-active">
+						<li class="nav-item">
+							<a
+								href="/?tab=all"
+								rel="prefetch"
+								class="nav-link"
+								class:active={tab === 'all' && !tag}>
+								Global Feed
+							</a>
+						</li>
+
 						{#if $session.user}
 							<li class="nav-item">
 								<a href="/?tab=feed" rel="prefetch" class="nav-link" class:active={tab === 'feed'}>
@@ -60,16 +70,6 @@
 								<a href="/login" rel="prefetch" class="nav-link"> Log in to see your Feed </a>
 							</li>
 						{/if}
-
-						<li class="nav-item">
-							<a
-								href="/?tab=all"
-								rel="prefetch"
-								class="nav-link"
-								class:active={tab === 'all' && !tag}>
-								Global Feed
-							</a>
-						</li>
 
 						{#if tag}
 							<li class="nav-item">
