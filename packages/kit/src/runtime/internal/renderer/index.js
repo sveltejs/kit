@@ -140,9 +140,15 @@ export class Renderer {
 				? await this.prefetching.promise
 				: await this.hydrate(selected);
 
+		if (hydrated.redirect) {
+			return this.router.goto(hydrated.redirect.to);
+		}
+
+		// if the render wasn't aborted...
 		if (this.token === token) {
-			// check render wasn't aborted
+			// ...update props
 			this.current = hydrated.state;
+			this.prefetching = { href: null, promise: null };
 
 			this.root.$set(hydrated.props);
 			this.stores.navigating.set(false);
