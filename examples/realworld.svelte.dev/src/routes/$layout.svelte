@@ -1,11 +1,17 @@
 <script>
+	import { navigating } from '$app/stores';
 	import Nav from '$components/Nav.svelte';
+	import PreloadingIndicator from '$components/PreloadingIndicator.svelte';
 
 	export let segment;
 </script>
 
-<Nav {segment}/>
+{#if $navigating}
+	<PreloadingIndicator />
+{/if}
+
+<Nav {segment} />
 
 <main>
-	<slot></slot>
+	<slot />
 </main>
