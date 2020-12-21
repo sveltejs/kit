@@ -6,23 +6,19 @@ export function prepare(headers) {
 
 	return {
 		context: {
-			user: jwt && JSON.parse(jwt)
+			user: jwt ? JSON.parse(jwt) : null
 		},
 		headers: {}
 	};
 }
 
 export function getSession(context) {
-	if (context.user) {
-		const { email, username, bio, image } = context.user;
-
-		return {
-			user: {
-				email,
-				username,
-				bio,
-				image
-			}
-		};
-	}
+	return {
+		user: context.user && {
+			username: context.user.username,
+			email: context.user.email,
+			image: context.user.image,
+			bio: context.user.bio
+		}
+	};
 }
