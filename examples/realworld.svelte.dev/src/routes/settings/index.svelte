@@ -1,33 +1,42 @@
 <script context="module">
 	export function load({ session }) {
-		if (!session.user) {
+		const { user } = session;
+
+		if (!user) {
 			return {
 				redirect: { to: '/login', status: 302 }
 			};
 		}
+
+		return {
+			props: { user }
+		};
 	}
 </script>
 
 <script>
 	import { session } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import ListErrors from '$components/ListErrors.svelte';
 	import SettingsForm from './_SettingsForm.svelte';
 	import { post } from '$common/utils.js';
+
+	export let user;
 
 	let in_progress;
 	let errors;
 
 	async function logout() {
 		await post(`auth/logout`);
+
+		// this will trigger a redirect, because it
+		// causes the `load` function to run again
 		$session.user = null;
-		goto('/');
 	}
 
-	async function save(event) {
+	async function save() {
 		in_progress = true;
 
-		const response = await post(`auth/save`, event.detail);
+		const response = await post(`auth/save`, user);
 
 		errors = response.errors;
 		if (response.user) $session.user = response.user;
@@ -48,7 +57,58 @@
 
 				<ListErrors {errors} />
 
-				<SettingsForm on:save={save} {...$session.user} {in_progress} />
+				<SettingsForm on:save={save} {...user} {in_progress} />
+
+				<form on:submit|preventDefault={save}>
+					<fieldset>
+						<fieldset class="form-group">
+							<input
+								class="form-control"
+								type="text"
+								placeholder="URL of profile picture"
+								bind:value={user.image} />
+						</fieldset>
+
+						<fieldset class="form-group">
+							<input
+								class="form-control form-control-lg"
+								type="text"
+								placeholder="Username"
+								bind:value={user.username} />
+						</fieldset>
+
+						<fieldset class="form-group">
+							<textarea
+								class="form-control form-control-lg"
+								rows="8"
+								placeholder="Short bio about you"
+								bind:value={user.bio} />
+						</fieldset>
+
+						<fieldset class="form-group">
+							<input
+								class="form-control form-control-lg"
+								type="email"
+								placeholder="Email"
+								bind:value={user.email} />
+						</fieldset>
+
+						<fieldset class="form-group">
+							<input
+								class="form-control form-control-lg"
+								type="password"
+								placeholder="New Password"
+								bind:value={user.password} />
+						</fieldset>
+
+						<button
+							class="btn btn-lg btn-primary pull-xs-right"
+							type="submit"
+							disabled={in_progress}>
+							Update Settings
+						</button>
+					</fieldset>
+				</form>
 
 				<hr />
 
