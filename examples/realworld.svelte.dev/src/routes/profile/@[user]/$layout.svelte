@@ -1,37 +1,47 @@
 <script context="module">
-	import * as api from '$common/api.js';
-
-	export async function load({ page, session: { user } }) {
-		const username = page.params.user.slice(1); // TODO is the @ necessary?
-
-		// TODO create an endpoint for this
-		const { profile } = await api.get(`profiles/${username}`);
+	export async function load({ page, fetch }) {
+		const res = await fetch(`/profile/@${page.params.user}.json`);
 
 		return {
-			props: { profile }
+			props: {
+				profile: await res.json()
+			}
 		};
 	}
 </script>
 
 <script>
-	import { goto } from '$app/navigation';
 	import { page, session } from '$app/stores';
 
 	export let profile;
 
+	// TODO would be nice to have a more idiomatic solution to this —
+	// https://github.com/sveltejs/kit/issues/269
 	$: segments = $page.path.split('/');
 	$: is_favorites = segments.length === 4 && segments[3] === 'favorites';
 	$: is_user = $session.user && profile.username === $session.user.username;
 
+	let current_token;
 	async function toggle_following() {
-		if (!user) return goto('/login');
+		const token = (current_token = {});
+
+		const { following, username } = profile;
 
 		// optimistic UI
 		profile.following = !profile.following;
 
-		({ profile } = await (profile.following
-			? api.post(`profiles/${profile.username}/follow`, null, session.user && session.user.token)
-			: api.del(`profiles/${profile.username}/follow`, session.user && session.user.token)));
+		const res = await fetch(`/profile/@${username}/follow`, {
+			method: following ? 'delete' : 'post'
+		});
+
+		const result = await res.json();
+
+		// synchronise with the server, in case it disagrees
+		// with our optimistic UI for some reason — but only
+		// if the button wasn't re-toggled in the meantime
+		if (token === current_token) {
+			profile = result.profile;
+		}
 	}
 </script>
 
@@ -53,15 +63,16 @@
 							<i class="ion-gear-a" />
 							Edit Profile Settings
 						</a>
-					{:else}
+					{:else if $session.user}
 						<button
 							class="btn btn-sm action-btn {profile.following ? 'btn-secondary' : 'btn-outline-secondary'}"
-							on:click={toggle_following}>
+							on:click={toggle_following}
+						>
 							<i class="ion-plus-round" />
 							{profile.following ? 'Unfollow' : 'Follow'}
 							{profile.username}
 						</button>
-					{/if}
+					{:else}<a href="/login">Sign in to follow</a>{/if}
 				</div>
 			</div>
 		</div>
@@ -77,7 +88,8 @@
 								href="/profile/@{profile.username}"
 								class="nav-link"
 								rel="prefetch"
-								class:active={!is_favorites}>My Articles</a>
+								class:active={!is_favorites}
+							>Articles</a>
 						</li>
 
 						<li class="nav-item">
@@ -85,7 +97,8 @@
 								href="/profile/@{profile.username}/favorites"
 								class="nav-link"
 								rel="prefetch"
-								class:active={is_favorites}>Favorited Articles</a>
+								class:active={is_favorites}
+							>Favorites</a>
 						</li>
 					</ul>
 				</div>

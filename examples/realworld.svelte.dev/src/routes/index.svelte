@@ -54,7 +54,8 @@
 								href="/?tab=all"
 								rel="prefetch"
 								class="nav-link"
-								class:active={tab === 'all' && !tag}>
+								class:active={tab === 'all' && !tag}
+							>
 								Global Feed
 							</a>
 						</li>
@@ -67,7 +68,7 @@
 							</li>
 						{:else}
 							<li class="nav-item">
-								<a href="/login" rel="prefetch" class="nav-link"> Log in to see your Feed </a>
+								<a href="/login" rel="prefetch" class="nav-link">Sign in to see your Feed </a>
 							</li>
 						{/if}
 

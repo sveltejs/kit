@@ -7,7 +7,6 @@
 	import ArticleList from '$components/ArticleList/index.svelte';
 
 	export let articles;
-	export let articlesCount;
 </script>
 
-<ArticleList {articles} {articlesCount} />
+<ArticleList {articles} />
