@@ -135,7 +135,10 @@ export class Renderer {
 
 		this.stores.navigating.set(true);
 
-		const hydrated = await this.hydrate(selected);
+		const hydrated =
+			this.prefetching.href === selected.href
+				? await this.prefetching.promise
+				: await this.hydrate(selected);
 
 		if (this.token === token) {
 			// check render wasn't aborted
@@ -332,7 +335,7 @@ export class Renderer {
 				}
 			});
 
-			if (!this.current || state.path !== this.current.path) {
+			if (!this.current || changed.query || state.path !== this.current.path) {
 				props.page = page;
 			}
 		} catch (error) {
