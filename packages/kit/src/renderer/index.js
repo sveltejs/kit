@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page';
 import render_endpoint from './endpoint';
+import { normalize_headers } from './utils';
 
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
@@ -18,12 +19,13 @@ export async function render(request, options) {
 		};
 	}
 
-	const { context, headers = {} } =
-		(await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
+	const prepared = (await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
+	const context = prepared.context;
+	const headers = normalize_headers(prepared.headers);
 
 	try {
 		const response = await (render_endpoint(request, context, options) ||
-			render_page(request, context, options));
+			render_page(request, context, options, headers));
 
 		if (response) {
 			// inject ETags for 200 responses

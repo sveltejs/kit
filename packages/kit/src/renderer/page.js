@@ -1,10 +1,19 @@
 import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
+import * as cookie from 'cookie';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
-async function get_response({ request, options, $session, route, status = 200, error }) {
+async function get_response({
+	request,
+	options,
+	response_headers,
+	$session,
+	route,
+	status = 200,
+	error
+}) {
 	const host = options.host || request.headers[options.host_header];
 
 	const dependencies = {};
@@ -64,11 +73,41 @@ async function get_response({ request, options, $session, route, status = 200, e
 			}
 
 			if (!response) {
+				const headers = opts.headers ? { ...opts.headers } : {};
+
+				if (opts.credentials !== 'omit') {
+					const cookies = Object.assign(
+						{},
+						cookie.parse(request.headers.cookie || ''),
+						cookie.parse(headers.cookie || '')
+					);
+
+					// In some cases, a cookie might be set in `src/setup.js`, in which
+					// case we need to honour it if a credentialled fetch is made immediately
+					const set_cookie = response_headers['set-cookie'];
+					if (set_cookie) {
+						set_cookie.split(', ').forEach((s) => {
+							const m = /([^=]+)=([^;]+)/.exec(s);
+							if (m) cookies[m[1]] = m[2];
+						});
+					}
+
+					const str = Object.keys(cookies)
+						.map((key) => `${key}=${cookies[key]}`)
+						.join('; ');
+
+					headers.cookie = str;
+
+					if (!headers.authorization && request.headers.authorization) {
+						headers.authorization = request.headers.authorization;
+					}
+				}
+
 				const rendered = await render(
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: opts.headers || {}, // TODO inject credentials...
+						headers,
 						path: resolved,
 						body: opts.body,
 						query: new URLSearchParams(parsed.query || '')
@@ -262,7 +301,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	};
 }
 
-export default async function render_page(request, context, options) {
+export default async function render_page(request, context, options, response_headers) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
 	const $session = await (options.setup.getSession && options.setup.getSession(context));
@@ -277,6 +316,7 @@ export default async function render_page(request, context, options) {
 		return await get_response({
 			request,
 			options,
+			response_headers,
 			$session,
 			route,
 			status: 200,
@@ -291,6 +331,7 @@ export default async function render_page(request, context, options) {
 			return await get_response({
 				request,
 				options,
+				response_headers,
 				$session,
 				route,
 				status,
