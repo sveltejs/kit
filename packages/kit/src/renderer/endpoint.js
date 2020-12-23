@@ -5,7 +5,8 @@ export default function render_route(request, context, options) {
 	if (!route) return null;
 
 	return route.load().then(async (mod) => {
-		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
+		const method = request.method.toLowerCase();
+		const handler = mod[method.replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
 			const match = route.pattern.exec(request.path);
@@ -24,11 +25,11 @@ export default function render_route(request, context, options) {
 					context
 				);
 
-				if (typeof response !== 'object' || response.body == null) {
+				if (method === 'get' && (typeof response !== 'object' || response.body == null)) {
 					return {
 						status: 500,
 						body: `Invalid response from route ${request.path}; ${
-							response.body == null
+							response && response.body == null
 								? 'body is missing'
 								: `expected an object, got ${typeof response}`
 						}`,
