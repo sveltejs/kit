@@ -4,7 +4,7 @@
 	export let article;
 	export let user;
 
-	async function toggleFavorite() {
+	async function toggle_favorite() {
 		// optimistic UI
 		if (article.favorited) {
 			article.favoritesCount -= 1;
@@ -35,7 +35,7 @@
 			<div class="pull-xs-right">
 				<button
 					class="btn btn-sm {article.favorited ? 'btn-primary' : 'btn-outline-primary'}"
-					on:click={toggleFavorite}
+					on:click={toggle_favorite}
 				>
 					<i class="ion-heart" />
 					{article.favoritesCount}

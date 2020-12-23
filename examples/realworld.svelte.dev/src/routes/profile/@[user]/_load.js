@@ -1,21 +1,9 @@
-import * as api from '$common/api.js';
-
-const page_size = 10;
-
-export function create_load(type) {
-	return async ({ page }) => {
-		const p = +page.query.get('p') || 1;
-
-		const q = new URLSearchParams([
-			['limit', page_size],
-			['offset', (p - 1) * page_size],
-			[type, encodeURIComponent(page.params.user)]
-		]);
-
-		const { articles, articlesCount } = await api.get(`articles?${q}`);
+export function create_load(endpoint) {
+	return async ({ page, fetch }) => {
+		const res = await fetch(`/profile/@${page.params.user}/${endpoint}.json`);
 
 		return {
-			props: { articles, articlesCount }
+			props: await res.json()
 		};
 	};
 }
