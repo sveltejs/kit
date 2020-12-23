@@ -37,7 +37,7 @@ export default function render_route(request, context, options) {
 					};
 				}
 
-				let { status = 200, body, headers = {} } = response;
+				let { status = 200, body, headers = {} } = response || {};
 
 				headers = normalize_headers(headers);
 
