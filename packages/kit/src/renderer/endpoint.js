@@ -5,7 +5,9 @@ export default function render_route(request, context, options) {
 	if (!route) return null;
 
 	return route.load().then(async (mod) => {
-		const method = request.method.toLowerCase();
+		// TODO make method override (?_method=delete) configurable
+		const method = (request.query.get('_method') || request.method).toLowerCase();
+
 		const handler = mod[method.replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {
