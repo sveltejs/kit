@@ -29,7 +29,7 @@ export async function render(request, options) {
 
 		if (response) {
 			// inject ETags for 200 responses
-			if (response.status === 200) {
+			if (/get/i.test(request.method) && response.status === 200) {
 				if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
 					const etag = `"${md5(response.body)}"`;
 
