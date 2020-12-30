@@ -2,11 +2,13 @@
 title: Security
 ---
 
-By default, Sapper does not add security headers to your app, but you may add them yourself using middleware such as [Helmet][].
+By default, SvelteKit does not add security headers to your app, but you may add them yourself using middleware such as [Helmet][].
 
 ### Content Security Policy (CSP)
 
-Sapper generates inline `<script>`s and `<style>`s, which can fail to execute if [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) headers do not allow javascript or stylesheets sourced from inline resources.
+[SvelteKit does not yet support CSP.](https://github.com/sveltejs/kit/issues/93)
+
+Sapper supported CSP by generating inline `<script>`s and `<style>`s, which can fail to execute if [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) headers do not allow javascript or stylesheets sourced from inline resources.
 
 To work around this, Sapper can inject a [nonce](https://www.troyhunt.com/locking-down-your-website-scripts-with-csp-hashes-nonces-and-report-uri/) which can be configured with middleware to emit the proper CSP headers. The nonce will be applied to the inline `<script>`s and `<style>`s. Here is an example using [Express][] and [Helmet][]:
 

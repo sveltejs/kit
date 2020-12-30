@@ -1,31 +1,23 @@
 ---
-title: Sapper app structure
+title: SvelteKit app structure
 ---
 
-If you take a look inside the [sapper-template](https://github.com/sveltejs/sapper-template) repo, you'll see some files that Sapper expects to find:
+If you take a look inside a new SvelteKit project, you'll see some files that SvelteKit expects to find:
 
 ```bash
 ├ package.json
 ├ src
 │ ├ routes
-│ │ ├ # your routes here
-│ │ ├ _error.svelte
 │ │ └ index.svelte
-│ ├ client.js
-│ ├ server.js
+│ ├ components
+│ │ └ Counter.svelte
 │ ├ service-worker.js
-│ └ template.html
+│ └ app.html
 ├ static
 │ ├ # your files here
-└ rollup.config.js / webpack.config.js
+└ snowpack.config.js
+└ svelte.config.js
 ```
-
-When you first run Sapper, it will create an additional `__sapper__` directory containing generated files.
-
-You'll notice a few extra files — we don't need to worry about those right now.
-
-> You *can* create these files from scratch, but it's much better to use the template. See [getting started](docs#Getting_started) for instructions on how to easily clone it
-
 
 ### package.json
 
@@ -33,38 +25,17 @@ Your package.json contains your app's dependencies and defines a number of scrip
 
 * `npm run dev` — start the app in development mode, and watch source files for changes
 * `npm run build` — build the app in production mode
-* `npm run export` — bake out a static version, if applicable (see [exporting](docs#Exporting))
 * `npm start` — start the app in production mode after you've built it
 
 
 ### src
 
-This contains the three *entry points* for your app — `src/client.js`, `src/server.js` and (optionally) `src/service-worker.js` — along with a `src/template.html` file.
-
-#### src/client.js
-
-This *must* import, and call, the `start` function from the generated `@sapper/app` module:
-
-```js
-import * as sapper from '@sapper/app';
-
-sapper.start({
-	target: document.querySelector('#sapper')
-});
-```
-
-In many cases, that's the entirety of your entry module, though you can do as much or as little here as you wish. See the [client API](docs#Client_API) section for more information on functions you can import.
+This contains the *home page* for your app — `src/index.svelte` and (optionally) `src/service-worker.js` — along with a `src/app.html` file.
 
 
-#### src/server.js
+#### src/routes/index.svelte
 
-This is a normal Express (or [Polka](https://github.com/lukeed/polka), etc) app, with three requirements:
-
-* it should serve the contents of the `static` folder, using for example [sirv](https://github.com/lukeed/sirv)
-* it should call `app.use(sapper.middleware())` at the end, where `sapper` is imported from `@sapper/server`
-* it must listen on `process.env.PORT`
-
-Beyond that, you can write the server however you like.
+This is the home page for your application and is just like any other Svelte component.
 
 
 #### src/service-worker.js
@@ -81,16 +52,16 @@ Because every app needs a slightly different service worker (sometimes it's appr
 * `timestamp` — the time the service worker was generated (useful for generating unique cache names)
 
 
-#### src/template.html
+#### src/app.html
 
 This file is a template for responses from the server. Sapper will inject content that replaces the following tags:
 
-* `%sapper.base%` — a `<base>` element (see [base URLs](docs#Base_URLs))
-* `%sapper.styles%` — critical CSS for the page being requested
-* `%sapper.head%` — HTML representing page-specific `<head>` contents, like `<title>`
-* `%sapper.html%` — HTML representing the body of the page being rendered
-* `%sapper.scripts%` — script tags for the client-side app
-* `%sapper.cspnonce%` — CSP nonce taken from `res.locals.nonce` (see [Content Security Policy (CSP)](docs#Content_Security_Policy_CSP))
+* `%svelte.base%` — a `<base>` element (see [base URLs](docs#Base_URLs))
+* `%svelte.styles%` — critical CSS for the page being requested
+* `%svelte.head%` — HTML representing page-specific `<head>` contents, like `<title>`
+* `%svelte.html%` — HTML representing the body of the page being rendered
+* `%svelte.scripts%` — script tags for the client-side app
+* `%svelte.cspnonce%` — CSP nonce taken from `res.locals.nonce` (see [Content Security Policy (CSP)](docs#Content_Security_Policy_CSP))
 
 
 ### src/routes
@@ -106,6 +77,10 @@ Sapper doesn't serve these files — you'd typically use [sirv](https://github.c
 
 > Note that the default behaviour of the service worker is to cache all assets from the static directory, so if you have more than 50mb of files here, you will start to exceed the cache limit for service-workers in some browsers, which can cause the service worker to stop loading. In this instance, it is advisable to customise what files are cached by editing the service-worker yourself.
 
-### rollup.config.js / webpack.config.js
+### snowpack.config.js
 
-Sapper can use [Rollup](https://rollupjs.org/) or [webpack](https://webpack.js.org/) to bundle your app. You probably won't need to change the config, but if you want to (for example to add new loaders or plugins), you can.
+This is the [Snowpack configuration file](https://www.snowpack.dev/reference/configuration) for your project.
+
+### svelte.config.js
+
+This file contains SvelteKit options as well as options for `svelte-preprocess`.

@@ -2,21 +2,21 @@
 title: Deployment
 ---
 
-Sapper apps run anywhere that supports Node 10 or higher.
+SvelteKit apps run anywhere that supports Node 12 or higher.
 
-### Deploying from sapper build
+### Deploying from svelte-kit build
 
-You will need the `__sapper__/build` and `static` directories as well as the production dependencies in `node_modules` to run the application. Node production dependencies can be generated with `npm ci --prod`, you can then start your app with:
+You will need the `.svelte/build` and `static` directories as well as the production dependencies in `node_modules` to run the application. Node production dependencies can be generated with `npm ci --prod`, you can then start your app with:
 
 ```bash
-node __sapper__/build
+node .svelte/build
 ```
 
-### Deploying to Vercel
-
-We can use a third-party library like [the `vercel-sapper` builder](https://www.npmjs.com/package/vercel-sapper) to deploy our projects to [Vercel] ([formerly ZEIT Now](https://vercel.com/blog/zeit-is-now-vercel)). See [that project's readme](https://github.com/thgh/vercel-sapper#readme) for more details regarding [Vercel] deployments.
-
 ### Deploying service workers
+
+[SvelteKit does not yet support service workers.](https://github.com/sveltejs/kit/issues/10)
+
+In Sapper, you could deploy service workers with the directions below.
 
 Sapper makes the Service Worker file (`service-worker.js`) unique by including a timestamp in the source code
 (calculated using `Date.now()`).

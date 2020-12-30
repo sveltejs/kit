@@ -2,21 +2,23 @@
 title: Building
 ---
 
-Up until now we've been using `sapper dev` to build our application and run a development server. But when it comes to production, we want to create a self-contained optimized build.
+Up until now we've been using `svelte-kit dev` to build our application and run a development server. But when it comes to production, we want to create a self-contained optimized build.
 
-### sapper build
+### svelte-kit build
 
-This command packages up your application into the `__sapper__/build` directory. (You can change this to a custom directory, as well as controlling various other options — do `sapper build --help` for more information.)
+This command packages up your application into the `.svelte/build` directory. (You can change this to a custom directory, as well as controlling various other options — do `svelte-kit build --help` for more information.)
 
 The output is a Node app that you can run from the project root:
 
 ```bash
-node __sapper__/build
+node .svelte/build
 ```
 
 ### Browser support
 
-Your site is built only for the latest versions of modern evergreen browsers by default. If you are using Rollup, you can use the `--legacy`<sup>1</sup> flag to build a second bundle that can be used to support legacy browsers like Internet Explorer. Sapper will then serve up the correct bundle at runtime<sup>2</sup>.
+Your site is built only for the latest versions of modern evergreen browsers.
+
+Sapper, the predecessor to SvelteKit, supported an option for to support legacy browsers. This does not yet exist in SvelteKit. In Sapper, if you are using Rollup, you can use the `--legacy`<sup>1</sup> flag to build a second bundle that can be used to support legacy browsers like Internet Explorer. Sapper will then serve up the correct bundle at runtime<sup>2</sup>.
 
 When using `--legacy`, Sapper will pass an environment variable `SAPPER_LEGACY_BUILD` to your Rollup config. Sapper will then build your client-side bundle twice: once with `SAPPER_LEGACY_BUILD` set to `true` and once with it set to `false`. [sapper-template-rollup](https://github.com/sveltejs/sapper-template-rollup) provides an example of utilizing this configuration.<sup>3</sup>
 

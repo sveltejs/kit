@@ -1,8 +1,8 @@
 {
 	"background_color": "#ffffff",
 	"theme_color": "#159794",
-	"name": "Sapper",
-	"short_name": "Sapper",
+	"name": "SvelteKit",
+	"short_name": "SvelteKit",
 	"display": "minimal-ui",
 	"start_url": "/",
 	"icons": [

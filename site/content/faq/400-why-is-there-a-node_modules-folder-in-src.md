@@ -1,5 +1,0 @@
----
-question: Why is there a node_modules folder in the src folder of a Sapper project?
----
-
-Before bundling your app, Sapper builds a special package for your app, which you can access by importing from `@sapper/app`. Putting it inside `src/node_modules` means that it won't get nuked when you add new dependencies, and that you can easily import from it using the Node resolution algorithm.

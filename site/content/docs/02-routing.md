@@ -2,7 +2,7 @@
 title: Routing
 ---
 
-As we've seen, there are two types of route in Sapper — pages, and server routes.
+As we've seen, there are two types of route in SvelteKit — pages and API endpoints.
 
 
 ### Pages
@@ -37,21 +37,23 @@ Dynamic parameters are encoded using `[brackets]`. For example, here's how you c
 ```html
 <!-- src/routes/blog/[slug].svelte -->
 <script context="module">
-	// the (optional) preload function takes a
-	// `{ path, params, query }` object and turns it into
+	import * as api from '$common/api.js';
+
+	// the (optional) load function takes a
+	// `{ page, session }` object and turns it into
 	// the data we need to render the page
-	export async function preload(page, session) {
+	export async function load({ page, session }) {
 		// the `slug` parameter is available because this file
 		// is called [slug].svelte
 		const { slug } = page.params;
 
-		// `this.fetch` is a wrapper around `fetch` that allows
+		// `api.get` is a wrapper around `fetch` that allows
 		// you to make credentialled requests on both
 		// server and client
-		const res = await this.fetch(`blog/${slug}.json`);
+		const res = await api.get(`blog/${slug}.json`);
 		const article = await res.json();
 
-		return { article };
+		return { { props: article } };
 	}
 </script>
 
@@ -77,16 +79,16 @@ If you don't want to create several folders to capture more than one parameter l
 ```html
 <!-- src/routes/blog/[...slug].svelte -->
 <script context="module">
-	export async function preload({ params }) {
-		let [slug, year, month, day] = params.slug;
+	export async function load({ page }) {
+		let [slug, year, month, day] = page.params.slug;
 
-		return { slug, year, month, day };
+		return { props: { slug, year, month, day }};
 	}
 </script>
 ```
 
 
-> See the section on [preloading](docs#Preloading) for more info about `preload` and `this.fetch`
+> See the section on [loading](docs#Loading) for more info about `load` and `this.fetch`
 
 
 ### Server routes
@@ -95,7 +97,7 @@ Server routes are modules written in `.js` files that export functions correspon
 
 ```js
 // routes/blog/[slug].json.js
-import db from './_database.js'; // the underscore tells Sapper this isn't a route
+import db from './_database.js'; // the underscore tells SvelteKit this isn't a route
 
 export async function get(req, res, next) {
 	// the `slug` parameter is available because this file
@@ -115,32 +117,21 @@ export async function get(req, res, next) {
 
 > `delete` is a reserved word in JavaScript. To handle DELETE requests, export a function called `del` instead.
 
-If you are using TypeScript, use the following types:
-
-```js
-import { SapperRequest, SapperResponse } from '@sapper/server';
-
-function get(req: SapperRequest, res: SapperResponse, next: () => void) { ... }
-```
-
-`SapperRequest` and `SapperResponse` will work with both Polka and Express. You can replace them with the types specific to your server, which are `polka.Request` / `http.ServerResponse` and `express.Request` / `express.Response`, respectively.
 
 ### File naming rules
 
 There are three simple rules for naming the files that define your routes:
 
-* A file called `src/routes/about.svelte` corresponds to the `/about` route. A file called `src/routes/blog/[slug].svelte` corresponds to the `/blog/:slug` route, in which case `params.slug` is available to `preload`
+* A file called `src/routes/about.svelte` corresponds to the `/about` route. A file called `src/routes/blog/[slug].svelte` corresponds to the `/blog/:slug` route, in which case `params.slug` is available to `load`
 * The file `src/routes/index.svelte` corresponds to the root of your app. `src/routes/about/index.svelte` is treated the same as `src/routes/about.svelte`.
 * Files and directories with a leading underscore do *not* create routes. This allows you to colocate helper modules and components with the routes that depend on them — for example you could have a file called `src/routes/_helpers/datetime.js` and it would *not* create a `/_helpers/datetime` route
 
 
-
 ### Error page
 
-In addition to regular pages, there is a 'special' page that Sapper expects to find — `src/routes/_error.svelte`. This will be shown when an error occurs while rendering a page.
+In addition to regular pages, there is a 'special' page that SvelteKit expects to find — `src/routes/$error.svelte`. This will be shown when an error occurs while rendering a page.
 
 The `error` object is made available to the template along with the HTTP `status` code. `error` is also available in the [`page` store](docs#Stores).
-
 
 
 ### Regexes in routes

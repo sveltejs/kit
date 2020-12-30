@@ -3,8 +3,8 @@
 Set up the project:
 
 ```bash
-git clone https://github.com/sveltejs/sapper.git
-cd sapper/site
+git clone https://github.com/sveltejs/kit.git
+cd kit/site
 npm ci
 ```
 

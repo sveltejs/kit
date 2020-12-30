@@ -1,6 +1,6 @@
 {
-  "name": "sapper.svelte.dev",
-  "description": "sapper.svelte.dev",
+  "name": "kit.svelte.dev",
+  "description": "kit.svelte.dev",
   "version": "0.0.1",
   "scripts": {
     "dev": "sapper dev",

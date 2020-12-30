@@ -4,12 +4,11 @@ title: Stores
 
 The `page` and `session` values passed to `preload` functions are available to components as [stores](https://svelte.dev/tutorial/writable-stores), along with `preloading`.
 
-A component can retrieve the stores using the `stores` function:
+A component can retrieve the stores by importing them:
 
 ```html
 <script>
-	import { stores } from '@sapper/app';
-	const { preloading, page, session } = stores();
+	import { preloading, page, session } from '$app/stores';
 </script>
 ```
 
@@ -20,25 +19,26 @@ A component can retrieve the stores using the `stores` function:
 
 ### Seeding session data
 
-`session` is `undefined` by default. To populate it with data, implement a function that returns session data given an HTTP request. Pass it as an option to `sapper.middleware` when the server is started.
+`session` is `undefined` by default. To populate it with data, implement a function that returns session data given an HTTP request.
 
 As an example, let's look at how to populate the session with the current user. First, add the `session` parameter to the Sapper middleware:
 
 ```js
-// src/server.js
-polka()
-	.use(
-		// ...
-		sapper.middleware({
-			// customize the session
-			session: (req, res) => ({
-				user: req.user
-			})
-		})
-	)
+	import { session } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { post } from '$common/utils.js';
+
+	async function submit(event) {
+		const response = await post(`auth/register`, { username, email, password });
+
+		if (response.user) {
+			$session.user = response.user;
+			goto('/');
+		}
+	}
 ```
 
-`req` is an `http.ClientRequest` and `res` an `http.ServerResponse`.
+`req` is an `SvelteKitRequest` and `res` an `SvelteKitResponse`.
 
 The session data must be serializable. This means it must not contain functions or custom classes, just built-in JavaScript data types.
 

@@ -6,7 +6,7 @@ So far, we've treated pages as entirely standalone components — upon navigatio
 
 But in many apps, there are elements that should be visible on *every* page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use *layout* components.
 
-To create a layout component that applies to every page, make a file called `src/routes/_layout.svelte`. The default layout component (the one that Sapper uses if you don't bring your own) looks like this...
+To create a layout component that applies to every page, make a file called `src/routes/$layout.svelte`. The default layout component (the one that Sapper uses if you don't bring your own) looks like this...
 
 ```html
 <slot></slot>
@@ -15,7 +15,7 @@ To create a layout component that applies to every page, make a file called `src
 ...but we can add whatever markup, styles and behaviour we want. For example, let's add a nav bar:
 
 ```html
-<!-- src/routes/_layout.svelte -->
+<!-- src/routes/$layout.svelte -->
 <nav>
 	<a href=".">Home</a>
 	<a href="about">About</a>
@@ -52,7 +52,7 @@ Suppose we don't just have a single `/settings` page, but instead have nested pa
 We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
 
 ```html
-<!-- src/routes/settings/_layout.svelte -->
+<!-- src/routes/settings/$layout.svelte -->
 <h1>Settings</h1>
 
 <div class="submenu">

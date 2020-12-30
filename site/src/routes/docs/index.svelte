@@ -12,11 +12,11 @@
 </script>
 
 <svelte:head>
-	<title>Docs • Sapper</title>
+	<title>Docs • SvelteKit</title>
 
-	<meta name="twitter:title" content="Sapper docs">
+	<meta name="twitter:title" content="SvelteKit docs">
 	<meta name="twitter:description" content="The next small thing in web development">
 	<meta name="Description" content="The next small thing in web development">
 </svelte:head>
 
-<Docs {sections} project="sapper"/>
+<Docs {sections} project="sveltekit"/>
