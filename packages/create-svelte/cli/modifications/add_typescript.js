@@ -22,6 +22,9 @@ export default async function add_typescript(cwd, yes) {
 		]);
 		add_svelte_prepocess_to_config(cwd);
 		add_snowpack_plugin_to_config(cwd, '@snowpack/plugin-typescript');
+		add_snowpack_plugin_to_config(cwd, '@snowpack/plugin-svelte', {
+			compilerOptions: { hydratable: true }
+		});
 		add_tsconfig(cwd);
 		add_d_ts_file(cwd);
 

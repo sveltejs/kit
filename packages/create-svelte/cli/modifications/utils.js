@@ -55,7 +55,7 @@ export function add_svelte_prepocess_to_config(cwd) {
 /**
  * Adds plugin to snowpack config file, if not already present.
  */
-export function add_snowpack_plugin_to_config(cwd, pluginname) {
+export function add_snowpack_plugin_to_config(cwd, pluginname, options) {
 	const file = path.join(cwd, 'snowpack.config.js');
 	let config = fs.readFileSync(file, 'utf-8');
 
@@ -63,13 +63,16 @@ export function add_snowpack_plugin_to_config(cwd, pluginname) {
 		return;
 	}
 
+	const toInsert =
+		options != null ? `['${pluginname}', ${JSON.stringify(options, null, 2)}]` : `'${pluginname}'`;
+
 	if (config.includes('plugins: [')) {
-		config = config.replace('plugins: [', `plugins: ['${pluginname}', `);
+		config = config.replace('plugins: [', `plugins: [${toInsert}, `);
 	} else {
 		config = config.replace(
 			"extends: '@sveltejs/snowpack-config'",
 			`extends: '@sveltejs/snowpack-config',
-	plugins: ['${pluginname}']`
+	plugins: [${toInsert}]`
 		);
 	}
 
