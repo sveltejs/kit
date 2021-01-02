@@ -4,7 +4,6 @@ Everything you need to build a Svelte app.
 
 To get started, run `npm init svelte@next` — this will fetch and run the [`create-svelte`](packages/create-svelte) package.
 
-
 ## Developing
 
 This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
@@ -17,6 +16,12 @@ npm i -g pnpm
 
 ```bash
 pnpm i
+```
+
+...then build SvelteKit
+
+```bash
+pnpm build
 ```
 
 (This will also have the effect of building all the packages.)
