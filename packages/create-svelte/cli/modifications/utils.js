@@ -33,11 +33,12 @@ export function update_component(cwd, filepath, replacements) {
  * Adds `svelte-preprocess` to `svelte.config.js`, if there's no preprocessor already.
  */
 export function add_svelte_prepocess_to_config(cwd) {
-	const file = path.join(cwd, 'svelte.config.js');
+	const configFile = 'svelte.config.js';
+	const file = path.join(cwd, configFile);
 	let config = fs.readFileSync(file, 'utf-8');
 
 	if (config.includes('preprocess:')) {
-		return;
+		throw new Error(`"preprocess" config in ${configFile} already exists, refusing to override.`);
 	}
 
 	config = `const sveltePreprocess = require('svelte-preprocess');\n${config}`;
