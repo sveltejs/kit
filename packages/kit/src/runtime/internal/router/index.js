@@ -159,6 +159,7 @@ export class Router {
 
 		if (selected) {
 			// TODO shouldn't need to pass the hash here
+			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 		}
 
