@@ -56,7 +56,7 @@ export class Router {
 				// This will persist even if we navigate away from the site and come back
 				const new_state = {
 					...(history.state || {}),
-					scroll: scroll_state()
+					'sveltekit:scroll': scroll_state()
 				};
 				history.replaceState(new_state, document.title, window.location);
 			}, 50);
@@ -99,7 +99,7 @@ export class Router {
 
 			const selected = this.select(url);
 			if (selected) {
-				const noscroll = a.hasAttribute('sapper:noscroll');
+				const noscroll = a.hasAttribute('sveltekit:noscroll');
 				this.history.pushState({}, '', url.href);
 				this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 				event.preventDefault();
@@ -111,7 +111,7 @@ export class Router {
 				const url = new URL(location.href);
 				const selected = this.select(url);
 				if (selected) {
-					this.navigate(selected, event.state.scroll);
+					this.navigate(selected, event.state['sveltekit:scroll']);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar

@@ -5,6 +5,7 @@
 ### Patch Changes
 
 - Remove temporary logging
+- Add sveltekit:prefetch and sveltekit:noscroll
 
 ## 1.0.0-next.15
 
