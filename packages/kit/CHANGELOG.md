@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- f7dea55: Set process.env.NODE_ENV when invoking via the CLI
+
 ## 1.0.0-next.16
 
 ### Patch Changes
