@@ -8,3 +8,7 @@ export async function get(request, context) {
 		body: article
 	};
 }
+
+export async function put(request, context) {
+	console.log('put', request);
+}

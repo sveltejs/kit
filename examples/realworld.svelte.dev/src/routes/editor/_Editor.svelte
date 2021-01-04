@@ -3,14 +3,15 @@
 	import { session } from '$app/stores';
 	import ListErrors from '$components/ListErrors.svelte';
 	import * as api from '$common/api.js';
+	import { ajax } from '$common/actions.js';
 
 	export let article;
 	export let slug;
 
-	let inProgress = false;
+	let publishing = false;
 	let errors;
 
-	function addTag(input) {
+	function add_tag(input) {
 		article.tagList = [...article.tagList, input.value];
 		input.value = '';
 	}
@@ -19,19 +20,15 @@
 		article.tagList = [...article.tagList.slice(0, index), ...article.tagList.slice(index + 1)];
 	}
 
-	async function publish() {
-		inProgress = true;
+	const onsubmit = () => {
+		publishing = true;
+	};
 
-		const response = await (slug
-			? api.put(`articles/${slug}`, { article }, $session.user && $session.user.token)
-			: api.post('articles', { article }, $session.user && $session.user.token));
-
-		if (response.article) {
-			goto(`/article/${response.article.slug}`);
+	const onresponse = async (res) => {
+		if (res.ok) {
+			goto(res.headers.get('location'));
 		}
-
-		inProgress = false;
-	}
+	};
 
 	function enter(node, callback) {
 		function onkeydown(event) {
@@ -52,36 +49,60 @@
 	<div class="container page">
 		<div class="row">
 			<div class="col-md-10 offset-md-1 col-xs-12">
-				<ListErrors {errors}/>
+				<ListErrors {errors} />
 
-				<form>
+				<form
+					action={slug ? `/article/${slug}.json?_method=put` : `/article.json`}
+					method="post"
+					use:ajax={{ onsubmit, onresponse }}
+				>
 					<fieldset>
 						<fieldset class="form-group">
-							<input class="form-control form-control-lg" type="text" placeholder="Article Title" bind:value={article.title}>
+							<input
+								class="form-control form-control-lg"
+								type="text"
+								placeholder="Article Title"
+								bind:value={article.title}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
-							<input class="form-control" type="text" placeholder="What's this article about?" bind:value={article.description}>
+							<input
+								class="form-control"
+								type="text"
+								placeholder="What's this article about?"
+								bind:value={article.description}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
-							<textarea class="form-control" rows="8" placeholder="Write your article (in markdown)" bind:value={article.body}/>
+							<textarea
+								class="form-control"
+								rows="8"
+								placeholder="Write your article (in markdown)"
+								bind:value={article.body}
+							/>
 						</fieldset>
 
 						<fieldset class="form-group">
-							<input class="form-control" type="text" placeholder="Enter tags" use:enter={addTag}>
+							<input
+								class="form-control"
+								type="text"
+								placeholder="Enter tags"
+								use:enter={add_tag}
+							/>
 
 							<div class="tag-list">
 								{#each article.tagList as tag, i}
 									<span class="tag-default tag-pill">
-										<i class="ion-close-round" on:click='{() => remove(i)}'/>
+										<i class="ion-close-round" on:click={() => remove(i)} />
 										{tag}
 									</span>
 								{/each}
 							</div>
 						</fieldset>
 
-						<button class="btn btn-lg pull-xs-right btn-primary" type="button" disabled={inProgress} on:click={publish}>
+						<button class="btn btn-lg pull-xs-right btn-primary" disabled={publishing}>
 							Publish Article
 						</button>
 					</fieldset>
