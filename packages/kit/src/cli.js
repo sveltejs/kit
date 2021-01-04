@@ -3,22 +3,22 @@ import colors from 'kleur';
 import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
-let config;
+function get_config() {
+	try {
+		return load_config();
+	} catch (error) {
+		let message = error.message;
 
-try {
-	config = load_config();
-} catch (error) {
-	let message = error.message;
+		if (error.code === 'ENOENT') {
+			message = 'Missing svelte.config.js';
+		} else if (error.name === 'SyntaxError') {
+			message = 'Malformed svelte.config.js';
+		}
 
-	if (error.code === 'ENOENT') {
-		message = 'Missing svelte.config.js';
-	} else if (error.name === 'SyntaxError') {
-		message = 'Malformed svelte.config.js';
+		console.error(colors.bold().red(message));
+		console.error(colors.grey(error.stack));
+		process.exit(1);
 	}
-
-	console.error(colors.bold().red(message));
-	console.error(colors.grey(error.stack));
-	process.exit(1);
 }
 
 function handle_error(error) {
@@ -40,6 +40,9 @@ prog
 	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
+		process.env.NODE_ENV = 'development';
+		const config = get_config();
+
 		const { dev } = await import('./api/dev');
 
 		try {
@@ -64,6 +67,9 @@ prog
 	.command('build')
 	.describe('Create a production build of your app')
 	.action(async () => {
+		process.env.NODE_ENV = 'production';
+		const config = get_config();
+
 		const { build } = await import('./api/build');
 
 		try {
@@ -79,6 +85,9 @@ prog
 	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
+		process.env.NODE_ENV = 'production';
+		const config = get_config();
+
 		const { start } = await import('./api/start');
 
 		try {
@@ -95,6 +104,9 @@ prog
 	.command('adapt')
 	.describe('Customise your production build for different platforms')
 	.action(async () => {
+		process.env.NODE_ENV = 'production';
+		const config = get_config();
+
 		const { adapt } = await import('./api/adapt');
 
 		try {
