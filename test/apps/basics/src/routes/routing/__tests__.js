@@ -1,7 +1,16 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('redirects from /routing/ to /routing', async ({ errors, visit, click, sleep, goto, text, pathname, js }) => {
+	test('redirects from /routing/ to /routing', async ({
+		errors,
+		visit,
+		click,
+		sleep,
+		goto,
+		text,
+		pathname,
+		js
+	}) => {
 		await visit('/routing/slashes');
 		await click('a[href="/routing/"]');
 		assert.equal(await pathname(), '/routing');
@@ -15,7 +24,14 @@ export default function (test) {
 		}
 	});
 
-	test('redirects from /routing/? to /routing', async ({ visit, click, goto, text, pathname, js }) => {
+	test('redirects from /routing/? to /routing', async ({
+		visit,
+		click,
+		goto,
+		text,
+		pathname,
+		js
+	}) => {
 		await visit('/routing/slashes');
 		await click('a[href="/routing/?"]');
 		assert.equal(await pathname(), '/routing');
@@ -29,7 +45,14 @@ export default function (test) {
 		}
 	});
 
-	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({ visit, click, goto, text, pathname, js }) => {
+	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({
+		visit,
+		click,
+		goto,
+		text,
+		pathname,
+		js
+	}) => {
 		await visit('/routing/slashes');
 		await click('a[href="/routing/?foo=bar"]');
 		assert.equal(await pathname(), '/routing?foo=bar');
@@ -84,14 +107,14 @@ export default function (test) {
 		if (js) {
 			await visit('/routing');
 
-			await prefetch_routes().catch(e => {
+			await prefetch_routes().catch((e) => {
 				// from error handler tests; ignore
 				if (!e.message.includes('Crashing now')) throw e;
 			});
 
 			// weird flakiness — without this, some requests are
 			// reported after prefetch_routes has finished
-			await new Promise(f => setTimeout(f, 100));
+			await new Promise((f) => setTimeout(f, 200));
 
 			const requests = await capture_requests(async () => {
 				await click('a[href="/routing/a"]');
@@ -146,7 +169,11 @@ export default function (test) {
 		assert.equal(await text('h1'), 'reserved words are okay as routes');
 	});
 
-	test('resets the active element after navigation', async ({ visit, click, wait_for_function }) => {
+	test('resets the active element after navigation', async ({
+		visit,
+		click,
+		wait_for_function
+	}) => {
 		await visit('/routing');
 
 		await click('[href="/routing/a"]');
