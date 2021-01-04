@@ -12,18 +12,16 @@ This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
 npm i -g pnpm
 ```
 
-...then install this repo's dependencies:
+...then install this repo's dependencies...
 
 ```bash
 pnpm i
 ```
 
-...then build SvelteKit
+...then build SvelteKit and the other packages:
 
 ```bash
 pnpm build
 ```
-
-(This will also have the effect of building all the packages.)
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
