@@ -16,14 +16,9 @@ const mutable = (dir) =>
 
 const noop_handler = (_req, _res, next) => next();
 
-// TODO how to handle the case where `paths.assets !== ''` and `paths.generated !== '/app'`?
-// Does that even make sense in the context of adapter-node?
-const static_handler = fs.existsSync(app.files.assets) ? mutable(app.files.assets) : noop_handler;
-const prerendered_handler = fs.existsSync('build/prerendered')
-	? mutable('build/prerendered')
-	: noop_handler;
+const prerendered_handler = fs.existsSync('prerendered') ? mutable('prerendered') : noop_handler;
 
-const assets_handler = sirv('build/assets', {
+const assets_handler = sirv('assets', {
 	maxAge: 31536000,
 	immutable: true
 });
@@ -32,24 +27,22 @@ const server = http.createServer((req, res) => {
 	const parsed = parse(req.url || '');
 
 	assets_handler(req, res, () => {
-		static_handler(req, res, () => {
-			prerendered_handler(req, res, async () => {
-				const rendered = await app.render({
-					method: req.method,
-					headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-					path: parsed.pathname,
-					body: await get_body(req),
-					query: new URLSearchParams(parsed.query || '')
-				});
-
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					res.end(rendered.body);
-				} else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
+		prerendered_handler(req, res, async () => {
+			const rendered = await app.render({
+				method: req.method,
+				headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+				path: parsed.pathname,
+				body: await get_body(req),
+				query: new URLSearchParams(parsed.query || '')
 			});
+
+			if (rendered) {
+				res.writeHead(rendered.status, rendered.headers);
+				res.end(rendered.body);
+			} else {
+				res.statusCode = 404;
+				res.end('Not found');
+			}
 		});
 	});
 });
