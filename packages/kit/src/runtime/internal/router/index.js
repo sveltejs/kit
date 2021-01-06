@@ -124,6 +124,9 @@ export class Router {
 
 		const selected = this.select(new URL(location.href));
 		if (selected) return this.renderer.start(selected);
+
+		// make it possible to reset focus
+		document.body.setAttribute('tabindex', '-1');
 	}
 
 	select(url) {
@@ -177,9 +180,7 @@ export class Router {
 
 		await this.renderer.render(selected);
 
-		if (document.activeElement instanceof HTMLElement) {
-			document.activeElement.blur();
-		}
+		document.body.focus();
 
 		const deep_linked = hash && document.getElementById(hash.slice(1));
 		if (scroll) {
