@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test.only('resets focus', async ({ visit, click, keyboard, evaluate, contains }) => {
+	test('resets focus', async ({ visit, click, keyboard, evaluate, contains }) => {
 		await visit('/focus/a');
 
 		await click('[href="/focus/b"]');
