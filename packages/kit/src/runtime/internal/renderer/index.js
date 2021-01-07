@@ -59,7 +59,7 @@ export class Renderer {
 
 		this.stores = {
 			page: page_store({}),
-			navigating: writable(false),
+			navigating: writable(null),
 			session: writable(session)
 		};
 
@@ -129,10 +129,15 @@ export class Renderer {
 		this.initial = null;
 	}
 
+	notify(selected) {
+		this.stores.navigating.set({
+			from: this.current.page,
+			to: selected.page
+		});
+	}
+
 	async render(selected) {
 		const token = (this.token = {});
-
-		this.stores.navigating.set(true);
 
 		const hydrated = await this.hydrate(selected);
 
@@ -141,7 +146,7 @@ export class Renderer {
 			this.current = hydrated.state;
 
 			this.root.$set(hydrated.props);
-			this.stores.navigating.set(false);
+			this.stores.navigating.set(null);
 		}
 	}
 
@@ -165,6 +170,7 @@ export class Renderer {
 		};
 
 		const state = {
+			page,
 			path: page.path,
 			params: page.params,
 			query: page.query.toString(),

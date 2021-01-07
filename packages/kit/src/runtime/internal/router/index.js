@@ -100,6 +100,7 @@ export class Router {
 			const selected = this.select(url);
 			if (selected) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
+				this.renderer.notify(selected);
 				this.history.pushState({}, '', url.href);
 				this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
 				event.preventDefault();
@@ -161,6 +162,8 @@ export class Router {
 		const selected = this.select(url);
 
 		if (selected) {
+			this.renderer.notify(selected);
+
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
