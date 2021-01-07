@@ -15,7 +15,8 @@ async function setup({ port }) {
 		await page
 			.waitForFunction(
 				({ expectedValue, selector }) =>
-					document.querySelector(selector) && document.querySelector(selector).textContent === expectedValue,
+					document.querySelector(selector) &&
+					document.querySelector(selector).textContent === expectedValue,
 				{ expectedValue, selector },
 				{ timeout: defaultTimeout }
 			)
@@ -28,7 +29,7 @@ async function setup({ port }) {
 
 	const capture_requests = async (operations) => {
 		const requests = [];
-		const on_request = request => requests.push(request.url());
+		const on_request = (request) => requests.push(request.url());
 		page.on('request', on_request);
 
 		try {
@@ -56,9 +57,9 @@ async function setup({ port }) {
 
 	return {
 		base,
-		visit: path => page.goto(base + path),
-		contains: async str => (await page.innerHTML('body')).includes(str),
-		html: async selector => await page.innerHTML(selector, { timeout: defaultTimeout }),
+		visit: (path) => page.goto(base + path),
+		contains: async (str) => (await page.innerHTML('body')).includes(str),
+		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		text,
 		evaluate: (fn) => page.evaluate(fn),
@@ -73,9 +74,10 @@ async function setup({ port }) {
 		wait_for_function: (fn, arg, options) =>
 			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests,
-		set_extra_http_headers: headers => page.setExtraHTTPHeaders(headers),
+		set_extra_http_headers: (headers) => page.setExtraHTTPHeaders(headers),
 		pathname: () => page.url().replace(base, ''),
-		$: selector => page.$(selector)
+		keyboard: page.keyboard,
+		$: (selector) => page.$(selector)
 	};
 }
 
@@ -88,7 +90,7 @@ export function runner(callback, options = {}) {
 
 		const duplicate = (test_fn) => {
 			return (name, callback) => {
-				test_fn(`${name} [no js]`, async context => {
+				test_fn(`${name} [no js]`, async (context) => {
 					await callback({
 						...context,
 						js: false
@@ -96,7 +98,7 @@ export function runner(callback, options = {}) {
 				});
 
 				if (!options.amp) {
-					test_fn(`${name} [js]`, async context => {
+					test_fn(`${name} [js]`, async (context) => {
 						await callback({
 							...context,
 							js: true,
@@ -108,8 +110,8 @@ export function runner(callback, options = {}) {
 						});
 					});
 				}
-			}
-		}
+			};
+		};
 
 		const test = duplicate(suite);
 		test.skip = duplicate(suite.skip);

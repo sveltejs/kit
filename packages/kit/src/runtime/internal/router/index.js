@@ -119,6 +119,9 @@ export class Router {
 			}
 		});
 
+		// make it possible to reset focus
+		document.body.setAttribute('tabindex', '-1');
+
 		// load current page
 		this.history.replaceState({}, '', location.href);
 
@@ -177,9 +180,7 @@ export class Router {
 
 		await this.renderer.render(selected);
 
-		if (document.activeElement instanceof HTMLElement) {
-			document.activeElement.blur();
-		}
+		document.body.focus();
 
 		const deep_linked = hash && document.getElementById(hash.slice(1));
 		if (scroll) {
