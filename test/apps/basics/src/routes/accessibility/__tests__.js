@@ -19,7 +19,7 @@ export default function (test) {
 		assert.equal(await evaluate(() => document.activeElement.textContent), 'a');
 	});
 
-	test('announces client-side navigation', async ({ visit, click, contains, html, js }) => {
+	test('announces client-side navigation', async ({ visit, click, contains, html, sleep, js }) => {
 		await visit('/accessibility/a');
 
 		const has_live_region = await contains('aria-live');
@@ -31,6 +31,7 @@ export default function (test) {
 			assert.equal(await html('[aria-live]'), '');
 
 			await click('[href="/accessibility/b"]');
+			await sleep(50);
 			assert.equal(await html('[aria-live]'), 'Navigated to b'); // TODO i18n
 		} else {
 			assert.ok(!has_live_region);

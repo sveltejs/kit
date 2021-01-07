@@ -102,6 +102,7 @@ export default function (test) {
 		capture_requests,
 		click,
 		wait_for_function,
+		sleep,
 		js
 	}) => {
 		if (js) {
@@ -114,7 +115,7 @@ export default function (test) {
 
 			// weird flakiness — without this, some requests are
 			// reported after prefetch_routes has finished
-			await new Promise((f) => setTimeout(f, 200));
+			await sleep(200);
 
 			const requests = await capture_requests(async () => {
 				await click('a[href="/routing/a"]');
