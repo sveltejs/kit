@@ -179,7 +179,7 @@ importers:
       '@types/node': 14.11.10
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
-      amphtml-validator: 1.0.33
+      amphtml-validator: 1.0.34
       eslint: 7.14.0
       esm: 3.2.25
       estree-walker: 2.0.1
@@ -201,7 +201,7 @@ importers:
       '@types/node': ^14.11.10
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
-      amphtml-validator: ^1.0.33
+      amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.2
       eslint: ^7.14.0
       esm: ^3.2.25
@@ -1026,15 +1026,15 @@ packages:
     dev: true
     resolution:
       integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==
-  /amphtml-validator/1.0.33:
+  /amphtml-validator/1.0.34:
     dependencies:
-      colors: 1.2.5
+      colors: 1.4.0
       commander: 2.15.1
       promise: 8.0.1
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-NAamUl3flAku2DLc/OKEPpR2BQJBQTG+iW7HFeJDDvsZ0YwCmGsMAV97/HPaKAvUowzjA+79QjWr4z0Pscg+8g==
+      integrity: sha512-x/D7DcpYCxg0onjxtDqS0KD0VIdclx/oJu+9hcJLMafzVJbc/Qj6LJQ0YolhmVHZV6EWtkUwjfOe0nnBC8QXig==
   /ansi-align/2.0.0:
     dependencies:
       string-width: 2.1.1
@@ -1426,12 +1426,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-puCDz0CzydiSYOrnXpz/PKd69zRrribezjtE9yd4zvytoRc8+RY/KJPvtPFKZS3E3wP6neGyMe0vOTlHO5L3Pw==
-  /colors/1.2.5:
+  /colors/1.4.0:
     dev: true
     engines:
       node: '>=0.1.90'
     resolution:
-      integrity: sha512-erNRLao/Y3Fv54qUa0LBB+//Uf3YwMUmdJinN20yMXm9zdKKqH9wt7R9IIVZ+K7ShzfpLV/Zg8+VyrBJYB4lpg==
+      integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
   /combined-stream/1.0.8:
     dependencies:
       delayed-stream: 1.0.0
