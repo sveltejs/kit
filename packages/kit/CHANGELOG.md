@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.18
+
+### Patch Changes
+
+- c29b61e: Announce page changes
+- 72da270: Reset focus properly
+
 ## 1.0.0-next.17
 
 ### Patch Changes
