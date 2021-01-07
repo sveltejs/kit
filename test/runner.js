@@ -77,6 +77,7 @@ async function setup({ port }) {
 		set_extra_http_headers: (headers) => page.setExtraHTTPHeaders(headers),
 		pathname: () => page.url().replace(base, ''),
 		keyboard: page.keyboard,
+		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
 		$: (selector) => page.$(selector)
 	};
 }
