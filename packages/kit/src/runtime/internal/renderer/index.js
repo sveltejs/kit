@@ -43,8 +43,7 @@ export class Renderer {
 		};
 
 		this.current = {
-			params: {},
-			path: null,
+			page: null,
 			query: null,
 			session_changed: false,
 			nodes: []
@@ -169,11 +168,11 @@ export class Renderer {
 			return fetch(url, opts);
 		};
 
+		const query = page.query.toString();
+
 		const state = {
 			page,
-			path: page.path,
-			params: page.params,
-			query: page.query.toString(),
+			query,
 			session_changed: false,
 			nodes: []
 		};
@@ -186,9 +185,9 @@ export class Renderer {
 
 		const changed = {
 			params: Object.keys(page.params).filter((key) => {
-				return this.current.params[key] !== page.params[key];
+				return !this.current.page || this.current.page.params[key] !== page.params[key];
 			}),
-			query: state.query !== this.current.query,
+			query: query !== this.current.query,
 			session: this.current.session_changed,
 			context: false
 		};
@@ -209,9 +208,11 @@ export class Renderer {
 					(changed.context && previous.uses.context);
 
 				if (changed_since_last_render) {
+					const hash = page.path + query;
+
 					// see if we have some cached data
 					const cache = this.caches.get(component);
-					const cached = cache && cache.get(state.path + state.query);
+					const cached = cache && cache.get(hash);
 
 					let node;
 					let loaded;
@@ -294,9 +295,7 @@ export class Renderer {
 							const cache = this.caches.get(component);
 							const cached = { node, loaded };
 
-							const key = state.path + state.query;
-
-							cache.set(key, cached);
+							cache.set(hash, cached);
 
 							let ready = false;
 
@@ -305,8 +304,8 @@ export class Renderer {
 							}, loaded.maxage * 1000);
 
 							const clear = () => {
-								if (cache.get(key) === cached) {
-									cache.delete(key);
+								if (cache.get(hash) === cached) {
+									cache.delete(hash);
 								}
 
 								unsubscribe();
@@ -337,7 +336,7 @@ export class Renderer {
 				}
 			});
 
-			if (!this.current || state.path !== this.current.path) {
+			if (!this.current.page || page.path !== this.current.page.path) {
 				props.page = page;
 			}
 		} catch (error) {
