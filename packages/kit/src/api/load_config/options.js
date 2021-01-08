@@ -14,10 +14,9 @@ export default {
 		}
 	},
 
-	target: expect_string(null),
+	amp: expect_boolean(false),
 
-	// used for testing
-	startGlobal: expect_string(null),
+	appDir: expect_string('_app'),
 
 	files: {
 		default: {
@@ -28,6 +27,10 @@ export default {
 		}
 	},
 
+	host: expect_string(null),
+
+	hostHeader: expect_string(null),
+
 	paths: {
 		default: {
 			base: expect_string(''),
@@ -35,12 +38,35 @@ export default {
 		}
 	},
 
-	appDir: expect_string('_app'),
+	prerender: {
+		default: {
+			crawl: expect_boolean(true),
+			enabled: expect_boolean(true),
+			pages: {
+				default: ['*'],
+				validate: (option, keypath) => {
+					if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
 
-	host: expect_string(null),
-	hostHeader: expect_string(null),
+					option.forEach((page) => {
+						if (page !== '*' && page[0] !== '/') {
+							throw new Error(
+								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							);
+						}
+					});
 
-	amp: expect_boolean(false)
+					return option;
+				}
+			}
+		}
+	},
+
+	// used for testing
+	startGlobal: expect_string(null),
+
+	target: expect_string(null)
 };
 
 function expect_string(string) {
