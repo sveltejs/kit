@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- deda984: Make navigating store contain from and to properties
+
 ## 1.0.0-next.18
 
 ### Patch Changes
