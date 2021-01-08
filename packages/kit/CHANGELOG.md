@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- ccf4aa7: Implement prerender config
+
 ## 1.0.0-next.19
 
 ### Patch Changes
