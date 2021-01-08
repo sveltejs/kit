@@ -49,7 +49,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	const server_root = resolve_path(dir);
 	const app = require(`${server_root}/server/app.js`);
 
-	async function crawl(path) {
+	async function visit(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
@@ -129,7 +129,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				}
 			}
 
-			if (is_html) {
+			if (is_html && config.prerender.crawl) {
 				const cleaned = clean_html(rendered.body);
 
 				let match;
@@ -173,34 +173,40 @@ export async function prerender({ dir, out, log, config, force }) {
 							// TODO warn that query strings have no effect on statically-exported pages
 						}
 
-						await crawl(parsed.pathname);
+						await visit(parsed.pathname);
 					}
 				}
 			}
 		}
 	}
 
-	// TODO support other extensions, e.g. .svelte.md?
-	const entries = glob('**/*.svelte', { cwd: config.files.routes })
-		.map((file) => {
-			const parts = file.split('/'); // TODO is this true for glob results on windows?
+	for (const entry of config.prerender.pages) {
+		if (entry === '*') {
+			// TODO support other extensions, e.g. .svelte.md?
+			const entries = glob('**/*.svelte', { cwd: config.files.routes })
+				.map((file) => {
+					const parts = file.split('/'); // TODO is this true for glob results on windows?
 
-			if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
-				return null;
+					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
+						return null;
+					}
+
+					parts[parts.length - 1] = parts[parts.length - 1].replace(/\.svelte$/, '');
+					if (parts[parts.length - 1] === 'index') parts.pop();
+
+					if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
+						return null;
+					}
+
+					return `/${parts.join('/')}`;
+				})
+				.filter(Boolean);
+
+			for (const entry of entries) {
+				await visit(entry);
 			}
-
-			parts[parts.length - 1] = parts[parts.length - 1].replace(/\.svelte$/, '');
-			if (parts[parts.length - 1] === 'index') parts.pop();
-
-			if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
-				return null;
-			}
-
-			return `/${parts.join('/')}`;
-		})
-		.filter(Boolean);
-
-	for (const entry of entries) {
-		await crawl(entry);
+		} else {
+			await visit(entry);
+		}
 	}
 }

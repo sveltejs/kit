@@ -25,12 +25,14 @@ export default class Builder {
 	}
 
 	async prerender({ force = false, dest }) {
-		await prerender({
-			out: dest,
-			force,
-			dir: this.#generated_files,
-			config: this.#config,
-			log: this.log
-		});
+		if (this.#config.prerender.enabled) {
+			await prerender({
+				out: dest,
+				force,
+				dir: this.#generated_files,
+				config: this.#config,
+				log: this.log
+			});
+		}
 	}
 }

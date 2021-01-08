@@ -7,22 +7,27 @@ test('fills in defaults', () => {
 
 	assert.equal(validated, {
 		adapter: [null],
-		target: null,
-		startGlobal: null,
+		amp: false,
+		appDir: '_app',
 		files: {
 			assets: 'static',
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
 		},
+		host: null,
+		hostHeader: null,
 		paths: {
 			base: '',
 			assets: '/.'
 		},
-		appDir: '_app',
-		host: null,
-		hostHeader: null,
-		amp: false
+		prerender: {
+			crawl: true,
+			enabled: true,
+			pages: ['*']
+		},
+		target: null,
+		startGlobal: null
 	});
 });
 
@@ -59,22 +64,27 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated, {
 		adapter: [null],
-		target: null,
-		startGlobal: null,
+		amp: false,
+		appDir: '_app',
 		files: {
 			assets: 'public',
 			routes: 'src/routes',
 			setup: 'src/setup',
 			template: 'src/app.html'
 		},
+		host: null,
+		hostHeader: null,
 		paths: {
 			base: '',
 			assets: '/.'
 		},
-		appDir: '_app',
-		host: null,
-		hostHeader: null,
-		amp: false
+		prerender: {
+			crawl: true,
+			enabled: true,
+			pages: ['*']
+		},
+		startGlobal: null,
+		target: null
 	});
 });
 
@@ -98,6 +108,18 @@ test('fails if paths.base is not root-relative', () => {
 			}
 		});
 	}, /^kit\.paths\.base must be a root-relative path$/);
+});
+
+test('fails if prerender.pages are invalid', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				prerender: {
+					pages: ['foo']
+				}
+			}
+		});
+	}, /^Each member of kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 function validate_paths(name, input, output) {
