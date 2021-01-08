@@ -185,7 +185,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		error,
 		stores: {
 			page: writable(null),
-			navigating: writable(false),
+			navigating: writable(null),
 			session
 		},
 		page,
