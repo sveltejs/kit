@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.21
+
+### Patch Changes
+
+- 217e4cc: Set paths to empty string before prerender
+
 ## 1.0.0-next.20
 
 ### Patch Changes
