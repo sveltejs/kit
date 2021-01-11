@@ -49,6 +49,10 @@ export async function prerender({ dir, out, log, config, force }) {
 	const server_root = resolve_path(dir);
 	const app = require(`${server_root}/server/app.js`);
 
+	app.init({
+		paths: { base: '', assets: '' }
+	});
+
 	async function visit(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
