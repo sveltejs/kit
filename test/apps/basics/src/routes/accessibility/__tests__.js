@@ -7,6 +7,7 @@ export default function (test) {
 		await click('[href="/accessibility/b"]');
 		await sleep(50);
 		assert.ok(await contains('b'));
+		await sleep(50);
 		assert.equal(await evaluate(() => document.activeElement.nodeName), 'BODY');
 		await keyboard.press('Tab');
 		await sleep(50);
