@@ -11,7 +11,6 @@ import { createServer } from 'http';
 import snowpack from 'snowpack';
 import create_manifest_data from '../../core/create_manifest_data';
 import { create_app } from '../../core/create_app';
-import pkg from '../../../package.json';
 import loader from './loader';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
