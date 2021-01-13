@@ -1,8 +1,8 @@
 import * as assert from 'uvu/assert';
 
-export default function(test, is_dev) {
+export default function (test, is_dev) {
 	if (is_dev) {
-		test('client-side errors', async ({ visit, contains, js }) => {
+		test('client-side errors', async ({ visit, contains, sleep, js }) => {
 			if (js) {
 				try {
 					await visit('/errors/clientside');
@@ -11,6 +11,7 @@ export default function(test, is_dev) {
 				} finally {
 					// this is the Snowpack error overlay
 					assert.ok(await contains('Custom layout'));
+					await sleep(100);
 					assert.ok(await contains('Crashing now'));
 				}
 			}
