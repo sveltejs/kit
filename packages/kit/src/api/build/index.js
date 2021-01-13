@@ -309,7 +309,10 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${s(`.${data.url.endsWith('.js') ? data.url : data.url + '.js'}`)})`;
+
+							// TODO clarify file renaming rules (i.e. why does foo.json.ts become foo.json.js and not foo.json.ts.js?)
+							// https://github.com/snowpackjs/snowpack/discussions/2260
+							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
