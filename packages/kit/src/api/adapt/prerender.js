@@ -161,15 +161,13 @@ export async function prerender({ dir, out, log, config, force }) {
 
 						const parsed = parse(resolved);
 
-						const parts = parsed.pathname.slice(1).split('/').filter(Boolean);
-						if (parts[parts.length - 1] === 'index.html') parts.pop();
+						const file = parsed.pathname.replace(config.paths.assets, '');
 
 						const file_exists =
-							(parsed.pathname.startsWith(`/${config.appDir}/`) &&
-								fs.existsSync(`${dir}/client/${parsed.pathname}`)) ||
-							fs.existsSync(`${out}${parsed.pathname}`) ||
-							fs.existsSync(`static${parsed.pathname}`) ||
-							fs.existsSync(`static${parsed.pathname}/index.html`);
+							(file.startsWith(`/${config.appDir}/`) && fs.existsSync(`${dir}/client/${file}`)) ||
+							fs.existsSync(`${out}/${file}`) ||
+							fs.existsSync(`${config.files.static}/${file}`) ||
+							fs.existsSync(`${config.files.static}/${file}/index.html`);
 
 						if (file_exists) continue;
 
@@ -177,7 +175,7 @@ export async function prerender({ dir, out, log, config, force }) {
 							// TODO warn that query strings have no effect on statically-exported pages
 						}
 
-						await visit(parsed.pathname);
+						await visit(parsed.pathname.replace(config.paths.base, ''));
 					}
 				}
 			}
