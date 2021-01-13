@@ -130,6 +130,9 @@ class Watcher extends EventEmitter {
 				return this.snowpack.handleRequest(req, res);
 			}
 
+			// TODO investigate why Snowpack injects '.proxy'
+			req.url = req.url.replace('.svelte.proxy', '.svelte');
+
 			const parsed = parse(req.url);
 
 			static_handler(req, res, async () => {
@@ -159,7 +162,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).exports
+					root = (await this.load(`/${this.config.appDir}/assets/generated/root.svelte.js`)).exports
 						.default;
 				} catch (e) {
 					res.statusCode = 500;
@@ -275,7 +278,7 @@ class Watcher extends EventEmitter {
 			output: '.svelte/assets'
 		});
 
-		const load = (url) => this.load(url.replace(/\.\w+$/, '.js'));
+		const load = (url) => this.load(url.endsWith('.js') ? url : url + '.js');
 
 		const common_css_deps = new Set();
 

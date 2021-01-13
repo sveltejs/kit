@@ -182,7 +182,7 @@ export async function build(config) {
 					};
 
 					manifest.components.forEach((component) => {
-						const file = path.normalize(component.file.replace(/\.svelte$/, '.js'));
+						const file = path.normalize(component.file + '.js');
 						const key = reverse_lookup.get(file);
 
 						client.deps[component.name] = get_deps(key);
@@ -222,7 +222,7 @@ export async function build(config) {
 		component_indexes.set(c.file, i);
 	});
 
-	const stringify_component = (c) => `() => import(${s(`.${c.url.replace(/\.\w+$/, '.js')}`)})`;
+	const stringify_component = (c) => `() => import(${s(`.${c.url + '.js'}`)})`;
 
 	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
 	// way to be able to inline CSS into AMP documents. if we come up with
@@ -309,7 +309,7 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
+							const load = `() => import(${s(`.${data.url + '.js'}`)})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})

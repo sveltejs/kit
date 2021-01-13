@@ -44,6 +44,9 @@ export default function loader(sp, config) {
 
 		if (cache.has(url)) return cache.get(url);
 
+		// TODO investigate why Snowpack injects '.proxy'
+		url = url.replace('.svelte.proxy', '.svelte');
+
 		const promise = sp
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
 			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
