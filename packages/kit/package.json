@@ -2,7 +2,6 @@
 	"name": "@sveltejs/kit",
 	"version": "1.0.0-next.21",
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*",
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
 		"rollup": "^2.32.0",
@@ -14,6 +13,7 @@
 		"source-map": "^0.7.3"
 	},
 	"devDependencies": {
+		"@sveltejs/app-utils": "*",
 		"@types/node": "^14.11.10",
 		"@types/rimraf": "^3.0.0",
 		"@types/sade": "^1.7.2",
