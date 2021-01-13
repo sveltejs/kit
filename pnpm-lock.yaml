@@ -32,8 +32,6 @@ importers:
       prettier: 2.1.2
       rollup: ^2.32.0
       typescript: ^4.1.2
-  ../../../../.nvm/versions/node/v12.18.3/pnpm-global:
-    specifiers: {}
   examples/hn.svelte.dev:
     devDependencies:
       '@sveltejs/adapter-netlify': 'link:../../packages/adapter-netlify'
@@ -167,7 +165,6 @@ importers:
       tiny-glob: ^0.2.8
   packages/kit:
     dependencies:
-      '@sveltejs/app-utils': 'link:../app-utils'
       cheap-watch: 1.0.2
       http-proxy: 1.18.1
       rollup: 2.32.0
@@ -178,6 +175,7 @@ importers:
       snowpack: 3.0.0-rc.1
       source-map: 0.7.3
     devDependencies:
+      '@sveltejs/app-utils': 'link:../app-utils'
       '@types/node': 14.11.10
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
@@ -199,7 +197,7 @@ importers:
       svelte: 3.29.0
       tiny-glob: 0.2.8
     specifiers:
-      '@sveltejs/app-utils': 'workspace:*'
+      '@sveltejs/app-utils': '*'
       '@types/node': ^14.11.10
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
