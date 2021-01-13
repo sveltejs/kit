@@ -4,7 +4,6 @@ const { readFileSync, existsSync } = require('fs');
 const { copy } = require('@sveltejs/app-utils/files');
 const { resolve, join } = require('path');
 const parse = require('@architect/parser');
-const child_process = require('child_process');
 
 function parse_arc(arcPath) {
 	if (!existsSync(arcPath)) {
@@ -37,16 +36,10 @@ module.exports = async function adapter(builder) {
 	builder.copy_static_files(static_directory);
 	builder.copy_client_files(static_directory);
 
-  builder.log.minor('Building lambda...');
-  const local_lambda_dir = join(__dirname, 'files');
-  copy(local_lambda_dir, lambda_directory);
+	builder.log.minor('Building lambda...');
+	const local_lambda_dir = join(__dirname, 'files');
+	copy(local_lambda_dir, lambda_directory);
 
-  builder.log.minor('Installing lambda dependencies...');
-	child_process.execSync('npm install', {
-		stdio: [0, 1, 2],
-		cwd: lambda_directory
-  });
-  
 	builder.log.minor('Writing server application...');
 	builder.copy_server_files(server_directory);
 

@@ -13,7 +13,7 @@
 		"files"
 	],
 	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*"
+		"@sveltejs/app-utils": "*"
 	},
 	"devDependencies": {
 		"rollup": "^2.34.2",
