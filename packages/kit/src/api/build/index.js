@@ -246,7 +246,7 @@ export async function build(config) {
 		app_file,
 		`
 			import * as renderer from '@sveltejs/kit/dist/renderer';
-			import root from './${config.appDir}/assets/generated/root.js';
+			import root from './${config.appDir}/assets/generated/root.svelte.js';
 			import { set_paths } from './${config.appDir}/assets/runtime/internal/singletons.js';
 			import * as setup from './${config.appDir}/setup/index.js';
 
@@ -309,7 +309,7 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${s(`.${data.url + '.js'}`)})`;
+							const load = `() => import(${s(`.${data.url.endsWith('.js') ? data.url : data.url + '.js'}`)})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})

@@ -1,20 +1,24 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('resets focus', async ({ visit, click, keyboard, evaluate, contains }) => {
+	test('resets focus', async ({ visit, click, sleep, keyboard, evaluate, contains }) => {
 		await visit('/accessibility/a');
 
 		await click('[href="/accessibility/b"]');
+		await sleep(50);
 		assert.ok(await contains('b'));
 		assert.equal(await evaluate(() => document.activeElement.nodeName), 'BODY');
 		await keyboard.press('Tab');
+		await sleep(50);
 		assert.equal(await evaluate(() => document.activeElement.nodeName), 'A');
 		assert.equal(await evaluate(() => document.activeElement.textContent), 'a');
 
 		await click('[href="/accessibility/a"]');
+		await sleep(50);
 		assert.ok(await contains('a'));
 		assert.equal(await evaluate(() => document.activeElement.nodeName), 'BODY');
 		await keyboard.press('Tab');
+		await sleep(50);
 		assert.equal(await evaluate(() => document.activeElement.nodeName), 'A');
 		assert.equal(await evaluate(() => document.activeElement.textContent), 'a');
 	});
