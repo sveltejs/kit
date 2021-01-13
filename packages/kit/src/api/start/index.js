@@ -43,7 +43,7 @@ export function start({ port, config }) {
 								base: '',
 								assets: '/.'
 							},
-							get_static_file: (file) => fs.createReadStream(join(config.files.assets, file))
+							get_static_file: (file) => fs.readFileSync(join(config.files.assets, file))
 						}
 					);
 

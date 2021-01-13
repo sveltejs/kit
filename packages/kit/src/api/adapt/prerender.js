@@ -1,4 +1,4 @@
-import fs, { createReadStream } from 'fs';
+import fs, { readFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync';
@@ -68,7 +68,7 @@ export async function prerender({ dir, out, log, config, force }) {
 			},
 			{
 				only_prerender: !force,
-				get_static_file: (file) => createReadStream(join(config.files.assets, file))
+				get_static_file: (file) => readFileSync(join(config.files.assets, file))
 			}
 		);
 

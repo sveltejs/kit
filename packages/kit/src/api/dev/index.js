@@ -1,4 +1,4 @@
-import { createReadStream, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
@@ -251,7 +251,7 @@ class Watcher extends EventEmitter {
 						app_dir: this.config.appDir,
 						host: this.config.host,
 						host_header: this.config.hostHeader,
-						get_static_file: (file) => createReadStream(join(this.config.files.assets, file)),
+						get_static_file: (file) => readFileSync(join(this.config.files.assets, file)),
 						get_amp_css: (url) =>
 							this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
 					}
