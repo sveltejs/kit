@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.24
+
+### Patch Changes
+
+- 26643df: Account for config.paths when prerendering
+
 ## 1.0.0-next.23
 
 ### Patch Changes
