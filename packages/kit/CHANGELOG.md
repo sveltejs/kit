@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.22
+
+### Patch Changes
+
+- bb68595: use readFileSync instead of createReadStream
+
 ## 1.0.0-next.21
 
 ### Patch Changes
