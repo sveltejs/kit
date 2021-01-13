@@ -80,12 +80,11 @@ class Watcher extends EventEmitter {
 		process.env.SVELTE_KIT_APP_DIR = this.config.appDir;
 
 		this.snowpack_port = await ports.find(this.port + 1);
-		this.snowpack_config = snowpack.loadAndValidateConfig(
+		this.snowpack_config = await snowpack.loadConfiguration(
 			{
-				config: 'snowpack.config.js',
-				port: this.snowpack_port
+				devOptions: { port: this.snowpack_port }
 			},
-			pkg
+			'snowpack.config.js'
 		);
 
 		this.snowpack_config.mount[resolve('.svelte/assets')] = {
@@ -106,11 +105,9 @@ class Watcher extends EventEmitter {
 			resolve: true
 		};
 
-		this.snowpack = await snowpack.startDevServer({
-			cwd: process.cwd(),
+		this.snowpack = await snowpack.startServer({
 			config: this.snowpack_config,
-			lockfile: null,
-			pkgManifest: pkg
+			lockfile: null
 		});
 
 		this.load = loader(this.snowpack, this.snowpack_config);
@@ -234,8 +231,8 @@ class Watcher extends EventEmitter {
 								'</head>',
 								`
 									<script>window.HMR_WEBSOCKET_URL = \`ws://\${location.hostname}:${this.snowpack_port}\`;</script>
-									<script type="module" src="/__snowpack__/hmr-client.js"></script>
-									<script type="module" src="/__snowpack__/hmr-error-overlay.js"></script>
+									<script type="module" src="/_snowpack/hmr-client.js"></script>
+									<script type="module" src="/_snowpack/hmr-error-overlay.js"></script>
 								</head>`.replace(/^\t{6}/gm, '')
 							);
 						},

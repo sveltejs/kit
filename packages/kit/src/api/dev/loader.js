@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'url';
-import snowpack from 'snowpack';
 import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
@@ -33,8 +32,7 @@ export default function loader(sp, config) {
 	};
 
 	sp.onFileChange(({ filePath }) => {
-		// TODO seems odd that getUrlForFile isn't a property of the `sp` instance!
-		const url = snowpack.getUrlForFile(filePath, config);
+		const url = sp.getUrlForFile(filePath);
 		if (url) invalidate_all(url);
 	});
 
