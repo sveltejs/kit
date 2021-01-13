@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.23
+
+### Patch Changes
+
+- 9b758aa: Upgrade to Snowpack 3
+
 ## 1.0.0-next.22
 
 ### Patch Changes

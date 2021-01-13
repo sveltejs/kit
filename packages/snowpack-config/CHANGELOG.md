@@ -1,5 +1,11 @@
 # @sveltejs/snowpack-config
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- 9b758aa: Upgrade to Snowpack 3
+
 ## 0.0.7
 
 ### Patch Changes
