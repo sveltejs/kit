@@ -11,7 +11,6 @@ import { createServer } from 'http';
 import snowpack from 'snowpack';
 import create_manifest_data from '../../core/create_manifest_data';
 import { create_app } from '../../core/create_app';
-import pkg from '../../../package.json';
 import loader from './loader';
 import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
@@ -80,12 +79,11 @@ class Watcher extends EventEmitter {
 		process.env.SVELTE_KIT_APP_DIR = this.config.appDir;
 
 		this.snowpack_port = await ports.find(this.port + 1);
-		this.snowpack_config = snowpack.loadAndValidateConfig(
+		this.snowpack_config = await snowpack.loadConfiguration(
 			{
-				config: 'snowpack.config.js',
-				port: this.snowpack_port
+				devOptions: { port: this.snowpack_port }
 			},
-			pkg
+			'snowpack.config.js'
 		);
 
 		this.snowpack_config.mount[resolve('.svelte/assets')] = {
@@ -106,11 +104,9 @@ class Watcher extends EventEmitter {
 			resolve: true
 		};
 
-		this.snowpack = await snowpack.startDevServer({
-			cwd: process.cwd(),
+		this.snowpack = await snowpack.startServer({
 			config: this.snowpack_config,
-			lockfile: null,
-			pkgManifest: pkg
+			lockfile: null
 		});
 
 		this.load = loader(this.snowpack, this.snowpack_config);
@@ -132,6 +128,9 @@ class Watcher extends EventEmitter {
 			if (req.url === '/' && req.headers.upgrade === 'websocket') {
 				return this.snowpack.handleRequest(req, res);
 			}
+
+			// TODO investigate why Snowpack injects '.proxy'
+			req.url = req.url.replace('.svelte.proxy', '.svelte');
 
 			const parsed = parse(req.url);
 
@@ -162,7 +161,7 @@ class Watcher extends EventEmitter {
 				let root;
 
 				try {
-					root = (await this.load(`/${this.config.appDir}/assets/generated/root.js`)).exports
+					root = (await this.load(`/${this.config.appDir}/assets/generated/root.svelte.js`)).exports
 						.default;
 				} catch (e) {
 					res.statusCode = 500;
@@ -234,8 +233,8 @@ class Watcher extends EventEmitter {
 								'</head>',
 								`
 									<script>window.HMR_WEBSOCKET_URL = \`ws://\${location.hostname}:${this.snowpack_port}\`;</script>
-									<script type="module" src="/__snowpack__/hmr-client.js"></script>
-									<script type="module" src="/__snowpack__/hmr-error-overlay.js"></script>
+									<script type="module" src="/_snowpack/hmr-client.js"></script>
+									<script type="module" src="/_snowpack/hmr-error-overlay.js"></script>
 								</head>`.replace(/^\t{6}/gm, '')
 							);
 						},
@@ -278,7 +277,7 @@ class Watcher extends EventEmitter {
 			output: '.svelte/assets'
 		});
 
-		const load = (url) => this.load(url.replace(/\.\w+$/, '.js'));
+		const load = (url) => this.load(url.endsWith('.js') ? url : url + '.js');
 
 		const common_css_deps = new Set();
 

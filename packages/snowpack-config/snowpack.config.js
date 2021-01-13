@@ -3,10 +3,11 @@ const pkg = require(path.join(process.cwd(), 'package.json'));
 
 // Consult https://www.snowpack.dev to learn about these options
 module.exports = {
-	install: ['svelte'],
-	installOptions: {
+	packageOptions: {
+		// always include Svelte in your project
+		knownEntrypoints: ['svelte'],
 		// ignore `import fs from 'fs'` etc
-		externalPackage: [...require('module').builtinModules, ...Object.keys(pkg.dependencies || {})]
+		external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies || {})]
 	},
 	plugins: [
 		[
@@ -23,7 +24,7 @@ module.exports = {
 		output: 'stream'
 	},
 	buildOptions: {
-		sourceMaps: true
+		sourcemap: true
 	},
 	mount: {
 		'.svelte/assets': `/${process.env.SVELTE_KIT_APP_DIR}/assets`

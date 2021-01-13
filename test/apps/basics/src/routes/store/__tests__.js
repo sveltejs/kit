@@ -29,7 +29,7 @@ export default function (test) {
 		assert.equal(await text('#navigating'), 'not currently navigating');
 
 		if (js) {
-			await click('a[href="/store/navigating/b');
+			await click('a[href="/store/navigating/b"]');
 
 			assert.equal(
 				await text('#navigating'),

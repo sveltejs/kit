@@ -1,17 +1,15 @@
 // Consult https://www.snowpack.dev to learn about these options
 module.exports = {
 	extends: '@sveltejs/snowpack-config',
-	installOptions: {
-		externalPackage: [
-			...Object.keys(require('./package.json').dependencies)
-		]
+	packageOptions: {
+		external: [...Object.keys(require('./package.json').dependencies)]
 	},
 	mount: {
 		'src/components': '/_components',
 		'src/common': '/common'
 	},
 	alias: {
-		'$common': './src/common',
-		'$components': './src/components'
+		$common: './src/common',
+		$components: './src/components'
 	}
 };

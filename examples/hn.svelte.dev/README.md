@@ -13,7 +13,3 @@ Start the development server:
 ```
 npm run dev -- --open
 ```
-
-## Note
-
-This currently requires a pre-release version of `@snowpack/plugin-svelte` — [clone the repo](https://github.com/pikapkg/snowpack), `cd` into `packages/plugin-svelte`, build, and link.

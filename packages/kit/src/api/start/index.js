@@ -61,5 +61,7 @@ export function start({ port, config }) {
 		server.listen(port, () => {
 			fulfil(server);
 		});
+
+		return server;
 	});
 }

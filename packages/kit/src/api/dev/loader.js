@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'url';
-import snowpack from 'snowpack';
 import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
@@ -33,8 +32,7 @@ export default function loader(sp, config) {
 	};
 
 	sp.onFileChange(({ filePath }) => {
-		// TODO seems odd that getUrlForFile isn't a property of the `sp` instance!
-		const url = snowpack.getUrlForFile(filePath, config);
+		const url = sp.getUrlForFile(filePath);
 		if (url) invalidate_all(url);
 	});
 
@@ -45,6 +43,9 @@ export default function loader(sp, config) {
 		}
 
 		if (cache.has(url)) return cache.get(url);
+
+		// TODO investigate why Snowpack injects '.proxy'
+		url = url.replace('.svelte.proxy', '.svelte');
 
 		const promise = sp
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
