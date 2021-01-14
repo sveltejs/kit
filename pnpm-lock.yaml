@@ -83,12 +83,22 @@ importers:
       svelte: ^3.32.1
   packages/adapter-begin:
     dependencies:
+<<<<<<< HEAD
       '@sveltejs/app-utils': link:../app-utils
+=======
+      '@architect/parser': 3.0.1
+      '@sveltejs/app-utils': 'link:../app-utils'
+>>>>>>> 4891291... fix missing architect dependency
     devDependencies:
       rollup: 2.39.1
       sirv: 1.0.11
     specifiers:
+<<<<<<< HEAD
       '@sveltejs/app-utils': workspace:*
+=======
+      '@architect/parser': ^3.0.1
+      '@sveltejs/app-utils': 'workspace:*'
+>>>>>>> 4891291... fix missing architect dependency
       rollup: ^2.34.2
       sirv: ^1.0.10
   packages/adapter-netlify:
@@ -272,6 +282,12 @@ importers:
       svelte: ^3.32.1
 lockfileVersion: 5.2
 packages:
+  /@architect/parser/3.0.1:
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-mXn5Ha5a3tEOV5vkGHLdrDinSRfO8g9s72gKuOWA13HJtGcfI+jkYrEdQbLqe63gz0RPQN27h0e1IKc2kSzqHw==
   /@babel/code-frame/7.10.4:
     dependencies:
       '@babel/highlight': 7.10.4
@@ -3763,5 +3779,9 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
+<<<<<<< HEAD
       tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f
+=======
+      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f'
+>>>>>>> 4891291... fix missing architect dependency
     version: 5.6.0

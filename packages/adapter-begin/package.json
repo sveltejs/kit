@@ -13,7 +13,8 @@
 		"files"
 	],
 	"dependencies": {
-		"@sveltejs/app-utils": "*"
+		"@architect/parser": "^3.0.1",
+		"@sveltejs/app-utils": "workspace:*"
 	},
 	"devDependencies": {
 		"rollup": "^2.34.2",
