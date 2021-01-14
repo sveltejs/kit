@@ -125,16 +125,16 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let maxage;
 
 	for (let i = 0; i < component_promises.length; i += 1) {
-		const mod = await component_promises[i];
-		components[i] = mod.default;
-
-		if (options.only_prerender && !mod.prerender) {
-			return;
-		}
-
 		let loaded;
 
 		try {
+			const mod = await component_promises[i];
+			components[i] = mod.default;
+
+			if (options.only_prerender && !mod.prerender) {
+				return;
+			}
+
 			loaded =
 				mod.load &&
 				(await mod.load.call(null, {
@@ -194,7 +194,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const props = {
 		status,
 		// remove error.stack in production
-		error: options.dev ? error : Object.assign(error, { stack: error.message }),
+		error: error && (options.dev ? error : Object.assign(error, { stack: error.message })),
 		stores: {
 			page: writable(null),
 			navigating: writable(null),
@@ -210,7 +210,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 		props[`props_${i}`] = await props_promises[i];
 	}
 
-	const rendered = options.root.render(props);
+	let rendered;
+
+	try {
+		rendered = options.root.render(props);
+	} catch (e) {
+		if (error) throw e;
+
+		return await get_response({
+			request,
+			options,
+			$session,
+			route,
+			status: 500,
+			error: e
+		});
+	}
+
 	unsubscribe();
 
 	// TODO all the `route &&` stuff is messy
@@ -279,36 +295,25 @@ export default async function render_page(request, context, options) {
 
 	const $session = await (options.setup.getSession && options.setup.getSession(context));
 
-	try {
-		if (!route) {
-			return await get_response({
-				request,
-				options,
-				$session,
-				route,
-				status: 404,
-				error: new Error(`Not found: ${request.path}`)
-			});
-		}
-
+	if (!route) {
 		return await get_response({
 			request,
 			options,
 			$session,
 			route,
-			status: 200,
-			error: null
+			status: 404,
+			error: new Error(`Not found: ${request.path}`)
 		});
-	} catch (error) {
-		// if you end up here it's because an error was thrown
-		// while rendering the error page
-		return {
-			status: 500,
-			headers: {},
-			body: options.dev ? error.stack : error.message,
-			dependencies: {}
-		};
 	}
+
+	return await get_response({
+		request,
+		options,
+		$session,
+		route,
+		status: 200,
+		error: null
+	});
 }
 
 function try_serialize(data, fail) {

@@ -9,53 +9,41 @@ export default function render_route(request, context, options) {
 			const match = route.pattern.exec(request.path);
 			const params = route.params(match);
 
-			try {
-				const response = await handler(
-					{
-						host: options.host || request.headers[options.host_header || 'host'],
-						path: request.path,
-						headers: request.headers,
-						query: request.query,
-						body: request.body,
-						params
-					},
-					context
-				);
+			const response = await handler(
+				{
+					host: options.host || request.headers[options.host_header || 'host'],
+					path: request.path,
+					headers: request.headers,
+					query: request.query,
+					body: request.body,
+					params
+				},
+				context
+			);
 
-				if (typeof response !== 'object' || response.body == null) {
-					return {
-						status: 500,
-						body: `Invalid response from route ${request.path}; ${
-							response.body == null
-								? 'body is missing'
-								: `expected an object, got ${typeof response}`
-						}`,
-						headers: {}
-					};
-				}
-
-				let { status = 200, body, headers = {} } = response;
-
-				headers = lowercase_keys(headers);
-
-				if (
-					(typeof body === 'object' && !('content-type' in headers)) ||
-					headers['content-type'] === 'application/json'
-				) {
-					headers = { ...headers, 'content-type': 'application/json' };
-					body = JSON.stringify(body);
-				}
-
-				return { status, body, headers };
-			} catch (err) {
-				console.error((err && err.stack) || err);
-
+			if (typeof response !== 'object' || response.body == null) {
 				return {
 					status: 500,
-					body: (err && (options.dev ? err.stack : err.message)) || err,
+					body: `Invalid response from route ${request.path}; ${
+						response.body == null ? 'body is missing' : `expected an object, got ${typeof response}`
+					}`,
 					headers: {}
 				};
 			}
+
+			let { status = 200, body, headers = {} } = response;
+
+			headers = lowercase_keys(headers);
+
+			if (
+				(typeof body === 'object' && !('content-type' in headers)) ||
+				headers['content-type'] === 'application/json'
+			) {
+				headers = { ...headers, 'content-type': 'application/json' };
+				body = JSON.stringify(body);
+			}
+
+			return { status, body, headers };
 		} else {
 			return {
 				status: 501,

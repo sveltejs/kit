@@ -51,9 +51,11 @@ export async function render(request, options) {
 			};
 		}
 	} catch (err) {
+		console.error((err && err.stack) || err);
+
 		return {
 			status: 500,
-			headers: {},
+			headers,
 			body: options.dev ? err.stack : err.message
 		};
 	}
