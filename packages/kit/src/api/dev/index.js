@@ -129,9 +129,6 @@ class Watcher extends EventEmitter {
 				return this.snowpack.handleRequest(req, res);
 			}
 
-			// TODO investigate why Snowpack injects '.proxy'
-			req.url = req.url.replace('.svelte.proxy', '.svelte');
-
 			const parsed = parse(req.url);
 
 			static_handler(req, res, async () => {
