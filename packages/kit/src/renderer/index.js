@@ -50,13 +50,17 @@ export async function render(request, options) {
 				dependencies: response.dependencies
 			};
 		}
-	} catch (err) {
-		console.error((err && err.stack) || err);
+	} catch (e) {
+		if (e && e.stack) {
+			e.stack = await options.get_stack(e);
+		}
+
+		console.error((e && e.stack) || e);
 
 		return {
 			status: 500,
 			headers,
-			body: options.dev ? err.stack : err.message
+			body: options.dev ? e.stack : e.message
 		};
 	}
 }

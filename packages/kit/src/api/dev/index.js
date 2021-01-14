@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
@@ -16,6 +16,7 @@ import { mkdirp } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
+import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 
 export function dev(opts) {
 	return new Watcher(opts).init();
@@ -109,7 +110,7 @@ class Watcher extends EventEmitter {
 			lockfile: null
 		});
 
-		this.load = loader(this.snowpack, this.snowpack_config);
+		this.load = loader(this.snowpack);
 	}
 
 	async init_server() {
@@ -250,6 +251,23 @@ class Watcher extends EventEmitter {
 						app_dir: this.config.appDir,
 						host: this.config.host,
 						host_header: this.config.hostHeader,
+						get_stack: (error) =>
+							sourcemap_stacktrace(error.stack, async (address) => {
+								if (existsSync(address)) {
+									// it's a filepath
+									return readFileSync(address, 'utf-8');
+								}
+
+								try {
+									const { contents } = await this.snowpack.loadUrl(address, {
+										isSSR: true,
+										encoding: 'utf8'
+									});
+									return contents;
+								} catch {
+									// fail gracefully
+								}
+							}),
 						get_static_file: (file) => readFileSync(join(this.config.files.assets, file)),
 						get_amp_css: (url) =>
 							this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)

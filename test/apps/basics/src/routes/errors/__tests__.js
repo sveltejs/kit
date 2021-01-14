@@ -105,7 +105,7 @@ export default function (test, is_dev) {
 			'This is your custom error page saying: "Internal Server Error"'
 		);
 
-		const has_stack_trace = await contains('endpoint.svelte'); // TODO line/column, once sourcemaps are implemented
+		const has_stack_trace = await contains('endpoint.svelte:11:15');
 
 		if (is_dev) {
 			assert.ok(has_stack_trace);

@@ -191,10 +191,18 @@ async function get_response({ request, options, $session, route, status = 200, e
 	});
 	session_tracking_active = true;
 
+	if (error) {
+		if (options.dev) {
+			error.stack = await options.get_stack(error);
+		} else {
+			// remove error.stack in production
+			error.stack = String(error);
+		}
+	}
+
 	const props = {
 		status,
-		// remove error.stack in production
-		error: error && (options.dev ? error : Object.assign(error, { stack: error.message })),
+		error,
 		stores: {
 			page: writable(null),
 			navigating: writable(null),
