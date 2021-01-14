@@ -48,9 +48,11 @@ export default function render_route(request, context, options) {
 
 				return { status, body, headers };
 			} catch (err) {
+				console.error((err && err.stack) || err);
+
 				return {
 					status: 500,
-					body: err.message,
+					body: (err && (options.dev ? err.stack : err.message)) || err,
 					headers: {}
 				};
 			}

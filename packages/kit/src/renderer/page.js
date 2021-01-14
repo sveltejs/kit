@@ -132,23 +132,34 @@ async function get_response({ request, options, $session, route, status = 200, e
 			return;
 		}
 
-		const loaded =
-			mod.load &&
-			(await mod.load.call(null, {
-				page,
-				get session() {
-					uses_credentials = true;
-					return $session;
-				},
-				fetch: fetcher,
-				context: { ...context }
-			}));
+		let loaded;
+
+		try {
+			loaded =
+				mod.load &&
+				(await mod.load.call(null, {
+					page,
+					get session() {
+						uses_credentials = true;
+						return $session;
+					},
+					fetch: fetcher,
+					context: { ...context }
+				}));
+		} catch (error) {
+			loaded = { error };
+		}
 
 		if (loaded) {
 			if (loaded.error) {
-				const error = new Error(loaded.error.message);
-				error.status = loaded.error.status;
-				throw error;
+				return await get_response({
+					request,
+					options,
+					$session,
+					route,
+					status: loaded.status || 500,
+					error: loaded.error
+				});
 			}
 
 			if (loaded.redirect) {
@@ -182,7 +193,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const props = {
 		status,
-		error,
+		// remove error.stack in production
+		error: options.dev ? error : Object.assign(error, { stack: error.message }),
 		stores: {
 			page: writable(null),
 			navigating: writable(null),
@@ -269,9 +281,14 @@ export default async function render_page(request, context, options) {
 
 	try {
 		if (!route) {
-			const error = new Error(`Not found: ${request.path}`);
-			error.status = 404;
-			throw error;
+			return await get_response({
+				request,
+				options,
+				$session,
+				route,
+				status: 404,
+				error: new Error(`Not found: ${request.path}`)
+			});
 		}
 
 		return await get_response({
@@ -283,28 +300,14 @@ export default async function render_page(request, context, options) {
 			error: null
 		});
 	} catch (error) {
-		try {
-			const status = error.status || 500;
-
-			// TODO sourcemapped stacktrace? https://github.com/sveltejs/kit/pull/266
-
-			return await get_response({
-				request,
-				options,
-				$session,
-				route,
-				status,
-				error
-			});
-		} catch (error) {
-			// oh lawd now you've done it
-			return {
-				status: 500,
-				headers: {},
-				body: error.stack, // TODO probably not in prod?
-				dependencies: {}
-			};
-		}
+		// if you end up here it's because an error was thrown
+		// while rendering the error page
+		return {
+			status: 500,
+			headers: {},
+			body: options.dev ? error.stack : error.message,
+			dependencies: {}
+		};
 	}
 }
 
