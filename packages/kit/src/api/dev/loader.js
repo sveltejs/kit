@@ -1,11 +1,9 @@
-import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'url';
-import { sourcemap_stacktrace } from './sourcemap_stacktrace';
 import { transform } from './transform';
 
 // This function makes it possible to load modules from the 'server'
 // snowpack server, for the sake of SSR
-export default function loader(sp, config) {
+export default function loader(sp) {
 	const cache = new Map();
 	const graph = new Map();
 
@@ -123,25 +121,7 @@ export default function loader(sp, config) {
 
 		const fn = new Function(...args.map((d) => d.name), `${code}\n//# sourceURL=${url}`);
 
-		try {
-			fn(...args.map((d) => d.value));
-		} catch (e) {
-			e.stack = await sourcemap_stacktrace(e.stack, async (address) => {
-				if (existsSync(address)) {
-					// it's a filepath
-					return readFileSync(address, 'utf-8');
-				}
-
-				try {
-					const { contents } = await sp.loadUrl(address, { isSSR: true, encoding: 'utf8' });
-					return contents;
-				} catch {
-					// fail gracefully
-				}
-			});
-
-			throw e;
-		}
+		fn(...args.map((d) => d.value));
 
 		return {
 			exports,
