@@ -3,3 +3,4 @@ packages:
   - 'examples/*'
   - 'test/apps/*'
   - 'test'
+  - 'site'
