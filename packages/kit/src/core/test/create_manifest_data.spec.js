@@ -14,13 +14,17 @@ const get_config = (dir) => ({
 test('creates routes', () => {
 	const { components, pages, endpoints } = create_manifest_data(get_config('samples/basic'));
 
-	const index = { name: 'index', file: 'index.svelte', url: '/_app/routes/index.svelte' };
-	const about = { name: 'about', file: 'about.svelte', url: '/_app/routes/about.svelte' };
-	const blog = { name: 'blog', file: 'blog/index.svelte', url: '/_app/routes/blog/index.svelte' };
+	const index = { name: 'index', file: 'index.svelte', url: '/_app/routes/index.svelte.js' };
+	const about = { name: 'about', file: 'about.svelte', url: '/_app/routes/about.svelte.js' };
+	const blog = {
+		name: 'blog',
+		file: 'blog/index.svelte',
+		url: '/_app/routes/blog/index.svelte.js'
+	};
 	const blog_$slug = {
 		name: 'blog_$slug',
 		file: 'blog/[slug].svelte',
-		url: '/_app/routes/blog/[slug].svelte'
+		url: '/_app/routes/blog/[slug].svelte.js'
 	};
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
@@ -75,9 +79,9 @@ test('encodes invalid characters', () => {
 
 	// had to remove ? and " because windows
 
-	// const quote = { name: '$34', file: '".svelte', url: '/_app/routes/".svelte' };
-	const hash = { name: '$35', file: '#.svelte', url: '/_app/routes/#.svelte' };
-	// const question_mark = { name: '$63', file: '?.svelte', url: '/_app/routes/?.svelte' };
+	// const quote = { name: '$34', file: '".svelte', url: '/_app/routes/".svelte.js' };
+	const hash = { name: '$35', file: '#.svelte', url: '/_app/routes/#.svelte.js' };
+	// const question_mark = { name: '$63', file: '?.svelte', url: '/_app/routes/?.svelte.js' };
 
 	assert.equal(components, [
 		// quote,
@@ -216,13 +220,17 @@ test('works with custom extensions', () => {
 		'.jazz .beebop .funk .svelte'
 	);
 
-	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk' };
-	const about = { name: 'about', file: 'about.jazz', url: '/_app/routes/about.jazz' };
-	const blog = { name: 'blog', file: 'blog/index.svelte', url: '/_app/routes/blog/index.svelte' };
+	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk.js' };
+	const about = { name: 'about', file: 'about.jazz', url: '/_app/routes/about.jazz.js' };
+	const blog = {
+		name: 'blog',
+		file: 'blog/index.svelte',
+		url: '/_app/routes/blog/index.svelte.js'
+	};
 	const blog_$slug = {
 		name: 'blog_$slug',
 		file: 'blog/[slug].beebop',
-		url: '/_app/routes/blog/[slug].beebop'
+		url: '/_app/routes/blog/[slug].beebop.js'
 	};
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
