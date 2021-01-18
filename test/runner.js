@@ -145,13 +145,19 @@ export function runner(callback, options = {}) {
 
 	run(false, {
 		async before(context) {
-			const port = await ports.find(3000);
+			try {
+				const port = await ports.find(3000);
 
-			// TODO implement `svelte start` so we don't need to use an adapter
-			await build(config);
+				// TODO implement `svelte start` so we don't need to use an adapter
+				await build(config);
 
-			context.server = await start({ port, config });
-			Object.assign(context, await setup({ port }));
+				context.server = await start({ port, config });
+				Object.assign(context, await setup({ port }));
+			} catch (e) {
+				// the try-catch is necessary pending https://github.com/lukeed/uvu/issues/80
+				console.error(e);
+				throw e;
+			}
 		},
 		async after(context) {
 			context.server.close();

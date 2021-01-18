@@ -13,7 +13,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 			fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`))
 		);
 		const file = posixify(path.join(dir, `${file_name}${ext}`));
-		const url = `/${config.appDir}/routes/${file}`;
+		const url = `/${config.appDir}/routes/${file}.js`;
 
 		return ext
 			? {
@@ -41,12 +41,12 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 
 	const default_layout = {
 		name: '$default_layout',
-		url: `/${config.appDir}/assets/components/layout.svelte`
+		url: `/${config.appDir}/assets/components/layout.svelte.js`
 	};
 
 	const default_error = {
 		name: '$default_error',
-		url: `/${config.appDir}/assets/components/error.svelte`
+		url: `/${config.appDir}/assets/components/error.svelte.js`
 	};
 
 	function walk(dir, parent_segments, parent_params, stack) {
@@ -140,7 +140,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 				const component = {
 					name: get_slug(item.file),
 					file: item.file,
-					url: `/${config.appDir}/routes/${item.file}`
+					url: `/${config.appDir}/routes/${item.file}.js`
 				};
 
 				components.push(component);
@@ -166,7 +166,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 					name: `route_${get_slug(item.file)}`,
 					pattern,
 					file: item.file,
-					url: `/${config.appDir}/routes/${item.file}`,
+					url: `/${config.appDir}/routes/${item.file.replace(/\.\w+$/, '.js')}`,
 					params
 				});
 			}

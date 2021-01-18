@@ -28,11 +28,11 @@ suite('copy files', () => {
 		manifest: {
 			error: {
 				name: '$default_error',
-				url: '/_app/assets/components/error.svelte'
+				url: '/_app/assets/components/error.svelte.js'
 			},
 			layout: {
 				name: '$default_layout',
-				url: '/_app/assets/components/layout.svelte'
+				url: '/_app/assets/components/layout.svelte.js'
 			},
 			components: [],
 			pages: [],

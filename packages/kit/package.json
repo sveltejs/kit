@@ -9,7 +9,7 @@
 		"rollup-plugin-terser": "^7.0.2",
 		"sade": "^1.7.4",
 		"scorta": "^1.0.0",
-		"snowpack": "^3.0.4",
+		"snowpack": "^3.0.10",
 		"source-map": "^0.7.3"
 	},
 	"devDependencies": {
