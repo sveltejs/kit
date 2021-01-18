@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.26
+
+### Patch Changes
+
+- Fix svelte-announcer CSS
+
 ## 1.0.0-next.25
 
 ### Patch Changes
