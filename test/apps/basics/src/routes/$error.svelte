@@ -1,8 +1,6 @@
 <script>
 	export let status;
 	export let error;
-
-	const dev = true;
 </script>
 
 <svelte:head>
@@ -11,14 +9,13 @@
 
 <h1>{status}</h1>
 
-<p>This is your custom error page saying: "<b>{error.message}</b>"</p>
+<p id="message">This is your custom error page saying: "<b>{error.message}</b>"</p>
 
-{#if dev && error.stack}
-	<pre>{error.stack}</pre>
-{/if}
+<pre>{error.stack}</pre>
 
 <style>
-	h1, p {
+	h1,
+	p {
 		margin: 0 auto;
 	}
 

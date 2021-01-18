@@ -241,6 +241,8 @@ export async function build(config) {
 		});
 	});
 
+	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
+
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
@@ -341,6 +343,7 @@ export async function build(config) {
 					app_dir: ${s(config.appDir)},
 					host: ${s(config.host)},
 					host_header: ${s(config.hostHeader)},
+					get_stack: error => error.stack,
 					get_static_file,
 					get_amp_css: dep => css_lookup[dep]
 				});

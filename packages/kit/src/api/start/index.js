@@ -43,6 +43,7 @@ export function start({ port, config }) {
 								base: '',
 								assets: '/.'
 							},
+							get_stack: (error) => error.stack, // TODO should this return a sourcemapped stacktrace?
 							get_static_file: (file) => fs.readFileSync(join(config.files.assets, file))
 						}
 					);

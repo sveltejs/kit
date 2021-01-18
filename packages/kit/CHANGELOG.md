@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.25
+
+### Patch Changes
+
+- Surface stack traces for endpoint/page rendering errors
+
 ## 1.0.0-next.24
 
 ### Patch Changes

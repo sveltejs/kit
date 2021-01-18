@@ -125,30 +125,41 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let maxage;
 
 	for (let i = 0; i < component_promises.length; i += 1) {
-		const mod = await component_promises[i];
-		components[i] = mod.default;
+		let loaded;
 
-		if (options.only_prerender && !mod.prerender) {
-			return;
+		try {
+			const mod = await component_promises[i];
+			components[i] = mod.default;
+
+			if (options.only_prerender && !mod.prerender) {
+				return;
+			}
+
+			loaded =
+				mod.load &&
+				(await mod.load.call(null, {
+					page,
+					get session() {
+						uses_credentials = true;
+						return $session;
+					},
+					fetch: fetcher,
+					context: { ...context }
+				}));
+		} catch (error) {
+			loaded = { error };
 		}
-
-		const loaded =
-			mod.load &&
-			(await mod.load.call(null, {
-				page,
-				get session() {
-					uses_credentials = true;
-					return $session;
-				},
-				fetch: fetcher,
-				context: { ...context }
-			}));
 
 		if (loaded) {
 			if (loaded.error) {
-				const error = new Error(loaded.error.message);
-				error.status = loaded.error.status;
-				throw error;
+				return await get_response({
+					request,
+					options,
+					$session,
+					route,
+					status: loaded.status || 500,
+					error: loaded.error
+				});
 			}
 
 			if (loaded.redirect) {
@@ -180,6 +191,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 	});
 	session_tracking_active = true;
 
+	if (error) {
+		if (options.dev) {
+			error.stack = await options.get_stack(error);
+		} else {
+			// remove error.stack in production
+			error.stack = String(error);
+		}
+	}
+
 	const props = {
 		status,
 		error,
@@ -198,7 +218,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 		props[`props_${i}`] = await props_promises[i];
 	}
 
-	const rendered = options.root.render(props);
+	let rendered;
+
+	try {
+		rendered = options.root.render(props);
+	} catch (e) {
+		if (error) throw e;
+
+		return await get_response({
+			request,
+			options,
+			$session,
+			route,
+			status: 500,
+			error: e
+		});
+	}
+
 	unsubscribe();
 
 	// TODO all the `route &&` stuff is messy
@@ -267,45 +303,25 @@ export default async function render_page(request, context, options) {
 
 	const $session = await (options.setup.getSession && options.setup.getSession(context));
 
-	try {
-		if (!route) {
-			const error = new Error(`Not found: ${request.path}`);
-			error.status = 404;
-			throw error;
-		}
-
+	if (!route) {
 		return await get_response({
 			request,
 			options,
 			$session,
 			route,
-			status: 200,
-			error: null
+			status: 404,
+			error: new Error(`Not found: ${request.path}`)
 		});
-	} catch (error) {
-		try {
-			const status = error.status || 500;
-
-			// TODO sourcemapped stacktrace? https://github.com/sveltejs/kit/pull/266
-
-			return await get_response({
-				request,
-				options,
-				$session,
-				route,
-				status,
-				error
-			});
-		} catch (error) {
-			// oh lawd now you've done it
-			return {
-				status: 500,
-				headers: {},
-				body: error.stack, // TODO probably not in prod?
-				dependencies: {}
-			};
-		}
 	}
+
+	return await get_response({
+		request,
+		options,
+		$session,
+		route,
+		status: 200,
+		error: null
+	});
 }
 
 function try_serialize(data, fail) {
