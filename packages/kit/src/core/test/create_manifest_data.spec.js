@@ -67,7 +67,7 @@ test('creates routes', () => {
 		{
 			name: 'route_blog_$slug_json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'blog/[slug].json.js',
+			file: 'blog/[slug].json.ts',
 			url: '/_app/routes/blog/[slug].json.js',
 			params: ['slug']
 		}

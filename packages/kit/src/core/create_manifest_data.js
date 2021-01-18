@@ -166,7 +166,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 					name: `route_${get_slug(item.file)}`,
 					pattern,
 					file: item.file,
-					url: `/${config.appDir}/routes/${item.file}`,
+					url: `/${config.appDir}/routes/${item.file.replace(/\.\w+$/, '.js')}`,
 					params
 				});
 			}
