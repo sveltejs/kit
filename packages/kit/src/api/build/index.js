@@ -311,7 +311,7 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${s(`.${data.url}`)})`;
+							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
