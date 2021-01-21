@@ -28,6 +28,13 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let uses_credentials = false;
 
 	const fetcher = async (url, opts = {}) => {
+		if (options.local && url.startsWith(options.paths.assets)) {
+			// when running `start`, or prerendering, `assets` should be
+			// config.paths.assets, but we should still be able to fetch
+			// assets directly from `static`
+			url = url.replace(options.paths.assets, '');
+		}
+
 		const parsed = parse(url);
 
 		if (opts.credentials !== 'omit') {

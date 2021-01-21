@@ -321,11 +321,13 @@ export async function build(config) {
 
 			export function render(request, {
 				paths = ${s(config.paths)},
+				local = false,
 				only_prerender = false,
 				get_static_file
 			} = {}) {
 				return renderer.render(request, {
 					paths,
+					local,
 					template,
 					manifest,
 					target: ${s(config.target)},${
