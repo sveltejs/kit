@@ -3,14 +3,14 @@ import relative from 'require-relative';
 import { logger } from '../utils';
 import Builder from './Builder';
 
-export async function adapt(config) {
+export async function adapt(config, { verbose }) {
 	const [adapter, options] = config.adapter;
 
 	if (!adapter) {
 		throw new Error('No adapter specified');
 	}
 
-	const log = logger();
+	const log = logger({ verbose });
 
 	console.log(colors.bold().cyan(`\n> Using ${adapter}`));
 
