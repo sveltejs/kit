@@ -316,11 +316,7 @@ export default async function render_page(request, context, options) {
 			// rather than render the error page — which could lead to an
 			// infinite loop, if the `load` belonged to the root layout,
 			// we respond with a bare-bones 404
-			return {
-				status: 404,
-				headers: {},
-				body: 'Not found'
-			};
+			throw new Error('Bad request in load function');
 		}
 
 		return await get_response({
