@@ -315,7 +315,7 @@ export default async function render_page(request, context, options) {
 			// we came here because of a bad request in a `load` function.
 			// rather than render the error page — which could lead to an
 			// infinite loop, if the `load` belonged to the root layout,
-			// we respond with a bare-bones 404
+			// we respond with a bare-bones 500
 			throw new Error('Bad request in load function');
 		}
 
