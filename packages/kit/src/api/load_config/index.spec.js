@@ -24,6 +24,7 @@ test('fills in defaults', () => {
 		prerender: {
 			crawl: true,
 			enabled: true,
+			force: false,
 			pages: ['*']
 		},
 		target: null,
@@ -81,6 +82,7 @@ test('fills in partial blanks', () => {
 		prerender: {
 			crawl: true,
 			enabled: true,
+			force: false,
 			pages: ['*']
 		},
 		startGlobal: null,

@@ -53,6 +53,14 @@ export async function prerender({ dir, out, log, config, force }) {
 		paths: { base: '', assets: '' }
 	});
 
+	const error = config.prerender.force
+		? (status, path) => {
+				log.error(`${status} ${path}`);
+		  }
+		: (status, path) => {
+				throw new Error(`${status} ${path}`);
+		  };
+
 	async function visit(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
@@ -102,8 +110,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				log.info(`${rendered.status} ${path}`);
 				fs.writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else {
-				// TODO should this fail the build?
-				log.error(`${rendered.status} ${path}`);
+				error(rendered.status, path);
 			}
 
 			const { dependencies } = rendered;
@@ -128,7 +135,7 @@ export async function prerender({ dir, out, log, config, force }) {
 					if (response_type === OK) {
 						log.info(`${result.status} ${path}`);
 					} else {
-						log.error(`${result.status} ${path}`);
+						error(result.status, path);
 					}
 				}
 			}

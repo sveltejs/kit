@@ -42,6 +42,7 @@ export default {
 		default: {
 			crawl: expect_boolean(true),
 			enabled: expect_boolean(true),
+			force: expect_boolean(false),
 			pages: {
 				default: ['*'],
 				validate: (option, keypath) => {
