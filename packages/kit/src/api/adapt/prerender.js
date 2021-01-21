@@ -50,7 +50,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	const app = require(`${server_root}/server/app.js`);
 
 	app.init({
-		paths: { base: '', assets: '' }
+		paths: config.paths
 	});
 
 	const error = config.prerender.force
@@ -75,6 +75,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				query: new URLSearchParams()
 			},
 			{
+				local: true,
 				only_prerender: !force,
 				get_static_file: (file) => readFileSync(join(config.files.assets, file))
 			}
