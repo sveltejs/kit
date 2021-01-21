@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Fail build if prerender errors
+- Hide logging behind --verbose option
+
 ## 1.0.0-next.26
 
 ### Patch Changes

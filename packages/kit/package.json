@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.26",
+	"version": "1.0.0-next.27",
 	"dependencies": {
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
