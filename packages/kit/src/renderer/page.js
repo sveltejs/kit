@@ -73,7 +73,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 						body: opts.body,
 						query: new URLSearchParams(parsed.query || '')
 					},
-					options
+					{
+						...options,
+						fetched: true
+					}
 				);
 
 				if (rendered) {
@@ -146,8 +149,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 					fetch: fetcher,
 					context: { ...context }
 				}));
-		} catch (error) {
-			loaded = { error };
+		} catch (e) {
+			// if load fails when we're already rendering the
+			// error page, there's not a lot we can do
+			if (error) throw e;
+
+			loaded = { error: e };
 		}
 
 		if (loaded) {
@@ -304,6 +311,14 @@ export default async function render_page(request, context, options) {
 	const $session = await (options.setup.getSession && options.setup.getSession(context));
 
 	if (!route) {
+		if (options.fetched) {
+			// we came here because of a bad request in a `load` function.
+			// rather than render the error page — which could lead to an
+			// infinite loop, if the `load` belonged to the root layout,
+			// we respond with a bare-bones 404
+			throw new Error('Bad request in load function');
+		}
+
 		return await get_response({
 			request,
 			options,
