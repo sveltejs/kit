@@ -20,6 +20,7 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
+    "beige-bananas-press",
     "calm-pens-prove",
     "chatty-mangos-raise",
     "chilled-starfishes-jog",
@@ -64,6 +65,7 @@
     "tricky-wolves-confess",
     "two-crabs-tease",
     "wicked-items-repair",
-    "young-hairs-cough"
+    "young-hairs-cough",
+    "young-swans-burn"
   ]
 }

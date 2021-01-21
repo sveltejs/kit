@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.28
+
+### Patch Changes
+
+- 4353025: Prevent infinite loop when fetching bad URLs inside error responses
+- 2860065: Handle assets path when prerendering
+
 ## 1.0.0-next.27
 
 ### Patch Changes
