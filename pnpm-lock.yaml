@@ -229,9 +229,9 @@ importers:
       tiny-glob: ^0.2.8
   packages/snowpack-config:
     dependencies:
-      '@snowpack/plugin-svelte': 3.5.0
+      '@snowpack/plugin-svelte': 3.5.2
     specifiers:
-      '@snowpack/plugin-svelte': ^3.5.0
+      '@snowpack/plugin-svelte': ^3.5.2
   test:
     dependencies:
       '@sveltejs/kit': link:../packages/kit
@@ -607,7 +607,7 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==
-  /@snowpack/plugin-svelte/3.5.0:
+  /@snowpack/plugin-svelte/3.5.2:
     dependencies:
       rollup-plugin-svelte: 7.0.0
       svelte-hmr: 0.12.2
@@ -616,7 +616,7 @@ packages:
     peerDependencies:
       svelte: ^3.21.0
     resolution:
-      integrity: sha512-9Fn1CbHviNjTKacURqRE6yjQ/s1igxtgEgkC1pKIz/lGk4I7mBNQdcBN5TVqCGRmxPh1fC/AnMR0VKQWWndxhw==
+      integrity: sha512-i7OhkIRNt1uJ/y3qpowlU7icjtSgFPIl/GjMmBxhtwoIqHAnowFLh1Ur5G6S36GCFo65ymClnYfEIM/2x1+wPQ==
   /@types/estree/0.0.39:
     dev: true
     resolution:

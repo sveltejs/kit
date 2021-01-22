@@ -8,6 +8,6 @@
 	},
 	"main": "snowpack.config.js",
 	"dependencies": {
-		"@snowpack/plugin-svelte": "^3.5.0"
+		"@snowpack/plugin-svelte": "^3.5.2"
 	}
 }
