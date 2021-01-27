@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- 4c0edce: Use addEventListener instead of onload
+
 ## 1.0.0-next.28
 
 ### Patch Changes
