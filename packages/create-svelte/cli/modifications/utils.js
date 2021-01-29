@@ -44,9 +44,9 @@ export function add_svelte_prepocess_to_config(cwd) {
 	config = config.replace(
 		'module.exports = {',
 		`module.exports = {
-    // Consult https://github.com/sveltejs/svelte-preprocess
-    // for more information about preprocessors
-    preprocess: sveltePreprocess(),`
+	// Consult https://github.com/sveltejs/svelte-preprocess
+	// for more information about preprocessors
+	preprocess: sveltePreprocess(),`
 	);
 
 	fs.writeFileSync(file, config);
