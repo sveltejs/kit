@@ -130,8 +130,6 @@ class Watcher extends EventEmitter {
 				return this.snowpack.handleRequest(req, res);
 			}
 
-			const parsed = parse(req.url);
-
 			static_handler(req, res, async () => {
 				try {
 					await this.snowpack.handleRequest(req, res, { handleError: false });
@@ -167,33 +165,23 @@ class Watcher extends EventEmitter {
 					return;
 				}
 
-				const body = await get_body(req);
+				const rendered = await render(await convert_request(req), {
+					paths: this.config.paths,
+					template: ({ head, body }) => {
+						let rendered = template
+							.replace('%svelte.head%', () => head)
+							.replace('%svelte.body%', () => body);
 
-				const rendered = await render(
-					{
-						headers: req.headers,
-						method: req.method,
-						path: parsed.pathname,
-						query: new URLSearchParams(parsed.query),
-						body
-					},
-					{
-						paths: this.config.paths,
-						template: ({ head, body }) => {
-							let rendered = template
-								.replace('%svelte.head%', () => head)
-								.replace('%svelte.body%', () => body);
+						if (this.config.amp) {
+							const result = validator.validateString(rendered);
 
-							if (this.config.amp) {
-								const result = validator.validateString(rendered);
+							if (result.status !== 'PASS') {
+								const lines = rendered.split('\n');
 
-								if (result.status !== 'PASS') {
-									const lines = rendered.split('\n');
+								const escape = (str) =>
+									str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-									const escape = (str) =>
-										str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-									rendered = `<!doctype html>
+								rendered = `<!doctype html>
 										<head>
 											<meta charset="utf-8" />
 											<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -224,52 +212,51 @@ class Watcher extends EventEmitter {
 											)
 											.join('\n\n')}
 									`;
-								}
 							}
+						}
 
-							return rendered.replace(
-								'</head>',
-								`
+						return rendered.replace(
+							'</head>',
+							`
 									<script>window.HMR_WEBSOCKET_URL = \`ws://\${location.hostname}:${this.snowpack_port}\`;</script>
 									<script type="module" src="/_snowpack/hmr-client.js"></script>
 									<script type="module" src="/_snowpack/hmr-error-overlay.js"></script>
 								</head>`.replace(/^\t{6}/gm, '')
-							);
-						},
-						manifest: this.manifest,
-						target: this.config.target,
-						entry: 'assets/runtime/internal/start.js',
-						dev: true,
-						amp: this.config.amp,
-						root,
-						setup,
-						only_prerender: false,
-						start_global: this.config.startGlobal,
-						app_dir: this.config.appDir,
-						host: this.config.host,
-						host_header: this.config.hostHeader,
-						get_stack: (error) =>
-							sourcemap_stacktrace(error.stack, async (address) => {
-								if (existsSync(address)) {
-									// it's a filepath
-									return readFileSync(address, 'utf-8');
-								}
+						);
+					},
+					manifest: this.manifest,
+					target: this.config.target,
+					entry: 'assets/runtime/internal/start.js',
+					dev: true,
+					amp: this.config.amp,
+					root,
+					setup,
+					only_prerender: false,
+					start_global: this.config.startGlobal,
+					app_dir: this.config.appDir,
+					host: this.config.host,
+					host_header: this.config.hostHeader,
+					get_stack: (error) =>
+						sourcemap_stacktrace(error.stack, async (address) => {
+							if (existsSync(address)) {
+								// it's a filepath
+								return readFileSync(address, 'utf-8');
+							}
 
-								try {
-									const { contents } = await this.snowpack.loadUrl(address, {
-										isSSR: true,
-										encoding: 'utf8'
-									});
-									return contents;
-								} catch {
-									// fail gracefully
-								}
-							}),
-						get_static_file: (file) => readFileSync(join(this.config.files.assets, file)),
-						get_amp_css: (url) =>
-							this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
-					}
-				);
+							try {
+								const { contents } = await this.snowpack.loadUrl(address, {
+									isSSR: true,
+									encoding: 'utf8'
+								});
+								return contents;
+							} catch {
+								// fail gracefully
+							}
+						}),
+					get_static_file: (file) => readFileSync(join(this.config.files.assets, file)),
+					get_amp_css: (url) =>
+						this.snowpack.loadUrl(url, { encoding: 'utf-8' }).then(({ contents }) => contents)
+				});
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);
@@ -358,5 +345,17 @@ function get_params(array) {
 			}
 		});
 		return params;
+	};
+}
+
+async function convert_request(req) {
+	const parsed = parse(req.url);
+	const body = await get_body(req);
+	return {
+		headers: req.headers,
+		method: req.method,
+		path: parsed.pathname,
+		query: new URLSearchParams(parsed.query),
+		body
 	};
 }
