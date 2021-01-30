@@ -1,5 +1,5 @@
 import path from 'path';
-import glob from 'tiny-glob/sync';
+import glob from 'tiny-glob/sync.js';
 import * as assert from 'uvu/assert';
 import { runner } from '../../../runner'; // TODO make this a package?
 

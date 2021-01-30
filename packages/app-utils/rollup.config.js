@@ -8,22 +8,13 @@ Object.keys(pkg.exports).forEach((key) => {
 
 export default {
 	input,
-	output: [
-		{
-			dir: '.',
-			entryFileNames: '[name]/index.js',
-			chunkFileNames: 'common/[name].js',
-			format: 'cjs',
-			sourcemap: true
-		},
-		{
-			dir: '.',
-			entryFileNames: '[name]/index.mjs',
-			chunkFileNames: 'common/[name].js',
-			format: 'esm',
-			sourcemap: true
-		}
-	],
+	output: {
+		dir: '.',
+		entryFileNames: '[name]/index.js',
+		chunkFileNames: 'common/[name].js',
+		format: 'esm',
+		sourcemap: true
+	},
 	plugins: [nodeResolve()],
 	external: [...require('module').builtinModules, ...Object.keys(pkg.dependencies)]
 };

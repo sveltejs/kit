@@ -41,7 +41,7 @@ prog
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
 		process.env.NODE_ENV = 'development';
-		const config = get_config();
+		const config = await get_config();
 
 		const { dev } = await import('./api/dev');
 
@@ -68,7 +68,7 @@ prog
 	.describe('Create a production build of your app')
 	.action(async () => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { build } = await import('./api/build');
 
@@ -86,7 +86,7 @@ prog
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { start } = await import('./api/start');
 

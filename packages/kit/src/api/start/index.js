@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as http from 'http';
-import relative from 'require-relative';
-import { parse, URLSearchParams } from 'url';
+import { parse, URLSearchParams, pathToFileURL } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 import { join } from 'path';
@@ -12,19 +11,23 @@ const mutable = (dir) =>
 		maxAge: 0
 	});
 
-export function start({ port, config }) {
+export async function start({ port, config }) {
+	const app_file = await import.meta.resolve(
+		'.svelte/build/optimized/server/app.js',
+		pathToFileURL(process.cwd())
+	);
+	const app = await import(app_file);
+
+	const static_handler = fs.existsSync(config.files.assets)
+		? mutable(config.files.assets)
+		: (_req, _res, next) => next();
+
+	const assets_handler = sirv('.svelte/build/optimized/client', {
+		maxAge: 31536000,
+		immutable: true
+	});
+
 	return new Promise((fulfil) => {
-		const app = relative('./.svelte/build/optimized/server/app.js');
-
-		const static_handler = fs.existsSync(config.files.assets)
-			? mutable(config.files.assets)
-			: (_req, _res, next) => next();
-
-		const assets_handler = sirv('.svelte/build/optimized/client', {
-			maxAge: 31536000,
-			immutable: true
-		});
-
 		const server = http.createServer((req, res) => {
 			const parsed = parse(req.url || '');
 

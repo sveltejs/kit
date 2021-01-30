@@ -2,7 +2,7 @@ import * as uvu from 'uvu';
 import * as ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build, start, load_config } from '@sveltejs/kit/dist/api';
+import { dev, build, start, load_config } from '@sveltejs/kit/dist/api.js';
 import * as assert from 'uvu/assert';
 
 async function setup({ port }) {

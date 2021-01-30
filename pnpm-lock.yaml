@@ -11,7 +11,6 @@ importers:
       eslint: 7.11.0
       eslint-plugin-import: 2.22.1_eslint@7.11.0
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
-      esm: 3.2.25
       playwright: 1.6.2
       prettier: 2.1.2
       rollup: 2.32.0
@@ -21,75 +20,74 @@ importers:
       '@rollup/plugin-commonjs': ^15.1.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^9.0.0
-      '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.6.0
+      '@sveltejs/eslint-config': 'github:sveltejs/eslint-config#v5.6.0'
       '@typescript-eslint/eslint-plugin': ^4.8.2
       '@typescript-eslint/parser': ^4.8.2
       eslint: ^7.11.0
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^2.7.3
-      esm: ^3.2.25
       playwright: ^1.6.2
       prettier: 2.1.2
       rollup: ^2.32.0
       typescript: ^4.1.2
   examples/hn.svelte.dev:
     devDependencies:
-      '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/snowpack-config': link:../../packages/snowpack-config
+      '@sveltejs/adapter-netlify': 'link:../../packages/adapter-netlify'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-netlify': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-netlify': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
   examples/realworld.svelte.dev:
     dependencies:
       node-fetch: 2.6.1
     devDependencies:
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/snowpack-config': link:../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       marked: 1.2.5
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       marked: ^1.2.2
       node-fetch: ^2.6.1
       svelte: ^3.29.0
   examples/sandbox:
     devDependencies:
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/snowpack-config': link:../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
   examples/svelte-kit-demo:
     devDependencies:
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/adapter-static': link:../../packages/adapter-static
-      '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/snowpack-config': link:../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../packages/adapter-node'
+      '@sveltejs/adapter-static': 'link:../../packages/adapter-static'
+      '@sveltejs/kit': 'link:../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/adapter-static': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/adapter-static': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
   packages/adapter-begin:
     dependencies:
       '@architect/parser': 2.3.0
-      '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/app-utils': 'link:../app-utils'
     specifiers:
       '@architect/parser': ^2.3.0
-      '@sveltejs/app-utils': workspace:*
+      '@sveltejs/app-utils': 'workspace:*'
   packages/adapter-netlify:
     dependencies:
       toml: 3.0.0
@@ -97,23 +95,23 @@ importers:
       toml: ^3.0.0
   packages/adapter-node:
     devDependencies:
-      '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/app-utils': 'link:../app-utils'
       rollup: 2.32.0
       sirv: 1.0.7
     specifiers:
-      '@sveltejs/app-utils': workspace:*
+      '@sveltejs/app-utils': 'workspace:*'
       rollup: ^2.32.0
       sirv: ^1.0.7
   packages/adapter-static:
     specifiers: {}
   packages/adapter-vercel:
     dependencies:
-      '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/app-utils': 'link:../app-utils'
     devDependencies:
       rollup: 2.34.2
       sirv: 1.0.7
     specifiers:
-      '@sveltejs/app-utils': workspace:*
+      '@sveltejs/app-utils': 'workspace:*'
       rollup: ^2.32.0
       sirv: ^1.0.7
   packages/app-utils:
@@ -124,29 +122,27 @@ importers:
       '@types/node': 14.14.0
       '@types/node-fetch': 2.5.7
       devalue: 2.0.1
-      esm: 3.2.25
       node-fetch: 2.6.1
       rollup: 2.32.0
       svelte: 3.29.0
-      uvu: 0.3.4
+      uvu: 0.5.1
     specifiers:
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.0
       '@types/node-fetch': ^2.5.7
       devalue: ^2.0.1
-      esm: ^3.2.25
       mime: ^2.4.6
       node-fetch: ^2.6.1
       rollup: ^2.32.0
       svelte: ^3.29.0
-      uvu: ^0.3.4
+      uvu: ^0.5.1
   packages/create-svelte:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.32.0
-      '@sveltejs/adapter-node': link:../adapter-node
-      '@sveltejs/app-utils': link:../app-utils
-      '@sveltejs/kit': link:../kit
-      '@sveltejs/snowpack-config': link:../snowpack-config
+      '@sveltejs/adapter-node': 'link:../adapter-node'
+      '@sveltejs/app-utils': 'link:../app-utils'
+      '@sveltejs/kit': 'link:../kit'
+      '@sveltejs/snowpack-config': 'link:../snowpack-config'
       gitignore-parser: 0.0.2
       kleur: 4.1.3
       prompts: 2.3.2
@@ -154,10 +150,10 @@ importers:
       tiny-glob: 0.2.8
     specifiers:
       '@rollup/plugin-json': ^4.1.0
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/app-utils': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/app-utils': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       gitignore-parser: ^0.0.2
       kleur: ^4.1.3
       prompts: ^2.3.2
@@ -175,20 +171,19 @@ importers:
       snowpack: 3.0.10
       source-map: 0.7.3
     devDependencies:
-      '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/app-utils': 'link:../app-utils'
       '@types/node': 14.11.10
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
       eslint: 7.14.0
-      esm: 3.2.25
-      estree-walker: 2.0.1
+      estree-walker: 3.0.0
       is-reference: 1.2.1
       kleur: 4.1.3
       magic-string: 0.25.7
-      meriyah: 3.0.3
+      meriyah: 3.1.6
       node-fetch: 2.6.1
-      periscopic: 2.0.2
+      periscopic: 3.0.0
       port-authority: 1.1.1
       require-relative: 0.8.7
       rimraf: 3.0.2
@@ -196,6 +191,7 @@ importers:
       source-map-support: 0.5.19
       svelte: 3.29.0
       tiny-glob: 0.2.8
+      uvu: 0.5.1
     specifiers:
       '@sveltejs/app-utils': '*'
       '@types/node': ^14.11.10
@@ -204,15 +200,14 @@ importers:
       amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.2
       eslint: ^7.14.0
-      esm: ^3.2.25
-      estree-walker: ^2.0.1
+      estree-walker: ^3.0.0
       http-proxy: ^1.18.1
       is-reference: ^1.2.1
       kleur: ^4.1.3
       magic-string: ^0.25.7
       meriyah: ^3.0.3
       node-fetch: ^2.6.1
-      periscopic: ^2.0.2
+      periscopic: ^3.0.0
       port-authority: ^1.1.1
       require-relative: ^0.8.7
       rimraf: ^3.0.2
@@ -227,6 +222,7 @@ importers:
       source-map-support: ^0.5.19
       svelte: ^3.29.0
       tiny-glob: ^0.2.8
+      uvu: ^0.5.1
   packages/snowpack-config:
     dependencies:
       '@snowpack/plugin-svelte': 3.5.2
@@ -234,44 +230,44 @@ importers:
       '@snowpack/plugin-svelte': ^3.5.2
   test:
     dependencies:
-      '@sveltejs/kit': link:../packages/kit
+      '@sveltejs/kit': 'link:../packages/kit'
     devDependencies:
       port-authority: 1.1.2
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': 'workspace:*'
       port-authority: ^1.1.2
   test/apps/amp:
     devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      '@sveltejs/snowpack-config': link:../../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
   test/apps/basics:
     devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      '@sveltejs/snowpack-config': link:../../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
   test/apps/options:
     devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      '@sveltejs/snowpack-config': link:../../../packages/snowpack-config
+      '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
+      '@sveltejs/kit': 'link:../../../packages/kit'
+      '@sveltejs/snowpack-config': 'link:../../../packages/snowpack-config'
       svelte: 3.29.0
     specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
+      '@sveltejs/adapter-node': 'workspace:*'
+      '@sveltejs/kit': 'workspace:*'
+      '@sveltejs/snowpack-config': 'workspace:*'
       svelte: ^3.29.0
 lockfileVersion: 5.2
 packages:
@@ -1311,12 +1307,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-I2TiqT5iWBEyB8GRfTDP0hiLZ0YeDJZ+upDxjBfOC2lebO5LezQMv7QvIUTzdb64jQyAKLf1AHADtGN+jw6v8Q==
-  /diff/4.0.2:
+  /diff/5.0.0:
     dev: true
     engines:
       node: '>=0.3.1'
     resolution:
-      integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
+      integrity: sha512-/VTCrvm5Z0JGty/BWHljh+BAiw3IK+2j87NGMu8Nwc/f48WoDAC395uomO9ZD117ZOBaHmkX1oyLvkVM/aIT3w==
   /dir-glob/3.0.1:
     dependencies:
       path-type: 4.0.0
@@ -1601,12 +1597,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-5YubdnPXrlrYAFCKybPuHIAH++PINe1pmKNc5wQRB9HSbqIK1ywAnntE3Wwua4giKu0bjligf1gLF6qxMGOYRA==
-  /esm/3.2.25:
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
   /espree/7.3.0:
     dependencies:
       acorn: 7.4.1
@@ -1664,6 +1654,14 @@ packages:
     dev: true
     resolution:
       integrity: sha512-tF0hv+Yi2Ot1cwj9eYHtxC0jB9bmjacjQs6ZBTj82H8JwUywFuc+7E83NWfNMwHXZc11mjfFcVXPe9gEP4B8dg==
+  /estree-walker/2.0.2:
+    dev: true
+    resolution:
+      integrity: sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w==
+  /estree-walker/3.0.0:
+    dev: true
+    resolution:
+      integrity: sha512-s6ceX0NFiU/vKPiKvFdR83U1Zffu7upwZsGwpoqfg5rbbq1l50WQ5hCeIvM6E6oD4shUHCYMsiFPns4Jk0YfMQ==
   /esutils/2.0.3:
     dev: true
     engines:
@@ -2296,6 +2294,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-H1tr8QP2PxFTNwAFM74Mui2b6ovcY9FoxJefgrwxY+OCJcq01k5nvhf4M/KnizzrJvLRap5STUy7dgDV35iUBw==
+  /kleur/4.1.4:
+    dev: true
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-8QADVssbrFjivHWQU7KkMgptGTl6WAcSdlbBPY4uNF+mWr6DGcKrvY2w4FQJoXch7+fKMjj0dRrL75vk3k23OA==
   /levn/0.4.1:
     dependencies:
       prelude-ls: 1.2.1
@@ -2432,12 +2436,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /meriyah/3.0.3:
+  /meriyah/3.1.6:
     dev: true
     engines:
       node: '>=10.4.0'
     resolution:
-      integrity: sha512-f56aaXQq2y8Mn6+BlH4/IAXrgjxQHuLBngAHGDKqxAEaOWKm5u/+vaiA/byEi5tFPpBnDYOcLFGtHyzfa7I5wA==
+      integrity: sha512-JDOSi6DIItDc33U5N52UdV6P8v+gn+fqZKfbAfHzdWApRQyQWdcvxPvAr9t01bI2rBxGvSrKRQSCg3SkZC1qeg==
   /micromatch/4.0.2:
     dependencies:
       braces: 3.0.2
@@ -2773,13 +2777,13 @@ packages:
     dev: true
     resolution:
       integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=
-  /periscopic/2.0.2:
+  /periscopic/3.0.0:
     dependencies:
-      estree-walker: 1.0.1
+      estree-walker: 2.0.2
       is-reference: 1.2.1
     dev: true
     resolution:
-      integrity: sha512-Ngkg+fjibPB9V2ss67QY3EmNd+NBoXoxUkNEsDdvo4wk4yPW0LHyRh37/L61bkifUQsbtJxrbt8DE1oLjdV9Nw==
+      integrity: sha512-m/MBWIgwELB00OdTvM+Ei5saKHNKmyFWy0iW2MpbADmIdK/sL+kir3Yvb+Z2vzYeItZVtemA0bgAg5lZXoJmaA==
   /picomatch/2.2.2:
     dev: true
     engines:
@@ -3672,11 +3676,11 @@ packages:
     dev: false
     resolution:
       integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==
-  /uvu/0.3.4:
+  /uvu/0.5.1:
     dependencies:
       dequal: 2.0.2
-      diff: 4.0.2
-      kleur: 4.1.3
+      diff: 5.0.0
+      kleur: 4.1.4
       sade: 1.7.4
       totalist: 2.0.0
     dev: true
@@ -3684,7 +3688,7 @@ packages:
       node: '>=8'
     hasBin: true
     resolution:
-      integrity: sha512-UM8M8r+85jYdwn4XII8cjQTojRAkNIaB3kA6FRXX0dQTDAE2NfWs0hLcLJm9/XL1aIFwhSp05vDfDDBlpnZgcg==
+      integrity: sha512-JGxttnOGDFs77FaZ0yMUHIzczzQ5R1IlDeNW6Wymw6gAscwMdAffVOP6TlxLIfReZyK8tahoGwWZaTCJzNFDkg==
   /v8-compile-cache/2.1.1:
     dev: true
     resolution:
@@ -3857,5 +3861,5 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     resolution:
-      tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f
+      tarball: 'https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f'
     version: 5.6.0

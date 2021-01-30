@@ -1,6 +1,7 @@
 {
 	"name": "@sveltejs/kit",
 	"version": "1.0.0-next.29",
+	"type": "module",
 	"dependencies": {
 		"cheap-watch": "^1.0.2",
 		"http-proxy": "^1.18.1",
@@ -19,21 +20,21 @@
 		"@types/sade": "^1.7.2",
 		"amphtml-validator": "^1.0.34",
 		"eslint": "^7.14.0",
-		"esm": "^3.2.25",
-		"estree-walker": "^2.0.1",
+		"estree-walker": "^3.0.0",
 		"is-reference": "^1.2.1",
 		"kleur": "^4.1.3",
 		"magic-string": "^0.25.7",
 		"meriyah": "^3.0.3",
 		"node-fetch": "^2.6.1",
-		"periscopic": "^2.0.2",
+		"periscopic": "^3.0.0",
 		"port-authority": "^1.1.1",
 		"require-relative": "^0.8.7",
 		"rimraf": "^3.0.2",
 		"sirv": "^1.0.7",
 		"source-map-support": "^0.5.19",
 		"svelte": "^3.29.0",
-		"tiny-glob": "^0.2.8"
+		"tiny-glob": "^0.2.8",
+		"uvu": "^0.5.1"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit"
@@ -50,6 +51,6 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu src \"(spec.js|test/index.js)\" -r esm"
+		"test": "uvu src \"(spec.mjs|test/index.mjs)\""
 	}
 }

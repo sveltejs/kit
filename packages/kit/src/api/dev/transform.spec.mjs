@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { transform } from './transform';
+import { transform } from './transform.js';
 
 function compare(a, b) {
 	assert.equal(a.replace(/^\t+/gm, '').trim(), b.replace(/^\t+/gm, '').trim());

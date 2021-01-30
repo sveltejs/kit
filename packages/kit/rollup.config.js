@@ -45,7 +45,7 @@ export default [
 		},
 		output: {
 			dir: 'dist',
-			format: 'cjs',
+			format: 'esm',
 			sourcemap: true,
 			chunkFileNames: '[name].js'
 		},

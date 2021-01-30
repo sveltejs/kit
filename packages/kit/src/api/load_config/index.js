@@ -1,6 +1,5 @@
-import relative from 'require-relative';
 import { bold, yellow } from 'kleur/colors';
-import options from './options';
+import options from './options.js';
 import * as url from 'url';
 
 function warn(msg) {
@@ -58,8 +57,9 @@ function remove_trailing_slash(str) {
 
 const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
 
-export function load_config({ cwd = process.cwd() } = {}) {
-	const config = relative('./svelte.config.js', cwd);
+export async function load_config({ cwd = process.cwd() } = {}) {
+	const config_file = await import.meta.resolve('svelte.config.js', url.pathToFileURL(cwd));
+	const config = await import(config_file);
 	const validated = validate_config(config);
 
 	// TODO check all the `files` exist when the config is loaded?

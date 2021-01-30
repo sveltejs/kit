@@ -18,7 +18,6 @@ const snowpack_main = require.resolve('snowpack');
 const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
 const snowpack_pkg = require(snowpack_pkg_file); // eslint-disable-line
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
-
 const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'MISSING_EXPORT']);
 const onwarn = (warning, handler) => {
 	// TODO would be nice to just eliminate the circular dependencies instead of
