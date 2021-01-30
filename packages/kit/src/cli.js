@@ -103,14 +103,15 @@ prog
 prog
 	.command('adapt')
 	.describe('Customise your production build for different platforms')
-	.action(async () => {
+	.option('--verbose', 'Log more stuff', false)
+	.action(async ({ verbose }) => {
 		process.env.NODE_ENV = 'production';
 		const config = get_config();
 
 		const { adapt } = await import('./api/adapt');
 
 		try {
-			await adapt(config);
+			await adapt(config, { verbose });
 		} catch (error) {
 			handle_error(error);
 		}

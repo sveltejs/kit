@@ -130,9 +130,6 @@ class Watcher extends EventEmitter {
 				return this.snowpack.handleRequest(req, res);
 			}
 
-			// TODO investigate why Snowpack injects '.proxy'
-			req.url = req.url.replace('.svelte.proxy', '.svelte');
-
 			const parsed = parse(req.url);
 
 			static_handler(req, res, async () => {
@@ -295,19 +292,17 @@ class Watcher extends EventEmitter {
 			output: '.svelte/assets'
 		});
 
-		const load = (url) => this.load(url.endsWith('.js') ? url : url + '.js');
-
 		const common_css_deps = new Set();
 
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: async () => {
-				const { exports, css } = await load(manifest_data.layout.url);
+				const { exports, css } = await this.load(manifest_data.layout.url);
 				css.forEach((dep) => common_css_deps.add(dep));
 				return exports;
 			},
 			error: async () => {
-				const { exports, css } = await load(manifest_data.error.url);
+				const { exports, css } = await this.load(manifest_data.error.url);
 				css.forEach((dep) => common_css_deps.add(dep));
 				return exports;
 			},
@@ -320,7 +315,7 @@ class Watcher extends EventEmitter {
 					pattern: data.pattern,
 					params: get_params(data.params),
 					parts: data.parts.map(({ url }) => async () => {
-						const { exports, css } = await load(url);
+						const { exports, css } = await this.load(url);
 						common_css_deps.forEach((url) => css_deps.add(url));
 						css.forEach((url) => css_deps.add(url));
 						return exports;
@@ -334,7 +329,7 @@ class Watcher extends EventEmitter {
 			endpoints: manifest_data.endpoints.map((data) => ({
 				pattern: data.pattern,
 				params: get_params(data.params),
-				load: () => load(data.url).then(({ exports }) => exports)
+				load: () => this.load(data.url).then(({ exports }) => exports)
 			}))
 		};
 	}

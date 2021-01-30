@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- 4c0edce: Use addEventListener instead of onload
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- 4353025: Prevent infinite loop when fetching bad URLs inside error responses
+- 2860065: Handle assets path when prerendering
+
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Fail build if prerender errors
+- Hide logging behind --verbose option
+
+## 1.0.0-next.26
+
+### Patch Changes
+
+- Fix svelte-announcer CSS
+
 ## 1.0.0-next.25
 
 ### Patch Changes

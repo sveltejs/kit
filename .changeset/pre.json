@@ -20,12 +20,15 @@
     "svelte-kit-demo": "1.0.0"
   },
   "changesets": [
+    "beige-bananas-press",
     "calm-pens-prove",
     "chatty-mangos-raise",
     "chilled-starfishes-jog",
     "cyan-roses-act",
+    "cyan-seals-trade",
     "dirty-ligers-protect",
     "dull-tigers-type",
+    "eighty-carrots-heal",
     "fifty-turtles-joke",
     "forty-months-prove",
     "friendly-rivers-argue",
@@ -39,9 +42,11 @@
     "long-moles-fold",
     "metal-nails-divide",
     "mighty-pumpkins-stare",
+    "plenty-cougars-invite",
     "poor-years-hear",
     "pretty-drinks-cough",
     "quick-maps-remain",
+    "rare-ways-watch",
     "selfish-avocados-develop",
     "shy-mails-share",
     "silver-hounds-clean",
@@ -59,7 +64,9 @@
     "tiny-starfishes-exist",
     "tricky-avocados-smile",
     "tricky-wolves-confess",
+    "two-crabs-tease",
     "wicked-items-repair",
-    "young-hairs-cough"
+    "young-hairs-cough",
+    "young-swans-burn"
   ]
 }

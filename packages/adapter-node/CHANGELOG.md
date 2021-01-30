@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- 13e8fa3: Make adapter-node work
+
 ## 0.0.18
 
 ### Patch Changes

@@ -50,8 +50,16 @@ export async function prerender({ dir, out, log, config, force }) {
 	const app = require(`${server_root}/server/app.js`);
 
 	app.init({
-		paths: { base: '', assets: '' }
+		paths: config.paths
 	});
+
+	const error = config.prerender.force
+		? (status, path) => {
+				log.error(`${status} ${path}`);
+		  }
+		: (status, path) => {
+				throw new Error(`${status} ${path}`);
+		  };
 
 	async function visit(path) {
 		if (seen.has(path)) return;
@@ -67,6 +75,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				query: new URLSearchParams()
 			},
 			{
+				local: true,
 				only_prerender: !force,
 				get_static_file: (file) => readFileSync(join(config.files.assets, file))
 			}
@@ -102,8 +111,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				log.info(`${rendered.status} ${path}`);
 				fs.writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else {
-				// TODO should this fail the build?
-				log.error(`${rendered.status} ${path}`);
+				error(rendered.status, path);
 			}
 
 			const { dependencies } = rendered;
@@ -128,7 +136,7 @@ export async function prerender({ dir, out, log, config, force }) {
 					if (response_type === OK) {
 						log.info(`${result.status} ${path}`);
 					} else {
-						log.error(`${result.status} ${path}`);
+						error(result.status, path);
 					}
 				}
 			}
