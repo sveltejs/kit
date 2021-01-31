@@ -85,7 +85,7 @@ export default function (test, is_dev) {
 		assert.match(await res.text(), /PUT is not implemented/);
 	});
 
-	test('error in endpoint', async ({ visit, text, contains }) => {
+	test('error in endpoint', async ({ visit, text }) => {
 		const console_errors = [];
 		const { error: original_error } = console;
 		console.error = (text) => {
@@ -105,10 +105,12 @@ export default function (test, is_dev) {
 			'This is your custom error page saying: "Internal Server Error"'
 		);
 
-		const has_stack_trace = await contains('endpoint.svelte:11:15');
+		const contents = await text('#stack');
+		const location = 'endpoint.svelte:11:15';
+		const has_stack_trace = contents.includes(location);
 
 		if (is_dev) {
-			assert.ok(has_stack_trace);
+			assert.ok(has_stack_trace, `Could not find ${location} in ${contents}`);
 		} else {
 			assert.ok(!has_stack_trace);
 		}
