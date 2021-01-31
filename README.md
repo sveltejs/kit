@@ -25,3 +25,7 @@ pnpm build
 ```
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
+
+## Testing
+
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subpackages of `test/` such as `test/apps/basics/`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
