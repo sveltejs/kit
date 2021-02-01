@@ -81,9 +81,8 @@ async function setup({ port }) {
 	};
 }
 
-globalThis.UVU_DEFER = 1;
-
 export async function runner(prepare_tests, options = {}) {
+	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
 	async function run(is_dev, { before, after }) {
@@ -124,6 +123,9 @@ export async function runner(prepare_tests, options = {}) {
 
 		tests.forEach((fn) => fn(test, is_dev));
 
+		// nameless suite -> null
+		const count = globalThis.UVU_QUEUE.push([null]);
+		globalThis.UVU_INDEX = count - 1;
 		suite.run();
 	}
 
