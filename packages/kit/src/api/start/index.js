@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as http from 'http';
-import { parse, URLSearchParams, pathToFileURL } from 'url';
+import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
-import { join } from 'path';
+import { join, resolve } from 'path';
 
 const mutable = (dir) =>
 	sirv(dir, {
@@ -12,10 +12,7 @@ const mutable = (dir) =>
 	});
 
 export async function start({ port, config }) {
-	const app_file = await import.meta.resolve(
-		'.svelte/build/optimized/server/app.js',
-		pathToFileURL(process.cwd())
-	);
+	const app_file = resolve('.svelte/build/optimized/server/app.js');
 	const app = await import(app_file);
 
 	const static_handler = fs.existsSync(config.files.assets)

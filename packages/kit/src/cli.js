@@ -10,9 +10,9 @@ function get_config() {
 		let message = error.message;
 
 		if (error.code === 'ENOENT') {
-			message = 'Missing svelte.config.js';
+			message = 'Missing svelte.config.cjs';
 		} else if (error.name === 'SyntaxError') {
-			message = 'Malformed svelte.config.js';
+			message = 'Malformed svelte.config.cjs';
 		}
 
 		console.error(colors.bold().red(message));

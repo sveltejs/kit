@@ -129,14 +129,16 @@ export default function loader(sp) {
 	return async (url) => load(url, []);
 }
 
-function load_node(source) {
+async function load_node(source) {
+	const mod = await import(source);
+	return mod;
+
 	// mirror Rollup's interop by allowing both of these:
 	//  import fs from 'fs';
 	//  import { readFileSync } from 'fs';
 	return {
-		exports: new Proxy(require(source), {
+		exports: new Proxy(mod, {
 			get(mod, prop) {
-				if (prop === 'default') return mod;
 				return mod[prop];
 			}
 		}),

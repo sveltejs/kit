@@ -1,6 +1,7 @@
 import { bold, yellow } from 'kleur/colors';
 import options from './options.js';
 import * as url from 'url';
+import { join } from 'path';
 
 function warn(msg) {
 	console.log(bold(yellow(msg)));
@@ -58,9 +59,9 @@ function remove_trailing_slash(str) {
 const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
 
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = await import.meta.resolve('svelte.config.js', url.pathToFileURL(cwd));
+	const config_file = join(cwd, 'svelte.config.cjs');
 	const config = await import(config_file);
-	const validated = validate_config(config);
+	const validated = validate_config(config.default);
 
 	// TODO check all the `files` exist when the config is loaded?
 	// TODO check that `target` is present in the provided template

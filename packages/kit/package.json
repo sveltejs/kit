@@ -52,5 +52,13 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "uvu src \"(spec.mjs|test/index.mjs)\""
+	},
+	"exports": {
+		"./api": {
+			"import": "./dist/api.js"
+		},
+		"./renderer": {
+			"import": "./dist/renderer.js"
+		}
 	}
 }

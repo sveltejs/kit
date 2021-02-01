@@ -1,4 +1,5 @@
-import fs, { readFileSync, writeFileSync } from 'fs';
+import fs, { existsSync, readFileSync, writeFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 import path from 'path';
 import child_process from 'child_process';
 import { promisify } from 'util';
@@ -14,9 +15,14 @@ import { css_injection } from './css_injection';
 
 const execFile = promisify(child_process.execFile);
 
-const snowpack_main = require.resolve('snowpack');
-const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
-const snowpack_pkg = require(snowpack_pkg_file); // eslint-disable-line
+let snowpack_pkg_file;
+let dir = fileURLToPath(import.meta.url);
+while (dir !== (dir = path.join(dir, '..'))) {
+	snowpack_pkg_file = path.join(dir, 'node_modules/snowpack/package.json');
+	if (existsSync(snowpack_pkg_file)) break;
+}
+
+const snowpack_pkg = JSON.parse(readFileSync(snowpack_pkg_file, 'utf-8')); // eslint-disable-line
 const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
 const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'MISSING_EXPORT']);
 const onwarn = (warning, handler) => {
@@ -111,7 +117,8 @@ export async function build(config) {
 					}
 				}
 			},
-			css_chunks({
+			// TODO the .default suggests a bug in the css_chunks plugin
+			css_chunks.default({
 				sourcemap: true
 			}),
 			css_injection,
@@ -246,7 +253,7 @@ export async function build(config) {
 	fs.writeFileSync(
 		app_file,
 		`
-			import * as renderer from '@sveltejs/kit/dist/renderer';
+			import * as renderer from '@sveltejs/kit/renderer';
 			import root from './${config.appDir}/assets/generated/root.svelte.js';
 			import { set_paths } from './${config.appDir}/assets/runtime/internal/singletons.js';
 			import * as setup from './${config.appDir}/setup/index.js';
@@ -377,7 +384,7 @@ export async function build(config) {
 
 	await server_chunks.write({
 		dir: `${OPTIMIZED}/server`,
-		format: 'cjs', // TODO some adapters might want ESM?
+		format: 'esm',
 		exports: 'named',
 		entryFileNames: '[name].js',
 		chunkFileNames: 'chunks/[name].js',

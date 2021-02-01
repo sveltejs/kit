@@ -6,7 +6,8 @@
 		"@sveltejs/kit": "workspace:*"
 	},
 	"devDependencies": {
-		"port-authority": "^1.1.2"
+		"port-authority": "^1.1.2",
+		"uvu": "^0.6.0-next.1"
 	},
 	"type": "module"
 }

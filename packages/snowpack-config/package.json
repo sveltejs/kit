@@ -6,7 +6,7 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
-	"main": "snowpack.config.js",
+	"main": "snowpack.config.cjs",
 	"dependencies": {
 		"@snowpack/plugin-svelte": "^3.5.2"
 	}

@@ -1,8 +1,7 @@
-import * as uvu from 'uvu';
-import * as ports from 'port-authority';
+import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build, start, load_config } from '@sveltejs/kit/dist/api.js';
+import { dev, build, start, load_config } from '@sveltejs/kit/api';
 import * as assert from 'uvu/assert';
 
 async function setup({ port }) {
@@ -82,9 +81,14 @@ async function setup({ port }) {
 	};
 }
 
-export function runner(callback, options = {}) {
-	function run(is_dev, { before, after }) {
+globalThis.UVU_DEFER = 1;
+
+export async function runner(prepare_tests, options = {}) {
+	const uvu = await import('uvu');
+
+	async function run(is_dev, { before, after }) {
 		const suite = uvu.suite(is_dev ? 'dev' : 'build');
+		const tests = await prepare_tests();
 
 		suite.before(before);
 		suite.after(after);
@@ -118,22 +122,23 @@ export function runner(callback, options = {}) {
 		test.skip = duplicate(suite.skip);
 		test.only = duplicate(suite.only);
 
-		callback(test, is_dev);
+		tests.forEach((fn) => fn(test, is_dev));
 
 		suite.run();
 	}
 
-	const config = load_config();
+	const config_promise = load_config();
 
-	run(true, {
+	await run(true, {
 		async before(context) {
 			const port = await ports.find(3000);
+			const config = await config_promise;
 
 			try {
 				context.watcher = await dev({ port, config });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
-				console.log(e.message);
+				console.log(e.stack);
 				throw e;
 			}
 		},
@@ -143,10 +148,11 @@ export function runner(callback, options = {}) {
 		}
 	});
 
-	run(false, {
+	await run(false, {
 		async before(context) {
 			try {
 				const port = await ports.find(3000);
+				const config = await config_promise;
 
 				// TODO implement `svelte start` so we don't need to use an adapter
 				await build(config);
