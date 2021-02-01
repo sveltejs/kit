@@ -88,8 +88,10 @@ export async function runner(prepare_tests, options = {}) {
 
 	async function run(is_dev, { before, after }) {
 		const name = is_dev ? 'dev' : 'build';
-		globalThis.UVU_QUEUE = [[name]];
-		globalThis.UVU_INDEX = 0;
+
+		// manually replicate uvu global state
+		const count = globalThis.UVU_QUEUE.push([name]);
+		globalThis.UVU_INDEX = count - 1;
 
 		const suite = uvu.suite(name);
 		const tests = await prepare_tests();
@@ -129,7 +131,6 @@ export async function runner(prepare_tests, options = {}) {
 		tests.forEach((fn) => fn(test, is_dev));
 
 		suite.run();
-		await uvu.exec();
 	}
 
 	const config_promise = load_config();
@@ -175,4 +176,7 @@ export async function runner(prepare_tests, options = {}) {
 			await context.reset();
 		}
 	});
+
+	await uvu.exec();
+	process.exit(process.exitCode || 0);
 }
