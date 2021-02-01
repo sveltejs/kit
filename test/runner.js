@@ -86,7 +86,11 @@ export async function runner(prepare_tests, options = {}) {
 	const uvu = await import('uvu');
 
 	async function run(is_dev, { before, after }) {
-		const suite = uvu.suite(is_dev ? 'dev' : 'build');
+		const name = is_dev ? 'dev' : 'build';
+		globalThis.UVU_QUEUE = [[name]];
+		globalThis.UVU_INDEX = 0;
+
+		const suite = uvu.suite(name);
 		const tests = await prepare_tests();
 
 		suite.before(before);
@@ -123,10 +127,8 @@ export async function runner(prepare_tests, options = {}) {
 
 		tests.forEach((fn) => fn(test, is_dev));
 
-		// nameless suite -> null
-		const count = globalThis.UVU_QUEUE.push([null]);
-		globalThis.UVU_INDEX = count - 1;
 		suite.run();
+		await uvu.exec();
 	}
 
 	const config_promise = load_config();
