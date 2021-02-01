@@ -30,7 +30,7 @@ export function update_component(cwd, filepath, replacements) {
 }
 
 /**
- * Adds `svelte-preprocess` to `svelte.config.js`, if there's no preprocessor already.
+ * Adds `svelte-preprocess` to `svelte.config.cjs`, if there's no preprocessor already.
  */
 export function add_svelte_prepocess_to_config(cwd) {
 	const file = path.join(cwd, 'svelte.config.cjs');
@@ -44,9 +44,9 @@ export function add_svelte_prepocess_to_config(cwd) {
 	config = config.replace(
 		'module.exports = {',
 		`module.exports = {
-    // Consult https://github.com/sveltejs/svelte-preprocess
-    // for more information about preprocessors
-    preprocess: sveltePreprocess(),`
+	// Consult https://github.com/sveltejs/svelte-preprocess
+	// for more information about preprocessors
+	preprocess: sveltePreprocess(),`
 	);
 
 	fs.writeFileSync(file, config);

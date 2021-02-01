@@ -1,5 +1,11 @@
 # @sveltejs/snowpack-config
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- 00cbaf6: Rename _.config.js to _.config.cjs
+
 ## 1.0.0-next.1
 
 ### Patch Changes

@@ -11,7 +11,7 @@
 
 <p id="message">This is your custom error page saying: "<b>{error.message}</b>"</p>
 
-<pre>{error.stack}</pre>
+<pre id="stack">{error.stack}</pre>
 
 <style>
 	h1,

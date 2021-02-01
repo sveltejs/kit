@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.26
+
+### Patch Changes
+
+- 00cbaf6: Rename _.config.js to _.config.cjs
+
 ## 2.0.0-next.25
 
 ### Patch Changes

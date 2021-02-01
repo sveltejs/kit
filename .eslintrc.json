@@ -6,6 +6,8 @@
 	},
 	"settings": {
 		"import/ignore": "/template/"
-
+	},
+	"rules": {
+		"@typescript-eslint/no-var-requires": "off"
 	}
 }
