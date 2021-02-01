@@ -30,10 +30,10 @@ export function update_component(cwd, filepath, replacements) {
 }
 
 /**
- * Adds `svelte-preprocess` to `svelte.config.js`, if there's no preprocessor already.
+ * Adds `svelte-preprocess` to `svelte.config.cjs`, if there's no preprocessor already.
  */
 export function add_svelte_prepocess_to_config(cwd) {
-	const file = path.join(cwd, 'svelte.config.js');
+	const file = path.join(cwd, 'svelte.config.cjs');
 	let config = fs.readFileSync(file, 'utf-8');
 
 	if (config.includes('preprocess:')) {
@@ -56,7 +56,7 @@ export function add_svelte_prepocess_to_config(cwd) {
  * Adds plugin to snowpack config file, if not already present.
  */
 export function add_snowpack_plugin_to_config(cwd, pluginname) {
-	const file = path.join(cwd, 'snowpack.config.js');
+	const file = path.join(cwd, 'snowpack.config.cjs');
 	let config = fs.readFileSync(file, 'utf-8');
 
 	if (config.includes(pluginname)) {

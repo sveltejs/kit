@@ -59,7 +59,7 @@ function remove_trailing_slash(str) {
 const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
 
 export function load_config({ cwd = process.cwd() } = {}) {
-	const config = relative('./svelte.config.js', cwd);
+	const config = relative('./svelte.config.cjs', cwd);
 	const validated = validate_config(config);
 
 	// TODO check all the `files` exist when the config is loaded?

@@ -84,7 +84,7 @@ class Watcher extends EventEmitter {
 			{
 				devOptions: { port: this.snowpack_port }
 			},
-			'snowpack.config.js'
+			'snowpack.config.cjs'
 		);
 
 		this.snowpack_config.mount[resolve('.svelte/assets')] = {
