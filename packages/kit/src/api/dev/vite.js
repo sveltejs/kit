@@ -1,5 +1,5 @@
 import express from 'express';
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
@@ -75,7 +75,6 @@ class Watcher extends EventEmitter {
 		});
 
 		const app_dir = this.config.appDir;
-		//const app_dir = '.svelte';
 		const {
 			set_paths
 		} = await this.viteDevServer.ssrLoadModule(`/${app_dir}/assets/runtime/internal/singletons.js`);
@@ -116,7 +115,7 @@ class Watcher extends EventEmitter {
 					let root;
 
 					try {
-//						root = (await viteDevServer.ssrLoadModule(`/${app_dir}/assets/generated/root.svelte.js`)).default;
+//						root = (await this.viteDevServer.ssrLoadModule(`/${app_dir}/assets/generated/root.svelte.js`)).default;
 						root = (await this.viteDevServer.ssrLoadModule(`/${app_dir}/assets/generated/root.svelte`)).default;
 					} catch (e) {
 						res.statusCode = 500;
@@ -240,9 +239,7 @@ class Watcher extends EventEmitter {
 				// css.forEach((dep) => common_css_deps.add(dep));
 				// return exports;
 
-//				const layout_component_url = manifest_data.layout.url;
-				const layout_component_url = '/.svelte/assets/components/layout.svelte';
-				return await this.viteDevServer.ssrLoadModule(layout_component_url);
+				return await this.viteDevServer.ssrLoadModule(manifest_data.layout.url);
 			},
 			error: async () => {
 				// TODO: CSS support
@@ -250,9 +247,7 @@ class Watcher extends EventEmitter {
 				// css.forEach((dep) => common_css_deps.add(dep));
 				// return exports;
 
-//				const error_component_url = manifest_data.error.url;
-				const error_component_url = '/.svelte/assets/components/error.svelte';
-				return await this.viteDevServer.ssrLoadModule(error_component_url);
+				return await this.viteDevServer.ssrLoadModule(manifest_data.error.url);
 			},
 			pages: manifest_data.pages.map((data) => {
 				// This is a bit of a hack, but it means we can inject the correct <link>
@@ -269,7 +264,6 @@ class Watcher extends EventEmitter {
 						// css.forEach((url) => css_deps.add(url));
 						// return exports;
 
-						url = url.replace('/.svelte', '/src').replace('.svelte.js', '.svelte');
 						return await this.viteDevServer.ssrLoadModule(url);
 					}),
 					get css() {

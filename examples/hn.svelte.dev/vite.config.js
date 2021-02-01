@@ -5,10 +5,8 @@ const production = (process.env.NODE_ENV === 'production')
 
 export default {
 	alias: {
-		'/$app': path.resolve(__dirname, '.svelte/assets/runtime/app'),
-		'/_app': path.resolve(__dirname, '.svelte/assets/runtime/app'),
-		'/$components': path.resolve(__dirname, 'src/components'),
-		'/_components': path.resolve(__dirname, 'src/components')
+		'$app': path.resolve(__dirname, '.svelte/assets/runtime/app'),
+		'$components': path.resolve(__dirname, 'src/components')
 	},
 	plugins: [
 		svelte({
