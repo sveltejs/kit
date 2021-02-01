@@ -1,20 +1,32 @@
 import path from 'path';
 import glob from 'tiny-glob/sync.js';
 import * as assert from 'uvu/assert';
-import { runner } from '../../../runner'; // TODO make this a package?
+import { fileURLToPath } from 'url';
+import { runner } from '../../../runner.js'; // TODO make this a package?
 
-runner((test, is_dev) => {
-	const cwd = path.join(__dirname, '../src/routes');
-	const modules = glob('**/__tests__.js', { cwd });
-	for (const module of modules) {
-		require(`../src/routes/${module}`).default(test, is_dev);
+runner(
+	async () => {
+		const __filename = fileURLToPath(import.meta.url);
+		const cwd = path.join(__filename, '../../src/routes');
+		const modules = glob('**/__tests__.js', { cwd });
+
+		const tests = [];
+
+		for (const file of modules) {
+			const mod = await import(`${cwd}/${file}`);
+			tests.push(mod.default);
+		}
+
+		tests.push(suite => {
+			suite('static files', async ({ fetch }) => {
+				let res = await fetch('/static.json');
+				assert.equal(await res.json(), 'static file');
+
+				res = await fetch('/subdirectory/static.json');
+				assert.equal(await res.json(), 'subdirectory file');
+			});
+		});
+
+		return tests;
 	}
-
-	test('static files', async ({ fetch }) => {
-		let res = await fetch('/static.json');
-		assert.equal(await res.json(), 'static file');
-
-		res = await fetch('/subdirectory/static.json');
-		assert.equal(await res.json(), 'subdirectory file');
-	});
-});
+);
