@@ -11,8 +11,8 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/snowpack-config": "workspace:*",
-		"marked": "^1.2.2",
-		"svelte": "^3.29.0"
+		"marked": "^1.2.8",
+		"svelte": "^3.32.1"
 	},
 	"dependencies": {
 		"node-fetch": "^2.6.1"
