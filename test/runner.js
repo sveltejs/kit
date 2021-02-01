@@ -77,6 +77,7 @@ async function setup({ port }) {
 		pathname: () => page.url().replace(base, ''),
 		keyboard: page.keyboard,
 		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
+		reset: () => browser && browser.close(),
 		$: (selector) => page.$(selector)
 	};
 }
@@ -148,7 +149,7 @@ export async function runner(prepare_tests, options = {}) {
 		},
 		async after(context) {
 			await context.watcher.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
 
@@ -171,7 +172,7 @@ export async function runner(prepare_tests, options = {}) {
 		},
 		async after(context) {
 			context.server.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
 }
