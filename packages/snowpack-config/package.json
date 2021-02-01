@@ -2,11 +2,11 @@
 	"name": "@sveltejs/snowpack-config",
 	"version": "1.0.0-next.1",
 	"scripts": {
-		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,cjs,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
-	"main": "snowpack.config.js",
+	"main": "snowpack.config.cjs",
 	"dependencies": {
 		"@snowpack/plugin-svelte": "^3.5.2"
 	}
