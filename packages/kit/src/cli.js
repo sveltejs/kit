@@ -10,9 +10,11 @@ function get_config() {
 	} catch (error) {
 		let message = error.message;
 
-		if (error.code === 'ENOENT') {
+		if (error.code === 'MODULE_NOT_FOUND') {
 			if (existsSync('svelte.config.js')) {
-				message = 'You must rename svelte.config.js to svelte.config.cjs';
+				// TODO this is temporary, for the benefit of early adopters
+				message =
+					'You must rename svelte.config.js to svelte.config.cjs, and snowpack.config.js to snowpack.config.cjs';
 			} else {
 				message = 'Missing svelte.config.cjs';
 			}
