@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/snowpack-config",
-	"version": "1.0.0-next.1",
+	"version": "1.0.0-next.2",
 	"scripts": {
 		"lint": "eslint --ignore-pattern node_modules/ \"**/*.{ts,js,cjs,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",

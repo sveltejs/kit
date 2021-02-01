@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.30
+
+### Patch Changes
+
+- 00cbaf6: Rename _.config.js to _.config.cjs
+
 ## 1.0.0-next.29
 
 ### Patch Changes
