@@ -36,13 +36,11 @@ importers:
     devDependencies:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/snowpack-config': link:../../packages/snowpack-config
       svelte: 3.29.0
       vite-plugin-svelte: github.com/benmccann/vite-plugin-svelte/a344f66caa4a3ff72b71b0395071df43780ea22d_svelte@3.29.0
     specifiers:
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/snowpack-config': workspace:*
       svelte: ^3.29.0
       vite-plugin-svelte: github:benmccann/vite-plugin-svelte
   examples/realworld.svelte.dev:
