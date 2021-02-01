@@ -12,7 +12,7 @@ importers:
       eslint-plugin-import: 2.22.1_eslint@7.11.0
       eslint-plugin-svelte3: 2.7.3_eslint@7.11.0
       esm: 3.2.25
-      playwright: 1.6.2
+      playwright: 1.8.0
       prettier: 2.1.2
       rollup: 2.32.0
       typescript: 4.1.2
@@ -28,7 +28,7 @@ importers:
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^2.7.3
       esm: ^3.2.25
-      playwright: ^1.6.2
+      playwright: ^1.8.0
       prettier: 2.1.2
       rollup: ^2.32.0
       typescript: ^4.1.2
@@ -674,11 +674,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-BfbIHP9IapdupGhq/hc+jT5dyiBVZ2DdeC5WwJWQWDb0GijQlzUFAeIQn/2GtvZcd2HVUU7An8felIICFTC2qg==
-  /@types/node/14.14.10:
-    dev: true
-    optional: true
-    resolution:
-      integrity: sha512-J32dgx2hw8vXrSbu4ZlVhn1Nm3GbeCFNw2FWL8S5QKucHGY0cyNwjdQdO+KMBZ4wpmC7KhLCiNsdk1RFRIYUQQ==
   /@types/node/14.14.11:
     resolution:
       integrity: sha512-BJ97wAUuU3NUiUCp44xzUFquQEvnk1wu7q4CMEUYKJWjdkr0YWYDsm4RFtAvxYsNjLsKcrFt6RvK8r+mnzMbEQ==
@@ -725,7 +720,7 @@ packages:
       integrity: sha512-RxAwYt4rGwK5GyoRwuP0jT6ZHAVTdz2EqgsHmX0PYNjGsko+OeT4WFXXTs/lM3teJUJodM+SNtAL5/pXIJ61IQ==
   /@types/yauzl/2.9.1:
     dependencies:
-      '@types/node': 14.14.10
+      '@types/node': 14.14.11
     dev: true
     optional: true
     resolution:
@@ -1163,6 +1158,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==
+  /commander/6.2.1:
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-U7VdrJFnJgo4xjrHpTzu0yrHPGImdsmD95ZlgYSEajAn2JKzDhDTPG9kBTefmObL2w/ngeZnilk+OV9CG3d7UA==
   /commondir/1.0.1:
     dev: true
     resolution:
@@ -2814,8 +2815,9 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==
-  /playwright/1.6.2:
+  /playwright/1.8.0:
     dependencies:
+      commander: 6.2.1
       debug: 4.3.1
       extract-zip: 2.0.1
       https-proxy-agent: 5.0.0
@@ -2830,9 +2832,10 @@ packages:
     dev: true
     engines:
       node: '>=10.17.0'
+    hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-KiMmQuANG4O/ozpwxP8EwBBap0/liS3+wwkGo6nBJ4O4951y4ZsRPR1dqwsMOUD9wjsWf3ER+bAmQH5XmEO4Ig==
+      integrity: sha512-urMJDLX92KawbkWKrt3chVVBPQsuuNwlS5St7I5YQENXAEItoyUqX7FjiYaoPgXifKqe1+BKC+7pBAq1QUkgSw==
   /pngjs/5.0.0:
     dev: true
     engines:
