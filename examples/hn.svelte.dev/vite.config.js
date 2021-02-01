@@ -16,7 +16,8 @@ export default {
 			compilerOptions: {
 				dev: !production,
 				hydratable: true
-			}
+			},
+			hot: true
 		})
 	]
 }
