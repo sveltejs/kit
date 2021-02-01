@@ -285,7 +285,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 			});
 		</script>`;
 
-	const head = [rendered.head, links, init].join('\n\n');
+	// TODO: is this the best way to add CSS?
+	const css = `<style>${rendered.css.code}</style>`;
+	const head = [rendered.head, css, links, init].join('\n\n');
 
 	const body = options.amp
 		? rendered.html
