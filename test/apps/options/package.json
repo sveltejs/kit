@@ -1,12 +1,13 @@
 {
 	"name": "test-options",
 	"private": true,
+	"type": "module",
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
 		"start": "svelte-kit start",
-		"test": "uvu"
+		"test": "node test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",

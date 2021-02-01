@@ -77,17 +77,23 @@ async function setup({ port }) {
 		pathname: () => page.url().replace(base, ''),
 		keyboard: page.keyboard,
 		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
+		reset: () => browser && browser.close(),
 		$: (selector) => page.$(selector)
 	};
 }
 
-globalThis.UVU_DEFER = 1;
-
 export async function runner(prepare_tests, options = {}) {
+	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
 	async function run(is_dev, { before, after }) {
-		const suite = uvu.suite(is_dev ? 'dev' : 'build');
+		const name = is_dev ? 'dev' : 'build';
+
+		// manually replicate uvu global state
+		const count = globalThis.UVU_QUEUE.push([name]);
+		globalThis.UVU_INDEX = count - 1;
+
+		const suite = uvu.suite(name);
 		const tests = await prepare_tests();
 
 		suite.before(before);
@@ -144,7 +150,7 @@ export async function runner(prepare_tests, options = {}) {
 		},
 		async after(context) {
 			await context.watcher.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
 
@@ -167,7 +173,10 @@ export async function runner(prepare_tests, options = {}) {
 		},
 		async after(context) {
 			context.server.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
+
+	await uvu.exec();
+	process.exit(process.exitCode || 0);
 }

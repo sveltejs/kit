@@ -12,7 +12,6 @@ runner(
 		const tests = [];
 
 		for (const file of modules) {
-			console.log(file);
 			const mod = await import(`${cwd}/${file}`);
 			tests.push(mod.default);
 		}

@@ -1,12 +1,13 @@
 {
 	"name": "test-basics",
 	"private": true,
+	"type": "module",
 	"version": "0.0.2",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
 		"start": "svelte-kit start",
-		"test": "uvu test"
+		"test": "node test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
