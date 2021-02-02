@@ -380,9 +380,9 @@ export async function build(config) {
 		dir: `${OPTIMIZED}/server`,
 		format: 'cjs', // TODO some adapters might want ESM?
 		exports: 'named',
-		entryFileNames: '[name].js',
-		chunkFileNames: 'chunks/[name].js',
-		assetFileNames: 'assets/[name].js',
+		entryFileNames: '[name].cjs',
+		chunkFileNames: 'chunks/[name].cjs',
+		assetFileNames: 'assets/[name].cjs',
 		sourcemap: true
 	});
 
