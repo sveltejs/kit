@@ -113,6 +113,7 @@ export async function build(config) {
 				}
 			},
 			css_chunks({
+				entryFileNames: '[name]-[hash].css',
 				sourcemap: true
 			}),
 			css_injection,
