@@ -267,12 +267,14 @@ async function get_response({ request, options, $session, route, status = 200, e
 				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
 		  ].join('\n\t\t\t');
 
-	const init = options.amp
-		? `
+	let init = '';
+	if (options.amp) {
+		init = `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
-		<script async src="https://cdn.ampproject.org/v0.js"></script>`
-		: `
+		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
+	} else if (options.rendering.client) {
+		init = `
 		<script type="module">
 			import { start } from '${options.paths.assets}/${options.app_dir}/${options.entry}';
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
@@ -284,12 +286,14 @@ async function get_response({ request, options, $session, route, status = 200, e
 				session: ${serialized_session}
 			});
 		</script>`;
+	}
 
 	const head = [rendered.head, links, init].join('\n\n');
 
-	const body = options.amp
-		? rendered.html
-		: `${rendered.html}
+	const body =
+		options.amp || !options.rendering.client
+			? rendered.html
+			: `${rendered.html}
 
 			${serialized_data
 				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)

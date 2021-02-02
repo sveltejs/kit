@@ -27,6 +27,9 @@ test('fills in defaults', () => {
 			force: false,
 			pages: ['*']
 		},
+		rendering: {
+			client: true
+		},
 		target: null,
 		startGlobal: null
 	});
@@ -84,6 +87,9 @@ test('fills in partial blanks', () => {
 			enabled: true,
 			force: false,
 			pages: ['*']
+		},
+		rendering: {
+			client: true
 		},
 		startGlobal: null,
 		target: null

@@ -340,6 +340,7 @@ export async function build(config) {
 					amp: ${config.amp},
 					only_prerender,
 					app_dir: ${s(config.appDir)},
+					rendering: this.config.rendering,
 					host: ${s(config.host)},
 					host_header: ${s(config.hostHeader)},
 					get_stack: error => error.stack,

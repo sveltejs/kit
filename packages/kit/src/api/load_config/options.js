@@ -64,6 +64,12 @@ export default {
 		}
 	},
 
+	rendering: {
+		default: {
+			client: expect_boolean(true)
+		}
+	},
+
 	// used for testing
 	startGlobal: expect_string(null),
 

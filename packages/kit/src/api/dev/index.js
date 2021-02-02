@@ -246,6 +246,7 @@ class Watcher extends EventEmitter {
 						only_prerender: false,
 						start_global: this.config.startGlobal,
 						app_dir: this.config.appDir,
+						rendering: this.config.rendering,
 						host: this.config.host,
 						host_header: this.config.hostHeader,
 						get_stack: (error) =>
