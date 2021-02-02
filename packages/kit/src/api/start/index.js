@@ -14,7 +14,7 @@ const mutable = (dir) =>
 
 export function start({ port, config }) {
 	return new Promise((fulfil) => {
-		const app = relative('./.svelte/build/optimized/server/app.js');
+		const app = relative('./.svelte/build/optimized/server/app.cjs');
 
 		const static_handler = fs.existsSync(config.files.assets)
 			? mutable(config.files.assets)

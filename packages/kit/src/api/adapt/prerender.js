@@ -47,7 +47,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
-	const app = require(`${server_root}/server/app.js`);
+	const app = require(`${server_root}/server/app.cjs`);
 
 	app.init({
 		paths: config.paths
