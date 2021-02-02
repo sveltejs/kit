@@ -15,7 +15,8 @@ module.exports = {
 			{
 				compilerOptions: {
 					hydratable: true
-				}
+				},
+				configFilePath: 'svelte.config.cjs'
 			}
 		]
 	],
