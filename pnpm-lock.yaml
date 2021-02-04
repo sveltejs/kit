@@ -173,7 +173,7 @@ importers:
       rollup-plugin-terser: 7.0.2_rollup@2.32.0
       sade: 1.7.4
       scorta: 1.0.0
-      snowpack: 3.0.10
+      snowpack: 3.0.11
       source-map: 0.7.3
       vite: 2.0.0-beta.60
       vite-plugin-svelte: github.com/benmccann/vite-plugin-svelte/a344f66caa4a3ff72b71b0395071df43780ea22d_rollup@2.32.0+svelte@3.29.0
@@ -226,7 +226,7 @@ importers:
       sade: ^1.7.4
       scorta: ^1.0.0
       sirv: ^1.0.7
-      snowpack: ^3.0.10
+      snowpack: ^3.0.11
       source-map: ^0.7.3
       source-map-support: ^0.5.19
       svelte: ^3.29.0
@@ -1506,12 +1506,6 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-QCOllgZJtaUo9miYBcLChTUaHNjJF3PYs1VidD7AwiEj1kYxKeQTctLAezAOH5ZKRH0g2IgPn6KwB4IT8iRpvA==
-  /esbuild/0.8.21:
-    dev: false
-    hasBin: true
-    requiresBuild: true
-    resolution:
-      integrity: sha512-vRRx5MZmiekw2R7jK5BppvBUFCJA0Zkl0wYxrDmyUvMPBcQC/xJvxJUM4R+Hgjgb3gp5P1W655AsuoqDeQQDVw==
   /esbuild/0.8.37:
     dev: false
     hasBin: true
@@ -3632,10 +3626,11 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-bzWRwHwu0RnWjwU7dFy7tF68pDAx/zMSu3g7xr9Nx5J0iSImYInglwEVExyHLxXljy6PWMjkSAbwF7t2mPnRmg==
-  /snowpack/3.0.10:
+  /snowpack/3.0.11:
     dependencies:
-      esbuild: 0.8.21
+      esbuild: 0.8.37
       open: 7.3.1
+      rollup: 2.38.1
     dev: false
     engines:
       node: '>=10.19.0'
@@ -3643,7 +3638,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.1
     resolution:
-      integrity: sha512-1boFvYMQ5EEkyvr6yA0XTkJWyQoIuPBSeY/ViR1DhuesspUHiQXFAiS/FF1AOWUj8Zju3VfRyyo3GLud0P80+g==
+      integrity: sha512-lBxgkvWTgdg0szE31JUt01wQkA9Lnmm+6lxqeV9rxDfflpx7ASnldVHFvu7Se70QJmPTQB0UJjfKI+xmYGwiiQ==
   /source-map-support/0.5.19:
     dependencies:
       buffer-from: 1.1.1
