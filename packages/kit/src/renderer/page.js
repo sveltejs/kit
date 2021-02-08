@@ -1,7 +1,7 @@
 import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
-import { parse, resolve, URLSearchParams } from 'url';
+import { URL, URLSearchParams } from 'url';
 import { render } from './index';
 
 async function get_response({ request, options, $session, route, status = 200, error }) {
@@ -35,7 +35,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			url = url.replace(options.paths.assets, '');
 		}
 
-		const parsed = parse(url);
+		const parsed = new URL(url);
 
 		if (opts.credentials !== 'omit') {
 			uses_credentials = true;
@@ -48,7 +48,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			response = await fetch(parsed.href, opts);
 		} else {
 			// otherwise we're dealing with an internal fetch
-			const resolved = resolve(request.path, parsed.pathname);
+			const resolved = new URL(request.path, parsed.pathname);
 
 			// is this a request for a static asset?
 			const filename = resolved.slice(1);
