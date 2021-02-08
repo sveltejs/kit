@@ -23,7 +23,7 @@
 		"node-fetch": "^2.6.1",
 		"rollup": "^2.38.3",
 		"svelte": "^3.32.1",
-		"uvu": "^0.3.5"
+		"uvu": "^0.4.1"
 	},
 	"exports": {
 		"./files": {

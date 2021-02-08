@@ -57,6 +57,7 @@ async function setup({ port }) {
 
 	return {
 		base,
+		page,
 		visit: (path) => page.goto(base + path),
 		contains: async (str) => (await page.innerHTML('body')).includes(str),
 		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
