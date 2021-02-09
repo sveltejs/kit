@@ -23,7 +23,7 @@ module.exports = async function adapter(builder) {
 
 	if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
 		throw new Error(
-			'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/adapter-netlify#configuration'
+			'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
 		);
 	}
 
