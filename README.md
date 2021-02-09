@@ -28,7 +28,7 @@ You should now be able to run the [examples](examples) by navigating to one of t
 
 ### Version bumps
 
-You can bump the package versions by running `pnpx changeset` followed by `pnpx version`.
+You can bump the package versions by running `pnpx changeset` followed by `pnpx changeset version`.
 
 ## Testing
 
