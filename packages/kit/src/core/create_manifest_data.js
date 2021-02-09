@@ -3,13 +3,11 @@ import * as path from 'path';
 import * as mime from 'mime';
 import { posixify, reserved_words } from '../utils';
 
-export default function create_manifest_data(config, extensions = '.svelte') {
-	// TODO support .svelte.md etc?
+export default function create_manifest_data(config) {
 	const cwd = config.files.routes;
-	const component_extensions = extensions.split(' ');
 
 	function find_layout(file_name, component_name, dir = '') {
-		const ext = component_extensions.find((ext) =>
+		const ext = config.pageExtensions.find((ext) =>
 			fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`))
 		);
 		const file = posixify(path.join(dir, `${file_name}${ext}`));
@@ -72,7 +70,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 
 				const parts = get_parts(segment);
 				const is_index = is_dir ? false : basename.startsWith('index.');
-				const is_page = component_extensions.indexOf(ext) !== -1;
+				const is_page = config.pageExtensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
 
 				parts.forEach((part) => {

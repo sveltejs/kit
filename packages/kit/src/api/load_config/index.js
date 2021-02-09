@@ -56,7 +56,7 @@ function remove_trailing_slash(str) {
 	return str.endsWith('/') ? str.slice(0, -1) : str;
 }
 
-const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
+const expected = new Set(['compilerOptions', 'extensions', 'kit', 'preprocess']);
 
 export function load_config({ cwd = process.cwd() } = {}) {
 	const config = relative('./svelte.config.cjs', cwd);
@@ -75,7 +75,9 @@ export function validate_config(config) {
 		}
 	}
 
-	const { kit = {} } = config;
+	const { extensions, kit = {} } = config;
+
+	if (extensions) kit.pageExtensions = extensions;
 
 	const validated = validate(options, kit, 'kit');
 

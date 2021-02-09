@@ -8,7 +8,8 @@ const get_config = (dir) => ({
 		assets: path.join(__dirname, 'static'),
 		routes: path.join(__dirname, dir)
 	},
-	appDir: '_app'
+	appDir: '_app',
+	pageExtensions: ['.svelte']
 });
 
 test('creates routes', () => {
@@ -216,8 +217,10 @@ test('ignores things that look like lockfiles', () => {
 
 test('works with custom extensions', () => {
 	const { components, pages, endpoints } = create_manifest_data(
-		get_config('samples/custom-extension'),
-		'.jazz .beebop .funk .svelte'
+		{
+			...get_config('samples/custom-extension'),
+			pageExtensions: ['.jazz', '.beebop', '.funk', '.svelte']
+		}
 	);
 
 	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk.js' };

@@ -18,6 +18,8 @@ export default {
 
 	appDir: expect_string('_app'),
 
+	pageExtensions: expect_array(['.svelte']),
+
 	files: {
 		default: {
 			assets: expect_string('static'),
@@ -85,6 +87,18 @@ function expect_boolean(boolean) {
 		default: boolean,
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
+				throw new Error(`${keypath} should be true or false, if specified`);
+			}
+			return option;
+		}
+	};
+}
+
+function expect_array(array) {
+	return {
+		default: array,
+		validate: (option, keypath) => {
+			if (!Array.isArray(array)) {
 				throw new Error(`${keypath} should be true or false, if specified`);
 			}
 			return option;

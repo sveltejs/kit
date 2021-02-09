@@ -17,6 +17,7 @@ test('fills in defaults', () => {
 		},
 		host: null,
 		hostHeader: null,
+		pageExtensions: ['.svelte'],
 		paths: {
 			base: '',
 			assets: '/.'
@@ -75,6 +76,7 @@ test('fills in partial blanks', () => {
 		},
 		host: null,
 		hostHeader: null,
+		pageExtensions: ['.svelte'],
 		paths: {
 			base: '',
 			assets: '/.'
