@@ -1,6 +1,9 @@
 import { writeFileSync, mkdirSync } from 'fs';
-import { resolve, join } from 'path';
+import { dirname, resolve, join } from 'path';
+import { fileURLToPath } from 'url';
 import { copy } from '@sveltejs/app-utils/files';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default async function adapter(builder) {
 	const vercel_output_directory = resolve('.vercel_build_output');
