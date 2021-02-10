@@ -220,12 +220,10 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('works with custom extensions', () => {
-	const { components, pages, endpoints } = create_manifest_data(
-		{
-			...get_config('samples/custom-extension'),
-			pageExtensions: ['.jazz', '.beebop', '.funk', '.svelte']
-		}
-	);
+	const { components, pages, endpoints } = create_manifest_data({
+		...get_config('samples/custom-extension'),
+		pageExtensions: ['.jazz', '.beebop', '.funk', '.svelte']
+	});
 
 	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk.js' };
 	const about = { name: 'about', file: 'about.jazz', url: '/_app/routes/about.jazz.js' };
