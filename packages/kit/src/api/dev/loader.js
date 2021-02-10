@@ -17,7 +17,7 @@ export default function loader(sp) {
 			return load(pathname, url_stack);
 		}
 
-		return Promise.resolve(load_node(imported));
+		return import(imported);
 	};
 
 	const invalidate_all = (path) => {
@@ -127,21 +127,4 @@ export default function loader(sp) {
 	}
 
 	return async (url) => load(url, []);
-}
-
-async function load_node(source) {
-	const mod = await import(source);
-	return mod;
-
-	// mirror Rollup's interop by allowing both of these:
-	//  import fs from 'fs';
-	//  import { readFileSync } from 'fs';
-	return {
-		exports: new Proxy(mod, {
-			get(mod, prop) {
-				return mod[prop];
-			}
-		}),
-		css: []
-	};
 }
