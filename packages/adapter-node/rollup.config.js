@@ -5,7 +5,7 @@ export default {
 	input: 'src/server.js',
 	output: {
 		file: 'files/server.js',
-		format: 'cjs',
+		format: 'esm',
 		sourcemap: true
 	},
 	plugins: [nodeResolve(), commonjs()],
