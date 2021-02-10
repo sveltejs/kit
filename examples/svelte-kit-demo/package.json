@@ -2,6 +2,7 @@
 	"name": "svelte-kit-demo",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
