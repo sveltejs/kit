@@ -1,7 +1,7 @@
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
-import { analyze, extract_names } from 'periscopic';
-import { walk } from 'estree-walker';
+import * as periscopic from 'periscopic'; // eslint-disable-line import/no-unresolved
+import * as walker from 'estree-walker';
 import is_reference from 'is-reference';
 
 export function transform(data) {
@@ -11,11 +11,11 @@ export function transform(data) {
 		next: true
 	});
 
-	const { map, scope } = analyze(ast);
+	const { map, scope } = periscopic.analyze(ast);
 	const all_identifiers = new Set();
 
 	// first, get a list of all the identifiers used in the module...
-	walk(ast, {
+	walker.walk(ast, {
 		enter(node, parent) {
 			if (is_reference(node, parent)) {
 				all_identifiers.add(node.name);
@@ -109,7 +109,7 @@ export function transform(data) {
 				if (node.declaration.type === 'VariableDeclaration') {
 					const names = [];
 					node.declaration.declarations.forEach((declarator) => {
-						names.push(...extract_names(declarator.id));
+						names.push(...periscopic.extract_names(declarator.id));
 					});
 
 					suffix = names.map((name) => ` ${__export}('${name}', () => ${name});`).join('');
@@ -144,7 +144,7 @@ export function transform(data) {
 	if (replacements.size) {
 		let current_scope = scope;
 
-		walk(ast, {
+		walker.walk(ast, {
 			enter(node, parent) {
 				if (map.has(node)) {
 					current_scope = map.get(node) || current_scope;
@@ -176,7 +176,7 @@ export function transform(data) {
 
 	// replace import.meta and import(dynamic)
 	if (/import\s*\.\s*meta/.test(data) || /import\s*\(/.test(data)) {
-		walk(ast.body, {
+		walker.walk(ast.body, {
 			enter(node) {
 				if (node.type === 'MetaProperty' && node.meta.name === 'import') {
 					code.overwrite(node.start, node.end, __import_meta);

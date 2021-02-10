@@ -4,8 +4,12 @@ import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
 import rimraf from 'rimraf';
-import glob from 'tiny-glob/sync';
-import Builder from '../Builder';
+import glob from 'tiny-glob/sync.js';
+import Builder from '../Builder.js';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = join(__filename, '..');
 
 const suite = uvu.suite('Builder');
 

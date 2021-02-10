@@ -341,7 +341,7 @@ class Watcher extends EventEmitter {
 
 		this.server.close();
 		this.cheapwatch.close();
-		this.snowpack.shutdown();
+		return this.snowpack.shutdown();
 	}
 }
 

@@ -6,12 +6,13 @@
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
 		"start": "svelte-kit start",
-		"test": "uvu test -r esm"
+		"test": "node test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/snowpack-config": "workspace:*",
 		"svelte": "^3.32.1"
-	}
+	},
+	"type": "module"
 }
