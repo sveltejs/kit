@@ -50,7 +50,7 @@ prog
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
 
-		const { dev } = await import('./api/dev');
+		const { dev } = await import('./api/dev/vite');
 
 		try {
 			const watcher = await dev({ port, config });

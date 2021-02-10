@@ -4,6 +4,7 @@
 	"type": "module",
 	"dependencies": {
 		"cheap-watch": "^1.0.3",
+		"express": "^4.17.1",
 		"http-proxy": "^1.18.1",
 		"rollup": "^2.38.3",
 		"rollup-plugin-css-chunks": "^2.0.2",
@@ -11,7 +12,9 @@
 		"sade": "^1.7.4",
 		"scorta": "^1.0.0",
 		"snowpack": "^3.0.11",
-		"source-map": "^0.7.3"
+		"source-map": "^0.7.3",
+		"vite": "^2.0.0-beta.60",
+		"vite-plugin-svelte": "github:benmccann/vite-plugin-svelte"
 	},
 	"devDependencies": {
 		"@sveltejs/app-utils": "workspace:*",
