@@ -1,7 +1,11 @@
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import create_manifest_data from '../create_manifest_data';
+import create_manifest_data from '../create_manifest_data.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.join(__filename, '..');
 
 const get_config = (dir) => ({
 	files: {

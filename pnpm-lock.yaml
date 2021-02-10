@@ -11,7 +11,6 @@ importers:
       eslint: 7.19.0
       eslint-plugin-import: 2.22.1_eslint@7.19.0
       eslint-plugin-svelte3: 3.0.0_eslint@7.19.0
-      esm: 3.2.25
       playwright: 1.8.0
       prettier: 2.2.1
       rollup: 2.38.3
@@ -27,7 +26,6 @@ importers:
       eslint: ^7.19.0
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^3.0.0
-      esm: ^3.2.25
       playwright: ^1.8.0
       prettier: 2.2.1
       rollup: ^2.38.3
@@ -124,22 +122,18 @@ importers:
       '@types/node': 14.14.22
       '@types/node-fetch': 2.5.8
       devalue: 2.0.1
-      esm: 3.2.25
       node-fetch: 2.6.1
       rollup: 2.38.3
       svelte: 3.32.1
-      uvu: 0.3.5
     specifiers:
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.22
       '@types/node-fetch': ^2.5.8
       devalue: ^2.0.1
-      esm: ^3.2.25
       mime: ^2.5.0
       node-fetch: ^2.6.1
       rollup: ^2.38.3
       svelte: ^3.32.1
-      uvu: ^0.3.5
   packages/create-svelte:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.38.3
@@ -181,14 +175,13 @@ importers:
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
       eslint: 7.19.0
-      esm: 3.2.25
       estree-walker: 2.0.2
       is-reference: 1.2.1
       kleur: 4.1.4
       magic-string: 0.25.7
-      meriyah: 3.1.6
+      meriyah: 4.1.1
       node-fetch: 2.6.1
-      periscopic: 2.0.3
+      periscopic: 3.0.0
       port-authority: 1.1.2
       require-relative: 0.8.7
       rimraf: 3.0.2
@@ -204,15 +197,14 @@ importers:
       amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.3
       eslint: ^7.19.0
-      esm: ^3.2.25
       estree-walker: ^2.0.2
       http-proxy: ^1.18.1
       is-reference: ^1.2.1
       kleur: ^4.1.4
       magic-string: ^0.25.7
-      meriyah: ^3.1.6
+      meriyah: ^4.1.1
       node-fetch: ^2.6.1
-      periscopic: ^2.0.3
+      periscopic: ^3.0.0
       port-authority: ^1.1.2
       require-relative: ^0.8.7
       rimraf: ^3.0.2
@@ -237,9 +229,11 @@ importers:
       '@sveltejs/kit': 'link:../packages/kit'
     devDependencies:
       port-authority: 1.1.2
+      uvu: 0.6.0-next.1
     specifiers:
       '@sveltejs/kit': 'workspace:*'
       port-authority: ^1.1.2
+      uvu: ^0.6.0-next.1
   test/apps/amp:
     devDependencies:
       '@sveltejs/adapter-node': 'link:../../../packages/adapter-node'
@@ -1285,12 +1279,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-I2TiqT5iWBEyB8GRfTDP0hiLZ0YeDJZ+upDxjBfOC2lebO5LezQMv7QvIUTzdb64jQyAKLf1AHADtGN+jw6v8Q==
-  /diff/4.0.2:
+  /diff/5.0.0:
     dev: true
     engines:
       node: '>=0.3.1'
     resolution:
-      integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==
+      integrity: sha512-/VTCrvm5Z0JGty/BWHljh+BAiw3IK+2j87NGMu8Nwc/f48WoDAC395uomO9ZD117ZOBaHmkX1oyLvkVM/aIT3w==
   /dir-glob/3.0.1:
     dependencies:
       path-type: 4.0.0
@@ -1512,12 +1506,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-CGlMgJY56JZ9ZSYhJuhow61lMPPjUzWmChFya71Z/jilVos7mR/jPgaEfVGgMBY5DshbKdG8Ezb8FDCHcoMEMg==
-  /esm/3.2.25:
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-U1suiZ2oDVWv4zPO56S0NcR5QriEahGtdN2OR6FiOG4WJvcjBVFB0qI4+eKoWFH483PKGuLuu6V8Z4T5g63UVA==
   /espree/7.3.1:
     dependencies:
       acorn: 7.4.1
@@ -2341,12 +2329,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /meriyah/3.1.6:
+  /meriyah/4.1.1:
     dev: true
     engines:
       node: '>=10.4.0'
     resolution:
-      integrity: sha512-JDOSi6DIItDc33U5N52UdV6P8v+gn+fqZKfbAfHzdWApRQyQWdcvxPvAr9t01bI2rBxGvSrKRQSCg3SkZC1qeg==
+      integrity: sha512-Awk9n/HTyIZWhtpZkb8HvlrU7q7fBGl24wm4HXxVFm5IV3ov2PacmR41SL+LZ9EtuhRCudw5MkGaXUcUEcOBZg==
   /micromatch/4.0.2:
     dependencies:
       braces: 3.0.2
@@ -2675,13 +2663,13 @@ packages:
     dev: true
     resolution:
       integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=
-  /periscopic/2.0.3:
+  /periscopic/3.0.0:
     dependencies:
       estree-walker: 2.0.2
       is-reference: 1.2.1
     dev: true
     resolution:
-      integrity: sha512-FuCZe61mWxQOJAQFEfmt9FjzebRlcpFz8sFPbyaCKtdusPkMEbA9ey0eARnRav5zAhmXznhaQkKGFAPn7X9NUw==
+      integrity: sha512-m/MBWIgwELB00OdTvM+Ei5saKHNKmyFWy0iW2MpbADmIdK/sL+kir3Yvb+Z2vzYeItZVtemA0bgAg5lZXoJmaA==
   /picomatch/2.2.2:
     dev: true
     engines:
@@ -3538,10 +3526,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==
-  /uvu/0.3.5:
+  /uvu/0.6.0-next.1:
     dependencies:
       dequal: 2.0.2
-      diff: 4.0.2
+      diff: 5.0.0
       kleur: 4.1.4
       sade: 1.7.4
       totalist: 2.0.0
@@ -3550,7 +3538,7 @@ packages:
       node: '>=8'
     hasBin: true
     resolution:
-      integrity: sha512-kcRdf1Lt4MeU70UsyIjqKq1NHau4IMW6VTLpWsSab3Xb3JbDBymCrLrWQmjMfXSG3AEmWW7TRlkIOkI8N8rQ/A==
+      integrity: sha512-YXBhSHY/tlP/ulBi+JDvLGFgDhmVUALufkFAxF61S6hUnI4IQ/9KT0tEVNTLLdzoPZs+9vpjLUTYJOWxffciPQ==
   /v8-compile-cache/2.2.0:
     dev: true
     resolution:

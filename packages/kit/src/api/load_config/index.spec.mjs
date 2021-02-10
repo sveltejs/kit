@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { validate_config } from './index';
+import { validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});

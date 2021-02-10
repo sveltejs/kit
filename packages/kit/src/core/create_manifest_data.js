@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as mime from 'mime';
-import { posixify, reserved_words } from '../utils';
+import mime from 'mime';
+import { posixify, reserved_words } from '../utils.js';
 
 export default function create_manifest_data(config) {
 	const cwd = config.files.routes;

@@ -1,5 +1,11 @@
 # @sveltejs/app-utils
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Convert everything to ESM
+
 ## 0.0.18
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const rm = fs.rm || fs.rmdir;
 const [, , ...filenames] = process.argv;

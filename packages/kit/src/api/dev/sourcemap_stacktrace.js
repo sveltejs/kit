@@ -1,5 +1,5 @@
 import path from 'path';
-import { SourceMapConsumer } from 'source-map';
+import sourcemap from 'source-map';
 
 function get_sourcemap_url(contents) {
 	const reversed = contents.split('\n').reverse().join('\n');
@@ -65,12 +65,12 @@ export async function sourcemap_stacktrace(stack, load_contents) {
 
 				// TODO: according to typings, this code cannot work;
 				// the constructor returns a promise that needs to be awaited
-				const consumer = await new SourceMapConsumer(raw_sourcemap);
+				const consumer = await new sourcemap.SourceMapConsumer(raw_sourcemap);
 
 				const pos = consumer.originalPositionFor({
 					line: Number(line),
 					column: Number(column),
-					bias: SourceMapConsumer.LEAST_UPPER_BOUND
+					bias: sourcemap.SourceMapConsumer.LEAST_UPPER_BOUND
 				});
 
 				if (!pos.source) return input;
