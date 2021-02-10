@@ -1,15 +1,15 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const toml = require('toml');
+import { existsSync, readFileSync, copyFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+import toml from 'toml';
 
-module.exports = async function adapter(builder) {
+export default async function adapter(builder) {
 	let netlify_config;
 
-	if (fs.existsSync('netlify.toml')) {
+	if (existsSync('netlify.toml')) {
 		try {
-			netlify_config = toml.parse(fs.readFileSync('netlify.toml', 'utf-8'));
+			netlify_config = toml.parse(readFileSync('netlify.toml', 'utf-8'));
 		} catch (err) {
 			err.message = `Error parsing netlify.toml: ${err.message}`;
 			throw err;
@@ -27,22 +27,22 @@ module.exports = async function adapter(builder) {
 		);
 	}
 
-	const publish = path.resolve(netlify_config.build.publish);
-	const functions = path.resolve(netlify_config.build.functions);
+	const publish = resolve(netlify_config.build.publish);
+	const functions = resolve(netlify_config.build.functions);
 
 	builder.copy_static_files(publish);
 	builder.copy_client_files(publish);
 	builder.copy_server_files(`${functions}/render`);
 
 	// copy the renderer
-	fs.copyFileSync(path.resolve(__dirname, 'files/render.js'), `${functions}/render/index.js`);
+	copyFileSync(resolve(__dirname, 'files/render.js'), `${functions}/render/index.js`);
 
 	// create _redirects
-	fs.writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
+	writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
 
 	// prerender
 	builder.log.info('Prerendering static pages...');
 	await builder.prerender({
 		dest: publish
 	});
-};
+}
