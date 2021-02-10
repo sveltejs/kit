@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
 ## 1.0.0-next.1
 
 ### Patch Changes

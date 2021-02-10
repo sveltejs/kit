@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.34
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
 ## 1.0.0-next.33
 
 ### Patch Changes
