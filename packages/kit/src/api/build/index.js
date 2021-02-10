@@ -360,7 +360,7 @@ export async function build(config) {
 	);
 
 	const server_input = {
-		app: `${UNOPTIMIZED}/server/app.js`
+		app: app_file
 	};
 
 	const server_chunks = await rollup({
