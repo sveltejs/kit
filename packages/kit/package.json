@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.31",
+	"version": "1.0.0-next.32",
 	"type": "module",
 	"dependencies": {
 		"cheap-watch": "^1.0.3",

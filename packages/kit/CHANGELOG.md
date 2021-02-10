@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.32
+
+### Patch Changes
+
+- Convert everything to ESM
+
 ## 1.0.0-next.31
 
 ### Patch Changes
