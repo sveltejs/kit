@@ -1,5 +1,5 @@
 import { copy } from '@sveltejs/app-utils/files';
-import { prerender } from './prerender';
+import { prerender } from './prerender.js';
 
 export default class Builder {
 	#generated_files;

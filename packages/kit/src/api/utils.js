@@ -1,6 +1,10 @@
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import colors from 'kleur';
 import { copy } from '@sveltejs/app-utils/files';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export function copy_assets() {
 	copy(resolve(__dirname, '../assets'), '.svelte/assets');

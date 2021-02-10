@@ -9,7 +9,7 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu -r esm"
+		"test": "uvu"
 	},
 	"dependencies": {
 		"mime": "^2.5.0"
@@ -19,20 +19,17 @@
 		"@types/node": "^14.14.22",
 		"@types/node-fetch": "^2.5.8",
 		"devalue": "^2.0.1",
-		"esm": "^3.2.25",
 		"node-fetch": "^2.6.1",
 		"rollup": "^2.38.3",
-		"svelte": "^3.32.1",
-		"uvu": "^0.3.5"
+		"svelte": "^3.32.1"
 	},
+	"type": "module",
 	"exports": {
 		"./files": {
-			"require": "./files/index.js",
-			"import": "./files/index.mjs"
+			"import": "./files/index.js"
 		},
 		"./http": {
-			"require": "./http/index.js",
-			"import": "./http/index.mjs"
+			"import": "./http/index.js"
 		}
 	},
 	"files": [

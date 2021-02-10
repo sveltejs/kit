@@ -1,6 +1,6 @@
 const { writeFileSync } = require('fs');
 const { join } = require('path');
-const glob = require('tiny-glob/sync');
+const glob = require('tiny-glob/sync.js');
 const template_pkg = require('../template/package.json');
 
 const cwd = join(__dirname, '../../');

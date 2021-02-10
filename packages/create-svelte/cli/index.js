@@ -4,7 +4,7 @@ import parser from 'gitignore-parser';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import path from 'path';
 import prompts from 'prompts/lib/index';
-import glob from 'tiny-glob/sync';
+import glob from 'tiny-glob/sync.js';
 import gitignore_contents from '../template/.gitignore';
 import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
