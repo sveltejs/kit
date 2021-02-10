@@ -4,11 +4,11 @@ import { logger } from '../utils';
 import Builder from './Builder';
 
 export async function adapt(config, { verbose }) {
-	const [adapter, options] = config.adapter;
-
-	if (!adapter) {
+	if (!config.adapter) {
 		throw new Error('No adapter specified');
 	}
+
+	const [adapter, options] = config.adapter;
 
 	const log = logger({ verbose });
 
