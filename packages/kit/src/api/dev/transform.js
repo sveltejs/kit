@@ -1,6 +1,6 @@
 import * as meriyah from 'meriyah';
 import MagicString from 'magic-string';
-import * as periscopic from 'periscopic';
+import * as periscopic from 'periscopic'; // eslint-disable-line import/no-unresolved
 import * as walker from 'estree-walker';
 import is_reference from 'is-reference';
 
