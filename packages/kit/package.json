@@ -13,7 +13,7 @@
 		"scorta": "^1.0.0",
 		"snowpack": "^3.0.11",
 		"source-map": "^0.7.3",
-		"vite": "^2.0.0-beta.60",
+		"vite": "2.0.0-beta.60",
 		"vite-plugin-svelte": "github:benmccann/vite-plugin-svelte"
 	},
 	"devDependencies": {
