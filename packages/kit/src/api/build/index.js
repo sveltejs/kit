@@ -386,9 +386,9 @@ export async function build(config) {
 		dir: `${OPTIMIZED}/server`,
 		format: 'esm',
 		exports: 'named',
-		entryFileNames: '[name].cjs',
-		chunkFileNames: 'chunks/[name].cjs',
-		assetFileNames: 'assets/[name].cjs',
+		entryFileNames: '[name].js',
+		chunkFileNames: 'chunks/[name].js',
+		assetFileNames: 'assets/[name].js',
 		sourcemap: true
 	});
 
