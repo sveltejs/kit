@@ -46,6 +46,11 @@ export default function loader(sp) {
 			.loadUrl(url, { isSSR: true, encoding: 'utf8' })
 			.then((loaded) => initialize_module(url, loaded, url_stack.concat(url)))
 			.catch((e) => {
+				if (e.message === 'NOT_FOUND') {
+					e.code = 'NOT_FOUND';
+					e.message = `Not found: ${url}`;
+				}
+
 				cache.delete(url);
 				throw e;
 			});
