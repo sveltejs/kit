@@ -18,7 +18,22 @@ export default {
 
 	appDir: expect_string('_app'),
 
-	pageExtensions: expect_array(['.svelte']),
+	pageExtensions: {
+		default: ['.svelte'],
+		validate: (option, keypath) => {
+			if (!Array.isArray(option) || !option.every((extension) => typeof extension === 'string')) {
+				throw new Error(`${keypath} must be an array of strings`);
+			}
+
+			option.forEach((extension) => {
+				if (extension[0] !== '.') {
+					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+				}
+			});
+
+			return option;
+		}
+	},
 
 	files: {
 		default: {
@@ -88,18 +103,6 @@ function expect_boolean(boolean) {
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
 				throw new Error(`${keypath} should be true or false, if specified`);
-			}
-			return option;
-		}
-	};
-}
-
-function expect_array(array) {
-	return {
-		default: array,
-		validate: (option, keypath) => {
-			if (!Array.isArray(array)) {
-				throw new Error(`${keypath} should be an array, if specified`);
 			}
 			return option;
 		}
