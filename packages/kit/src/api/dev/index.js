@@ -152,7 +152,7 @@ class Watcher extends EventEmitter {
 				try {
 					setup = (await this.load(`/${this.config.appDir}/setup/index.js`)).exports;
 				} catch (err) {
-					if (!err.message.endsWith('NOT_FOUND')) throw err;
+					if (err.code !== 'NOT_FOUND') throw err;
 					setup = {};
 				}
 
