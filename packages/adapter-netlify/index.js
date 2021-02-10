@@ -1,8 +1,11 @@
 'use strict';
 
 import { existsSync, readFileSync, copyFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import toml from 'toml';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default async function adapter(builder) {
 	let netlify_config;
