@@ -99,7 +99,7 @@ function expect_array(array) {
 		default: array,
 		validate: (option, keypath) => {
 			if (!Array.isArray(array)) {
-				throw new Error(`${keypath} should be true or false, if specified`);
+				throw new Error(`${keypath} should be an array, if specified`);
 			}
 			return option;
 		}
