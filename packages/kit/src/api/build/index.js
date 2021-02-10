@@ -119,6 +119,7 @@ export async function build(config) {
 			},
 			// TODO the .default suggests a bug in the css_chunks plugin
 			css_chunks.default({
+				entryFileNames: '[name]-[hash].css',
 				sourcemap: true
 			}),
 			css_injection,
