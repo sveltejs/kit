@@ -24,7 +24,7 @@
 		"is-reference": "^1.2.1",
 		"kleur": "^4.1.4",
 		"magic-string": "^0.25.7",
-		"meriyah": "^3.1.6",
+		"meriyah": "^4.1.1",
 		"node-fetch": "^2.6.1",
 		"periscopic": "^3.0.0",
 		"port-authority": "^1.1.2",

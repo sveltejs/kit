@@ -179,7 +179,7 @@ importers:
       is-reference: 1.2.1
       kleur: 4.1.4
       magic-string: 0.25.7
-      meriyah: 3.1.6
+      meriyah: 4.1.1
       node-fetch: 2.6.1
       periscopic: 3.0.0
       port-authority: 1.1.2
@@ -202,7 +202,7 @@ importers:
       is-reference: ^1.2.1
       kleur: ^4.1.4
       magic-string: ^0.25.7
-      meriyah: ^3.1.6
+      meriyah: ^4.1.1
       node-fetch: ^2.6.1
       periscopic: ^3.0.0
       port-authority: ^1.1.2
@@ -2329,12 +2329,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /meriyah/3.1.6:
+  /meriyah/4.1.1:
     dev: true
     engines:
       node: '>=10.4.0'
     resolution:
-      integrity: sha512-JDOSi6DIItDc33U5N52UdV6P8v+gn+fqZKfbAfHzdWApRQyQWdcvxPvAr9t01bI2rBxGvSrKRQSCg3SkZC1qeg==
+      integrity: sha512-Awk9n/HTyIZWhtpZkb8HvlrU7q7fBGl24wm4HXxVFm5IV3ov2PacmR41SL+LZ9EtuhRCudw5MkGaXUcUEcOBZg==
   /micromatch/4.0.2:
     dependencies:
       braces: 3.0.2
