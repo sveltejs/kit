@@ -18,17 +18,17 @@ const get_config = (dir) => ({
 test('creates routes', () => {
 	const { components, pages, endpoints } = create_manifest_data(get_config('samples/basic'));
 
-	const index = { name: 'index', file: 'index.svelte', url: '/_app/routes/index.svelte.js' };
-	const about = { name: 'about', file: 'about.svelte', url: '/_app/routes/about.svelte.js' };
+	const index = { name: 'index', file: 'index.svelte', url: '/src/routes/index.svelte' };
+	const about = { name: 'about', file: 'about.svelte', url: '/src/routes/about.svelte' };
 	const blog = {
 		name: 'blog',
 		file: 'blog/index.svelte',
-		url: '/_app/routes/blog/index.svelte.js'
+		url: '/src/routes/blog/index.svelte'
 	};
 	const blog_$slug = {
 		name: 'blog_$slug',
 		file: 'blog/[slug].svelte',
-		url: '/_app/routes/blog/[slug].svelte.js'
+		url: '/src/routes/blog/[slug].svelte'
 	};
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
@@ -64,7 +64,7 @@ test('creates routes', () => {
 			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
 			file: 'blog/index.json.js',
-			url: '/_app/routes/blog/index.json.js',
+			url: '/src/routes/blog/index.json.js',
 			params: []
 		},
 
@@ -72,7 +72,7 @@ test('creates routes', () => {
 			name: 'route_blog_$slug_json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'blog/[slug].json.ts',
-			url: '/_app/routes/blog/[slug].json.js',
+			url: '/src/routes/blog/[slug].json.ts',
 			params: ['slug']
 		}
 	]);
@@ -83,9 +83,9 @@ test('encodes invalid characters', () => {
 
 	// had to remove ? and " because windows
 
-	// const quote = { name: '$34', file: '".svelte', url: '/_app/routes/".svelte.js' };
-	const hash = { name: '$35', file: '#.svelte', url: '/_app/routes/#.svelte.js' };
-	// const question_mark = { name: '$63', file: '?.svelte', url: '/_app/routes/?.svelte.js' };
+	// const quote = { name: '$34', file: '".svelte', url: '/src/routes/".svelte' };
+	const hash = { name: '$35', file: '#.svelte', url: '/src/routes/#.svelte' };
+	// const question_mark = { name: '$63', file: '?.svelte', url: '/src/routes/?.svelte' };
 
 	assert.equal(components, [
 		// quote,
@@ -162,7 +162,7 @@ test('allows multiple slugs', () => {
 			name: 'route_$file$93_$91ext',
 			pattern: /^\/([^/]+?)\.([^/]+?)$/,
 			file: '[file].[ext].js',
-			url: '/_app/routes/[file].[ext].js',
+			url: '/src/routes/[file].[ext].js',
 			params: ['file', 'ext']
 		}
 	]);
@@ -176,7 +176,7 @@ test('allows multiple slugs with nested square brackets', () => {
 			name: 'route_$file_$91ext$40$91a$45z$93$43$41$93',
 			pattern: /^\/([a-z]+)\.([a-z]+)$/,
 			file: '[file([a-z]+)].[ext([a-z]+)].js',
-			url: '/_app/routes/[file([a-z]+)].[ext([a-z]+)].js',
+			url: '/src/routes/[file([a-z]+)].[ext([a-z]+)].js',
 			params: ['file', 'ext']
 		}
 	]);
@@ -210,7 +210,7 @@ test('ignores things that look like lockfiles', () => {
 	assert.equal(endpoints, [
 		{
 			file: 'foo.js',
-			url: '/_app/routes/foo.js',
+			url: '/src/routes/foo.js',
 			name: 'route_foo',
 			params: [],
 			pattern: /^\/foo\/?$/
@@ -224,17 +224,17 @@ test('works with custom extensions', () => {
 		'.jazz .beebop .funk .svelte'
 	);
 
-	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk.js' };
-	const about = { name: 'about', file: 'about.jazz', url: '/_app/routes/about.jazz.js' };
+	const index = { name: 'index', file: 'index.funk', url: '/src/routes/index.funk' };
+	const about = { name: 'about', file: 'about.jazz', url: '/src/routes/about.jazz' };
 	const blog = {
 		name: 'blog',
 		file: 'blog/index.svelte',
-		url: '/_app/routes/blog/index.svelte.js'
+		url: '/src/routes/blog/index.svelte'
 	};
 	const blog_$slug = {
 		name: 'blog_$slug',
 		file: 'blog/[slug].beebop',
-		url: '/_app/routes/blog/[slug].beebop.js'
+		url: '/src/routes/blog/[slug].beebop'
 	};
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
@@ -270,14 +270,14 @@ test('works with custom extensions', () => {
 			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
 			file: 'blog/index.json.js',
-			url: '/_app/routes/blog/index.json.js',
+			url: '/src/routes/blog/index.json.js',
 			params: []
 		},
 		{
 			name: 'route_blog_$slug_json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'blog/[slug].json.js',
-			url: '/_app/routes/blog/[slug].json.js',
+			url: '/src/routes/blog/[slug].json.js',
 			params: ['slug']
 		}
 	]);
