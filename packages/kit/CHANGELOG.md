@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.33
+
+### Patch Changes
+
+- 474070e: Better errors when modules cannot be found
+
 ## 1.0.0-next.32
 
 ### Patch Changes
