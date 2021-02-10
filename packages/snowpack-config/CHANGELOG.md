@@ -1,5 +1,11 @@
 # @sveltejs/snowpack-config
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- 7175368: Make `@snowpack/plugin-svelte` use `svelte.config.cjs`
+
 ## 1.0.0-next.2
 
 ### Patch Changes

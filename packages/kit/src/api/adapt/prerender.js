@@ -1,7 +1,7 @@
 import fs, { readFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, resolve, URLSearchParams } from 'url';
-import glob from 'tiny-glob/sync';
+import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '@sveltejs/app-utils/files';
 
 function clean_html(html) {
@@ -47,7 +47,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
-	const app = require(`${server_root}/server/app.js`);
+	const app = await import(`${server_root}/server/app.js`);
 
 	app.init({
 		paths: config.paths

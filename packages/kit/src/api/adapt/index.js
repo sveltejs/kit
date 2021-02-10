@@ -1,5 +1,5 @@
 import colors from 'kleur';
-import relative from 'require-relative';
+import { pathToFileURL } from 'url';
 import { logger } from '../utils';
 import Builder from './Builder';
 
@@ -20,7 +20,8 @@ export async function adapt(config, { verbose }) {
 		log
 	});
 
-	const fn = relative(adapter);
+	const resolved = await import.meta.resolve(adapter, pathToFileURL(process.cwd()));
+	const fn = await import(resolved);
 	await fn(builder, options);
 
 	log.success('done');
