@@ -1,9 +1,9 @@
-'use strict';
+import { copyFileSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
 
-const fs = require('fs');
-const { join } = require('path');
-
-module.exports = async function adapter(builder) {
+export default async function adapter(builder) {
+	const dir = dirname(fileURLToPath(import.meta.url));
 	const out = 'build'; // TODO implement adapter options
 
 	builder.log.minor('Writing client application...');
@@ -14,10 +14,10 @@ module.exports = async function adapter(builder) {
 	builder.log.minor('Building server');
 	builder.copy_server_files(out);
 
-	fs.copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
+	copyFileSync(`${dir}/files/server.js`, `${out}/index.js`);
 
 	builder.log.minor('Prerendering static pages...');
 	await builder.prerender({
 		dest: `${out}/prerendered`
 	});
-};
+}
