@@ -1,8 +1,11 @@
-const { writeFileSync, mkdirSync } = require('fs');
-const { resolve, join } = require('path');
-const { copy } = require('@sveltejs/app-utils/files');
+import { writeFileSync, mkdirSync } from 'fs';
+import { dirname, resolve, join } from 'path';
+import { fileURLToPath } from 'url';
+import { copy } from '@sveltejs/app-utils/files';
 
-module.exports = async function adapter(builder) {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default async function adapter(builder) {
 	const vercel_output_directory = resolve('.vercel_build_output');
 	const config_directory = join(vercel_output_directory, 'config');
 	const static_directory = join(vercel_output_directory, 'static');
@@ -37,4 +40,4 @@ module.exports = async function adapter(builder) {
 			}
 		])
 	);
-};
+}

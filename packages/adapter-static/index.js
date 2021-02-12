@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = async function adapter(builder, { pages = 'build', assets = 'build' } = {}) {
+export default async function adapter(builder, { pages = 'build', assets = 'build' } = {}) {
 	builder.copy_static_files(assets);
 	builder.copy_client_files(assets);
 
@@ -8,4 +8,4 @@ module.exports = async function adapter(builder, { pages = 'build', assets = 'bu
 		force: true,
 		dest: pages
 	});
-};
+}

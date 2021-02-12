@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
 ## 0.0.13
 
 ### Patch Changes

@@ -2,13 +2,14 @@ import colors from 'kleur';
 import { pathToFileURL } from 'url';
 import { logger } from '../utils';
 import Builder from './Builder';
+import { createRequire } from 'module';
 
 export async function adapt(config, { verbose }) {
-	const [adapter, options] = config.adapter;
-
-	if (!adapter) {
+	if (!config.adapter) {
 		throw new Error('No adapter specified');
 	}
+
+	const [adapter, options] = config.adapter;
 
 	const log = logger({ verbose });
 
@@ -20,8 +21,9 @@ export async function adapt(config, { verbose }) {
 		log
 	});
 
-	const resolved = await import.meta.resolve(adapter, pathToFileURL(process.cwd()));
-	const fn = await import(resolved);
+	const require = createRequire(import.meta.url);
+	const resolved = require.resolve(adapter, pathToFileURL(process.cwd()));
+	const fn = (await import(resolved)).default;
 	await fn(builder, options);
 
 	log.success('done');

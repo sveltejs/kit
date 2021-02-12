@@ -184,7 +184,7 @@ importers:
       is-reference: 1.2.1
       kleur: 4.1.4
       magic-string: 0.25.7
-      meriyah: 4.1.1
+      meriyah: 4.1.2
       node-fetch: 2.6.1
       periscopic: 3.0.0
       port-authority: 1.1.2
@@ -208,7 +208,7 @@ importers:
       is-reference: ^1.2.1
       kleur: ^4.1.4
       magic-string: ^0.25.7
-      meriyah: ^4.1.1
+      meriyah: ^4.1.2
       node-fetch: ^2.6.1
       periscopic: ^3.0.0
       port-authority: ^1.1.2
@@ -2541,12 +2541,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /meriyah/4.1.1:
+  /meriyah/4.1.2:
     dev: true
     engines:
       node: '>=10.4.0'
     resolution:
-      integrity: sha512-Awk9n/HTyIZWhtpZkb8HvlrU7q7fBGl24wm4HXxVFm5IV3ov2PacmR41SL+LZ9EtuhRCudw5MkGaXUcUEcOBZg==
+      integrity: sha512-96HmNeyUom4BXgfXmUZcJzEx7peF/QYI6UJDG2gs3a6dCoakEuLwKXtHyHx8QjR7ksgMeSRxpbPIOGSJIkZgBQ==
   /methods/1.1.2:
     dev: false
     engines:
@@ -2991,7 +2991,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==
-  /postcss/8.2.5:
+  /postcss/8.2.6:
     dependencies:
       colorette: 1.2.1
       nanoid: 3.1.20
@@ -3000,7 +3000,7 @@ packages:
     engines:
       node: ^10 || ^12 || >=14
     resolution:
-      integrity: sha512-wMcb7BpDcm3gxQOQx46NDNT36Kk0Ao6PJLLI2ed5vehbbbxCEuslSQzbQ2sfSKy+gkYxhWcGWSeaK+gwm4KIZg==
+      integrity: sha512-xpB8qYxgPuly166AGlpRjUdEYtmOWx2iCwGmrv4vqZL9YPVviDVPZPRXxnXr6xPZOdxQ9lp3ZBFCRgWJ7LE3Sg==
   /preferred-pm/3.0.2:
     dependencies:
       find-up: 5.0.0
@@ -3305,15 +3305,6 @@ packages:
       fsevents: 2.3.1
     resolution:
       integrity: sha512-FVx/XzR2DtCozKNDBjHJCHIgkC12rNg/ruAeoYWjLeeKfSKgwhh+lDLDhuCkuRG/fsup8py8dKBTlHdvUFX32A==
-  /rollup/2.38.5:
-    dev: false
-    engines:
-      node: '>=10.0.0'
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.1
-    resolution:
-      integrity: sha512-VoWt8DysFGDVRGWuHTqZzT02J0ASgjVq/hPs9QcBOGMd7B+jfTr/iqMVEyOi901rE3xq+Deq66GzIT1yt7sGwQ==
   /run-parallel/1.1.10:
     dev: true
     resolution:
@@ -3942,9 +3933,9 @@ packages:
   /vite/2.0.0-beta.60:
     dependencies:
       esbuild: 0.8.39
-      postcss: 8.2.5
+      postcss: 8.2.6
       resolve: 1.19.0
-      rollup: 2.38.5
+      rollup: 2.38.3
     dev: false
     engines:
       node: '>=12.0.0'

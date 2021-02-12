@@ -4,9 +4,9 @@ import colors from 'kleur';
 import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
-function get_config() {
+async function get_config() {
 	try {
-		return load_config();
+		return await load_config();
 	} catch (error) {
 		let message = error.message;
 
@@ -113,7 +113,7 @@ prog
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { adapt } = await import('./api/adapt');
 
