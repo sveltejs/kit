@@ -5,7 +5,6 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
-		"postbuild": "svelte-kit adapt",
 		"start": "svelte-kit start",
 		"test": "node test"
 	},
