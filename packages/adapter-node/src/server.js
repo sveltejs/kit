@@ -4,7 +4,7 @@ import { parse, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 
-const app = require('./app.js');
+const app = await import('./app.js');
 
 const { PORT = 3000 } = process.env; // TODO configure via svelte.config.js
 

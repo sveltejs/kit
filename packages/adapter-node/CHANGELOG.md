@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- 93ab9b9: use import instead of require
+
 ## 1.0.0-next.3
 
 ### Patch Changes
