@@ -2,19 +2,13 @@
 	const valid_lists = new Set(['news', 'newest', 'show', 'ask', 'jobs']);
 
 	export async function load({ page: { params }, fetch }) {
-		const list = (
-			params.list === 'top' ? 'news' :
-			params.list === 'new' ? 'newest' :
-			params.list
-		);
+		const list = params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
 
 		if (!valid_lists.has(list)) {
 			console.log('invalid');
 			return {
-				error: {
-					status: 404,
-					message: 'Not found'
-				}
+				status: 404,
+				error: 'Not found'
 			};
 		}
 
@@ -42,18 +36,19 @@
 
 	const PAGE_SIZE = 30;
 
-	$: start = (1 + (page - 1) * PAGE_SIZE);
+	$: start = 1 + (page - 1) * PAGE_SIZE;
 	$: next = `/${list}/${+page + 1}`;
 </script>
 
 <svelte:head>
 	<title>Svelte Hacker News</title>
-	<meta name="description" content="Latest Hacker News stories in the {list} category">
+	<meta name="description" content="Latest Hacker News stories in the {list} category" />
 </svelte:head>
 
 {#each items as item, i}
-	{#if item} <!-- sometimes we get bad data? TODO investigate -->
-		<ItemSummary {item} index={start + i}/>
+	{#if item}
+		<!-- sometimes we get bad data? TODO investigate -->
+		<ItemSummary {item} index={start + i} />
 	{/if}
 {/each}
 

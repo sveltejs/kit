@@ -45,13 +45,12 @@ The `load` function receives two arguments — `page` and `session`.
 
 So if the example above was `src/routes/blog/[slug].svelte` and the URL was `/blog/some-post?foo=bar&baz`, the following would be true:
 
-* `page.path === '/blog/some-post'`
-* `page.params.slug === 'some-post'`
-* `page.query.foo === 'bar'`
-* `page.query.baz === true`
+- `page.path === '/blog/some-post'`
+- `page.params.slug === 'some-post'`
+- `page.query.foo === 'bar'`
+- `page.query.baz === true`
 
 `session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. [Seeding session data](docs#Seeding_session_data) describes how to add data to it.
-
 
 #### api
 
@@ -70,10 +69,10 @@ To fix this, SvelteKit provides `api` methods, which work on the server as well 
 ```
 
 It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
-  - should run on the same domain as any upstream API servers requiring credentials
-  - should not reference `window`, `document` or any browser-specific objects
-  - should not reference any API keys or secrets, which will be exposed to the client
 
+- should run on the same domain as any upstream API servers requiring credentials
+- should not reference `window`, `document` or any browser-specific objects
+- should not reference any API keys or secrets, which will be exposed to the client
 
 ### Return values
 
@@ -81,10 +80,9 @@ If you return a Promise from `load`, the page will delay rendering until the pro
 
 When Sapper renders a page on the server, it will attempt to serialize the resolved value (using [devalue](https://github.com/Rich-Harris/devalue)) and include it on the page, so that the client doesn't also need to call `preload` upon initialization. Serialization will fail if the value includes functions or custom classes (cyclical and repeated references are fine, as are built-ins like `Date`, `Map`, `Set` and `RegExp`).
 
-
 #### error
 
-If the user navigated to `/blog/some-invalid-slug`, we would want to render a 404 Not Found page. We can do that with `this.error`:
+If the user navigated to `/blog/some-invalid-slug`, we would want to render a 404 Not Found page. We can do that by returning an object with the `"error"` property. The value in the `"error"` property, can be either a `string` or an `Error` instance.
 
 ```html
 <script context="module">
@@ -98,13 +96,12 @@ If the user navigated to `/blog/some-invalid-slug`, we would want to render a 40
 			return { props: { article } };
 		}
 
-		return { status: 404, message: 'Not found' };
+		return { status: 404, error: 'Not found' };
 	}
 </script>
 ```
 
 The same applies to other error codes you might encounter.
-
 
 #### redirect
 
