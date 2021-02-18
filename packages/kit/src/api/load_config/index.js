@@ -76,9 +76,11 @@ export function validate_config(config) {
 		}
 	}
 
-	const { extensions, kit = {} } = config;
+	let { extensions, kit = {} } = config;
 
-	if (extensions) kit.pageExtensions = extensions;
+	if (extensions && !kit.pageExtensions) {
+		kit = { ...kit, pageExtensions: extensions };
+	}
 
 	const validated = validate(options, kit, 'kit');
 
