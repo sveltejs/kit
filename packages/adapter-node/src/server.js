@@ -1,10 +1,14 @@
 import * as fs from 'fs';
 import * as http from 'http';
-import { parse, URLSearchParams } from 'url';
+import { dirname, join } from 'path';
+import { parse, URLSearchParams, fileURLToPath } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
+// App is a dynamic file built from the application layer.
+/*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
+import * as app from './app.js';
 
-const app = require('./app.js');
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const { PORT = 3000 } = process.env; // TODO configure via svelte.config.js
 
@@ -18,7 +22,7 @@ const noop_handler = (_req, _res, next) => next();
 
 const prerendered_handler = fs.existsSync('prerendered') ? mutable('prerendered') : noop_handler;
 
-const assets_handler = sirv('assets', {
+const assets_handler = sirv(join(__dirname, '/assets'), {
 	maxAge: 31536000,
 	immutable: true
 });

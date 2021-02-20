@@ -9,5 +9,5 @@ export default {
 		sourcemap: true
 	},
 	plugins: [nodeResolve(), commonjs()],
-	external: require('module').builtinModules
+	external: ['./app.js', ...require('module').builtinModules]
 };
