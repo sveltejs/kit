@@ -1,5 +1,3 @@
-// import { mkdtempSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
-// import { tmpdir } from 'os';
 import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
