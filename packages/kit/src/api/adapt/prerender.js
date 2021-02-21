@@ -195,7 +195,8 @@ export async function prerender({ dir, out, log, config, force }) {
 			// TODO support other extensions, e.g. .svelte.md?
 			const entries = glob('**/*.svelte', { cwd: config.files.routes })
 				.map((file) => {
-					const parts = file.split('/'); // TODO is this true for glob results on windows?
+					// support both windows and unix glob results
+					const parts = file.split(/[/\\]/);
 
 					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
 						return null;
