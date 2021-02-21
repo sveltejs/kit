@@ -3,8 +3,6 @@
 import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
-import rimraf from 'rimraf';
-import glob from 'tiny-glob/sync.js';
 import { fileURLToPath } from 'url';
 import { load_config } from '../index.js';
 
