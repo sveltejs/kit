@@ -68,4 +68,56 @@ suite('copy files', () => {
 	assert.equal(glob('**', { cwd: `${generated_files}/server` }), glob('**', { cwd: dest }));
 });
 
+suite('prerender', async () => {
+	const generated_files = join(__dirname, 'fixtures/prerender/.svelte/build/optimized');
+	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
+	const config = {
+		files: {
+			assets: join(__dirname, 'fixtures/prerender/static'),
+			routes: join(__dirname, 'fixtures/prerender/.svelte/build/optimized/server/routes')
+		},
+		appDir: '_app',
+		prerender: {
+			pages: ['*'],
+			enabled: true
+		}
+	};
+
+	const builder = new Builder({
+		generated_files,
+		config,
+		manifest: {
+			error: {
+				name: '$default_error',
+				url: '/_app/assets/components/error.svelte.js'
+			},
+			layout: {
+				name: '$default_layout',
+				url: '/_app/assets/components/layout.svelte.js'
+			},
+			components: [],
+			pages: [],
+			endpoints: []
+		},
+		log: Object.assign((_msg) => {}, {
+			info: (_msg) => {},
+			warn: (_msg) => {},
+			error: (_msg) => {},
+			success: (_msg) => {}
+		})
+	});
+
+	const dest = join(__dirname, 'output');
+
+	rimraf.sync(dest);
+	await builder.prerender({
+		force: true,
+		dest
+	});
+
+	assert.equal(glob('**', { cwd: `${prerendered_files}` }), glob('**', { cwd: dest }));
+
+	rimraf.sync(dest);
+});
+
 suite.run();
