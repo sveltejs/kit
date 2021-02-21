@@ -4,9 +4,9 @@ title: Layouts
 
 So far, we've treated pages as entirely standalone components — upon navigation, the existing component will be destroyed, and a new one will take its place.
 
-But in many apps, there are elements that should be visible on *every* page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use *layout* components.
+But in many apps, there are elements that should be visible on _every_ page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use _layout_ components.
 
-To create a layout component that applies to every page, make a file called `src/routes/$layout.svelte`. The default layout component (the one that Sapper uses if you don't bring your own) looks like this...
+To create a layout component that applies to every page, make a file called `src/routes/$layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
 
 ```html
 <slot></slot>
@@ -44,7 +44,6 @@ If we create pages for `/`, `/about` and `/settings`...
 
 ...the nav will always be visible, and clicking between the three pages will only result in the `<h1>` being replaced.
 
-
 ### Nested routes
 
 Suppose we don't just have a single `/settings` page, but instead have nested pages like `/settings/profile` and `/settings/notifications` with a shared submenu (for a real-life example, see [github.com/settings](https://github.com/settings)).
@@ -63,24 +62,24 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
-Layout components receive a `segment` property which is useful for things like styling:
+The `page` store from `$app/stores` can be useful for styling:
 
 ```diff
 +<script>
-+	export let segment;
++	import { page } from '$app/stores';
 +</script>
 +
-<div class="submenu">
+ <div class="submenu">
 -	<a href="settings/profile">Profile</a>
 -	<a href="settings/notifications">Notifications</a>
 +	<a
-+		class:selected={segment === "profile"}
++		class:selected={$page.path.endsWith("profile")}
 +		href="settings/profile"
 +	>Profile</a>
 +
 +	<a
-+		class:selected={segment === "notifications"}
++		class:selected={$page.path.endsWith("notifications")}
 +		href="settings/notifications"
 +	>Notifications</a>
-</div>
+ </div>
 ```
