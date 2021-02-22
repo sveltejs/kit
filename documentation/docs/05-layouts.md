@@ -55,8 +55,8 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <h1>Settings</h1>
 
 <div class="submenu">
-	<a href="settings/profile">Profile</a>
-	<a href="settings/notifications">Notifications</a>
+	<a href="/settings/profile">Profile</a>
+	<a href="/settings/notifications">Notifications</a>
 </div>
 
 <slot></slot>
@@ -70,16 +70,16 @@ The `page` store from `$app/stores` can be useful for styling:
 +</script>
 +
  <div class="submenu">
--	<a href="settings/profile">Profile</a>
--	<a href="settings/notifications">Notifications</a>
+-	<a href="/settings/profile">Profile</a>
+-	<a href="/settings/notifications">Notifications</a>
 +	<a
-+		class:selected={$page.path.endsWith("profile")}
-+		href="settings/profile"
++		class:selected={$page.path === "/settings/profile"}
++		href="/settings/profile"
 +	>Profile</a>
 +
 +	<a
-+		class:selected={$page.path.endsWith("notifications")}
-+		href="settings/notifications"
++		class:selected={$page.path === "/settings/notifications"}
++		href="/settings/notifications"
 +	>Notifications</a>
  </div>
 ```
