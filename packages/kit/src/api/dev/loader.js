@@ -17,7 +17,7 @@ export default function loader(sp) {
 			return load(pathname, url_stack);
 		}
 
-		return import(imported);
+		return load_node(imported);
 	};
 
 	const invalidate_all = (path) => {
@@ -33,6 +33,13 @@ export default function loader(sp) {
 		const url = sp.getUrlForFile(filePath);
 		if (url) invalidate_all(url);
 	});
+
+	async function load_node(source) {
+		return {
+			exports: await import(source),
+			css: []
+		};
+	}
 
 	async function load(url, url_stack) {
 		if (url_stack.includes(url)) {
