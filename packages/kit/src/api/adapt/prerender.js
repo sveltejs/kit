@@ -1,5 +1,5 @@
 import fs, { readFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path } from 'path';
+import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '@sveltejs/app-utils/files';
@@ -196,7 +196,7 @@ export async function prerender({ dir, out, log, config, force }) {
 			const entries = glob('**/*.svelte', { cwd: config.files.routes })
 				.map((file) => {
 					// support both windows and unix glob results
-					const parts = file.split(/[/\\]/);
+					const parts = file.split(path_separator);
 
 					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
 						return null;
