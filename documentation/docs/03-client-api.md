@@ -2,26 +2,6 @@
 title: Client API
 ---
 
-The app entry point consists of a `start` function.
-
-### start({ target })
-
-- `target` — an element to render pages to
-
-This configures the router and starts the application — listens for clicks on `<a>` elements, interacts with the `history` API, and renders and updates your Svelte components.
-
-Returns a `Promise` that resolves when the initial page has been hydrated.
-
-```js
-import { start } from '/./_app/entry.js'; // filename will include a hash
-
-start({
-	target: document.querySelector('#svelte')
-}).then(() => {
-	console.log('client-side app has started');
-});
-```
-
 The `$app/navigation` and `$app/stores` modules contain functions for controlling SvelteKit programmatically and responding to events.
 
 ### goto(href, options?)
@@ -60,6 +40,6 @@ Returns a `Promise` that resolves when the prefetch is complete.
 
 - `routes` — an optional array of strings representing routes to prefetch
 
-Programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this after `start()` is complete, to speed up subsequent navigation (this is the 'L' of the [PRPL pattern](https://developers.google.com/web/fundamentals/performance/prpl-pattern/)). Omitting arguments will cause all routes to be fetched, or you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `preload` for individual pages.
+Programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation (this is the 'L' of the [PRPL pattern](https://developers.google.com/web/fundamentals/performance/prpl-pattern/)). Omitting arguments will cause all routes to be fetched, or you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `preload` for individual pages.
 
 Returns a `Promise` that resolves when the routes have been prefetched.
