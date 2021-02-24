@@ -28,7 +28,9 @@ When you run `svelte-kit build`, SvelteKit first builds a production version of 
 
 When you run `svelte-kit adapt` with the static adapter, it then starts the server, and navigates to the root of your app. From there, it follows any `<a>`, `<img>`, `<link>` and `<source>` elements it finds pointing to local URLs, and captures any data served by the app.
 
-Because of this, any pages you want to be included in the exported site must be reachable by `<a>` elements.
+Because of this, any dynamic pages you want to be included in the exported site must be reachable by `<a>` elements.
+
+Statically named pages (such as our `src/routes/about.svelte` example) are always included in the export process, even if they cannot be discovered by the method above.
 
 ### When not to use the static adapter
 
