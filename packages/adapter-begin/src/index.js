@@ -38,6 +38,4 @@ async function handler(event) {
 	};
 }
 
-export {
-	handler
-};
+export { handler };
