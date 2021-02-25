@@ -1,9 +1,9 @@
 'use strict';
 
-const { readFileSync, existsSync } = require('fs');
-const { copy } = require('@sveltejs/app-utils/files');
-const { resolve, join } = require('path');
-const parse = require('@architect/parser');
+import { readFileSync, existsSync } from 'fs';
+import { copy } from '@sveltejs/app-utils/files';
+import { resolve, join } from 'path';
+import parse from '@architect/parser';
 
 function parse_arc(arcPath) {
 	if (!existsSync(arcPath)) {
@@ -24,7 +24,7 @@ function parse_arc(arcPath) {
 	}
 }
 
-module.exports = async function adapter(builder) {
+export default async function adapter(builder) {
 	builder.log.minor('Parsing app.arc file');
 	const { static: static_mount_point } = parse_arc('app.arc');
 
@@ -47,4 +47,4 @@ module.exports = async function adapter(builder) {
 	await builder.prerender({
 		dest: static_directory
 	});
-};
+}

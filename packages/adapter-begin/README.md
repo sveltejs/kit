@@ -4,7 +4,7 @@ Adapter for Svelte apps that creates a [Begin](https://begin.com/) app, using a 
 
 ## Configuration
 
-Add the adapter to your `svelte.config.js`:
+Add the adapter to your `svelte.config.cjs`:
 
 ```js
 module.exports = {

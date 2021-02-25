@@ -1,9 +1,9 @@
 'use strict';
 
-const url = require('url');
-const app = require('@architect/shared/app.js');
+import url from 'url';
+import app from '@architect/shared/app.js'; // eslint-disable-line import/no-unresolved
 
-exports.handler = async (event) => {
+async function handler(event) {
 	const { host, rawPath: path, httpMethod, headers, queryStringParameters, body } = event;
 
 	const query = new url.URLSearchParams();
@@ -36,4 +36,8 @@ exports.handler = async (event) => {
 		statusCode: 404,
 		body: 'Not Found'
 	};
+}
+
+export {
+	handler
 };
