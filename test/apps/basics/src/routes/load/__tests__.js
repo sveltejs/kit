@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-export default function(test, is_dev) {
+export default function (test, is_dev) {
 	test('loads', async ({ visit, contains }) => {
 		await visit('/load');
 		assert.ok(await contains('bar == bar'));
@@ -11,19 +11,20 @@ export default function(test, is_dev) {
 			await visit('/load/serialization');
 		});
 
-		const payload = '{"status":200,"statusText":"OK","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
+		const payload =
+			'{"status":200,"statusText":"OK","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
 
-		if (!js) { // by the time JS has run, hydration will have nuked these scripts
+		if (!js) {
+			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents = await html('script[type="svelte-data"]');
 
-			assert.equal(
-				script_contents,
-				payload,
-				'Page should contain serialized data'
-			);
+			assert.equal(script_contents, payload, 'Page should contain serialized data');
 		}
 
-		assert.ok(!requests.some(r => r.endsWith('/load/serialization.json')), 'Should not load JSON over the wire');
+		assert.ok(
+			!requests.some((r) => r.endsWith('/load/serialization.json')),
+			'Should not load JSON over the wire'
+		);
 	});
 
 	test('prefers static data over endpoint', async ({ visit, text }) => {
@@ -34,11 +35,14 @@ export default function(test, is_dev) {
 	test('context is inherited', async ({ visit, text }) => {
 		await visit('/load/context/a/b/c');
 		assert.equal(await text('h1'), 'message: original + new');
-		assert.equal(await text('pre'), JSON.stringify({
-			x: 'a',
-			y: 'b',
-			z: 'c'
-		}));
+		assert.equal(
+			await text('pre'),
+			JSON.stringify({
+				x: 'a',
+				y: 'b',
+				z: 'c'
+			})
+		);
 	});
 
 	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {

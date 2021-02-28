@@ -12,14 +12,14 @@ const mutable = (dir) =>
 	});
 
 export async function start({ port, config }) {
-	const app_file = resolve('.svelte/build/optimized/server/app.js');
+	const app_file = resolve('.svelte/output/server/app.js');
 	const app = await import(app_file);
 
 	const static_handler = fs.existsSync(config.files.assets)
 		? mutable(config.files.assets)
 		: (_req, _res, next) => next();
 
-	const assets_handler = sirv('.svelte/build/optimized/client', {
+	const assets_handler = sirv('.svelte/output/client', {
 		maxAge: 31536000,
 		immutable: true
 	});

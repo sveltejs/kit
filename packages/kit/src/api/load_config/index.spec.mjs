@@ -8,7 +8,7 @@ test('fills in defaults', () => {
 	assert.equal(validated, {
 		adapter: [null],
 		amp: false,
-		appDir: '.svelte',
+		appDir: '_app',
 		files: {
 			assets: 'static',
 			routes: 'src/routes',
@@ -66,7 +66,7 @@ test('fills in partial blanks', () => {
 	assert.equal(validated, {
 		adapter: [null],
 		amp: false,
-		appDir: '.svelte',
+		appDir: '_app',
 		files: {
 			assets: 'public',
 			routes: 'src/routes',

@@ -16,7 +16,7 @@ export default {
 
 	amp: expect_boolean(false),
 
-	appDir: expect_string('.svelte'),
+	appDir: expect_string('_app'),
 
 	files: {
 		default: {

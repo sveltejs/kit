@@ -3,20 +3,15 @@
 	"version": "1.0.0-next.34",
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/vite-plugin-svelte": "workspace:*",
 		"cheap-watch": "^1.0.3",
-		"express": "^4.17.1",
 		"http-proxy": "^1.18.1",
-		"rollup": "^2.38.3",
-		"rollup-plugin-css-chunks": "^2.0.2",
-		"rollup-plugin-terser": "^7.0.2",
 		"sade": "^1.7.4",
 		"scorta": "^1.0.0",
-		"snowpack": "^3.0.11",
-		"source-map": "^0.7.3",
-		"vite": "2.0.0-beta.60",
-		"vite-plugin-svelte": "github:benmccann/vite-plugin-svelte"
+		"source-map": "^0.7.3"
 	},
 	"devDependencies": {
+		"@rollup/plugin-typescript": "^8.2.0",
 		"@sveltejs/app-utils": "workspace:*",
 		"@types/node": "^14.14.22",
 		"@types/rimraf": "^3.0.0",
@@ -33,10 +28,15 @@
 		"port-authority": "^1.1.2",
 		"require-relative": "^0.8.7",
 		"rimraf": "^3.0.2",
+		"rollup": "^2.38.3",
 		"sirv": "^1.0.11",
-		"source-map-support": "^0.5.19",
+		"tiny-glob": "^0.2.8",
+		"typescript": "^4.2.2",
+		"vite": "^2.0.4"
+	},
+	"peerDependencies": {
 		"svelte": "^3.32.1",
-		"tiny-glob": "^0.2.8"
+		"vite": "^2.0.4"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
@@ -49,7 +49,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",

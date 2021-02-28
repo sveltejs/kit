@@ -11,8 +11,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/snowpack-config": "workspace:*",
-		"svelte": "^3.32.1",
-		"vite-plugin-svelte": "github:benmccann/vite-plugin-svelte"
+		"svelte": "^3.32.1"
 	}
 }
