@@ -78,7 +78,7 @@ importers:
       '@architect/parser': 3.0.1
       '@sveltejs/app-utils': link:../app-utils
     devDependencies:
-      rollup: 2.38.3
+      rollup: 2.40.0
       sirv: 1.0.11
     specifiers:
       '@architect/parser': ^3.0.1
