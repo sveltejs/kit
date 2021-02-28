@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.4
+
+### Minor Changes
+
+- Make adapter node work under esm
+
 ## 1.0.0-next.3
 
 ### Patch Changes

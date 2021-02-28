@@ -53,7 +53,7 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu src \"(spec.mjs|test/index.mjs)\""
+		"test": "uvu src \"(spec\\.mjs|test[\\\\/]index\\.mjs)\""
 	},
 	"exports": {
 		"./api": {

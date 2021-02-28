@@ -37,6 +37,8 @@ This is the home page for your application and is just like any other Svelte com
 
 #### src/service-worker.js
 
+_Currently not implemented._
+
 Service workers act as proxy servers that give you fine-grained control over how to respond to network requests. For example, when the browser requests `/goats.jpg`, the service worker can respond with a file it previously cached, or it can pass the request on to the server, or it could even respond with something completely different, such as a picture of llamas.
 
 Among other things, this makes it possible to build applications that work offline.
@@ -71,10 +73,26 @@ Sapper doesn't serve these files — you'd typically use [sirv](https://github.c
 
 > Note that the default behaviour of the service worker is to cache all assets from the static directory, so if you have more than 50mb of files here, you will start to exceed the cache limit for service-workers in some browsers, which can cause the service worker to stop loading. In this instance, it is advisable to customise what files are cached by editing the service-worker yourself.
 
+<<<<<<< HEAD
+
 ### svelte.config.cjs
+
+=======
+
+### snowpack.config.cjs
+
+> > > > > > > master
 
 This file contains SvelteKit options as well as options for `svelte-preprocess`.
 
+<<<<<<< HEAD
+
 ### vite.config.js
+
+=======
+
+### svelte.config.cjs
+
+> > > > > > > master
 
 This is the [Vite configuration file](https://vitejs.dev/config/) for your project.
