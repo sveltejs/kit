@@ -32,7 +32,7 @@ export function update_component(cwd, filepath, replacements) {
 /**
  * Adds `svelte-preprocess` to `svelte.config.cjs`, if there's no preprocessor already.
  */
-export function add_svelte_prepocess_to_config(cwd) {
+export function add_svelte_preprocess_to_config(cwd) {
 	const file = path.join(cwd, 'svelte.config.cjs');
 	let config = fs.readFileSync(file, 'utf-8');
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { bold, green } from 'kleur/colors';
 import path from 'path';
-import { add_svelte_prepocess_to_config, update_component, update_package_json } from './utils';
+import { add_svelte_preprocess_to_config, update_component, update_package_json } from './utils';
 
 export default async function add_typescript(cwd, yes) {
 	if (yes) {
@@ -15,7 +15,7 @@ export default async function add_typescript(cwd, yes) {
 			['<script>', '<script lang="ts">'],
 			['let count = 0', 'let count: number = 0']
 		]);
-		add_svelte_prepocess_to_config(cwd);
+		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
 		add_d_ts_file(cwd);
 
