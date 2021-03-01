@@ -156,35 +156,23 @@ importers:
     dependencies:
       '@sveltejs/vite-plugin-svelte': link:../vite-plugin-svelte
       cheap-watch: 1.0.3
-      http-proxy: 1.18.1
       sade: 1.7.4
-      scorta: 1.0.0
-      source-map: 0.7.3
     devDependencies:
-      '@rollup/plugin-typescript': 8.2.0_rollup@2.40.0+typescript@4.2.2
       '@sveltejs/app-utils': link:../app-utils
       '@types/node': 14.14.31
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
       eslint: 7.20.0
-      estree-walker: 2.0.2
-      is-reference: 1.2.1
       kleur: 4.1.4
-      magic-string: 0.25.7
-      meriyah: 4.1.2
       node-fetch: 2.6.1
-      periscopic: 3.0.0
       port-authority: 1.1.2
-      require-relative: 0.8.7
       rimraf: 3.0.2
       rollup: 2.40.0
       sirv: 1.0.11
       tiny-glob: 0.2.8
-      typescript: 4.2.2
       vite: 2.0.4
     specifiers:
-      '@rollup/plugin-typescript': ^8.2.0
       '@sveltejs/app-utils': workspace:*
       '@sveltejs/vite-plugin-svelte': workspace:*
       '@types/node': ^14.14.22
@@ -193,24 +181,14 @@ importers:
       amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.3
       eslint: ^7.19.0
-      estree-walker: ^2.0.2
-      http-proxy: ^1.18.1
-      is-reference: ^1.2.1
       kleur: ^4.1.4
-      magic-string: ^0.25.7
-      meriyah: ^4.1.2
       node-fetch: ^2.6.1
-      periscopic: ^3.0.0
       port-authority: ^1.1.2
-      require-relative: ^0.8.7
       rimraf: ^3.0.2
       rollup: ^2.38.3
       sade: ^1.7.4
-      scorta: ^1.0.0
       sirv: ^1.0.11
-      source-map: ^0.7.3
       tiny-glob: ^0.2.8
-      typescript: ^4.2.2
       vite: ^2.0.4
   packages/vite-plugin-svelte:
     dependencies:
@@ -616,21 +594,6 @@ packages:
       '@rollup/pluginutils': 3.1.0_rollup@2.40.0
       resolve: 1.20.0
       rollup: 2.40.0
-    dev: true
-    engines:
-      node: '>=8.0.0'
-    peerDependencies:
-      rollup: ^2.14.0
-      tslib: '*'
-      typescript: '>=3.4.0'
-    resolution:
-      integrity: sha512-5DyVsb7L+ehLfNPu/nat8Gq3uJGzku4bMFPt90XahtgiSBf7z9YKPLqFUJKMT41W/mJ98SVGDPOhzikGrr/Lhg==
-  /@rollup/plugin-typescript/8.2.0_rollup@2.40.0+typescript@4.2.2:
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.40.0
-      resolve: 1.20.0
-      rollup: 2.40.0
-      typescript: 4.2.2
     dev: true
     engines:
       node: '>=8.0.0'
@@ -1429,12 +1392,6 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-b5KzFweLLXoXQwdC/e2+Z80c8uo2M5MgP7yQEEebkFw6In4T9CvYcNoM2ElvJt8ByO04zAZUV0fZkXmXoi2s9A==
-  /escalade/3.1.1:
-    dev: false
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==
   /escape-string-regexp/1.0.5:
     dev: true
     engines:
@@ -1674,10 +1631,6 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
-  /eventemitter3/4.0.7:
-    dev: false
-    resolution:
-      integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
   /execa/0.7.0:
     dependencies:
       cross-spawn: 5.1.0
@@ -1818,17 +1771,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==
-  /follow-redirects/1.13.2:
-    dev: false
-    engines:
-      node: '>=4.0'
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    resolution:
-      integrity: sha512-6mPTgLxYm3r6Bkkg0vNM0HTjfGrOEtsfbhagQvbxDEsEkpNhw582upBaoRZylzen6krEmxXJgt9Ju6HiI4O7BA==
   /form-data/3.0.1:
     dependencies:
       asynckit: 0.4.0
@@ -2009,16 +1951,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-f/wzC2QaWBs7t9IYqB4T3sR1xviIViXJRJTWBlx2Gf3g0Xi5vI7Yy4koXQ1c9OYDGHN9sBy1DQ2AB8fqZBWhUg==
-  /http-proxy/1.18.1:
-    dependencies:
-      eventemitter3: 4.0.7
-      follow-redirects: 1.13.2
-      requires-port: 1.0.0
-    dev: false
-    engines:
-      node: '>=8.0.0'
-    resolution:
-      integrity: sha512-7mz/721AbnJwIVbnaSv1Cz3Am0ZLT/UBwkC92VlxhXv/k/BBQfM2fXElQNC27BVGr0uwUpplYPQM9LnaBMR5NQ==
   /https-proxy-agent/5.0.0:
     dependencies:
       agent-base: 6.0.2
@@ -2413,12 +2345,6 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
-  /meriyah/4.1.2:
-    dev: true
-    engines:
-      node: '>=10.4.0'
-    resolution:
-      integrity: sha512-96HmNeyUom4BXgfXmUZcJzEx7peF/QYI6UJDG2gs3a6dCoakEuLwKXtHyHx8QjR7ksgMeSRxpbPIOGSJIkZgBQ==
   /micromatch/4.0.2:
     dependencies:
       braces: 3.0.2
@@ -2746,13 +2672,6 @@ packages:
     dev: true
     resolution:
       integrity: sha1-elfrVQpng/kRUzH89GY9XI4AelA=
-  /periscopic/3.0.0:
-    dependencies:
-      estree-walker: 2.0.2
-      is-reference: 1.2.1
-    dev: true
-    resolution:
-      integrity: sha512-m/MBWIgwELB00OdTvM+Ei5saKHNKmyFWy0iW2MpbADmIdK/sL+kir3Yvb+Z2vzYeItZVtemA0bgAg5lZXoJmaA==
   /picomatch/2.2.2:
     engines:
       node: '>=8.6'
@@ -3006,12 +2925,9 @@ packages:
     resolution:
       integrity: sha512-NKN5kMDylKuldxYLSUfrbo5Tuzh4hd+2E8NPPX02mZtn1VuREQToYe/ZdlJy+J3uCpfaiGF05e7B8W0iXbQHmg==
   /require-relative/0.8.7:
-    resolution:
-      integrity: sha1-eZlTn8ngR6N5KPoZb44VY9q9Nt4=
-  /requires-port/1.0.0:
     dev: false
     resolution:
-      integrity: sha1-kl0mAdOaxIXgkc8NpcbmlNw9yv8=
+      integrity: sha1-eZlTn8ngR6N5KPoZb44VY9q9Nt4=
   /resolve-from/4.0.0:
     dev: true
     engines:
@@ -3077,14 +2993,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
-  /scorta/1.0.0:
-    dependencies:
-      escalade: 3.1.1
-    dev: false
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-q6qyZNQEeJopoG5eWMVb92qeeKVRaThhaDwlyhu7V2MAROZjD0BJyGaNnf4d+QJcaJu+Mv72RqEB+BZVo+ONCA==
   /semver/5.7.1:
     dev: true
     hasBin: true

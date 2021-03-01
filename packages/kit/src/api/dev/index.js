@@ -4,7 +4,6 @@ import { join, resolve } from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
-import { scorta } from 'scorta/sync';
 import amp_validator from 'amphtml-validator';
 import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data';
@@ -25,7 +24,6 @@ class Watcher extends EventEmitter {
 	constructor({ port, config }) {
 		super();
 
-		this.cachedir = scorta('svelte');
 		this.port = port;
 		this.config = config;
 
