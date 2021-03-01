@@ -73,26 +73,10 @@ Sapper doesn't serve these files — you'd typically use [sirv](https://github.c
 
 > Note that the default behaviour of the service worker is to cache all assets from the static directory, so if you have more than 50mb of files here, you will start to exceed the cache limit for service-workers in some browsers, which can cause the service worker to stop loading. In this instance, it is advisable to customise what files are cached by editing the service-worker yourself.
 
-<<<<<<< HEAD
-
 ### svelte.config.cjs
-
-=======
-
-### snowpack.config.cjs
-
-> > > > > > > master
 
 This file contains SvelteKit options as well as options for `svelte-preprocess`.
 
-<<<<<<< HEAD
-
 ### vite.config.js
-
-=======
-
-### svelte.config.cjs
-
-> > > > > > > master
 
 This is the [Vite configuration file](https://vitejs.dev/config/) for your project.
