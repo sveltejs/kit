@@ -95,7 +95,7 @@ prog
 	.command('build')
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
-	.action(async () => {
+	.action(async ({ verbose }) => {
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
