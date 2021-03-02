@@ -1,5 +1,11 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Use new app-utils format
+
 ## 0.0.5
 
 ### Patch Changes

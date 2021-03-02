@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.28
+
+### Patch Changes
+
+- Use Vite
+
 ## 2.0.0-next.27
 
 ### Patch Changes

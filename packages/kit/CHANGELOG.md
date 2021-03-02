@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- Use Vite
+- Fix Windows issues
+- Preserve load context during navigation
+- Return error from load
+
 ## 1.0.0-next.34
 
 ### Patch Changes
