@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.37
+
+### Patch Changes
+
+- 230c6d9: Indicate which request failed, if fetch fails inside load function
+- f1bc218: Run adapt via svelte-kit build
+- 6850ddc: Fix svelte-kit start for Windows
+
 ## 1.0.0-next.36
 
 ### Patch Changes
