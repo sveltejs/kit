@@ -21,6 +21,7 @@
 		"rollup": "^2.38.3",
 		"sirv": "^1.0.11",
 		"tiny-glob": "^0.2.8",
+		"uvu": "^0.5.1",
 		"vite": "^2.0.4"
 	},
 	"peerDependencies": {
