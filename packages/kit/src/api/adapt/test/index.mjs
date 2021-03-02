@@ -18,10 +18,13 @@ suite('builder ', () => {
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic/_svelte/output');
 	const config = {
-		files: {
-			assets: join(__dirname, 'fixtures/basic/static')
-		},
-		appDir: '_app'
+		kit: {
+			files: {
+				assets: join(__dirname, 'fixtures/basic/static')
+			},
+			appDir: '_app',
+			extensions: ['.svelte']
+		}
 	};
 
 	const builder = new Builder({
@@ -40,7 +43,7 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	builder.copy_static_files(dest);
 
-	assert.equal(glob('**', { cwd: config.files.assets }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: config.kit.files.assets }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	builder.copy_client_files(dest);
@@ -57,14 +60,17 @@ suite('prerender', async () => {
 	const cwd = join(__dirname, 'fixtures/prerender/_svelte/output');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 	const config = {
-		files: {
-			assets: join(__dirname, 'fixtures/prerender/static'),
-			routes: join(__dirname, 'fixtures/prerender/src/routes')
-		},
-		appDir: '_app',
-		prerender: {
-			pages: ['*'],
-			enabled: true
+		extensions: ['.svelte'],
+		kit: {
+			files: {
+				assets: join(__dirname, 'fixtures/prerender/static'),
+				routes: join(__dirname, 'fixtures/prerender/src/routes')
+			},
+			appDir: '_app',
+			prerender: {
+				pages: ['*'],
+				enabled: true
+			}
 		}
 	};
 

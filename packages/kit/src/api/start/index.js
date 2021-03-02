@@ -15,8 +15,8 @@ export async function start({ port, config }) {
 	const app_file = resolve('.svelte/output/server/app.js');
 	const app = await import(pathToFileURL(app_file));
 
-	const static_handler = fs.existsSync(config.files.assets)
-		? mutable(config.files.assets)
+	const static_handler = fs.existsSync(config.kit.files.assets)
+		? mutable(config.kit.files.assets)
 		: (_req, _res, next) => next();
 
 	const assets_handler = sirv('.svelte/output/client', {
@@ -44,7 +44,7 @@ export async function start({ port, config }) {
 								assets: '/.'
 							},
 							get_stack: (error) => error.stack, // TODO should this return a sourcemapped stacktrace?
-							get_static_file: (file) => fs.readFileSync(join(config.files.assets, file))
+							get_static_file: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 						}
 					);
 

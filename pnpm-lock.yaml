@@ -252,6 +252,15 @@ importers:
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.32.3
+  test/apps/custom-extension:
+    devDependencies:
+      '@sveltejs/adapter-node': link:../../../packages/adapter-node
+      '@sveltejs/kit': link:../../../packages/kit
+      svelte: 3.34.0
+    specifiers:
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.32.1
   test/apps/options:
     devDependencies:
       '@sveltejs/adapter-node': link:../../../packages/adapter-node

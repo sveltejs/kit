@@ -5,17 +5,9 @@ import { posixify } from '../utils.js';
 
 // TODO components could just be an array of strings
 
-export default function create_manifest_data({
-	config,
-	output,
-	cwd = process.cwd(),
-	extensions = '.svelte'
-}) {
-	// TODO support .svelte.md etc?
-	const component_extensions = extensions.split(' ');
-
+export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	function find_layout(file_name, dir) {
-		const files = component_extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
+		const files = config.extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
 		return files.find((file) => fs.existsSync(path.join(cwd, file)));
 	}
 
@@ -45,12 +37,13 @@ export default function create_manifest_data({
 				const file = path.relative(cwd, resolved);
 				const is_dir = fs.statSync(resolved).isDirectory();
 
-				const ext = path.extname(basename);
+				const ext =
+					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
 				if (basename[0] === '$') return null; // $layout, $error
 				if (basename[0] === '_') return null; // private files
 				if (basename[0] === '.' && basename !== '.well-known') return null;
-				if (!is_dir && !/^\.[a-z]+$/i.test(ext)) return null; // filter out tmp files etc
+				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
 				const segment = is_dir ? basename : basename.slice(0, -ext.length);
 
@@ -60,7 +53,7 @@ export default function create_manifest_data({
 
 				const parts = get_parts(segment);
 				const is_index = is_dir ? false : basename.startsWith('index.');
-				const is_page = component_extensions.indexOf(ext) !== -1;
+				const is_page = config.extensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
 
 				parts.forEach((part) => {
@@ -153,12 +146,12 @@ export default function create_manifest_data({
 		});
 	}
 
-	const layout = find_layout('$layout', config.files.routes) || default_layout;
-	const error = find_layout('$error', config.files.routes) || default_error;
+	const layout = find_layout('$layout', config.kit.files.routes) || default_layout;
+	const error = find_layout('$error', config.kit.files.routes) || default_error;
 
-	walk(path.join(cwd, config.files.routes), [], [], []);
+	walk(path.join(cwd, config.kit.files.routes), [], [], []);
 
-	const assets_dir = path.join(cwd, config.files.assets);
+	const assets_dir = path.join(cwd, config.kit.files.assets);
 
 	return {
 		assets: fs.existsSync(assets_dir) ? list_files(assets_dir, '') : [],
