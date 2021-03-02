@@ -108,7 +108,7 @@ prog
 			await build(config, { cwd });
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
-			if (config.adapter[0]) {
+			if (config.kit.adapter[0]) {
 				await adapt(config, { cwd, verbose });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
@@ -149,7 +149,7 @@ prog
 	.command('adapt')
 	.describe('Customise your production build for different platforms')
 	.option('--verbose', 'Log more stuff', false)
-	.action(async ({ verbose }) => {
+	.action(async () => {
 		console.log('"svelte-kit build" will now run the adapter');
 	});
 
