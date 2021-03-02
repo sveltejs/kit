@@ -24,11 +24,7 @@ module.exports = {
 
 ### How it works
 
-When you run `svelte-kit build`, SvelteKit first builds a production version of your app, as though you had used the Node adapter, and copies the contents of your `static` folder to the destination.
-
-When you run `svelte-kit adapt` with the static adapter, it then starts the server, and navigates to the root of your app. From there, it follows any `<a>`, `<img>`, `<link>` and `<source>` elements it finds pointing to local URLs, and captures any data served by the app.
-
-Because of this, any dynamic pages you want to be included in the exported site must be reachable by `<a>` elements.
+When you run `svelte-kit build`, SvelteKit first builds a production version of your app, as though you had used the Node adapter, and copies the contents of your `static` folder to the destination. It then starts the server, and navigates to the root of your app. From there, it follows any `<a>`, `<img>`, `<link>` and `<source>` elements it finds pointing to local URLs, and captures any data served by the app. Because of this, any dynamic pages you want to be included in the exported site must be reachable by `<a>` elements.
 
 Statically named pages (such as our `src/routes/about.svelte` example) are always included in the export process, even if they cannot be discovered by the method above.
 
