@@ -55,6 +55,16 @@ test('errors on invalid nested values', () => {
 	}, /^Unexpected option kit\.files\.potato$/);
 });
 
+test('errors on extension without leading .', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				extensions: ['blah']
+			}
+		});
+	}, /Each member of kit\.extensions must start with '\.' — saw 'blah'/);
+});
+
 test('fills in partial blanks', () => {
 	const validated = validate_config({
 		kit: {

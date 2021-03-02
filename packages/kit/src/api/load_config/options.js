@@ -29,6 +29,10 @@ export default {
 				if (extension[0] !== '.') {
 					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
 				}
+
+				if (!/^\.[a-z0-9]+$/i.test(extension)) {
+					throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+				}
 			});
 
 			return option;

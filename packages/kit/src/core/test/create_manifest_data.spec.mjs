@@ -232,10 +232,12 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('works with custom extensions', () => {
-	const { components, pages, endpoints } = create(
-		'samples/custom-extension',
-		'.jazz .beebop .funk .svelte'
-	);
+	const { components, pages, endpoints } = create('samples/custom-extension', [
+		'.jazz',
+		'.beebop',
+		'.funk',
+		'.svelte'
+	]);
 
 	const index = 'samples/custom-extension/index.funk';
 	const about = 'samples/custom-extension/about.jazz';

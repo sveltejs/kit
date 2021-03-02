@@ -21,7 +21,8 @@ suite('copy files', () => {
 		files: {
 			assets: join(__dirname, 'fixtures/basic/static')
 		},
-		appDir: '_app'
+		appDir: '_app',
+		extensions: ['.svelte']
 	};
 
 	const builder = new Builder({
@@ -78,7 +79,8 @@ suite('prerender', async () => {
 		prerender: {
 			pages: ['*'],
 			enabled: true
-		}
+		},
+		extensions: ['.svelte']
 	};
 
 	const builder = new Builder({

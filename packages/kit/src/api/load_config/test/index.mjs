@@ -18,6 +18,7 @@ suite('load default config', async () => {
 		adapter: [null],
 		amp: false,
 		appDir: '_app',
+		extensions: ['.svelte'],
 		files: {
 			assets: 'static',
 			routes: 'src/routes',
