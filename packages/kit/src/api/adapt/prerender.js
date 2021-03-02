@@ -50,10 +50,10 @@ export async function prerender({ dir, out, log, config, force }) {
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`));
 
 	app.init({
-		paths: config.paths
+		paths: config.kit.paths
 	});
 
-	const error = config.prerender.force
+	const error = config.kit.prerender.force
 		? (status, path) => {
 				log.error(`${status} ${path}`);
 		  }
@@ -67,7 +67,7 @@ export async function prerender({ dir, out, log, config, force }) {
 
 		const rendered = await app.render(
 			{
-				host: config.host,
+				host: config.kit.host,
 				method: 'GET',
 				headers: {},
 				path,
@@ -77,7 +77,7 @@ export async function prerender({ dir, out, log, config, force }) {
 			{
 				local: true,
 				only_prerender: !force,
-				get_static_file: (file) => readFileSync(join(config.files.assets, file))
+				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
 			}
 		);
 
@@ -141,7 +141,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				}
 			}
 
-			if (is_html && config.prerender.crawl) {
+			if (is_html && config.kit.prerender.crawl) {
 				const cleaned = clean_html(rendered.body);
 
 				let match;
@@ -169,13 +169,14 @@ export async function prerender({ dir, out, log, config, force }) {
 
 						const parsed = parse(resolved);
 
-						const file = parsed.pathname.replace(config.paths.assets, '');
+						const file = parsed.pathname.replace(config.kit.paths.assets, '');
 
 						const file_exists =
-							(file.startsWith(`/${config.appDir}/`) && fs.existsSync(`${dir}/client/${file}`)) ||
+							(file.startsWith(`/${config.kit.appDir}/`) &&
+								fs.existsSync(`${dir}/client/${file}`)) ||
 							fs.existsSync(`${out}/${file}`) ||
-							fs.existsSync(`${config.files.static}/${file}`) ||
-							fs.existsSync(`${config.files.static}/${file}/index.html`);
+							fs.existsSync(`${config.kit.files.static}/${file}`) ||
+							fs.existsSync(`${config.kit.files.static}/${file}/index.html`);
 
 						if (file_exists) continue;
 
@@ -183,19 +184,19 @@ export async function prerender({ dir, out, log, config, force }) {
 							// TODO warn that query strings have no effect on statically-exported pages
 						}
 
-						await visit(parsed.pathname.replace(config.paths.base, ''));
+						await visit(parsed.pathname.replace(config.kit.paths.base, ''));
 					}
 				}
 			}
 		}
 	}
 
-	for (const entry of config.prerender.pages) {
+	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
 			// remove the prefix '.' from the extensions array
-			const extensions = config.extensions.map((extension) => extension.slice(1));
+			const extensions = config.kit.extensions.map((extension) => extension.slice(1));
 			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
-			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.files.routes })
+			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.kit.files.routes })
 				.map((file) => {
 					// support both windows and unix glob results
 					const parts = file.split(path_separator);

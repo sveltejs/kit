@@ -21,11 +21,11 @@ export default class Builder {
 	}
 
 	copy_static_files(dest) {
-		copy(this.#config.files.assets, dest);
+		copy(this.#config.kit.files.assets, dest);
 	}
 
 	async prerender({ force = false, dest }) {
-		if (this.#config.prerender.enabled) {
+		if (this.#config.kit.prerender.enabled) {
 			await prerender({
 				out: dest,
 				force,

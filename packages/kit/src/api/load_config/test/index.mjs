@@ -15,22 +15,26 @@ suite('load default config', async () => {
 	});
 
 	assert.equal(config, {
-		adapter: [null],
-		amp: false,
-		appDir: '_app',
+		compilerOptions: null,
 		extensions: ['.svelte'],
-		files: {
-			assets: 'static',
-			routes: 'src/routes',
-			setup: 'src/setup',
-			template: 'src/app.html'
+		kit: {
+			adapter: [null],
+			amp: false,
+			appDir: '_app',
+			files: {
+				assets: 'static',
+				routes: 'src/routes',
+				setup: 'src/setup',
+				template: 'src/app.html'
+			},
+			host: null,
+			hostHeader: null,
+			paths: { base: '', assets: '/.' },
+			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
+			startGlobal: null,
+			target: null
 		},
-		host: null,
-		hostHeader: null,
-		paths: { base: '', assets: '/.' },
-		prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
-		startGlobal: null,
-		target: null
+		preprocess: null
 	});
 });
 

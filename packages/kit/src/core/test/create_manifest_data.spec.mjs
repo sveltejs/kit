@@ -10,12 +10,14 @@ const __dirname = path.join(__filename, '..');
 const create = (dir, extensions = ['.svelte']) =>
 	create_manifest_data({
 		config: {
-			files: {
-				assets: 'static',
-				routes: dir
-			},
-			appDir: '_app',
-			extensions
+			extensions,
+			kit: {
+				files: {
+					assets: 'static',
+					routes: dir
+				},
+				appDir: '_app'
+			}
 		},
 		cwd: __dirname
 	});

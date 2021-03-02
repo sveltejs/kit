@@ -5,11 +5,11 @@ import Builder from './Builder';
 import { createRequire } from 'module';
 
 export async function adapt(config, { verbose }) {
-	if (!config.adapter) {
+	if (!config.kit.adapter) {
 		throw new Error('No adapter specified');
 	}
 
-	const [adapter, options] = config.adapter;
+	const [adapter, options] = config.kit.adapter;
 
 	const log = logger({ verbose });
 

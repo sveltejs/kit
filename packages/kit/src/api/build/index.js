@@ -31,17 +31,17 @@ export async function build(config) {
 	writeFileSync(`${build_dir}/runtime/app/env.js`, [
 		'export const browser = !import.meta.env.SSR;',
 		'export const dev = false;',
-		`export const amp = ${config.amp};`
+		`export const amp = ${config.kit.amp};`
 	].join('\n'));
 
 	const client_entry_file = `${build_dir}/runtime/internal/start.js`;
-	const client_out_dir = `${output_dir}/client/${config.appDir}`;
+	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
 	const base =
-		config.paths.assets === '/.'
-			? `/${config.appDir}/`
-			: `${config.paths.assets}/${config.appDir}/`;
+		config.kit.paths.assets === '/.'
+			? `/${config.kit.appDir}/`
+			: `${config.kit.paths.assets}/${config.kit.appDir}/`;
 
 	// client build
 	await vite.build({
@@ -105,8 +105,8 @@ export async function build(config) {
 	// 	data.parts.forEach((c) => {
 	// 		const deps = client.deps[c];
 	// 		deps.css.forEach((dep) => {
-	// 			const url = `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
-	// 			const file = `${OPTIMIZED}/client/${config.appDir}/${dep}`;
+	// 			const url = `${config.kit.paths.assets}/${config.kit.appDir}/${dep}`.replace(/^\/\./, '');
+	// 			const file = `${OPTIMIZED}/client/${config.kit.appDir}/${dep}`;
 
 	// 			css_lookup[url] = readFileSync(file, 'utf-8');
 	// 		});
@@ -115,7 +115,7 @@ export async function build(config) {
 
 	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
 
-	const entry = `${config.paths.assets}/${config.appDir}/${client_manifest[client_entry_file].file}`;
+	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -126,18 +126,18 @@ export async function build(config) {
 			import { set_paths } from ${s(app_relative(`${build_dir}/runtime/internal/singletons.js`))};
 			import * as setup from '${app_relative(setup_file)}';
 
-			const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
+			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			set_paths(${s(config.paths)});
+			set_paths(${s(config.kit.paths)});
 
 			// allow paths to be overridden in svelte-kit start
 			export function init({ paths }) {
 				set_paths(paths);
 			}
 
-			init({ paths: ${s(config.paths)} });
+			init({ paths: ${s(config.kit.paths)} });
 
 			const d = decodeURIComponent;
 			const empty = () => ({});
@@ -146,7 +146,7 @@ export async function build(config) {
 				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
 			];
 
-			${config.amp ? `
+			${config.kit.amp ? `
 			const css_lookup = ${s(css_lookup)};` : ''}
 
 			const manifest = {
@@ -159,8 +159,8 @@ export async function build(config) {
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
-							const prefix = config.paths.assets === '/.' ? '' : config.paths.assets;
-							const path_to_dep = dep => prefix + `/${config.appDir}/${dep}`;
+							const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
+							const path_to_dep = dep => prefix + `/${config.kit.appDir}/${dep}`;
 
 							const js_deps = new Set();
 							const css_deps = new Set();
@@ -211,7 +211,7 @@ export async function build(config) {
 			};
 
 			export function render(request, {
-				paths = ${s(config.paths)},
+				paths = ${s(config.kit.paths)},
 				local = false,
 				only_prerender = false,
 				get_static_file
@@ -221,18 +221,18 @@ export async function build(config) {
 					local,
 					template,
 					manifest,
-					target: ${s(config.target)},${
-						config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
+					target: ${s(config.kit.target)},${
+						config.kit.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.kit.startGlobal)},` : ''
 					}
 					entry: ${s(entry)},
 					root,
 					setup,
 					dev: false,
-					amp: ${config.amp},
+					amp: ${config.kit.amp},
 					only_prerender,
-					app_dir: ${s(config.appDir)},
-					host: ${s(config.host)},
-					host_header: ${s(config.hostHeader)},
+					app_dir: ${s(config.kit.appDir)},
+					host: ${s(config.kit.host)},
+					host_header: ${s(config.kit.hostHeader)},
 					get_stack: error => error.stack,
 					get_static_file,
 					get_amp_css: dep => css_lookup[dep]

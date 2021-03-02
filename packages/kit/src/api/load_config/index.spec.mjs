@@ -6,30 +6,34 @@ test('fills in defaults', () => {
 	const validated = validate_config({});
 
 	assert.equal(validated, {
-		adapter: [null],
-		amp: false,
-		appDir: '_app',
+		compilerOptions: null,
 		extensions: ['.svelte'],
-		files: {
-			assets: 'static',
-			routes: 'src/routes',
-			setup: 'src/setup',
-			template: 'src/app.html'
+		kit: {
+			adapter: [null],
+			amp: false,
+			appDir: '_app',
+			files: {
+				assets: 'static',
+				routes: 'src/routes',
+				setup: 'src/setup',
+				template: 'src/app.html'
+			},
+			host: null,
+			hostHeader: null,
+			paths: {
+				base: '',
+				assets: '/.'
+			},
+			prerender: {
+				crawl: true,
+				enabled: true,
+				force: false,
+				pages: ['*']
+			},
+			target: null,
+			startGlobal: null
 		},
-		host: null,
-		hostHeader: null,
-		paths: {
-			base: '',
-			assets: '/.'
-		},
-		prerender: {
-			crawl: true,
-			enabled: true,
-			force: false,
-			pages: ['*']
-		},
-		target: null,
-		startGlobal: null
+		preprocess: null
 	});
 });
 
@@ -40,7 +44,7 @@ test('errors on invalid values', () => {
 				target: 42
 			}
 		});
-	}, /^kit\.target should be a string, if specified$/);
+	}, /^config\.kit\.target should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {
@@ -52,17 +56,15 @@ test('errors on invalid nested values', () => {
 				}
 			}
 		});
-	}, /^Unexpected option kit\.files\.potato$/);
+	}, /^Unexpected option config\.kit\.files\.potato$/);
 });
 
 test('errors on extension without leading .', () => {
 	assert.throws(() => {
 		validate_config({
-			kit: {
-				extensions: ['blah']
-			}
+			extensions: ['blah']
 		});
-	}, /Each member of kit\.extensions must start with '\.' — saw 'blah'/);
+	}, /Each member of config\.extensions must start with '\.' — saw 'blah'/);
 });
 
 test('fills in partial blanks', () => {
@@ -75,30 +77,34 @@ test('fills in partial blanks', () => {
 	});
 
 	assert.equal(validated, {
-		adapter: [null],
-		amp: false,
-		appDir: '_app',
+		compilerOptions: null,
 		extensions: ['.svelte'],
-		files: {
-			assets: 'public',
-			routes: 'src/routes',
-			setup: 'src/setup',
-			template: 'src/app.html'
+		kit: {
+			adapter: [null],
+			amp: false,
+			appDir: '_app',
+			files: {
+				assets: 'public',
+				routes: 'src/routes',
+				setup: 'src/setup',
+				template: 'src/app.html'
+			},
+			host: null,
+			hostHeader: null,
+			paths: {
+				base: '',
+				assets: '/.'
+			},
+			prerender: {
+				crawl: true,
+				enabled: true,
+				force: false,
+				pages: ['*']
+			},
+			startGlobal: null,
+			target: null
 		},
-		host: null,
-		hostHeader: null,
-		paths: {
-			base: '',
-			assets: '/.'
-		},
-		prerender: {
-			crawl: true,
-			enabled: true,
-			force: false,
-			pages: ['*']
-		},
-		startGlobal: null,
-		target: null
+		preprocess: null
 	});
 });
 
@@ -109,7 +115,7 @@ test('fails if kit.appDir is blank', () => {
 				appDir: ''
 			}
 		});
-	}, /^kit\.appDir cannot be empty$/);
+	}, /^config\.kit\.appDir cannot be empty$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -121,7 +127,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^kit\.paths\.base must be a root-relative path$/);
+	}, /^config\.kit\.paths\.base must be a root-relative path$/);
 });
 
 test('fails if prerender.pages are invalid', () => {
@@ -133,7 +139,7 @@ test('fails if prerender.pages are invalid', () => {
 				}
 			}
 		});
-	}, /^Each member of kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 function validate_paths(name, input, output) {
@@ -143,7 +149,7 @@ function validate_paths(name, input, output) {
 				kit: {
 					paths: input
 				}
-			}).paths,
+			}).kit.paths,
 			output
 		);
 	});

@@ -44,7 +44,7 @@ class Watcher extends EventEmitter {
 		writeFileSync(`${dev_dir}/runtime/app/env.js`, [
 			'export const browser = !import.meta.env.SSR;',
 			'export const dev = true;',
-			`export const amp = ${this.config.amp};`
+			`export const amp = ${this.config.kit.amp};`
 		].join('\n'));
 
 		await this.init_filewatcher();
@@ -57,7 +57,7 @@ class Watcher extends EventEmitter {
 
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
-			dir: this.config.files.routes,
+			dir: this.config.kit.files.routes,
 			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
@@ -94,7 +94,7 @@ class Watcher extends EventEmitter {
 					extensions: this.config.extensions
 				})
 			],
-			publicDir: this.config.files.assets,
+			publicDir: this.config.kit.files.assets,
 			server: {
 				middlewareMode: true
 			}
@@ -104,9 +104,9 @@ class Watcher extends EventEmitter {
 			`/${dev_dir}/runtime/internal/singletons.js`
 		);
 
-		set_paths(this.config.paths);
+		set_paths(this.config.kit.paths);
 
-		const validator = this.config.amp && (await amp_validator.getInstance());
+		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
 		this.server = http.createServer((req, res) => {
 			this.viteDevServer.middlewares(req, res, async () => {
@@ -116,10 +116,10 @@ class Watcher extends EventEmitter {
 					if (req.originalUrl === '/favicon.ico') return;
 
 					// handle dynamic requests - i.e. pages and endpoints
-					const template = readFileSync(this.config.files.template, 'utf-8');
+					const template = readFileSync(this.config.kit.files.template, 'utf-8');
 
 					const setup = await this.viteDevServer
-						.ssrLoadModule(`/${this.config.files.setup}`)
+						.ssrLoadModule(`/${this.config.kit.files.setup}`)
 						.catch(() => ({}));
 
 					let root;
@@ -144,13 +144,13 @@ class Watcher extends EventEmitter {
 							body
 						},
 						{
-							paths: this.config.paths,
+							paths: this.config.kit.paths,
 							template: ({ head, body }) => {
 								let rendered = template
 									.replace('%svelte.head%', () => head)
 									.replace('%svelte.body%', () => body);
 
-								if (this.config.amp) {
+								if (this.config.kit.amp) {
 									const result = validator.validateString(rendered);
 
 									if (result.status !== 'PASS') {
@@ -196,21 +196,21 @@ class Watcher extends EventEmitter {
 								return rendered;
 							},
 							manifest: this.manifest,
-							target: this.config.target,
+							target: this.config.kit.target,
 							entry: `/${dev_dir}/runtime/internal/start.js`,
 							dev: true,
-							amp: this.config.amp,
+							amp: this.config.kit.amp,
 							root,
 							setup,
 							only_prerender: false,
-							start_global: this.config.startGlobal,
-							host: this.config.host,
-							host_header: this.config.hostHeader,
+							start_global: this.config.kit.startGlobal,
+							host: this.config.kit.host,
+							host_header: this.config.kit.hostHeader,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);
 								return error.stack;
 							},
-							get_static_file: (file) => readFileSync(join(this.config.files.assets, file)),
+							get_static_file: (file) => readFileSync(join(this.config.kit.files.assets, file)),
 							get_amp_css: (url) => '' // TODO: implement this
 						}
 					);
