@@ -15,7 +15,10 @@
 		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
+		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/app-utils": "workspace:*",
+		"compression": "^1.7.4",
+		"polka": "^0.5.2",
 		"rollup": "^2.38.3",
 		"sirv": "^1.0.11"
 	}

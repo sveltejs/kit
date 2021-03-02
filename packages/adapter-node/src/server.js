@@ -1,8 +1,9 @@
+import compression from 'compression';
 import * as fs from 'fs';
-import * as http from 'http';
+import polka from 'polka';
 import { dirname, join } from 'path';
-import { parse, URLSearchParams, fileURLToPath } from 'url';
 import sirv from 'sirv';
+import { parse, URLSearchParams, fileURLToPath } from 'url';
 import { get_body } from '@sveltejs/app-utils/http';
 // App is a dynamic file built from the application layer.
 /*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
@@ -27,30 +28,29 @@ const assets_handler = sirv(join(__dirname, '/assets'), {
 	immutable: true
 });
 
-const server = http.createServer((req, res) => {
-	const parsed = parse(req.url || '');
-
-	assets_handler(req, res, () => {
-		prerendered_handler(req, res, async () => {
-			const rendered = await app.render({
-				method: req.method,
-				headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-				path: parsed.pathname,
-				body: await get_body(req),
-				query: new URLSearchParams(parsed.query || '')
-			});
-
-			if (rendered) {
-				res.writeHead(rendered.status, rendered.headers);
-				res.end(rendered.body);
-			} else {
-				res.statusCode = 404;
-				res.end('Not found');
-			}
+polka()
+	.use(compression({ threshold: 0 }), assets_handler, prerendered_handler, async (req, res) => {
+		const parsed = parse(req.url || '');
+		const rendered = await app.render({
+			method: req.method,
+			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+			path: parsed.pathname,
+			body: await get_body(req),
+			query: new URLSearchParams(parsed.query || '')
 		});
-	});
-});
 
-server.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
-});
+		if (rendered) {
+			res.writeHead(rendered.status, rendered.headers);
+			res.end(rendered.body);
+		} else {
+			res.statusCode = 404;
+			res.end('Not found');
+		}
+	})
+	.listen(PORT, (err) => {
+		if (err) {
+			console.log('error', err);
+		} else {
+			console.log(`Listening on port ${PORT}`);
+		}
+	});
