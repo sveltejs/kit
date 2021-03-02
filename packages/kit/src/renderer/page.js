@@ -166,13 +166,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		if (loaded) {
 			if (loaded.error) {
+				let error = loaded.error;
+				if (typeof error === 'string') {
+					error = new Error(error);
+				}
+				if (!(error instanceof Error)) {
+					error = new Error(
+						`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
+					);
+				}
+
 				return await get_response({
 					request,
 					options,
 					$session,
 					route,
 					status: loaded.status || 500,
-					error: loaded.error
+					error
 				});
 			}
 

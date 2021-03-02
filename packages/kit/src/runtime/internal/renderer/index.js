@@ -281,8 +281,16 @@ export class Renderer {
 
 					if (loaded) {
 						if (loaded.error) {
-							const error = new Error(loaded.error.message);
-							error.status = loaded.error.status;
+							let error = loaded.error;
+							if (typeof error === 'string') {
+								error = new Error(error);
+							}
+							if (!(error instanceof Error)) {
+								error = new Error(
+									`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
+								);
+							}
+							error.status = loaded.status;
 							throw error;
 						}
 
@@ -356,7 +364,7 @@ export class Renderer {
 			}
 		} catch (error) {
 			props.error = error;
-			props.status = 500;
+			props.status = error.status || 500;
 			state.nodes = [];
 		}
 
