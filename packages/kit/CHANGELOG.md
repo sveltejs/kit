@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.36
+
+### Patch Changes
+
+- 7b70a33: Force version bump so that Kit uses updated vite-plugin-svelte
+
 ## 1.0.0-next.35
 
 ### Patch Changes
