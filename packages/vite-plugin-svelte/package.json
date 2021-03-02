@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/vite-plugin-svelte",
-	"version": "1.0.0-next.1",
+	"version": "1.0.0-next.2",
 	"dependencies": {
 		"@rollup/pluginutils": "^4.1.0",
 		"chalk": "^4.1.0",
@@ -10,6 +10,10 @@
 		"source-map": "^0.7.3",
 		"svelte-hmr": "^0.12.6"
 	},
+	"main": "index.js",
+	"files": [
+		"index.js"
+	],
 	"peerDependencies": {
 		"svelte": "^3.34.0",
 		"vite": "^2"
