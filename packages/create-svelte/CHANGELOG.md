@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.29
+
+### Patch Changes
+
+- 15dd6d6: Fix setup to include vite
+
 ## 2.0.0-next.28
 
 ### Patch Changes
