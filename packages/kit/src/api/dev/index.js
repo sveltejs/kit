@@ -90,7 +90,8 @@ class Watcher extends EventEmitter {
 						dev: true,
 						hydratable: true
 					},
-					hot: true
+					hot: true,
+					extensions: this.config.extensions
 				})
 			],
 			publicDir: this.config.files.assets,

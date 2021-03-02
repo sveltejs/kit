@@ -68,7 +68,8 @@ export async function build(config) {
 					dev: true,
 					hydratable: true
 				},
-				hot: true
+				hot: true,
+				extensions: config.extensions
 			})
 		]
 	});
@@ -265,7 +266,8 @@ export async function build(config) {
 					dev: true,
 					hydratable: true
 				},
-				hot: true
+				hot: true,
+				extensions: config.extensions
 			})
 		],
 		ssr: {
