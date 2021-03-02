@@ -16,7 +16,7 @@ suite('builder ', () => {
 });
 
 suite('copy files', () => {
-	const cwd = join(__dirname, 'fixtures/basic/.svelte/output');
+	const cwd = join(__dirname, 'fixtures/basic/_svelte/output');
 	const config = {
 		files: {
 			assets: join(__dirname, 'fixtures/basic/static')
@@ -54,7 +54,7 @@ suite('copy files', () => {
 });
 
 suite('prerender', async () => {
-	const cwd = join(__dirname, 'fixtures/prerender/.svelte/output');
+	const cwd = join(__dirname, 'fixtures/prerender/_svelte/output');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 	const config = {
 		files: {
