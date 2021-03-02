@@ -2,22 +2,22 @@ import { copy } from '@sveltejs/app-utils/files';
 import { prerender } from './prerender.js';
 
 export default class Builder {
-	#generated_files;
+	#cwd;
 	#config;
 
-	constructor({ generated_files, config, log }) {
-		this.#generated_files = generated_files;
+	constructor({ cwd, config, log }) {
+		this.#cwd = cwd;
 		this.#config = config;
 
 		this.log = log;
 	}
 
 	copy_client_files(dest) {
-		copy(`${this.#generated_files}/client`, dest, (file) => file[0] !== '.');
+		copy(`${this.#cwd}/client`, dest, (file) => file[0] !== '.');
 	}
 
 	copy_server_files(dest) {
-		copy(`${this.#generated_files}/server`, dest, (file) => file[0] !== '.');
+		copy(`${this.#cwd}/server`, dest, (file) => file[0] !== '.');
 	}
 
 	copy_static_files(dest) {
@@ -29,7 +29,7 @@ export default class Builder {
 			await prerender({
 				out: dest,
 				force,
-				dir: this.#generated_files,
+				dir: this.#cwd,
 				config: this.#config,
 				log: this.log
 			});

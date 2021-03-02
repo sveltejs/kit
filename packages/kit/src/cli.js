@@ -103,8 +103,10 @@ prog
 		const { adapt } = await import('./api/adapt');
 
 		try {
-			await build(config);
-			await adapt(config, { verbose });
+			const cwd = '.svelte/output';
+
+			await build(config, { cwd });
+			await adapt(config, { cwd, verbose });
 		} catch (error) {
 			handle_error(error);
 		}
