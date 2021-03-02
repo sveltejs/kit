@@ -8,8 +8,7 @@ export default async function add_typescript(cwd, yes) {
 		update_package_json(cwd, {
 			typescript: '^4.0.0',
 			tslib: '^2.0.0',
-			'svelte-preprocess': '^4.0.0',
-			'@snowpack/plugin-typescript': '^1.0.0'
+			'svelte-preprocess': '^4.0.0'
 		});
 		update_component(cwd, 'src/components/Counter.svelte', [
 			['<script>', '<script lang="ts">'],
