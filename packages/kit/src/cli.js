@@ -106,7 +106,18 @@ prog
 			const cwd = '.svelte/output';
 
 			await build(config, { cwd });
-			await adapt(config, { cwd, verbose });
+			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
+
+			if (config.adapter[0]) {
+				await adapt(config, { cwd, verbose });
+			} else {
+				console.log(colors.bold().yellow('\nNo adapter specified'));
+
+				// prettier-ignore
+				console.log(
+					`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
+				);
+			}
 		} catch (error) {
 			handle_error(error);
 		}
