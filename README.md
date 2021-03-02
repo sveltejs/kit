@@ -28,15 +28,15 @@ You should now be able to run the [examples](examples) by navigating to one of t
 
 Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
 
-### Version bumps
+### Changelogs
 
 For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts.
 
-When you're ready to cut a release, run `pnpx changeset version`. This will bump versions according to the as-yet-unapplied changesets, and update changelogs.
-
 ### Releases
 
-After running `pnpx changeset version`, publish versions of packages that have changed by running `pnpm publish-all`.
+The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
+
+> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
 
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
