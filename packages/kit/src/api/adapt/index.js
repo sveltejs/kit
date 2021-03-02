@@ -4,7 +4,7 @@ import { logger } from '../utils';
 import Builder from './Builder';
 import { createRequire } from 'module';
 
-export async function adapt(config, { verbose }) {
+export async function adapt(config, { cwd, verbose }) {
 	if (!config.adapter) {
 		throw new Error('No adapter specified');
 	}
@@ -15,11 +15,7 @@ export async function adapt(config, { verbose }) {
 
 	console.log(colors.bold().cyan(`\n> Using ${adapter}`));
 
-	const builder = new Builder({
-		generated_files: '.svelte/build/optimized',
-		config,
-		log
-	});
+	const builder = new Builder({ cwd, config, log });
 
 	const require = createRequire(import.meta.url);
 	const resolved = require.resolve(adapter, pathToFileURL(process.cwd()));
