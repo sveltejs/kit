@@ -21,8 +21,19 @@ jobs:
         with:
           node-version: 12.x
 
-      - name: Install Dependencies
-        run: pnpm i
+      - name: Cache pnpm modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-pnpm-modules
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+
+      - uses: pnpm/action-setup@v1.2.1
+        with:
+          run_install: true
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
