@@ -6,10 +6,8 @@ import { posixify } from '../utils.js';
 // TODO components could just be an array of strings
 
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
-	const component_extensions = config.extensions;
-
 	function find_layout(file_name, dir) {
-		const files = component_extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
+		const files = config.extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
 		return files.find((file) => fs.existsSync(path.join(cwd, file)));
 	}
 
@@ -39,12 +37,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const file = path.relative(cwd, resolved);
 				const is_dir = fs.statSync(resolved).isDirectory();
 
-				const ext = path.extname(basename);
+				const ext =
+					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
 				if (basename[0] === '$') return null; // $layout, $error
 				if (basename[0] === '_') return null; // private files
 				if (basename[0] === '.' && basename !== '.well-known') return null;
-				if (!is_dir && !/^\.[a-z]+$/i.test(ext)) return null; // filter out tmp files etc
+				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
 				const segment = is_dir ? basename : basename.slice(0, -ext.length);
 
@@ -54,7 +53,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				const parts = get_parts(segment);
 				const is_index = is_dir ? false : basename.startsWith('index.');
-				const is_page = component_extensions.indexOf(ext) !== -1;
+				const is_page = config.extensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
 
 				parts.forEach((part) => {
