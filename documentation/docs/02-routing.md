@@ -4,7 +4,6 @@ title: Routing
 
 As we've seen, there are two types of route in SvelteKit — pages and API endpoints.
 
-
 ### Pages
 
 Pages are Svelte components written in `.svelte` files. When a user first visits the application, they will be served a server-rendered version of the route in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel.
@@ -37,20 +36,18 @@ Dynamic parameters are encoded using `[brackets]`. For example, here's how you c
 ```html
 <!-- src/routes/blog/[slug].svelte -->
 <script context="module">
-	import * as api from '$common/api.js';
-
 	// the (optional) load function takes a
 	// `{ page, session }` object and turns it into
 	// the data we need to render the page
-	export async function load({ page, session }) {
+	export async function load({ fetch, page, session }) {
 		// the `slug` parameter is available because this file
 		// is called [slug].svelte
 		const { slug } = page.params;
 
-		// `api.get` is a wrapper around `fetch` that allows
-		// you to make credentialled requests on both
-		// server and client
-		const res = await api.get(`blog/${slug}.json`);
+		// `fetch` is a wrapper around the browser`fetch`
+		// that allows you to make credentialled requests
+		// on both server and client
+		const res = await fetch(`blog/${slug}.json`);
 		const article = await res.json();
 
 		return { { props: article } };
@@ -67,9 +64,7 @@ Dynamic parameters are encoded using `[brackets]`. For example, here's how you c
 
 <h1>{article.title}</h1>
 
-<div class='content'>
-	{@html article.html}
-</div>
+<div class="content">{@html article.html}</div>
 ```
 
 If you want to capture more params, you can create nested folders using the same naming convention: `[slug]/[language]`.
@@ -82,24 +77,22 @@ If you don't want to create several folders to capture more than one parameter l
 	export async function load({ page }) {
 		let [slug, year, month, day] = page.params.slug;
 
-		return { props: { slug, year, month, day }};
+		return { props: { slug, year, month, day } };
 	}
 </script>
 ```
 
-
-> See the section on [loading](docs#Loading) for more info about `load` and `this.fetch`
-
+> See the section on [loading](docs#Loading) for more info about `load` and `fetch`
 
 ### Server routes
 
-Server routes are modules written in `.js` files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `response` objects as arguments, plus a `next` function. This is useful for creating a JSON API. For example, here's how you could create an endpoint that served the blog page above:
+Server routes are modules written in `.js` or `.ts` files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `context` objects as arguments. This is useful for creating a JSON API. For example, here's how you could create an endpoint that served the blog page above:
 
 ```js
 // routes/blog/[slug].json.js
 import db from './_database.js'; // the underscore tells SvelteKit this isn't a route
 
-export async function get(req, res, next) {
+export async function get(req, context) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
 	const { slug } = req.params;
@@ -107,32 +100,37 @@ export async function get(req, res, next) {
 	const article = await db.get(slug);
 
 	if (article !== null) {
-		res.setHeader('Content-Type', 'application/json');
-		res.end(JSON.stringify(article));
+		return {
+			body: {
+				article
+			}
+		};
 	} else {
-		next();
+		return {
+			status: 404,
+			body: {
+				error: 'Not found'
+			}
+		};
 	}
 }
 ```
 
 > `delete` is a reserved word in JavaScript. To handle DELETE requests, export a function called `del` instead.
 
-
 ### File naming rules
 
 There are three simple rules for naming the files that define your routes:
 
-* A file called `src/routes/about.svelte` corresponds to the `/about` route. A file called `src/routes/blog/[slug].svelte` corresponds to the `/blog/:slug` route, in which case `params.slug` is available to `load`
-* The file `src/routes/index.svelte` corresponds to the root of your app. `src/routes/about/index.svelte` is treated the same as `src/routes/about.svelte`.
-* Files and directories with a leading underscore do *not* create routes. This allows you to colocate helper modules and components with the routes that depend on them — for example you could have a file called `src/routes/_helpers/datetime.js` and it would *not* create a `/_helpers/datetime` route
-
+- A file called `src/routes/about.svelte` corresponds to the `/about` route. A file called `src/routes/blog/[slug].svelte` corresponds to the `/blog/:slug` route, in which case `params.slug` is available to `load`
+- The file `src/routes/index.svelte` corresponds to the root of your app. `src/routes/about/index.svelte` is treated the same as `src/routes/about.svelte`.
+- Files and directories with a leading underscore do _not_ create routes. This allows you to colocate helper modules and components with the routes that depend on them — for example you could have a file called `src/routes/_helpers/datetime.js` and it would _not_ create a `/_helpers/datetime` route
 
 ### Error page
 
 In addition to regular pages, there is a 'special' page that SvelteKit expects to find — `src/routes/$error.svelte`. This will be shown when an error occurs while rendering a page.
 
 The `error` object is made available to the template along with the HTTP `status` code. `error` is also available in the [`page` store](docs#Stores).
-
 
 ### Regexes in routes
 

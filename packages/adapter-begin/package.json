@@ -4,15 +4,20 @@
 	"main": "index.js",
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"dev": "rollup -cw",
+		"build": "rollup -c",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"files": [
-		"index.js",
-		"src"
+		"files"
 	],
 	"dependencies": {
-		"@architect/parser": "^2.3.0",
+		"@architect/parser": "^3.0.1",
 		"@sveltejs/app-utils": "workspace:*"
+	},
+	"devDependencies": {
+		"rollup": "^2.34.2",
+		"sirv": "^1.0.10"
 	}
 }

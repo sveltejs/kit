@@ -12,6 +12,12 @@ You will need the `.svelte/build` and `static` directories as well as the produc
 node .svelte/build
 ```
 
+Alternatively, you can use the SvelteKit CLI to start your app.
+
+```bash
+svelte-kit start
+```
+
 ### Deploying service workers
 
 [SvelteKit does not yet support service workers.](https://github.com/sveltejs/kit/issues/10)
@@ -42,7 +48,7 @@ export default {
 			'process.env.SAPPER_TIMESTAMP': process.env.SAPPER_TIMESTAMP || Date.now()
 		})
 	]
-}
+};
 ```
 
 Then you can set it using the environment variable, e.g.:
@@ -57,4 +63,4 @@ When deploying to [Vercel], you can pass the environment variable into the Verce
 vercel -e SAPPER_TIMESTAMP=$(date +%s%3N)
 ```
 
-[Vercel]: https://vercel.com/home
+[vercel]: https://vercel.com/home

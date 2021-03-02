@@ -7,7 +7,6 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/app-utils": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/snowpack-config": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.4",
 		"prompts": "^2.4.0",

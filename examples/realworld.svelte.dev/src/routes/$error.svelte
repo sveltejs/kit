@@ -1,9 +1,8 @@
 <script>
+	import { dev } from '$app/env';
 	import Layout from './$layout.svelte';
 
 	export let error, status;
-
-	let dev = import.meta.env.MODE === 'development';
 </script>
 
 <svelte:head>

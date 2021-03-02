@@ -5,6 +5,27 @@ import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
 async function get_config() {
+	// TODO this is temporary, for the benefit of early adopters
+	if (existsSync('snowpack.config.js') || existsSync('snowpack.config.cjs')) {
+		// prettier-ignore
+		console.error(colors.bold().red(
+			'SvelteKit now uses https://vitejs.dev. Please replace snowpack.config.js with vite.config.js:'
+		));
+
+		// prettier-ignore
+		console.error(`
+			import { resolve } from 'path';
+
+			export default {
+				resolve: {
+					alias: {
+						$components: resolve('src/components')
+					}
+				}
+			};
+		`.replace(/^\t{3}/gm, '').replace(/\t/gm, '  ').trim());
+	}
+
 	try {
 		return await load_config();
 	} catch (error) {
@@ -39,7 +60,7 @@ async function launch(port) {
 	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
 }
 
-const prog = sade('svelte').version(pkg.version);
+const prog = sade('svelte-kit').version(pkg.version);
 
 prog
 	.command('dev')

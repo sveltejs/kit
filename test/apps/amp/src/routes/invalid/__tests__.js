@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 export default function (test, is_dev) {
-	test('prints validation errors', async ({ visit, contains }) => {
+	test('prints validation errors', async ({ visit, contains, html }) => {
 		await visit('/invalid');
 
 		if (is_dev) {
