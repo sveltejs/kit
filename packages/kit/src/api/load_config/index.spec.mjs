@@ -9,6 +9,7 @@ test('fills in defaults', () => {
 		adapter: [null],
 		amp: false,
 		appDir: '_app',
+		extensions: ['.svelte'],
 		files: {
 			assets: 'static',
 			routes: 'src/routes',
@@ -67,6 +68,7 @@ test('fills in partial blanks', () => {
 		adapter: [null],
 		amp: false,
 		appDir: '_app',
+		extensions: ['.svelte'],
 		files: {
 			assets: 'public',
 			routes: 'src/routes',

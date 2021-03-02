@@ -192,8 +192,10 @@ export async function prerender({ dir, out, log, config, force }) {
 
 	for (const entry of config.prerender.pages) {
 		if (entry === '*') {
-			// TODO support other extensions, e.g. .svelte.md?
-			const entries = glob('**/*.svelte', { cwd: config.files.routes })
+			// remove the prefix '.' from the extensions array
+			const extensions = config.extensions.map((extension) => extension.slice(1));
+			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
+			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.files.routes })
 				.map((file) => {
 					// support both windows and unix glob results
 					const parts = file.split(path_separator);
@@ -202,7 +204,7 @@ export async function prerender({ dir, out, log, config, force }) {
 						return null;
 					}
 
-					parts[parts.length - 1] = parts[parts.length - 1].replace(/\.svelte$/, '');
+					parts[parts.length - 1] = parts[parts.length - 1].replace(extensions_regex, '');
 					if (parts[parts.length - 1] === 'index') parts.pop();
 
 					if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {

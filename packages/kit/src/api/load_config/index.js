@@ -80,10 +80,6 @@ export function validate_config(config) {
 
 	const validated = validate(options, kit, 'kit');
 
-	if (validated.appDir === '') {
-		throw new Error('kit.appDir cannot be empty');
-	}
-
 	// resolve paths
 	if (validated.paths.base !== '' && !validated.paths.base.startsWith('/')) {
 		throw new Error('kit.paths.base must be a root-relative path');

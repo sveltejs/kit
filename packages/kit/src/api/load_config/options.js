@@ -16,7 +16,24 @@ export default {
 
 	amp: expect_boolean(false),
 
-	appDir: expect_string('_app'),
+	appDir: expect_string('_app', false),
+
+	extensions: {
+		default: ['.svelte'],
+		validate: (option, keypath) => {
+			if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+				throw new Error(`${keypath} must be an array of strings`);
+			}
+
+			option.forEach((extension) => {
+				if (extension[0] !== '.') {
+					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+				}
+			});
+
+			return option;
+		}
+	},
 
 	files: {
 		default: {
@@ -70,11 +87,14 @@ export default {
 	target: expect_string(null)
 };
 
-function expect_string(string) {
+function expect_string(string, allowEmpty = true) {
 	return {
 		default: string,
 		validate: (option, keypath) => {
 			assert_is_string(option, keypath);
+			if (!allowEmpty && option === '') {
+				throw new Error(`${keypath} cannot be empty`);
+			}
 			return option;
 		}
 	};

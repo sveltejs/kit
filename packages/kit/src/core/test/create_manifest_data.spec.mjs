@@ -14,10 +14,10 @@ const create = (dir, extensions) =>
 				assets: 'static',
 				routes: dir
 			},
-			appDir: '_app'
+			appDir: '_app',
+			extensions
 		},
-		cwd: __dirname,
-		extensions
+		cwd: __dirname
 	});
 
 test('creates routes', () => {

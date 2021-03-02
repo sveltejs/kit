@@ -5,14 +5,8 @@ import { posixify } from '../utils.js';
 
 // TODO components could just be an array of strings
 
-export default function create_manifest_data({
-	config,
-	output,
-	cwd = process.cwd(),
-	extensions = '.svelte'
-}) {
-	// TODO support .svelte.md etc?
-	const component_extensions = extensions.split(' ');
+export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
+	const component_extensions = config.extensions;
 
 	function find_layout(file_name, dir) {
 		const files = component_extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
