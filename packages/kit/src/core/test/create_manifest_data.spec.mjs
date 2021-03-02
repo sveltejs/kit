@@ -7,7 +7,7 @@ import create_manifest_data from '../create_manifest_data.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.join(__filename, '..');
 
-const create = (dir, extensions) =>
+const create = (dir, extensions = ['.svelte']) =>
 	create_manifest_data({
 		config: {
 			files: {
