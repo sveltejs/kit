@@ -4,4 +4,7 @@
 - [ ] Ideally, include a test that fails without this PR but passes with it.
 
 ### Tests
--  [ ] Run the tests with `npm test` and lint the project with `npm run lint`
+- [ ] Run the tests with `npm test` and lint the project with `npm run lint`
+
+### Changesets
+- [ ] If your PR makes a change that should be noted in one or more packages' changelogs, generate a changeset by running `pnpx changeset` and following the prompts
