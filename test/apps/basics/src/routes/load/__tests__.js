@@ -32,7 +32,7 @@ export default function (test, is_dev) {
 		assert.equal(await text('h1'), 'static file');
 	});
 
-	test('context is inherited', async ({ visit, text }) => {
+	test('context is inherited', async ({ visit, text, html, js, goto }) => {
 		await visit('/load/context/a/b/c');
 		assert.equal(await text('h1'), 'message: original + new');
 		assert.equal(
@@ -43,6 +43,20 @@ export default function (test, is_dev) {
 				z: 'c'
 			})
 		);
+
+		if (js) {
+			await goto('/load/context/d/e/f');
+
+			assert.equal(await text('h1'), 'message: original + new');
+			assert.equal(
+				await text('pre'),
+				JSON.stringify({
+					x: 'd',
+					y: 'e',
+					z: 'f'
+				})
+			);
+		}
 	});
 
 	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {

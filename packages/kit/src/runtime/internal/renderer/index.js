@@ -46,7 +46,8 @@ export class Renderer {
 			page: null,
 			query: null,
 			session_changed: false,
-			nodes: []
+			nodes: [],
+			contexts: []
 		};
 
 		this.caches = new Map();
@@ -183,13 +184,14 @@ export class Renderer {
 			page,
 			query,
 			session_changed: false,
-			nodes: []
+			nodes: [],
+			contexts: []
 		};
 
 		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
 		const props_promises = [];
 
-		let context = {};
+		let context;
 		let redirect;
 
 		const changed = {
@@ -204,6 +206,7 @@ export class Renderer {
 		try {
 			for (let i = 0; i < component_promises.length; i += 1) {
 				const previous = this.current.nodes[i];
+				const previous_context = this.current.contexts[i];
 
 				const { default: component, load } = await component_promises[i];
 				props.components[i] = component;
@@ -341,8 +344,10 @@ export class Renderer {
 					}
 
 					state.nodes[i] = node;
+					state.contexts[i] = context;
 				} else {
 					state.nodes[i] = previous;
+					state.contexts[i] = context = previous_context;
 				}
 			}
 
