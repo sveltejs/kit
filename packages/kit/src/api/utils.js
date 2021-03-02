@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-export function copy_assets() {
-	copy(resolve(__dirname, '../assets'), '.svelte/assets');
+export function copy_assets(dest) {
+	copy(resolve(__dirname, '../assets'), dest);
 }
 
 function noop() {}

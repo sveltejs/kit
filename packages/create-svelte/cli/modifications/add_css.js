@@ -1,5 +1,5 @@
 import { bold, green } from 'kleur/colors';
-import { add_svelte_prepocess_to_config, update_component, update_package_json } from './utils';
+import { add_svelte_preprocess_to_config, update_component, update_package_json } from './utils';
 
 export default async function add_css(cwd, which) {
 	if (which === 'css') {
@@ -11,7 +11,7 @@ export default async function add_css(cwd, which) {
 		});
 		update_component(cwd, 'src/components/Counter.svelte', [['<style>', '<style lang="less">']]);
 		update_component(cwd, 'src/routes/index.svelte', [['<style>', '<style lang="less">']]);
-		add_svelte_prepocess_to_config(cwd);
+		add_svelte_preprocess_to_config(cwd);
 		console.log(
 			bold(
 				green(
@@ -27,7 +27,7 @@ export default async function add_css(cwd, which) {
 		});
 		update_component(cwd, 'src/components/Counter.svelte', [['<style>', '<style lang="scss">']]);
 		update_component(cwd, 'src/routes/index.svelte', [['<style>', '<style lang="scss">']]);
-		add_svelte_prepocess_to_config(cwd);
+		add_svelte_preprocess_to_config(cwd);
 		console.log(
 			bold(
 				green(

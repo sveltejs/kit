@@ -43,6 +43,7 @@ export default function (test, is_dev) {
 				z: 'c'
 			})
 		);
+
 		if (js) {
 			await goto('/load/context/d/e/f');
 

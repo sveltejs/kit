@@ -7,7 +7,7 @@
 {#if !comment.deleted}
 	<article class="comment" class:hidden>
 		<div class="meta-bar" on:click="{() => hidden = !hidden}">
-			<span class="meta"><a rel="prefetch" href="/user/{comment.user}">{comment.user}</a> {comment.time_ago}</span>
+			<span class="meta"><a sveltekit:prefetch href="/user/{comment.user}">{comment.user}</a> {comment.time_ago}</span>
 		</div>
 
 		<div class="body">
@@ -36,12 +36,12 @@
 	.meta-bar {
 		padding: 1em 0;
 		cursor: pointer;
-		background: 100% 50% no-repeat url(/icons/fold.svg);
+		background: 100% 50% no-repeat url(./_icons/fold.svg);
 		background-size: 1em 1em;
 	}
 
 	.hidden .meta-bar {
-		background-image: url(/icons/unfold.svg);
+		background-image: url(./_icons/unfold.svg);
 	}
 
 	.comment .children {

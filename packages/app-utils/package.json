@@ -2,13 +2,9 @@
 	"name": "@sveltejs/app-utils",
 	"version": "1.0.0-next.1",
 	"scripts": {
-		"clean": "node rimraf.js files http renderer",
-		"dev": "npm run clean && rollup -cw",
-		"build": "npm run clean && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"prepublishOnly": "npm run build",
 		"test": "uvu"
 	},
 	"dependencies": {
@@ -34,7 +30,6 @@
 	},
 	"files": [
 		"files",
-		"http",
-		"renderer"
+		"http"
 	]
 }

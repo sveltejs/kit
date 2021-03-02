@@ -16,15 +16,25 @@ export default function (test, is_dev) {
 				}
 			}
 		});
+
+		// TODO these probably shouldn't have the full render treatment,
+		// given that they will never be user-visible in prod
+		test('server-side errors', async ({ visit, contains }) => {
+			await visit('/errors/serverside');
+
+			assert.ok(await contains('Custom layout'));
+			assert.ok(await contains('Crashing now'));
+			assert.ok(await contains('custom error page'));
+		});
+
+		test('server-side module context errors', async ({ visit, contains }) => {
+			await visit('/errors/module-scope-server');
+
+			assert.ok(await contains('Custom layout'));
+			assert.ok(await contains('Crashing now'));
+			assert.ok(await contains('custom error page'));
+		});
 	}
-
-	test('server-side errors', async ({ visit, contains }) => {
-		await visit('/errors/serverside');
-
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('Crashing now'));
-		assert.ok(await contains('custom error page'));
-	});
 
 	test('client-side load errors', async ({ visit, contains, js }) => {
 		if (js) {
@@ -52,14 +62,6 @@ export default function (test, is_dev) {
 			assert.ok(await contains('Crashing now'));
 			assert.ok(await contains('custom error page'));
 		}
-	});
-
-	test('server-side module context errors', async ({ visit, contains }) => {
-		await visit('/errors/module-scope-server');
-
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('Crashing now'));
-		assert.ok(await contains('custom error page'));
 	});
 
 	test('404', async ({ visit, contains }) => {
@@ -94,10 +96,14 @@ export default function (test, is_dev) {
 
 		const res = await visit('/errors/endpoint');
 
+		console.error = original_error;
+
 		// should include stack trace
-		const lines = console_errors[0].split('\n');
+		const lines = (console_errors[0] || '').split('\n');
 		assert.equal(lines[0], 'Error: nope');
-		assert.ok(lines[1].includes('endpoint.json'));
+		if (is_dev) {
+			assert.ok(lines[1].includes('endpoint.json'));
+		}
 
 		assert.equal(res.status(), 500);
 		assert.equal(
@@ -106,15 +112,13 @@ export default function (test, is_dev) {
 		);
 
 		const contents = await text('#stack');
-		const location = 'endpoint.svelte:11:15';
+		const location = 'endpoint.svelte:11:9';
 		const has_stack_trace = contents.includes(location);
 
 		if (is_dev) {
 			assert.ok(has_stack_trace, `Could not find ${location} in ${contents}`);
 		} else {
-			assert.ok(!has_stack_trace);
+			assert.ok(!has_stack_trace, 'Stack trace is visible');
 		}
-
-		console.error = original_error;
 	});
 }
