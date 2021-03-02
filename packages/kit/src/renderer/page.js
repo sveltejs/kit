@@ -82,7 +82,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					},
 					{
 						...options,
-						fetched: true
+						fetched: url
 					}
 				);
 
@@ -339,7 +339,7 @@ export default async function render_page(request, context, options) {
 			// rather than render the error page — which could lead to an
 			// infinite loop, if the `load` belonged to the root layout,
 			// we respond with a bare-bones 500
-			throw new Error('Bad request in load function');
+			throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
 		}
 
 		return await get_response({
