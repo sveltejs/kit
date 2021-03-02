@@ -45,12 +45,12 @@ importers:
     devDependencies:
       '@sveltejs/adapter-node': link:../../packages/adapter-node
       '@sveltejs/kit': link:../../packages/kit
-      marked: 1.2.9
+      marked: 2.0.1
       svelte: 3.34.0
     specifiers:
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
-      marked: ^1.2.8
+      marked: ^2.0.0
       node-fetch: ^2.6.1
       svelte: ^3.32.1
   examples/sandbox:
@@ -2310,13 +2310,13 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-glc9y00wgtwcDmp7GaE/0b0OnxpNJsVf3ael/An6Fe2Q51LLwN1er6sdomLRzz5h0+yMpiYLhWYF5R7HeqVd4g==
-  /marked/1.2.9:
+  /marked/2.0.1:
     dev: true
     engines:
       node: '>= 8.16.2'
     hasBin: true
     resolution:
-      integrity: sha512-H8lIX2SvyitGX+TRdtS06m1jHMijKN/XjfH6Ooii9fvxMlh8QdqBfBDkGUpMWH2kQNrtixjzYUa3SH8ROTgRRw==
+      integrity: sha512-5+/fKgMv2hARmMW7DOpykr2iLhl0NgjyELk5yn92iE7z8Se1IS9n3UsFm86hFXIkvMBmVxki8+ckcpjBeyo/hw==
   /meow/6.1.1:
     dependencies:
       '@types/minimist': 1.2.1

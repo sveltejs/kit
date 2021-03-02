@@ -11,7 +11,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"marked": "^1.2.8",
+		"marked": "^2.0.0",
 		"svelte": "^3.32.1"
 	},
 	"dependencies": {
