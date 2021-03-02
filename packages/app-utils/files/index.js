@@ -15,6 +15,7 @@ export function rimraf(path) {
 }
 
 export function copy(from, to, filter = () => true) {
+	if (!fs.existsSync(from)) return [];
 	if (!filter(path.basename(from))) return [];
 
 	const files = [];
