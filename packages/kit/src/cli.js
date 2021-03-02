@@ -94,14 +94,30 @@ prog
 prog
 	.command('build')
 	.describe('Create a production build of your app')
-	.action(async () => {
+	.option('--verbose', 'Log more stuff', false)
+	.action(async ({ verbose }) => {
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
 		const { build } = await import('./api/build');
+		const { adapt } = await import('./api/adapt');
 
 		try {
-			await build(config);
+			const cwd = '.svelte/output';
+
+			await build(config, { cwd });
+			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
+
+			if (config.adapter[0]) {
+				await adapt(config, { cwd, verbose });
+			} else {
+				console.log(colors.bold().yellow('\nNo adapter specified'));
+
+				// prettier-ignore
+				console.log(
+					`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
+				);
+			}
 		} catch (error) {
 			handle_error(error);
 		}
@@ -128,21 +144,13 @@ prog
 		}
 	});
 
+// For the benefit of early-adopters. Can later be removed
 prog
 	.command('adapt')
 	.describe('Customise your production build for different platforms')
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
-		process.env.NODE_ENV = 'production';
-		const config = await get_config();
-
-		const { adapt } = await import('./api/adapt');
-
-		try {
-			await adapt(config, { verbose });
-		} catch (error) {
-			handle_error(error);
-		}
+		console.log('"svelte-kit build" will now run the adapter');
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });

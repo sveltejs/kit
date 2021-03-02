@@ -1,5 +1,28 @@
 # @sveltejs/kit
 
+## 1.0.0-next.37
+
+### Patch Changes
+
+- 230c6d9: Indicate which request failed, if fetch fails inside load function
+- f1bc218: Run adapt via svelte-kit build
+- 6850ddc: Fix svelte-kit start for Windows
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- 7b70a33: Force version bump so that Kit uses updated vite-plugin-svelte
+
+## 1.0.0-next.35
+
+### Patch Changes
+
+- Use Vite
+- Fix Windows issues
+- Preserve load context during navigation
+- Return error from load
+
 ## 1.0.0-next.34
 
 ### Patch Changes

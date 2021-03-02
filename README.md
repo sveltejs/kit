@@ -21,14 +21,28 @@ pnpm i
 ...then build SvelteKit and the other packages:
 
 ```bash
-pnpm build
+pnpm -r build
 ```
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
 
-### Version bumps
+Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
 
-You can bump the package versions by running `pnpx changeset` followed by `pnpx changeset version`.
+### Changelogs
+
+For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts.
+
+### Releases
+
+The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
+
+> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
+
+New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
+
+```
+npm publish --access=public
+```
 
 ## Testing
 

@@ -16,7 +16,7 @@ suite('builder ', () => {
 });
 
 suite('copy files', () => {
-	const generated_files = join(__dirname, 'fixtures/basic/.svelte/build/optimized');
+	const cwd = join(__dirname, 'fixtures/basic/_svelte/output');
 	const config = {
 		kit: {
 			files: {
@@ -28,21 +28,8 @@ suite('copy files', () => {
 	};
 
 	const builder = new Builder({
-		generated_files,
+		cwd,
 		config,
-		manifest: {
-			error: {
-				name: '$default_error',
-				url: '/_app/assets/components/error.svelte.js'
-			},
-			layout: {
-				name: '$default_layout',
-				url: '/_app/assets/components/layout.svelte.js'
-			},
-			components: [],
-			pages: [],
-			endpoints: []
-		},
 		log: Object.assign((_msg) => {}, {
 			info: (_msg) => {},
 			warn: (_msg) => {},
@@ -61,48 +48,35 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	builder.copy_client_files(dest);
 
-	assert.equal(glob('**', { cwd: `${generated_files}/client` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: `${cwd}/client` }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	builder.copy_server_files(dest);
 
-	assert.equal(glob('**', { cwd: `${generated_files}/server` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: `${cwd}/server` }), glob('**', { cwd: dest }));
 });
 
 suite('prerender', async () => {
-	const generated_files = join(__dirname, 'fixtures/prerender/.svelte/build/optimized');
+	const cwd = join(__dirname, 'fixtures/prerender/_svelte/output');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 	const config = {
+		extensions: ['.svelte'],
 		kit: {
 			files: {
 				assets: join(__dirname, 'fixtures/prerender/static'),
-				routes: join(__dirname, 'fixtures/prerender/.svelte/build/optimized/server/routes')
+				routes: join(__dirname, 'fixtures/prerender/src/routes')
 			},
 			appDir: '_app',
 			prerender: {
 				pages: ['*'],
 				enabled: true
-			},
-			extensions: ['.svelte']
+			}
 		}
 	};
 
 	const builder = new Builder({
-		generated_files,
+		cwd,
 		config,
-		manifest: {
-			error: {
-				name: '$default_error',
-				url: '/_app/assets/components/error.svelte.js'
-			},
-			layout: {
-				name: '$default_layout',
-				url: '/_app/assets/components/layout.svelte.js'
-			},
-			components: [],
-			pages: [],
-			endpoints: []
-		},
 		log: Object.assign((_msg) => {}, {
 			info: (_msg) => {},
 			warn: (_msg) => {},

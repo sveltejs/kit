@@ -161,8 +161,7 @@ export async function runner(prepare_tests, options = {}) {
 				const port = await ports.find(3000);
 				const config = await config_promise;
 
-				// TODO implement `svelte start` so we don't need to use an adapter
-				await build(config);
+				await build(config, { cwd: '.svelte/output' });
 
 				context.server = await start({ port, config });
 				Object.assign(context, await setup({ port }));

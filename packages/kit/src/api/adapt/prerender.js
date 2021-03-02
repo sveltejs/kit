@@ -45,6 +45,7 @@ const REDIRECT = 3;
 
 export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
+	const seen_files = new Set();
 
 	const server_root = resolve_path(dir);
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`));
@@ -165,20 +166,25 @@ export async function prerender({ dir, out, log, config, force }) {
 
 					for (const href of hrefs) {
 						const resolved = resolve(path, href);
+
 						if (resolved[0] !== '/') continue;
+						if (seen_files.has(resolved)) continue;
 
 						const parsed = parse(resolved);
 
-						const file = parsed.pathname.replace(config.kit.paths.assets, '');
+						const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
 
 						const file_exists =
-							(file.startsWith(`/${config.kit.appDir}/`) &&
+							(file.startsWith(`${config.kit.appDir}/`) &&
 								fs.existsSync(`${dir}/client/${file}`)) ||
 							fs.existsSync(`${out}/${file}`) ||
-							fs.existsSync(`${config.kit.files.static}/${file}`) ||
-							fs.existsSync(`${config.kit.files.static}/${file}/index.html`);
+							fs.existsSync(`${config.kit.files.assets}/${file}`) ||
+							fs.existsSync(`${config.kit.files.assets}/${file}/index.html`);
 
-						if (file_exists) continue;
+						if (file_exists) {
+							seen_files.add(resolved);
+							continue;
+						}
 
 						if (parsed.query) {
 							// TODO warn that query strings have no effect on statically-exported pages
@@ -194,7 +200,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
 			// remove the prefix '.' from the extensions array
-			const extensions = config.kit.extensions.map((extension) => extension.slice(1));
+			const extensions = config.extensions.map((extension) => extension.slice(1));
 			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
 			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.kit.files.routes })
 				.map((file) => {

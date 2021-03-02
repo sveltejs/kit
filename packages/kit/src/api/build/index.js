@@ -10,9 +10,8 @@ import svelte from '@sveltejs/vite-plugin-svelte';
 const s = JSON.stringify;
 
 const build_dir = '.svelte/build';
-const output_dir = '.svelte/output';
 
-export async function build(config) {
+export async function build(config, { cwd }) {
 	const manifest = create_manifest_data({
 		config,
 		output: build_dir
@@ -35,7 +34,7 @@ export async function build(config) {
 	].join('\n'));
 
 	const client_entry_file = `${build_dir}/runtime/internal/start.js`;
-	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
+	const client_out_dir = `${cwd}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
 	const base =
@@ -252,7 +251,7 @@ export async function build(config) {
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${output_dir}/server`
+			outDir: `${cwd}/server`
 		},
 		resolve: {
 			alias: {
