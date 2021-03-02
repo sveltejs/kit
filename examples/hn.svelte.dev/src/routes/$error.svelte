@@ -1,8 +1,9 @@
 <script>
+	import { dev } from '$app/env';
+
 	export let status;
 	export let error;
 
-	const dev = process.env.NODE_ENV === 'development';
 	const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
 
 	const title = offline ? 'Offline' : status;

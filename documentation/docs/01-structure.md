@@ -15,8 +15,8 @@ If you take a look inside a new SvelteKit project, you'll see some files that Sv
 │ └ app.html
 ├ static
 │ ├ # your files here
-├ snowpack.config.cjs
-└ svelte.config.cjs
+├ svelte.config.cjs
+└ vite.config.js
 ```
 
 ### package.json
@@ -73,10 +73,10 @@ Sapper doesn't serve these files — you'd typically use [sirv](https://github.c
 
 > Note that the default behaviour of the service worker is to cache all assets from the static directory, so if you have more than 50mb of files here, you will start to exceed the cache limit for service-workers in some browsers, which can cause the service worker to stop loading. In this instance, it is advisable to customise what files are cached by editing the service-worker yourself.
 
-### snowpack.config.cjs
-
-This is the [Snowpack configuration file](https://www.snowpack.dev/reference/configuration) for your project.
-
 ### svelte.config.cjs
 
 This file contains SvelteKit options as well as options for `svelte-preprocess`.
+
+### vite.config.js
+
+This is the [Vite configuration file](https://vitejs.dev/config/) for your project.

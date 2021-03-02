@@ -7,29 +7,26 @@ import create_manifest_data from '../create_manifest_data.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.join(__filename, '..');
 
-const get_config = (dir) => ({
-	files: {
-		assets: path.join(__dirname, 'static'),
-		routes: path.join(__dirname, dir)
-	},
-	appDir: '_app'
-});
+const create = (dir, extensions) =>
+	create_manifest_data({
+		config: {
+			files: {
+				assets: 'static',
+				routes: dir
+			},
+			appDir: '_app'
+		},
+		cwd: __dirname,
+		extensions
+	});
 
 test('creates routes', () => {
-	const { components, pages, endpoints } = create_manifest_data(get_config('samples/basic'));
+	const { components, pages, endpoints } = create('samples/basic');
 
-	const index = { name: 'index', file: 'index.svelte', url: '/_app/routes/index.svelte.js' };
-	const about = { name: 'about', file: 'about.svelte', url: '/_app/routes/about.svelte.js' };
-	const blog = {
-		name: 'blog',
-		file: 'blog/index.svelte',
-		url: '/_app/routes/blog/index.svelte.js'
-	};
-	const blog_$slug = {
-		name: 'blog_$slug',
-		file: 'blog/[slug].svelte',
-		url: '/_app/routes/blog/[slug].svelte.js'
-	};
+	const index = 'samples/basic/index.svelte';
+	const about = 'samples/basic/about.svelte';
+	const blog = 'samples/basic/blog/index.svelte';
+	const blog_$slug = 'samples/basic/blog/[slug].svelte';
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
 
@@ -61,31 +58,53 @@ test('creates routes', () => {
 
 	assert.equal(endpoints, [
 		{
-			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
-			file: 'blog/index.json.js',
-			url: '/_app/routes/blog/index.json.js',
+			file: 'samples/basic/blog/index.json.js',
 			params: []
 		},
 
 		{
-			name: 'route_blog_$slug_json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'blog/[slug].json.ts',
-			url: '/_app/routes/blog/[slug].json.js',
+			file: 'samples/basic/blog/[slug].json.ts',
 			params: ['slug']
 		}
 	]);
 });
 
+test('creates routes with layout', () => {
+	const { layout, components, pages } = create('samples/basic-layout');
+
+	const $layout = 'samples/basic-layout/$layout.svelte';
+	const index = 'samples/basic-layout/index.svelte';
+	const foo_$layout = 'samples/basic-layout/foo/$layout.svelte';
+	const foo = 'samples/basic-layout/foo/index.svelte';
+
+	assert.equal(layout, $layout);
+	assert.equal(components, [index, foo_$layout, foo]);
+
+	assert.equal(pages, [
+		{
+			pattern: /^\/$/,
+			params: [],
+			parts: [index]
+		},
+
+		{
+			pattern: /^\/foo\/?$/,
+			params: [],
+			parts: [foo_$layout, foo]
+		}
+	]);
+});
+
 test('encodes invalid characters', () => {
-	const { components, pages } = create_manifest_data(get_config('samples/encoding'));
+	const { components, pages } = create('samples/encoding');
 
 	// had to remove ? and " because windows
 
-	// const quote = { name: '$34', file: '".svelte', url: '/_app/routes/".svelte.js' };
-	const hash = { name: '$35', file: '#.svelte', url: '/_app/routes/#.svelte.js' };
-	// const question_mark = { name: '$63', file: '?.svelte', url: '/_app/routes/?.svelte.js' };
+	// const quote = 'samples/encoding/".svelte';
+	const hash = 'samples/encoding/#.svelte';
+	// const question_mark = 'samples/encoding/?.svelte';
 
 	assert.equal(components, [
 		// quote,
@@ -104,7 +123,7 @@ test('encodes invalid characters', () => {
 });
 
 test('allows regex qualifiers', () => {
-	const { pages } = create_manifest_data(get_config('samples/qualifiers'));
+	const { pages } = create('samples/qualifiers');
 
 	assert.equal(
 		pages.map((p) => p.pattern),
@@ -113,70 +132,66 @@ test('allows regex qualifiers', () => {
 });
 
 test('sorts routes correctly', () => {
-	const { pages } = create_manifest_data(get_config('samples/sorting'));
+	const { pages } = create('samples/sorting');
 
 	assert.equal(
-		pages.map((p) => p.parts.map((part) => part && part.file)),
+		pages.map((p) => p.parts),
 		[
-			['index.svelte'],
-			['about.svelte'],
-			['post/index.svelte'],
-			['post/bar.svelte'],
-			['post/foo.svelte'],
-			['post/f[xx].svelte'],
-			['post/[id([0-9-a-z]{3,})].svelte'],
-			['post/[id].svelte'],
-			['[wildcard].svelte'],
-			['[...spread]/deep/[...deep_spread]/xyz.svelte'],
-			['[...spread]/deep/[...deep_spread]/index.svelte'],
-			['[...spread]/deep/index.svelte'],
-			['[...spread]/abc.svelte'],
-			['[...spread]/index.svelte']
+			['samples/sorting/index.svelte'],
+			['samples/sorting/about.svelte'],
+			['samples/sorting/post/index.svelte'],
+			['samples/sorting/post/bar.svelte'],
+			['samples/sorting/post/foo.svelte'],
+			['samples/sorting/post/f[xx].svelte'],
+			['samples/sorting/post/[id([0-9-a-z]{3,})].svelte'],
+			['samples/sorting/post/[id].svelte'],
+			['samples/sorting/[wildcard].svelte'],
+			['samples/sorting/[...spread]/deep/[...deep_spread]/xyz.svelte'],
+			['samples/sorting/[...spread]/deep/[...deep_spread]/index.svelte'],
+			['samples/sorting/[...spread]/deep/index.svelte'],
+			['samples/sorting/[...spread]/abc.svelte'],
+			['samples/sorting/[...spread]/index.svelte']
 		]
 	);
 });
 
 test('ignores files and directories with leading underscores', () => {
-	const { endpoints } = create_manifest_data(get_config('samples/hidden-underscore'));
+	const { endpoints } = create('samples/hidden-underscore');
 
 	assert.equal(
 		endpoints.map((r) => r.file),
-		['e/f/g/h.js']
+		['samples/hidden-underscore/e/f/g/h.js']
 	);
 });
 
 test('ignores files and directories with leading dots except .well-known', () => {
-	const { endpoints } = create_manifest_data(get_config('samples/hidden-dot'));
+	const { endpoints } = create('samples/hidden-dot');
 
 	assert.equal(
 		endpoints.map((r) => r.file),
-		['.well-known/dnt-policy.txt.js']
+		['samples/hidden-dot/.well-known/dnt-policy.txt.js']
 	);
 });
 
 test('allows multiple slugs', () => {
-	const { endpoints } = create_manifest_data(get_config('samples/multiple-slugs'));
+	const { endpoints } = create('samples/multiple-slugs');
 
 	assert.equal(endpoints, [
 		{
-			name: 'route_$file$93_$91ext',
 			pattern: /^\/([^/]+?)\.([^/]+?)$/,
-			file: '[file].[ext].js',
-			url: '/_app/routes/[file].[ext].js',
+			file: 'samples/multiple-slugs/[file].[ext].js',
 			params: ['file', 'ext']
 		}
 	]);
 });
 
 test('allows multiple slugs with nested square brackets', () => {
-	const { endpoints } = create_manifest_data(get_config('samples/nested-square-brackets'));
+	const { endpoints } = create('samples/nested-square-brackets');
 
 	assert.equal(endpoints, [
 		{
-			name: 'route_$file_$91ext$40$91a$45z$93$43$41$93',
 			pattern: /^\/([a-z]+)\.([a-z]+)$/,
-			file: '[file([a-z]+)].[ext([a-z]+)].js',
-			url: '/_app/routes/[file([a-z]+)].[ext([a-z]+)].js',
+			file: 'samples/nested-square-brackets/[file([a-z]+)].[ext([a-z]+)].js',
 			params: ['file', 'ext']
 		}
 	]);
@@ -184,34 +199,32 @@ test('allows multiple slugs with nested square brackets', () => {
 
 test('fails on clashes', () => {
 	assert.throws(() => {
-		create_manifest_data(get_config('samples/clash-pages'));
-	}, /The \[bar\]\/index\.svelte and \[foo\]\.svelte routes clash/);
+		create('samples/clash-pages');
+	}, /The samples\/clash-pages\/\[bar\]\/index\.svelte and samples\/clash-pages\/\[foo\]\.svelte routes clash/);
 
 	assert.throws(() => {
-		create_manifest_data(get_config('samples/clash-routes'));
-	}, /The \[bar\]\/index\.js and \[foo\]\.js routes clash/);
+		create('samples/clash-routes');
+	}, /The samples\/clash-routes\/\[bar\]\/index\.js and samples\/clash-routes\/\[foo\]\.js routes clash/);
 });
 
 test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
-		create_manifest_data(get_config('samples/invalid-params'));
-	}, /Invalid route \[foo\]\[bar\]\.js — parameters must be separated/);
+		create('samples/invalid-params');
+	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\.js — parameters must be separated/);
 });
 
 test('errors when trying to use reserved characters in route regexp', () => {
 	assert.throws(() => {
-		create_manifest_data(get_config('samples/invalid-qualifier'));
-	}, /Invalid route \[foo\(\[a-z\]\(\[0-9\]\)\)\].js — cannot use \(, \), \? or : in route qualifiers/);
+		create('samples/invalid-qualifier');
+	}, /Invalid route samples\/invalid-qualifier\/\[foo\(\[a-z\]\(\[0-9\]\)\)\].js — cannot use \(, \), \? or : in route qualifiers/);
 });
 
 test('ignores things that look like lockfiles', () => {
-	const { endpoints } = create_manifest_data(get_config('samples/lockfiles'));
+	const { endpoints } = create('samples/lockfiles');
 
 	assert.equal(endpoints, [
 		{
-			file: 'foo.js',
-			url: '/_app/routes/foo.js',
-			name: 'route_foo',
+			file: 'samples/lockfiles/foo.js',
 			params: [],
 			pattern: /^\/foo\/?$/
 		}
@@ -219,23 +232,15 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('works with custom extensions', () => {
-	const { components, pages, endpoints } = create_manifest_data(
-		get_config('samples/custom-extension'),
+	const { components, pages, endpoints } = create(
+		'samples/custom-extension',
 		'.jazz .beebop .funk .svelte'
 	);
 
-	const index = { name: 'index', file: 'index.funk', url: '/_app/routes/index.funk.js' };
-	const about = { name: 'about', file: 'about.jazz', url: '/_app/routes/about.jazz.js' };
-	const blog = {
-		name: 'blog',
-		file: 'blog/index.svelte',
-		url: '/_app/routes/blog/index.svelte.js'
-	};
-	const blog_$slug = {
-		name: 'blog_$slug',
-		file: 'blog/[slug].beebop',
-		url: '/_app/routes/blog/[slug].beebop.js'
-	};
+	const index = 'samples/custom-extension/index.funk';
+	const about = 'samples/custom-extension/about.jazz';
+	const blog = 'samples/custom-extension/blog/index.svelte';
+	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
 
@@ -267,24 +272,20 @@ test('works with custom extensions', () => {
 
 	assert.equal(endpoints, [
 		{
-			name: 'route_blog_json',
 			pattern: /^\/blog\.json$/,
-			file: 'blog/index.json.js',
-			url: '/_app/routes/blog/index.json.js',
+			file: 'samples/custom-extension/blog/index.json.js',
 			params: []
 		},
 		{
-			name: 'route_blog_$slug_json',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
-			file: 'blog/[slug].json.js',
-			url: '/_app/routes/blog/[slug].json.js',
+			file: 'samples/custom-extension/blog/[slug].json.js',
 			params: ['slug']
 		}
 	]);
 });
 
 test('lists static assets', () => {
-	const { assets } = create_manifest_data(get_config('samples/basic'));
+	const { assets } = create('samples/basic');
 
 	assert.equal(assets, [
 		{

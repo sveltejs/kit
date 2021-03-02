@@ -5,8 +5,8 @@ import pkg from './package.json';
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
-	Object.keys(process.binding('natives')),
-	resolve('snowpack/pkg')
+	Object.keys(pkg.peerDependencies || {}),
+	Object.keys(process.binding('natives'))
 );
 
 export default [
@@ -50,7 +50,6 @@ export default [
 			chunkFileNames: '[name].js'
 		},
 		external: (id) => {
-			if (id.includes('snowpack/snowpack')) return true;
 			return external.includes(id);
 		},
 		plugins: [

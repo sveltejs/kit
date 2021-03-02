@@ -60,7 +60,7 @@ const expected = new Set(['compilerOptions', 'kit', 'preprocess']);
 
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = join(cwd, 'svelte.config.cjs');
-	const config = await import(config_file);
+	const config = await import(url.pathToFileURL(config_file));
 	const validated = validate_config(config.default);
 
 	// TODO check all the `files` exist when the config is loaded?

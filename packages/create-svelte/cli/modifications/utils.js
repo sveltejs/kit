@@ -32,7 +32,7 @@ export function update_component(cwd, filepath, replacements) {
 /**
  * Adds `svelte-preprocess` to `svelte.config.cjs`, if there's no preprocessor already.
  */
-export function add_svelte_prepocess_to_config(cwd) {
+export function add_svelte_preprocess_to_config(cwd) {
 	const file = path.join(cwd, 'svelte.config.cjs');
 	let config = fs.readFileSync(file, 'utf-8');
 
@@ -48,30 +48,6 @@ export function add_svelte_prepocess_to_config(cwd) {
 	// for more information about preprocessors
 	preprocess: sveltePreprocess(),`
 	);
-
-	fs.writeFileSync(file, config);
-}
-
-/**
- * Adds plugin to snowpack config file, if not already present.
- */
-export function add_snowpack_plugin_to_config(cwd, pluginname) {
-	const file = path.join(cwd, 'snowpack.config.cjs');
-	let config = fs.readFileSync(file, 'utf-8');
-
-	if (config.includes(pluginname)) {
-		return;
-	}
-
-	if (config.includes('plugins: [')) {
-		config = config.replace('plugins: [', `plugins: ['${pluginname}', `);
-	} else {
-		config = config.replace(
-			"extends: '@sveltejs/snowpack-config'",
-			`extends: '@sveltejs/snowpack-config',
-	plugins: ['${pluginname}']`
-		);
-	}
 
 	fs.writeFileSync(file, config);
 }
