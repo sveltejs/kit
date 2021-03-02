@@ -8,8 +8,7 @@
 		"test": "pnpm -r test --workspace-concurrency=1",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"publish-all": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"prepublish-all": "pnpm build"
+		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\""
 	},
 	"repository": {
 		"type": "git",
