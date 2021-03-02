@@ -1,27 +1,22 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as mime from 'mime';
-import { posixify, reserved_words } from '../utils';
+import mime from 'mime';
+import { posixify } from '../utils.js';
 
-export default function create_manifest_data(config, extensions = '.svelte') {
+// TODO components could just be an array of strings
+
+export default function create_manifest_data({
+	config,
+	output,
+	cwd = process.cwd(),
+	extensions = '.svelte'
+}) {
 	// TODO support .svelte.md etc?
-	const cwd = config.files.routes;
 	const component_extensions = extensions.split(' ');
 
-	function find_layout(file_name, component_name, dir = '') {
-		const ext = component_extensions.find((ext) =>
-			fs.existsSync(path.join(cwd, dir, `${file_name}${ext}`))
-		);
-		const file = posixify(path.join(dir, `${file_name}${ext}`));
-		const url = `/${config.appDir}/routes/${file}.js`;
-
-		return ext
-			? {
-					name: component_name,
-					file,
-					url
-			  }
-			: null;
+	function find_layout(file_name, dir) {
+		const files = component_extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
+		return files.find((file) => fs.existsSync(path.join(cwd, file)));
 	}
 
 	const components = [];
@@ -39,15 +34,8 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 		seen.set(pattern, file);
 	};
 
-	const default_layout = {
-		name: '$default_layout',
-		url: `/${config.appDir}/assets/components/layout.svelte.js`
-	};
-
-	const default_error = {
-		name: '$default_error',
-		url: `/${config.appDir}/assets/components/error.svelte.js`
-	};
+	const default_layout = `${output}/components/layout.svelte`;
+	const default_error = `${output}/components/error.svelte`;
 
 	function walk(dir, parent_segments, parent_params, stack) {
 		const items = fs
@@ -126,7 +114,7 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const component = find_layout('$layout', `${get_slug(item.file)}__layout`, item.file);
+				const component = find_layout('$layout', item.file);
 
 				if (component) components.push(component);
 
@@ -137,18 +125,12 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 					component ? stack.concat(component) : stack
 				);
 			} else if (item.is_page) {
-				const component = {
-					name: get_slug(item.file),
-					file: item.file,
-					url: `/${config.appDir}/routes/${item.file}.js`
-				};
-
-				components.push(component);
+				components.push(item.file);
 
 				const parts =
 					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat(component)
-						: stack.concat(component);
+						? stack.slice(0, -1).concat(item.file)
+						: stack.concat(item.file);
 
 				const pattern = get_pattern(segments, true);
 				check_pattern(pattern, item.file);
@@ -163,23 +145,23 @@ export default function create_manifest_data(config, extensions = '.svelte') {
 				check_pattern(pattern, item.file);
 
 				endpoints.push({
-					name: `route_${get_slug(item.file)}`,
 					pattern,
 					file: item.file,
-					url: `/${config.appDir}/routes/${item.file.replace(/\.\w+$/, '.js')}`,
 					params
 				});
 			}
 		});
 	}
 
-	const layout = find_layout('$layout', 'main') || default_layout;
-	const error = find_layout('$error', 'error') || default_error;
+	const layout = find_layout('$layout', config.files.routes) || default_layout;
+	const error = find_layout('$error', config.files.routes) || default_error;
 
-	walk(cwd, [], [], []);
+	walk(path.join(cwd, config.files.routes), [], [], []);
+
+	const assets_dir = path.join(cwd, config.files.assets);
 
 	return {
-		assets: fs.existsSync(config.files.assets) ? list_files(config.files.assets, '') : [],
+		assets: fs.existsSync(assets_dir) ? list_files(assets_dir, '') : [],
 		layout,
 		error,
 		components,
@@ -264,20 +246,6 @@ function get_parts(part) {
 			};
 		})
 		.filter(Boolean);
-}
-
-function get_slug(file) {
-	let name = file
-		.replace(/[\\/]index/, '')
-		.replace(/[/\\]/g, '_')
-		.replace(/\.\w+$/, '')
-		.replace(/\[([^(]+)(?:\([^(]+\))?\]/, '$$$1')
-		.replace(/[^a-zA-Z0-9_$]/g, (c) => {
-			return c === '.' ? '_' : `$${c.charCodeAt(0)}`;
-		});
-
-	if (reserved_words.has(name)) name += '_';
-	return name;
 }
 
 function get_pattern(segments, add_trailing_slash) {

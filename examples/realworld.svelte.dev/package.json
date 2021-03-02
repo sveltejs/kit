@@ -2,6 +2,7 @@
 	"name": "realworld.svelte.dev",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
@@ -10,7 +11,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/snowpack-config": "workspace:*",
 		"marked": "^1.2.8",
 		"svelte": "^3.32.1"
 	},

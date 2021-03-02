@@ -1,8 +1,7 @@
-import * as uvu from 'uvu';
-import * as ports from 'port-authority';
+import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build, start, load_config } from '@sveltejs/kit/dist/api';
+import { dev, build, start, load_config } from '@sveltejs/kit/api';
 import * as assert from 'uvu/assert';
 
 async function setup({ port }) {
@@ -79,13 +78,24 @@ async function setup({ port }) {
 		pathname: () => page.url().replace(base, ''),
 		keyboard: page.keyboard,
 		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
+		reset: () => browser && browser.close(),
 		$: (selector) => page.$(selector)
 	};
 }
 
-export function runner(callback, options = {}) {
-	function run(is_dev, { before, after }) {
-		const suite = uvu.suite(is_dev ? 'dev' : 'build');
+export async function runner(prepare_tests, options = {}) {
+	globalThis.UVU_DEFER = 1;
+	const uvu = await import('uvu');
+
+	async function run(is_dev, { before, after }) {
+		const name = is_dev ? 'dev' : 'build';
+
+		// manually replicate uvu global state
+		const count = globalThis.UVU_QUEUE.push([name]);
+		globalThis.UVU_INDEX = count - 1;
+
+		const suite = uvu.suite(name);
+		const tests = await prepare_tests();
 
 		suite.before(before);
 		suite.after(after);
@@ -119,35 +129,37 @@ export function runner(callback, options = {}) {
 		test.skip = duplicate(suite.skip);
 		test.only = duplicate(suite.only);
 
-		callback(test, is_dev);
+		tests.forEach((fn) => fn(test, is_dev));
 
 		suite.run();
 	}
 
-	const config = load_config();
+	const config_promise = load_config();
 
-	run(true, {
+	await run(true, {
 		async before(context) {
 			const port = await ports.find(3000);
+			const config = await config_promise;
 
 			try {
 				context.watcher = await dev({ port, config });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
-				console.log(e.message);
+				console.log(e.stack);
 				throw e;
 			}
 		},
 		async after(context) {
 			await context.watcher.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
 
-	run(false, {
+	await run(false, {
 		async before(context) {
 			try {
 				const port = await ports.find(3000);
+				const config = await config_promise;
 
 				// TODO implement `svelte start` so we don't need to use an adapter
 				await build(config);
@@ -162,7 +174,10 @@ export function runner(callback, options = {}) {
 		},
 		async after(context) {
 			context.server.close();
-			if (context.browser) await context.browser.close();
+			await context.reset();
 		}
 	});
+
+	await uvu.exec();
+	process.exit(process.exitCode || 0);
 }

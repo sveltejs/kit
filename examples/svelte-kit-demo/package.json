@@ -2,6 +2,7 @@
 	"name": "svelte-kit-demo",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
@@ -11,7 +12,6 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/snowpack-config": "workspace:*",
 		"svelte": "^3.32.1"
 	}
 }

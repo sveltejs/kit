@@ -1,7 +1,7 @@
 import fs, { readFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path } from 'path';
-import { parse, resolve, URLSearchParams } from 'url';
-import glob from 'tiny-glob/sync';
+import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
+import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
+import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '@sveltejs/app-utils/files';
 
 function clean_html(html) {
@@ -47,7 +47,7 @@ export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
-	const app = require(`${server_root}/server/app.cjs`);
+	const app = await import(pathToFileURL(`${server_root}/server/app.js`));
 
 	app.init({
 		paths: config.paths
@@ -195,7 +195,8 @@ export async function prerender({ dir, out, log, config, force }) {
 			// TODO support other extensions, e.g. .svelte.md?
 			const entries = glob('**/*.svelte', { cwd: config.files.routes })
 				.map((file) => {
-					const parts = file.split('/'); // TODO is this true for glob results on windows?
+					// support both windows and unix glob results
+					const parts = file.split(path_separator);
 
 					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
 						return null;

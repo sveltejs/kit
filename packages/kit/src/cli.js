@@ -4,9 +4,30 @@ import colors from 'kleur';
 import { load_config } from './api/load_config';
 import * as pkg from '../package.json';
 
-function get_config() {
+async function get_config() {
+	// TODO this is temporary, for the benefit of early adopters
+	if (existsSync('snowpack.config.js') || existsSync('snowpack.config.cjs')) {
+		// prettier-ignore
+		console.error(colors.bold().red(
+			'SvelteKit now uses https://vitejs.dev. Please replace snowpack.config.js with vite.config.js:'
+		));
+
+		// prettier-ignore
+		console.error(`
+			import { resolve } from 'path';
+
+			export default {
+				resolve: {
+					alias: {
+						$components: resolve('src/components')
+					}
+				}
+			};
+		`.replace(/^\t{3}/gm, '').replace(/\t/gm, '  ').trim());
+	}
+
 	try {
-		return load_config();
+		return await load_config();
 	} catch (error) {
 		let message = error.message;
 
@@ -39,7 +60,7 @@ async function launch(port) {
 	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
 }
 
-const prog = sade('svelte').version(pkg.version);
+const prog = sade('svelte-kit').version(pkg.version);
 
 prog
 	.command('dev')
@@ -48,7 +69,7 @@ prog
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
 		process.env.NODE_ENV = 'development';
-		const config = get_config();
+		const config = await get_config();
 
 		const { dev } = await import('./api/dev');
 
@@ -75,7 +96,7 @@ prog
 	.describe('Create a production build of your app')
 	.action(async () => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { build } = await import('./api/build');
 
@@ -93,7 +114,7 @@ prog
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { start } = await import('./api/start');
 
@@ -113,7 +134,7 @@ prog
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
 		process.env.NODE_ENV = 'production';
-		const config = get_config();
+		const config = await get_config();
 
 		const { adapt } = await import('./api/adapt');
 

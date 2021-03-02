@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.34
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- 474070e: Better errors when modules cannot be found
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- Convert everything to ESM
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- b6c2434: app.js -> app.cjs
+
 ## 1.0.0-next.30
 
 ### Patch Changes

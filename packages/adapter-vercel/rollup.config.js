@@ -5,7 +5,7 @@ export default {
 	input: 'src/index.js',
 	output: {
 		file: 'files/index.js',
-		format: 'cjs',
+		format: 'esm',
 		sourcemap: true,
 		exports: 'default'
 	},

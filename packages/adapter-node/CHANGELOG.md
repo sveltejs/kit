@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.4
+
+### Minor Changes
+
+- Make adapter node work under esm
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- ab2367d: Convert to ESM
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
 ## 1.0.0-next.1
 
 ### Patch Changes

@@ -1,262 +1,133 @@
 import fs, { readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-import child_process from 'child_process';
-import { promisify } from 'util';
-import { green, bold, cyan } from 'kleur/colors';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { relative, resolve } from 'path';
+import { rimraf } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
-import { rollup } from 'rollup';
-import { terser } from 'rollup-plugin-terser';
-import css_chunks from 'rollup-plugin-css-chunks';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
-import { css_injection } from './css_injection';
-
-const execFile = promisify(child_process.execFile);
-
-const snowpack_main = require.resolve('snowpack');
-const snowpack_pkg_file = path.join(snowpack_main, '../../package.json');
-const snowpack_pkg = require(snowpack_pkg_file); // eslint-disable-line
-const snowpack_bin = path.resolve(path.dirname(snowpack_pkg_file), snowpack_pkg.bin.snowpack);
-
-const ignorable_warnings = new Set(['EMPTY_BUNDLE', 'MISSING_EXPORT']);
-const onwarn = (warning, handler) => {
-	// TODO would be nice to just eliminate the circular dependencies instead of
-	// squelching these warnings (it happens when e.g. the root layout imports
-	// from $app/navigation)
-	if (ignorable_warnings.has(warning.code)) return;
-	handler(warning);
-};
-
-const DIR = '.svelte';
-const ASSETS = `${DIR}/assets`;
-const UNOPTIMIZED = `${DIR}/build/unoptimized`;
-const OPTIMIZED = `${DIR}/build/optimized`;
+import vite from 'vite';
+import svelte from '@sveltejs/vite-plugin-svelte';
 
 const s = JSON.stringify;
 
-export async function build(config) {
-	const manifest = create_manifest_data(config);
+const build_dir = '.svelte/build';
+const output_dir = '.svelte/output';
 
-	mkdirp(ASSETS);
-	await rimraf(UNOPTIMIZED);
-	await rimraf(OPTIMIZED);
+export async function build(config) {
+	const manifest = create_manifest_data({
+		config,
+		output: build_dir
+	});
+
+	rimraf(build_dir);
 
 	create_app({
 		manifest_data: manifest,
-		output: '.svelte/assets'
+		output: build_dir
 	});
 
-	copy_assets();
+	copy_assets(build_dir);
 
-	// TODO use import.meta.env.SSR upon resolution of https://github.com/snowpackjs/snowpack/discussions/1889
 	// prettier-ignore
-	writeFileSync('.svelte/assets/runtime/app/env.js', [
-		'export const browser = typeof window !== "undefined";',
+	writeFileSync(`${build_dir}/runtime/app/env.js`, [
+		'export const browser = !import.meta.env.SSR;',
 		'export const dev = false;',
 		`export const amp = ${config.amp};`
 	].join('\n'));
 
-	const tick = bold(green('✔'));
-	console.log(bold(cyan('Transforming...')));
+	const client_entry_file = `${build_dir}/runtime/internal/start.js`;
+	const client_out_dir = `${output_dir}/client/${config.appDir}`;
+	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
-	const mount = [
-		`--mount.${config.files.routes}=/${config.appDir}/routes`,
-		`--mount.${config.files.setup}=/${config.appDir}/setup`
-	];
+	const base =
+		config.paths.assets === '/.'
+			? `/${config.appDir}/`
+			: `${config.paths.assets}/${config.appDir}/`;
 
-	const env = { ...process.env, SVELTE_KIT_APP_DIR: config.appDir };
-
-	const promises = {
-		transform_client: execFile(
-			process.argv[0],
-			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/client`],
-			{ env }
-		),
-		transform_server: execFile(
-			process.argv[0],
-			[snowpack_bin, 'build', ...mount, `--out=${UNOPTIMIZED}/server`, '--ssr'],
-			{ env }
-		)
-	};
-
-	await promises.transform_client;
-	console.log(`  ${tick} client`);
-
-	await promises.transform_server;
-	console.log(`  ${tick} server`);
-
-	console.log(bold(cyan('Optimizing...')));
-
-	const client = {
-		entry: null,
-		deps: {}
-	};
-
-	const entry = path.resolve(
-		`${UNOPTIMIZED}/client/${config.appDir}/assets/runtime/internal/start.js`
-	);
-
-	const client_chunks = await rollup({
-		input: {
-			entry
+	// client build
+	await vite.build({
+		base,
+		build: {
+			cssCodeSplit: true,
+			manifest: true,
+			lib: {
+				entry: client_entry_file,
+				name: 'app',
+				formats: ['es']
+			},
+			outDir: client_out_dir
+		},
+		resolve: {
+			alias: {
+				$app: resolve(`${build_dir}/runtime/app`)
+			}
 		},
 		plugins: [
-			{
-				name: 'deproxy-css',
-				async resolveId(importee, importer) {
-					if (/\.css\.proxy\.js$/.test(importee)) {
-						const deproxied = importee.replace(/\.css\.proxy\.js$/, '.css');
-						const resolved = await this.resolve(deproxied, importer);
-						return resolved.id;
-					}
-				}
-			},
-			css_chunks({
-				sourcemap: true
-			}),
-			css_injection,
-			{
-				name: 'generate-client-manifest',
-				generateBundle(_options, bundle) {
-					const reverse_lookup = new Map();
-
-					const routes = path.resolve(`${UNOPTIMIZED}/client/${config.appDir}/routes`);
-
-					let inject_styles;
-
-					for (const key in bundle) {
-						const chunk = bundle[key];
-
-						if (chunk.facadeModuleId === entry) {
-							client.entry = key;
-						} else if (chunk.facadeModuleId === 'inject_styles.js') {
-							inject_styles = key;
-						} else if (chunk.modules) {
-							for (const id in chunk.modules) {
-								if (id.startsWith(routes) && id.endsWith('.js')) {
-									const file = id.slice(routes.length + 1);
-									reverse_lookup.set(file, key);
-								}
-							}
-						}
-					}
-
-					const find_deps = (key, js, css) => {
-						if (js.has(key)) return;
-
-						js.add(key);
-
-						const chunk = bundle[key];
-
-						if (chunk) {
-							const imports = chunk.imports;
-
-							if (imports) {
-								imports.forEach((key) => {
-									if (key.endsWith('.css')) {
-										js.add(inject_styles);
-										css.add(key);
-									} else {
-										find_deps(key, js, css);
-									}
-								});
-							}
-						} else {
-							this.error(`'${key}' is imported but could not be bundled`);
-						}
-
-						return { js, css };
-					};
-
-					const get_deps = (key) => {
-						const js = new Set();
-						const css = new Set();
-
-						find_deps(key, js, css);
-
-						return {
-							js: Array.from(js),
-							css: Array.from(css)
-						};
-					};
-
-					manifest.components.forEach((component) => {
-						const file = path.normalize(component.file + '.js');
-						const key = reverse_lookup.get(file);
-
-						client.deps[component.name] = get_deps(key);
-					});
-				}
-			},
-			terser()
-		],
-
-		onwarn,
-
-		// TODO ensure this works with external node modules (on server)
-		external: (id) => id[0] !== '.' && !path.isAbsolute(id)
+			svelte({
+				emitCss: true,
+				compilerOptions: {
+					dev: true,
+					hydratable: true
+				},
+				hot: true
+			})
+		]
 	});
 
-	await client_chunks.write({
-		dir: `${OPTIMIZED}/client/${config.appDir}`,
-		entryFileNames: '[name]-[hash].js',
-		chunkFileNames: '[name]-[hash].js',
-		assetFileNames: '[name]-[hash].js', // TODO CSS filenames aren't hashed?
-		format: 'esm',
-		sourcemap: true
-	});
+	const client_manifest = JSON.parse(readFileSync(client_manifest_file, 'utf-8'));
+	fs.unlinkSync(client_manifest_file);
 
-	console.log(`  ${tick} client`);
-
-	const setup_file = `${UNOPTIMIZED}/server/${config.appDir}/setup/index.js`;
+	let setup_file = 'src/setup/index.js';
 	if (!fs.existsSync(setup_file)) {
-		mkdirp(path.dirname(setup_file));
+		setup_file = `${build_dir}/setup.js`;
 		fs.writeFileSync(setup_file, '');
 	}
 
-	const app_file = `${UNOPTIMIZED}/server/app.js`;
+	const app_file = `${build_dir}/app.js`;
+	const app_relative = (file) => {
+		const relative_file = relative(build_dir, file);
+		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
+	};
 
 	const component_indexes = new Map();
 	manifest.components.forEach((c, i) => {
-		component_indexes.set(c.file, i);
+		component_indexes.set(c, i);
 	});
 
-	const stringify_component = (c) => `() => import(${s(`.${c.url}`)})`;
+	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
 
 	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
 	// way to be able to inline CSS into AMP documents. if we come up with
 	// something better, we could use it for non-AMP documents too, as
 	// critical CSS below a certain threshold _should_ be inlined
 	const css_lookup = {};
-	manifest.pages.forEach((data) => {
-		data.parts.forEach((c) => {
-			const deps = client.deps[c.name];
-			deps.css.forEach((dep) => {
-				const url = `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
-				const file = `${OPTIMIZED}/client/${config.appDir}/${dep}`;
+	// manifest.pages.forEach((data) => {
+	// 	data.parts.forEach((c) => {
+	// 		const deps = client.deps[c];
+	// 		deps.css.forEach((dep) => {
+	// 			const url = `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
+	// 			const file = `${OPTIMIZED}/client/${config.appDir}/${dep}`;
 
-				css_lookup[url] = readFileSync(file, 'utf-8');
-			});
-		});
-	});
+	// 			css_lookup[url] = readFileSync(file, 'utf-8');
+	// 		});
+	// 	});
+	// });
 
 	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
+
+	const entry = `${config.paths.assets}/${config.appDir}/${client_manifest[client_entry_file].file}`;
 
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
 		`
-			import * as renderer from '@sveltejs/kit/dist/renderer';
-			import root from './${config.appDir}/assets/generated/root.svelte.js';
-			import { set_paths } from './${config.appDir}/assets/runtime/internal/singletons.js';
-			import * as setup from './${config.appDir}/setup/index.js';
+			import * as renderer from '@sveltejs/kit/renderer';
+			import root from ${s(app_relative(`${build_dir}/generated/root.svelte`))};
+			import { set_paths } from ${s(app_relative(`${build_dir}/runtime/internal/singletons.js`))};
+			import * as setup from '${app_relative(setup_file)}';
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
-
-			const entry = ${s(client.entry)};
 
 			set_paths(${s(config.paths)});
 
@@ -285,17 +156,36 @@ export async function build(config) {
 					${manifest.pages
 						.map((data) => {
 							const params = get_params(data.params);
-							const parts = data.parts.map(c => `components[${component_indexes.get(c.file)}]`);
+							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
-							const path_to_dep = dep => `${config.paths.assets}/${config.appDir}/${dep}`.replace(/^\/\./, '');
+							const prefix = config.paths.assets === '/.' ? '' : config.paths.assets;
+							const path_to_dep = dep => prefix + `/${config.appDir}/${dep}`;
 
 							const js_deps = new Set();
 							const css_deps = new Set();
-							data.parts.forEach(c => {
-								const deps = client.deps[c.name];
-								deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
-								deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
-							});
+
+							function find_deps(id) {
+								const chunk = client_manifest[id];
+								js_deps.add(path_to_dep(chunk.file));
+
+								if (chunk.css) {
+									chunk.css.forEach(file => css_deps.add(path_to_dep(file)));
+								}
+
+								if (chunk.imports) {
+									chunk.imports.forEach(find_deps);
+								}
+							}
+
+							for (const part of data.parts) {
+								find_deps(part);
+							}
+
+							// data.parts.forEach(c => {
+							// 	const deps = client.deps[c];
+							// 	deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
+							// 	deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
+							// });
 
 							return `{
 								pattern: ${data.pattern},
@@ -311,7 +201,7 @@ export async function build(config) {
 					${manifest.endpoints
 						.map((data) => {
 							const params = get_params(data.params);
-							const load = `() => import(${s(`.${data.url.replace(/\.\w+$/, '.js')}`)})`;
+							const load = `() => import(${s(app_relative(data.file))})`;
 
 							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
@@ -333,7 +223,7 @@ export async function build(config) {
 					target: ${s(config.target)},${
 						config.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.startGlobal)},` : ''
 					}
-					entry,
+					entry: ${s(entry)},
 					root,
 					setup,
 					dev: false,
@@ -352,46 +242,35 @@ export async function build(config) {
 			.trim()
 	);
 
-	const server_input = {
-		app: `${UNOPTIMIZED}/server/app.js`
-	};
-
-	const server_chunks = await rollup({
-		input: server_input,
-		plugins: [
-			{
-				name: 'remove-css',
-				load(id) {
-					if (/\.css\.proxy\.js$/.test(id)) return '';
-				}
+	await vite.build({
+		base,
+		build: {
+			ssr: true,
+			lib: {
+				entry: app_file,
+				name: 'app',
+				formats: ['es']
 			},
-			// TODO add server manifest generation so we can prune
-			// imports before zipping for cloud functions
-			terser()
+			outDir: `${output_dir}/server`
+		},
+		resolve: {
+			alias: {
+				$app: resolve(`${build_dir}/runtime/app`)
+			}
+		},
+		plugins: [
+			svelte({
+				emitCss: true,
+				compilerOptions: {
+					dev: true,
+					hydratable: true
+				},
+				hot: true
+			})
 		],
-
-		onwarn,
-
-		// TODO ensure this works with external node modules (on server)
-		external: (id) => id[0] !== '.' && !path.isAbsolute(id)
-	});
-
-	await server_chunks.write({
-		dir: `${OPTIMIZED}/server`,
-		format: 'cjs', // TODO some adapters might want ESM?
-		exports: 'named',
-		entryFileNames: '[name].cjs',
-		chunkFileNames: 'chunks/[name].cjs',
-		assetFileNames: 'assets/[name].cjs',
-		sourcemap: true
-	});
-
-	console.log(`  ${tick} server\n`);
-}
-
-async function rimraf(path) {
-	return new Promise((resolve) => {
-		(fs.rm || fs.rmdir)(path, { recursive: true, force: true }, () => resolve());
+		ssr: {
+			noExternal: ['svelte']
+		}
 	});
 }
 

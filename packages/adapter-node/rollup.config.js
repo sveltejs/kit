@@ -5,9 +5,9 @@ export default {
 	input: 'src/server.js',
 	output: {
 		file: 'files/server.js',
-		format: 'cjs',
+		format: 'esm',
 		sourcemap: true
 	},
 	plugins: [nodeResolve(), commonjs()],
-	external: require('module').builtinModules
+	external: ['./app.js', ...require('module').builtinModules]
 };

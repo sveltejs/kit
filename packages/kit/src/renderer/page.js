@@ -166,13 +166,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		if (loaded) {
 			if (loaded.error) {
+				let error = loaded.error;
+				if (typeof error === 'string') {
+					error = new Error(error);
+				}
+				if (!(error instanceof Error)) {
+					error = new Error(
+						`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
+					);
+				}
+
 				return await get_response({
 					request,
 					options,
 					$session,
 					route,
 					status: loaded.status || 500,
-					error: loaded.error
+					error
 				});
 			}
 
@@ -254,14 +264,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 	// TODO all the `route &&` stuff is messy
 	const js_deps = route ? route.js : [];
 	const css_deps = route ? route.css : [];
+	const style = route ? route.style : '';
 
 	const s = JSON.stringify;
 
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
-		? `<style amp-custom>${(
-				await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))
-		  ).join('\n')}</style>`
+		? `<style amp-custom>${
+				style || (await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))).join('\n')
+		  }</style>`
 		: [
 				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
 				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
@@ -274,7 +285,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`
 		: `
 		<script type="module">
-			import { start } from '${options.paths.assets}/${options.app_dir}/${options.entry}';
+			import { start } from ${s(options.entry)};
 			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				host: ${host ? s(host) : 'location.host'},
@@ -285,7 +296,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 			});
 		</script>`;
 
-	const head = [rendered.head, links, init].join('\n\n');
+	const head = [
+		rendered.head,
+		options.amp ? '' : `<style data-svelte>${style}</style>`,
+		links,
+		init
+	].join('\n\n');
 
 	const body = options.amp
 		? rendered.html

@@ -26,6 +26,10 @@ pnpm build
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
 
+### Version bumps
+
+You can bump the package versions by running `pnpx changeset` followed by `pnpx changeset version`.
+
 ## Testing
 
 Run `pnpm test` to run the tests from all subpackages. Browser tests live in subpackages of `test/` such as `test/apps/basics/`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.

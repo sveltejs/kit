@@ -46,7 +46,8 @@ export class Renderer {
 			page: null,
 			query: null,
 			session_changed: false,
-			nodes: []
+			nodes: [],
+			contexts: []
 		};
 
 		this.caches = new Map();
@@ -119,6 +120,15 @@ export class Renderer {
 			this.current = hydrated.state;
 		}
 
+		// remove dev-mode SSR <style> insert, since it doesn't apply
+		// to hydrated markup (HMR requires hashes to be rewritten)
+		// TODO only in dev
+		// TODO it seems this doesn't always work with the classname
+		// stabilisation in vite-plugin-svelte? see e.g.
+		// hn.svelte.dev
+		// const style = document.querySelector('style[data-svelte]');
+		// if (style) style.remove();
+
 		this.root = new this.Root({
 			target: this.target,
 			props,
@@ -174,13 +184,14 @@ export class Renderer {
 			page,
 			query,
 			session_changed: false,
-			nodes: []
+			nodes: [],
+			contexts: []
 		};
 
 		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
 		const props_promises = [];
 
-		let context = {};
+		let context;
 		let redirect;
 
 		const changed = {
@@ -195,6 +206,7 @@ export class Renderer {
 		try {
 			for (let i = 0; i < component_promises.length; i += 1) {
 				const previous = this.current.nodes[i];
+				const previous_context = this.current.contexts[i];
 
 				const { default: component, load } = await component_promises[i];
 				props.components[i] = component;
@@ -247,7 +259,8 @@ export class Renderer {
 							load &&
 							(await load.call(null, {
 								page: {
-									...page,
+									host: page.host,
+									path: page.path,
 									params,
 									get query() {
 										node.uses.query = true;
@@ -268,8 +281,16 @@ export class Renderer {
 
 					if (loaded) {
 						if (loaded.error) {
-							const error = new Error(loaded.error.message);
-							error.status = loaded.error.status;
+							let error = loaded.error;
+							if (typeof error === 'string') {
+								error = new Error(error);
+							}
+							if (!(error instanceof Error)) {
+								error = new Error(
+									`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
+								);
+							}
+							error.status = loaded.status;
 							throw error;
 						}
 
@@ -323,8 +344,10 @@ export class Renderer {
 					}
 
 					state.nodes[i] = node;
+					state.contexts[i] = context;
 				} else {
 					state.nodes[i] = previous;
+					state.contexts[i] = context = previous_context;
 				}
 			}
 
@@ -341,7 +364,7 @@ export class Renderer {
 			}
 		} catch (error) {
 			props.error = error;
-			props.status = 500;
+			props.status = error.status || 500;
 			state.nodes = [];
 		}
 
