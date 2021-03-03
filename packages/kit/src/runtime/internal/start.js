@@ -4,6 +4,17 @@ import { Router } from './router';
 import { Renderer } from './renderer';
 import { init, set_paths } from './singletons';
 
+/** @param {{
+ *   paths: {
+ *     assets: string;
+ *     base: string;
+ *   },
+ *   target: Node;
+ *   host: string;
+ *   session: any;
+ *   error: Error;
+ *   status: number;
+ * }} opts */
 export async function start({ paths, target, host, session, preloaded, error, status }) {
 	const router = new Router({
 		base: paths.base,
@@ -25,5 +36,5 @@ export async function start({ paths, target, host, session, preloaded, error, st
 	init({ router, renderer });
 	set_paths(paths);
 
-	await router.init({ renderer });
+	await router.init(renderer);
 }

@@ -12,7 +12,7 @@ import { rimraf } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import svelte from '@svitejs/vite-plugin-svelte';
 
 /** @typedef {{ port: number, config: import('../../types').ValidatedConfig }} Options */
 
@@ -62,6 +62,7 @@ class Watcher extends EventEmitter {
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
 			dir: this.config.kit.files.routes,
+			/** @type {({ path }: { path: string }) => boolean} */
 			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
@@ -115,9 +116,9 @@ class Watcher extends EventEmitter {
 		this.server = http.createServer((req, res) => {
 			this.viteDevServer.middlewares(req, res, async () => {
 				try {
-					const parsed = parse(req.originalUrl);
+					const parsed = parse(req.url);
 
-					if (req.originalUrl === '/favicon.ico') return;
+					if (req.url === '/favicon.ico') return;
 
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = readFileSync(this.config.kit.files.template, 'utf-8');
@@ -160,6 +161,7 @@ class Watcher extends EventEmitter {
 									if (result.status !== 'PASS') {
 										const lines = rendered.split('\n');
 
+										/** @param {string} str */
 										const escape = (str) =>
 											str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -271,6 +273,11 @@ class Watcher extends EventEmitter {
 			return { mod, css };
 		};
 
+		/**
+		 *
+		 * @param {import('vite').ModuleNode} node
+		 * @param {Set<import('vite').ModuleNode>} deps
+		 */
 		const find_deps = (node, deps) => {
 			for (const dep of node.importedModules) {
 				if (!deps.has(dep)) {

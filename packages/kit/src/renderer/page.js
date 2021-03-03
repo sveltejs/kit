@@ -10,7 +10,7 @@ import { render } from './index';
  *   request: import('../types').Request;
  *   options: import('../types').RenderOptions;
  *   $session: any;
- *   route: {};
+ *   route: import('../types').Page;
  *   status: number;
  *   error: Error
  * }} opts
@@ -19,10 +19,11 @@ import { render } from './index';
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
+	/** @type {Record<string, import('../types').Response>} */
 	const dependencies = {};
 
-	const serialized_session = try_serialize($session, (err) => {
-		throw new Error(`Failed to serialize session data: ${err.message}`);
+	const serialized_session = try_serialize($session, (error) => {
+		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
 
 	/** @type {Array<{ url: string, payload: string }>} */
@@ -43,9 +44,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	/**
 	 *
 	 * @param {string} url
-	 * @param {{
-	 *   credentials?: string;
-	 * }} opts
+	 * @param {RequestInit} opts
 	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
@@ -122,6 +121,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
+			/** @type {import('../types').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -244,6 +244,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 	}
 
+	/** @type {Record<string, any>} */
 	const props = {
 		status,
 		error,
@@ -332,6 +333,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
+	/** @type {import('../types').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -348,6 +350,11 @@ async function get_response({ request, options, $session, route, status = 200, e
 	};
 }
 
+/**
+ * @param {import('../types').Request} request
+ * @param {any} context
+ * @param {import('../types').RenderOptions} options
+ */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
@@ -382,6 +389,11 @@ export default async function render_page(request, context, options) {
 	});
 }
 
+/**
+ *
+ * @param {any} data
+ * @param {(error: Error) => void} [fail]
+ */
 function try_serialize(data, fail) {
 	try {
 		return devalue(data);
@@ -392,6 +404,8 @@ function try_serialize(data, fail) {
 }
 
 // Ensure we return something truthy so the client will not re-render the page over the error
+
+/** @param {Error} error */
 function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);

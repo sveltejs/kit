@@ -5,7 +5,7 @@ import create_manifest_data from '../../core/create_manifest_data';
 import { copy_assets } from '../utils';
 import { create_app } from '../../core/create_app';
 import vite from 'vite';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import svelte from '@svitejs/vite-plugin-svelte';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);

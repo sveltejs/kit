@@ -78,12 +78,7 @@ export type App = {
 			assets: string;
 		};
 	}) => void;
-	render: (
-		request: Request,
-		options: RenderOptions
-	) => Response & {
-		dependencies: Response[];
-	};
+	render: (request: Request, options: RenderOptions) => Response;
 };
 
 export type Headers = Record<string, string>;
@@ -100,30 +95,59 @@ export type Request = {
 export type Response = {
 	status: number;
 	headers: Headers;
-	body: any;
+	body?: any;
+	dependencies?: Record<string, Response>;
 };
 
-export type SSRComponent = {};
+export type PreloadContext = {
+	// TODO need to avoid having a bunch of different types called Page
+};
+
+export type SSRComponent = {
+	prerender?: boolean;
+	load: (
+		preload_context: PreloadContext
+	) => {
+		status?: number;
+		error?: Error | string;
+		redirect?: string;
+		props: Record<string, any>;
+		context: Record<string, any>;
+	};
+	default: {
+		render: (
+			props: Record<string, any>
+		) => {
+			html: string;
+			head: string;
+			css: string;
+		};
+	};
+};
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
+export type Page = {
+	pattern: RegExp;
+	params: (match: RegExpMatchArray) => Record<string, string | string[]>;
+	parts: SSRComponentLoader[];
+	style: string;
+	css: string[];
+	js: string[];
+};
+
+export type Endpoint = {
+	pattern: RegExp;
+	params: (match: RegExpMatchArray) => Record<string, string | string[]>;
+	load: () => Promise<any>; // TODO
+};
+
 export type Manifest = {
-	assets: string[];
-	layout: () => Promise<SSRComponentLoader>;
-	error: () => Promise<SSRComponentLoader>;
-	pages: Array<{
-		pattern: RegExp;
-		params: (match: RegExpMatchArray) => Record<string, string | string[]>;
-		parts: SSRComponentLoader[];
-		style: string;
-		css: string[];
-		js: string[];
-	}>;
-	endpoints: Array<{
-		pattern: RegExp;
-		params: (match: RegExpMatchArray) => Record<string, string | string[]>;
-		load: () => Promise<any>; // TODO
-	}>;
+	assets: Asset[];
+	layout: SSRComponentLoader;
+	error: SSRComponentLoader;
+	pages: Page[];
+	endpoints: Endpoint[];
 };
 
 export type RenderOptions = {
@@ -137,7 +161,7 @@ export type RenderOptions = {
 	target?: string;
 	start_global?: string;
 	entry?: string;
-	root?: string;
+	root?: SSRComponent['default'];
 	setup?: {
 		prepare?: (
 			headers: Headers
@@ -145,6 +169,7 @@ export type RenderOptions = {
 			context?: any;
 			headers?: Headers;
 		};
+		getSession: (context: any) => any;
 	};
 	dev?: boolean;
 	amp?: boolean;
@@ -155,6 +180,7 @@ export type RenderOptions = {
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;
+	fetched?: string;
 };
 
 export type Asset = {

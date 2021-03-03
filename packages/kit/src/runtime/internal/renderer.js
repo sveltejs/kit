@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
-import { find_anchor } from '../utils';
+import { find_anchor } from './utils';
 
+/** @param {any} value */
 function page_store(value) {
 	const store = writable(value);
 	let ready = true;
@@ -10,12 +11,15 @@ function page_store(value) {
 		store.update((val) => val);
 	}
 
+	/** @param {any} new_value */
 	function set(new_value) {
 		ready = false;
 		store.set(new_value);
 	}
 
+	/** @param {(value: any) => void} run */
 	function subscribe(run) {
+		/** @type {any} */
 		let old_value;
 		return store.subscribe((new_value) => {
 			if (old_value === undefined || (ready && new_value !== old_value)) {
@@ -67,7 +71,9 @@ export class Renderer {
 
 		this.root = null;
 
+		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
+			/** @type {HTMLAnchorElement | SVGAElement} */
 			const a = find_anchor(event.target);
 
 			if (a && a.hasAttribute('sveltekit:prefetch')) {
@@ -75,7 +81,10 @@ export class Renderer {
 			}
 		};
 
+		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
+
+		/** @param {MouseEvent} event */
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {

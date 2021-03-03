@@ -150,12 +150,16 @@ importers:
   packages/kit:
     dependencies:
       '@sveltejs/vite-plugin-svelte': link:../vite-plugin-svelte
+      '@svitejs/vite-plugin-svelte': 0.9.3_rollup@2.40.0+vite@2.0.4
       cheap-watch: 1.0.3
       sade: 1.7.4
     devDependencies:
       '@rollup/plugin-replace': 2.4.1_rollup@2.40.0
       '@sveltejs/app-utils': link:../app-utils
+      '@types/amphtml-validator': 1.0.1
+      '@types/mime': 2.0.3
       '@types/node': 14.14.31
+      '@types/node-fetch': 2.5.8
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
@@ -175,7 +179,11 @@ importers:
       '@rollup/plugin-replace': ^2.4.1
       '@sveltejs/app-utils': workspace:*
       '@sveltejs/vite-plugin-svelte': workspace:*
+      '@svitejs/vite-plugin-svelte': ^0.9.3
+      '@types/amphtml-validator': ^1.0.1
+      '@types/mime': ^2.0.3
       '@types/node': ^14.14.31
+      '@types/node-fetch': ^2.5.8
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
       amphtml-validator: ^1.0.34
@@ -652,6 +660,32 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-TrBhfJkFxA+ER+ew2U2/fHbebhLT/l/2pRk0hfj9KusXUuRXd2v0R58AfaZK9VXDQ4TogOSEmICVrQAA3zFnHQ==
+  /@svitejs/vite-plugin-svelte/0.9.3_rollup@2.40.0+vite@2.0.4:
+    dependencies:
+      '@rollup/pluginutils': 4.1.0_rollup@2.40.0
+      chalk: 4.1.0
+      debug: 4.3.1
+      hash-sum: 2.0.0
+      require-relative: 0.8.7
+      slash: 3.0.0
+      source-map: 0.7.3
+      svelte-hmr: 0.12.8
+      vite: 2.0.4
+    dev: false
+    engines:
+      node: '>=12.0.0'
+    peerDependencies:
+      rollup: '*'
+      svelte: ^3.34.0
+      vite: ^2.0.4
+    resolution:
+      integrity: sha512-bUjHCFfz1IsfO41/cBUXfkclc0NBqIwKfhmrkVQIO0J0MG9Vg9XXJp+1irkl8Xs3tUN/khp7x/4+Ij51dSa29A==
+  /@types/amphtml-validator/1.0.1:
+    dependencies:
+      '@types/node': 14.14.31
+    dev: true
+    resolution:
+      integrity: sha512-DWE7fy6KtC+Uw0KV/HAmjuH2GB/o8yskXlvmVWR7mOVsLDybp+XrwkzEeRFU9wGjWKeRMBNGsx+5DRq7sUsAwA==
   /@types/estree/0.0.39:
     dev: true
     resolution:
@@ -675,6 +709,10 @@ packages:
     dev: true
     resolution:
       integrity: sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
+  /@types/mime/2.0.3:
+    dev: true
+    resolution:
+      integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==
   /@types/minimatch/3.0.3:
     dev: true
     resolution:
@@ -687,6 +725,13 @@ packages:
     dev: true
     resolution:
       integrity: sha512-fMl88ZoZXOB7VKazJ6wUMpZc9QIn+jcigSFRf2K/rrw4DcXn+/uGxlWX8DDlcE7JkwgIZ7BDH+JgxZPlc/Ap3g==
+  /@types/node-fetch/2.5.8:
+    dependencies:
+      '@types/node': 14.14.31
+      form-data: 3.0.1
+    dev: true
+    resolution:
+      integrity: sha512-fbjI6ja0N5ZA8TV53RUqzsKNkl9fv8Oj3T7zxW7FGv1GSH7gwJaNF8dzCjrqKaxKeUpTz4yT1DaJFq/omNpGfw==
   /@types/node/12.20.4:
     dev: true
     resolution:
@@ -982,6 +1027,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
+  /asynckit/0.4.0:
+    dev: true
+    resolution:
+      integrity: sha1-x57Zf380y48robyXkLzDZkdLS3k=
   /balanced-match/1.0.0:
     dev: true
     resolution:
@@ -1171,6 +1220,14 @@ packages:
       node: '>=0.1.90'
     resolution:
       integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
+  /combined-stream/1.0.8:
+    dependencies:
+      delayed-stream: 1.0.0
+    dev: true
+    engines:
+      node: '>= 0.8'
+    resolution:
+      integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==
   /commander/2.15.1:
     dev: true
     resolution:
@@ -1267,7 +1324,6 @@ packages:
   /debug/4.3.1:
     dependencies:
       ms: 2.1.2
-    dev: true
     engines:
       node: '>=6.0'
     peerDependencies:
@@ -1316,6 +1372,12 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-3MqfYKj2lLzdMSf8ZIZE/V+Zuy+BgD6f164e8K2w7dgnpKArBDerGYpM46IYYcjnkdPNMjPk9A6VFB8+3SKlXQ==
+  /delayed-stream/1.0.0:
+    dev: true
+    engines:
+      node: '>=0.4.0'
+    resolution:
+      integrity: sha1-3zrhmayt+31ECqrgsp4icrJOxhk=
   /dequal/2.0.2:
     dev: true
     engines:
@@ -1803,6 +1865,16 @@ packages:
     dev: true
     resolution:
       integrity: sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==
+  /form-data/3.0.1:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      mime-types: 2.1.29
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
   /fs-extra/7.0.1:
     dependencies:
       graceful-fs: 4.2.6
@@ -2447,7 +2519,6 @@ packages:
     resolution:
       integrity: sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g=
   /ms/2.1.2:
-    dev: true
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
   /nanoid/3.1.20:
@@ -3297,6 +3368,12 @@ packages:
       svelte: '>=3.19.0'
     resolution:
       integrity: sha512-q08BjoUSbwXpKo9ij6aym93jBrt7K8eutLwix5Y9cuSFLS5djxumOoUVsSzDkdKssLlg5X//Kg/0MWHHBeQRTg==
+  /svelte-hmr/0.12.8:
+    dev: false
+    peerDependencies:
+      svelte: '>=3.19.0'
+    resolution:
+      integrity: sha512-ed9kd6aokguVMUnxRCB7u/3xWyKnNBOP/g9euQ65K+gEkkZGdLvuNqK7Np97Nc4/MpMQz8SxQJ8KjrNhetrwrw==
   /svelte/3.34.0:
     dev: true
     engines:
