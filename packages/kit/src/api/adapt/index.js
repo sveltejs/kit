@@ -19,7 +19,7 @@ export async function adapt(config, { cwd, verbose }) {
 
 	const require = createRequire(import.meta.url);
 	const resolved = require.resolve(adapter, pathToFileURL(process.cwd()));
-	const fn = (await import(resolved)).default;
+	const fn = (await import(pathToFileURL(resolved))).default;
 	await fn(builder, options);
 
 	log.success('done');
