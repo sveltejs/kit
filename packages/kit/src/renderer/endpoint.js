@@ -59,10 +59,14 @@ export default function render_route(request, context, options) {
 	});
 }
 
+/** @param {Record<string, string>} obj */
 function lowercase_keys(obj) {
+	/** @type {Record<string, string>} */
 	const clone = {};
+
 	for (const key in obj) {
 		clone[key.toLowerCase()] = obj[key];
 	}
+
 	return clone;
 }

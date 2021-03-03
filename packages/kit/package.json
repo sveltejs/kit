@@ -8,6 +8,7 @@
 		"sade": "^1.7.4"
 	},
 	"devDependencies": {
+		"@rollup/plugin-replace": "^2.4.1",
 		"@sveltejs/app-utils": "workspace:*",
 		"@types/node": "^14.14.31",
 		"@types/rimraf": "^3.0.0",

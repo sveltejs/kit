@@ -4,6 +4,18 @@ import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
+/**
+ *
+ * @param {{
+ *   request: import('../types').Request;
+ *   options: import('../types').RenderOptions;
+ *   $session: any;
+ *   route: {};
+ *   status: number;
+ *   error: Error
+ * }} opts
+ * @returns {Promise<import('../types').Response>}
+ */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
@@ -13,6 +25,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		throw new Error(`Failed to serialize session data: ${err.message}`);
 	});
 
+	/** @type {Array<{ url: string, payload: string }>} */
 	const serialized_data = [];
 
 	const match = route && route.pattern.exec(request.path);
@@ -27,6 +40,13 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	let uses_credentials = false;
 
+	/**
+	 *
+	 * @param {string} url
+	 * @param {{
+	 *   credentials?: string;
+	 * }} opts
+	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
 			// when running `start`, or prerendering, `assets` should be

@@ -12,10 +12,13 @@ const mutable = (dir) =>
 		maxAge: 0
 	});
 
-/** @param {{
+/**
+ * @param {{
  *   port: number;
  *   config: import('../../types').ValidatedConfig
- * }} opts */
+ * }} opts
+ * @returns {Promise<import('http').Server>}
+ */
 export async function start({ port, config }) {
 	const app_file = resolve('.svelte/output/server/app.js');
 

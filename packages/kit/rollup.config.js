@@ -1,5 +1,5 @@
 import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
 
@@ -53,7 +53,9 @@ export default [
 			return external.includes(id);
 		},
 		plugins: [
-			json(),
+			replace({
+				__VERSION__: pkg.version
+			}),
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),

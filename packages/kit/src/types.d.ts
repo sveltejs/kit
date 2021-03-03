@@ -103,7 +103,28 @@ export type Response = {
 	body: any;
 };
 
-export type Manifest = {};
+export type SSRComponent = {};
+
+export type SSRComponentLoader = () => Promise<SSRComponent>;
+
+export type Manifest = {
+	assets: string[];
+	layout: () => Promise<SSRComponentLoader>;
+	error: () => Promise<SSRComponentLoader>;
+	pages: Array<{
+		pattern: RegExp;
+		params: (match: RegExpMatchArray) => Record<string, string | string[]>;
+		parts: SSRComponentLoader[];
+		style: string;
+		css: string[];
+		js: string[];
+	}>;
+	endpoints: Array<{
+		pattern: RegExp;
+		params: (match: RegExpMatchArray) => Record<string, string | string[]>;
+		load: () => Promise<any>; // TODO
+	}>;
+};
 
 export type RenderOptions = {
 	paths?: {
@@ -111,13 +132,20 @@ export type RenderOptions = {
 		assets: string;
 	};
 	local?: boolean;
-	template?: ({ head: string, body: string }) => string;
+	template?: ({ head, body }: { head: string; body: string }) => string;
 	manifest?: Manifest;
 	target?: string;
 	start_global?: string;
 	entry?: string;
 	root?: string;
-	setup?: string;
+	setup?: {
+		prepare?: (
+			headers: Headers
+		) => {
+			context?: any;
+			headers?: Headers;
+		};
+	};
 	dev?: boolean;
 	amp?: boolean;
 	only_prerender?: boolean;

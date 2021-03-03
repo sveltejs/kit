@@ -2,7 +2,6 @@ import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
 import { load_config } from './api/load_config';
-import * as pkg from '../package.json';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -49,18 +48,20 @@ async function get_config() {
 	}
 }
 
+/** @param {Error} error */
 function handle_error(error) {
 	console.log(colors.bold().red(`> ${error.message}`));
 	console.log(colors.gray(error.stack));
 	process.exit(1);
 }
 
+/** @param {number} port */
 async function launch(port) {
 	const { exec } = await import('child_process');
 	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
 }
 
-const prog = sade('svelte-kit').version(pkg.version);
+const prog = sade('svelte-kit').version('__VERSION__');
 
 prog
 	.command('dev')
