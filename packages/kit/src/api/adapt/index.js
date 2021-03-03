@@ -4,6 +4,11 @@ import { logger } from '../utils';
 import Builder from './Builder';
 import { createRequire } from 'module';
 
+/**
+ *
+ * @param {import('../types').Config} config
+ * @param {{ cwd: string, verbose: boolean }} opts
+ */
 export async function adapt(config, { cwd, verbose }) {
 	if (!config.kit.adapter) {
 		throw new Error('No adapter specified');
@@ -18,7 +23,7 @@ export async function adapt(config, { cwd, verbose }) {
 	const builder = new Builder({ cwd, config, log });
 
 	const require = createRequire(import.meta.url);
-	const resolved = require.resolve(adapter, pathToFileURL(process.cwd()));
+	const resolved = require.resolve(adapter, { paths: [pathToFileURL(process.cwd()).href] });
 	const fn = (await import(resolved)).default;
 	await fn(builder, options);
 

@@ -12,7 +12,11 @@ export function copy_assets(dest) {
 
 function noop() {}
 
+/** @param {{
+ *   verbose: boolean
+ * }} opts */
 export function logger({ verbose }) {
+	/** @type {import('./types').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
 	log.success = (msg) => log(colors.green(`✔ ${msg}`));
