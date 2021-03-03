@@ -7,7 +7,8 @@ import { create_app } from '../../core/create_app';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
 
-const s = JSON.stringify;
+/** @param {any} value */
+const s = (value) => JSON.stringify(value);
 
 const build_dir = '.svelte/build';
 
@@ -104,6 +105,7 @@ export async function build(config, { cwd }) {
 		component_indexes.set(c, i);
 	});
 
+	/** @param {string} c */
 	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
 
 	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest

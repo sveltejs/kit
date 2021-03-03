@@ -103,10 +103,30 @@ export type Response = {
 	body: any;
 };
 
+export type Manifest = {};
+
 export type RenderOptions = {
-	local: boolean;
-	only_prerender: boolean;
-	get_static_file: (file: string) => Buffer;
+	paths?: {
+		base: string;
+		assets: string;
+	};
+	local?: boolean;
+	template?: ({ head: string, body: string }) => string;
+	manifest?: Manifest;
+	target?: string;
+	start_global?: string;
+	entry?: string;
+	root?: string;
+	setup?: string;
+	dev?: boolean;
+	amp?: boolean;
+	only_prerender?: boolean;
+	app_dir?: string;
+	host?: string;
+	host_header?: string;
+	get_stack?: (error: Error) => string;
+	get_static_file?: (file: string) => Buffer;
+	get_amp_css?: (dep: string) => string;
 };
 
 export type Asset = {

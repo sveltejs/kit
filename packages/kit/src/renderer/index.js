@@ -2,10 +2,15 @@ import { createHash } from 'crypto';
 import render_page from './page';
 import render_endpoint from './endpoint';
 
+/** @param {string} body */
 function md5(body) {
 	return createHash('md5').update(body).digest('hex');
 }
 
+/**
+ * @param {import('../types').Request} request
+ * @param {import('../types').RenderOptions} options
+ */
 export async function render(request, options) {
 	if (request.path.endsWith('/') && request.path !== '/') {
 		const q = request.query.toString();
