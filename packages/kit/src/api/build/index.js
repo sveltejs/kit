@@ -123,7 +123,7 @@ export async function build(config, { cwd }) {
 			import * as renderer from '@sveltejs/kit/renderer';
 			import root from ${s(app_relative(`${build_dir}/generated/root.svelte`))};
 			import { set_paths } from ${s(app_relative(`${build_dir}/runtime/internal/singletons.js`))};
-			import * as setup from '${app_relative(setup_file)}';
+			import * as setup from ${s(app_relative(setup_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
