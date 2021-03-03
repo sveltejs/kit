@@ -2,6 +2,15 @@ import options from './options.js';
 import * as url from 'url';
 import { join } from 'path';
 
+/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
+
+/**
+ *
+ * @param {Record<string, ConfigDefinition>} definition
+ * @param {any} option
+ * @param {string} keypath
+ * @returns {any}
+ */
 function validate(definition, option, keypath) {
 	for (const key in option) {
 		if (!(key in definition)) {
@@ -17,6 +26,7 @@ function validate(definition, option, keypath) {
 		}
 	}
 
+	/** @type {Record<string, any>} */
 	const merged = {};
 
 	for (const key in definition) {
@@ -24,44 +34,55 @@ function validate(definition, option, keypath) {
 		const actual = option[key];
 
 		const child_keypath = `${keypath}.${key}`;
-		const has_children =
-			expected.default && typeof expected.default === 'object' && !Array.isArray(expected.default);
 
 		if (key in option) {
-			if (has_children) {
+			if (expected.type === 'branch') {
 				if (actual && (typeof actual !== 'object' || Array.isArray(actual))) {
 					throw new Error(`${keypath}.${key} should be an object`);
 				}
 
-				merged[key] = validate(expected.default, actual, child_keypath);
+				merged[key] = validate(expected.children, actual, child_keypath);
 			} else {
 				merged[key] = expected.validate(actual, child_keypath);
 			}
 		} else {
-			merged[key] = has_children ? validate(expected.default, {}, child_keypath) : expected.default;
+			merged[key] =
+				expected.type === 'branch'
+					? validate(expected.children, {}, child_keypath)
+					: expected.default;
 		}
 	}
 
 	return merged;
 }
 
+/**
+ * @param {string} from
+ * @param {string} to
+ */
 function resolve(from, to) {
 	// the `/.` is weird, but allows `${assets}/images/blah.jpg` to work
 	// when `assets` is empty
 	return remove_trailing_slash(url.resolve(add_trailing_slash(from), to)) || '/.';
 }
 
+/**
+ * @param {string} str
+ */
 function add_trailing_slash(str) {
 	return str.endsWith('/') ? str : `${str}/`;
 }
 
+/**
+ * @param {string} str
+ */
 function remove_trailing_slash(str) {
 	return str.endsWith('/') ? str.slice(0, -1) : str;
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = join(cwd, 'svelte.config.cjs');
-	const config = await import(url.pathToFileURL(config_file));
+	const config = await import(url.pathToFileURL(config_file).href);
 	const validated = validate_config(config.default);
 
 	// TODO check all the `files` exist when the config is loaded?
@@ -70,7 +91,12 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	return validated;
 }
 
+/**
+ * @param {import('../../types').Config} config
+ * @returns {import('../../types.js').ValidatedConfig}
+ */
 export function validate_config(config) {
+	/** @type {import('../../types.js').ValidatedConfig} */
 	const validated = validate(options, config, 'config');
 
 	// resolve paths

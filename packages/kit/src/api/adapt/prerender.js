@@ -51,7 +51,7 @@ const REDIRECT = 3;
  *   dir: string;
  *   out: string;
  *   log: import('../../types').Logger;
- *   config: import('../../types').Config;
+ *   config: import('../../types').ValidatedConfig;
  *   force: boolean;
  * }} opts */
 export async function prerender({ dir, out, log, config, force }) {

@@ -23,7 +23,7 @@ import { posixify } from '../utils.js';
 
 /**
  * @param {{
- *   config: import('../types').Config;
+ *   config: import('../types').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
