@@ -11,6 +11,11 @@ const s = JSON.stringify;
 
 const build_dir = '.svelte/build';
 
+/**
+ *
+ * @param {import('../types').Config} config
+ * @param {{ cwd: string }} opts
+ */
 export async function build(config, { cwd }) {
 	const manifest = create_manifest_data({
 		config,
@@ -73,6 +78,11 @@ export async function build(config, { cwd }) {
 		]
 	});
 
+	/** @type {Record<string, {
+	 *   file: string;
+	 *   css: string[];
+	 *   imports: string[];
+	 * }>} */
 	const client_manifest = JSON.parse(readFileSync(client_manifest_file, 'utf-8'));
 	fs.unlinkSync(client_manifest_file);
 
@@ -83,6 +93,8 @@ export async function build(config, { cwd }) {
 	}
 
 	const app_file = `${build_dir}/app.js`;
+
+	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
 		const relative_file = relative(build_dir, file);
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
@@ -159,11 +171,14 @@ export async function build(config, { cwd }) {
 							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
 							const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
+
+							/** @param {string} dep */
 							const path_to_dep = dep => prefix + `/${config.kit.appDir}/${dep}`;
 
 							const js_deps = new Set();
 							const css_deps = new Set();
 
+							/** @param {string} id */
 							function find_deps(id) {
 								const chunk = client_manifest[id];
 								js_deps.add(path_to_dep(chunk.file));
@@ -275,10 +290,11 @@ export async function build(config, { cwd }) {
 	});
 }
 
-// given an array of params like `['x', 'y', 'z']` for
-// src/routes/[x]/[y]/[z]/svelte, create a function
-// that turns a RexExpMatchArray into ({ x, y, z })
+/** @param {string[]} array */
 function get_params(array) {
+	// given an array of params like `['x', 'y', 'z']` for
+	// src/routes/[x]/[y]/[z]/svelte, create a function
+	// that turns a RexExpMatchArray into ({ x, y, z })
 	return array.length
 		? '(m) => ({ ' +
 				array
