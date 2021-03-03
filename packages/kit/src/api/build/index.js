@@ -13,7 +13,7 @@ const build_dir = '.svelte/build';
 
 /**
  *
- * @param {import('../types').Config} config
+ * @param {import('../../types').Config} config
  * @param {{ cwd: string }} opts
  */
 export async function build(config, { cwd }) {

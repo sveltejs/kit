@@ -14,6 +14,9 @@ import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
 import svelte from '@sveltejs/vite-plugin-svelte';
 
+/** @typedef {{ port: number, config: import('../../types').Config }} Options */
+
+/** @param {Options} opts */
 export function dev(opts) {
 	return new Watcher(opts).init();
 }
@@ -21,6 +24,7 @@ export function dev(opts) {
 const dev_dir = '.svelte/dev';
 
 class Watcher extends EventEmitter {
+	/** @param {Options} opts */
 	constructor({ port, config }) {
 		super();
 
@@ -245,6 +249,9 @@ class Watcher extends EventEmitter {
 
 		const common_css_deps = new Set();
 
+		/**
+		 * @param {string} url
+		 */
 		const load = async (url) => {
 			const mod = await this.viteDevServer.ssrLoadModule(url);
 			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
@@ -331,11 +338,15 @@ class Watcher extends EventEmitter {
 	}
 }
 
-// given an array of params like `['x', 'y', 'z']` for
-// src/routes/[x]/[y]/[z]/svelte, create a function
-// that turns a RexExpMatchArray into ({ x, y, z })
+/** @param {string[]} array */
 function get_params(array) {
-	return (match) => {
+	// given an array of params like `['x', 'y', 'z']` for
+	// src/routes/[x]/[y]/[z]/svelte, create a function
+	// that turns a RegExpMatchArray into ({ x, y, z })
+
+	/** @param {RegExpMatchArray} match */
+	const fn = (match) => {
+		/** @type {Record<string, string | string[]>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
@@ -346,4 +357,6 @@ function get_params(array) {
 		});
 		return params;
 	};
+
+	return fn;
 }

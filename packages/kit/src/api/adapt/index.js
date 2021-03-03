@@ -6,7 +6,7 @@ import { createRequire } from 'module';
 
 /**
  *
- * @param {import('../types').Config} config
+ * @param {import('../../types').Config} config
  * @param {{ cwd: string, verbose: boolean }} opts
  */
 export async function adapt(config, { cwd, verbose }) {

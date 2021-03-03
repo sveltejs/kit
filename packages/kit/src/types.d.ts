@@ -77,3 +77,30 @@ export type RenderOptions = {
 	only_prerender: boolean;
 	get_static_file: (file: string) => Buffer;
 };
+
+export type Asset = {
+	file: string;
+	size: number;
+	type: string;
+};
+
+export type PageData = {
+	pattern: RegExp;
+	params: string[];
+	parts: any[]; // TODO
+};
+
+export type EndpointData = {
+	pattern: RegExp;
+	params: string[];
+	file: string;
+};
+
+export type ManifestData = {
+	assets: Asset[];
+	layout: string;
+	error: string;
+	components: string[];
+	pages: PageData[];
+	endpoints: EndpointData[];
+};

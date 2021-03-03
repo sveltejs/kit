@@ -50,8 +50,8 @@ const REDIRECT = 3;
 /** @param {{
  *   dir: string;
  *   out: string;
- *   log: import('../types').Logger;
- *   config: import('../types').Config;
+ *   log: import('../../types').Logger;
+ *   config: import('../../types').Config;
  *   force: boolean;
  * }} opts */
 export async function prerender({ dir, out, log, config, force }) {
@@ -60,7 +60,7 @@ export async function prerender({ dir, out, log, config, force }) {
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('../types').App} */
+	/** @type {import('../../types').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
