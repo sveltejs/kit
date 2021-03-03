@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"noImplicitAny": true,
+		"outDir": "types",
+		"target": "es2020",
+		"module": "es2020",
+		"moduleResolution": "node",
+		"maxNodeModuleJsDepth": 10
+	},
+	"include": ["./src"]
+}

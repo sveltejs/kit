@@ -1,5 +1,6 @@
 import { read_only_form_data } from './read_only_form_data';
 
+/** @param {import('http').IncomingMessage} req */
 export function get_body(req) {
 	const headers = req.headers;
 	const has_body =
@@ -34,10 +35,12 @@ export function get_body(req) {
 	}
 }
 
+/** @param {import('http').IncomingMessage} req */
 async function get_json(req) {
 	return JSON.parse(await get_text(req));
 }
 
+/** @param {import('http').IncomingMessage} req */
 async function get_urlencoded(req) {
 	const text = await get_text(req);
 
@@ -54,6 +57,10 @@ async function get_urlencoded(req) {
 	return data;
 }
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {string} boundary
+ */
 async function get_multipart(req, boundary) {
 	const text = await get_text(req);
 	const parts = text.split(`--${boundary}`);
@@ -75,6 +82,7 @@ async function get_multipart(req, boundary) {
 
 		let key;
 
+		/** @type {Record<string, string>} */
 		const headers = {};
 		raw_headers.split('\r\n').forEach((str) => {
 			const [raw_header, ...raw_directives] = str.split('; ');
@@ -83,6 +91,7 @@ async function get_multipart(req, boundary) {
 			name = name.toLowerCase();
 			headers[name] = value;
 
+			/** @type {Record<string, string>} */
 			const directives = {};
 			raw_directives.forEach((raw_directive) => {
 				const [name, value] = raw_directive.split('=');
@@ -111,6 +120,10 @@ async function get_multipart(req, boundary) {
 	return data;
 }
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @returns {Promise<string>}
+ */
 function get_text(req) {
 	return new Promise((fulfil, reject) => {
 		let data = '';
@@ -127,6 +140,10 @@ function get_text(req) {
 	});
 }
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @returns {Promise<ArrayBuffer>}
+ */
 function get_buffer(req) {
 	return new Promise((fulfil, reject) => {
 		let data = new Uint8Array(0);
