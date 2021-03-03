@@ -13,7 +13,7 @@ export function mkdirp(dir) {
 
 /** @param {string} path */
 export function rimraf(path) {
-	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
+	(fs['rm' + 'Sync'] || fs['rm' + 'dirSync'])(path, { recursive: true, force: true });
 }
 
 /**
