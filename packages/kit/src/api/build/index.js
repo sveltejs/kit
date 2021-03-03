@@ -12,7 +12,6 @@ const s = JSON.stringify;
 const build_dir = '.svelte/build';
 
 /**
- *
  * @param {import('../../types').ValidatedConfig} config
  * @param {{ cwd: string }} opts
  */

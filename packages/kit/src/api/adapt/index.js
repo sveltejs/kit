@@ -5,7 +5,6 @@ import Builder from './Builder';
 import { createRequire } from 'module';
 
 /**
- *
  * @param {import('../../types').ValidatedConfig} config
  * @param {{ cwd: string, verbose: boolean }} opts
  */

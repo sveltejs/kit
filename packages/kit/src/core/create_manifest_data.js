@@ -333,7 +333,6 @@ function get_pattern(segments, add_trailing_slash) {
 }
 
 /**
- *
  * @param {string} dir
  * @param {string} path
  * @param {import('../types').Asset[]} files

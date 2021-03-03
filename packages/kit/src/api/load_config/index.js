@@ -5,7 +5,6 @@ import { join } from 'path';
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
 /**
- *
  * @param {Record<string, ConfigDefinition>} definition
  * @param {any} option
  * @param {string} keypath

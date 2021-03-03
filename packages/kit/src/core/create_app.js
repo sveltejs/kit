@@ -63,7 +63,6 @@ export function create_serviceworker_manifest({
 }
 
 /**
- *
  * @param {ManifestData} manifest_data
  * @param {string} dir
  */
