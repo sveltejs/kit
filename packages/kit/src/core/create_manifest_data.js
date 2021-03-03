@@ -7,7 +7,7 @@ import { posixify } from '../utils.js';
 
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	function find_layout(file_name, dir) {
-		const files = config.extensions.map((ext) => path.join(dir, `${file_name}${ext}`));
+		const files = config.extensions.map((ext) => posixify(path.join(dir, `${file_name}${ext}`)));
 		return files.find((file) => fs.existsSync(path.join(cwd, file)));
 	}
 
@@ -34,7 +34,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			.readdirSync(dir)
 			.map((basename) => {
 				const resolved = path.join(dir, basename);
-				const file = path.relative(cwd, resolved);
+				const file = posixify(path.relative(cwd, resolved));
 				const is_dir = fs.statSync(resolved).isDirectory();
 
 				const ext =
