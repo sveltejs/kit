@@ -1,4 +1,4 @@
-import * as http from 'http';
+import http from 'http';
 import { readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { parse, URLSearchParams } from 'url';

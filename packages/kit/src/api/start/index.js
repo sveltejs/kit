@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as http from 'http';
+import fs from 'fs';
+import http from 'http';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';

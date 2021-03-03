@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -13,7 +13,7 @@ export function mkdirp(dir) {
 
 /** @param {string} path */
 export function rimraf(path) {
-	(fs['rm' + 'Sync'] || fs['rm' + 'dirSync'])(path, { recursive: true, force: true });
+	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
 
 /**

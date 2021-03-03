@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
 

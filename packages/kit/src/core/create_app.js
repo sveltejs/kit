@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import fs from 'fs';
 import { relative } from 'path';
 import { stringify, walk, write_if_changed } from '../utils';
 

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
