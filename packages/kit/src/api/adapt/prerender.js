@@ -52,7 +52,7 @@ const REDIRECT = 3;
  *   out: string;
  *   log: import('../../types').Logger;
  *   config: import('../../types').ValidatedConfig;
- *   force: boolean;
+ *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
