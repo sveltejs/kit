@@ -105,12 +105,6 @@ class Watcher extends EventEmitter {
 			}
 		});
 
-		const { set_paths } = await this.viteDevServer.ssrLoadModule(
-			`/${dev_dir}/runtime/internal/singletons.js`
-		);
-
-		set_paths(this.config.kit.paths);
-
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
 		this.server = http.createServer((req, res) => {
