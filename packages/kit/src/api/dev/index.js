@@ -40,16 +40,8 @@ class Watcher extends EventEmitter {
 
 	async init() {
 		rimraf(dev_dir);
-
 		copy_assets(dev_dir);
-
-		// TODO move this (and copy_assets?) into create_app
-		// prettier-ignore
-		writeFileSync(`${dev_dir}/runtime/app/env.js`, [
-			'export const browser = !import.meta.env.SSR;',
-			'export const dev = true;',
-			`export const amp = ${this.config.kit.amp};`
-		].join('\n'));
+		process.env.VITE_AMP = this.config.kit.amp ? 'true' : '';
 
 		await this.init_filewatcher();
 		await this.init_server();

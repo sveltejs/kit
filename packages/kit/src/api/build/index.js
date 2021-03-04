@@ -31,12 +31,7 @@ export async function build(config, { cwd }) {
 
 	copy_assets(build_dir);
 
-	// prettier-ignore
-	writeFileSync(`${build_dir}/runtime/app/env.js`, [
-		'export const browser = !import.meta.env.SSR;',
-		'export const dev = false;',
-		`export const amp = ${config.kit.amp};`
-	].join('\n'));
+	process.env.VITE_AMP = config.kit.amp ? 'true' : '';
 
 	const client_entry_file = `${build_dir}/runtime/internal/start.js`;
 	const client_out_dir = `${cwd}/client/${config.kit.appDir}`;

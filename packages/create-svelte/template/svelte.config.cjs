@@ -1,3 +1,4 @@
+/** @type {import('@sveltejs/kit').Config} */
 module.exports = {
 	kit: {
 		// By default, `npm run build` will create a standard Node app.
