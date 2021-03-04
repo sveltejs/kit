@@ -265,8 +265,14 @@ class Watcher extends EventEmitter {
 			for (const dep of deps) {
 				// TODO what about .scss files, etc?
 				if (dep.file.endsWith('.css')) {
-					const mod = await this.viteDevServer.ssrLoadModule(dep.url);
-					css.add(mod.default);
+					try {
+						const mod = await this.viteDevServer.ssrLoadModule(dep.url);
+						css.add(mod.default);
+					} catch {
+						// this can happen with dynamically imported modules, I think
+						// because the Vite module graph doesn't distinguish between
+						// static and dynamic imports? TODO investigate, submit fix
+					}
 				}
 			}
 

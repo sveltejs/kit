@@ -5,10 +5,10 @@ export let router;
 export let renderer;
 
 /** @type {string} */
-export let base;
+export let base = '';
 
 /** @type {string} */
-export let assets;
+export let assets = '/.';
 
 /** @param {{
  *   router: import('./router').Router,
