@@ -115,7 +115,7 @@ export class Router {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
 				this.renderer.notify(selected);
 				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
+				this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
 				event.preventDefault();
 			}
 		});
@@ -188,7 +188,7 @@ export class Router {
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
+			return this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
 		}
 
 		location.href = href;
@@ -201,7 +201,7 @@ export class Router {
 	 *
 	 * @param {*} selected
 	 * @param {{ x: number, y: number }} scroll
-	 * @param {string} hash
+	 * @param {string} [hash]
 	 */
 	async navigate(selected, scroll, hash) {
 		// remove trailing slashes

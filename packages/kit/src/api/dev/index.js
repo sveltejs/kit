@@ -349,9 +349,9 @@ class Watcher extends EventEmitter {
 function get_params(array) {
 	// given an array of params like `['x', 'y', 'z']` for
 	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RegExpMatchArray into ({ x, y, z })
+	// that turns a RegExpExecArray into ({ x, y, z })
 
-	/** @param {RegExpMatchArray} match */
+	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
 		/** @type {Record<string, string | string[]>} */
 		const params = {};

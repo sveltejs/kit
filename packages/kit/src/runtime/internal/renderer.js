@@ -32,7 +32,15 @@ function page_store(value) {
 }
 
 export class Renderer {
-	constructor({ Root, layout, target, error, status, preloaded, session }) {
+	/** @param {{
+	 *   Root: import('../../types').CSRComponent;
+	 *   layout: import('../../types').CSRComponent;
+	 *   target: Node;
+	 *   error: Error;
+	 *   status: number;
+	 *   session: any;
+	 * }} opts */
+	constructor({ Root, layout, target, error, status, session }) {
 		this.Root = Root;
 		this.layout = layout;
 		this.layout_loader = () => layout;
@@ -44,7 +52,6 @@ export class Renderer {
 		this.target = target;
 
 		this.initial = {
-			preloaded,
 			error,
 			status
 		};
@@ -177,6 +184,7 @@ export class Renderer {
 
 	/** @param {import('./types').NavigationTarget} selected */
 	async hydrate({ route, page }) {
+		/** @type {Record<string, any>} */
 		const props = {
 			status: 200,
 

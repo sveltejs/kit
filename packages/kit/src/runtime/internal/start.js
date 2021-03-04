@@ -15,7 +15,7 @@ import { init, set_paths } from './singletons';
  *   error: Error;
  *   status: number;
  * }} opts */
-export async function start({ paths, target, host, session, preloaded, error, status }) {
+export async function start({ paths, target, host, session, error, status }) {
 	const router = new Router({
 		base: paths.base,
 		host,
@@ -27,7 +27,6 @@ export async function start({ paths, target, host, session, preloaded, error, st
 		Root,
 		layout,
 		target,
-		preloaded,
 		error,
 		status,
 		session
