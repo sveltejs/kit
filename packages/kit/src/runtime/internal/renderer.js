@@ -37,6 +37,9 @@ export class Renderer {
 		this.layout = layout;
 		this.layout_loader = () => layout;
 
+		/** @type {import('./router').Router} */
+		this.router = null;
+
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
@@ -108,7 +111,9 @@ export class Renderer {
 		ready = true;
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async start(selected) {
+		/** @type {Record<string, any>} */
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
@@ -147,6 +152,7 @@ export class Renderer {
 		this.initial = null;
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	notify(selected) {
 		this.stores.navigating.set({
 			from: this.current.page,
@@ -154,6 +160,7 @@ export class Renderer {
 		});
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async render(selected) {
 		const token = (this.token = {});
 
@@ -168,10 +175,15 @@ export class Renderer {
 		}
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async hydrate({ route, page }) {
 		const props = {
-			error: null,
 			status: 200,
+
+			/** @type {Error} */
+			error: null,
+
+			/** @type {import('../../types').CSRComponent[]} */
 			components: []
 		};
 
@@ -189,17 +201,30 @@ export class Renderer {
 
 		const query = page.query.toString();
 
+		/** @typedef {{
+		 *   component: import('../../types').CSRComponent;
+		 *   uses: {
+		 *     params: Set<string>;
+		 *     query: boolean;
+		 *     session: boolean;
+		 *     context: boolean;
+		 *   }
+		 * }} LoadResult */
+
 		const state = {
 			page,
 			query,
 			session_changed: false,
+			/** @type {LoadResult[]} */
 			nodes: [],
+			/** @type {Record<string, any>[]} */
 			contexts: []
 		};
 
 		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
 		const props_promises = [];
 
+		/** @type {Record<string, any>} */
 		let context;
 		let redirect;
 
@@ -235,6 +260,7 @@ export class Renderer {
 					const cache = this.caches.get(component);
 					const cached = cache && cache.get(hash);
 
+					/** @type {LoadResult} */
 					let node;
 					let loaded;
 
@@ -380,6 +406,7 @@ export class Renderer {
 		return { redirect, props, state };
 	}
 
+	/** @param {URL} url */
 	async prefetch(url) {
 		const page = this.router.select(url);
 

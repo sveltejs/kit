@@ -2,6 +2,7 @@
  * @param {import('../types').Request} request
  * @param {*} context // TODO
  * @param {import('../types').RenderOptions} options
+ * @returns {Promise<import('../types').Response>}
  */
 export default function render_route(request, context, options) {
 	const route = options.manifest.endpoints.find((route) => route.pattern.test(request.path));

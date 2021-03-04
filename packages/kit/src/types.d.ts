@@ -127,6 +127,8 @@ export type SSRComponent = {
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
+export type CSRComponent = any; // TODO
+
 export type Page = {
 	pattern: RegExp;
 	params: (match: RegExpMatchArray) => Record<string, string | string[]>;

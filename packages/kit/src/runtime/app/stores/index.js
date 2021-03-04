@@ -13,13 +13,22 @@ export function stores() {
 	return getStores();
 }
 
+/** @typedef {import('svelte/store').Readable<{
+ *   host: string;
+ *   path: string;
+ *   query: URLSearchParams;
+ *   params: Record<string, string | string[]>
+ * }>} PageStore */
+
 export const getStores = () => {
 	const stores = getContext('__svelte__');
 
 	return {
+		/** @type {PageStore} */
 		page: {
 			subscribe: stores.page.subscribe
 		},
+		/** @type {import('svelte/store').Readable<boolean>} */
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
@@ -29,24 +38,30 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
+		/** @type {import('svelte/store').Writable<any>} */
 		session: stores.session
 	};
 };
 
+/** @type {PageStore} */
 export const page = {
+	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
 		const store = getStores().page;
 		return store.subscribe(fn);
 	}
 };
 
+/** @type {import('svelte/store').Readable<boolean>} */
 export const navigating = {
+	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
 		const store = getStores().navigating;
 		return store.subscribe(fn);
 	}
 };
 
+/** @param {string} verb */
 const error = (verb) => {
 	throw new Error(
 		ssr
@@ -55,6 +70,7 @@ const error = (verb) => {
 	);
 };
 
+/** @type {import('svelte/store').Writable<any>} */
 export const session = {
 	subscribe(fn) {
 		const store = getStores().session;

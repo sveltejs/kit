@@ -16,6 +16,7 @@ export class Router {
 	/** @param {{
 	 *    base: string;
 	 *    host: string;
+	 *    pages: import('../../types').Page[];
 	 *    ignore: RegExp[];
 	 * }} opts */
 	constructor({ base, host, pages, ignore }) {
@@ -33,6 +34,7 @@ export class Router {
 
 	/** @param {import('./renderer').Renderer} renderer */
 	init(renderer) {
+		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
 		renderer.router = this;
 
@@ -141,7 +143,10 @@ export class Router {
 		if (selected) return this.renderer.start(selected);
 	}
 
-	/** @param {URL} url */
+	/**
+	 * @param {URL} url
+	 * @returns {import('./types').NavigationTarget}
+	 */
 	select(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
