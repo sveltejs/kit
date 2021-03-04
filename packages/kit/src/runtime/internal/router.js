@@ -1,5 +1,6 @@
-import { find_anchor, get_base_uri } from '../utils';
+import { find_anchor, get_base_uri } from './utils';
 
+/** @param {MouseEvent} event */
 function which(event) {
 	return event.which === null ? event.button : event.which;
 }
@@ -12,6 +13,12 @@ function scroll_state() {
 }
 
 export class Router {
+	/** @param {{
+	 *    base: string;
+	 *    host: string;
+	 *    pages: import('../../types').Page[];
+	 *    ignore: RegExp[];
+	 * }} opts */
 	constructor({ base, host, pages, ignore }) {
 		this.base = base;
 		this.host = host;
@@ -25,7 +32,9 @@ export class Router {
 		};
 	}
 
-	init({ renderer }) {
+	/** @param {import('./renderer').Renderer} renderer */
+	init(renderer) {
+		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
 		renderer.router = this;
 
@@ -48,6 +57,8 @@ export class Router {
 
 		// There's no API to capture the scroll location right before the user
 		// hits the back/forward button, so we listen for scroll events
+
+		/** @type {NodeJS.Timeout} */
 		let scroll_timer;
 		addEventListener('scroll', () => {
 			clearTimeout(scroll_timer);
@@ -58,10 +69,11 @@ export class Router {
 					...(history.state || {}),
 					'sveltekit:scroll': scroll_state()
 				};
-				history.replaceState(new_state, document.title, window.location);
+				history.replaceState(new_state, document.title, window.location.href);
 			}, 50);
 		});
 
+		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
@@ -69,6 +81,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
+			/** @type {HTMLAnchorElement | SVGAElement} */
 			const a = find_anchor(event.target);
 			if (!a) return;
 
@@ -102,7 +115,7 @@ export class Router {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
 				this.renderer.notify(selected);
 				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
+				this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
 				event.preventDefault();
 			}
 		});
@@ -130,6 +143,10 @@ export class Router {
 		if (selected) return this.renderer.start(selected);
 	}
 
+	/**
+	 * @param {URL} url
+	 * @returns {import('./types').NavigationTarget}
+	 */
 	select(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
@@ -157,6 +174,10 @@ export class Router {
 		}
 	}
 
+	/**
+	 * @param {string} href
+	 * @param {{ noscroll?: boolean, replaceState?: boolean }} opts
+	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}) {
 		const url = new URL(href, get_base_uri(document));
 		const selected = this.select(url);
@@ -166,7 +187,7 @@ export class Router {
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : false, url.hash);
+			return this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
 		}
 
 		location.href = href;
@@ -175,6 +196,11 @@ export class Router {
 		});
 	}
 
+	/**
+	 * @param {*} selected
+	 * @param {{ x: number, y: number }} scroll
+	 * @param {string} [hash]
+	 */
 	async navigate(selected, scroll, hash) {
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {

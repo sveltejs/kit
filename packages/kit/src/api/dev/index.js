@@ -12,8 +12,11 @@ import { rimraf } from '@sveltejs/app-utils/files';
 import { render } from '../../renderer';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import svelte from '@svitejs/vite-plugin-svelte';
 
+/** @typedef {{ port: number, config: import('../../types').ValidatedConfig }} Options */
+
+/** @param {Options} opts */
 export function dev(opts) {
 	return new Watcher(opts).init();
 }
@@ -21,6 +24,7 @@ export function dev(opts) {
 const dev_dir = '.svelte/dev';
 
 class Watcher extends EventEmitter {
+	/** @param {Options} opts */
 	constructor({ port, config }) {
 		super();
 
@@ -58,6 +62,7 @@ class Watcher extends EventEmitter {
 	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
 			dir: this.config.kit.files.routes,
+			/** @type {({ path }: { path: string }) => boolean} */
 			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
 		});
 
@@ -111,9 +116,9 @@ class Watcher extends EventEmitter {
 		this.server = http.createServer((req, res) => {
 			this.viteDevServer.middlewares(req, res, async () => {
 				try {
-					const parsed = parse(req.originalUrl);
+					const parsed = parse(req.url);
 
-					if (req.originalUrl === '/favicon.ico') return;
+					if (req.url === '/favicon.ico') return;
 
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = readFileSync(this.config.kit.files.template, 'utf-8');
@@ -156,6 +161,7 @@ class Watcher extends EventEmitter {
 									if (result.status !== 'PASS') {
 										const lines = rendered.split('\n');
 
+										/** @param {string} str */
 										const escape = (str) =>
 											str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -245,6 +251,9 @@ class Watcher extends EventEmitter {
 
 		const common_css_deps = new Set();
 
+		/**
+		 * @param {string} url
+		 */
 		const load = async (url) => {
 			const mod = await this.viteDevServer.ssrLoadModule(url);
 			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
@@ -264,6 +273,10 @@ class Watcher extends EventEmitter {
 			return { mod, css };
 		};
 
+		/**
+		 * @param {import('vite').ModuleNode} node
+		 * @param {Set<import('vite').ModuleNode>} deps
+		 */
 		const find_deps = (node, deps) => {
 			for (const dep of node.importedModules) {
 				if (!deps.has(dep)) {
@@ -331,11 +344,15 @@ class Watcher extends EventEmitter {
 	}
 }
 
-// given an array of params like `['x', 'y', 'z']` for
-// src/routes/[x]/[y]/[z]/svelte, create a function
-// that turns a RexExpMatchArray into ({ x, y, z })
+/** @param {string[]} array */
 function get_params(array) {
-	return (match) => {
+	// given an array of params like `['x', 'y', 'z']` for
+	// src/routes/[x]/[y]/[z]/svelte, create a function
+	// that turns a RegExpExecArray into ({ x, y, z })
+
+	/** @param {RegExpExecArray} match */
+	const fn = (match) => {
+		/** @type {Record<string, string | string[]>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
@@ -346,4 +363,6 @@ function get_params(array) {
 		});
 		return params;
 	};
+
+	return fn;
 }

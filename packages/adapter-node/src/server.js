@@ -1,5 +1,5 @@
 import compression from 'compression';
-import * as fs from 'fs';
+import fs from 'fs';
 import polka from 'polka';
 import { dirname, join } from 'path';
 import sirv from 'sirv';

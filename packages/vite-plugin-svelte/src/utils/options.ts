@@ -147,7 +147,6 @@ export interface Options {
 
 	/**
 	 * use transform cache even for ssr request (might cause stale modules)
-	 *
 	 */
 	useTransformCacheForSSR?: boolean;
 }

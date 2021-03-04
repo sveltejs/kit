@@ -1,20 +1,31 @@
-import * as fs from 'fs';
-import * as http from 'http';
+import fs from 'fs';
+import http from 'http';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 import { join, resolve } from 'path';
 
+/** @param {string} dir */
 const mutable = (dir) =>
 	sirv(dir, {
 		etag: true,
 		maxAge: 0
 	});
 
+/**
+ * @param {{
+ *   port: number;
+ *   config: import('../../types').ValidatedConfig
+ * }} opts
+ * @returns {Promise<import('http').Server>}
+ */
 export async function start({ port, config }) {
 	const app_file = resolve('.svelte/output/server/app.js');
-	const app = await import(pathToFileURL(app_file));
 
+	/** @type {import('../../types').App} */
+	const app = await import(pathToFileURL(app_file).href);
+
+	/** @type {import('sirv').RequestHandler} */
 	const static_handler = fs.existsSync(config.kit.files.assets)
 		? mutable(config.kit.files.assets)
 		: (_req, _res, next) => next();

@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
-import { find_anchor } from '../utils';
+import { find_anchor } from './utils';
 
+/** @param {any} value */
 function page_store(value) {
 	const store = writable(value);
 	let ready = true;
@@ -10,12 +11,15 @@ function page_store(value) {
 		store.update((val) => val);
 	}
 
+	/** @param {any} new_value */
 	function set(new_value) {
 		ready = false;
 		store.set(new_value);
 	}
 
+	/** @param {(value: any) => void} run */
 	function subscribe(run) {
+		/** @type {any} */
 		let old_value;
 		return store.subscribe((new_value) => {
 			if (old_value === undefined || (ready && new_value !== old_value)) {
@@ -28,16 +32,26 @@ function page_store(value) {
 }
 
 export class Renderer {
-	constructor({ Root, layout, target, error, status, preloaded, session }) {
+	/** @param {{
+	 *   Root: import('../../types').CSRComponent;
+	 *   layout: import('../../types').CSRComponent;
+	 *   target: Node;
+	 *   error: Error;
+	 *   status: number;
+	 *   session: any;
+	 * }} opts */
+	constructor({ Root, layout, target, error, status, session }) {
 		this.Root = Root;
 		this.layout = layout;
 		this.layout_loader = () => layout;
+
+		/** @type {import('./router').Router} */
+		this.router = null;
 
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
 		this.initial = {
-			preloaded,
 			error,
 			status
 		};
@@ -67,7 +81,9 @@ export class Renderer {
 
 		this.root = null;
 
+		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
+			/** @type {HTMLAnchorElement | SVGAElement} */
 			const a = find_anchor(event.target);
 
 			if (a && a.hasAttribute('sveltekit:prefetch')) {
@@ -75,7 +91,10 @@ export class Renderer {
 			}
 		};
 
+		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
+
+		/** @param {MouseEvent} event */
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
@@ -99,7 +118,9 @@ export class Renderer {
 		ready = true;
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async start(selected) {
+		/** @type {Record<string, any>} */
 		const props = {
 			stores: this.stores,
 			error: this.initial.error,
@@ -138,6 +159,7 @@ export class Renderer {
 		this.initial = null;
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	notify(selected) {
 		this.stores.navigating.set({
 			from: this.current.page,
@@ -145,6 +167,7 @@ export class Renderer {
 		});
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async render(selected) {
 		const token = (this.token = {});
 
@@ -159,10 +182,16 @@ export class Renderer {
 		}
 	}
 
+	/** @param {import('./types').NavigationTarget} selected */
 	async hydrate({ route, page }) {
+		/** @type {Record<string, any>} */
 		const props = {
-			error: null,
 			status: 200,
+
+			/** @type {Error} */
+			error: null,
+
+			/** @type {import('../../types').CSRComponent[]} */
 			components: []
 		};
 
@@ -180,17 +209,30 @@ export class Renderer {
 
 		const query = page.query.toString();
 
+		/** @typedef {{
+		 *   component: import('../../types').CSRComponent;
+		 *   uses: {
+		 *     params: Set<string>;
+		 *     query: boolean;
+		 *     session: boolean;
+		 *     context: boolean;
+		 *   }
+		 * }} LoadResult */
+
 		const state = {
 			page,
 			query,
 			session_changed: false,
+			/** @type {LoadResult[]} */
 			nodes: [],
+			/** @type {Record<string, any>[]} */
 			contexts: []
 		};
 
 		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
 		const props_promises = [];
 
+		/** @type {Record<string, any>} */
 		let context;
 		let redirect;
 
@@ -226,6 +268,7 @@ export class Renderer {
 					const cache = this.caches.get(component);
 					const cached = cache && cache.get(hash);
 
+					/** @type {LoadResult} */
 					let node;
 					let loaded;
 
@@ -371,6 +414,7 @@ export class Renderer {
 		return { redirect, props, state };
 	}
 
+	/** @param {URL} url */
 	async prefetch(url) {
 		const page = this.router.select(url);
 

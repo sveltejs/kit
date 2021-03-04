@@ -4,15 +4,21 @@
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "workspace:*",
+		"@svitejs/vite-plugin-svelte": "^0.9.3",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4"
 	},
 	"devDependencies": {
+		"@rollup/plugin-replace": "^2.4.1",
 		"@sveltejs/app-utils": "workspace:*",
-		"@types/node": "^14.14.22",
+		"@types/amphtml-validator": "^1.0.1",
+		"@types/mime": "^2.0.3",
+		"@types/node": "^14.14.31",
+		"@types/node-fetch": "^2.5.8",
 		"@types/rimraf": "^3.0.0",
 		"@types/sade": "^1.7.2",
 		"amphtml-validator": "^1.0.34",
+		"devalue": "^2.0.1",
 		"eslint": "^7.19.0",
 		"kleur": "^4.1.4",
 		"node-fetch": "^2.6.1",
@@ -21,6 +27,7 @@
 		"rollup": "^2.38.3",
 		"sirv": "^1.0.11",
 		"tiny-glob": "^0.2.8",
+		"typescript": "^4.2.2",
 		"uvu": "^0.5.1",
 		"vite": "^2.0.4"
 	},
@@ -40,6 +47,7 @@
 		"dev": "rollup -cw",
 		"build": "rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"check": "npx tsc",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",

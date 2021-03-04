@@ -1,7 +1,12 @@
 export function read_only_form_data() {
+	/** @type {Map<string, string[]>} */
 	const map = new Map();
 
 	return {
+		/**
+		 * @param {string} key
+		 * @param {string} value
+		 */
 		append(key, value) {
 			if (map.has(key)) {
 				map.get(key).push(value);
@@ -15,21 +20,26 @@ export function read_only_form_data() {
 }
 
 class ReadOnlyFormData {
+	/** @type {Map<string, string[]>} */
 	#map;
 
+	/** @param {Map<string, string[]>} map */
 	constructor(map) {
 		this.#map = map;
 	}
 
+	/** @param {string} key */
 	get(key) {
 		const value = this.#map.get(key);
 		return value && value[0];
 	}
 
+	/** @param {string} key */
 	getAll(key) {
 		return this.#map.get(key);
 	}
 
+	/** @param {string} key */
 	has(key) {
 		return this.#map.has(key);
 	}

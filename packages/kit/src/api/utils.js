@@ -6,13 +6,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+/** @param {string} dest */
 export function copy_assets(dest) {
 	copy(resolve(__dirname, '../assets'), dest);
 }
 
 function noop() {}
 
+/** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
+	/** @type {import('../types').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
 	log.success = (msg) => log(colors.green(`✔ ${msg}`));

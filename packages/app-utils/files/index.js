@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
+/** @param {string} dir */
 export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
@@ -10,10 +11,16 @@ export function mkdirp(dir) {
 	}
 }
 
+/** @param {string} path */
 export function rimraf(path) {
 	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }
 
+/**
+ * @param {string} from
+ * @param {string} to
+ * @param {(basename: string) => boolean} filter
+ */
 export function copy(from, to, filter = () => true) {
 	if (!fs.existsSync(from)) return [];
 	if (!filter(path.basename(from))) return [];

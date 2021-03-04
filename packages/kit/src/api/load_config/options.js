@@ -1,12 +1,17 @@
 const noop = () => {};
 
-export default {
+/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
+
+/** @type {Record<string, ConfigDefinition>} */
+const options = {
 	compilerOptions: {
+		type: 'leaf',
 		default: null,
 		validate: noop
 	},
 
 	extensions: {
+		type: 'leaf',
 		default: ['.svelte'],
 		validate: (option, keypath) => {
 			if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
@@ -28,8 +33,10 @@ export default {
 	},
 
 	kit: {
-		default: {
+		type: 'branch',
+		children: {
 			adapter: {
+				type: 'leaf',
 				default: [null],
 				validate: (option, keypath) => {
 					// support both `adapter: 'foo'` and `adapter: ['foo', opts]`
@@ -49,7 +56,8 @@ export default {
 			appDir: expect_string('_app', false),
 
 			files: {
-				default: {
+				type: 'branch',
+				children: {
 					assets: expect_string('static'),
 					routes: expect_string('src/routes'),
 					setup: expect_string('src/setup'),
@@ -62,18 +70,21 @@ export default {
 			hostHeader: expect_string(null),
 
 			paths: {
-				default: {
+				type: 'branch',
+				children: {
 					base: expect_string(''),
 					assets: expect_string('')
 				}
 			},
 
 			prerender: {
-				default: {
+				type: 'branch',
+				children: {
 					crawl: expect_boolean(true),
 					enabled: expect_boolean(true),
 					force: expect_boolean(false),
 					pages: {
+						type: 'leaf',
 						default: ['*'],
 						validate: (option, keypath) => {
 							if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
@@ -102,17 +113,24 @@ export default {
 	},
 
 	preprocess: {
+		type: 'leaf',
 		default: null,
 		validate: noop
 	}
 };
 
-function expect_string(string, allowEmpty = true) {
+/**
+ * @param {string} string
+ * @param {boolean} allow_empty
+ * @returns {ConfigDefinition}
+ */
+function expect_string(string, allow_empty = true) {
 	return {
+		type: 'leaf',
 		default: string,
 		validate: (option, keypath) => {
 			assert_is_string(option, keypath);
-			if (!allowEmpty && option === '') {
+			if (!allow_empty && option === '') {
 				throw new Error(`${keypath} cannot be empty`);
 			}
 			return option;
@@ -120,8 +138,13 @@ function expect_string(string, allowEmpty = true) {
 	};
 }
 
+/**
+ * @param {boolean} boolean
+ * @returns {ConfigDefinition}
+ */
 function expect_boolean(boolean) {
 	return {
+		type: 'leaf',
 		default: boolean,
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
@@ -132,8 +155,14 @@ function expect_boolean(boolean) {
 	};
 }
 
+/**
+ * @param {any} option
+ * @param {string} keypath
+ */
 function assert_is_string(option, keypath) {
 	if (typeof option !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
 }
+
+export default options;

@@ -1,9 +1,17 @@
-import * as fs from 'fs';
+import fs from 'fs';
 import { relative } from 'path';
 import { stringify, walk, write_if_changed } from '../utils';
 
 const s = JSON.stringify;
 
+/** @typedef {import('../types').ManifestData} ManifestData */
+
+/**
+ * @param {{
+ *   manifest_data: ManifestData;
+ *   output: string;
+ * }} param0
+ */
 export function create_app({ manifest_data, output }) {
 	const dir = `${output}/generated`;
 
@@ -12,10 +20,19 @@ export function create_app({ manifest_data, output }) {
 	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data, dir));
 }
 
+/**
+ * @param {string} str
+ */
 function trim(str) {
 	return str.replace(/^\t\t/gm, '').trim();
 }
 
+/**
+ * @param {{
+ *   manifest_data: ManifestData;
+ *   output: string;
+ * }} param0
+ */
 export function create_serviceworker_manifest({
 	manifest_data,
 	output,
@@ -45,6 +62,10 @@ export function create_serviceworker_manifest({
 	write_if_changed(`${output}/service-worker.js`, code);
 }
 
+/**
+ * @param {ManifestData} manifest_data
+ * @param {string} dir
+ */
 function generate_client_manifest(manifest_data, dir) {
 	const page_ids = new Set(manifest_data.pages.map((page) => page.pattern.toString()));
 
@@ -52,6 +73,7 @@ function generate_client_manifest(manifest_data, dir) {
 		(route) => !page_ids.has(route.pattern.toString())
 	);
 
+	/** @type {Record<string, number>} */
 	const component_indexes = {};
 
 	const get_path = (c) => relative(dir, c);
@@ -109,6 +131,10 @@ function generate_client_manifest(manifest_data, dir) {
 	`);
 }
 
+/**
+ * @param {ManifestData} manifest_data
+ * @param {string} dir
+ */
 function generate_app(manifest_data, dir) {
 	// TODO remove default layout altogether
 

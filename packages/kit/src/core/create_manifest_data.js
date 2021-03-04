@@ -1,35 +1,81 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
 
-// TODO components could just be an array of strings
+/** @typedef {{
+ *   content: string;
+ *   dynamic: boolean;
+ *   spread: boolean;
+ *   qualifier: string;
+ * }} Part */
 
+/** @typedef {{
+ *   basename: string;
+ *   ext: string;
+ *   parts: Part[],
+ *   file: string;
+ *   is_dir: boolean;
+ *   is_index: boolean;
+ *   is_page: boolean;
+ *   route_suffix: string
+ * }} Item */
+
+/**
+ * @param {{
+ *   config: import('../types').ValidatedConfig;
+ *   output: string;
+ *   cwd?: string;
+ * }} opts
+ * @returns {import('../types.js').ManifestData}
+ */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
+	/**
+	 * @param {string} file_name
+	 * @param {string} dir
+	 */
 	function find_layout(file_name, dir) {
 		const files = config.extensions.map((ext) => posixify(path.join(dir, `${file_name}${ext}`)));
 		return files.find((file) => fs.existsSync(path.join(cwd, file)));
 	}
 
+	/** @type {string[]} */
 	const components = [];
+
+	/** @type {import('../types.js').PageData[]} */
 	const pages = [];
+
+	/** @type {import('../types.js').EndpointData[]} */
 	const endpoints = [];
 
+	/** @type {Map<string, string>} */
 	const seen = new Map();
-	const check_pattern = (pattern, file) => {
-		pattern = pattern.toString();
 
-		if (seen.has(pattern)) {
-			throw new Error(`The ${seen.get(pattern)} and ${file} routes clash`);
+	/**
+	 * @param {RegExp} pattern
+	 * @param {string} file
+	 */
+	const check_pattern = (pattern, file) => {
+		const str = pattern.toString();
+
+		if (seen.has(str)) {
+			throw new Error(`The ${seen.get(str)} and ${file} routes clash`);
 		}
 
-		seen.set(pattern, file);
+		seen.set(str, file);
 	};
 
 	const default_layout = `${output}/components/layout.svelte`;
 	const default_error = `${output}/components/error.svelte`;
 
+	/**
+	 * @param {string} dir
+	 * @param {Part[][]} parent_segments
+	 * @param {string[]} parent_params
+	 * @param {string[]} stack
+	 */
 	function walk(dir, parent_segments, parent_params, stack) {
+		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
 			.map((basename) => {
@@ -86,11 +132,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						const last_part = last_segment[last_segment.length - 1];
 
 						if (last_part.dynamic) {
-							last_segment.push({ dynamic: false, content: item.route_suffix });
+							last_segment.push({
+								dynamic: false,
+								spread: false,
+								content: item.route_suffix,
+								qualifier: null
+							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
-								content: `${last_part.content}${item.route_suffix}`
+								spread: false,
+								content: `${last_part.content}${item.route_suffix}`,
+								qualifier: null
 							};
 						}
 
@@ -163,11 +216,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	};
 }
 
+/**
+ * @param {string} path
+ */
 function is_spread(path) {
 	const spread_pattern = /\[\.{3}/g;
 	return spread_pattern.test(path);
 }
 
+/**
+ * @param {Item} a
+ * @param {Item} b
+ */
 function comparator(a, b) {
 	if (a.is_index !== b.is_index) {
 		if (a.is_index) return is_spread(a.file) ? 1 : -1;
@@ -222,6 +282,9 @@ function comparator(a, b) {
 	}
 }
 
+/**
+ * @param {string} part
+ */
 function get_parts(part) {
 	return part
 		.split(/\[(.+?\(.+?\)|.+?)\]/)
@@ -241,6 +304,10 @@ function get_parts(part) {
 		.filter(Boolean);
 }
 
+/**
+ * @param {Part[][]} segments
+ * @param {boolean} add_trailing_slash
+ */
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
@@ -264,6 +331,11 @@ function get_pattern(segments, add_trailing_slash) {
 	return new RegExp(`^\\/${path}${trailing}`);
 }
 
+/**
+ * @param {string} dir
+ * @param {string} path
+ * @param {import('../types').Asset[]} files
+ */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;

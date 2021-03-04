@@ -1,9 +1,10 @@
-import fs, { readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '@sveltejs/app-utils/files';
 
+/** @param {string} html */
 function clean_html(html) {
 	return html
 		.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gm, '')
@@ -12,16 +13,19 @@ function clean_html(html) {
 		.replace(/<!--[\s\S]*?-->/gm, '');
 }
 
+/** @param {string} attrs */
 function get_href(attrs) {
 	const match = /href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
+/** @param {string} attrs */
 function get_src(attrs) {
 	const match = /src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
+/** @param {string} attrs */
 function get_srcset_urls(attrs) {
 	const results = [];
 	// Note that the srcset allows any ASCII whitespace, including newlines.
@@ -43,17 +47,27 @@ function get_srcset_urls(attrs) {
 const OK = 2;
 const REDIRECT = 3;
 
+/** @param {{
+ *   dir: string;
+ *   out: string;
+ *   log: import('../../types').Logger;
+ *   config: import('../../types').ValidatedConfig;
+ *   force: boolean; // disregard `export const prerender = true`
+ * }} opts */
 export async function prerender({ dir, out, log, config, force }) {
 	const seen = new Set();
 	const seen_files = new Set();
 
 	const server_root = resolve_path(dir);
-	const app = await import(pathToFileURL(`${server_root}/server/app.js`));
+
+	/** @type {import('../../types').App} */
+	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
 		paths: config.kit.paths
 	});
 
+	/** @type {(status: number, path: string) => void} */
 	const error = config.kit.prerender.force
 		? (status, path) => {
 				log.error(`${status} ${path}`);
@@ -62,6 +76,7 @@ export async function prerender({ dir, out, log, config, force }) {
 				throw new Error(`${status} ${path}`);
 		  };
 
+	/** @param {string} path */
 	async function visit(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
@@ -100,17 +115,14 @@ export async function prerender({ dir, out, log, config, force }) {
 				const { location } = headers;
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
-				fs.writeFileSync(
-					file,
-					`<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`
-				);
+				writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
 
 				return;
 			}
 
 			if (response_type === OK) {
 				log.info(`${rendered.status} ${path}`);
-				fs.writeFileSync(file, rendered.body); // TODO minify where possible?
+				writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else {
 				error(rendered.status, path);
 			}
@@ -132,7 +144,7 @@ export async function prerender({ dir, out, log, config, force }) {
 					const file = `${out}${parts.join('/')}`;
 					mkdirp(dirname(file));
 
-					fs.writeFileSync(file, result.body);
+					writeFileSync(file, result.body);
 
 					if (response_type === OK) {
 						log.info(`${result.status} ${path}`);
@@ -175,11 +187,10 @@ export async function prerender({ dir, out, log, config, force }) {
 						const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
 
 						const file_exists =
-							(file.startsWith(`${config.kit.appDir}/`) &&
-								fs.existsSync(`${dir}/client/${file}`)) ||
-							fs.existsSync(`${out}/${file}`) ||
-							fs.existsSync(`${config.kit.files.assets}/${file}`) ||
-							fs.existsSync(`${config.kit.files.assets}/${file}/index.html`);
+							(file.startsWith(`${config.kit.appDir}/`) && existsSync(`${dir}/client/${file}`)) ||
+							existsSync(`${out}/${file}`) ||
+							existsSync(`${config.kit.files.assets}/${file}`) ||
+							existsSync(`${config.kit.files.assets}/${file}/index.html`);
 
 						if (file_exists) {
 							seen_files.add(resolved);
