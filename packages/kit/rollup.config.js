@@ -16,9 +16,10 @@ export default [
 		input: {
 			'internal/start': 'src/runtime/internal/start.js',
 			'internal/singletons': 'src/runtime/internal/singletons.js',
-			'app/navigation': 'src/runtime/app/navigation/index.js',
-			'app/stores': 'src/runtime/app/stores/index.js',
-			'app/paths': 'src/runtime/app/paths/index.js'
+			'app/navigation': 'src/runtime/app/navigation.js',
+			'app/stores': 'src/runtime/app/stores.js',
+			'app/paths': 'src/runtime/app/paths.js',
+			'app/env': 'src/runtime/app/env.js'
 		},
 		output: {
 			dir: 'assets/runtime',
@@ -54,7 +55,10 @@ export default [
 		},
 		plugins: [
 			replace({
-				__VERSION__: pkg.version
+				preventAssignment: true,
+				values: {
+					__VERSION__: pkg.version
+				}
 			}),
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']

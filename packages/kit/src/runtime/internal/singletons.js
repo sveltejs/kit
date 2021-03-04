@@ -1,7 +1,7 @@
-/** @type {import('./router').Router} */
+/** @type {any} */
 export let router;
 
-/** @type {import('./renderer').Renderer} */
+/** @type {any} */
 export let renderer;
 
 /** @type {string} */
@@ -10,10 +10,7 @@ export let base;
 /** @type {string} */
 export let assets;
 
-/** @param {{
- *   router: import('./router').Router,
- *   renderer: import('./renderer').Renderer
- * }} opts */
+/** @param {any} opts */
 export function init(opts) {
 	({ router, renderer } = opts);
 }

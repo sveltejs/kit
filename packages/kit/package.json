@@ -60,5 +60,6 @@
 		"./renderer": {
 			"import": "./dist/renderer.js"
 		}
-	}
+	},
+	"types": "types.d.ts"
 }

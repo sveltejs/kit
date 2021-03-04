@@ -1,5 +1,5 @@
-import { router, renderer } from '../../internal/singletons';
-import { get_base_uri } from '../../internal/utils';
+import { router, renderer } from '../internal/singletons';
+import { get_base_uri } from '../internal/utils';
 
 /**
  * @param {string} href
