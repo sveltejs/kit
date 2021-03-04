@@ -44,8 +44,8 @@
 		"client"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rm -rf assets/runtime && rollup -cw",
+		"build": "rm -rf assets/runtime && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "npx tsc",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",

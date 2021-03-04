@@ -24,6 +24,7 @@ export default [
 		output: {
 			dir: 'assets/runtime',
 			format: 'esm',
+			chunkFileNames: 'chunks/[name].js',
 			sourcemap: true,
 			paths: {
 				ROOT: '../../generated/root.svelte',

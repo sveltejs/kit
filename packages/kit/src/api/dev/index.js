@@ -97,12 +97,6 @@ class Watcher extends EventEmitter {
 			}
 		});
 
-		const { set_paths } = await this.viteDevServer.ssrLoadModule(
-			`/${dev_dir}/runtime/internal/singletons.js`
-		);
-
-		set_paths(this.config.kit.paths);
-
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
 		this.server = http.createServer((req, res) => {
@@ -257,8 +251,14 @@ class Watcher extends EventEmitter {
 			for (const dep of deps) {
 				// TODO what about .scss files, etc?
 				if (dep.file.endsWith('.css')) {
-					const mod = await this.viteDevServer.ssrLoadModule(dep.url);
-					css.add(mod.default);
+					try {
+						const mod = await this.viteDevServer.ssrLoadModule(dep.url);
+						css.add(mod.default);
+					} catch {
+						// this can happen with dynamically imported modules, I think
+						// because the Vite module graph doesn't distinguish between
+						// static and dynamic imports? TODO investigate, submit fix
+					}
 				}
 			}
 
