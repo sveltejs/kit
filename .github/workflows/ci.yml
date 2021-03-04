@@ -78,7 +78,7 @@ jobs:
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
-  Lint / typecheck:
+  Lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
