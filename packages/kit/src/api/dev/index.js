@@ -274,7 +274,6 @@ class Watcher extends EventEmitter {
 		};
 
 		/**
-		 *
 		 * @param {import('vite').ModuleNode} node
 		 * @param {Set<import('vite').ModuleNode>} deps
 		 */

@@ -69,7 +69,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	const default_error = `${output}/components/error.svelte`;
 
 	/**
-	 *
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params

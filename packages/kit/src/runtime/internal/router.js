@@ -175,7 +175,6 @@ export class Router {
 	}
 
 	/**
-	 *
 	 * @param {string} href
 	 * @param {{ noscroll?: boolean, replaceState?: boolean }} opts
 	 */
@@ -198,7 +197,6 @@ export class Router {
 	}
 
 	/**
-	 *
 	 * @param {*} selected
 	 * @param {{ x: number, y: number }} scroll
 	 * @param {string} [hash]

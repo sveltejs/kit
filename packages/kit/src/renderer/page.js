@@ -5,7 +5,6 @@ import { parse, resolve, URLSearchParams } from 'url';
 import { render } from './index';
 
 /**
- *
  * @param {{
  *   request: import('../types').Request;
  *   options: import('../types').RenderOptions;
@@ -42,7 +41,6 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let uses_credentials = false;
 
 	/**
-	 *
 	 * @param {string} url
 	 * @param {RequestInit} opts
 	 */
@@ -390,7 +388,6 @@ export default async function render_page(request, context, options) {
 }
 
 /**
- *
  * @param {any} data
  * @param {(error: Error) => void} [fail]
  */
