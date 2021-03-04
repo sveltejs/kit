@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
 		"test": "pnpm -r test --workspace-concurrency=1",
+		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
 		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\""
