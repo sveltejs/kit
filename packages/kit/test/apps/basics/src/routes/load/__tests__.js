@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
 	test('loads', '/load', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');

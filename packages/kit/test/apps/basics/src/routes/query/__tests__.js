@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	const assert_query_echoed = (query, parsed) => async ({ base, page }) => {
 		await page.goto(`${base}/query/echo${query}`);

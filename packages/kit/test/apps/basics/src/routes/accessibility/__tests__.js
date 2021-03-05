@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	// TODO unskip this
 	test.skip('resets focus', '/accessibility/a', async ({ page }) => {

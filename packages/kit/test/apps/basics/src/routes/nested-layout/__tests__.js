@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	test('renders a nested layout', '/nested-layout', async ({ page }) => {
 		assert.equal(await page.textContent('footer'), 'Custom layout');
