@@ -1,4 +1,4 @@
-import fs, { readFileSync, writeFileSync } from 'fs';
+import fs, { readFileSync } from 'fs';
 import { relative, resolve } from 'path';
 import { rimraf } from '@sveltejs/app-utils/files';
 import create_manifest_data from '../../core/create_manifest_data';
