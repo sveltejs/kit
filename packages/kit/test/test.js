@@ -65,14 +65,16 @@ async function setup({ port }) {
 		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		text,
-		// these are assumed to have been put in the global scope by the layout
-		goto: (url) => page.evaluate((url) => goto(url), url),
-		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
 		wait_for_text,
 		capture_requests,
-		set_extra_http_headers: (headers) => page.setExtraHTTPHeaders(headers),
-		pathname: () => page.url().replace(base, ''),
+
+		// these are assumed to have been put in the global scope by the layout
+		app: {
+			goto: (url) => page.evaluate((url) => goto(url), url),
+			prefetch: (url) => page.evaluate((url) => prefetch(url), url),
+			prefetchRoutes: () => page.evaluate(() => prefetchRoutes())
+		},
+
 		reset: () => browser && browser.close()
 	};
 }

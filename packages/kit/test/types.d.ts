@@ -14,16 +14,16 @@ export type TestContext = {
 	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
 
 	// these are assumed to have been put in the global scope by the layout
-	goto: (url: string) => Promise<void>;
-	prefetch: (url: string) => Promise<void>;
-	prefetch_routes: () => Promise<void>;
+	app: {
+		goto: (url: string) => Promise<void>;
+		prefetch: (url: string) => Promise<void>;
+		prefetchRoutes: () => Promise<void>;
+	};
 
 	// this function contains an assertions which feels weird
 	wait_for_text: (selector: string, text: string) => void;
 
 	capture_requests: (fn: () => void) => Promise<string[]>;
-	set_extra_http_headers: (headers: Record<string, string>) => void;
-	pathname: () => Promise<string>;
 	reset: () => Promise<void>;
 };
 

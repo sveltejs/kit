@@ -30,7 +30,7 @@ export default function (test, is_dev) {
 		assert.equal(await text('h1'), 'static file');
 	});
 
-	test('context is inherited', '/load/context/a/b/c', async ({ text, js, goto }) => {
+	test('context is inherited', '/load/context/a/b/c', async ({ text, js, app }) => {
 		assert.equal(await text('h1'), 'message: original + new');
 		assert.equal(
 			await text('pre'),
@@ -42,7 +42,7 @@ export default function (test, is_dev) {
 		);
 
 		if (js) {
-			await goto('/load/context/d/e/f');
+			await app.goto('/load/context/d/e/f');
 
 			assert.equal(await text('h1'), 'message: original + new');
 			assert.equal(
@@ -59,20 +59,20 @@ export default function (test, is_dev) {
 	test(
 		'load function is only called when necessary',
 		'/load/change-detection/one/a',
-		async ({ goto, text, js }) => {
+		async ({ app, text, js }) => {
 			assert.equal(await text('h1'), 'x: a: 1');
 
 			if (js) {
-				await goto('/load/change-detection/one/a?unused=whatever');
+				await app.goto('/load/change-detection/one/a?unused=whatever');
 				assert.equal(await text('h1'), 'x: a: 1');
 
-				await goto('/load/change-detection/two/b');
+				await app.goto('/load/change-detection/two/b');
 				assert.equal(await text('h1'), 'y: b: 1');
 
-				await goto('/load/change-detection/one/a');
+				await app.goto('/load/change-detection/one/a');
 				assert.equal(await text('h1'), 'x: a: 1');
 
-				await goto('/load/change-detection/one/b');
+				await app.goto('/load/change-detection/one/b');
 				assert.equal(await text('h1'), 'x: b: 2');
 			}
 		}

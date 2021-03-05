@@ -4,15 +4,15 @@ export default function (test) {
 	test(
 		'redirects from /routing/ to /routing',
 		'/routing/slashes',
-		async ({ visit, page, goto, text, pathname, js }) => {
+		async ({ base, visit, page, app, text, js }) => {
 			await page.click('a[href="/routing/"]');
-			assert.equal(await pathname(), '/routing');
+			assert.equal(await page.url(), `${base}/routing`);
 			assert.equal(await text('h1'), 'Great success!');
 
 			if (js) {
 				await visit('/routing/slashes');
-				await goto('/routing/');
-				assert.equal(await pathname(), '/routing');
+				await app.goto('/routing/');
+				assert.equal(await page.url(), `${base}/routing`);
 				assert.equal(await text('h1'), 'Great success!');
 			}
 		}
@@ -21,15 +21,15 @@ export default function (test) {
 	test(
 		'redirects from /routing/? to /routing',
 		'/routing/slashes',
-		async ({ visit, page, goto, text, pathname, js }) => {
+		async ({ base, visit, page, app, text, js }) => {
 			await page.click('a[href="/routing/?"]');
-			assert.equal(await pathname(), '/routing');
+			assert.equal(await page.url(), `${base}/routing`);
 			assert.equal(await text('h1'), 'Great success!');
 
 			if (js) {
 				await visit('/routing/slashes');
-				await goto('/routing/?');
-				assert.equal(await pathname(), '/routing');
+				await app.goto('/routing/?');
+				assert.equal(await page.url(), `${base}/routing`);
 				assert.equal(await text('h1'), 'Great success!');
 			}
 		}
@@ -38,15 +38,15 @@ export default function (test) {
 	test(
 		'redirects from /routing/?foo=bar to /routing?foo=bar',
 		'/routing/slashes',
-		async ({ visit, page, goto, text, pathname, js }) => {
+		async ({ base, visit, page, app, text, js }) => {
 			await page.click('a[href="/routing/?foo=bar"]');
-			assert.equal(await pathname(), '/routing?foo=bar');
+			assert.equal(await page.url(), `${base}/routing?foo=bar`);
 			assert.equal(await text('h1'), 'Great success!');
 
 			if (js) {
 				await visit('/routing/slashes');
-				await goto('/routing/?foo=bar');
-				assert.equal(await pathname(), '/routing?foo=bar');
+				await app.goto('/routing/?foo=bar');
+				assert.equal(await page.url(), `${base}/routing?foo=bar`);
 				assert.equal(await text('h1'), 'Great success!');
 			}
 		}
@@ -81,15 +81,15 @@ export default function (test) {
 	test(
 		'navigates to a new page without reloading',
 		'/routing',
-		async ({ text, prefetch_routes, capture_requests, page, js }) => {
+		async ({ text, app, capture_requests, page, js }) => {
 			if (js) {
-				await prefetch_routes().catch((e) => {
+				await app.prefetchRoutes().catch((e) => {
 					// from error handler tests; ignore
 					if (!e.message.includes('Crashing now')) throw e;
 				});
 
 				// weird flakiness — without this, some requests are
-				// reported after prefetch_routes has finished
+				// reported after prefetchRoutes has finished
 				await page.waitForTimeout(500);
 
 				const requests = await capture_requests(async () => {
@@ -105,25 +105,21 @@ export default function (test) {
 		}
 	);
 
-	test('navigates programmatically', '/routing/a', async ({ text, goto, js }) => {
+	test('navigates programmatically', '/routing/a', async ({ text, app, js }) => {
 		if (js) {
-			await goto('/routing/b');
+			await app.goto('/routing/b');
 			assert.equal(await text('h1'), 'b');
 		}
 	});
 
-	test(
-		'prefetches programmatically',
-		'/routing/a',
-		async ({ base, capture_requests, prefetch, js }) => {
-			if (js) {
-				const requests = await capture_requests(() => prefetch('b'));
+	test('prefetches programmatically', '/routing/a', async ({ base, capture_requests, app, js }) => {
+		if (js) {
+			const requests = await capture_requests(() => app.prefetch('b'));
 
-				assert.equal(requests.length, 2);
-				assert.equal(requests[1], `${base}/routing/b.json`);
-			}
+			assert.equal(requests.length, 2);
+			assert.equal(requests[1], `${base}/routing/b.json`);
 		}
-	);
+	});
 
 	test(
 		'does not attempt client-side navigation to server routes',
