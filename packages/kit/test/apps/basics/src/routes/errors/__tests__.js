@@ -3,10 +3,11 @@ import * as assert from 'uvu/assert';
 export default function (test, is_dev) {
 	if (is_dev) {
 		// TODO unskip this test
-		test.skip('client-side errors', async ({ visit, contains, sleep, js }) => {
+		test.skip('client-side errors', '/errors/clientside', async ({ contains, js }) => {
 			if (js) {
 				try {
-					await visit('/errors/clientside');
+					// ???
+					// await visit('/errors/clientside');
 				} catch (error) {
 					assert.ok(/Crashing now/.test(error.message));
 				} finally {
@@ -19,124 +20,119 @@ export default function (test, is_dev) {
 
 		// TODO these probably shouldn't have the full render treatment,
 		// given that they will never be user-visible in prod
-		test('server-side errors', async ({ visit, contains }) => {
-			await visit('/errors/serverside');
-
+		test('server-side errors', '/errors/serverside', async ({ contains }) => {
 			assert.ok(await contains('Custom layout'));
 			assert.ok(await contains('Crashing now'));
 			assert.ok(await contains('custom error page'));
 		});
 
-		test('server-side module context errors', async ({ visit, contains }) => {
-			await visit('/errors/module-scope-server');
-
-			assert.ok(await contains('Custom layout'));
-			assert.ok(await contains('Crashing now'));
-			assert.ok(await contains('custom error page'));
-		});
+		test(
+			'server-side module context errors',
+			'/errors/module-scope-server',
+			async ({ visit, contains }) => {
+				assert.ok(await contains('Custom layout'));
+				assert.ok(await contains('Crashing now'));
+				assert.ok(await contains('custom error page'));
+			}
+		);
 	}
 
-	test('client-side load errors', async ({ visit, contains, js }) => {
+	test('client-side load errors', '/errors/load-client', async ({ contains, js }) => {
 		if (js) {
-			await visit('/errors/load-client');
-
 			assert.ok(await contains('Custom layout'));
 			assert.ok(await contains('Crashing now'));
 			assert.ok(await contains('custom error page'));
 		}
 	});
 
-	test('server-side load errors', async ({ visit, contains }) => {
-		await visit('/errors/load-server');
-
+	test('server-side load errors', '/errors/load-server', async ({ contains }) => {
 		assert.ok(await contains('Custom layout'));
 		assert.ok(await contains('Crashing now'));
 		assert.ok(await contains('custom error page'));
 	});
 
-	test('client-side module context errors', async ({ visit, contains, js }) => {
-		if (js) {
-			await visit('/errors/module-scope-client');
-
-			assert.ok(await contains('Custom layout'));
-			assert.ok(await contains('Crashing now'));
-			assert.ok(await contains('custom error page'));
+	test(
+		'client-side module context errors',
+		'/errors/module-scope-client',
+		async ({ contains, js }) => {
+			if (js) {
+				assert.ok(await contains('Custom layout'));
+				assert.ok(await contains('Crashing now'));
+				assert.ok(await contains('custom error page'));
+			}
 		}
-	});
+	);
 
-	test('404', async ({ visit, contains }) => {
-		const res = await visit('/why/would/anyone/fetch/this/url');
-
+	test('404', '/why/would/anyone/fetch/this/url', async ({ contains, response }) => {
 		assert.ok(await contains('Custom layout'), 'Should show custom layout');
 		assert.ok(await contains('custom error page'), 'Should show custom error page');
-		assert.equal(res.status(), 404);
+		assert.equal(response.status(), 404);
 	});
 
-	test('server-side error from load() is a string', async ({ visit, contains }) => {
-		const res = await visit('/errors/load-error-string-server');
-
-		assert.ok(await contains('Custom layout'), 'Should show custom layout');
-		assert.ok(await contains('custom error page'), 'Should show custom error page');
-		assert.ok(
-			await contains('This is your custom error page saying: "<b>Not found</b>"'),
-			'Should show error message'
-		);
-		assert.equal(res.status(), 555);
-	});
-
-	test('client-side error from load() is a string', async ({ visit, contains, js, html }) => {
-		if (js) {
-			const res = await visit('/errors/load-error-string-client');
-
+	test(
+		'server-side error from load() is a string',
+		'/errors/load-error-string-server',
+		async ({ contains, response }) => {
 			assert.ok(await contains('Custom layout'), 'Should show custom layout');
 			assert.ok(await contains('custom error page'), 'Should show custom error page');
 			assert.ok(
 				await contains('This is your custom error page saying: "<b>Not found</b>"'),
 				'Should show error message'
 			);
-			assert.equal(await html('h1'), '555', 'Should set status code');
+			assert.equal(response.status(), 555);
 		}
-	});
+	);
 
-	test('server-side error from load() is an Error', async ({ visit, contains }) => {
-		const res = await visit('/errors/load-error-server');
+	test(
+		'client-side error from load() is a string',
+		'/errors/load-error-string-client',
+		async ({ contains, js, html }) => {
+			if (js) {
+				assert.ok(await contains('Custom layout'), 'Should show custom layout');
+				assert.ok(await contains('custom error page'), 'Should show custom error page');
+				assert.ok(
+					await contains('This is your custom error page saying: "<b>Not found</b>"'),
+					'Should show error message'
+				);
+				assert.equal(await html('h1'), '555', 'Should set status code');
+			}
+		}
+	);
 
-		assert.ok(await contains('Custom layout'), 'Should show custom layout');
-		assert.ok(await contains('custom error page'), 'Should show custom error page');
-		assert.ok(
-			await contains('This is your custom error page saying: "<b>Not found</b>"'),
-			'Should show error message'
-		);
-		assert.equal(res.status(), 555);
-	});
-	test('client-side error from load() is an Error', async ({ visit, contains, js, html }) => {
-		if (js) {
-			const res = await visit('/errors/load-error-client');
-
+	test(
+		'server-side error from load() is an Error',
+		'/errors/load-error-server',
+		async ({ contains, response }) => {
 			assert.ok(await contains('Custom layout'), 'Should show custom layout');
 			assert.ok(await contains('custom error page'), 'Should show custom error page');
 			assert.ok(
 				await contains('This is your custom error page saying: "<b>Not found</b>"'),
 				'Should show error message'
 			);
-			assert.equal(await html('h1'), '555', 'Should set status code');
+			assert.equal(response.status(), 555);
 		}
-	});
+	);
 
-	test('server-side error from load() is malformed', async ({ visit, contains }) => {
-		const res = await visit('/errors/load-error-malformed-server');
+	test(
+		'client-side error from load() is an Error',
+		'/errors/load-error-client',
+		async ({ contains, js, html }) => {
+			if (js) {
+				assert.ok(await contains('Custom layout'), 'Should show custom layout');
+				assert.ok(await contains('custom error page'), 'Should show custom error page');
+				assert.ok(
+					await contains('This is your custom error page saying: "<b>Not found</b>"'),
+					'Should show error message'
+				);
+				assert.equal(await html('h1'), '555', 'Should set status code');
+			}
+		}
+	);
 
-		assert.ok(
-			await contains(
-				'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-			),
-			'Should throw error'
-		);
-	});
-	test('client-side error from load() is malformed', async ({ visit, contains, js }) => {
-		if (js) {
-			const res = await visit('/errors/load-error-malformed-client');
-
+	test(
+		'server-side error from load() is malformed',
+		'/errors/load-error-malformed-server',
+		async ({ contains }) => {
 			assert.ok(
 				await contains(
 					'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
@@ -144,16 +140,31 @@ export default function (test, is_dev) {
 				'Should throw error'
 			);
 		}
-	});
+	);
 
-	test('invalid route response is handled', async ({ fetch }) => {
+	test(
+		'client-side error from load() is malformed',
+		'/errors/load-error-malformed-client',
+		async ({ contains, js }) => {
+			if (js) {
+				assert.ok(
+					await contains(
+						'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+					),
+					'Should throw error'
+				);
+			}
+		}
+	);
+
+	test('invalid route response is handled', '/', async ({ fetch }) => {
 		const res = await fetch('/errors/invalid-route-response');
 
 		assert.equal(res.status, 500);
 		assert.match(await res.text(), /body is missing/);
 	});
 
-	test('unhandled http method', async ({ fetch }) => {
+	test('unhandled http method', '/', async ({ fetch }) => {
 		const res = await fetch('/errors/invalid-route-response', { method: 'PUT' });
 
 		assert.equal(res.status, 501);

@@ -1,9 +1,7 @@
 export default function (test) {
-	test('calls a delete handler', async ({ visit, wait_for_text, click, js }) => {
+	test('calls a delete handler', '/delete-route', async ({ wait_for_text, page, js }) => {
 		if (js) {
-			await visit('/delete-route');
-
-			await click('.del');
+			await page.click('.del');
 			await wait_for_text('h1', 'deleted 42');
 		}
 	});

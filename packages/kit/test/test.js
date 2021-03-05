@@ -65,44 +65,56 @@ async function setup({ port }) {
 		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		text,
-		evaluate: (fn) => page.evaluate(fn),
 		// these are assumed to have been put in the global scope by the layout
 		goto: (url) => page.evaluate((url) => goto(url), url),
 		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		click: (selector, options) => page.click(selector, { timeout: defaultTimeout, ...options }),
 		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
 		wait_for_text,
-		wait_for_selector: (selector, options) =>
-			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
-		wait_for_function: (fn, arg, options) =>
-			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests,
 		set_extra_http_headers: (headers) => page.setExtraHTTPHeaders(headers),
 		pathname: () => page.url().replace(base, ''),
-		keyboard: page.keyboard,
-		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
-		reset: () => browser && browser.close(),
-		$: (selector) => page.$(selector)
+		reset: () => browser && browser.close()
 	};
 }
 
 function duplicate(test_fn, config) {
-	return (name, callback) => {
+	return (name, start, callback) => {
+		if (!callback) {
+			// TODO move everything over to new signature
+			callback = start;
+			start = null;
+		}
+
 		test_fn(`${name} [no js]`, async (context) => {
+			let response;
+
+			if (start) {
+				response = await context.page.goto(context.base + start);
+			}
+
 			await callback({
 				...context,
+				response,
 				js: false
 			});
 		});
 
 		if (!config.kit.amp) {
 			test_fn(`${name} [js]`, async (context) => {
+				let response;
+
+				if (start) {
+					response = await context.page.goto(context.base + start);
+					await context.page.evaluate(() => window.start());
+				}
+
 				await callback({
 					...context,
 					js: true,
+					response,
 					visit: async (path) => {
 						const res = await context.visit(path);
-						await context.evaluate(() => window.start());
+						await context.page.evaluate(() => window.start());
 						return res;
 					}
 				});

@@ -1,8 +1,7 @@
 import * as assert from 'uvu/assert';
 
 export default function (test, is_dev) {
-	test('loads', async ({ visit, contains }) => {
-		await visit('/load');
+	test('loads', '/load', async ({ contains }) => {
 		assert.ok(await contains('bar == bar'));
 	});
 
@@ -27,13 +26,11 @@ export default function (test, is_dev) {
 		);
 	});
 
-	test('prefers static data over endpoint', async ({ visit, text }) => {
-		await visit('/load/foo');
+	test('prefers static data over endpoint', '/load/foo', async ({ text }) => {
 		assert.equal(await text('h1'), 'static file');
 	});
 
-	test('context is inherited', async ({ visit, text, html, js, goto }) => {
-		await visit('/load/context/a/b/c');
+	test('context is inherited', '/load/context/a/b/c', async ({ text, js, goto }) => {
 		assert.equal(await text('h1'), 'message: original + new');
 		assert.equal(
 			await text('pre'),
@@ -59,22 +56,25 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {
-		await visit('/load/change-detection/one/a');
-		assert.equal(await text('h1'), 'x: a: 1');
-
-		if (js) {
-			await goto('/load/change-detection/one/a?unused=whatever');
+	test(
+		'load function is only called when necessary',
+		'/load/change-detection/one/a',
+		async ({ goto, text, js }) => {
 			assert.equal(await text('h1'), 'x: a: 1');
 
-			await goto('/load/change-detection/two/b');
-			assert.equal(await text('h1'), 'y: b: 1');
+			if (js) {
+				await goto('/load/change-detection/one/a?unused=whatever');
+				assert.equal(await text('h1'), 'x: a: 1');
 
-			await goto('/load/change-detection/one/a');
-			assert.equal(await text('h1'), 'x: a: 1');
+				await goto('/load/change-detection/two/b');
+				assert.equal(await text('h1'), 'y: b: 1');
 
-			await goto('/load/change-detection/one/b');
-			assert.equal(await text('h1'), 'x: b: 2');
+				await goto('/load/change-detection/one/a');
+				assert.equal(await text('h1'), 'x: a: 1');
+
+				await goto('/load/change-detection/one/b');
+				assert.equal(await text('h1'), 'x: b: 2');
+			}
 		}
-	});
+	);
 }
