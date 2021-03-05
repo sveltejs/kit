@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	// We decided not to keep this behaviour. Leaving the skipped test here for now
 	// in case we change our minds

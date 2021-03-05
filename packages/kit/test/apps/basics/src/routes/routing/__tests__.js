@@ -1,272 +1,206 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('redirects from /routing/ to /routing', async ({
-		errors,
-		visit,
-		click,
-		sleep,
-		goto,
-		text,
-		pathname,
-		js
-	}) => {
-		await visit('/routing/slashes');
-		await click('a[href="/routing/"]');
-		assert.equal(await pathname(), '/routing');
-		assert.equal(await text('h1'), 'Great success!');
+	test(
+		'redirects from /routing/ to /routing',
+		'/routing/slashes',
+		async ({ base, page, app, js }) => {
+			await page.click('a[href="/routing/"]');
+			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(await page.textContent('h1'), 'Great success!');
 
+			if (js) {
+				await page.goto(`${base}/routing/slashes`);
+				await app.start();
+				await app.goto('/routing/');
+				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(await page.textContent('h1'), 'Great success!');
+			}
+		}
+	);
+
+	test(
+		'redirects from /routing/? to /routing',
+		'/routing/slashes',
+		async ({ base, page, app, js }) => {
+			await page.click('a[href="/routing/?"]');
+			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(await page.textContent('h1'), 'Great success!');
+
+			if (js) {
+				await page.goto(`${base}/routing/slashes`);
+				await app.start();
+				await app.goto('/routing/?');
+				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(await page.textContent('h1'), 'Great success!');
+			}
+		}
+	);
+
+	test(
+		'redirects from /routing/?foo=bar to /routing?foo=bar',
+		'/routing/slashes',
+		async ({ base, page, app, js }) => {
+			await page.click('a[href="/routing/?foo=bar"]');
+			assert.equal(await page.url(), `${base}/routing?foo=bar`);
+			assert.equal(await page.textContent('h1'), 'Great success!');
+
+			if (js) {
+				await page.goto(`${base}/routing/slashes`);
+				await app.start();
+				await app.goto('/routing/?foo=bar');
+				assert.equal(await page.url(), `${base}/routing?foo=bar`);
+				assert.equal(await page.textContent('h1'), 'Great success!');
+			}
+		}
+	);
+
+	test('serves static route', '/routing/a', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'a');
+	});
+
+	test('serves static route from dir/index.html file', '/routing/b', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'b');
+	});
+
+	test(
+		'serves static route under client directory',
+		'/routing/client/foo',
+		async ({ base, page }) => {
+			assert.equal(await page.textContent('h1'), 'foo');
+
+			await page.goto(`${base}/routing/client/bar`);
+			assert.equal(await page.textContent('h1'), 'bar');
+
+			await page.goto(`${base}/routing/client/bar/b`);
+			assert.equal(await page.textContent('h1'), 'b');
+		}
+	);
+
+	test('serves dynamic route', '/routing/test-slug', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'test-slug');
+	});
+
+	test(
+		'navigates to a new page without reloading',
+		'/routing',
+		async ({ app, capture_requests, page, js }) => {
+			if (js) {
+				await app.prefetchRoutes().catch((e) => {
+					// from error handler tests; ignore
+					if (!e.message.includes('Crashing now')) throw e;
+				});
+
+				// weird flakiness — without this, some requests are
+				// reported after prefetchRoutes has finished
+				await page.waitForTimeout(500);
+
+				const requests = await capture_requests(async () => {
+					await page.click('a[href="/routing/a"]');
+
+					await page.waitForFunction(() => document.location.pathname == '/routing/a');
+
+					assert.equal(await page.textContent('h1'), 'a');
+				});
+
+				assert.equal(requests, []);
+			}
+		}
+	);
+
+	test('navigates programmatically', '/routing/a', async ({ page, app, js }) => {
 		if (js) {
-			await visit('/routing/slashes');
-			await goto('/routing/');
-			assert.equal(await pathname(), '/routing');
-			assert.equal(await text('h1'), 'Great success!');
+			await app.goto('/routing/b');
+			assert.equal(await page.textContent('h1'), 'b');
 		}
 	});
 
-	test('redirects from /routing/? to /routing', async ({
-		visit,
-		click,
-		goto,
-		text,
-		pathname,
-		js
-	}) => {
-		await visit('/routing/slashes');
-		await click('a[href="/routing/?"]');
-		assert.equal(await pathname(), '/routing');
-		assert.equal(await text('h1'), 'Great success!');
-
+	test('prefetches programmatically', '/routing/a', async ({ base, capture_requests, app, js }) => {
 		if (js) {
-			await visit('/routing/slashes');
-			await goto('/routing/?');
-			assert.equal(await pathname(), '/routing');
-			assert.equal(await text('h1'), 'Great success!');
-		}
-	});
-
-	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({
-		visit,
-		click,
-		goto,
-		text,
-		pathname,
-		js
-	}) => {
-		await visit('/routing/slashes');
-		await click('a[href="/routing/?foo=bar"]');
-		assert.equal(await pathname(), '/routing?foo=bar');
-		assert.equal(await text('h1'), 'Great success!');
-
-		if (js) {
-			await visit('/routing/slashes');
-			await goto('/routing/?foo=bar');
-			assert.equal(await pathname(), '/routing?foo=bar');
-			assert.equal(await text('h1'), 'Great success!');
-		}
-	});
-
-	test('serves static route', async ({ visit, text }) => {
-		await visit('/routing/a');
-
-		assert.equal(await text('h1'), 'a');
-	});
-
-	test('serves static route from dir/index.html file', async ({ visit, text }) => {
-		await visit('/routing/b');
-
-		assert.equal(await text('h1'), 'b');
-	});
-
-	test('serves static route under client directory', async ({ visit, text }) => {
-		await visit('/routing/client/foo');
-		assert.equal(await text('h1'), 'foo');
-
-		await visit('/routing/client/bar');
-		assert.equal(await text('h1'), 'bar');
-
-		await visit('/routing/client/bar/b');
-		assert.equal(await text('h1'), 'b');
-	});
-
-	test('serves dynamic route', async ({ visit, text }) => {
-		await visit('/routing/test-slug');
-
-		assert.equal(await text('h1'), 'test-slug');
-	});
-
-	test('navigates to a new page without reloading', async ({
-		visit,
-		text,
-		prefetch_routes,
-		capture_requests,
-		click,
-		wait_for_function,
-		sleep,
-		js
-	}) => {
-		if (js) {
-			await visit('/routing');
-
-			await prefetch_routes().catch((e) => {
-				// from error handler tests; ignore
-				if (!e.message.includes('Crashing now')) throw e;
-			});
-
-			// weird flakiness — without this, some requests are
-			// reported after prefetch_routes has finished
-			await sleep(500);
-
-			const requests = await capture_requests(async () => {
-				await click('a[href="/routing/a"]');
-
-				await wait_for_function(() => document.location.pathname == '/routing/a');
-
-				assert.equal(await text('h1'), 'a');
-			});
-
-			assert.equal(requests, []);
-		}
-	});
-
-	test('navigates programmatically', async ({ visit, text, goto, js }) => {
-		if (js) {
-			await visit('/routing/a');
-
-			await goto('/routing/b');
-
-			assert.equal(await text('h1'), 'b');
-		}
-	});
-
-	test('prefetches programmatically', async ({ visit, base, capture_requests, prefetch, js }) => {
-		if (js) {
-			await visit('/routing/a');
-
-			const requests = await capture_requests(() => prefetch('b'));
+			const requests = await capture_requests(() => app.prefetch('b'));
 
 			assert.equal(requests.length, 2);
 			assert.equal(requests[1], `${base}/routing/b.json`);
 		}
 	});
 
-	test('does not attempt client-side navigation to server routes', async ({
-		visit,
-		text,
-		click,
-		wait_for_function
-	}) => {
-		await visit('/routing');
+	test('does not attempt client-side navigation to server routes', '/routing', async ({ page }) => {
+		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await page.waitForFunction(() => document.location.pathname == '/routing/ambiguous/ok.json');
 
-		await click('[href="/routing/ambiguous/ok.json"]');
-		await wait_for_function(() => document.location.pathname == '/routing/ambiguous/ok.json');
-
-		assert.equal(await text('body'), 'ok');
+		assert.equal(await page.textContent('body'), 'ok');
 	});
 
-	test('allows reserved words as route names', async ({ visit, text }) => {
-		await visit('/routing/const');
-
-		assert.equal(await text('h1'), 'reserved words are okay as routes');
+	test('allows reserved words as route names', '/routing/const', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'reserved words are okay as routes');
 	});
 
-	test('resets the active element after navigation', async ({
-		visit,
-		click,
-		wait_for_function
-	}) => {
-		await visit('/routing');
-
-		await click('[href="/routing/a"]');
-
-		await wait_for_function(() => document.activeElement.nodeName == 'BODY');
+	test('resets the active element after navigation', '/routing', async ({ page }) => {
+		await page.click('[href="/routing/a"]');
+		await page.waitForFunction(() => document.activeElement.nodeName == 'BODY');
 	});
 
-	test('navigates between routes with empty parts', async ({
-		visit,
-		click,
-		text,
-		wait_for_selector
-	}) => {
-		await visit('/routing/dirs/foo');
+	test('navigates between routes with empty parts', '/routing/dirs/foo', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'foo');
+		await page.click('[href="bar"]');
+		await page.waitForSelector('.bar');
 
-		assert.equal(await text('h1'), 'foo');
-		await click('[href="bar"]');
-		await wait_for_selector('.bar');
-
-		assert.equal(await text('h1'), 'bar');
+		assert.equal(await page.textContent('h1'), 'bar');
 	});
 
-	test('navigates to ...rest', async ({ visit, click, text, wait_for_text }) => {
-		await visit('/routing/abc/xyz');
+	test('navigates to ...rest', '/routing/abc/xyz', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'abc,xyz');
 
-		assert.equal(await text('h1'), 'abc,xyz');
-		await click('[href="/routing/xyz/abc/def/ghi"]');
+		await page.click('[href="/routing/xyz/abc/def/ghi"]');
+		assert.equal(await page.textContent('h1'), 'xyz,abc,def,ghi');
+		assert.equal(await page.textContent('h2'), 'xyz,abc,def,ghi');
 
-		await wait_for_text('h1', 'xyz,abc,def,ghi');
-		assert.equal(await text('h2'), 'xyz,abc,def,ghi');
+		await page.click('[href="/routing/xyz/abc/def"]');
+		assert.equal(await page.textContent('h1'), 'xyz,abc,def');
+		assert.equal(await page.textContent('h2'), 'xyz,abc,def');
 
-		await click('[href="/routing/xyz/abc/def"]');
+		await page.click('[href="/routing/xyz/abc/def"]');
+		assert.equal(await page.textContent('h1'), 'xyz,abc,def');
+		assert.equal(await page.textContent('h2'), 'xyz,abc,def');
 
-		await wait_for_text('h1', 'xyz,abc,def');
-		assert.equal(await text('h2'), 'xyz,abc,def');
+		await page.click('[href="/routing/xyz/abc"]');
+		assert.equal(await page.textContent('h1'), 'xyz,abc');
+		assert.equal(await page.textContent('h2'), 'xyz,abc');
 
-		await click('[href="/routing/xyz/abc/def"]');
+		await page.click('[href="/routing/xyz/abc/deep"]');
+		assert.equal(await page.textContent('h1'), 'xyz,abc');
+		assert.equal(await page.textContent('h2'), 'xyz,abc');
 
-		await wait_for_text('h1', 'xyz,abc,def');
-		assert.equal(await text('h2'), 'xyz,abc,def');
-
-		await click('[href="/routing/xyz/abc"]');
-
-		await wait_for_text('h1', 'xyz,abc');
-		assert.equal(await text('h2'), 'xyz,abc');
-
-		await click('[href="/routing/xyz/abc/deep"]');
-
-		await wait_for_text('h1', 'xyz,abc');
-		assert.equal(await text('h2'), 'xyz,abc');
-
-		await click('[href="/routing/xyz/abc/qwe/deep.json"]');
-
-		await wait_for_text('body', 'xyz,abc,qwe');
+		await page.click('[href="/routing/xyz/abc/qwe/deep.json"]');
+		assert.equal(await page.textContent('body'), 'xyz,abc,qwe');
 	});
 
-	test('navigates between dynamic routes with same segments', async ({
-		visit,
-		click,
-		wait_for_text,
-		text
-	}) => {
-		await visit('/routing/dirs/bar/xyz');
+	test(
+		'navigates between dynamic routes with same segments',
+		'/routing/dirs/bar/xyz',
+		async ({ page }) => {
+			assert.equal(await page.textContent('h1'), 'A page');
 
-		assert.equal(await text('h1'), 'A page');
+			await page.click('[href="/routing/dirs/foo/xyz"]');
+			assert.equal(await page.textContent('h1'), 'B page');
+		}
+	);
 
-		await click('[href="/routing/dirs/foo/xyz"]');
+	test('find regexp routes', '/routing/qwe', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'qwe');
 
-		await wait_for_text('h1', 'B page');
+		await page.click('[href="234"]');
+		assert.equal(await page.textContent('h1'), 'Regexp page 234');
+
+		await page.click('[href="regexp/234"]');
+		assert.equal(await page.textContent('h1'), 'Nested regexp page 234');
 	});
 
-	test('find regexp routes', async ({ visit, click, wait_for_text, text }) => {
-		await visit('/routing/qwe');
+	test('invalidates page when a segment is skipped', '/routing/skipped/x/1', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'x/1');
 
-		assert.equal(await text('h1'), 'qwe');
-
-		await click('[href="234"]');
-
-		await wait_for_text('h1', 'Regexp page 234');
-
-		await click('[href="regexp/234"]');
-
-		await wait_for_text('h1', 'Nested regexp page 234');
-	});
-
-	test('invalidates page when a segment is skipped', async ({ visit, click, wait_for_text }) => {
-		await visit('/routing/skipped/x/1');
-
-		await wait_for_text('h1', 'x/1');
-
-		await click('#goto-y1');
-
-		await wait_for_text('h1', 'y/1');
+		await page.click('#goto-y1');
+		assert.equal(await page.textContent('h1'), 'y/1');
 	});
 }

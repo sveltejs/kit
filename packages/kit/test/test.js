@@ -4,30 +4,11 @@ import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
 import { dev, build, start, load_config } from '../src/api/index.js';
-import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
-	const defaultTimeout = 500;
-
-	const text = async (selector) => page.textContent(selector, { timeout: defaultTimeout });
-	const wait_for_text = async (selector, expectedValue) => {
-		await page
-			.waitForFunction(
-				({ expectedValue, selector }) =>
-					document.querySelector(selector) &&
-					document.querySelector(selector).textContent === expectedValue,
-				{ expectedValue, selector },
-				{ timeout: defaultTimeout }
-			)
-			.catch((e) => {
-				if (!e.message.match(/Timeout.*exceeded/)) throw e;
-			});
-
-		assert.equal(await text(selector), expectedValue);
-	};
 
 	const capture_requests = async (operations) => {
 		const requests = [];
@@ -60,51 +41,56 @@ async function setup({ port }) {
 	return {
 		base,
 		page,
-		visit: (path) => page.goto(base + path),
-		contains: async (str) => (await page.innerHTML('body')).includes(str),
-		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
-		text,
-		evaluate: (fn) => page.evaluate(fn),
-		// these are assumed to have been put in the global scope by the layout
-		goto: (url) => page.evaluate((url) => goto(url), url),
-		prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-		click: (selector, options) => page.click(selector, { timeout: defaultTimeout, ...options }),
-		prefetch_routes: () => page.evaluate(() => prefetchRoutes()),
-		wait_for_text,
-		wait_for_selector: (selector, options) =>
-			page.waitForSelector(selector, { timeout: defaultTimeout, ...options }),
-		wait_for_function: (fn, arg, options) =>
-			page.waitForFunction(fn, arg, { timeout: defaultTimeout, ...options }),
 		capture_requests,
-		set_extra_http_headers: (headers) => page.setExtraHTTPHeaders(headers),
-		pathname: () => page.url().replace(base, ''),
-		keyboard: page.keyboard,
-		sleep: (ms) => new Promise((f) => setTimeout(f, ms)),
-		reset: () => browser && browser.close(),
-		$: (selector) => page.$(selector)
+
+		// these are assumed to have been put in the global scope by the layout
+		app: {
+			start: () => page.evaluate(() => start()),
+			goto: (url) => page.evaluate((url) => goto(url), url),
+			prefetch: (url) => page.evaluate((url) => prefetch(url), url),
+			prefetchRoutes: () => page.evaluate(() => prefetchRoutes())
+		},
+
+		reset: () => browser && browser.close()
 	};
 }
 
 function duplicate(test_fn, config) {
-	return (name, callback) => {
+	return (name, start, callback) => {
+		if (!callback) {
+			// TODO move everything over to new signature
+			callback = start;
+			start = null;
+		}
+
 		test_fn(`${name} [no js]`, async (context) => {
+			let response;
+
+			if (start) {
+				response = await context.page.goto(context.base + start);
+			}
+
 			await callback({
 				...context,
+				response,
 				js: false
 			});
 		});
 
 		if (!config.kit.amp) {
 			test_fn(`${name} [js]`, async (context) => {
+				let response;
+
+				if (start) {
+					response = await context.page.goto(context.base + start);
+					await context.page.evaluate(() => window.start());
+				}
+
 				await callback({
 					...context,
 					js: true,
-					visit: async (path) => {
-						const res = await context.visit(path);
-						await context.evaluate(() => window.start());
-						return res;
-					}
+					response
 				});
 			});
 		}

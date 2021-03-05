@@ -1,10 +1,11 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('includes paths', async ({ visit, html }) => {
-		await visit('/paths');
+	test('includes paths', async ({ base, page }) => {
+		await page.goto(`${base}/paths`);
 
-		const json = await html('pre');
+		const json = await page.innerHTML('pre');
 
 		assert.equal(
 			json,

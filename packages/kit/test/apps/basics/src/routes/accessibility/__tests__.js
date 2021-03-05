@@ -1,44 +1,41 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	// TODO unskip this
-	test.skip('resets focus', async ({ visit, click, sleep, keyboard, evaluate, contains }) => {
-		await visit('/accessibility/a');
+	test.skip('resets focus', '/accessibility/a', async ({ page }) => {
+		await page.click('[href="/accessibility/b"]');
+		await page.waitForTimeout(50);
+		assert.equal(await page.innerHTML('h1'), 'b');
+		await page.waitForTimeout(50);
+		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'BODY');
+		await page.keyboard.press('Tab');
+		await page.waitForTimeout(50);
+		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'A');
+		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
 
-		await click('[href="/accessibility/b"]');
-		await sleep(50);
-		assert.ok(await contains('b'));
-		await sleep(50);
-		assert.equal(await evaluate(() => document.activeElement.nodeName), 'BODY');
-		await keyboard.press('Tab');
-		await sleep(50);
-		assert.equal(await evaluate(() => document.activeElement.nodeName), 'A');
-		assert.equal(await evaluate(() => document.activeElement.textContent), 'a');
-
-		await click('[href="/accessibility/a"]');
-		await sleep(50);
-		assert.ok(await contains('a'));
-		assert.equal(await evaluate(() => document.activeElement.nodeName), 'BODY');
-		await keyboard.press('Tab');
-		await sleep(50);
-		assert.equal(await evaluate(() => document.activeElement.nodeName), 'A');
-		assert.equal(await evaluate(() => document.activeElement.textContent), 'a');
+		await page.click('[href="/accessibility/a"]');
+		await page.waitForTimeout(50);
+		assert.equal(await page.innerHTML('h1'), 'a');
+		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'BODY');
+		await page.keyboard.press('Tab');
+		await page.waitForTimeout(50);
+		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'A');
+		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
 	});
 
-	test('announces client-side navigation', async ({ visit, click, contains, html, sleep, js }) => {
-		await visit('/accessibility/a');
-
-		const has_live_region = await contains('aria-live');
+	test('announces client-side navigation', '/accessibility/a', async ({ page, js }) => {
+		const has_live_region = (await page.innerHTML('body')).includes('aria-live');
 
 		if (js) {
 			assert.ok(has_live_region);
 
 			// live region should exist, but be empty
-			assert.equal(await html('[aria-live]'), '');
+			assert.equal(await page.innerHTML('[aria-live]'), '');
 
-			await click('[href="/accessibility/b"]');
-			await sleep(50);
-			assert.equal(await html('[aria-live]'), 'Navigated to b'); // TODO i18n
+			await page.click('[href="/accessibility/b"]');
+			await page.waitForTimeout(50);
+			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b'); // TODO i18n
 		} else {
 			assert.ok(!has_live_region);
 		}
