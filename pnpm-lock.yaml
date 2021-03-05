@@ -227,52 +227,6 @@ importers:
       slash: ^3.0.0
       source-map: ^0.7.3
       svelte-hmr: ^0.12.6
-  test:
-    dependencies:
-      '@sveltejs/kit': link:../packages/kit
-    devDependencies:
-      port-authority: 1.1.2
-      uvu: 0.6.0-next.1
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      port-authority: ^1.1.2
-      uvu: ^0.6.0-next.1
-  test/apps/amp:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
-  test/apps/basics:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.3
-  test/apps/custom-extension:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
-  test/apps/options:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
 lockfileVersion: 5.2
 packages:
   /@architect/parser/3.0.1:
@@ -3569,19 +3523,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-JGxttnOGDFs77FaZ0yMUHIzczzQ5R1IlDeNW6Wymw6gAscwMdAffVOP6TlxLIfReZyK8tahoGwWZaTCJzNFDkg==
-  /uvu/0.6.0-next.1:
-    dependencies:
-      dequal: 2.0.2
-      diff: 5.0.0
-      kleur: 4.1.4
-      sade: 1.7.4
-      totalist: 2.0.0
-    dev: true
-    engines:
-      node: '>=8'
-    hasBin: true
-    resolution:
-      integrity: sha512-YXBhSHY/tlP/ulBi+JDvLGFgDhmVUALufkFAxF61S6hUnI4IQ/9KT0tEVNTLLdzoPZs+9vpjLUTYJOWxffciPQ==
   /v8-compile-cache/2.2.0:
     dev: true
     resolution:
