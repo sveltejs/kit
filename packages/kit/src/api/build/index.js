@@ -1,22 +1,23 @@
-import fs, { readFileSync, writeFileSync } from 'fs';
-import { relative, resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
 import { rimraf } from '@sveltejs/app-utils/files';
-import create_manifest_data from '../../core/create_manifest_data';
-import { copy_assets } from '../utils';
-import { create_app } from '../../core/create_app';
+import create_manifest_data from '../../core/create_manifest_data.js';
+import { copy_assets } from '../utils.js';
+import { create_app } from '../../core/create_app.js';
 import vite from 'vite';
 import svelte from '@svitejs/vite-plugin-svelte';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
 
-const build_dir = '.svelte/build';
-
 /**
  * @param {import('../../types').ValidatedConfig} config
- * @param {{ cwd: string }} opts
+ * @param {{ cwd?: string }} [opts]
  */
-export async function build(config, { cwd }) {
+export async function build(config, { cwd = process.cwd() } = {}) {
+	const build_dir = path.resolve(cwd, '.svelte/build');
+	const output_dir = path.resolve(cwd, '.svelte/output');
+
 	const manifest = create_manifest_data({
 		config,
 		output: build_dir
@@ -33,9 +34,11 @@ export async function build(config, { cwd }) {
 
 	process.env.VITE_AMP = config.kit.amp ? 'true' : '';
 
-	const client_entry_file = `${build_dir}/runtime/internal/start.js`;
-	const client_out_dir = `${cwd}/client/${config.kit.appDir}`;
+	const client_entry_file = '.svelte/build/runtime/internal/start.js';
+	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
+
+	console.log({ client_entry_file });
 
 	const base =
 		config.kit.paths.assets === '/.'
@@ -44,6 +47,7 @@ export async function build(config, { cwd }) {
 
 	// client build
 	await vite.build({
+		root: cwd,
 		base,
 		build: {
 			cssCodeSplit: true,
@@ -57,7 +61,7 @@ export async function build(config, { cwd }) {
 		},
 		resolve: {
 			alias: {
-				$app: resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`)
 			}
 		},
 		plugins: [
@@ -78,7 +82,7 @@ export async function build(config, { cwd }) {
 	 *   css: string[];
 	 *   imports: string[];
 	 * }>} */
-	const client_manifest = JSON.parse(readFileSync(client_manifest_file, 'utf-8'));
+	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
 	fs.unlinkSync(client_manifest_file);
 
 	let setup_file = 'src/setup/index.js';
@@ -91,7 +95,7 @@ export async function build(config, { cwd }) {
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
-		const relative_file = relative(build_dir, file);
+		const relative_file = path.relative(build_dir, file);
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
@@ -115,12 +119,15 @@ export async function build(config, { cwd }) {
 	// 			const url = `${config.kit.paths.assets}/${config.kit.appDir}/${dep}`.replace(/^\/\./, '');
 	// 			const file = `${OPTIMIZED}/client/${config.kit.appDir}/${dep}`;
 
-	// 			css_lookup[url] = readFileSync(file, 'utf-8');
+	// 			css_lookup[url] = fs.readFileSync(file, 'utf-8');
 	// 		});
 	// 	});
 	// });
 
 	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
+
+	console.log('client_manifest', client_manifest);
+	console.log('manifest', manifest);
 
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
@@ -176,6 +183,7 @@ export async function build(config, { cwd }) {
 
 							/** @param {string} id */
 							function find_deps(id) {
+								console.log({ id });
 								const chunk = client_manifest[id];
 								js_deps.add(path_to_dep(chunk.file));
 
@@ -254,6 +262,7 @@ export async function build(config, { cwd }) {
 	);
 
 	await vite.build({
+		root: cwd,
 		base,
 		build: {
 			ssr: true,
@@ -262,11 +271,11 @@ export async function build(config, { cwd }) {
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${cwd}/server`
+			outDir: `${output_dir}/server`
 		},
 		resolve: {
 			alias: {
-				$app: resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`)
 			}
 		},
 		plugins: [

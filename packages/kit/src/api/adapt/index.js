@@ -1,7 +1,7 @@
 import colors from 'kleur';
 import { pathToFileURL } from 'url';
-import { logger } from '../utils';
-import Builder from './Builder';
+import { logger } from '../utils.js';
+import Builder from './Builder.js';
 import { createRequire } from 'module';
 
 /**

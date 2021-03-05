@@ -202,9 +202,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	const layout = find_layout('$layout', config.kit.files.routes) || default_layout;
 	const error = find_layout('$error', config.kit.files.routes) || default_error;
 
-	walk(path.join(cwd, config.kit.files.routes), [], [], []);
+	walk(config.kit.files.routes, [], [], []);
 
-	const assets_dir = path.join(cwd, config.kit.files.assets);
+	const assets_dir = config.kit.files.assets;
 
 	return {
 		assets: fs.existsSync(assets_dir) ? list_files(assets_dir, '') : [],

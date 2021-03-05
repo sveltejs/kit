@@ -26,6 +26,7 @@
 		"rimraf": "^3.0.2",
 		"rollup": "^2.38.3",
 		"sirv": "^1.0.11",
+		"svelte": "^3.35.0",
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.2",
 		"uvu": "^0.5.1",
@@ -51,7 +52,9 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "uvu src \"(spec\\.mjs|test[\\\\/]index\\.mjs)\""
+		"test": "npm run test:unit && npm run test:integration",
+		"test:unit": "uvu src \"(spec\\.mjs|test[\\\\/]index\\.mjs)\"",
+		"test:integration": "uvu test test.js"
 	},
 	"exports": {
 		"./api": {

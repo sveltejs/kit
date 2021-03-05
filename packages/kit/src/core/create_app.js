@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { relative } from 'path';
-import { stringify, walk, write_if_changed } from '../utils';
+import { stringify, walk, write_if_changed } from '../utils.js';
 
 const s = JSON.stringify;
 

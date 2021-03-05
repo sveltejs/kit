@@ -2,7 +2,7 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
-import { render } from './index';
+import { render } from './index.js';
 
 /**
  * @param {{

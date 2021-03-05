@@ -12,7 +12,10 @@ export default function (test, is_dev) {
 		assert.ok(!script, 'Should not include serialized data');
 
 		async function assertContains(message) {
-			assert.ok(await contains(message), `Did not find "${message}" in ${await page.innerHTML('body')}`);
+			assert.ok(
+				await contains(message),
+				`Did not find "${message}" in ${await page.innerHTML('body')}`
+			);
 		}
 	});
 }

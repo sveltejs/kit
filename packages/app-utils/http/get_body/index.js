@@ -1,4 +1,4 @@
-import { read_only_form_data } from './read_only_form_data';
+import { read_only_form_data } from './read_only_form_data.js';
 
 /** @param {import('http').IncomingMessage} req */
 export function get_body(req) {

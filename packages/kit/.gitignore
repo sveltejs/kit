@@ -3,3 +3,5 @@
 /dist
 /assets/runtime
 /client/**/*.d.ts
+/test/**/.svelte
+/test/**/build

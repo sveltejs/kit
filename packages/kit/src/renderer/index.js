@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
-import render_page from './page';
-import render_endpoint from './endpoint';
+import render_page from './page.js';
+import render_endpoint from './endpoint.js';
 
 /** @param {string} body */
 function md5(body) {

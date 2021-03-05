@@ -1,6 +1,6 @@
 import options from './options.js';
 import * as url from 'url';
-import { join } from 'path';
+import path from 'path';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -80,9 +80,14 @@ function remove_trailing_slash(str) {
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = join(cwd, 'svelte.config.cjs');
+	const config_file = path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
 	const validated = validate_config(config.default);
+
+	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
+	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
+	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);
+	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
 
 	// TODO check all the `files` exist when the config is loaded?
 	// TODO check that `target` is present in the provided template
