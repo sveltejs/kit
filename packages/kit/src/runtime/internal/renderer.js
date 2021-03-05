@@ -167,15 +167,28 @@ export class Renderer {
 		});
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	async render(selected) {
+	/**
+	 * @param {import('./types').NavigationTarget} selected
+	 * @param {string[]} chain
+	 */
+	async render(selected, chain) {
 		const token = (this.token = {});
 
 		const hydrated = await this.hydrate(selected);
 
 		if (this.token === token) {
 			if (hydrated.redirect) {
-				this.router.goto(hydrated.redirect, { replaceState: true });
+				if (chain.length > 10 || chain.includes(this.current.page.path)) {
+					hydrated.props.status = 500;
+					hydrated.props.error = new Error('Redirect loop');
+				} else {
+					this.router.goto(hydrated.redirect, { replaceState: true }, [
+						...chain,
+						this.current.page.path
+					]);
+
+					return;
+				}
 			}
 
 			// check render wasn't aborted

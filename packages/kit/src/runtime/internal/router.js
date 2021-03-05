@@ -115,7 +115,7 @@ export class Router {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
 				this.renderer.notify(selected);
 				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
+				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
 			}
 		});
@@ -125,7 +125,7 @@ export class Router {
 				const url = new URL(location.href);
 				const selected = this.select(url);
 				if (selected) {
-					this.navigate(selected, event.state['sveltekit:scroll']);
+					this.navigate(selected, event.state['sveltekit:scroll'], []);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -177,8 +177,9 @@ export class Router {
 	/**
 	 * @param {string} href
 	 * @param {{ noscroll?: boolean, replaceState?: boolean }} opts
+	 * @param {string[]} chain
 	 */
-	async goto(href, { noscroll = false, replaceState = false } = {}) {
+	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
 		const url = new URL(href, get_base_uri(document));
 		const selected = this.select(url);
 
@@ -187,7 +188,7 @@ export class Router {
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : null, url.hash);
+			return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
 		}
 
 		location.href = href;
@@ -199,15 +200,16 @@ export class Router {
 	/**
 	 * @param {*} selected
 	 * @param {{ x: number, y: number }} scroll
+	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async navigate(selected, scroll, hash) {
+	async navigate(selected, scroll, chain, hash) {
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.render(selected);
+		await this.renderer.render(selected, chain);
 
 		document.body.focus();
 
