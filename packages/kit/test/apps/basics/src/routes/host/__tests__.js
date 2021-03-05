@@ -1,15 +1,16 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('can access host through page store', async ({ visit, text, set_extra_http_headers }) => {
-		set_extra_http_headers({
+	test('can access host through page store', async ({ base, page }) => {
+		page.setExtraHTTPHeaders({
 			'x-forwarded-host': 'forwarded.com'
 		});
 
-		await visit('/host');
-		assert.equal(await text('h1'), 'forwarded.com');
+		await page.goto(`${base}/host`);
+		assert.equal(await page.textContent('h1'), 'forwarded.com');
 
 		// reset
-		set_extra_http_headers({});
+		page.setExtraHTTPHeaders({});
 	});
 }

@@ -1,11 +1,10 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('renders a nested layout', async ({ visit, contains }) => {
-		await visit('/nested-layout');
-
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('This is a nested layout component'));
-		assert.ok(await contains('Hello from inside the nested layout component'));
+	test('renders a nested layout', '/nested-layout', async ({ page }) => {
+		assert.equal(await page.textContent('footer'), 'Custom layout');
+		assert.equal(await page.textContent('p'), 'This is a nested layout component');
+		assert.equal(await page.textContent('h1'), 'Hello from inside the nested layout component');
 	});
 }

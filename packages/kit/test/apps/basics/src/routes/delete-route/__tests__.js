@@ -1,10 +1,13 @@
-export default function (test) {
-	test('calls a delete handler', async ({ visit, wait_for_text, click, js }) => {
-		if (js) {
-			await visit('/delete-route');
+import * as assert from 'uvu/assert';
 
-			await click('.del');
-			await wait_for_text('h1', 'deleted 42');
+/** @type {import('../../../../../types').TestMaker} */
+export default function (test) {
+	test('calls a delete handler', '/delete-route', async ({ page, js }) => {
+		if (js) {
+			await page.click('.del');
+			await page.waitForSelector('h1');
+
+			assert.equal(await page.innerHTML('h1'), 'deleted 42');
 		}
 	});
 }

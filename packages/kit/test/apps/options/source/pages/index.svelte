@@ -2,5 +2,5 @@
 	import Message from '$components/Message.svelte';
 </script>
 
-<p>We're on index.svelte</p>
+<h2>We're on index.svelte</h2>
 <Message/>

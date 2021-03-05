@@ -1,14 +1,14 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('loads', async ({ visit, contains }) => {
-		await visit('/load');
-		assert.ok(await contains('bar == bar'));
+	test('loads', '/load', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
-	test('data is serialized', async ({ visit, html, capture_requests, js }) => {
+	test('data is serialized', async ({ base, page, capture_requests, js }) => {
 		const requests = await capture_requests(async () => {
-			await visit('/load/serialization');
+			await page.goto(`${base}/load/serialization`);
 		});
 
 		const payload =
@@ -16,7 +16,7 @@ export default function (test, is_dev) {
 
 		if (!js) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await html('script[type="svelte-data"]');
+			const script_contents = await page.innerHTML('script[type="svelte-data"]');
 
 			assert.equal(script_contents, payload, 'Page should contain serialized data');
 		}
@@ -27,16 +27,14 @@ export default function (test, is_dev) {
 		);
 	});
 
-	test('prefers static data over endpoint', async ({ visit, text }) => {
-		await visit('/load/foo');
-		assert.equal(await text('h1'), 'static file');
+	test('prefers static data over endpoint', '/load/foo', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'static file');
 	});
 
-	test('context is inherited', async ({ visit, text, html, js, goto }) => {
-		await visit('/load/context/a/b/c');
-		assert.equal(await text('h1'), 'message: original + new');
+	test('context is inherited', '/load/context/a/b/c', async ({ page, js, app }) => {
+		assert.equal(await page.textContent('h1'), 'message: original + new');
 		assert.equal(
-			await text('pre'),
+			await page.textContent('pre'),
 			JSON.stringify({
 				x: 'a',
 				y: 'b',
@@ -45,11 +43,11 @@ export default function (test, is_dev) {
 		);
 
 		if (js) {
-			await goto('/load/context/d/e/f');
+			await app.goto('/load/context/d/e/f');
 
-			assert.equal(await text('h1'), 'message: original + new');
+			assert.equal(await page.textContent('h1'), 'message: original + new');
 			assert.equal(
-				await text('pre'),
+				await page.textContent('pre'),
 				JSON.stringify({
 					x: 'd',
 					y: 'e',
@@ -59,22 +57,25 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test('load function is only called when necessary', async ({ visit, goto, text, js }) => {
-		await visit('/load/change-detection/one/a');
-		assert.equal(await text('h1'), 'x: a: 1');
+	test(
+		'load function is only called when necessary',
+		'/load/change-detection/one/a',
+		async ({ app, page, js }) => {
+			assert.equal(await page.textContent('h1'), 'x: a: 1');
 
-		if (js) {
-			await goto('/load/change-detection/one/a?unused=whatever');
-			assert.equal(await text('h1'), 'x: a: 1');
+			if (js) {
+				await app.goto('/load/change-detection/one/a?unused=whatever');
+				assert.equal(await page.textContent('h1'), 'x: a: 1');
 
-			await goto('/load/change-detection/two/b');
-			assert.equal(await text('h1'), 'y: b: 1');
+				await app.goto('/load/change-detection/two/b');
+				assert.equal(await page.textContent('h1'), 'y: b: 1');
 
-			await goto('/load/change-detection/one/a');
-			assert.equal(await text('h1'), 'x: a: 1');
+				await app.goto('/load/change-detection/one/a');
+				assert.equal(await page.textContent('h1'), 'x: a: 1');
 
-			await goto('/load/change-detection/one/b');
-			assert.equal(await text('h1'), 'x: b: 2');
+				await app.goto('/load/change-detection/one/b');
+				assert.equal(await page.textContent('h1'), 'x: b: 2');
+			}
 		}
-	});
+	);
 }

@@ -19,6 +19,6 @@
 	export let data;
 </script>
 
-<p>host from load: {host}</p>
-<p>host from page store: {$page.host}</p>
-<p>host from endpoint: {data.host}</p>
+<p data-source="load">{host}</p>
+<p data-source="store">{$page.host}</p>
+<p data-source="endpoint">{data.host}</p>

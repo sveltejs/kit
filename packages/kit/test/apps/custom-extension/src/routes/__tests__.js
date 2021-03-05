@@ -1,26 +1,23 @@
 import * as assert from 'uvu/assert';
 
 export default function (test) {
-	test('works with arbitrary extensions', async ({ visit, text }) => {
-		await visit('/');
-		assert.equal(await text('h1'), 'Great success!');
+	test('works with arbitrary extensions', '/', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'Great success!');
 	});
 
-	test('works with other arbitrary extensions', async ({ visit, text }) => {
-		await visit(`/const`);
+	test('works with other arbitrary extensions', '/const', async ({ base, page }) => {
+		assert.equal(await page.textContent('h1'), 'Tremendous!');
 
-		assert.equal(await text('h1'), 'Tremendous!');
+		await page.goto(`${base}/a`);
 
-		await visit(`/a`);
+		assert.equal(await page.textContent('h1'), 'a');
 
-		assert.equal(await text('h1'), 'a');
+		await page.goto(`${base}/test-slug`);
 
-		await visit(`/test-slug`);
+		assert.equal(await page.textContent('h1'), 'TEST-SLUG');
 
-		assert.equal(await text('h1'), 'TEST-SLUG');
+		await page.goto(`${base}/unsafe-replacement`);
 
-		await visit(`/unsafe-replacement`);
-
-		assert.equal(await text('h1'), 'Bazooom!');
+		assert.equal(await page.textContent('h1'), 'Bazooom!');
 	});
 }
