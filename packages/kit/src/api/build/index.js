@@ -12,22 +12,30 @@ const s = (value) => JSON.stringify(value);
 
 /**
  * @param {import('../../types').ValidatedConfig} config
- * @param {{ cwd?: string }} [opts]
+ * @param {{
+ *   cwd?: string;
+ *   renderer?: string;
+ * }} [opts]
  */
-export async function build(config, { cwd = process.cwd() } = {}) {
+export async function build(
+	config,
+	{ cwd = process.cwd(), renderer = '@sveltejs/kit/renderer' } = {}
+) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
 	const output_dir = path.resolve(cwd, '.svelte/output');
 
 	const manifest = create_manifest_data({
 		config,
-		output: build_dir
+		output: build_dir,
+		cwd
 	});
 
 	rimraf(build_dir);
 
 	create_app({
 		manifest_data: manifest,
-		output: build_dir
+		output: build_dir,
+		cwd
 	});
 
 	copy_assets(build_dir);
@@ -37,8 +45,6 @@ export async function build(config, { cwd = process.cwd() } = {}) {
 	const client_entry_file = '.svelte/build/runtime/internal/start.js';
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
-
-	console.log({ client_entry_file });
 
 	const base =
 		config.kit.paths.assets === '/.'
@@ -85,17 +91,17 @@ export async function build(config, { cwd = process.cwd() } = {}) {
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
 	fs.unlinkSync(client_manifest_file);
 
-	let setup_file = 'src/setup/index.js';
-	if (!fs.existsSync(setup_file)) {
-		setup_file = `${build_dir}/setup.js`;
-		fs.writeFileSync(setup_file, '');
+	let setup_file = 'src/setup/index.js'; // TODO this is wrong... should see if we can resolve files.setup using Vite's resolution logic
+	if (!fs.existsSync(path.resolve(cwd, setup_file))) {
+		setup_file = '.svelte/build/setup.js';
+		fs.writeFileSync(path.resolve(cwd, setup_file), '');
 	}
 
 	const app_file = `${build_dir}/app.js`;
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
-		const relative_file = path.relative(build_dir, file);
+		const relative_file = path.relative('.svelte/build', file);
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
@@ -126,18 +132,15 @@ export async function build(config, { cwd = process.cwd() } = {}) {
 
 	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
 
-	console.log('client_manifest', client_manifest);
-	console.log('manifest', manifest);
-
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
 		`
-			import * as renderer from '@sveltejs/kit/renderer';
-			import root from ${s(app_relative(`${build_dir}/generated/root.svelte`))};
-			import { set_paths } from ${s(app_relative(`${build_dir}/runtime/internal/singletons.js`))};
+			import * as renderer from '${renderer}';
+			import root from './generated/root.svelte';
+			import { set_paths } from './runtime/internal/singletons.js';
 			import * as setup from ${s(app_relative(setup_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
@@ -183,7 +186,6 @@ export async function build(config, { cwd = process.cwd() } = {}) {
 
 							/** @param {string} id */
 							function find_deps(id) {
-								console.log({ id });
 								const chunk = client_manifest[id];
 								js_deps.add(path_to_dep(chunk.file));
 

@@ -169,9 +169,12 @@ async function main() {
 			try {
 				const port = await ports.find(3000);
 
-				await build(config, { cwd });
+				await build(config, {
+					cwd,
+					renderer: '../../../../../src/renderer/index.js'
+				});
 
-				context.server = await start({ port, config });
+				context.server = await start({ port, config, cwd });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
 				// the try-catch is necessary pending https://github.com/lukeed/uvu/issues/80
@@ -190,7 +193,7 @@ async function main() {
 		test.only = duplicate(suite.only, config);
 
 		tests.forEach((mod) => {
-			mod.default(test, true);
+			mod.default(test, false);
 		});
 
 		suite.run();

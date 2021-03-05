@@ -1,6 +1,6 @@
 import http from 'http';
-import { readFileSync } from 'fs';
-import { join, resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
 import { parse, URLSearchParams } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
@@ -27,7 +27,7 @@ class Watcher extends EventEmitter {
 		super();
 
 		this.cwd = cwd;
-		this.dir = resolve(cwd, '.svelte/dev');
+		this.dir = path.resolve(cwd, '.svelte/dev');
 
 		this.port = port;
 		this.config = config;
@@ -79,7 +79,7 @@ class Watcher extends EventEmitter {
 			root: this.cwd,
 			resolve: {
 				alias: {
-					$app: resolve(`${this.dir}/runtime/app`)
+					$app: path.resolve(`${this.dir}/runtime/app`)
 				}
 			},
 			plugins: [
@@ -109,7 +109,7 @@ class Watcher extends EventEmitter {
 					if (req.url === '/favicon.ico') return;
 
 					// handle dynamic requests - i.e. pages and endpoints
-					const template = readFileSync(this.config.kit.files.template, 'utf-8');
+					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
 					const setup = await this.viteDevServer
 						.ssrLoadModule(`/${this.config.kit.files.setup}`)
@@ -204,7 +204,8 @@ class Watcher extends EventEmitter {
 								this.viteDevServer.ssrFixStacktrace(error);
 								return error.stack;
 							},
-							get_static_file: (file) => readFileSync(join(this.config.kit.files.assets, file)),
+							get_static_file: (file) =>
+								fs.readFileSync(path.join(this.config.kit.files.assets, file)),
 							get_amp_css: (url) => '' // TODO: implement this
 						}
 					);
@@ -229,20 +230,24 @@ class Watcher extends EventEmitter {
 	update() {
 		const manifest_data = create_manifest_data({
 			config: this.config,
-			output: this.dir
+			output: this.dir,
+			cwd: this.cwd
 		});
 
 		create_app({
 			manifest_data,
-			output: this.dir
+			output: this.dir,
+			cwd: this.cwd
 		});
 
 		const common_css_deps = new Set();
 
 		/**
-		 * @param {string} url
+		 * @param {string} file
 		 */
-		const load = async (url) => {
+		const load = async (file) => {
+			const url = path.resolve(this.cwd, file);
+
 			const mod = await this.viteDevServer.ssrLoadModule(url);
 			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
 
@@ -323,7 +328,10 @@ class Watcher extends EventEmitter {
 			endpoints: manifest_data.endpoints.map((data) => ({
 				pattern: data.pattern,
 				params: get_params(data.params),
-				load: async () => await this.viteDevServer.ssrLoadModule(data.file)
+				load: async () => {
+					const url = path.resolve(this.cwd, data.file);
+					return await this.viteDevServer.ssrLoadModule(url);
+				}
 			}))
 		};
 	}

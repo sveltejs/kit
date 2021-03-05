@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@sveltejs/app-utils/files';
 
 /**
  * @param {string} str
@@ -59,22 +58,6 @@ export function posixify(str) {
 	return str.replace(/\\/g, '/');
 }
 
-/** @type {Map<string, string>} */
-const previous_contents = new Map();
-
-/**
- * @param {string} file
- * @param {string} code
- */
-export function write_if_changed(file, code) {
-	if (code !== previous_contents.get(file)) {
-		previous_contents.set(file, code);
-		mkdirp(path.dirname(file));
-		fs.writeFileSync(file, code);
-		fudge_mtime(file);
-	}
-}
-
 /**
  * @param {string} string
  * @param {boolean} include_quotes
@@ -82,13 +65,6 @@ export function write_if_changed(file, code) {
 export function stringify(string, include_quotes = true) {
 	const quoted = JSON.stringify(string);
 	return include_quotes ? quoted : quoted.slice(1, -1);
-}
-
-/** @param {string} file */
-export function fudge_mtime(file) {
-	// need to fudge the mtime so that webpack doesn't go doolally
-	const { atime, mtime } = fs.statSync(file);
-	fs.utimesSync(file, new Date(atime.getTime() - 999999), new Date(mtime.getTime() - 999999));
 }
 
 /** @param {string} user_path */
