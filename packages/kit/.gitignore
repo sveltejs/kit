@@ -5,3 +5,4 @@
 /client/**/*.d.ts
 /test/**/.svelte
 /test/**/build
+!/src/api/adapt/test/fixtures/*/.svelte
