@@ -183,6 +183,11 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (loaded) {
+			let error;
+			let status;
+
+			// TODO there's some logic that's duplicated in the client runtime,
+			// it would be nice to DRY it out if possible
 			if (loaded.error) {
 				let error = loaded.error;
 				if (typeof error === 'string') {
@@ -194,23 +199,42 @@ async function get_response({ request, options, $session, route, status = 200, e
 					);
 				}
 
+				if (!loaded.status || loaded.status < 400 || loaded.status > 599) {
+					console.warn(
+						'"error" returned from load() without a valid status code — defaulting to 500'
+					);
+					status = 500;
+				} else {
+					status = loaded.status;
+				}
+			} else if (loaded.redirect) {
+				if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
+					error = new Error(
+						'"redirect" property returned from load() must be accompanied by a 3xx status code'
+					);
+					status = 500;
+				} else if (typeof loaded.redirect !== 'string') {
+					error = new Error('"redirect" property returned from load() must be a string');
+					status = 500;
+				} else {
+					return {
+						status: loaded.status,
+						headers: {
+							location: loaded.redirect
+						}
+					};
+				}
+			}
+
+			if (error) {
 				return await get_response({
 					request,
 					options,
 					$session,
 					route,
-					status: loaded.status || 500,
+					status,
 					error
 				});
-			}
-
-			if (loaded.redirect) {
-				return {
-					status: loaded.redirect.status,
-					headers: {
-						location: loaded.redirect.to
-					}
-				};
 			}
 
 			if (loaded.context) {
