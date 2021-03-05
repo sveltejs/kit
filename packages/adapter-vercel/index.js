@@ -19,7 +19,7 @@ export default async function adapter(builder) {
 	builder.log.minor('Building lambda...');
 	builder.copy_server_files(server_directory);
 
-	copy(join(__dirname, '../files'), lambda_directory);
+	copy(join(__dirname, 'files'), lambda_directory);
 
 	builder.log.minor('Prerendering static pages...');
 	await builder.prerender({
