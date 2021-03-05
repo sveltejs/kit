@@ -115,7 +115,9 @@ async function main() {
 	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
-	const apps = fs.readdirSync(new URL('apps', import.meta.url));
+	const apps = process.env.APP
+		? [process.env.APP]
+		: fs.readdirSync(new URL('apps', import.meta.url));
 
 	async function test_dev(app, cwd, config, tests) {
 		const name = `dev:${app}`;
