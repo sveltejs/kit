@@ -2,14 +2,12 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('redirect', async ({ visit, click, pathname, text, js, sleep }) => {
-		await visit('/redirect');
+	test('redirect', '/redirect', async ({ base, page, js }) => {
+		await page.click('[href="/redirect/a"]');
 
-		await click('[href="/redirect/a"]');
+		if (js) await page.waitForTimeout(50);
 
-		if (js) await sleep(50);
-
-		assert.equal(await pathname(), '/redirect/b');
-		assert.equal(await text('h1'), 'b');
+		assert.equal(await page.url(), `${base}/redirect/b`);
+		assert.equal(await page.textContent('h1'), 'b');
 	});
 }

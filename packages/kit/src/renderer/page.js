@@ -179,7 +179,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// error page, there's not a lot we can do
 			if (error) throw e;
 
-			loaded = { error: e };
+			loaded = { error: e, status: 500 };
 		}
 
 		if (loaded) {
@@ -189,7 +189,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// TODO there's some logic that's duplicated in the client runtime,
 			// it would be nice to DRY it out if possible
 			if (loaded.error) {
-				let error = loaded.error;
+				error = loaded.error;
 				if (typeof error === 'string') {
 					error = new Error(error);
 				}
