@@ -2,16 +2,14 @@ import { CompileOptions, Processed, ResolvedOptions } from './options';
 import { compile, preprocess, walk } from 'svelte/compiler';
 // @ts-ignore
 import { createMakeHot } from 'svelte-hmr';
-// @ts-ignore
-import * as relative from 'require-relative';
 import { SvelteRequest } from './id';
 import { safeBase64Hash } from './hash';
 import { log } from './log';
 
 const makeHot = createMakeHot({
 	walk,
-	adapter: relative.resolve('svelte-hmr/runtime/proxy-adapter-dom.js', __dirname),
-	hotApi: relative.resolve('svelte-hmr/runtime/hot-api-esm.js', __dirname)
+	adapter: require.resolve('svelte-hmr/runtime/proxy-adapter-dom.js'),
+	hotApi: require.resolve('svelte-hmr/runtime/hot-api-esm.js')
 });
 
 export async function compileSvelte(
