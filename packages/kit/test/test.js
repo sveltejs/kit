@@ -1,12 +1,11 @@
 import fs from 'fs';
-import path from 'path';
 import glob from 'tiny-glob/sync.js';
 import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
 import { dev, build, start, load_config } from '../src/api/index.js';
 import * as assert from 'uvu/assert';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
@@ -116,8 +115,7 @@ async function main() {
 	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
-	// const apps = fs.readdirSync(new URL('apps', import.meta.url));
-	const apps = ['amp'];
+	const apps = fs.readdirSync(new URL('apps', import.meta.url));
 
 	async function test_dev(app, cwd, config, tests) {
 		const name = `dev:${app}`;
@@ -216,97 +214,3 @@ async function main() {
 }
 
 main();
-
-// 	async function run(is_dev, { before, after }) {
-// 		const name = is_dev ? 'dev' : 'build';
-
-// 		// manually replicate uvu global state
-// 		const count = globalThis.UVU_QUEUE.push([name]);
-// 		globalThis.UVU_INDEX = count - 1;
-
-// 		const suite = uvu.suite(name);
-// 		const tests = await prepare_tests();
-
-// 		suite.before(before);
-// 		suite.after(after);
-
-// 		const duplicate = (test_fn) => {
-// 			return (name, callback) => {
-// 				test_fn(`${name} [no js]`, async (context) => {
-// 					await callback({
-// 						...context,
-// 						js: false
-// 					});
-// 				});
-
-// 				if (!options.amp) {
-// 					test_fn(`${name} [js]`, async (context) => {
-// 						await callback({
-// 							...context,
-// 							js: true,
-// 							visit: async (path) => {
-// 								const res = await context.visit(path);
-// 								await context.evaluate(() => window.start());
-// 								return res;
-// 							}
-// 						});
-// 					});
-// 				}
-// 			};
-// 		};
-
-// 		const test = duplicate(suite);
-// 		test.skip = duplicate(suite.skip);
-// 		test.only = duplicate(suite.only);
-
-// 		tests.forEach((fn) => fn(test, is_dev));
-
-// 		suite.run();
-// 	}
-
-// 	const config_promise = load_config();
-
-// 	await run(true, {
-// 		async before(context) {
-// 			const port = await ports.find(3000);
-// 			const config = await config_promise;
-
-// 			try {
-// 				context.watcher = await dev({ port, config });
-// 				Object.assign(context, await setup({ port }));
-// 			} catch (e) {
-// 				console.log(e.stack);
-// 				throw e;
-// 			}
-// 		},
-// 		async after(context) {
-// 			await context.watcher.close();
-// 			await context.reset();
-// 		}
-// 	});
-
-// 	await run(false, {
-// 		async before(context) {
-// 			try {
-// 				const port = await ports.find(3000);
-// 				const config = await config_promise;
-
-// 				await build(config, { cwd: '.svelte/output' });
-
-// 				context.server = await start({ port, config });
-// 				Object.assign(context, await setup({ port }));
-// 			} catch (e) {
-// 				// the try-catch is necessary pending https://github.com/lukeed/uvu/issues/80
-// 				console.error(e);
-// 				throw e;
-// 			}
-// 		},
-// 		async after(context) {
-// 			context.server.close();
-// 			await context.reset();
-// 		}
-// 	});
-
-// 	await uvu.exec();
-// 	process.exit(process.exitCode || 0);
-// }
