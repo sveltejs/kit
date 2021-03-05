@@ -2,9 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { HmrContext, IndexHtmlTransformContext, ModuleNode, Plugin, UserConfig } from 'vite';
 
-// @ts-ignore
-import * as relative from 'require-relative';
-
 import { handleHotUpdate } from './handleHotUpdate';
 import { log } from './utils/log';
 import { compileSvelte, getCompileData } from './utils/compile';
@@ -125,7 +122,7 @@ export default function vitePluginSvelte(rawOptions: Options): Plugin {
 
 			try {
 				const file = `${name}/package.json`;
-				const resolved = relative.resolve(file, path.dirname(importer));
+				const resolved = require.resolve(file, { paths: [path.dirname(importer)] });
 				dir = path.dirname(resolved);
 				pkg = JSON.parse(fs.readFileSync(resolved, 'utf-8'));
 			} catch (err) {
