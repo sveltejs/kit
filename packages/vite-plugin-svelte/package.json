@@ -5,7 +5,6 @@
 		"@rollup/pluginutils": "^4.1.0",
 		"chalk": "^4.1.0",
 		"hash-sum": "^2.0.0",
-		"require-relative": "^0.8.7",
 		"slash": "^3.0.0",
 		"source-map": "^0.7.3",
 		"svelte-hmr": "^0.12.6"
