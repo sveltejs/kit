@@ -6,9 +6,12 @@ export default function (test) {
 
 		const json = await html('pre');
 
-		assert.equal(json, JSON.stringify({
-			base: '',
-			assets: '/.'
-		}));
+		assert.equal(
+			json,
+			JSON.stringify({
+				base: '',
+				assets: '/.'
+			})
+		);
 	});
 }
