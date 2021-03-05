@@ -191,7 +191,7 @@ class Watcher extends EventEmitter {
 							},
 							manifest: this.manifest,
 							target: this.config.kit.target,
-							entry: `/${this.dir}/runtime/internal/start.js`,
+							entry: '/.svelte/dev/runtime/internal/start.js',
 							dev: true,
 							amp: this.config.kit.amp,
 							root,
