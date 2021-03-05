@@ -19,12 +19,12 @@ export default class Builder {
 
 	/** @param {string} dest */
 	copy_client_files(dest) {
-		copy(`${this.#cwd}/client`, dest, (file) => file[0] !== '.');
+		copy(`${this.#cwd}/.svelte/output/client`, dest, (file) => file[0] !== '.');
 	}
 
 	/** @param {string} dest */
 	copy_server_files(dest) {
-		copy(`${this.#cwd}/server`, dest, (file) => file[0] !== '.');
+		copy(`${this.#cwd}/.svelte/output/server`, dest, (file) => file[0] !== '.');
 	}
 
 	/** @param {string} dest */
@@ -38,7 +38,7 @@ export default class Builder {
 			await prerender({
 				out: dest,
 				force,
-				dir: this.#cwd,
+				cwd: this.#cwd,
 				config: this.#config,
 				log: this.log
 			});

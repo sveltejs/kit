@@ -16,7 +16,7 @@ suite('builder ', () => {
 });
 
 suite('copy files', () => {
-	const cwd = join(__dirname, 'fixtures/basic/_svelte/output');
+	const cwd = join(__dirname, 'fixtures/basic');
 	const config = {
 		kit: {
 			files: {
@@ -48,16 +48,16 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	builder.copy_client_files(dest);
 
-	assert.equal(glob('**', { cwd: `${cwd}/client` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: `${cwd}/.svelte/output/client` }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	builder.copy_server_files(dest);
 
-	assert.equal(glob('**', { cwd: `${cwd}/server` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: `${cwd}/.svelte/output/server` }), glob('**', { cwd: dest }));
 });
 
 suite('prerender', async () => {
-	const cwd = join(__dirname, 'fixtures/prerender/_svelte/output');
+	const cwd = join(__dirname, 'fixtures/prerender');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 	const config = {
 		extensions: ['.svelte'],

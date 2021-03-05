@@ -5,22 +5,23 @@ import * as assert from 'uvu/assert';
 import create_manifest_data from '../create_manifest_data.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.join(__filename, '..');
+const cwd = path.join(__filename, '..');
 
-const create = (dir, extensions = ['.svelte']) =>
-	create_manifest_data({
+const create = (dir, extensions = ['.svelte']) => {
+	return create_manifest_data({
 		config: {
 			extensions,
 			kit: {
 				files: {
-					assets: 'static',
-					routes: dir
+					assets: path.resolve(cwd, 'static'),
+					routes: path.resolve(cwd, dir)
 				},
 				appDir: '_app'
 			}
 		},
-		cwd: __dirname
+		cwd
 	});
+};
 
 test('creates routes', () => {
 	const { components, pages, endpoints } = create('samples/basic');

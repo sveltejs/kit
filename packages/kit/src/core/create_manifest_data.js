@@ -36,7 +36,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 */
 	function find_layout(file_name, dir) {
 		const files = config.extensions.map((ext) => posixify(path.join(dir, `${file_name}${ext}`)));
-		return files.find((file) => fs.existsSync(path.join(cwd, file)));
+		return files.find((file) => fs.existsSync(path.resolve(cwd, file)));
 	}
 
 	/** @type {string[]} */
@@ -65,8 +65,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		seen.set(str, file);
 	};
 
-	const default_layout = `${output}/components/layout.svelte`;
-	const default_error = `${output}/components/error.svelte`;
+	const default_layout = path.relative(cwd, `${output}/components/layout.svelte`);
+	const default_error = path.relative(cwd, `${output}/components/error.svelte`);
 
 	/**
 	 * @param {string} dir
@@ -199,12 +199,14 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		});
 	}
 
-	const layout = find_layout('$layout', config.kit.files.routes) || default_layout;
-	const error = find_layout('$error', config.kit.files.routes) || default_error;
+	const base = path.relative(cwd, config.kit.files.routes);
 
-	walk(path.join(cwd, config.kit.files.routes), [], [], []);
+	const layout = find_layout('$layout', base) || default_layout;
+	const error = find_layout('$error', base) || default_error;
 
-	const assets_dir = path.join(cwd, config.kit.files.assets);
+	walk(config.kit.files.routes, [], [], []);
+
+	const assets_dir = config.kit.files.assets;
 
 	return {
 		assets: fs.existsSync(assets_dir) ? list_files(assets_dir, '') : [],

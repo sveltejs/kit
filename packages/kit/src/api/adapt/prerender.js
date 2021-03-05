@@ -48,13 +48,15 @@ const OK = 2;
 const REDIRECT = 3;
 
 /** @param {{
- *   dir: string;
+ *   cwd: string;
  *   out: string;
  *   log: import('../../types').Logger;
  *   config: import('../../types').ValidatedConfig;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
-export async function prerender({ dir, out, log, config, force }) {
+export async function prerender({ cwd, out, log, config, force }) {
+	const dir = resolve_path(cwd, '.svelte/output');
+
 	const seen = new Set();
 	const seen_files = new Set();
 

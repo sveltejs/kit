@@ -10,9 +10,9 @@ const __dirname = join(__filename, '..');
 const suite = uvu.suite('Builder');
 
 suite('load default config', async () => {
-	const config = await load_config({
-		cwd: join(__dirname, 'fixtures')
-	});
+	const cwd = join(__dirname, 'fixtures');
+
+	const config = await load_config({ cwd });
 
 	assert.equal(config, {
 		compilerOptions: null,
@@ -22,10 +22,10 @@ suite('load default config', async () => {
 			amp: false,
 			appDir: '_app',
 			files: {
-				assets: 'static',
-				routes: 'src/routes',
-				setup: 'src/setup',
-				template: 'src/app.html'
+				assets: join(cwd, 'static'),
+				routes: join(cwd, 'src/routes'),
+				setup: join(cwd, 'src/setup'),
+				template: join(cwd, 'src/app.html')
 			},
 			host: null,
 			hostHeader: null,

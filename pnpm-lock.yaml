@@ -150,7 +150,7 @@ importers:
   packages/kit:
     dependencies:
       '@sveltejs/vite-plugin-svelte': link:../vite-plugin-svelte
-      '@svitejs/vite-plugin-svelte': 0.9.3_rollup@2.40.0+vite@2.0.4
+      '@svitejs/vite-plugin-svelte': 0.9.3_381994cc90b5a766aee3c6168d6bf71e
       cheap-watch: 1.0.3
       sade: 1.7.4
     devDependencies:
@@ -171,6 +171,7 @@ importers:
       rimraf: 3.0.2
       rollup: 2.40.0
       sirv: 1.0.11
+      svelte: 3.35.0
       tiny-glob: 0.2.8
       typescript: 4.2.2
       uvu: 0.5.1
@@ -197,6 +198,7 @@ importers:
       rollup: ^2.38.3
       sade: ^1.7.4
       sirv: ^1.0.11
+      svelte: ^3.35.0
       tiny-glob: ^0.2.8
       typescript: ^4.2.2
       uvu: ^0.5.1
@@ -225,52 +227,6 @@ importers:
       slash: ^3.0.0
       source-map: ^0.7.3
       svelte-hmr: ^0.12.6
-  test:
-    dependencies:
-      '@sveltejs/kit': link:../packages/kit
-    devDependencies:
-      port-authority: 1.1.2
-      uvu: 0.6.0-next.1
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      port-authority: ^1.1.2
-      uvu: ^0.6.0-next.1
-  test/apps/amp:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
-  test/apps/basics:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.3
-  test/apps/custom-extension:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
-  test/apps/options:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../packages/adapter-node
-      '@sveltejs/kit': link:../../../packages/kit
-      svelte: 3.34.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.32.1
 lockfileVersion: 5.2
 packages:
   /@architect/parser/3.0.1:
@@ -660,7 +616,7 @@ packages:
       rollup: ^1.20.0||^2.0.0
     resolution:
       integrity: sha512-TrBhfJkFxA+ER+ew2U2/fHbebhLT/l/2pRk0hfj9KusXUuRXd2v0R58AfaZK9VXDQ4TogOSEmICVrQAA3zFnHQ==
-  /@svitejs/vite-plugin-svelte/0.9.3_rollup@2.40.0+vite@2.0.4:
+  /@svitejs/vite-plugin-svelte/0.9.3_381994cc90b5a766aee3c6168d6bf71e:
     dependencies:
       '@rollup/pluginutils': 4.1.0_rollup@2.40.0
       chalk: 4.1.0
@@ -669,7 +625,8 @@ packages:
       require-relative: 0.8.7
       slash: 3.0.0
       source-map: 0.7.3
-      svelte-hmr: 0.12.8
+      svelte: 3.35.0
+      svelte-hmr: 0.12.8_svelte@3.35.0
       vite: 2.0.4
     dev: false
     engines:
@@ -3368,7 +3325,9 @@ packages:
       svelte: '>=3.19.0'
     resolution:
       integrity: sha512-q08BjoUSbwXpKo9ij6aym93jBrt7K8eutLwix5Y9cuSFLS5djxumOoUVsSzDkdKssLlg5X//Kg/0MWHHBeQRTg==
-  /svelte-hmr/0.12.8:
+  /svelte-hmr/0.12.8_svelte@3.35.0:
+    dependencies:
+      svelte: 3.35.0
     dev: false
     peerDependencies:
       svelte: '>=3.19.0'
@@ -3380,6 +3339,12 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-xWcaQ/J4Yd5k0UWz+ef6i5RW5WP3hNpluEI2qtTTKlMOXERHpVL509O9lIw7sgEn1JjJgTOS+lnnDj99vQ3YqQ==
+  /svelte/3.35.0:
+    dev: true
+    engines:
+      node: '>= 8'
+    resolution:
+      integrity: sha512-gknlZkR2sXheu/X+B7dDImwANVvK1R0QGQLd8CNIfxxGPeXBmePnxfzb6fWwTQRsYQG7lYkZXvpXJvxvpsoB7g==
   /table/6.0.7:
     dependencies:
       ajv: 7.1.1
@@ -3558,19 +3523,6 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-JGxttnOGDFs77FaZ0yMUHIzczzQ5R1IlDeNW6Wymw6gAscwMdAffVOP6TlxLIfReZyK8tahoGwWZaTCJzNFDkg==
-  /uvu/0.6.0-next.1:
-    dependencies:
-      dequal: 2.0.2
-      diff: 5.0.0
-      kleur: 4.1.4
-      sade: 1.7.4
-      totalist: 2.0.0
-    dev: true
-    engines:
-      node: '>=8'
-    hasBin: true
-    resolution:
-      integrity: sha512-YXBhSHY/tlP/ulBi+JDvLGFgDhmVUALufkFAxF61S6hUnI4IQ/9KT0tEVNTLLdzoPZs+9vpjLUTYJOWxffciPQ==
   /v8-compile-cache/2.2.0:
     dev: true
     resolution:

@@ -104,13 +104,11 @@ prog
 		const { adapt } = await import('./api/adapt');
 
 		try {
-			const cwd = '.svelte/output';
-
-			await build(config, { cwd });
+			await build(config);
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
 			if (config.kit.adapter[0]) {
-				await adapt(config, { cwd, verbose });
+				await adapt(config, { verbose });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 

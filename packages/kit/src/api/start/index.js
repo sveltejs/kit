@@ -15,12 +15,13 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
- *   config: import('../../types').ValidatedConfig
+ *   config: import('../../types').ValidatedConfig;
+ *   cwd: string;
  * }} opts
  * @returns {Promise<import('http').Server>}
  */
-export async function start({ port, config }) {
-	const app_file = resolve('.svelte/output/server/app.js');
+export async function start({ port, config, cwd = process.cwd() }) {
+	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
 	/** @type {import('../../types').App} */
 	const app = await import(pathToFileURL(app_file).href);
@@ -30,7 +31,7 @@ export async function start({ port, config }) {
 		? mutable(config.kit.files.assets)
 		: (_req, _res, next) => next();
 
-	const assets_handler = sirv('.svelte/output/client', {
+	const assets_handler = sirv(resolve(cwd, '.svelte/output/client'), {
 		maxAge: 31536000,
 		immutable: true
 	});

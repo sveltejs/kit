@@ -1,14 +1,14 @@
 import colors from 'kleur';
 import { pathToFileURL } from 'url';
-import { logger } from '../utils';
-import Builder from './Builder';
+import { logger } from '../utils.js';
+import Builder from './Builder.js';
 import { createRequire } from 'module';
 
 /**
  * @param {import('../../types').ValidatedConfig} config
- * @param {{ cwd: string, verbose: boolean }} opts
+ * @param {{ cwd?: string, verbose: boolean }} opts
  */
-export async function adapt(config, { cwd, verbose }) {
+export async function adapt(config, { cwd = process.cwd(), verbose }) {
 	if (!config.kit.adapter) {
 		throw new Error('No adapter specified');
 	}
