@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 export default {
 	build: {
@@ -6,7 +6,7 @@ export default {
 	},
 	resolve: {
 		alias: {
-			$components: resolve('source/components')
+			$components: fileURLToPath(new URL('source/components', import.meta.url))
 		}
 	},
 	clearScreen: false
