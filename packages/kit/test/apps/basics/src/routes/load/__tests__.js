@@ -1,8 +1,8 @@
 import * as assert from 'uvu/assert';
 
 export default function (test, is_dev) {
-	test('loads', '/load', async ({ contains }) => {
-		assert.ok(await contains('bar == bar'));
+	test('loads', '/load', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
 	test('data is serialized', async ({ base, page, capture_requests, js }) => {

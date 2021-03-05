@@ -7,10 +7,8 @@ import { Page, Response } from 'playwright';
 export type TestContext = {
 	base: string;
 	page: Page;
-	contains: (str: string) => Promise<boolean>;
-	html: (selector: string) => Promise<string>;
-	text: (selector: string) => Promise<string>;
 	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
+	capture_requests: (fn: () => void) => Promise<string[]>;
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
@@ -20,7 +18,6 @@ export type TestContext = {
 		prefetchRoutes: () => Promise<void>;
 	};
 
-	capture_requests: (fn: () => void) => Promise<string[]>;
 	reset: () => Promise<void>;
 };
 

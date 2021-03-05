@@ -2,4 +2,4 @@
 	<title>a</title>
 </svelte:head>
 
-<p>a</p>
+<h1>a</h1>

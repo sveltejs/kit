@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 export default function (test, is_dev) {
 	if (is_dev) {
 		// TODO unskip this test
-		test.skip('client-side errors', '/errors/clientside', async ({ contains, js }) => {
+		test.skip('client-side errors', '/errors/clientside', async ({ page, js }) => {
 			if (js) {
 				try {
 					// ???
@@ -12,72 +12,79 @@ export default function (test, is_dev) {
 					assert.ok(/Crashing now/.test(error.message));
 				} finally {
 					// this is the Snowpack error overlay
-					assert.ok(await contains('Custom layout'));
-					assert.ok(await contains('Crashing now'));
+					assert.equal(await page.textContent('footer'), 'Custom layout');
+					assert.equal(
+						await page.textContent('#message'),
+						'This is your custom error page saying: "Crashing now"'
+					);
 				}
 			}
 		});
 
 		// TODO these probably shouldn't have the full render treatment,
 		// given that they will never be user-visible in prod
-		test('server-side errors', '/errors/serverside', async ({ contains }) => {
-			assert.ok(await contains('Custom layout'));
-			assert.ok(await contains('Crashing now'));
-			assert.ok(await contains('custom error page'));
+		test('server-side errors', '/errors/serverside', async ({ page }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Crashing now"'
+			);
 		});
 
-		test(
-			'server-side module context errors',
-			'/errors/module-scope-server',
-			async ({ contains }) => {
-				assert.ok(await contains('Custom layout'));
-				assert.ok(await contains('Crashing now'));
-				assert.ok(await contains('custom error page'));
-			}
-		);
+		test('server-side module context errors', '/errors/module-scope-server', async ({ page }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Crashing now"'
+			);
+		});
 	}
 
-	test('client-side load errors', '/errors/load-client', async ({ contains, js }) => {
+	test('client-side load errors', '/errors/load-client', async ({ page, js }) => {
 		if (js) {
-			assert.ok(await contains('Custom layout'));
-			assert.ok(await contains('Crashing now'));
-			assert.ok(await contains('custom error page'));
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Crashing now"'
+			);
 		}
 	});
 
-	test('server-side load errors', '/errors/load-server', async ({ contains }) => {
-		assert.ok(await contains('Custom layout'));
-		assert.ok(await contains('Crashing now'));
-		assert.ok(await contains('custom error page'));
+	test('server-side load errors', '/errors/load-server', async ({ page }) => {
+		assert.equal(await page.textContent('footer'), 'Custom layout');
+		assert.equal(
+			await page.textContent('#message'),
+			'This is your custom error page saying: "Crashing now"'
+		);
 	});
 
-	test(
-		'client-side module context errors',
-		'/errors/module-scope-client',
-		async ({ contains, js }) => {
-			if (js) {
-				assert.ok(await contains('Custom layout'));
-				assert.ok(await contains('Crashing now'));
-				assert.ok(await contains('custom error page'));
-			}
+	test('client-side module context errors', '/errors/module-scope-client', async ({ page, js }) => {
+		if (js) {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Crashing now"'
+			);
 		}
-	);
+	});
 
-	test('404', '/why/would/anyone/fetch/this/url', async ({ contains, response }) => {
-		assert.ok(await contains('Custom layout'), 'Should show custom layout');
-		assert.ok(await contains('custom error page'), 'Should show custom error page');
+	test('404', '/why/would/anyone/fetch/this/url', async ({ page, response }) => {
+		assert.equal(await page.textContent('footer'), 'Custom layout');
+		assert.equal(
+			await page.textContent('#message'),
+			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url"'
+		);
 		assert.equal(response.status(), 404);
 	});
 
 	test(
 		'server-side error from load() is a string',
 		'/errors/load-error-string-server',
-		async ({ contains, response }) => {
-			assert.ok(await contains('Custom layout'), 'Should show custom layout');
-			assert.ok(await contains('custom error page'), 'Should show custom error page');
-			assert.ok(
-				await contains('This is your custom error page saying: "<b>Not found</b>"'),
-				'Should show error message'
+		async ({ page, response }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Not found"'
 			);
 			assert.equal(response.status(), 555);
 		}
@@ -86,13 +93,12 @@ export default function (test, is_dev) {
 	test(
 		'client-side error from load() is a string',
 		'/errors/load-error-string-client',
-		async ({ contains, js, page }) => {
+		async ({ page, js }) => {
 			if (js) {
-				assert.ok(await contains('Custom layout'), 'Should show custom layout');
-				assert.ok(await contains('custom error page'), 'Should show custom error page');
-				assert.ok(
-					await contains('This is your custom error page saying: "<b>Not found</b>"'),
-					'Should show error message'
+				assert.equal(await page.textContent('footer'), 'Custom layout');
+				assert.equal(
+					await page.textContent('#message'),
+					'This is your custom error page saying: "Not found"'
 				);
 				assert.equal(await page.innerHTML('h1'), '555', 'Should set status code');
 			}
@@ -102,12 +108,11 @@ export default function (test, is_dev) {
 	test(
 		'server-side error from load() is an Error',
 		'/errors/load-error-server',
-		async ({ contains, response }) => {
-			assert.ok(await contains('Custom layout'), 'Should show custom layout');
-			assert.ok(await contains('custom error page'), 'Should show custom error page');
-			assert.ok(
-				await contains('This is your custom error page saying: "<b>Not found</b>"'),
-				'Should show error message'
+		async ({ page, response }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Not found"'
 			);
 			assert.equal(response.status(), 555);
 		}
@@ -116,13 +121,12 @@ export default function (test, is_dev) {
 	test(
 		'client-side error from load() is an Error',
 		'/errors/load-error-client',
-		async ({ contains, js, page }) => {
+		async ({ page, js }) => {
 			if (js) {
-				assert.ok(await contains('Custom layout'), 'Should show custom layout');
-				assert.ok(await contains('custom error page'), 'Should show custom error page');
-				assert.ok(
-					await contains('This is your custom error page saying: "<b>Not found</b>"'),
-					'Should show error message'
+				assert.equal(await page.textContent('footer'), 'Custom layout');
+				assert.equal(
+					await page.textContent('#message'),
+					'This is your custom error page saying: "Not found"'
 				);
 				assert.equal(await page.innerHTML('h1'), '555', 'Should set status code');
 			}
@@ -132,12 +136,13 @@ export default function (test, is_dev) {
 	test(
 		'server-side error from load() is malformed',
 		'/errors/load-error-malformed-server',
-		async ({ contains }) => {
+		async ({ page }) => {
+			const body = await page.textContent('body');
+
 			assert.ok(
-				await contains(
+				body.includes(
 					'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-				),
-				'Should throw error'
+				)
 			);
 		}
 	);
@@ -145,10 +150,12 @@ export default function (test, is_dev) {
 	test(
 		'client-side error from load() is malformed',
 		'/errors/load-error-malformed-client',
-		async ({ contains, js }) => {
+		async ({ page, js }) => {
 			if (js) {
+				const body = await page.textContent('body');
+
 				assert.ok(
-					await contains(
+					await body.includes(
 						'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
 					),
 					'Should throw error'

@@ -41,7 +41,6 @@ async function setup({ port }) {
 	return {
 		base,
 		page,
-		contains: async (str) => (await page.innerHTML('body')).includes(str),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,
 

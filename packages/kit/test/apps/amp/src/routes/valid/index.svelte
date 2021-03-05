@@ -12,10 +12,6 @@
 	export let answer;
 </script>
 
-<p>Hello from the {browser ? 'client' : 'server'} in {dev ? 'dev' : 'prod'} mode!</p>
-
-<p>The answer is {answer}</p>
-
-{#if amp}
-	<p>amp is true</p>
-{/if}
+<h1>Hello from the {browser ? 'client' : 'server'} in {dev ? 'dev' : 'prod'} mode!</h1>
+<h2>The answer is {answer}</h2>
+<p>amp is {amp}</p>

@@ -1,14 +1,12 @@
 import * as assert from 'uvu/assert';
 
 export default function (test, is_dev) {
-	test('serves /', '/', async ({ contains, js }) => {
-		assert.ok(await contains('I am in the template'), 'Should show custom template contents');
-		assert.ok(await contains("We're on index.svelte"), 'Should show page contents');
-		assert.ok(
-			await contains(
-				`Hello from the ${js ? 'client' : 'server'} in ${is_dev ? 'dev' : 'prod'} mode!`
-			),
-			'Should run JavaScript'
+	test('serves /', '/', async ({ page, js }) => {
+		assert.equal(await page.textContent('h1'), 'I am in the template');
+		assert.equal(await page.textContent('h2'), "We're on index.svelte");
+		assert.equal(
+			await page.textContent('p'),
+			`Hello from the ${js ? 'client' : 'server'} in ${is_dev ? 'dev' : 'prod'} mode!`
 		);
 	});
 }
