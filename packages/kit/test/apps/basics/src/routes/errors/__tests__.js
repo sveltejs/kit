@@ -29,7 +29,7 @@ export default function (test, is_dev) {
 		test(
 			'server-side module context errors',
 			'/errors/module-scope-server',
-			async ({ visit, contains }) => {
+			async ({ contains }) => {
 				assert.ok(await contains('Custom layout'));
 				assert.ok(await contains('Crashing now'));
 				assert.ok(await contains('custom error page'));
@@ -86,7 +86,7 @@ export default function (test, is_dev) {
 	test(
 		'client-side error from load() is a string',
 		'/errors/load-error-string-client',
-		async ({ contains, js, html }) => {
+		async ({ contains, js, page }) => {
 			if (js) {
 				assert.ok(await contains('Custom layout'), 'Should show custom layout');
 				assert.ok(await contains('custom error page'), 'Should show custom error page');
@@ -94,7 +94,7 @@ export default function (test, is_dev) {
 					await contains('This is your custom error page saying: "<b>Not found</b>"'),
 					'Should show error message'
 				);
-				assert.equal(await html('h1'), '555', 'Should set status code');
+				assert.equal(await page.innerHTML('h1'), '555', 'Should set status code');
 			}
 		}
 	);
@@ -116,7 +116,7 @@ export default function (test, is_dev) {
 	test(
 		'client-side error from load() is an Error',
 		'/errors/load-error-client',
-		async ({ contains, js, html }) => {
+		async ({ contains, js, page }) => {
 			if (js) {
 				assert.ok(await contains('Custom layout'), 'Should show custom layout');
 				assert.ok(await contains('custom error page'), 'Should show custom error page');
@@ -124,7 +124,7 @@ export default function (test, is_dev) {
 					await contains('This is your custom error page saying: "<b>Not found</b>"'),
 					'Should show error message'
 				);
-				assert.equal(await html('h1'), '555', 'Should set status code');
+				assert.equal(await page.innerHTML('h1'), '555', 'Should set status code');
 			}
 		}
 	);
@@ -172,14 +172,14 @@ export default function (test, is_dev) {
 		assert.match(await res.text(), /PUT is not implemented/);
 	});
 
-	test('error in endpoint', async ({ visit, text }) => {
+	test('error in endpoint', async ({ base, page }) => {
 		const console_errors = [];
 		const { error: original_error } = console;
 		console.error = (text) => {
 			console_errors.push(text);
 		};
 
-		const res = await visit('/errors/endpoint');
+		const res = await page.goto(`${base}/errors/endpoint`);
 
 		console.error = original_error;
 
@@ -192,11 +192,11 @@ export default function (test, is_dev) {
 
 		assert.equal(res.status(), 500);
 		assert.equal(
-			await text('#message'),
+			await page.textContent('#message'),
 			'This is your custom error page saying: "Internal Server Error"'
 		);
 
-		const contents = await text('#stack');
+		const contents = await page.textContent('#stack');
 		const location = 'endpoint.svelte:11:9';
 		const has_stack_trace = contents.includes(location);
 

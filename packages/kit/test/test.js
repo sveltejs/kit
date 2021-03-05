@@ -4,30 +4,11 @@ import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
 import { dev, build, start, load_config } from '../src/api/index.js';
-import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
 	const page = await browser.newPage();
-	const defaultTimeout = 500;
-
-	const text = async (selector) => page.textContent(selector, { timeout: defaultTimeout });
-	const wait_for_text = async (selector, expectedValue) => {
-		await page
-			.waitForFunction(
-				({ expectedValue, selector }) =>
-					document.querySelector(selector) &&
-					document.querySelector(selector).textContent === expectedValue,
-				{ expectedValue, selector },
-				{ timeout: defaultTimeout }
-			)
-			.catch((e) => {
-				if (!e.message.match(/Timeout.*exceeded/)) throw e;
-			});
-
-		assert.equal(await text(selector), expectedValue);
-	};
 
 	const capture_requests = async (operations) => {
 		const requests = [];
@@ -60,16 +41,13 @@ async function setup({ port }) {
 	return {
 		base,
 		page,
-		visit: (path) => page.goto(base + path),
 		contains: async (str) => (await page.innerHTML('body')).includes(str),
-		html: async (selector) => await page.innerHTML(selector, { timeout: defaultTimeout }),
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
-		text,
-		wait_for_text,
 		capture_requests,
 
 		// these are assumed to have been put in the global scope by the layout
 		app: {
+			start: () => page.evaluate(() => start()),
 			goto: (url) => page.evaluate((url) => goto(url), url),
 			prefetch: (url) => page.evaluate((url) => prefetch(url), url),
 			prefetchRoutes: () => page.evaluate(() => prefetchRoutes())
@@ -113,12 +91,7 @@ function duplicate(test_fn, config) {
 				await callback({
 					...context,
 					js: true,
-					response,
-					visit: async (path) => {
-						const res = await context.visit(path);
-						await context.page.evaluate(() => window.start());
-						return res;
-					}
+					response
 				});
 			});
 		}

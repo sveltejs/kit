@@ -23,24 +23,20 @@ export default function (test) {
 		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
 	});
 
-	test(
-		'announces client-side navigation',
-		'/accessibility/a',
-		async ({ page, contains, html, js }) => {
-			const has_live_region = await contains('aria-live');
+	test('announces client-side navigation', '/accessibility/a', async ({ page, contains, js }) => {
+		const has_live_region = await contains('aria-live');
 
-			if (js) {
-				assert.ok(has_live_region);
+		if (js) {
+			assert.ok(has_live_region);
 
-				// live region should exist, but be empty
-				assert.equal(await html('[aria-live]'), '');
+			// live region should exist, but be empty
+			assert.equal(await page.innerHTML('[aria-live]'), '');
 
-				await page.click('[href="/accessibility/b"]');
-				await page.waitForTimeout(50);
-				assert.equal(await html('[aria-live]'), 'Navigated to b'); // TODO i18n
-			} else {
-				assert.ok(!has_live_region);
-			}
+			await page.click('[href="/accessibility/b"]');
+			await page.waitForTimeout(50);
+			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b'); // TODO i18n
+		} else {
+			assert.ok(!has_live_region);
 		}
-	);
+	});
 }

@@ -7,7 +7,6 @@ import { Page, Response } from 'playwright';
 export type TestContext = {
 	base: string;
 	page: Page;
-	visit: (path: string) => Promise<Response>;
 	contains: (str: string) => Promise<boolean>;
 	html: (selector: string) => Promise<string>;
 	text: (selector: string) => Promise<string>;
@@ -15,13 +14,11 @@ export type TestContext = {
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
+		start: () => Promise<void>;
 		goto: (url: string) => Promise<void>;
 		prefetch: (url: string) => Promise<void>;
 		prefetchRoutes: () => Promise<void>;
 	};
-
-	// this function contains an assertions which feels weird
-	wait_for_text: (selector: string, text: string) => void;
 
 	capture_requests: (fn: () => void) => Promise<string[]>;
 	reset: () => Promise<void>;
