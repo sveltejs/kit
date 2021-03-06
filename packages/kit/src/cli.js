@@ -131,7 +131,7 @@ prog
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
-		const { start } = await import('./api/start');
+		const { start } = await import('./core/start/index.js');
 
 		try {
 			await start({ port, config });

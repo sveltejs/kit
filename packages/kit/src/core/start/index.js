@@ -16,7 +16,7 @@ const mutable = (dir) =>
  * @param {{
  *   port: number;
  *   config: import('../../types').ValidatedConfig;
- *   cwd: string;
+ *   cwd?: string;
  * }} opts
  * @returns {Promise<import('http').Server>}
  */
