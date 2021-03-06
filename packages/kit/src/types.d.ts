@@ -78,6 +78,7 @@ export type LoadResult = {
 	redirect?: string;
 	props?: Record<string, any>;
 	context?: Record<string, any>;
+	maxage?: number;
 };
 
 export type SSRComponent = {

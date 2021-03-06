@@ -2,6 +2,7 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
+import { normalize } from '../load.js';
 import { ssr } from './index.js';
 
 /**
@@ -183,58 +184,28 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (loaded) {
-			let error;
-			let status;
+			loaded = normalize(loaded);
 
 			// TODO there's some logic that's duplicated in the client runtime,
 			// it would be nice to DRY it out if possible
 			if (loaded.error) {
-				error = loaded.error;
-				if (typeof error === 'string') {
-					error = new Error(error);
-				}
-				if (!(error instanceof Error)) {
-					error = new Error(
-						`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
-					);
-				}
-
-				if (!loaded.status || loaded.status < 400 || loaded.status > 599) {
-					console.warn(
-						'"error" returned from load() without a valid status code — defaulting to 500'
-					);
-					status = 500;
-				} else {
-					status = loaded.status;
-				}
-			} else if (loaded.redirect) {
-				if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
-					error = new Error(
-						'"redirect" property returned from load() must be accompanied by a 3xx status code'
-					);
-					status = 500;
-				} else if (typeof loaded.redirect !== 'string') {
-					error = new Error('"redirect" property returned from load() must be a string');
-					status = 500;
-				} else {
-					return {
-						status: loaded.status,
-						headers: {
-							location: loaded.redirect
-						}
-					};
-				}
-			}
-
-			if (error) {
 				return await get_response({
 					request,
 					options,
 					$session,
 					route,
-					status,
-					error
+					status: loaded.status,
+					error: loaded.error
 				});
+			}
+
+			if (loaded.redirect) {
+				return {
+					status: loaded.status,
+					headers: {
+						location: loaded.redirect
+					}
+				};
 			}
 
 			if (loaded.context) {
