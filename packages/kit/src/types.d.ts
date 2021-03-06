@@ -72,17 +72,17 @@ export type PreloadContext = {
 	// TODO need to avoid having a bunch of different types called Page
 };
 
+export type LoadResult = {
+	status?: number;
+	error?: Error | string;
+	redirect?: string;
+	props?: Record<string, any>;
+	context?: Record<string, any>;
+};
+
 export type SSRComponent = {
 	prerender?: boolean;
-	load: (
-		preload_context: PreloadContext
-	) => {
-		status?: number;
-		error?: Error | string;
-		redirect?: string;
-		props: Record<string, any>;
-		context: Record<string, any>;
-	};
+	load: (preload_context: PreloadContext) => LoadResult | Promise<LoadResult>;
 	default: {
 		render: (
 			props: Record<string, any>

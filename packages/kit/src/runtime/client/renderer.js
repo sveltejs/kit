@@ -226,6 +226,7 @@ export class Renderer {
 
 		const query = page.query.toString();
 
+		// TODO come up with a better name
 		/** @typedef {{
 		 *   component: import('../../types').CSRComponent;
 		 *   uses: {
@@ -234,13 +235,13 @@ export class Renderer {
 		 *     session: boolean;
 		 *     context: boolean;
 		 *   }
-		 * }} LoadResult */
+		 * }} Branch */
 
 		const state = {
 			page,
 			query,
 			session_changed: false,
-			/** @type {LoadResult[]} */
+			/** @type {Branch[]} */
 			nodes: [],
 			/** @type {Record<string, any>[]} */
 			contexts: []
@@ -285,7 +286,7 @@ export class Renderer {
 					const cache = this.caches.get(component);
 					const cached = cache && cache.get(hash);
 
-					/** @type {LoadResult} */
+					/** @type {Branch} */
 					let node;
 					let loaded;
 
