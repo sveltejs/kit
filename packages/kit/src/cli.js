@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import { fileURLToPath } from 'url';
 import { load_config } from './core/load_config/index.js';
 
 async function get_config() {
@@ -72,7 +73,7 @@ prog
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
 
-		const { dev } = await import('./core/dev/index.js');
+		const { dev } = await import(fileURLToPath('./core/dev/index.js'));
 
 		try {
 			const watcher = await dev({ port, config });
@@ -131,7 +132,7 @@ prog
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
-		const { start } = await import('./core/start/index.js');
+		const { start } = await import(fileURLToPath('./core/start/index.js'));
 
 		try {
 			await start({ port, config });
