@@ -28,4 +28,30 @@ export default function (test, is_dev) {
 			assert.equal(await page.url(), 'chrome-error://chromewebdata/');
 		}
 	});
+
+	test('errors on missing status', '/redirect', async ({ base, page, js }) => {
+		await page.click('[href="/redirect/missing-status/a"]');
+
+		if (js) await page.waitForTimeout(50);
+
+		assert.equal(await page.url(), `${base}/redirect/missing-status/a`);
+		assert.equal(await page.textContent('h1'), '500');
+		assert.equal(
+			await page.textContent('#message'),
+			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+		);
+	});
+
+	test('errors on invalid status', '/redirect', async ({ base, page, js }) => {
+		await page.click('[href="/redirect/missing-status/b"]');
+
+		if (js) await page.waitForTimeout(50);
+
+		assert.equal(await page.url(), `${base}/redirect/missing-status/b`);
+		assert.equal(await page.textContent('h1'), '500');
+		assert.equal(
+			await page.textContent('#message'),
+			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+		);
+	});
 }
