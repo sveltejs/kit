@@ -157,7 +157,7 @@ async function main() {
 
 				await build(config, {
 					cwd,
-					renderer: '../../../../../src/renderer/index.js'
+					runtime: '../../../../../src/runtime/server/index.js'
 				});
 
 				context.server = await start({ port, config, cwd });

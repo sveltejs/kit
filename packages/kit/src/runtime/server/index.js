@@ -8,10 +8,10 @@ function md5(body) {
 }
 
 /**
- * @param {import('../types').Request} request
- * @param {import('../types').RenderOptions} options
+ * @param {import('../../types').Request} request
+ * @param {import('../../types').RenderOptions} options
  */
-export async function render(request, options) {
+export async function ssr(request, options) {
 	if (request.path.endsWith('/') && request.path !== '/') {
 		const q = request.query.toString();
 

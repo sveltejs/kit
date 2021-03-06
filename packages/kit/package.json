@@ -60,8 +60,8 @@
 		"./api": {
 			"import": "./dist/api.js"
 		},
-		"./renderer": {
-			"import": "./dist/renderer.js"
+		"./ssr": {
+			"import": "./dist/ssr.js"
 		}
 	},
 	"types": "types.d.ts"

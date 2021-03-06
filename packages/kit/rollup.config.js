@@ -43,7 +43,7 @@ export default [
 		input: {
 			cli: 'src/cli.js',
 			api: 'src/api/index.js',
-			renderer: 'src/renderer/index.js'
+			ssr: 'src/runtime/server/index.js'
 		},
 		output: {
 			dir: 'dist',

@@ -9,7 +9,7 @@ import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data.js';
 import { create_app } from '../../core/create_app.js';
 import { rimraf } from '@sveltejs/app-utils/files';
-import { render } from '../../renderer/index.js';
+import { ssr } from '../../runtime/server/index.js';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
 import svelte from '@svitejs/vite-plugin-svelte';
@@ -128,7 +128,7 @@ class Watcher extends EventEmitter {
 
 					const body = await get_body(req);
 
-					const rendered = await render(
+					const rendered = await ssr(
 						{
 							headers: req.headers,
 							method: req.method,
