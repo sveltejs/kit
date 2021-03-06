@@ -83,6 +83,7 @@ export type LoadResult = {
 
 export type SSRComponent = {
 	prerender?: boolean;
+	preload?: any; // TODO remove for 1.0
 	load: (preload_context: PreloadContext) => LoadResult | Promise<LoadResult>;
 	default: {
 		render: (

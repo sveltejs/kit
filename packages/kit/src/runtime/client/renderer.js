@@ -269,8 +269,14 @@ export class Renderer {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
 
-				const { default: component, load } = await component_promises[i];
+				const { default: component, preload, load } = await component_promises[i];
 				props.components[i] = component;
+
+				if (preload) {
+					throw new Error(
+						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
+					);
+				}
 
 				const changed_since_last_render =
 					!previous ||
