@@ -11,11 +11,9 @@ const external = [].concat(
 
 export default [
 	{
-		// TODO could we just put `start.js` in `assets`, and everything
-		// else gets installed to `/web_modules`?
 		input: {
-			'internal/start': 'src/runtime/internal/start.js',
-			'internal/singletons': 'src/runtime/internal/singletons.js',
+			'internal/start': 'src/runtime/client/start.js',
+			'internal/singletons': 'src/runtime/client/singletons.js',
 			'app/navigation': 'src/runtime/app/navigation.js',
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
@@ -25,7 +23,6 @@ export default [
 			dir: 'assets/runtime',
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js',
-			sourcemap: true,
 			paths: {
 				ROOT: '../../generated/root.svelte',
 				MANIFEST: '../../generated/manifest.js'
@@ -42,14 +39,12 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			api: 'src/api/index.js',
-			renderer: 'src/renderer/index.js'
+			ssr: 'src/runtime/server/index.js'
 		},
 		output: {
 			dir: 'dist',
 			format: 'esm',
-			sourcemap: true,
-			chunkFileNames: '[name].js'
+			chunkFileNames: 'chunks/[name].js'
 		},
 		external: (id) => {
 			return external.includes(id);

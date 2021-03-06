@@ -2,23 +2,24 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
-import { render } from './index.js';
+import { normalize } from '../load.js';
+import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../types').Request;
- *   options: import('../types').RenderOptions;
+ *   request: import('../../types').Request;
+ *   options: import('../../types').RenderOptions;
  *   $session: any;
- *   route: import('../types').Page;
+ *   route: import('../../types').Page;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../types').Response>}
+ * @returns {Promise<import('../../types').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../types').Response>} */
+	/** @type {Record<string, import('../../types').Response>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -88,7 +89,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			}
 
 			if (!response) {
-				const rendered = await render(
+				const rendered = await ssr(
 					{
 						host: request.host,
 						method: opts.method || 'GET',
@@ -119,7 +120,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../types').Headers} */
+			/** @type {import('../../types').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -183,58 +184,28 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (loaded) {
-			let error;
-			let status;
+			loaded = normalize(loaded);
 
 			// TODO there's some logic that's duplicated in the client runtime,
 			// it would be nice to DRY it out if possible
 			if (loaded.error) {
-				error = loaded.error;
-				if (typeof error === 'string') {
-					error = new Error(error);
-				}
-				if (!(error instanceof Error)) {
-					error = new Error(
-						`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
-					);
-				}
-
-				if (!loaded.status || loaded.status < 400 || loaded.status > 599) {
-					console.warn(
-						'"error" returned from load() without a valid status code — defaulting to 500'
-					);
-					status = 500;
-				} else {
-					status = loaded.status;
-				}
-			} else if (loaded.redirect) {
-				if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
-					error = new Error(
-						'"redirect" property returned from load() must be accompanied by a 3xx status code'
-					);
-					status = 500;
-				} else if (typeof loaded.redirect !== 'string') {
-					error = new Error('"redirect" property returned from load() must be a string');
-					status = 500;
-				} else {
-					return {
-						status: loaded.status,
-						headers: {
-							location: loaded.redirect
-						}
-					};
-				}
-			}
-
-			if (error) {
 				return await get_response({
 					request,
 					options,
 					$session,
 					route,
-					status,
-					error
+					status: loaded.status,
+					error: loaded.error
 				});
+			}
+
+			if (loaded.redirect) {
+				return {
+					status: loaded.status,
+					headers: {
+						location: loaded.redirect
+					}
+				};
 			}
 
 			if (loaded.context) {
@@ -355,7 +326,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../types').Headers} */
+	/** @type {import('../../types').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -373,9 +344,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../types').Request} request
+ * @param {import('../../types').Request} request
  * @param {any} context
- * @param {import('../types').RenderOptions} options
+ * @param {import('../../types').RenderOptions} options
  */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));

@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { posixify } from '../utils.js';
 
 /** @typedef {{
  *   content: string;
@@ -23,11 +22,11 @@ import { posixify } from '../utils.js';
 
 /**
  * @param {{
- *   config: import('../types').ValidatedConfig;
+ *   config: import('../../types').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('../types.js').ManifestData}
+ * @returns {import('../../types').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -42,10 +41,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('../types.js').PageData[]} */
+	/** @type {import('../../types').PageData[]} */
 	const pages = [];
 
-	/** @type {import('../types.js').EndpointData[]} */
+	/** @type {import('../../types').EndpointData[]} */
 	const endpoints = [];
 
 	/** @type {Map<string, string>} */
@@ -218,9 +217,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	};
 }
 
-/**
- * @param {string} path
- */
+/** @param {string} str */
+function posixify(str) {
+	return str.replace(/\\/g, '/');
+}
+
+/** @param {string} path */
 function is_spread(path) {
 	const spread_pattern = /\[\.{3}/g;
 	return spread_pattern.test(path);
@@ -284,9 +286,7 @@ function comparator(a, b) {
 	}
 }
 
-/**
- * @param {string} part
- */
+/** @param {string} part */
 function get_parts(part) {
 	return part
 		.split(/\[(.+?\(.+?\)|.+?)\]/)
@@ -336,7 +336,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('../types').Asset[]} files
+ * @param {import('../../types').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

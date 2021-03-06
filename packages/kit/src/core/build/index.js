@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { rimraf } from '@sveltejs/app-utils/files';
-import create_manifest_data from '../../core/create_manifest_data.js';
+import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { copy_assets } from '../utils.js';
-import { create_app } from '../../core/create_app.js';
+import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@svitejs/vite-plugin-svelte';
 
@@ -14,13 +14,10 @@ const s = (value) => JSON.stringify(value);
  * @param {import('../../types').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
- *   renderer?: string;
+ *   runtime?: string;
  * }} [opts]
  */
-export async function build(
-	config,
-	{ cwd = process.cwd(), renderer = '@sveltejs/kit/renderer' } = {}
-) {
+export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
 	const output_dir = path.resolve(cwd, '.svelte/output');
 
@@ -138,7 +135,7 @@ export async function build(
 	fs.writeFileSync(
 		app_file,
 		`
-			import * as renderer from '${renderer}';
+			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
 			import { set_paths } from './runtime/internal/singletons.js';
 			import * as setup from ${s(app_relative(setup_file))};
@@ -236,7 +233,7 @@ export async function build(
 				only_prerender = false,
 				get_static_file
 			} = {}) {
-				return renderer.render(request, {
+				return ssr(request, {
 					paths,
 					local,
 					template,

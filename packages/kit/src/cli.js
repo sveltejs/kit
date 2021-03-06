@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
-import { load_config } from './api/load_config';
+import { load_config } from './core/load_config/index.js';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -72,7 +72,7 @@ prog
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
 
-		const { dev } = await import('./api/dev');
+		const { dev } = await import('./core/dev/index.js');
 
 		try {
 			const watcher = await dev({ port, config });
@@ -100,14 +100,14 @@ prog
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
-		const { build } = await import('./api/build');
-		const { adapt } = await import('./api/adapt');
-
 		try {
+			const { build } = await import('./core/build/index.js');
 			await build(config);
+
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
 			if (config.kit.adapter[0]) {
+				const { adapt } = await import('./core/adapt/index.js');
 				await adapt(config, { verbose });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
@@ -131,7 +131,7 @@ prog
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
-		const { start } = await import('./api/start');
+		const { start } = await import('./core/start/index.js');
 
 		try {
 			await start({ port, config });

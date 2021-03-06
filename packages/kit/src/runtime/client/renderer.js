@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { normalize } from '../load';
 import { find_anchor } from './utils';
 
 /** @param {any} value */
@@ -226,6 +227,7 @@ export class Renderer {
 
 		const query = page.query.toString();
 
+		// TODO come up with a better name
 		/** @typedef {{
 		 *   component: import('../../types').CSRComponent;
 		 *   uses: {
@@ -234,13 +236,13 @@ export class Renderer {
 		 *     session: boolean;
 		 *     context: boolean;
 		 *   }
-		 * }} LoadResult */
+		 * }} Branch */
 
 		const state = {
 			page,
 			query,
 			session_changed: false,
-			/** @type {LoadResult[]} */
+			/** @type {Branch[]} */
 			nodes: [],
 			/** @type {Record<string, any>[]} */
 			contexts: []
@@ -285,8 +287,10 @@ export class Renderer {
 					const cache = this.caches.get(component);
 					const cached = cache && cache.get(hash);
 
-					/** @type {LoadResult} */
+					/** @type {Branch} */
 					let node;
+
+					/** @type {import('../../types').LoadResult} */
 					let loaded;
 
 					if (cached && (!changed.context || !cached.node.uses.context)) {
@@ -340,45 +344,16 @@ export class Renderer {
 					}
 
 					if (loaded) {
+						loaded = normalize(loaded);
+
 						if (loaded.error) {
-							let error = loaded.error;
-							if (typeof error === 'string') {
-								error = new Error(error);
-							}
-							if (!(error instanceof Error)) {
-								error = new Error(
-									`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
-								);
-							}
-							if (!loaded.status || loaded.status < 400 || loaded.status > 599) {
-								console.warn(
-									'"error" returned from load() without a valid status code — defaulting to 500'
-								);
-								error.status = 500;
-							} else {
-								// TODO sticking the status on the error object is kinda hacky
-								error.status = loaded.status;
-							}
-							throw error;
+							// TODO sticking the status on the error object is kinda hacky
+							loaded.error.status = loaded.status;
+							throw loaded.error;
 						}
 
 						if (loaded.redirect) {
-							if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
-								const error = new Error(
-									'"redirect" property returned from load() must be accompanied by a 3xx status code'
-								);
-								error.status = 500;
-								throw error;
-							}
-
-							if (typeof loaded.redirect !== 'string') {
-								const error = new Error(
-									'"redirect" property returned from load() must be a string'
-								);
-								error.status = 500;
-								throw error;
-							}
-
+							// TODO return from here?
 							redirect = loaded.redirect;
 							break;
 						}
