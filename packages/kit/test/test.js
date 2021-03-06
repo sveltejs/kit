@@ -3,7 +3,10 @@ import glob from 'tiny-glob/sync.js';
 import ports from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright';
-import { dev, build, start, load_config } from '../src/api/index.js';
+import { dev } from '../src/core/dev/index.js';
+import { build } from '../src/core/build/index.js';
+import { start } from '../src/core/start/index.js';
+import { load_config } from '../src/core/load_config/index.js';
 import { fileURLToPath } from 'url';
 
 async function setup({ port }) {

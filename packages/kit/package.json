@@ -53,13 +53,10 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:integration",
-		"test:unit": "uvu src \"(spec\\.mjs|test[\\\\/]index\\.mjs)\"",
+		"test:unit": "uvu src \"(spec\\.m?js|test[\\\\/]index\\.m?js)\"",
 		"test:integration": "uvu test test.js"
 	},
 	"exports": {
-		"./api": {
-			"import": "./dist/api.js"
-		},
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		}

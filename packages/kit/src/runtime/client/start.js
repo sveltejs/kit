@@ -1,8 +1,9 @@
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
 import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
-import { Router } from './router';
-import { Renderer } from './renderer';
-import { init, set_paths } from './singletons';
+import { Router } from './router.js';
+import { Renderer } from './renderer.js';
+import { init } from './singletons.js';
+import { set_paths } from '../shared.js';
 
 /** @param {{
  *   paths: {

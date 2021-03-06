@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { mkdirp } from '@sveltejs/app-utils/files';
-import { stringify, walk } from '../utils.js';
+import { stringify, walk } from '../../utils.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -20,7 +20,7 @@ export function write_if_changed(file, code) {
 
 const s = JSON.stringify;
 
-/** @typedef {import('../types').ManifestData} ManifestData */
+/** @typedef {import('../../types').ManifestData} ManifestData */
 
 /**
  * @param {{

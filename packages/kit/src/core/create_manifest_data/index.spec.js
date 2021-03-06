@@ -2,10 +2,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import create_manifest_data from '../create_manifest_data.js';
+import create_manifest_data from './index.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const cwd = path.join(__filename, '..');
+const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
 const create = (dir, extensions = ['.svelte']) => {
 	return create_manifest_data({
