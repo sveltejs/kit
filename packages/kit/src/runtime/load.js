@@ -3,8 +3,8 @@
  * @returns {import('../types').LoadResult}
  */
 export function normalize(loaded) {
-	// TODO there's some logic that's duplicated in the client runtime,
-	// it would be nice to DRY it out if possible
+	// TODO should this behaviour be dev-only?
+
 	if (loaded.error) {
 		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
 		const status = loaded.status;
