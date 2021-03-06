@@ -3,7 +3,7 @@ import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
-import { set_paths } from '../shared.js';
+import { set_paths } from '../paths.js';
 
 /** @param {{
  *   paths: {
