@@ -53,7 +53,7 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:integration",
-		"test:unit": "uvu src \"(spec\\.m?js|test[\\\\/]index\\.m?js)\"",
+		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"test:integration": "uvu test test.js"
 	},
 	"exports": {
