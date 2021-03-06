@@ -9,7 +9,7 @@ import { get_base_uri } from '../internal/utils';
  * }} [opts]
  */
 export async function goto(href, opts) {
-	return router.goto(href, opts);
+	return router.goto(href, opts, []);
 }
 
 /** @param {string} href */

@@ -167,13 +167,30 @@ export class Renderer {
 		});
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	async render(selected) {
+	/**
+	 * @param {import('./types').NavigationTarget} selected
+	 * @param {string[]} chain
+	 */
+	async render(selected, chain) {
 		const token = (this.token = {});
 
 		const hydrated = await this.hydrate(selected);
 
 		if (this.token === token) {
+			if (hydrated.redirect) {
+				if (chain.length > 10 || chain.includes(this.current.page.path)) {
+					hydrated.props.status = 500;
+					hydrated.props.error = new Error('Redirect loop');
+				} else {
+					this.router.goto(hydrated.redirect, { replaceState: true }, [
+						...chain,
+						this.current.page.path
+					]);
+
+					return;
+				}
+			}
+
 			// check render wasn't aborted
 			this.current = hydrated.state;
 
@@ -333,11 +350,35 @@ export class Renderer {
 									`"error" property returned from load() must be a string or instance of Error, received type "${typeof error}"`
 								);
 							}
-							error.status = loaded.status;
+							if (!loaded.status || loaded.status < 400 || loaded.status > 599) {
+								console.warn(
+									'"error" returned from load() without a valid status code — defaulting to 500'
+								);
+								error.status = 500;
+							} else {
+								// TODO sticking the status on the error object is kinda hacky
+								error.status = loaded.status;
+							}
 							throw error;
 						}
 
 						if (loaded.redirect) {
+							if (!loaded.status || Math.floor(loaded.status / 100) !== 3) {
+								const error = new Error(
+									'"redirect" property returned from load() must be accompanied by a 3xx status code'
+								);
+								error.status = 500;
+								throw error;
+							}
+
+							if (typeof loaded.redirect !== 'string') {
+								const error = new Error(
+									'"redirect" property returned from load() must be a string'
+								);
+								error.status = 500;
+								throw error;
+							}
+
 							redirect = loaded.redirect;
 							break;
 						}
