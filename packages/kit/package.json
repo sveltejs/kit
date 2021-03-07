@@ -25,6 +25,7 @@
 		"port-authority": "^1.1.2",
 		"rimraf": "^3.0.2",
 		"rollup": "^2.38.3",
+		"selfsigned": "^1.10.8",
 		"sirv": "^1.0.11",
 		"svelte": "^3.35.0",
 		"tiny-glob": "^0.2.8",

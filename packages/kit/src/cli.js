@@ -127,16 +127,19 @@ prog
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, open }) => {
+	.option('--https', 'use HTTPS', false)
+	.action(async ({ port, open, https }) => {
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
 		const { start } = await import('./core/start/index.js');
 
 		try {
-			await start({ port, config });
+			await start({ port, config, https });
 
-			console.log(colors.bold().cyan(`> Listening on http://localhost:${port}`));
+			console.log(
+				colors.bold().cyan(`> Listening on ${https ? 'https' : 'http'}://localhost:${port}`)
+			);
 			if (open) if (open) launch(port);
 		} catch (error) {
 			handle_error(error);
