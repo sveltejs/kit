@@ -48,6 +48,25 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			? `/${config.kit.appDir}/`
 			: `${config.kit.paths.assets}/${config.kit.appDir}/`;
 
+	/** @type {Record<string, string>} */
+	const input = {
+		start: client_entry_file
+	};
+
+	manifest.pages.forEach((page) => {
+		page.parts.forEach((file) => {
+			const resolved = path.resolve(cwd, file);
+			const relative = path.relative(config.kit.files.routes, resolved);
+			input[path.join('pages', relative)] = resolved;
+		});
+	});
+
+	manifest.endpoints.forEach((endpoint) => {
+		const resolved = path.resolve(cwd, endpoint.file);
+		const relative = path.relative(config.kit.files.routes, resolved);
+		input[path.join('endpoints', relative)] = resolved;
+	});
+
 	// client build
 	await vite.build({
 		root: cwd,
@@ -60,7 +79,16 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: client_out_dir
+			outDir: client_out_dir,
+			rollupOptions: {
+				input,
+				output: {
+					entryFileNames: '[name]-[hash].js',
+					chunkFileNames: 'chunks/[name]-[hash].js',
+					assetFileNames: 'assets/[name]-[hash][extname]'
+				},
+				preserveEntrySignatures: 'strict'
+			}
 		},
 		resolve: {
 			alias: {
@@ -198,12 +226,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 							for (const part of data.parts) {
 								find_deps(part);
 							}
-
-							// data.parts.forEach(c => {
-							// 	const deps = client.deps[c];
-							// 	deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
-							// 	deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
-							// });
 
 							return `{
 								pattern: ${data.pattern},
