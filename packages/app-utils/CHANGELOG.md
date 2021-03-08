@@ -1,5 +1,12 @@
 # @sveltejs/app-utils
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- 73dd998: Check file/directory exists before copying
+- b800049: Include type declarations
+
 ## 1.0.0-next.1
 
 ### Patch Changes

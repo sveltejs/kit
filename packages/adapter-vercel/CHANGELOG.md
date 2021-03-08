@@ -1,5 +1,14 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- 8123929: Fix adapter-vercel using the wrong directory
+- Updated dependencies [73dd998]
+- Updated dependencies [b800049]
+  - @sveltejs/app-utils@1.0.0-next.2
+
 ## 1.0.0-next.2
 
 ### Patch Changes
