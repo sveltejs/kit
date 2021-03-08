@@ -16,27 +16,26 @@ onActivate(async () => {
 onFetch(async ({ request }) => {
 	if (request.method !== 'GET' || request.headers.has('range')) return;
 
-	const cached = await caches.match(request);
+	const url = new URL(request.url);
 
-	if (build.includes(request.url)) {
-		return cached;
-	}
+	if (url.protocol === 'https:' || location.hostname === 'localhost') {
+		const cached = await caches.match(request);
 
-	if (request.url.startsWith('https:')) {
+		if (url.origin === location.origin && build.includes(url.pathname)) {
+			return cached;
+		}
+
 		const promise = fetch(request);
 
 		try {
 			// try the network first...
 			const response = await promise;
 			if (response.ok && response.type === 'basic') {
-				console.log(`caching ${request.url}`);
 				const fallback = await caches.open(name);
 				fallback.put(request, response.clone());
 			}
-			console.log(`returning response from network ${request.url}`);
 			return response;
 		} catch {
-			console.log(`handle failure ${request.url}`);
 			// ...then fallback to cached response,
 			// or return the failed fetch
 			return cached || promise;
