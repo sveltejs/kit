@@ -80,13 +80,6 @@ It is important to note that `load` may run on either the server or in the clien
 
 If you return a Promise from `load`, the page will delay rendering until the promise resolves. You can also return a plain object. In both cases, the values in the object will be passed into the components as props.
 
-<<<<<<< HEAD
-When Sapper renders a page on the server, it will attempt to serialize the resolved value (using [devalue](https://github.com/Rich-Harris/devalue)) and include it on the page, so that the client doesn't also need to call `preload` upon initialization. Serialization will fail if the value includes functions or custom classes (cyclical and repeated references are fine, as are built-ins like `Date`, `Map`, `Set` and `RegExp`).
-
-#### error
-
-# If the user navigated to `/blog/some-invalid-slug`, we would want to render a 404 Not Found page. We can do that by returning an object with the `"error"` property. The value in the `"error"` property, can be either a `string` or an `Error` instance.
-
 When SvelteKit renders a page on the server, it will attempt to serialize the resolved value (using [devalue](https://github.com/Rich-Harris/devalue)) and include it on the page, so that the client doesn't also need to call `preload` upon initialization. Serialization will fail if the value includes functions or custom classes (cyclical and repeated references are fine, as are built-ins like `Date`, `Map`, `Set` and `RegExp`).
 
 #### error
@@ -117,7 +110,7 @@ The same applies to other error codes you might encounter.
 
 #### redirect
 
-You can abort rendering and redirect to a different location by returning a `redirect` object:
+You can abort rendering and redirect to a different location by returning a 3xx status code and a `redirect` path:
 
 ```html
 <script context="module">
@@ -126,10 +119,8 @@ You can abort rendering and redirect to a different location by returning a `red
 
 		if (!user) {
 			return {
-				status: 302,
-				redirect: {
-					to: '/login'
-				}
+				status: 307, // temporary redirect
+				redirect: '/login'
 			};
 		}
 
