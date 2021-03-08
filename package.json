@@ -36,5 +36,8 @@
 		"rollup": "^2.40.0",
 		"typescript": "^4.2.2"
 	},
-	"type": "module"
+	"type": "module",
+	"engines": {
+		"node": ">= 12.17.0 < 13.0.0 || >= 14.13.0"
+	}
 }
