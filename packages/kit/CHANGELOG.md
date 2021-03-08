@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.38
+
+### Patch Changes
+
+- 15402b1: Add service worker support
+- 0c630b5: Ignore dynamically imported components when constructing styles in dev mode
+- ac06af5: Fix svelte-kit adapt for Windows
+- 061fa46: Implement improved redirect API
+- b800049: Include type declarations
+- 07c6de4: Use posix paths in manifest even on Windows
+- 27ba872: Error if preload function exists
+- 0c630b5: Add default paths in case singletons module is invalidated
+- 73dd998: Allow custom extensions
+
 ## 1.0.0-next.37
 
 ### Patch Changes

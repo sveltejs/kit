@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.30
+
+### Patch Changes
+
+- b800049: Include type declarations
+
 ## 2.0.0-next.29
 
 ### Patch Changes

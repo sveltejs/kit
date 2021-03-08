@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 222fe9d: Compress adapter-node responses
+
 ## 1.0.0-next.4
 
 ### Minor Changes
