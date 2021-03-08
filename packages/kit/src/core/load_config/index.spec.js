@@ -15,6 +15,7 @@ test('fills in defaults', () => {
 			files: {
 				assets: 'static',
 				routes: 'src/routes',
+				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},
@@ -86,6 +87,7 @@ test('fills in partial blanks', () => {
 			files: {
 				assets: 'public',
 				routes: 'src/routes',
+				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},

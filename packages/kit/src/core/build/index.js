@@ -10,6 +10,12 @@ import svelte from '@svitejs/vite-plugin-svelte';
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
 
+/** @typedef {Record<string, {
+ *   file: string;
+ *   css: string[];
+ *   imports: string[];
+ * }>} ClientManifest */
+
 /**
  * @param {import('../../types').ValidatedConfig} config
  * @param {{
@@ -19,16 +25,55 @@ const s = (value) => JSON.stringify(value);
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
-	const output_dir = path.resolve(cwd, '.svelte/output');
-
-	const manifest = create_manifest_data({
-		config,
-		output: build_dir,
-		cwd
-	});
 
 	rimraf(build_dir);
 
+	const options = {
+		cwd,
+		config,
+		build_dir,
+		base:
+			config.kit.paths.assets === '/.'
+				? `/${config.kit.appDir}/`
+				: `${config.kit.paths.assets}/${config.kit.appDir}/`,
+		manifest: create_manifest_data({
+			config,
+			output: build_dir,
+			cwd
+		}),
+		output_dir: path.resolve(cwd, '.svelte/output'),
+		client_entry_file: '.svelte/build/runtime/internal/start.js'
+	};
+
+	const client_manifest = await build_client(options);
+	await build_server(options, client_manifest, runtime);
+
+	const service_worker_entry = resolve_entry(config.kit.files.serviceWorker);
+	if (service_worker_entry) {
+		await build_service_worker(options, client_manifest);
+	}
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ * }} options
+ */
+async function build_client({
+	cwd,
+	base,
+	config,
+	manifest,
+	build_dir,
+	output_dir,
+	client_entry_file
+}) {
 	create_app({
 		manifest_data: manifest,
 		output: build_dir,
@@ -39,14 +84,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 	process.env.VITE_AMP = config.kit.amp ? 'true' : '';
 
-	const client_entry_file = '.svelte/build/runtime/internal/start.js';
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
-
-	const base =
-		config.kit.paths.assets === '/.'
-			? `/${config.kit.appDir}/`
-			: `${config.kit.paths.assets}/${config.kit.appDir}/`;
 
 	// client build
 	await vite.build({
@@ -80,25 +119,43 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		]
 	});
 
-	/** @type {Record<string, {
-	 *   file: string;
-	 *   css: string[];
-	 *   imports: string[];
-	 * }>} */
+	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
 	fs.unlinkSync(client_manifest_file);
 
-	let setup_file = 'src/setup/index.js'; // TODO this is wrong... should see if we can resolve files.setup using Vite's resolution logic
-	if (!fs.existsSync(path.resolve(cwd, setup_file))) {
-		setup_file = '.svelte/build/setup.js';
-		fs.writeFileSync(path.resolve(cwd, setup_file), '');
+	return client_manifest;
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ * }} options
+ * @param {ClientManifest} client_manifest
+ * @param {string} runtime
+ */
+async function build_server(
+	{ cwd, base, config, manifest, build_dir, output_dir, client_entry_file },
+	client_manifest,
+	runtime
+) {
+	let setup_file = resolve_entry(config.kit.files.setup);
+	console.log({ setup_file });
+	if (!fs.existsSync(setup_file)) {
+		setup_file = path.resolve(cwd, '.svelte/build/setup.js');
+		fs.writeFileSync(setup_file, '');
 	}
 
 	const app_file = `${build_dir}/app.js`;
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
-		const relative_file = path.relative('.svelte/build', file);
+		const relative_file = path.relative(build_dir, path.resolve(cwd, file));
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
@@ -292,6 +349,50 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			noExternal: ['svelte']
 		}
 	});
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ * }} options
+ * @param {ClientManifest} client_manifest
+ */
+async function build_service_worker(options, client_manifest) {
+	// TODO
+}
+
+/**
+ * @param {string} entry
+ * @returns {string}
+ */
+function resolve_entry(entry) {
+	if (fs.existsSync(entry)) {
+		const stats = fs.statSync(entry);
+		if (stats.isDirectory()) {
+			return resolve_entry(path.join(entry, 'index'));
+		}
+
+		return entry;
+	} else {
+		const dir = path.dirname(entry);
+
+		if (fs.existsSync(dir)) {
+			const base = path.basename(entry);
+			const files = fs.readdirSync(dir);
+
+			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+
+			if (found) return path.join(dir, found);
+		}
+	}
+
+	return null;
 }
 
 /** @param {string[]} array */

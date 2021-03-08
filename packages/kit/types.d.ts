@@ -8,6 +8,7 @@ export type Config = {
 		files?: {
 			assets?: string;
 			routes?: string;
+			serviceWorker?: string;
 			setup?: string;
 			template?: string;
 		};

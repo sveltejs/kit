@@ -60,6 +60,7 @@ const options = {
 				children: {
 					assets: expect_string('static'),
 					routes: expect_string('src/routes'),
+					serviceWorker: expect_string('src/service-worker'),
 					setup: expect_string('src/setup'),
 					template: expect_string('src/app.html')
 				}
