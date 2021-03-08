@@ -50,8 +50,10 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	await build_server(options, client_manifest, runtime);
 
 	if (options.service_worker_entry_file) {
-		if (config.kit.paths.base !== '' || config.kit.paths.assets !== '/.') {
-			throw new Error('Cannot use service worker alongside config.kit.paths');
+		const { base, assets } = config.kit.paths;
+
+		if (assets !== base && assets !== '/.') {
+			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
 		await build_service_worker(options, client_manifest);
@@ -389,12 +391,14 @@ async function build_service_worker(
 
 			export const build = [
 				${Object.values(client_manifest)
-					.map((asset) => `${s(`/${config.kit.appDir}/${asset.file}`)}`)
+					.map((asset) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 
 			export const assets = [
-				${manifest.assets.map((asset) => `${s(`/${asset.file}`)}`).join(',\n\t\t\t\t')}
+				${manifest.assets
+					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+					.join(',\n\t\t\t\t')}
 			];
 
 			export function onInstall(callback) {
