@@ -17,6 +17,7 @@ export type ValidatedConfig = {
 		files: {
 			assets: string;
 			routes: string;
+			serviceWorker: string;
 			setup: string;
 			template: string;
 		};

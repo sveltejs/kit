@@ -86,6 +86,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
 	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
+	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
 
@@ -96,7 +97,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('../../types').Config} config
+ * @param {import('../../../types').Config} config
  * @returns {import('../../types.js').ValidatedConfig}
  */
 export function validate_config(config) {

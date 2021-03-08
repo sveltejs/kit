@@ -10,6 +10,12 @@ import svelte from '@svitejs/vite-plugin-svelte';
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
 
+/** @typedef {Record<string, {
+ *   file: string;
+ *   css: string[];
+ *   imports: string[];
+ * }>} ClientManifest */
+
 /**
  * @param {import('../../types').ValidatedConfig} config
  * @param {{
@@ -19,16 +25,63 @@ const s = (value) => JSON.stringify(value);
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
-	const output_dir = path.resolve(cwd, '.svelte/output');
-
-	const manifest = create_manifest_data({
-		config,
-		output: build_dir,
-		cwd
-	});
 
 	rimraf(build_dir);
 
+	const options = {
+		cwd,
+		config,
+		build_dir,
+		base:
+			config.kit.paths.assets === '/.'
+				? `/${config.kit.appDir}/`
+				: `${config.kit.paths.assets}/${config.kit.appDir}/`,
+		manifest: create_manifest_data({
+			config,
+			output: build_dir,
+			cwd
+		}),
+		output_dir: path.resolve(cwd, '.svelte/output'),
+		client_entry_file: '.svelte/build/runtime/internal/start.js',
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
+	};
+
+	const client_manifest = await build_client(options);
+	await build_server(options, client_manifest, runtime);
+
+	if (options.service_worker_entry_file) {
+		const { base, assets } = config.kit.paths;
+
+		if (assets !== base && assets !== '/.') {
+			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
+		}
+
+		await build_service_worker(options, client_manifest);
+	}
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ *   service_worker_entry_file: string;
+ * }} options
+ */
+async function build_client({
+	cwd,
+	base,
+	config,
+	manifest,
+	build_dir,
+	output_dir,
+	client_entry_file,
+	service_worker_entry_file
+}) {
 	create_app({
 		manifest_data: manifest,
 		output: build_dir,
@@ -37,16 +90,30 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 	copy_assets(build_dir);
 
-	process.env.VITE_AMP = config.kit.amp ? 'true' : '';
+	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
+	process.env.VITE_SVELTEKIT_SERVICE_WORKER = service_worker_entry_file ? '/service-worker.js' : '';
 
-	const client_entry_file = '.svelte/build/runtime/internal/start.js';
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
-	const base =
-		config.kit.paths.assets === '/.'
-			? `/${config.kit.appDir}/`
-			: `${config.kit.paths.assets}/${config.kit.appDir}/`;
+	/** @type {Record<string, string>} */
+	const input = {
+		start: path.resolve(cwd, client_entry_file)
+	};
+
+	manifest.pages.forEach((page) => {
+		page.parts.forEach((file) => {
+			const resolved = path.resolve(cwd, file);
+			const relative = path.relative(config.kit.files.routes, resolved);
+			input[path.join('pages', relative)] = resolved;
+		});
+	});
+
+	manifest.endpoints.forEach((endpoint) => {
+		const resolved = path.resolve(cwd, endpoint.file);
+		const relative = path.relative(config.kit.files.routes, resolved);
+		input[path.join('endpoints', relative)] = resolved;
+	});
 
 	// client build
 	await vite.build({
@@ -56,11 +123,23 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			cssCodeSplit: true,
 			manifest: true,
 			lib: {
+				// TODO i'm not convinced this block is necessary if we're
+				// providing inputs explicitly via rollupOptions, but without
+				// it Vite complains about the dynamic import polyfill
 				entry: client_entry_file,
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: client_out_dir
+			outDir: client_out_dir,
+			rollupOptions: {
+				input,
+				output: {
+					entryFileNames: '[name]-[hash].js',
+					chunkFileNames: 'chunks/[name]-[hash].js',
+					assetFileNames: 'assets/[name]-[hash][extname]'
+				},
+				preserveEntrySignatures: 'strict'
+			}
 		},
 		resolve: {
 			alias: {
@@ -80,25 +159,43 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		]
 	});
 
-	/** @type {Record<string, {
-	 *   file: string;
-	 *   css: string[];
-	 *   imports: string[];
-	 * }>} */
+	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
 	fs.unlinkSync(client_manifest_file);
 
-	let setup_file = 'src/setup/index.js'; // TODO this is wrong... should see if we can resolve files.setup using Vite's resolution logic
-	if (!fs.existsSync(path.resolve(cwd, setup_file))) {
-		setup_file = '.svelte/build/setup.js';
-		fs.writeFileSync(path.resolve(cwd, setup_file), '');
+	return client_manifest;
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ *   service_worker_entry_file: string;
+ * }} options
+ * @param {ClientManifest} client_manifest
+ * @param {string} runtime
+ */
+async function build_server(
+	{ cwd, base, config, manifest, build_dir, output_dir, client_entry_file },
+	client_manifest,
+	runtime
+) {
+	let setup_file = resolve_entry(config.kit.files.setup);
+	if (!fs.existsSync(setup_file)) {
+		setup_file = path.resolve(cwd, '.svelte/build/setup.js');
+		fs.writeFileSync(setup_file, '');
 	}
 
 	const app_file = `${build_dir}/app.js`;
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
-		const relative_file = path.relative('.svelte/build', file);
+		const relative_file = path.relative(build_dir, path.resolve(cwd, file));
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
@@ -199,12 +296,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 								find_deps(part);
 							}
 
-							// data.parts.forEach(c => {
-							// 	const deps = client.deps[c];
-							// 	deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
-							// 	deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
-							// });
-
 							return `{
 								pattern: ${data.pattern},
 								params: ${params},
@@ -292,6 +383,109 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			noExternal: ['svelte']
 		}
 	});
+}
+
+/**
+ * @param {{
+ *   cwd: string;
+ *   base: string;
+ *   config: import('../../types').ValidatedConfig
+ *   manifest: import('../../types').ManifestData
+ *   build_dir: string;
+ *   output_dir: string;
+ *   client_entry_file: string;
+ *   service_worker_entry_file: string;
+ * }} options
+ * @param {ClientManifest} client_manifest
+ */
+async function build_service_worker(
+	{ cwd, base, config, manifest, build_dir, output_dir, service_worker_entry_file },
+	client_manifest
+) {
+	// TODO add any assets referenced in template .html file, e.g. favicon?
+	const app_files = new Set();
+	for (const key in client_manifest) {
+		const { file, css } = client_manifest[key];
+		app_files.add(file);
+		if (css) {
+			css.forEach((file) => {
+				app_files.add(file);
+			});
+		}
+	}
+
+	fs.writeFileSync(
+		`${build_dir}/runtime/service-worker.js`,
+		`
+			export const timestamp = ${Date.now()};
+
+			export const build = [
+				${Array.from(app_files)
+					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
+					.join(',\n\t\t\t\t')}
+			];
+
+			export const assets = [
+				${manifest.assets
+					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+					.join(',\n\t\t\t\t')}
+			];
+		`
+			.replace(/^\t{3}/gm, '')
+			.trim()
+	);
+
+	await vite.build({
+		root: cwd,
+		base,
+		build: {
+			lib: {
+				entry: service_worker_entry_file,
+				name: 'app',
+				formats: ['es']
+			},
+			rollupOptions: {
+				output: {
+					entryFileNames: 'service-worker.js'
+				}
+			},
+			outDir: `${output_dir}/client`,
+			emptyOutDir: false
+		},
+		resolve: {
+			alias: {
+				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
+			}
+		}
+	});
+}
+
+/**
+ * @param {string} entry
+ * @returns {string}
+ */
+function resolve_entry(entry) {
+	if (fs.existsSync(entry)) {
+		const stats = fs.statSync(entry);
+		if (stats.isDirectory()) {
+			return resolve_entry(path.join(entry, 'index'));
+		}
+
+		return entry;
+	} else {
+		const dir = path.dirname(entry);
+
+		if (fs.existsSync(dir)) {
+			const base = path.basename(entry);
+			const files = fs.readdirSync(dir);
+
+			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+
+			if (found) return path.join(dir, found);
+		}
+	}
+
+	return null;
 }
 
 /** @param {string[]} array */

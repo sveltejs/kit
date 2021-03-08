@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function test(test) {
-	test.only('errors on preload', '/preload', async ({ page }) => {
+	test('errors on preload', '/preload', async ({ page }) => {
 		await page.click('[href="/preload/uses-preload"]');
 
 		assert.equal(await page.textContent('h1'), '500');
