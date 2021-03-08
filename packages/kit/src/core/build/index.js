@@ -384,14 +384,26 @@ async function build_service_worker(
 	{ cwd, base, config, manifest, build_dir, output_dir, service_worker_entry_file },
 	client_manifest
 ) {
+	// TODO add any assets referenced in template .html file, e.g. favicon?
+	const app_files = new Set();
+	for (const key in client_manifest) {
+		const { file, css } = client_manifest[key];
+		app_files.add(file);
+		if (css) {
+			css.forEach((file) => {
+				app_files.add(file);
+			});
+		}
+	}
+
 	fs.writeFileSync(
 		`${build_dir}/runtime/service-worker.js`,
 		`
 			export const timestamp = ${Date.now()};
 
 			export const build = [
-				${Object.values(client_manifest)
-					.map((asset) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${asset.file}`)}`)
+				${Array.from(app_files)
+					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
 
@@ -400,24 +412,6 @@ async function build_service_worker(
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
-
-			export function onInstall(callback) {
-				self.addEventListener('install', (event) => {
-					event.waitUntil(Promise.resolve(callback(event)));
-				});
-			}
-
-			export function onActivate(callback) {
-				self.addEventListener('activate', (event) => {
-					event.waitUntil(Promise.resolve(callback(event)));
-				});
-			}
-
-			export function onFetch(callback) {
-				self.addEventListener('fetch', (event) => {
-					event.respondWith(Promise.resolve(callback(event)).then(result => result || fetch(event.request)));
-				});
-			}
 		`
 			.replace(/^\t{3}/gm, '')
 			.trim()
