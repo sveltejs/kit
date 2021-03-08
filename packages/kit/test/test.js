@@ -196,8 +196,13 @@ async function main() {
 
 		const config = await load_config({ cwd });
 
-		await test_dev(app, cwd, config, tests);
-		await test_build(app, cwd, config, tests);
+		if (process.env.DEV !== 'false') {
+			await test_dev(app, cwd, config, tests);
+		}
+
+		if (process.env.BUILD !== 'false') {
+			await test_build(app, cwd, config, tests);
+		}
 	}
 
 	await uvu.exec();

@@ -38,3 +38,7 @@ export async function start({ paths, target, host, session, error, status }) {
 
 	await router.init(renderer);
 }
+
+if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {
+	navigator.serviceWorker.register(import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER);
+}

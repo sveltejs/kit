@@ -42,14 +42,18 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			cwd
 		}),
 		output_dir: path.resolve(cwd, '.svelte/output'),
-		client_entry_file: '.svelte/build/runtime/internal/start.js'
+		client_entry_file: '.svelte/build/runtime/internal/start.js',
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
 	const client_manifest = await build_client(options);
 	await build_server(options, client_manifest, runtime);
 
-	const service_worker_entry = resolve_entry(config.kit.files.serviceWorker);
-	if (service_worker_entry) {
+	if (options.service_worker_entry_file) {
+		if (config.kit.paths.base !== '' || config.kit.paths.assets !== '/.') {
+			throw new Error('Cannot use service worker alongside config.kit.paths');
+		}
+
 		await build_service_worker(options, client_manifest);
 	}
 }
@@ -63,6 +67,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
+ *   service_worker_entry_file: string;
  * }} options
  */
 async function build_client({
@@ -72,7 +77,8 @@ async function build_client({
 	manifest,
 	build_dir,
 	output_dir,
-	client_entry_file
+	client_entry_file,
+	service_worker_entry_file
 }) {
 	create_app({
 		manifest_data: manifest,
@@ -82,7 +88,8 @@ async function build_client({
 
 	copy_assets(build_dir);
 
-	process.env.VITE_AMP = config.kit.amp ? 'true' : '';
+	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
+	process.env.VITE_SVELTEKIT_SERVICE_WORKER = service_worker_entry_file ? '/service-worker.js' : '';
 
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
@@ -99,7 +106,14 @@ async function build_client({
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: client_out_dir
+			outDir: client_out_dir,
+			rollupOptions: {
+				output: {
+					entryFileNames: 'start-[hash].js',
+					chunkFileNames: '[name]-[hash].js',
+					assetFileNames: '[name]-[hash][extname]'
+				}
+			}
 		},
 		resolve: {
 			alias: {
@@ -135,6 +149,7 @@ async function build_client({
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
+ *   service_worker_entry_file: string;
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -145,7 +160,6 @@ async function build_server(
 	runtime
 ) {
 	let setup_file = resolve_entry(config.kit.files.setup);
-	console.log({ setup_file });
 	if (!fs.existsSync(setup_file)) {
 		setup_file = path.resolve(cwd, '.svelte/build/setup.js');
 		fs.writeFileSync(setup_file, '');
@@ -360,11 +374,74 @@ async function build_server(
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
+ *   service_worker_entry_file: string;
  * }} options
  * @param {ClientManifest} client_manifest
  */
-async function build_service_worker(options, client_manifest) {
-	// TODO
+async function build_service_worker(
+	{ cwd, base, config, manifest, build_dir, output_dir, service_worker_entry_file },
+	client_manifest
+) {
+	fs.writeFileSync(
+		`${build_dir}/runtime/service-worker.js`,
+		`
+			export const timestamp = ${Date.now()};
+
+			export const build = [
+				${Object.values(client_manifest)
+					.map((asset) => `${s(`/${config.kit.appDir}/${asset.file}`)}`)
+					.join(',\n\t\t\t\t')}
+			];
+
+			export const assets = [
+				${manifest.assets.map((asset) => `${s(`/${asset.file}`)}`).join(',\n\t\t\t\t')}
+			];
+
+			export function onInstall(callback) {
+				self.addEventListener('install', (event) => {
+					event.waitUntil(Promise.resolve(callback(event)));
+				});
+			}
+
+			export function onActivate(callback) {
+				self.addEventListener('activate', (event) => {
+					event.waitUntil(Promise.resolve(callback(event)));
+				});
+			}
+
+			export function onFetch(callback) {
+				self.addEventListener('fetch', (event) => {
+					event.respondWith(Promise.resolve(callback(event)).then(result => result || fetch(event.request)));
+				});
+			}
+		`
+			.replace(/^\t{3}/gm, '')
+			.trim()
+	);
+
+	await vite.build({
+		root: cwd,
+		base,
+		build: {
+			lib: {
+				entry: service_worker_entry_file,
+				name: 'app',
+				formats: ['es']
+			},
+			rollupOptions: {
+				output: {
+					entryFileNames: 'service-worker.js'
+				}
+			},
+			outDir: `${output_dir}/client`,
+			emptyOutDir: false
+		},
+		resolve: {
+			alias: {
+				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
+			}
+		}
+	});
 }
 
 /**

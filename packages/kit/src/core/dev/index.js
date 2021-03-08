@@ -42,7 +42,7 @@ class Watcher extends EventEmitter {
 	async init() {
 		rimraf(this.dir);
 		copy_assets(this.dir);
-		process.env.VITE_AMP = this.config.kit.amp ? 'true' : '';
+		process.env.VITE_SVELTEKIT_AMP = this.config.kit.amp ? 'true' : '';
 
 		await this.init_filewatcher();
 		await this.init_server();
