@@ -96,6 +96,25 @@ async function build_client({
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
+	/** @type {Record<string, string>} */
+	const input = {
+		start: path.resolve(cwd, client_entry_file)
+	};
+
+	manifest.pages.forEach((page) => {
+		page.parts.forEach((file) => {
+			const resolved = path.resolve(cwd, file);
+			const relative = path.relative(config.kit.files.routes, resolved);
+			input[path.join('pages', relative)] = resolved;
+		});
+	});
+
+	manifest.endpoints.forEach((endpoint) => {
+		const resolved = path.resolve(cwd, endpoint.file);
+		const relative = path.relative(config.kit.files.routes, resolved);
+		input[path.join('endpoints', relative)] = resolved;
+	});
+
 	// client build
 	await vite.build({
 		root: cwd,
@@ -104,17 +123,22 @@ async function build_client({
 			cssCodeSplit: true,
 			manifest: true,
 			lib: {
+				// TODO i'm not convinced this block is necessary if we're
+				// providing inputs explicitly via rollupOptions, but without
+				// it Vite complains about the dynamic import polyfill
 				entry: client_entry_file,
 				name: 'app',
 				formats: ['es']
 			},
 			outDir: client_out_dir,
 			rollupOptions: {
+				input,
 				output: {
-					entryFileNames: 'start-[hash].js',
-					chunkFileNames: '[name]-[hash].js',
-					assetFileNames: '[name]-[hash][extname]'
-				}
+					entryFileNames: '[name]-[hash].js',
+					chunkFileNames: 'chunks/[name]-[hash].js',
+					assetFileNames: 'assets/[name]-[hash][extname]'
+				},
+				preserveEntrySignatures: 'strict'
 			}
 		},
 		resolve: {
@@ -271,12 +295,6 @@ async function build_server(
 							for (const part of data.parts) {
 								find_deps(part);
 							}
-
-							// data.parts.forEach(c => {
-							// 	const deps = client.deps[c];
-							// 	deps.js.forEach(dep => js_deps.add(path_to_dep(dep)));
-							// 	deps.css.forEach(dep => css_deps.add(path_to_dep(dep)));
-							// });
 
 							return `{
 								pattern: ${data.pattern},

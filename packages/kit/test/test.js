@@ -7,7 +7,7 @@ import { dev } from '../src/core/dev/index.js';
 import { build } from '../src/core/build/index.js';
 import { start } from '../src/core/start/index.js';
 import { load_config } from '../src/core/load_config/index.js';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
@@ -191,7 +191,7 @@ async function main() {
 	for (const app of apps) {
 		const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 		const tests = await Promise.all(
-			glob('**/__tests__.js', { cwd }).map((file) => import(`${cwd}/${file}`))
+			glob('**/__tests__.js', { cwd }).map((file) => import(pathToFileURL(`${cwd}/${file}`)))
 		);
 
 		const config = await load_config({ cwd });
