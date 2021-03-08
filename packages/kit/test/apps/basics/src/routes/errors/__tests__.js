@@ -199,10 +199,7 @@ export default function (test, is_dev) {
 		}
 
 		assert.equal(res.status(), 500);
-		assert.equal(
-			await page.textContent('#message'),
-			'This is your custom error page saying: "Internal Server Error"'
-		);
+		assert.equal(await page.textContent('#message'), 'This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
 		const location = 'endpoint.svelte:11:9';

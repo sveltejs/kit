@@ -159,14 +159,13 @@ importers:
       '@types/amphtml-validator': 1.0.1
       '@types/mime': 2.0.3
       '@types/node': 14.14.31
-      '@types/node-fetch': 2.5.8
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
       devalue: 2.0.1
       eslint: 7.20.0
       kleur: 4.1.4
-      node-fetch: 2.6.1
+      node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
       rimraf: 3.0.2
       rollup: 2.40.0
@@ -184,7 +183,6 @@ importers:
       '@types/amphtml-validator': ^1.0.1
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.31
-      '@types/node-fetch': ^2.5.8
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
       amphtml-validator: ^1.0.34
@@ -192,7 +190,7 @@ importers:
       devalue: ^2.0.1
       eslint: ^7.19.0
       kleur: ^4.1.4
-      node-fetch: ^2.6.1
+      node-fetch: ^3.0.0-beta.8
       port-authority: ^1.1.2
       rimraf: ^3.0.2
       rollup: ^2.38.3
@@ -682,13 +680,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-fMl88ZoZXOB7VKazJ6wUMpZc9QIn+jcigSFRf2K/rrw4DcXn+/uGxlWX8DDlcE7JkwgIZ7BDH+JgxZPlc/Ap3g==
-  /@types/node-fetch/2.5.8:
-    dependencies:
-      '@types/node': 14.14.31
-      form-data: 3.0.1
-    dev: true
-    resolution:
-      integrity: sha512-fbjI6ja0N5ZA8TV53RUqzsKNkl9fv8Oj3T7zxW7FGv1GSH7gwJaNF8dzCjrqKaxKeUpTz4yT1DaJFq/omNpGfw==
   /@types/node/12.20.4:
     dev: true
     resolution:
@@ -984,10 +975,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
-  /asynckit/0.4.0:
-    dev: true
-    resolution:
-      integrity: sha1-x57Zf380y48robyXkLzDZkdLS3k=
   /balanced-match/1.0.0:
     dev: true
     resolution:
@@ -1177,14 +1164,6 @@ packages:
       node: '>=0.1.90'
     resolution:
       integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
-  /combined-stream/1.0.8:
-    dependencies:
-      delayed-stream: 1.0.0
-    dev: true
-    engines:
-      node: '>= 0.8'
-    resolution:
-      integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==
   /commander/2.15.1:
     dev: true
     resolution:
@@ -1272,6 +1251,12 @@ packages:
       node: '>= 0.1.90'
     resolution:
       integrity: sha512-odDyucr9OgJTdGM2wrMbJXbOkJx3nnUX3Pt8SFOwlAMOpsUQlz1dywvLMXJWX/4Ib0rjfOsaawuuwfI5ucqBGQ==
+  /data-uri-to-buffer/3.0.1:
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-WboRycPNsVw3B3TL559F7kuBUM4d8CgMEvk6xEJlOp7OBPjt6G7z8WMWlD2rOFZLk6OYfFIUGsCOWzcQH9K2og==
   /debug/2.6.9:
     dependencies:
       ms: 2.0.0
@@ -1329,12 +1314,6 @@ packages:
       node: '>= 0.4'
     resolution:
       integrity: sha512-3MqfYKj2lLzdMSf8ZIZE/V+Zuy+BgD6f164e8K2w7dgnpKArBDerGYpM46IYYcjnkdPNMjPk9A6VFB8+3SKlXQ==
-  /delayed-stream/1.0.0:
-    dev: true
-    engines:
-      node: '>=0.4.0'
-    resolution:
-      integrity: sha1-3zrhmayt+31ECqrgsp4icrJOxhk=
   /dequal/2.0.2:
     dev: true
     engines:
@@ -1760,6 +1739,14 @@ packages:
     dev: true
     resolution:
       integrity: sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=
+  /fetch-blob/2.1.1:
+    dev: true
+    engines:
+      node: ^10.17.0 || >=12.3.0
+    peerDependencies:
+      domexception: ^2.0.1
+    resolution:
+      integrity: sha512-Uf+gxPCe1hTOFXwkxYyckn8iUSk6CFXGy5VENZKifovUTZC9eUODWSBhOBS7zICGrAetKzdwLMr85KhIcePMAQ==
   /file-entry-cache/6.0.1:
     dependencies:
       flat-cache: 3.0.4
@@ -1822,16 +1809,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-zAoAQiudy+r5SvnSw3KJy5os/oRJYHzrzja/tBDqrZtNhUw8bt6y8OBzMWcjWr+8liV8Eb6yOhw8WZ7VFZ5ZzA==
-  /form-data/3.0.1:
-    dependencies:
-      asynckit: 0.4.0
-      combined-stream: 1.0.8
-      mime-types: 2.1.29
-    dev: true
-    engines:
-      node: '>= 6'
-    resolution:
-      integrity: sha512-RHkBKtLWUVwd7SqRIvCZMEvAMoGUp0XU+seQiZejj0COz3RI3hWP4sCv3gZWWLjJTd7rGwcsF5eKZGii0r/hbg==
   /fs-extra/7.0.1:
     dependencies:
       graceful-fs: 4.2.6
@@ -2496,10 +2473,20 @@ packages:
     resolution:
       integrity: sha512-hZXc7K2e+PgeI1eDBe/10Ard4ekbfrrqG8Ep+8Jmf4JID2bNg7NvCPOZN+kfF574pFQI7mum2AUqDidoKqcTOw==
   /node-fetch/2.6.1:
+    dev: false
     engines:
       node: 4.x || >=6.0.0
     resolution:
       integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==
+  /node-fetch/3.0.0-beta.9:
+    dependencies:
+      data-uri-to-buffer: 3.0.1
+      fetch-blob: 2.1.1
+    dev: true
+    engines:
+      node: ^10.17 || >=12.3
+    resolution:
+      integrity: sha512-RdbZCEynH2tH46+tj0ua9caUHVWrd/RHnRfvly2EVdqGmI3ndS1Vn/xjm5KuGejDt2RNDQsVRLPNd2QPwcewVg==
   /normalize-package-data/2.5.0:
     dependencies:
       hosted-git-info: 2.8.8

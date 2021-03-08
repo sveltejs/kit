@@ -12,7 +12,7 @@ export default function (test, is_dev) {
 		});
 
 		const payload =
-			'{"status":200,"statusText":"OK","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
+			'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
 
 		if (!js) {
 			// by the time JS has run, hydration will have nuked these scripts
