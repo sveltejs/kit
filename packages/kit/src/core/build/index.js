@@ -381,6 +381,9 @@ async function build_server(
 		],
 		ssr: {
 			noExternal: ['svelte']
+		},
+		optimizeDeps: {
+			entries: []
 		}
 	});
 }
@@ -456,6 +459,9 @@ async function build_service_worker(
 			alias: {
 				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
 			}
+		},
+		optimizeDeps: {
+			entries: []
 		}
 	});
 }
