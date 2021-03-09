@@ -228,6 +228,34 @@ async function build_server(
 
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
+	const common_js_deps = new Set();
+	const common_css_deps = new Set();
+
+	const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
+
+	/** @param {string} dep */
+	const path_to_dep = (dep) => prefix + `/${config.kit.appDir}/${dep}`;
+
+	/**
+	 * @param {string} id
+	 * @param {Set<string>} js_deps
+	 * @param {Set<string>} css_deps
+	 */
+	function find_deps(id, js_deps, css_deps) {
+		const chunk = client_manifest[id];
+		js_deps.add(path_to_dep(chunk.file));
+
+		if (chunk.css) {
+			chunk.css.forEach((file) => css_deps.add(path_to_dep(file)));
+		}
+
+		if (chunk.imports) {
+			chunk.imports.forEach((id) => find_deps(id, js_deps, css_deps));
+		}
+	}
+
+	find_deps(client_entry_file, common_js_deps, common_css_deps);
+
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
@@ -270,30 +298,11 @@ async function build_server(
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
-							const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
-
-							/** @param {string} dep */
-							const path_to_dep = dep => prefix + `/${config.kit.appDir}/${dep}`;
-
-							const js_deps = new Set();
-							const css_deps = new Set();
-
-							/** @param {string} id */
-							function find_deps(id) {
-								const chunk = client_manifest[id];
-								js_deps.add(path_to_dep(chunk.file));
-
-								if (chunk.css) {
-									chunk.css.forEach(file => css_deps.add(path_to_dep(file)));
-								}
-
-								if (chunk.imports) {
-									chunk.imports.forEach(find_deps);
-								}
-							}
+							const js_deps = new Set(common_js_deps);
+							const css_deps = new Set(common_css_deps);
 
 							for (const part of data.parts) {
-								find_deps(part);
+								find_deps(part, js_deps, css_deps);
 							}
 
 							return `{
