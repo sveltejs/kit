@@ -1,4 +1,4 @@
-export function prepare(request) {
+export function prepare({ headers }) {
 	// TODO
 	return {
 		context: {},

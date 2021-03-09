@@ -138,7 +138,7 @@ export type RenderOptions = {
 	root?: SSRComponent['default'];
 	setup?: {
 		prepare?: (
-			headers: Request
+			{ headers: Headers }
 		) => {
 			context?: any;
 			headers?: Headers;

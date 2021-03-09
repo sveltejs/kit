@@ -24,7 +24,7 @@ export async function ssr(request, options) {
 	}
 
 	const { context, headers = {} } =
-		(await (options.setup.prepare && options.setup.prepare(request))) || {};
+		(await (options.setup.prepare && options.setup.prepare({ headers: request.headers }))) || {};
 
 	try {
 		const response = await (render_endpoint(request, context, options) ||
