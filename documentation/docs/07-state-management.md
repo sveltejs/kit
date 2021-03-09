@@ -27,8 +27,8 @@ As an example, let's look at how to populate the session with the current user.
 import cookie from 'cookie';
 import jwt from 'jsonwebtoken';
 
-export async function prepare(headers) {
-	const { token } = cookie.parse(headers.cookie);
+export async function prepare(req) {
+	const { token } = cookie.parse(req.headers.cookie);
 	const user = token ? jwt.decode(token) : false;
 
 	return {
@@ -44,7 +44,7 @@ export async function getSession(context) {
 }
 ```
 
-The `prepare` function receives request headers from the current request. You can optionally return response headers and a context object passed to server routes (for example, `src/routes/api.js`).
+The `prepare` function receives the current request. You can optionally return response headers and a context object passed to server routes (for example, `src/routes/api.js`).
 
 The `getSession` function may return a `Promise` (or, equivalently, be `async`). It receives the `context` from the `prepare` function, and you can seed the `session` data by returning it.
 

@@ -1,4 +1,4 @@
-export function prepare(headers) {
+export function prepare(request) {
 	return {
 		context: {
 			answer: 42
