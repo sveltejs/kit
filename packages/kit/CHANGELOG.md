@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.39
+
+### Patch Changes
+
+- b7fdb0d: Skip pre-bundling
+
 ## 1.0.0-next.38
 
 ### Patch Changes
