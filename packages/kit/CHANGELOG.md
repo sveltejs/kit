@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- 4c5fd3c: Include layout/error styles in SSR
+
 ## 1.0.0-next.39
 
 ### Patch Changes
