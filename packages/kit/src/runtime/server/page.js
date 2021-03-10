@@ -34,6 +34,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const page = {
 		host,
+		body: request.body,
+		method: request.method,
 		path: request.path,
 		query: request.query,
 		params
