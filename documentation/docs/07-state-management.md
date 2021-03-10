@@ -27,7 +27,7 @@ As an example, let's look at how to populate the session with the current user.
 import cookie from 'cookie';
 import jwt from 'jsonwebtoken';
 
-export async function prepare(headers) {
+export async function prepare({ headers }) {
 	const { token } = cookie.parse(headers.cookie);
 	const user = token ? jwt.decode(token) : false;
 
