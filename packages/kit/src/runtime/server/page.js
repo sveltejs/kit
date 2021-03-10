@@ -43,7 +43,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/**
 	 * @param {string} url
-	 * @param {RequestInit} opts
+	 * @param {import('node-fetch').RequestInit} opts
 	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
@@ -55,6 +55,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		const parsed = parse(url);
 
+		// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 		if (opts.credentials !== 'omit') {
 			uses_credentials = true;
 		}

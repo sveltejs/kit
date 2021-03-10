@@ -84,11 +84,10 @@ export class Renderer {
 
 		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
-			/** @type {HTMLAnchorElement | SVGAElement} */
+			if (!(event.target instanceof Node)) return;
 			const a = find_anchor(event.target);
-
 			if (a && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(new URL(a.href));
+				this.prefetch(new URL(a.href.toString()));
 			}
 		};
 
@@ -213,6 +212,10 @@ export class Renderer {
 			components: []
 		};
 
+		/**
+		 * @param {string} url
+		 * @param {RequestInit} opts
+		 */
 		const fetcher = (url, opts) => {
 			if (this.initial) {
 				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
