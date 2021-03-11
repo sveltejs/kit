@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- e6449d2: Fix AMP styles for real
+
 ## 1.0.0-next.43
 
 ### Patch Changes
