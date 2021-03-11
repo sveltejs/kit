@@ -319,6 +319,8 @@ class Watcher extends EventEmitter {
 						return mod;
 					}),
 					get style() {
+						// TODO is it possible to inject <link> elements with
+						// the current Vite plugin? would be better than this
 						return [...common_css_deps, ...css_deps].join('\n');
 					},
 					css: [],

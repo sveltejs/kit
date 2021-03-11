@@ -207,25 +207,6 @@ async function build_server(
 	/** @param {string} c */
 	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
 
-	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
-	// way to be able to inline CSS into AMP documents. if we come up with
-	// something better, we could use it for non-AMP documents too, as
-	// critical CSS below a certain threshold _should_ be inlined
-	const css_lookup = {};
-	// manifest.pages.forEach((data) => {
-	// 	data.parts.forEach((c) => {
-	// 		const deps = client.deps[c];
-	// 		deps.css.forEach((dep) => {
-	// 			const url = `${config.kit.paths.assets}/${config.kit.appDir}/${dep}`.replace(/^\/\./, '');
-	// 			const file = `${OPTIMIZED}/client/${config.kit.appDir}/${dep}`;
-
-	// 			css_lookup[url] = fs.readFileSync(file, 'utf-8');
-	// 		});
-	// 	});
-	// });
-
-	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
-
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
 	const common_js_deps = new Set();
@@ -256,6 +237,31 @@ async function build_server(
 
 	find_deps(client_entry_file, common_js_deps, common_css_deps);
 
+	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
+	// way to be able to inline CSS into AMP documents. if we come up with
+	// something better, we could use it for non-AMP documents too, as
+	// critical CSS below a certain threshold _should_ be inlined
+	const deps = {};
+	const amp_css_lookup = {};
+	manifest.pages.forEach((data) => {
+		data.parts.forEach((file) => {
+			/** @type {Record<string, { js: Set<string>, css: Set<string> }>} */
+			deps[file] = {
+				js: new Set(common_js_deps),
+				css: new Set(common_css_deps)
+			};
+
+			find_deps(file, deps[file].js, deps[file].css);
+
+			Array.from(deps[file].css).forEach((file) => {
+				const resolved = `${output_dir}/client/${file}`;
+				const contents = fs.readFileSync(resolved, 'utf-8');
+
+				amp_css_lookup[file] = contents;
+			});
+		});
+	});
+
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
@@ -284,7 +290,7 @@ async function build_server(
 			];
 
 			${config.kit.amp ? `
-			const css_lookup = ${s(css_lookup)};` : ''}
+			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
 
 			const manifest = {
 				assets: ${s(manifest.assets)},
@@ -350,7 +356,7 @@ async function build_server(
 					host_header: ${s(config.kit.hostHeader)},
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => css_lookup[dep]
+					get_amp_css: dep => amp_css_lookup[dep]
 				});
 			}
 		`
