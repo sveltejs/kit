@@ -262,7 +262,7 @@ async function build_server(
 		`
 			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths } from './runtime/internal/singletons.js';
+			import { set_paths } from './runtime/paths.js';
 			import * as setup from ${s(app_relative(setup_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
@@ -275,8 +275,6 @@ async function build_server(
 			export function init({ paths }) {
 				set_paths(paths);
 			}
-
-			init({ paths: ${s(config.kit.paths)} });
 
 			const d = decodeURIComponent;
 			const empty = () => ({});
