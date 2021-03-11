@@ -17,7 +17,8 @@ export default [
 			'app/navigation': 'src/runtime/app/navigation.js',
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
-			'app/env': 'src/runtime/app/env.js'
+			'app/env': 'src/runtime/app/env.js',
+			paths: 'src/runtime/paths.js'
 		},
 		output: {
 			dir: 'assets/runtime',
