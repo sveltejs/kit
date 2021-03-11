@@ -2,7 +2,8 @@ import { URL, URLSearchParams } from 'url';
 import { get_body } from '@sveltejs/app-utils/http';
 
 export default async (req, res) => {
-	const { pathname, query = '' } = new URL(req.url || '', req.host);
+	const host = `${req.headers['x-forwarded-proto']}://${req.headers.host}`;
+	const { pathname, query = '' } = new URL(req.url || '', host);
 
 	const { default: app } = await import('./server/app.js');
 
