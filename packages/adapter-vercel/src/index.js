@@ -1,10 +1,10 @@
-import { parse, URLSearchParams } from 'url';
+import { URL, URLSearchParams } from 'url';
 import { get_body } from '@sveltejs/app-utils/http';
 
-const app = require('./server/app.js');
-
 export default async (req, res) => {
-	const { pathname, query = '' } = parse(req.url || '');
+	const { pathname, query = '' } = new URL(req.url || '', req.host);
+
+	const { default: app } = await import('./server/app.js');
 
 	const rendered = await app.render({
 		method: req.method,

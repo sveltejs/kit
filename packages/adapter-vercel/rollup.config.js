@@ -10,5 +10,5 @@ export default {
 		exports: 'default'
 	},
 	plugins: [nodeResolve(), commonjs()],
-	external: require('module').builtinModules
+	external: [...require('module').builtinModules, './server/app.js']
 };
