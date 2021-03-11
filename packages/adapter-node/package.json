@@ -19,7 +19,7 @@
 		"@sveltejs/app-utils": "workspace:*",
 		"compression": "^1.7.4",
 		"polka": "^0.5.2",
-		"rollup": "^2.38.3",
+		"rollup": "^2.41.1",
 		"sirv": "^1.0.11"
 	}
 }
