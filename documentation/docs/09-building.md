@@ -4,16 +4,6 @@ title: Building
 
 Up until now we've been using `svelte-kit dev` to build our application and run a development server. But when it comes to production, we want to create a self-contained optimized build.
 
-### svelte-kit build
-
-This command packages up your application into the `.svelte/build` directory. (You can change this to a custom directory, as well as controlling various other options — do `svelte-kit build --help` for more information.)
-
-The output is a Node app that you can run from the project root:
-
-```bash
-node .svelte/build
-```
-
 ### svelte-kit start
 
 This command runs your build output as a Node app. You can pass two options to it:
@@ -21,9 +11,9 @@ This command runs your build output as a Node app. You can pass two options to i
 - `--port $PORT` — Set the port that the application runs on. Defaults to port 3000.
 - `--open` — Opens a browser tab on launch (defaults to false)
 
-### svelte-kit adapt
+### svelte-kit build
 
-This command packages your build output into a platform-specific format. The command will use the adapter defined in your `svelte.config.cjs` file. For example, you can use `@sveltejs/adapter-static` to "export" your site, or `@sveltejs/adapter-vercel` to deploy to Vercel as a serverless app.
+This command packages up your application into a platform-specifc format in the `.svelte/build` directory. The command will use the adapter defined in your `svelte.config.cjs` file. For example, you can use `@sveltejs/adapter-static` to "export" your site, or `@sveltejs/adapter-vercel` to deploy to Vercel as a serverless app.
 
 ```js
 // svelte.config.cjs
@@ -36,6 +26,12 @@ module.exports = {
 	}
 	// ...
 };
+```
+
+The output is a Node app that you can run from the project root. (You can change the output directory to a custom directory, as well as controlling various other options — do `svelte-kit build --help` for more information.)
+
+```bash
+node .svelte/build
 ```
 
 ### Browser support
