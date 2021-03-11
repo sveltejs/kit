@@ -31,7 +31,7 @@ module.exports = {
 The output is a Node app that you can run from the project root. (You can change the output directory to a custom directory, as well as controlling various other options — do `svelte-kit build --help` for more information.)
 
 ```bash
-node .svelte/build
+node build
 ```
 
 ### Browser support
