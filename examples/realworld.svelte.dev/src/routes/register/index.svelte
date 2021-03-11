@@ -1,9 +1,7 @@
 <script context="module">
 	export async function load({ session }) {
 		if (session.user) {
-			return {
-				redirect: { to: '/', status: 302 }
-			};
+			return { redirect: '/', status: 302 };
 		}
 	}
 </script>
