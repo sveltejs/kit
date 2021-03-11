@@ -389,7 +389,7 @@ async function build_server(
 			})
 		],
 		ssr: {
-			noExternal: ['svelte']
+			noExternal: ['svelte', '@sveltejs/kit']
 		},
 		optimizeDeps: {
 			entries: []
