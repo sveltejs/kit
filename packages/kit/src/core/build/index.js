@@ -209,16 +209,26 @@ async function build_server(
 
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
+	/** @type {Set<string>} */
 	const common_js_deps = new Set();
+
+	/** @type {Set<string>} */
 	const common_css_deps = new Set();
 
+	/** @type {Map<string, Set<string>>} */
+	const js_deps_by_file = new Map();
+
+	/** @type {Map<string, Set<string>>} */
+	const css_deps_by_file = new Map();
+
 	/**
-	 * @param {string} id
+	 * @param {string} file
 	 * @param {Set<string>} js_deps
 	 * @param {Set<string>} css_deps
 	 */
-	function find_deps(id, js_deps, css_deps) {
-		const chunk = client_manifest[id];
+	function find_deps(file, js_deps, css_deps) {
+		const chunk = client_manifest[file];
+
 		js_deps.add(chunk.file);
 
 		if (chunk.css) {
@@ -226,7 +236,7 @@ async function build_server(
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((id) => find_deps(id, js_deps, css_deps));
+			chunk.imports.forEach((file) => find_deps(file, js_deps, css_deps));
 		}
 	}
 
@@ -236,24 +246,24 @@ async function build_server(
 	// way to be able to inline CSS into AMP documents. if we come up with
 	// something better, we could use it for non-AMP documents too, as
 	// critical CSS below a certain threshold _should_ be inlined
-	const deps = {};
+
+	/** @type {Record<string, string>} */
 	const amp_css_lookup = {};
-	manifest.pages.forEach((data) => {
-		data.parts.forEach((file) => {
-			/** @type {Record<string, { js: Set<string>, css: Set<string> }>} */
-			deps[file] = {
-				js: new Set(common_js_deps),
-				css: new Set(common_css_deps)
-			};
 
-			find_deps(file, deps[file].js, deps[file].css);
+	[client_entry_file, ...manifest.components].forEach((file) => {
+		const js_deps = new Set();
+		const css_deps = new Set();
 
-			Array.from(deps[file].css).forEach((file) => {
-				const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
-				const contents = fs.readFileSync(resolved, 'utf-8');
+		js_deps_by_file.set(file, js_deps);
+		css_deps_by_file.set(file, css_deps);
 
-				amp_css_lookup[`/${config.kit.appDir}/${file}`] = contents;
-			});
+		find_deps(file, js_deps, css_deps);
+
+		css_deps.forEach((file) => {
+			const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
+			const contents = fs.readFileSync(resolved, 'utf-8');
+
+			amp_css_lookup[file] = contents;
 		});
 	});
 
@@ -302,18 +312,16 @@ async function build_server(
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
-							const js_deps = new Set();
-							const css_deps = new Set();
+							const js_deps = new Set(common_js_deps);
+							const css_deps = new Set(common_css_deps);
 
 							for (const file of data.parts) {
-								const { js, css } = deps[file];
-
-								js.forEach(asset => {
-									js_deps.add(`${prefix}/${asset}`);
+								js_deps_by_file.get(file).forEach(asset => {
+									js_deps.add(asset);
 								});
 
-								css.forEach(asset => {
-									css_deps.add(`${prefix}/${asset}`);
+								css_deps_by_file.get(file).forEach(asset => {
+									css_deps.add(asset);
 								});
 							}
 
