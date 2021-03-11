@@ -28,7 +28,11 @@ export default async function adapter(builder) {
 	});
 
 	builder.log.minor('Writing routes...');
-	mkdirSync(config_directory);
+	try {
+		mkdirSync(config_directory);
+	} catch {
+		// directory already exists
+	}
 	writeFileSync(
 		join(config_directory, 'routes.json'),
 		JSON.stringify([
