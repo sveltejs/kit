@@ -84,10 +84,9 @@ export class Renderer {
 
 		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
-			if (!(event.target instanceof Node)) return;
-			const a = find_anchor(event.target);
+			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (a && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(new URL(a.href.toString()));
+				this.prefetch(new URL(/** @type {string} */ (a.href)));
 			}
 		};
 

@@ -81,8 +81,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			if (!(event.target instanceof Node)) return;
-			const a = find_anchor(event.target);
+			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (!a) return;
 
 			if (!a.href) return;
