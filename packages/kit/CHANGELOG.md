@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- 0f54ebc: Fix AMP styles
+
 ## 1.0.0-next.41
 
 ### Patch Changes

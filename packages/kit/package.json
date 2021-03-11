@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.41",
+	"version": "1.0.0-next.42",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "workspace:*",
