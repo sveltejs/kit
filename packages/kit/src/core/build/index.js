@@ -109,12 +109,6 @@ async function build_client({
 		});
 	});
 
-	manifest.endpoints.forEach((endpoint) => {
-		const resolved = path.resolve(cwd, endpoint.file);
-		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('endpoints', relative)] = resolved;
-	});
-
 	// client build
 	await vite.build({
 		root: cwd,
