@@ -212,11 +212,6 @@ async function build_server(
 	const common_js_deps = new Set();
 	const common_css_deps = new Set();
 
-	const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
-
-	/** @param {string} dep */
-	const path_to_dep = (dep) => prefix + `/${config.kit.appDir}/${dep}`;
-
 	/**
 	 * @param {string} id
 	 * @param {Set<string>} js_deps
@@ -224,10 +219,10 @@ async function build_server(
 	 */
 	function find_deps(id, js_deps, css_deps) {
 		const chunk = client_manifest[id];
-		js_deps.add(path_to_dep(chunk.file));
+		js_deps.add(chunk.file);
 
 		if (chunk.css) {
-			chunk.css.forEach((file) => css_deps.add(path_to_dep(file)));
+			chunk.css.forEach((file) => css_deps.add(file));
 		}
 
 		if (chunk.imports) {
@@ -254,13 +249,18 @@ async function build_server(
 			find_deps(file, deps[file].js, deps[file].css);
 
 			Array.from(deps[file].css).forEach((file) => {
-				const resolved = `${output_dir}/client/${file}`;
+				const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
 				const contents = fs.readFileSync(resolved, 'utf-8');
 
-				amp_css_lookup[file] = contents;
+				amp_css_lookup[`/${config.kit.appDir}/${file}`] = contents;
 			});
 		});
 	});
+
+	const prefix =
+		config.kit.paths.assets === '/.'
+			? `/${config.kit.appDir}`
+			: `${config.kit.paths.assets}/${config.kit.appDir}`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -302,11 +302,19 @@ async function build_server(
 							const params = get_params(data.params);
 							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
 
-							const js_deps = new Set(common_js_deps);
-							const css_deps = new Set(common_css_deps);
+							const js_deps = new Set();
+							const css_deps = new Set();
 
-							for (const part of data.parts) {
-								find_deps(part, js_deps, css_deps);
+							for (const file of data.parts) {
+								const { js, css } = deps[file];
+
+								js.forEach(asset => {
+									js_deps.add(`${prefix}/${asset}`);
+								});
+
+								css.forEach(asset => {
+									css_deps.add(`${prefix}/${asset}`);
+								});
 							}
 
 							return `{
