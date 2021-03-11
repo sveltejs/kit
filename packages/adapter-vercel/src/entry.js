@@ -5,9 +5,9 @@ export default async (req, res) => {
 	const host = `${req.headers['x-forwarded-proto']}://${req.headers.host}`;
 	const { pathname, query = '' } = new URL(req.url || '', host);
 
-	const { default: app } = await import('./server/app.mjs');
+	const { render } = await import('./server/app.mjs');
 
-	const rendered = await app.render({
+	const rendered = await render({
 		method: req.method,
 		headers: req.headers,
 		path: pathname,
