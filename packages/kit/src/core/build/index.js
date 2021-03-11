@@ -267,11 +267,6 @@ async function build_server(
 		});
 	});
 
-	const prefix =
-		config.kit.paths.assets === '/.'
-			? `/${config.kit.appDir}`
-			: `${config.kit.paths.assets}/${config.kit.appDir}`;
-
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
