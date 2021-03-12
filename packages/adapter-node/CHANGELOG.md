@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
 ## 1.0.0-next.5
 
 ### Patch Changes

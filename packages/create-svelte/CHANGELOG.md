@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.31
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+- 625747d: create-svelte: bundle production dependencies for SSR
+
 ## 2.0.0-next.30
 
 ### Patch Changes
