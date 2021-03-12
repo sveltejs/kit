@@ -12,7 +12,7 @@ export default function (test, is_dev) {
 	});
 
 	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([page.waitForNavigation(), page.click('[href="/redirect/loopy/a"]')]);
+		await page.click('[href="/redirect/loopy/a"]');
 
 		if (js) {
 			await page.waitForTimeout(50);
