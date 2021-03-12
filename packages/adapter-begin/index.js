@@ -22,7 +22,7 @@ function parse_arc(arcPath) {
 	}
 }
 
-export default function adapter() {
+export default function () {
 	return {
 		async adapt(builder) {
 			builder.log.minor('Parsing app.arc file');
