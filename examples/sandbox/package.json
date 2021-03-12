@@ -1,6 +1,6 @@
 {
 	"name": "sandbox",
-	"version": "1.0.0",
+	"version": "1.0.1-next.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -11,6 +11,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.32.1"
+		"svelte": "^3.35.0"
 	}
 }

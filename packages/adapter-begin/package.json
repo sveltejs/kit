@@ -17,7 +17,7 @@
 		"@sveltejs/app-utils": "workspace:*"
 	},
 	"devDependencies": {
-		"rollup": "^2.34.2",
-		"sirv": "^1.0.10"
+		"rollup": "^2.41.1",
+		"sirv": "^1.0.11"
 	}
 }

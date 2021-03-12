@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- e6449d2: Fix AMP styles for real
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- 672e9be: Fix AMP styles, again
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- 0f54ebc: Fix AMP styles
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- 4aa5a73: Future-proof prepare argument
+- 58dc400: Call correct set_paths function
+- 2322291: Update to node-fetch@3
+
 ## 1.0.0-next.40
 
 ### Patch Changes

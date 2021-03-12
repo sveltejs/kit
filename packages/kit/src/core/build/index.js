@@ -109,12 +109,6 @@ async function build_client({
 		});
 	});
 
-	manifest.endpoints.forEach((endpoint) => {
-		const resolved = path.resolve(cwd, endpoint.file);
-		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('endpoints', relative)] = resolved;
-	});
-
 	// client build
 	await vite.build({
 		root: cwd,
@@ -207,54 +201,65 @@ async function build_server(
 	/** @param {string} c */
 	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
 
-	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
-	// way to be able to inline CSS into AMP documents. if we come up with
-	// something better, we could use it for non-AMP documents too, as
-	// critical CSS below a certain threshold _should_ be inlined
-	const css_lookup = {};
-	// manifest.pages.forEach((data) => {
-	// 	data.parts.forEach((c) => {
-	// 		const deps = client.deps[c];
-	// 		deps.css.forEach((dep) => {
-	// 			const url = `${config.kit.paths.assets}/${config.kit.appDir}/${dep}`.replace(/^\/\./, '');
-	// 			const file = `${OPTIMIZED}/client/${config.kit.appDir}/${dep}`;
-
-	// 			css_lookup[url] = fs.readFileSync(file, 'utf-8');
-	// 		});
-	// 	});
-	// });
-
-	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
-
 	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
 
+	/** @type {Set<string>} */
 	const common_js_deps = new Set();
+
+	/** @type {Set<string>} */
 	const common_css_deps = new Set();
 
-	const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
+	/** @type {Map<string, Set<string>>} */
+	const js_deps_by_file = new Map();
 
-	/** @param {string} dep */
-	const path_to_dep = (dep) => prefix + `/${config.kit.appDir}/${dep}`;
+	/** @type {Map<string, Set<string>>} */
+	const css_deps_by_file = new Map();
 
 	/**
-	 * @param {string} id
+	 * @param {string} file
 	 * @param {Set<string>} js_deps
 	 * @param {Set<string>} css_deps
 	 */
-	function find_deps(id, js_deps, css_deps) {
-		const chunk = client_manifest[id];
-		js_deps.add(path_to_dep(chunk.file));
+	function find_deps(file, js_deps, css_deps) {
+		const chunk = client_manifest[file];
+
+		js_deps.add(chunk.file);
 
 		if (chunk.css) {
-			chunk.css.forEach((file) => css_deps.add(path_to_dep(file)));
+			chunk.css.forEach((file) => css_deps.add(file));
 		}
 
 		if (chunk.imports) {
-			chunk.imports.forEach((id) => find_deps(id, js_deps, css_deps));
+			chunk.imports.forEach((file) => find_deps(file, js_deps, css_deps));
 		}
 	}
 
 	find_deps(client_entry_file, common_js_deps, common_css_deps);
+
+	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
+	// way to be able to inline CSS into AMP documents. if we come up with
+	// something better, we could use it for non-AMP documents too, as
+	// critical CSS below a certain threshold _should_ be inlined
+
+	/** @type {Record<string, string>} */
+	const amp_css_lookup = {};
+
+	[client_entry_file, ...manifest.components].forEach((file) => {
+		const js_deps = new Set();
+		const css_deps = new Set();
+
+		js_deps_by_file.set(file, js_deps);
+		css_deps_by_file.set(file, css_deps);
+
+		find_deps(file, js_deps, css_deps);
+
+		css_deps.forEach((file) => {
+			const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
+			const contents = fs.readFileSync(resolved, 'utf-8');
+
+			amp_css_lookup[file] = contents;
+		});
+	});
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -262,7 +267,7 @@ async function build_server(
 		`
 			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths } from './runtime/internal/singletons.js';
+			import { set_paths } from './runtime/paths.js';
 			import * as setup from ${s(app_relative(setup_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
@@ -276,8 +281,6 @@ async function build_server(
 				set_paths(paths);
 			}
 
-			init({ paths: ${s(config.kit.paths)} });
-
 			const d = decodeURIComponent;
 			const empty = () => ({});
 
@@ -286,7 +289,7 @@ async function build_server(
 			];
 
 			${config.kit.amp ? `
-			const css_lookup = ${s(css_lookup)};` : ''}
+			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
 
 			const manifest = {
 				assets: ${s(manifest.assets)},
@@ -301,8 +304,14 @@ async function build_server(
 							const js_deps = new Set(common_js_deps);
 							const css_deps = new Set(common_css_deps);
 
-							for (const part of data.parts) {
-								find_deps(part, js_deps, css_deps);
+							for (const file of data.parts) {
+								js_deps_by_file.get(file).forEach(asset => {
+									js_deps.add(asset);
+								});
+
+								css_deps_by_file.get(file).forEach(asset => {
+									css_deps.add(asset);
+								});
 							}
 
 							return `{
@@ -352,7 +361,7 @@ async function build_server(
 					host_header: ${s(config.kit.hostHeader)},
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => css_lookup[dep]
+					get_amp_css: dep => amp_css_lookup[dep]
 				});
 			}
 		`
