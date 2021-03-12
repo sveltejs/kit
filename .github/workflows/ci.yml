@@ -14,8 +14,13 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        node-version: [12, 14, 15]
-        os: [ubuntu-latest, macOS-latest]
+        # Run only on Node 12 while repo is private to save minutes
+        # node-version: [12, 14]
+        node-version: [12]
+        # don't include macOS-latest while repo is private because it is charged at 10x rate
+        # same with windows-latest charged at 2x rate
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
@@ -50,7 +55,7 @@ jobs:
         # don't include macOS-latest while repo is private because it is charged at 10x rate
         # same with windows-latest charged at 2x rate
         # os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
