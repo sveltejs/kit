@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.2
+
+### Patch Changes
+
+- 512b8c9: adapter-netlify: Use CJS entrypoint
+
 ## 1.0.0-next.1
 
 ### Patch Changes

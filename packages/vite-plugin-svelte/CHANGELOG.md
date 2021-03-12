@@ -1,5 +1,11 @@
 # @sveltejs/vite-plugin-svelte
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
 ## 1.0.0-next.2
 
 ### Patch Changes
