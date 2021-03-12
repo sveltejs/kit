@@ -1,3 +1,14 @@
+# READ THIS FIRST!
+
+We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting, and documentation will be available. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some major known issues to resolve...
+
+- [#460](https://github.com/sveltejs/kit/issues/460): It doesn't work on Windows
+- [#424](https://github.com/sveltejs/kit/issues/424): It doesn't work with TypeScript
+
+...and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
+
+---
+
 # @sveltejs/kit
 
 Everything you need to build a Svelte app.
@@ -46,4 +57,4 @@ npm publish --access=public
 
 ## Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subpackages of `test/` such as `test/apps/basics/`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
