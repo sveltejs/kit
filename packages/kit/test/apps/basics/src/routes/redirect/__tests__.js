@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
 	test('redirect', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/a"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/redirect/a"]')]);
 
 		if (js) await page.waitForTimeout(50);
 
@@ -12,7 +12,7 @@ export default function (test, is_dev) {
 	});
 
 	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/loopy/a"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/redirect/loopy/a"]')]);
 
 		if (js) {
 			await page.waitForTimeout(50);
@@ -30,7 +30,10 @@ export default function (test, is_dev) {
 	});
 
 	test('errors on missing status', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/missing-status/a"]');
+		await Promise.all([
+			page.waitForNavigation(),
+			page.click('[href="/redirect/missing-status/a"]')
+		]);
 
 		if (js) await page.waitForTimeout(50);
 
@@ -43,7 +46,10 @@ export default function (test, is_dev) {
 	});
 
 	test('errors on invalid status', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/missing-status/b"]');
+		await Promise.all([
+			page.waitForNavigation(),
+			page.click('[href="/redirect/missing-status/b"]')
+		]);
 
 		if (js) await page.waitForTimeout(50);
 

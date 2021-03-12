@@ -6,7 +6,7 @@ export default function (test) {
 		'redirects from /routing/ to /routing',
 		'/routing/slashes',
 		async ({ base, page, app, js }) => {
-			await page.click('a[href="/routing/"]');
+			await Promise.all([page.waitForNavigation(), page.click('a[href="/routing/"]')]);
 			assert.equal(await page.url(), `${base}/routing`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
@@ -24,7 +24,7 @@ export default function (test) {
 		'redirects from /routing/? to /routing',
 		'/routing/slashes',
 		async ({ base, page, app, js }) => {
-			await page.click('a[href="/routing/?"]');
+			await Promise.all([page.waitForNavigation(), page.click('a[href="/routing/?"]')]);
 			assert.equal(await page.url(), `${base}/routing`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
@@ -42,7 +42,7 @@ export default function (test) {
 		'redirects from /routing/?foo=bar to /routing?foo=bar',
 		'/routing/slashes',
 		async ({ base, page, app, js }) => {
-			await page.click('a[href="/routing/?foo=bar"]');
+			await Promise.all([page.waitForNavigation(), page.click('a[href="/routing/?foo=bar"]')]);
 			assert.equal(await page.url(), `${base}/routing?foo=bar`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
@@ -97,7 +97,7 @@ export default function (test) {
 				await page.waitForTimeout(500);
 
 				const requests = await capture_requests(async () => {
-					await page.click('a[href="/routing/a"]');
+					await Promise.all([page.waitForNavigation(), page.click('a[href="/routing/a"]')]);
 
 					await page.waitForFunction(() => document.location.pathname == '/routing/a');
 
@@ -126,7 +126,10 @@ export default function (test) {
 	});
 
 	test('does not attempt client-side navigation to server routes', '/routing', async ({ page }) => {
-		await page.click('[href="/routing/ambiguous/ok.json"]');
+		await Promise.all([
+			page.waitForNavigation(),
+			page.click('[href="/routing/ambiguous/ok.json"]')
+		]);
 		await page.waitForFunction(() => document.location.pathname == '/routing/ambiguous/ok.json');
 
 		assert.equal(await page.textContent('body'), 'ok');
@@ -137,13 +140,13 @@ export default function (test) {
 	});
 
 	test('resets the active element after navigation', '/routing', async ({ page }) => {
-		await page.click('[href="/routing/a"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/a"]')]);
 		await page.waitForFunction(() => document.activeElement.nodeName == 'BODY');
 	});
 
 	test('navigates between routes with empty parts', '/routing/dirs/foo', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'foo');
-		await page.click('[href="bar"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="bar"]')]);
 		await page.waitForSelector('.bar');
 
 		assert.equal(await page.textContent('h1'), 'bar');
@@ -152,27 +155,30 @@ export default function (test) {
 	test('navigates to ...rest', '/routing/abc/xyz', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'abc,xyz');
 
-		await page.click('[href="/routing/xyz/abc/def/ghi"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/xyz/abc/def/ghi"]')]);
 		assert.equal(await page.textContent('h1'), 'xyz,abc,def,ghi');
 		assert.equal(await page.textContent('h2'), 'xyz,abc,def,ghi');
 
-		await page.click('[href="/routing/xyz/abc/def"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/xyz/abc/def"]')]);
 		assert.equal(await page.textContent('h1'), 'xyz,abc,def');
 		assert.equal(await page.textContent('h2'), 'xyz,abc,def');
 
-		await page.click('[href="/routing/xyz/abc/def"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/xyz/abc/def"]')]);
 		assert.equal(await page.textContent('h1'), 'xyz,abc,def');
 		assert.equal(await page.textContent('h2'), 'xyz,abc,def');
 
-		await page.click('[href="/routing/xyz/abc"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/xyz/abc"]')]);
 		assert.equal(await page.textContent('h1'), 'xyz,abc');
 		assert.equal(await page.textContent('h2'), 'xyz,abc');
 
-		await page.click('[href="/routing/xyz/abc/deep"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/routing/xyz/abc/deep"]')]);
 		assert.equal(await page.textContent('h1'), 'xyz,abc');
 		assert.equal(await page.textContent('h2'), 'xyz,abc');
 
-		await page.click('[href="/routing/xyz/abc/qwe/deep.json"]');
+		await Promise.all([
+			page.waitForNavigation(),
+			page.click('[href="/routing/xyz/abc/qwe/deep.json"]')
+		]);
 		assert.equal(await page.textContent('body'), 'xyz,abc,qwe');
 	});
 
@@ -182,7 +188,7 @@ export default function (test) {
 		async ({ page }) => {
 			assert.equal(await page.textContent('h1'), 'A page');
 
-			await page.click('[href="/routing/dirs/foo/xyz"]');
+			await Promise.all([page.waitForNavigation(), page.click('[href="/routing/dirs/foo/xyz"]')]);
 			assert.equal(await page.textContent('h1'), 'B page');
 		}
 	);
@@ -190,17 +196,17 @@ export default function (test) {
 	test('find regexp routes', '/routing/qwe', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'qwe');
 
-		await page.click('[href="234"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="234"]')]);
 		assert.equal(await page.textContent('h1'), 'Regexp page 234');
 
-		await page.click('[href="regexp/234"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="regexp/234"]')]);
 		assert.equal(await page.textContent('h1'), 'Nested regexp page 234');
 	});
 
 	test('invalidates page when a segment is skipped', '/routing/skipped/x/1', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'x/1');
 
-		await page.click('#goto-y1');
+		await Promise.all([page.waitForNavigation(), page.click('#goto-y1')]);
 		assert.equal(await page.textContent('h1'), 'y/1');
 	});
 }

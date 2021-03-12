@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert';
 export default function (test) {
 	test('calls a delete handler', '/delete-route', async ({ page, js }) => {
 		if (js) {
-			await page.click('.del');
+			await Promise.all([page.waitForNavigation(), page.click('.del')]);
 			await page.waitForSelector('h1');
 
 			assert.equal(await page.innerHTML('h1'), 'deleted 42');
