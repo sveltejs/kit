@@ -81,8 +81,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			/** @type {HTMLAnchorElement | SVGAElement} */
-			const a = find_anchor(event.target);
+			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (!a) return;
 
 			if (!a.href) return;
@@ -90,7 +89,7 @@ export class Router {
 			// check if link is inside an svg
 			// in this case, both href and target are always inside an object
 			const svg = typeof a.href === 'object' && a.href.constructor.name === 'SVGAnimatedString';
-			const href = String(svg ? a.href.baseVal : a.href);
+			const href = String(svg ? /** @type {SVGAElement} */ (a).href.baseVal : a.href);
 
 			if (href === location.href) {
 				if (!location.hash) event.preventDefault();
@@ -103,7 +102,7 @@ export class Router {
 			if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
 
 			// Ignore if <a> has a target
-			if (svg ? a.target.baseVal : a.target) return;
+			if (svg ? /** @type {SVGAElement} */ (a).target.baseVal : a.target) return;
 
 			const url = new URL(href);
 
