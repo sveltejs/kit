@@ -57,6 +57,7 @@
 		"test:integration": "uvu test test.js"
 	},
 	"exports": {
+		"./package.json": "./package.json",
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		}
