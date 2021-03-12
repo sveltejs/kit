@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFileSync, mkdirSync, renameSync } from 'fs';
 import { dirname, resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 import { copy } from '@sveltejs/app-utils/files';
@@ -18,6 +18,7 @@ export default async function adapter(builder) {
 
 	builder.log.minor('Building lambda...');
 	builder.copy_server_files(server_directory);
+	renameSync(join(server_directory, 'app.js'), join(server_directory, 'app.mjs'));
 
 	copy(join(__dirname, 'files'), lambda_directory);
 
@@ -27,7 +28,11 @@ export default async function adapter(builder) {
 	});
 
 	builder.log.minor('Writing routes...');
-	mkdirSync(config_directory);
+	try {
+		mkdirSync(config_directory);
+	} catch {
+		// directory already exists
+	}
 	writeFileSync(
 		join(config_directory, 'routes.json'),
 		JSON.stringify([
