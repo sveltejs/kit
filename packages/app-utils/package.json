@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/app-utils",
-	"version": "1.0.0-next.2",
+	"version": "1.0.0-next.3",
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"build": "tsc",
