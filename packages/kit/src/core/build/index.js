@@ -379,7 +379,8 @@ async function build_server(
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${output_dir}/server`
+			outDir: `${output_dir}/server`,
+			target: 'es2018'
 		},
 		resolve: {
 			alias: {
@@ -398,7 +399,7 @@ async function build_server(
 			})
 		],
 		ssr: {
-			noExternal: ['svelte']
+			noExternal: ['svelte', '@sveltejs/kit']
 		},
 		optimizeDeps: {
 			entries: []
