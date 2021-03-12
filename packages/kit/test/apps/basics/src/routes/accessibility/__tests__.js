@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert';
 export default function (test) {
 	// TODO unskip this
 	test.skip('resets focus', '/accessibility/a', async ({ page }) => {
-		await page.click('[href="/accessibility/b"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/accessibility/b"]')]);
 		await page.waitForTimeout(50);
 		assert.equal(await page.innerHTML('h1'), 'b');
 		await page.waitForTimeout(50);
@@ -14,7 +14,7 @@ export default function (test) {
 		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'A');
 		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
 
-		await page.click('[href="/accessibility/a"]');
+		await Promise.all([page.waitForNavigation(), page.click('[href="/accessibility/a"]')]);
 		await page.waitForTimeout(50);
 		assert.equal(await page.innerHTML('h1'), 'a');
 		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'BODY');
@@ -33,7 +33,7 @@ export default function (test) {
 			// live region should exist, but be empty
 			assert.equal(await page.innerHTML('[aria-live]'), '');
 
-			await page.click('[href="/accessibility/b"]');
+			await Promise.all([page.waitForNavigation(), page.click('[href="/accessibility/b"]')]);
 			await page.waitForTimeout(50);
 			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b'); // TODO i18n
 		} else {
