@@ -143,7 +143,7 @@ export type RenderOptions = {
 	entry?: string;
 	root?: SSRComponent['default'];
 	setup?: {
-		prepare?: (ctx: {
+		prepare?: (incoming: {
 			headers: Headers;
 		}) => {
 			context?: any;
