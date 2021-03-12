@@ -1,8 +1,8 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { session } from '$app/stores';
-	import ListErrors from '$components/ListErrors.svelte';
-	import * as api from '$common/api.js';
+	import ListErrors from '$lib/ListErrors.svelte';
+	import * as api from '$lib/api.js';
 
 	export let article;
 	export let slug;

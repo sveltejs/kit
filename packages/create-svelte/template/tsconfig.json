@@ -3,7 +3,7 @@
 		"allowJs": true,
 		"paths": {
 			"$app/*": [".svelte/dev/runtime/app/*", ".svelte/build/runtime/app/*"],
-			"$components/*": ["src/components/*"]
+			"$lib/*": ["src/lib/*"]
 		}
 	},
 	"include": ["src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]

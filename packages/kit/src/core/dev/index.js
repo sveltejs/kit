@@ -79,7 +79,8 @@ class Watcher extends EventEmitter {
 			root: this.cwd,
 			resolve: {
 				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`)
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [

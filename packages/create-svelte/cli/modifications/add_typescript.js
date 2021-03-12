@@ -54,7 +54,7 @@ function add_tsconfig(cwd) {
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"paths": {
-			"$components/*": ["./src/components/*"]
+			"$lib/*": ["./src/lib/*"]
 		}
 	},
 	"include": ["src/**/*"],

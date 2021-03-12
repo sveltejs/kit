@@ -16,6 +16,7 @@ export type ValidatedConfig = {
 		appDir: string;
 		files: {
 			assets: string;
+			lib: string;
 			routes: string;
 			serviceWorker: string;
 			setup: string;
