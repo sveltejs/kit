@@ -7,7 +7,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Test');
 		assert.equal(await page.textContent('h2'), 'Calls: 1');
 
-		await Promise.all([page.waitForNavigation(), page.click('a[href="/store/result"]')]);
+		await page.click('a[href="/store/result"]');
 		assert.equal(await page.textContent('h1'), 'Result');
 		assert.equal(await page.textContent('h2'), js ? 'Calls: 1' : 'Calls: 0');
 
