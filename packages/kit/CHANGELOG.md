@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.46
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
 ## 1.0.0-next.45
 
 ### Minor Changes

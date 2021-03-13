@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.2",
+	"version": "1.0.0-next.3",
 	"type": "module",
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",

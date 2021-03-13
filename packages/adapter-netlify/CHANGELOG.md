@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
 ## 1.0.0-next.2
 
 ### Patch Changes
