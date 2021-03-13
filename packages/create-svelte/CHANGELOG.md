@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.32
+
+### Patch Changes
+
+- 97b7ea4: jsconfig for js projects
+
 ## 2.0.0-next.31
 
 ### Patch Changes

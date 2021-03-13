@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
 ## 1.0.0-next.6
 
 ### Patch Changes
