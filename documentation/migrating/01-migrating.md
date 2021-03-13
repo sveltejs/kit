@@ -10,7 +10,7 @@ SvelteKit is largely backwards-compatible with Sapper. However, there are a numb
   - It should have a `<div id="svelte">` (or `id` matching `target` in `svelte.config.cjs`)
 - The error and layout pages should prefixed by `$` instead of `_`
 - Replace imports from `@sapper/app` with imports from `$app/navigation` and `$app/stores` and update APIs accordingly
-- If you have `src/node_modules/components`, move it to `src/lib` and update the import path to `$lib`
+- If you have source code in `src/node_modules`, move it to `src/lib` and update the import path to `$lib`
 - Move any custom `client.js` code to `$layout.svelte` and put it in an `if (browser)` check (`import { browser } from "$app/env";`).
 - `preload` has been renamed to `load`. It has a new method signature and return values
 - `sapper:prefetch` and `sapper:noscroll` have been renamed to `sveltekit:prefetch` and `sveltekit:noscroll`
