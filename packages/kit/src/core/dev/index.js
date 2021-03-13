@@ -90,7 +90,7 @@ class Watcher extends EventEmitter {
 						dev: true,
 						hydratable: true
 					},
-					hot: true,
+					hot: true, // TODO: fix type https://github.com/svitejs/svite/issues/6
 					extensions: this.config.extensions
 				})
 			],
@@ -133,6 +133,7 @@ class Watcher extends EventEmitter {
 						{
 							headers: req.headers,
 							method: req.method,
+							host: null,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body

@@ -1,6 +1,9 @@
 import { router, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
+/**
+ * @param {string} name
+ */
 function guard(name) {
 	return () => {
 		throw new Error(`Cannot call ${name}(...) on the server`);

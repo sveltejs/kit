@@ -47,7 +47,8 @@
 		"dev": "rm -rf assets/runtime && rollup -cw",
 		"build": "rm -rf assets/runtime && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
-		"check": "npx tsc",
+		"check": "npx tsc -p tsconfig.enforced.json",
+		"check-all": "npx tsc -p tsconfig.all.json",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
@@ -56,6 +57,7 @@
 		"test:integration": "uvu test test.js"
 	},
 	"exports": {
+		"./package.json": "./package.json",
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		}

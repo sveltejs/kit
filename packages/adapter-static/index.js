@@ -1,11 +1,13 @@
-'use strict';
+export default function ({ pages = 'build', assets = 'build' } = {}) {
+	return {
+		async adapt(builder) {
+			builder.copy_static_files(assets);
+			builder.copy_client_files(assets);
 
-export default async function adapter(builder, { pages = 'build', assets = 'build' } = {}) {
-	builder.copy_static_files(assets);
-	builder.copy_client_files(assets);
-
-	await builder.prerender({
-		force: true,
-		dest: pages
-	});
+			await builder.prerender({
+				force: true,
+				dest: pages
+			});
+		}
+	};
 }
