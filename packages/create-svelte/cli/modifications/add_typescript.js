@@ -17,7 +17,6 @@ export default async function add_typescript(cwd, yes) {
 		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
 		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
-		add_d_ts_file(cwd);
 
 		console.log(
 			bold(
@@ -35,10 +34,6 @@ export default async function add_typescript(cwd, yes) {
 function add_tsconfig(cwd) {
 	fs.unlinkSync(join(cwd, 'jsconfig.json'));
 	copy_from_ts_template(cwd, 'tsconfig.json');
-}
-
-function add_d_ts_file(cwd) {
-	copy_from_ts_template(cwd, 'src', 'globals.d.ts');
 }
 
 function copy_from_ts_template(cwd, ...path) {
