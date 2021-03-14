@@ -142,12 +142,6 @@ async function build_client({
 		},
 		plugins: [
 			svelte({
-				emitCss: true,
-				compilerOptions: {
-					dev: true,
-					hydratable: true
-				},
-				hot: true,
 				extensions: config.extensions
 			})
 		]
@@ -389,12 +383,6 @@ async function build_server(
 		},
 		plugins: [
 			svelte({
-				emitCss: true,
-				compilerOptions: {
-					dev: true,
-					hydratable: true
-				},
-				hot: true,
 				extensions: config.extensions
 			})
 		],
