@@ -187,7 +187,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// error page, there's not a lot we can do
 			if (error) throw e instanceof Error ? e : new Error(e);
 
-			loaded = { error: e instanceof Error ? e : { message: e.toString() }, status: 500 };
+			loaded = { error: e instanceof Error ? e : { name: 'Error', message: e.toString() }, status: 500 };
 		}
 
 		if (loaded) {
@@ -276,7 +276,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			$session,
 			route,
 			status: 500,
-			error: e instanceof Error ? e : { message: e.toString() }
+			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
 	}
 
