@@ -9,7 +9,7 @@
 </script>
 
 <script>
-	import Counter from '$components/Counter.svelte';
+	import Counter from '$lib/Counter.svelte';
 
 	export let answer;
 

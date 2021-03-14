@@ -1,5 +1,5 @@
 <script>
-	import ListErrors from '$components/ListErrors.svelte';
+	import ListErrors from '$lib/ListErrors.svelte';
 	import CommentInput from './_CommentInput.svelte';
 	import Comment from './_Comment.svelte';
 

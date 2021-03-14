@@ -137,7 +137,8 @@ async function build_client({
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
@@ -378,7 +379,8 @@ async function build_server(
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [

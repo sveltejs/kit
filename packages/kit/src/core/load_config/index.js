@@ -85,6 +85,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	const validated = validate_config(config.default);
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
+	validated.kit.files.lib = path.resolve(cwd, validated.kit.files.lib);
 	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
 	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);

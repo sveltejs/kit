@@ -1,7 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
-	import ArticleList from '$components/ArticleList/index.svelte';
-	import * as api from '$common/api.js';
+	import ArticleList from '$lib/ArticleList/index.svelte';
+	import * as api from '$lib/api.js';
 
 	export let profile;
 	export let favorites;
