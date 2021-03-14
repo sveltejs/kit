@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.34
+
+### Patch Changes
+
+- 848687c: Fix location of example `Counter.svelte` component
+
 ## 2.0.0-next.33
 
 ### Patch Changes
