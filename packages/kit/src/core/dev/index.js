@@ -84,12 +84,6 @@ class Watcher extends EventEmitter {
 			},
 			plugins: [
 				svelte({
-					emitCss: true,
-					compilerOptions: {
-						dev: true,
-						hydratable: true
-					},
-					hot: true, // TODO: fix type https://github.com/svitejs/svite/issues/6
 					extensions: this.config.extensions
 				})
 			],
