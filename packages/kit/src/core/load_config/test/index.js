@@ -23,6 +23,7 @@ suite('load default config', async () => {
 			appDir: '_app',
 			files: {
 				assets: join(cwd, 'static'),
+				lib: join(cwd, 'src/lib'),
 				routes: join(cwd, 'src/routes'),
 				serviceWorker: join(cwd, 'src/service-worker'),
 				setup: join(cwd, 'src/setup'),

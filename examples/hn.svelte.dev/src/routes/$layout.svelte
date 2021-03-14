@@ -4,9 +4,9 @@
 
 <script>
 	import { page, navigating } from '$app/stores';
-	import Nav from '$components/Nav.svelte';
-	import PreloadingIndicator from '$components/PreloadingIndicator.svelte';
-	import ThemeToggler from '$components/ThemeToggler.svelte';
+	import Nav from '$lib/Nav.svelte';
+	import PreloadingIndicator from '$lib/PreloadingIndicator.svelte';
+	import ThemeToggler from '$lib/ThemeToggler.svelte';
 
 	$: section = $page.path.split('/')[1];
 </script>

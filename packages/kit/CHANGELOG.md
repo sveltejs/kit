@@ -1,5 +1,57 @@
 # @sveltejs/kit
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- 5554acc: Add \$lib alias
+- 5cd6f11: bump vite-plugin-svelte to 0.11.0
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.45
+
+### Minor Changes
+
+- 925638a: Remove endpoints from the files built for the client
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+- 625747d: kit: bundle @sveltejs/kit into built application
+- Updated dependencies [c3cf3f3]
+  - @sveltejs/vite-plugin-svelte@1.0.0-next.3
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- e6449d2: Fix AMP styles for real
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- 672e9be: Fix AMP styles, again
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- 0f54ebc: Fix AMP styles
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- 4aa5a73: Future-proof prepare argument
+- 58dc400: Call correct set_paths function
+- 2322291: Update to node-fetch@3
+
 ## 1.0.0-next.40
 
 ### Patch Changes

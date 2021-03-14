@@ -1,4 +1,6 @@
+// @ts-ignore
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
+// @ts-ignore
 import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';

@@ -79,17 +79,12 @@ class Watcher extends EventEmitter {
 			root: this.cwd,
 			resolve: {
 				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`)
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [
 				svelte({
-					emitCss: true,
-					compilerOptions: {
-						dev: true,
-						hydratable: true
-					},
-					hot: true,
 					extensions: this.config.extensions
 				})
 			],
@@ -132,6 +127,7 @@ class Watcher extends EventEmitter {
 						{
 							headers: req.headers,
 							method: req.method,
+							host: null,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body
@@ -319,6 +315,8 @@ class Watcher extends EventEmitter {
 						return mod;
 					}),
 					get style() {
+						// TODO is it possible to inject <link> elements with
+						// the current Vite plugin? would be better than this
 						return [...common_css_deps, ...css_deps].join('\n');
 					},
 					css: [],

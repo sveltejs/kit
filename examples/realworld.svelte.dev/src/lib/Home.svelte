@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import MainView from './MainView/index.svelte';
 	import Tags from './Tags.svelte';
-	import * as api from '$common/api.js';
+	import * as api from '$lib/api.js';
 
 	export let p = 1;
 

@@ -1,6 +1,6 @@
 <script>
 	import { session, page } from '$app/stores';
-	import * as api from '$common/api.js';
+	import * as api from '$lib/api.js';
 	import ArticlePreview from './ArticlePreview.svelte';
 	import ListPagination from './ListPagination.svelte';
 

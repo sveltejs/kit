@@ -43,7 +43,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/**
 	 * @param {string} url
-	 * @param {RequestInit} opts
+	 * @param {import('node-fetch').RequestInit} opts
 	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
@@ -55,6 +55,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		const parsed = parse(url);
 
+		// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 		if (opts.credentials !== 'omit') {
 			uses_credentials = true;
 		}
@@ -287,6 +288,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const style = route ? route.style : '';
 
 	const s = JSON.stringify;
+	const prefix = `${options.paths.assets}/${options.app_dir}`;
 
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
@@ -294,8 +296,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 				style || (await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))).join('\n')
 		  }</style>`
 		: [
-				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...js_deps.map((dep) => `<link rel="modulepreload" href="${prefix}/${dep}">`),
+				...css_deps.map((dep) => `<link rel="stylesheet" href="${prefix}/${dep}">`)
 		  ].join('\n\t\t\t');
 
 	const init = options.amp

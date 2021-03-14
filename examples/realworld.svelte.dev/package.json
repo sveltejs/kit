@@ -1,6 +1,6 @@
 {
 	"name": "realworld.svelte.dev",
-	"version": "1.0.0",
+	"version": "1.0.1-next.0",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -11,8 +11,8 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"marked": "^2.0.0",
-		"svelte": "^3.32.1"
+		"marked": "^2.0.1",
+		"svelte": "^3.35.0"
 	},
 	"dependencies": {
 		"node-fetch": "^2.6.1"

@@ -1,3 +1,9 @@
+declare global {
+	interface ImportMeta {
+		env: Record<string, string>;
+	}
+}
+
 export type Logger = {
 	(msg: string): void;
 	success: (msg: string) => void;
@@ -16,6 +22,7 @@ export type ValidatedConfig = {
 		appDir: string;
 		files: {
 			assets: string;
+			lib: string;
 			routes: string;
 			serviceWorker: string;
 			setup: string;
@@ -137,8 +144,8 @@ export type RenderOptions = {
 	entry?: string;
 	root?: SSRComponent['default'];
 	setup?: {
-		prepare?: ({
-			headers: Headers
+		prepare?: (incoming: {
+			headers: Headers;
 		}) => {
 			context?: any;
 			headers?: Headers;
