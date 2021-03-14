@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"moduleResolution": "node",
-		"target": "es2017",
+		"target": "es2018",
 		/**
 			svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
 			to enforce using \`import type\` instead of \`import\` for Types.
@@ -18,6 +18,8 @@
 		"forceConsistentCasingInFileNames": true,
 		"baseUrl": ".",
 		"allowJs": true,
+		"checkJs": true,
+		"types": ["vite/client"],
 		"paths": {
 			"$app/*": [".svelte/dev/runtime/app/*", ".svelte/build/runtime/app/*"],
 			"$components/*": ["src/components/*"]
