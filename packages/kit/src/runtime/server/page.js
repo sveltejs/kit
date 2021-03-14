@@ -359,7 +359,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
-	const $session = await (options.setup.getSession && options.setup.getSession(context));
+	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
 	if (!route) {
 		if (options.fetched) {

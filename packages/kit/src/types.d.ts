@@ -150,7 +150,7 @@ export type RenderOptions = {
 			context?: any;
 			headers?: Headers;
 		};
-		getSession: (context: any) => any;
+		getSession: ({ context }: { context: any }) => any;
 	};
 	dev?: boolean;
 	amp?: boolean;
