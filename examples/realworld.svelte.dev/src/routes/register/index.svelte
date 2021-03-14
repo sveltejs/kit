@@ -9,8 +9,8 @@
 <script>
 	import { session } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { post } from '$common/utils.js';
-	import ListErrors from '$components/ListErrors.svelte';
+	import { post } from '$lib/utils.js';
+	import ListErrors from '$lib/ListErrors.svelte';
 
 	let username = '';
 	let email = '';

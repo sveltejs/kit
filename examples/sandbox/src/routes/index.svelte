@@ -9,7 +9,7 @@
 </script>
 
 <script>
-	import Counter from '$components/Counter.svelte';
+	import Counter from '$lib/Counter.svelte';
 
 	export let answer;
 
@@ -31,11 +31,11 @@
 
 	<p>the answer is {answer}</p>
 
-	<Counter/>
-	<p>Visit the <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
+	<Counter />
+	<p>Visit <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte apps.</p>
 
 	<form on:submit={handle_submit} action="/doubler" method="post">
-		<input type="number" name="num" value="1">
+		<input type="number" name="num" value="1" />
 		<button>double it</button>
 	</form>
 
@@ -46,7 +46,8 @@
 
 <style>
 	:root {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+			'Open Sans', 'Helvetica Neue', sans-serif;
 	}
 
 	main {

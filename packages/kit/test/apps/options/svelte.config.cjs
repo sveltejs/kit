@@ -5,6 +5,7 @@ module.exports = {
 
 		files: {
 			assets: 'public',
+			lib: 'source/components',
 			routes: 'source/pages',
 			template: 'source/template.html'
 		},

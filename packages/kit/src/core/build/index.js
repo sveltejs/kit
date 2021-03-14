@@ -137,7 +137,8 @@ async function build_client({
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
@@ -378,7 +379,8 @@ async function build_server(
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
@@ -389,6 +391,7 @@ async function build_server(
 		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
 		// it's not exposed in the typescript definitions as a result
 		// so we need to ignore the fact that it's missing
+		// @ts-ignore
 		ssr: {
 			noExternal: ['svelte', '@sveltejs/kit']
 		},
