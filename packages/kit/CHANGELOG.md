@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- 5554acc: Add \$lib alias
+- 5cd6f11: bump vite-plugin-svelte to 0.11.0
+
 ## 1.0.0-next.46
 
 ### Patch Changes
