@@ -185,9 +185,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 		} catch (e) {
 			// if load fails when we're already rendering the
 			// error page, there's not a lot we can do
-			if (error) throw e;
+			if (error) throw e instanceof Error ? e : new Error(e);
 
-			loaded = { error: e, status: 500 };
+			loaded = { error: e instanceof Error ? e : { message: e.toString() }, status: 500 };
 		}
 
 		if (loaded) {
@@ -268,7 +268,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	try {
 		rendered = options.root.render(props);
 	} catch (e) {
-		if (error) throw e;
+		if (error) throw e instanceof Error ? e : new Error(e);
 
 		return await get_response({
 			request,
@@ -276,7 +276,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			$session,
 			route,
 			status: 500,
-			error: e
+			error: e instanceof Error ? e : { message: e.toString() }
 		});
 	}
 
