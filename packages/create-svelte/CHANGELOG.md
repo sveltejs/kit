@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.33
+
+### Patch Changes
+
+- f7dc6ad: Fix typo in template app
+- 5554acc: Add \$lib alias
+- c0ed7a8: create-svelte: globals.d.ts TSDoc fixes, add vite/client types to js/tsconfig
+
 ## 2.0.0-next.32
 
 ### Patch Changes
