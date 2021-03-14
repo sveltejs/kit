@@ -82,7 +82,7 @@ export type PreloadContext = {
 
 export type LoadResult = {
 	status?: number;
-	error?: Error | string;
+	error?: Error;
 	redirect?: string;
 	props?: Record<string, any>;
 	context?: Record<string, any>;
