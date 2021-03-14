@@ -1,8 +1,6 @@
 {
 	"compilerOptions": {
 		"baseUrl": ".",
-		"checkJs": true,
-		"types": ["vite/client"],
 		"paths": {
 			"$app/*": [".svelte/dev/runtime/app/*", ".svelte/build/runtime/app/*"],
 			"$components/*": ["src/components/*"]

@@ -1,4 +1,5 @@
 /// <reference types="@sveltejs/kit" />
+/// <reference types="vite/client" />
 
 //#region Ensure Svelte file endings have a type for TypeScript
 /**
