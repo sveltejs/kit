@@ -40,7 +40,8 @@
 	"files": [
 		"assets",
 		"dist",
-		"client"
+		"client",
+		"types.d.ts"
 	],
 	"scripts": {
 		"dev": "rm -rf assets/runtime && rollup -cw",
@@ -59,7 +60,8 @@
 		"./package.json": "./package.json",
 		"./ssr": {
 			"import": "./dist/ssr.js"
-		}
+		},
+		"./types.d.ts": "./types.d.ts"
 	},
 	"types": "types.d.ts"
 }
