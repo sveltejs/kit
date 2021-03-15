@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- ab28c0a: kit: include missing types.d.ts
+- c76c9bf: Upgrade Vite
+
 ## 1.0.0-next.48
 
 ### Patch Changes

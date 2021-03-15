@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.37
+
+### Patch Changes
+
+- c76c9bf: Upgrade Vite
+- ab28c0a: create-svelte: Remove duplicate types
+
 ## 2.0.0-next.36
 
 ### Patch Changes
