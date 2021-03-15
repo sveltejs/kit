@@ -15,7 +15,7 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
- *   config: import('../../types').ValidatedConfig;
+ *   config: import('../../../types.internal').ValidatedConfig;
  *   cwd?: string;
  * }} opts
  * @returns {Promise<import('http').Server>}
@@ -23,7 +23,7 @@ const mutable = (dir) =>
 export async function start({ port, config, cwd = process.cwd() }) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
-	/** @type {import('../../types').App} */
+	/** @type {import('../../../types.internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
 
 	/** @type {import('sirv').RequestHandler} */

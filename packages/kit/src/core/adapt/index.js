@@ -5,7 +5,7 @@ import Builder from './Builder.js';
 import { createRequire } from 'module';
 
 /**
- * @param {import('../../types').ValidatedConfig} config
+ * @param {import('../../../types.internal').ValidatedConfig} config
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
 export async function adapt(config, { cwd = process.cwd(), verbose }) {

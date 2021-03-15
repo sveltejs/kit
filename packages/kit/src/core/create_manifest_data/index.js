@@ -22,11 +22,11 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('../../types').ValidatedConfig;
+ *   config: import('../../../types.internal').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('../../types').ManifestData}
+ * @returns {import('../../../types.internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -41,10 +41,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('../../types').PageData[]} */
+	/** @type {import('../../../types.internal').PageData[]} */
 	const pages = [];
 
-	/** @type {import('../../types').EndpointData[]} */
+	/** @type {import('../../../types.internal').EndpointData[]} */
 	const endpoints = [];
 
 	/** @type {Map<string, string>} */
@@ -336,7 +336,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('../../types').Asset[]} files
+ * @param {import('../../../types.internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

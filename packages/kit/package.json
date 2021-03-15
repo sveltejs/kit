@@ -40,7 +40,9 @@
 	"files": [
 		"assets",
 		"dist",
-		"client"
+		"types.d.ts",
+		"types.internal.d.ts",
+		"svelte-kit.js"
 	],
 	"scripts": {
 		"dev": "rm -rf assets/runtime && rollup -cw",

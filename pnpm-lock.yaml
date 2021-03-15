@@ -94,17 +94,21 @@ importers:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
       '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/kit': link:../kit
       compression: 1.7.4
       polka: 0.5.2
       rollup: 2.41.1
       sirv: 1.0.11
+      typescript: 4.2.3
     specifiers:
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/app-utils': workspace:*
+      '@sveltejs/kit': workspace:*
       compression: ^1.7.4
       polka: ^0.5.2
       rollup: ^2.41.1
       sirv: ^1.0.11
+      typescript: ^4.2.3
   packages/adapter-static:
     specifiers: {}
   packages/adapter-vercel:
@@ -669,13 +673,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-oJqcTrgPUF29oUP8AsUqbXGJNuPutsetaa9kTQAQce5Lx5dTYWV02ScBiT/k1BX/Z7pKeqedmvp39Wu4zR7N7g==
+  /@types/node/14.14.34:
+    dev: true
+    resolution:
+      integrity: sha512-dBPaxocOK6UVyvhbnpFIj2W+S+1cBTkHQbFQfeeJhoKFbzYcVUGHvddeWPSucKATb3F0+pgDq0i6ghEaZjsugA==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.14.33
+      '@types/node': 14.14.34
     dev: true
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
@@ -2415,13 +2423,13 @@ packages:
   /ms/2.1.2:
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
-  /nanoid/3.1.20:
+  /nanoid/3.1.21:
     dev: true
     engines:
       node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1
     hasBin: true
     resolution:
-      integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==
+      integrity: sha512-A6oZraK4DJkAOICstsGH98dvycPr/4GGDH7ZWKmMdd3vGcOurZ6JmWFUt0DA5bzrrn2FrUjmv6mFNWvv8jpppA==
   /natural-compare/1.4.0:
     dev: true
     resolution:
@@ -2765,7 +2773,7 @@ packages:
   /postcss/8.2.8:
     dependencies:
       colorette: 1.2.2
-      nanoid: 3.1.20
+      nanoid: 3.1.21
       source-map: 0.6.1
     dev: true
     engines:

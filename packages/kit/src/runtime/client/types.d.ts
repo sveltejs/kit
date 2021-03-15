@@ -1,6 +1,6 @@
 export type NavigationTarget = {
 	href: string;
-	route: import('../../types').Page;
+	route: import('../../../types.internal').Page;
 	match: RegExpExecArray;
 	page: {
 		host: string;

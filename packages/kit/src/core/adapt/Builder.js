@@ -8,7 +8,7 @@ export default class Builder {
 	/** @param {{
 	 *   cwd: string;
 	 *   config: any; // TODO
-	 *   log: import('../../types').Logger
+	 *   log: import('../../../types.internal').Logger
 	 * }} opts */
 	constructor({ cwd, config, log }) {
 		this.#cwd = cwd;

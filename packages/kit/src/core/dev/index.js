@@ -14,7 +14,7 @@ import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
 import svelte from '@svitejs/vite-plugin-svelte';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../types').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
 
 /** @param {Options} opts */
 export function dev(opts) {

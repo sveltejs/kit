@@ -19,7 +19,7 @@ export function write_if_changed(file, code) {
 
 const s = JSON.stringify;
 
-/** @typedef {import('../../types').ManifestData} ManifestData */
+/** @typedef {import('../../../types.internal').ManifestData} ManifestData */
 
 /**
  * @param {{
