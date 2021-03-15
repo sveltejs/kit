@@ -168,7 +168,7 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationTarget} selected
-	 * @param {string[]} chain
+	 * @param {string[]} [chain]
 	 */
 	async render(selected, chain) {
 		const token = (this.token = {});
@@ -182,7 +182,7 @@ export class Renderer {
 					hydrated.props.error = new Error('Redirect loop');
 				} else {
 					this.router.goto(hydrated.redirect, { replaceState: true }, [
-						...chain,
+						...(chain || []),
 						this.current.page.path
 					]);
 

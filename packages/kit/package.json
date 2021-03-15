@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.47",
+	"version": "1.0.0-next.49",
 	"type": "module",
 	"dependencies": {
 		"@svitejs/vite-plugin-svelte": "^0.11.0",
@@ -28,11 +28,11 @@
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.3",
 		"uvu": "^0.5.1",
-		"vite": "^2.0.5"
+		"vite": "^2.1.0"
 	},
 	"peerDependencies": {
 		"svelte": "^3.32.1",
-		"vite": "^2.0.4"
+		"vite": "^2.1.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
@@ -40,14 +40,15 @@
 	"files": [
 		"assets",
 		"dist",
-		"client"
+		"client",
+		"types.d.ts"
 	],
 	"scripts": {
 		"dev": "rm -rf assets/runtime && rollup -cw",
 		"build": "rm -rf assets/runtime && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "npx tsc -p tsconfig.enforced.json",
-		"check-all": "npx tsc -p tsconfig.all.json",
+		"check-all": "npx tsc -p tsconfig.json",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
@@ -59,7 +60,8 @@
 		"./package.json": "./package.json",
 		"./ssr": {
 			"import": "./dist/ssr.js"
-		}
+		},
+		"./types.d.ts": "./types.d.ts"
 	},
 	"types": "types.d.ts"
 }

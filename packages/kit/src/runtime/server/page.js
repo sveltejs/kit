@@ -185,9 +185,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 		} catch (e) {
 			// if load fails when we're already rendering the
 			// error page, there's not a lot we can do
-			if (error) throw e;
+			if (error) throw e instanceof Error ? e : new Error(e);
 
-			loaded = { error: e, status: 500 };
+			loaded = {
+				error: e instanceof Error ? e : { name: 'Error', message: e.toString() },
+				status: 500
+			};
 		}
 
 		if (loaded) {
@@ -268,7 +271,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	try {
 		rendered = options.root.render(props);
 	} catch (e) {
-		if (error) throw e;
+		if (error) throw e instanceof Error ? e : new Error(e);
 
 		return await get_response({
 			request,
@@ -276,7 +279,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			$session,
 			route,
 			status: 500,
-			error: e
+			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
 	}
 
@@ -359,7 +362,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
-	const $session = await (options.setup.getSession && options.setup.getSession(context));
+	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
 	if (!route) {
 		if (options.fetched) {

@@ -10,7 +10,7 @@ export default async function add_typescript(cwd, yes) {
 			tslib: '^2.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/components/Counter.svelte', [
+		update_component(cwd, 'src/lib/Counter.svelte', [
 			['<script>', '<script lang="ts">'],
 			['let count = 0', 'let count: number = 0']
 		]);

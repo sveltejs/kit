@@ -9,6 +9,6 @@ export function prepare({ headers }) {
 	};
 }
 
-export function getSession(context) {
+export function getSession({ context }) {
 	return context;
 }

@@ -1,5 +1,18 @@
 # @sveltejs/kit
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- ab28c0a: kit: include missing types.d.ts
+- c76c9bf: Upgrade Vite
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- e37a302: Make getSession future-proof
+
 ## 1.0.0-next.47
 
 ### Patch Changes
