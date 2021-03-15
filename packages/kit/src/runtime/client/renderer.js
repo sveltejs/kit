@@ -355,9 +355,10 @@ export class Renderer {
 						loaded = normalize(loaded);
 
 						if (loaded.error) {
-							// TODO sticking the status on the error object is kinda hacky
-							loaded.error.status = loaded.status;
-							throw loaded.error;
+							props.error = loaded.error;
+							props.status = loaded.status || 500;
+							state.nodes = [];
+							return { redirect, props, state };
 						}
 
 						if (loaded.redirect) {
@@ -431,7 +432,7 @@ export class Renderer {
 			}
 		} catch (error) {
 			props.error = error;
-			props.status = error.status || 500;
+			props.status = 500;
 			state.nodes = [];
 		}
 
