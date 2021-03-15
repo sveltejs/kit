@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.36
+
+### Patch Changes
+
+- 0da62eb: create-svelte: Include missing ts-template
+
 ## 2.0.0-next.35
 
 ### Patch Changes
