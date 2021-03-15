@@ -39,7 +39,7 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `context` objects as arguments. This is useful for creating a JSON API. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `context` objects as arguments. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';
@@ -50,7 +50,7 @@ import db from '$lib/database';
  *   method: 'GET';
  *   headers: Record<string, string>;
  *   path: string;
- *   body: any;
+ *   body: string | Buffer | ReadOnlyFormData;
  *   query: URLSearchParams;
  * }} request
  * @param {any} context
@@ -90,8 +90,6 @@ The second argument, `context`, is something you define during [setup](#Setup), 
 
 The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response.
 
-> We don't interact with the `req`/`res` objects you might be familiar with from Node's `http` module or frameworks like Express, because they're only available on certain platforms. Instead, SvelteKit translates the returned object into whatever's required by the platform you're deploying your app to.
-
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
 ```js
@@ -99,6 +97,10 @@ export function post(request, context) {...}
 ```
 
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
+
+> We don't interact with the `req`/`res` objects you might be familiar with from Node's `http` module or frameworks like Express, because they're only available on certain platforms. Instead, SvelteKit translates the returned object into whatever's required by the platform you're deploying your app to.
+>
+> The `body` property of the request object exists in the case of POST requests. If you're posting form data, it will be a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
 
 ### Private modules

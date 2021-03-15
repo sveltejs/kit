@@ -30,7 +30,7 @@ export async function prepare({ headers }) {
 }
 ```
 
-The outgoing `headers` will be added to the response alongside any headers returned from individual endpoints. This is useful for setting cookies, for example:
+The outgoing `headers` will be added to the response alongside any headers returned from individual endpoints (which take precedence). This is useful for setting cookies, for example:
 
 ```js
 import * as cookie from 'cookie';

@@ -54,7 +54,7 @@ The stores themselves attach to the correct context at the point of subscription
 
 ### $lib
 
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`]. It allows you to access common components and utility modules from arbitrary files in `src/routes` without `../../../../` nonsense.
+This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`]. It allows you to access common components and utility modules without `../../../../` nonsense.
 
 ### $service-worker
 

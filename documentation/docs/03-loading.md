@@ -4,7 +4,7 @@ title: Loading
 
 A component that defines a page can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
 
-Our example blog page might contain a `load` function like this:
+Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
 ```html
 <script context="module">
@@ -51,8 +51,6 @@ Our example blog page might contain a `load` function like this:
 
 `load` is the SvelteKit equivalent of `getStaticProps` or `getServerSideProps` in Next.js or `asyncData` in Nuxt.js.
 
-Note the `context="module"` — this is necessary because `load` runs before the component is rendered.
-
 > `load` only applies to components that define pages, not the components that they import.
 
 ### Input
@@ -92,7 +90,7 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `/bl
 
 ### Output
 
-If you return a Promise from `load`, the SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
+If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
 
 #### status
 

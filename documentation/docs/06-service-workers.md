@@ -6,8 +6,8 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, or `src/service-worker/index.js`, etc) it will be built with Vite and automatically registered.
 
-> You can change the location of your service worker in your [project configuration](#configuration).
+> You can change the location of your service worker in your [project configuration](#configuration-files).
 
-Inside the service worker you have access to the [`$service-worker` module](#$service-worker).
+Inside the service worker you have access to the [`$service-worker` module](#imports-service-worker).
 
 Because it needs to be bundled (since browsers don't yet support `import` in this context), and depends on the client-side app's build manifest, **service workers only work in production, not in development**.
