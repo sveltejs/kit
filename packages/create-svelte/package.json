@@ -22,6 +22,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
-		"template"
+		"template",
+		"ts-template"
 	]
 }
