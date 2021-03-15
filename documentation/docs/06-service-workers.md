@@ -10,4 +10,4 @@ In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker
 
 Inside the service worker you have access to the [`$service-worker` module](#imports-service-worker).
 
-Because it needs to be bundled (since browsers don't yet support `import` in this context), and depends on the client-side app's build manifest, **service workers only work in production, not in development**.
+Because it needs to be bundled (since browsers don't yet support `import` in this context), and depends on the client-side app's build manifest, **service workers only work in the production build, not in development**. To test it locally, use [`svelte-kit start`](#cli-svelte-kit-start).
