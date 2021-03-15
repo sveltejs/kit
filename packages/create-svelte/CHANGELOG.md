@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.35
+
+### Patch Changes
+
+- bb01514: Actually fix $component => $lib transition
+
 ## 2.0.0-next.34
 
 ### Patch Changes
