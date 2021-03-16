@@ -2,7 +2,7 @@
 title: Migrating
 ---
 
-SvelteKit is largely backwards-compatible with Sapper. However, there are a number of differences.YOu may find it helpful to view the [examples](https://github.com/sveltejs/kit/tree/master/examples) while migrating.
+SvelteKit is largely backwards-compatible with Sapper. However, there are a number of differences.You may find it helpful to view the [examples](https://github.com/sveltejs/kit/tree/master/examples) while migrating.
 
 - Remove `rollup.config.js` or `webpack.config.js` and replace with [`vite.config.js`](https://github.com/sveltejs/kit/blob/master/packages/create-svelte/template/vite.config.js)
 - Add a [`svelte.config.cjs` ](https://github.com/sveltejs/kit/blob/master/packages/create-svelte/template/svelte.config.cjs) with the adapter of your choice
