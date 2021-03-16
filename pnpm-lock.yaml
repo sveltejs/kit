@@ -199,30 +199,6 @@ importers:
       typescript: ^4.2.3
       uvu: ^0.5.1
       vite: ^2.1.0
-  packages/vite-plugin-svelte:
-    dependencies:
-      '@rollup/pluginutils': 4.1.0_rollup@2.41.1
-      chalk: 4.1.0
-      hash-sum: 2.0.0
-      require-relative: 0.8.7
-      slash: 3.0.0
-      source-map: 0.7.3
-      svelte-hmr: 0.12.9
-    devDependencies:
-      '@rollup/plugin-typescript': 8.2.0_rollup@2.41.1
-      eslint: 7.21.0
-      rollup: 2.41.1
-    specifiers:
-      '@rollup/plugin-typescript': ^8.2.0
-      '@rollup/pluginutils': ^4.1.0
-      chalk: ^4.1.0
-      eslint: ^7.21.0
-      hash-sum: ^2.0.0
-      require-relative: ^0.8.7
-      rollup: ^2.41.1
-      slash: ^3.0.0
-      source-map: ^0.7.3
-      svelte-hmr: ^0.12.9
 lockfileVersion: 5.2
 packages:
   /@architect/parser/3.0.1:
@@ -556,20 +532,6 @@ packages:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-XwC1oK5rrtRJ0tn1ioLHS6OV5JTluJF7QE1J/q1hN3bquwjnVxjtMyY9iCnoyH9DQbf92CxajB3o98wZbP3oAQ==
-  /@rollup/plugin-typescript/8.2.0_rollup@2.41.1:
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.41.1
-      resolve: 1.20.0
-      rollup: 2.41.1
-    dev: true
-    engines:
-      node: '>=8.0.0'
-    peerDependencies:
-      rollup: ^2.14.0
-      tslib: '*'
-      typescript: '>=3.4.0'
-    resolution:
-      integrity: sha512-5DyVsb7L+ehLfNPu/nat8Gq3uJGzku4bMFPt90XahtgiSBf7z9YKPLqFUJKMT41W/mJ98SVGDPOhzikGrr/Lhg==
   /@rollup/pluginutils/3.1.0_rollup@2.41.1:
     dependencies:
       '@types/estree': 0.0.39
@@ -3266,12 +3228,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==
-  /svelte-hmr/0.12.9:
-    dev: false
-    peerDependencies:
-      svelte: '>=3.19.0'
-    resolution:
-      integrity: sha512-SGE7Odznj4dqZtUVIWcoPCvZ9gHImxVIIjrz+O3DDSi0j4OaSLim6MRF4UdhlBKeW3glSRc+tXNSKYvM5x+Dyw==
   /svelte-hmr/0.13.0-2_svelte@3.35.0:
     dependencies:
       svelte: 3.35.0
