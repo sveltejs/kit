@@ -1,11 +1,6 @@
 # READ THIS FIRST!
 
-We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting, and documentation will be available. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some major known issues to resolve...
-
-- [#460](https://github.com/sveltejs/kit/issues/460): It doesn't work on Windows
-- [#424](https://github.com/sveltejs/kit/issues/424): It doesn't work with TypeScript
-
-...and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
+We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting, and documentation will be available. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some known issues to resolve and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
 
 ---
 

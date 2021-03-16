@@ -9,7 +9,7 @@ export default async function add_css(cwd, which) {
 			less: '^3.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/components/Counter.svelte', [['<style>', '<style lang="less">']]);
+		update_component(cwd, 'src/lib/Counter.svelte', [['<style>', '<style lang="less">']]);
 		update_component(cwd, 'src/routes/index.svelte', [['<style>', '<style lang="less">']]);
 		add_svelte_preprocess_to_config(cwd);
 		console.log(
@@ -25,7 +25,7 @@ export default async function add_css(cwd, which) {
 			sass: '^1.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/components/Counter.svelte', [['<style>', '<style lang="scss">']]);
+		update_component(cwd, 'src/lib/Counter.svelte', [['<style>', '<style lang="scss">']]);
 		update_component(cwd, 'src/routes/index.svelte', [['<style>', '<style lang="scss">']]);
 		add_svelte_preprocess_to_config(cwd);
 		console.log(
