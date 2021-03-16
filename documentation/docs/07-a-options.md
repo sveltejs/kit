@@ -1,5 +1,5 @@
 ---
-title: Link options
+title: Anchor options
 ---
 
 ### sveltekit:prefetch
@@ -16,9 +16,19 @@ We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` at
 
 ...will cause SvelteKit to run the page's `load` function as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
 
-> `sveltekit:prefetch` is a SvelteKit idiom, not a standard attribute for `<a>` elements
-
 You can also programmatically invoke `prefetch` from `$app/navigation`.
+
+### sveltekit:noscroll
+
+When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
+
+In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:noscroll` attribute to a link...
+
+```html
+<a href="path" sveltekit:noscroll>Path</a>
+```
+
+...will prevent scrolling after the link is clicked.
 
 ### rel=external
 
@@ -31,15 +41,3 @@ Adding a `rel=external` attribute to a link...
 ```
 
 ...will trigger a browser navigation when the link is clicked.
-
-### sveltekit:noscroll
-
-When navigating to internal links, SvelteKit will change the scroll position to 0,0 so that the user is at the very top left of the page. When a hash is defined, it will scroll to the element with a matching ID.
-
-In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:noscroll` attribute to a link...
-
-```html
-<a href="path" sveltekit:noscroll>Path</a>
-```
-
-...will prevent scrolling after the link is clicked.
