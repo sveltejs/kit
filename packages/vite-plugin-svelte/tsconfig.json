@@ -1,8 +1,0 @@
-{
-	"compilerOptions": {
-		"target": "es2020",
-		"module": "es2020",
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true
-	}
-}
