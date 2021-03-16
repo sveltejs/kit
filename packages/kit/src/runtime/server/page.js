@@ -7,19 +7,19 @@ import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../../types').Request;
- *   options: import('../../types').RenderOptions;
+ *   request: import('../../../types.internal').Request;
+ *   options: import('../../../types.internal').RenderOptions;
  *   $session: any;
- *   route: import('../../types').Page;
+ *   route: import('../../../types.internal').Page;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../types').Response>}
+ * @returns {Promise<import('../../../types.internal').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../types').Response>} */
+	/** @type {Record<string, import('../../../types.internal').Response>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -124,7 +124,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../../types').Headers} */
+			/** @type {import('../../../types.internal').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -340,7 +340,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../../types').Headers} */
+	/** @type {import('../../../types.internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -358,9 +358,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../../types').Request} request
+ * @param {import('../../../types.internal').Request} request
  * @param {any} context
- * @param {import('../../types').RenderOptions} options
+ * @param {import('../../../types.internal').RenderOptions} options
  */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
