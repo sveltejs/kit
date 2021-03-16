@@ -4,13 +4,13 @@ title: Routing
 
 At the heart of SvelteKit is a *filesystem-based router*. This means that the structure of your application is defined by the structure of your codebase — specifically, the contents of `src/routes`.
 
-> You can change this to a different directory by editing the [project config](#Project-configuration).
+> You can change this to a different directory by editing the [project config](#configuration).
 
 There are two types of route — **pages** and **endpoints**.
 
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#Project-configuration)). When a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel.
+Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). When a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel.
 
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
@@ -35,7 +35,7 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 <p>TODO...</p>
 ```
 
-Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. Soon, we'll see how to access that parameter in a [load function](#Loading) or the [page store](#TODO).
+Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. Soon, we'll see how to access that parameter in a [load function](#loading) or the [page store](#modules-app-stores).
 
 ### Endpoints
 
@@ -91,9 +91,9 @@ export async function get(request, context) {
 }
 ```
 
-Because this module only runs on the server (or when you build your site, if [prerendering](#Prerendering)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
+Because this module only runs on the server (or when you build your site, if [prerendering](#prerendering)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
 
-The second argument, `context`, is something you define during [setup](#Setup), if necessary.
+The second argument, `context`, is something you define during [setup](#setup), if necessary.
 
 The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response.
 

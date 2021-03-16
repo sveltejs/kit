@@ -82,7 +82,7 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `/bl
 
 #### session
 
-`session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. [Seeding session data](#Seeding_session_data) describes how to add data to it.
+`session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [Setup](#setup) to learn how to use it.
 
 #### context
 

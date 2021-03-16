@@ -15,7 +15,7 @@ module.exports = {
 };
 ```
 
-With this, [svelte-kit build](#cli-svelte-kit-build) will generate a self-contained Node app inside `build`. You can pass options to adapters, such as customising the output directory in `adapter-node`:
+With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside `build`. You can pass options to adapters, such as customising the output directory in `adapter-node`:
 
 ```diff
 // svelte.config.cjs

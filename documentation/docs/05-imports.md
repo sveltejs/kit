@@ -21,7 +21,7 @@ import { goto, prefetch, prefetchRoutes } from '$app/navigation';
 ```
 
 * `goto(href, { replaceState, noscroll })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional. If `replaceState` is true, a new history entry won't be created. If `noscroll` is true, the browser won't scroll to the top of the page after navigation.
-* `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](docs#sveltekit_prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
+* `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](docs#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 * `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `preload` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
 
 ### $app/paths
@@ -49,7 +49,7 @@ The stores themselves attach to the correct context at the point of subscription
 
 * `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores) with a value that is `true` once client-side navigation starts, and `false` once it finishes
 * `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`
-* `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
+* `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#setup-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 
 ### $lib
