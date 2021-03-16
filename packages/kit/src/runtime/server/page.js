@@ -69,14 +69,17 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
 
-			// is this a request for a static asset?
+			// handle fetch requests for static assets. e.g. prebaked data, etc.
+			// we need to support everything the browser's fetch supports
 			const filename = resolved.slice(1);
-			const filename_html = `${filename}/index.html`;
+			const filename_html = `${filename}/index.html`; // path may also match path/index.html
 			const asset = options.manifest.assets.find(
 				(d) => d.file === filename || d.file === filename_html
 			);
 
 			if (asset) {
+				// we don't have a running server while prerendering because jumping between
+				// processes would be inefficient so we have get_static_file instead
 				if (options.get_static_file) {
 					response = new Response(options.get_static_file(asset.file), {
 						headers: {
