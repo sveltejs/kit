@@ -41,24 +41,31 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `context` objects as arguments. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
+```ts
+type Request = {
+	host: string;
+	method: 'GET';
+	headers: Record<string, string>;
+	path: string;
+	params: Record<string, string | string[]>;
+	query: URLSearchParams;
+	body: string | Buffer | ReadOnlyFormData;
+};
+
+type Response = {
+	status?: number;
+	headers?: Record<string, string>;
+	body?: any;
+};
+```
+
 ```js
 import db from '$lib/database';
 
 /**
- * @param {{
- *   host: string;
- *   method: 'GET';
- *   headers: Record<string, string>;
- *   path: string;
- *   body: string | Buffer | ReadOnlyFormData;
- *   query: URLSearchParams;
- * }} request
+ * @param {import('@sveltejs/kit').Request} request
  * @param {any} context
- * @returns {{
- *   status?: number;
- *   headers?: Record<string, string>;
- *   body: any;
- * }}
+ * @returns {import('@sveltejs/kit').Response}
  */
 export async function get(request, context) {
 	// the `slug` parameter is available because this file

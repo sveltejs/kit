@@ -6,28 +6,34 @@ A component that defines a page can export a `load` function that runs before th
 
 Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
+```ts
+type LoadOptions = {
+	page: {
+		host: string;
+		path: string;
+		params: Record<string, string | string[]>;
+		query: URLSearchParams;
+	};
+	fetch: (url: string, opts?: {...}) => Promise<Response>
+	session: any;
+	context: Record<string, any>;
+};
+
+type Loaded = {
+	status?: number;
+	error?: Error | string;
+	redirect?: string;
+	maxage?: number;
+	props?: Record<string, any>;
+	context?: Record<string, any>;
+};
+```
+
 ```html
 <script context="module">
 	/**
-	 * @param {{
-	 *   page: {
-	 *     host: string;
-	 *     path: string;
-	 *     params: Record<string, string | string[]>;
-	 *     query: URLSearchParams;
-	 *   };
-	 *   fetch: (url: string, opts?: {...}) => Promise<Response>
-	 *   session: any;
-	 *   context: Record<string, any>;
-	 * }} options
-	 * @returns {{
-	 *   status?: number;
-	 *   error?: Error | string;
-	 *   redirect?: string;
-	 *   maxage?: number;
-	 *   props?: Record<string, any>;
-	 *   context?: Record<string, any>;
-	 * }}
+	 * @param {import('@sveltejs/kit).LoadOptions} options
+	 * @returns {import('@sveltejs/kit').Loaded}
 	 */
 	export async function load({ page, fetch, session, context }) {
 		const url = `/blog/${page.params.slug}.json`;
