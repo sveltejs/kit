@@ -1,0 +1,6 @@
+- `sapper build` -> adapter-node, `sapper export` -> adapter-static
+- The error and layout pages should prefixed by `$` instead of `_`
+- Replace imports from `@sapper/app` with imports from `$app/navigation` and `$app/stores` and update APIs accordingly
+- `preload` has been renamed to `load`. It has a new method signature and return values
+- `sapper:prefetch` and `sapper:noscroll` have been renamed to `sveltekit:prefetch` and `sveltekit:noscroll`
+- endpoints (formerly 'server routes') have a different signature
