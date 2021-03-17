@@ -321,18 +321,16 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: ${status},
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
-				initial: {
-					nodes: [
-						${(route ? route.parts : [])
-							.map((part) => `import(${s(options.get_component_path(part.id))})`)
-							.join(',\n\t\t\t\t\t')}
-					],
-					page: {
-						host: ${host ? s(host) : 'location.host'},
-						path: ${s(request.path)},
-						query: new URLSearchParams(${s(request.query.toString())}),
-						params: ${s(params)}
-					}
+				nodes: [
+					${(route ? route.parts : [])
+						.map((part) => `import(${s(options.get_component_path(part.id))})`)
+						.join(',\n\t\t\t\t\t')}
+				],
+				page: {
+					host: ${host ? s(host) : 'location.host'},
+					path: ${s(request.path)},
+					query: new URLSearchParams(${s(request.query.toString())}),
+					params: ${s(params)}
 				}
 			});
 		</script>`;

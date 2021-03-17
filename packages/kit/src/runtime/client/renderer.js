@@ -37,11 +37,9 @@ export class Renderer {
 	 *   Root: import('../../../types.internal').CSRComponent;
 	 *   layout: import('../../../types.internal').CSRComponent;
 	 *   target: Node;
-	 *   error: Error;
-	 *   status: number;
 	 *   session: any;
 	 * }} opts */
-	constructor({ Root, layout, target, error, status, session }) {
+	constructor({ Root, layout, target, session }) {
 		this.Root = Root;
 		this.layout = layout;
 
@@ -51,10 +49,7 @@ export class Renderer {
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
-		this.initial = {
-			error,
-			status
-		};
+		this.started = false;
 
 		this.current = {
 			page: null,
@@ -116,17 +111,21 @@ export class Renderer {
 		ready = true;
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	async start(selected) {
+	/**
+	 * @param {import('./types').NavigationTarget} selected
+	 * @param {number} status
+	 * @param {Error} error
+	 */
+	async start(selected, status, error) {
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: this.stores,
-			error: this.initial.error,
-			status: this.initial.status,
+			error,
+			status,
 			page: selected.page
 		};
 
-		if (this.initial.error) {
+		if (error) {
 			props.components = [this.layout.default];
 		} else {
 			const hydrated = await this.hydrate(selected);
@@ -154,7 +153,7 @@ export class Renderer {
 			hydrate: true
 		});
 
-		this.initial = null;
+		this.started = true;
 	}
 
 	/** @param {import('../../../types.internal').Page} page */
@@ -219,7 +218,7 @@ export class Renderer {
 		 * @param {RequestInit} opts
 		 */
 		const fetcher = (url, opts) => {
-			if (this.initial) {
+			if (!this.started) {
 				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
 				if (script) {
 					const { body, ...init } = JSON.parse(script.textContent);
