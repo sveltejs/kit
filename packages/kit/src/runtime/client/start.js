@@ -37,7 +37,7 @@ export async function start({ paths, target, session, error, status, nodes, page
 	init({ router, renderer });
 	set_paths(paths);
 
-	await router.init(renderer);
+	router.init(renderer);
 	await renderer.start({ nodes, page }, status, error);
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
