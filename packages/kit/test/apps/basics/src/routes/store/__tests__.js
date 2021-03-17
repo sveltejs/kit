@@ -2,11 +2,11 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('page store functions as expected', '/store', async ({ page, js }) => {
+	test('page store functions as expected', '/store', async ({ page, clicknav, js }) => {
 		assert.equal(await page.textContent('h1'), 'Test');
 		assert.equal(await page.textContent('h2'), 'Calls: 1');
 
-		await page.click('a[href="/store/result"]');
+		await clicknav('a[href="/store/result"]');
 		assert.equal(await page.textContent('h1'), 'Result');
 		assert.equal(await page.textContent('h2'), js ? 'Calls: 1' : 'Calls: 0');
 

@@ -1,5 +1,20 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.4
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+- d742029: Fix mixed usage of CJS and ESM
+- Updated dependencies [c3cf3f3]
+  - @sveltejs/app-utils@1.0.0-next.3
+
 ## 1.0.0-next.3
 
 ### Patch Changes

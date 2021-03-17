@@ -8,8 +8,8 @@ function md5(body) {
 }
 
 /**
- * @param {import('../../types').Request} request
- * @param {import('../../types').RenderOptions} options
+ * @param {import('../../../types.internal').Request} request
+ * @param {import('../../../types.internal').SSRRenderOptions} options
  */
 export async function ssr(request, options) {
 	if (request.path.endsWith('/') && request.path !== '/') {
@@ -24,7 +24,7 @@ export async function ssr(request, options) {
 	}
 
 	const { context, headers = {} } =
-		(await (options.setup.prepare && options.setup.prepare(request.headers))) || {};
+		(await (options.setup.prepare && options.setup.prepare({ headers: request.headers }))) || {};
 
 	try {
 		const response = await (render_endpoint(request, context, options) ||

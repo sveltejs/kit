@@ -1,5 +1,23 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 9212aa5: Add options to adapter-node, and add adapter types
+
+## 1.0.0-next.7
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
 ## 1.0.0-next.5
 
 ### Patch Changes

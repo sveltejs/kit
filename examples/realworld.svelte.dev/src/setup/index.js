@@ -1,4 +1,4 @@
-export function prepare(headers) {
+export function prepare({ headers }) {
 	// TODO
 	return {
 		context: {},
@@ -6,7 +6,7 @@ export function prepare(headers) {
 	};
 }
 
-export function getSession(context) {
+export function getSession({ context }) {
 	// TODO
 	return context;
 }

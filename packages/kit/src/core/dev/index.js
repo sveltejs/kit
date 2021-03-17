@@ -14,7 +14,8 @@ import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
 import svelte from '@svitejs/vite-plugin-svelte';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../types').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
+/** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
 export function dev(opts) {
@@ -79,17 +80,12 @@ class Watcher extends EventEmitter {
 			root: this.cwd,
 			resolve: {
 				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`)
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [
 				svelte({
-					emitCss: true,
-					compilerOptions: {
-						dev: true,
-						hydratable: true
-					},
-					hot: true,
 					extensions: this.config.extensions
 				})
 			],
@@ -132,6 +128,7 @@ class Watcher extends EventEmitter {
 						{
 							headers: req.headers,
 							method: req.method,
+							host: null,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body
@@ -197,9 +194,9 @@ class Watcher extends EventEmitter {
 							root,
 							setup,
 							only_prerender: false,
-							start_global: this.config.kit.startGlobal,
 							host: this.config.kit.host,
 							host_header: this.config.kit.hostHeader,
+							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);
 								return error.stack;
@@ -244,11 +241,15 @@ class Watcher extends EventEmitter {
 
 		/**
 		 * @param {string} file
+		 * @returns {Promise<{
+		 *   mod: SSRComponent;
+		 *   css: Set<string>;
+		 * }>}
 		 */
 		const load = async (file) => {
 			const url = path.resolve(this.cwd, file);
 
-			const mod = await this.viteDevServer.ssrLoadModule(url);
+			const mod = /** @type {SSRComponent} */ (await this.viteDevServer.ssrLoadModule(url));
 			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
 
 			const deps = new Set();
@@ -285,6 +286,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
+		/** @type {import('../../../types.internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: async () => {
@@ -309,16 +311,23 @@ class Watcher extends EventEmitter {
 				return {
 					pattern: data.pattern,
 					params: get_params(data.params),
-					parts: data.parts.map((file) => async () => {
-						const { mod, css } = await load(file);
+					parts: data.parts.map((id) => {
+						return {
+							id,
+							async load() {
+								const { mod, css } = await load(id);
 
-						css.forEach((mod) => {
-							css_deps.add(mod);
-						});
+								css.forEach((mod) => {
+									css_deps.add(mod);
+								});
 
-						return mod;
+								return mod;
+							}
+						};
 					}),
 					get style() {
+						// TODO is it possible to inject <link> elements with
+						// the current Vite plugin? would be better than this
 						return [...common_css_deps, ...css_deps].join('\n');
 					},
 					css: [],
@@ -354,11 +363,11 @@ function get_params(array) {
 
 	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
-		/** @type {Record<string, string | string[]>} */
+		/** @type {Record<string, string>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
-				params[key.slice(3)] = decodeURIComponent(match[i + 1]).split('/');
+				params[key.slice(3)] = decodeURIComponent(match[i + 1]);
 			} else {
 				params[key] = decodeURIComponent(match[i + 1]);
 			}

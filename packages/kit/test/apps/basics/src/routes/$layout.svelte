@@ -9,3 +9,9 @@
 <slot></slot>
 
 <footer>Custom layout</footer>
+
+<style>
+	footer {
+		color: purple;
+	}
+</style>

@@ -1,5 +1,5 @@
 <script context="module">
-	import * as api from '$common/api.js';
+	import * as api from '$lib/api.js';
 
 	export async function load({ page, session: { user } }) {
 		const username = page.params.user.slice(1);

@@ -19,7 +19,7 @@ export function write_if_changed(file, code) {
 
 const s = JSON.stringify;
 
-/** @typedef {import('../../types').ManifestData} ManifestData */
+/** @typedef {import('../../../types.internal').ManifestData} ManifestData */
 
 /**
  * @param {{
@@ -79,7 +79,7 @@ function generate_client_manifest(manifest_data, base) {
 					  page.params
 							.map((param, i) => {
 								return param.startsWith('...')
-									? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+									? `${param.slice(3)}: d(m[${i + 1}])`
 									: `${param}: d(m[${i + 1}])`;
 							})
 							.join(', ') +

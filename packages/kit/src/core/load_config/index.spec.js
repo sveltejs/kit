@@ -14,6 +14,7 @@ test('fills in defaults', () => {
 			appDir: '_app',
 			files: {
 				assets: 'static',
+				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
@@ -31,8 +32,7 @@ test('fills in defaults', () => {
 				force: false,
 				pages: ['*']
 			},
-			target: null,
-			startGlobal: null
+			target: null
 		},
 		preprocess: null
 	});
@@ -86,6 +86,7 @@ test('fills in partial blanks', () => {
 			appDir: '_app',
 			files: {
 				assets: 'public',
+				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
@@ -103,7 +104,6 @@ test('fills in partial blanks', () => {
 				force: false,
 				pages: ['*']
 			},
-			startGlobal: null,
 			target: null
 		},
 		preprocess: null

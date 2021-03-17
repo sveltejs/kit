@@ -16,7 +16,7 @@ export class Router {
 	/** @param {{
 	 *    base: string;
 	 *    host: string;
-	 *    pages: import('../../types').Page[];
+	 *    pages: import('../../../types.internal').CSRPage[];
 	 *    ignore: RegExp[];
 	 * }} opts */
 	constructor({ base, host, pages, ignore }) {
@@ -81,8 +81,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			/** @type {HTMLAnchorElement | SVGAElement} */
-			const a = find_anchor(event.target);
+			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (!a) return;
 
 			if (!a.href) return;
@@ -90,7 +89,7 @@ export class Router {
 			// check if link is inside an svg
 			// in this case, both href and target are always inside an object
 			const svg = typeof a.href === 'object' && a.href.constructor.name === 'SVGAnimatedString';
-			const href = String(svg ? a.href.baseVal : a.href);
+			const href = String(svg ? /** @type {SVGAElement} */ (a).href.baseVal : a.href);
 
 			if (href === location.href) {
 				if (!location.hash) event.preventDefault();
@@ -103,7 +102,7 @@ export class Router {
 			if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
 
 			// Ignore if <a> has a target
-			if (svg ? a.target.baseVal : a.target) return;
+			if (svg ? /** @type {SVGAElement} */ (a).target.baseVal : a.target) return;
 
 			const url = new URL(href);
 
@@ -113,7 +112,7 @@ export class Router {
 			const selected = this.select(url);
 			if (selected) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.renderer.notify(selected);
+				this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
 				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
@@ -135,12 +134,6 @@ export class Router {
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
-
-		// load current page
-		this.history.replaceState({}, '', location.href);
-
-		const selected = this.select(new URL(location.href));
-		if (selected) return this.renderer.start(selected);
 	}
 
 	/**
@@ -167,9 +160,13 @@ export class Router {
 				const query = new URLSearchParams(url.search);
 				const params = route.params(match);
 
+				/** @type {import('../../../types.internal').Page} */
 				const page = { host: this.host, path, query, params };
 
-				return { href: url.href, route, match, page };
+				return {
+					nodes: route.parts.map((loader) => loader()),
+					page
+				};
 			}
 		}
 	}
@@ -184,7 +181,7 @@ export class Router {
 		const selected = this.select(url);
 
 		if (selected) {
-			this.renderer.notify(selected);
+			this.renderer.notify(selected.page);
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);

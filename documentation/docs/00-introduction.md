@@ -6,7 +6,7 @@ title: Introduction
 
 > SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
-> See the [migration guides](migrating) for help upgrading from older versions.
+> See the [migration guides](migrating) for help upgrading from Sapper.
 
 ### What is SvelteKit?
 
@@ -18,21 +18,6 @@ SvelteKit is a framework for building extremely high-performance web apps. You'r
 Building an app with all the modern best practices — code-splitting, offline support, server-rendered views with client-side hydration — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
 You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
-
-
-### Why the name?
-
-SvelteKit is meant to be a full kit of everything necessary to build a Svelte application.
-
-
-### Comparison with Next.js
-
-[Next.js](https://github.com/zeit/next.js) is a React framework from [Vercel (formerly ZEIT)](https://vercel.com), and is the inspiration for SvelteKit. There are a few notable differences, however:
-
-* SvelteKit is powered by Svelte instead of React, so it's faster and your apps are smaller
-* As well as *pages*, you can create *server routes* in your `src/routes` directory. This makes it very easy to, for example, add a JSON API such as the one powering this very page (try visiting [/docs.json](/docs.json))
-* Links are just `<a>` elements, rather than framework-specific `<Link>` components. That means, for example, that [this link right here](/), despite being inside a blob of markdown, works with the router as you'd expect
-
 
 ### Getting started
 

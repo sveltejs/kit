@@ -14,4 +14,16 @@ export default function (test, is_dev) {
 		const script = await page.$('script[type="svelte-data"]');
 		assert.ok(!script, 'Should not include serialized data');
 	});
+
+	test('styles are applied', '/valid', async ({ page }) => {
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('p')).color),
+			'rgb(255, 0, 0)'
+		);
+
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('footer')).color),
+			'rgb(128, 0, 128)'
+		);
+	});
 }

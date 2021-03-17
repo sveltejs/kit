@@ -1,7 +1,7 @@
-/** @type {any} */
+/** @type {import('./router').Router} */
 export let router;
 
-/** @type {any} */
+/** @type {import('./renderer').Renderer} */
 export let renderer;
 
 /** @type {string} */

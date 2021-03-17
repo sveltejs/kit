@@ -7,19 +7,19 @@ import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../../types').Request;
- *   options: import('../../types').RenderOptions;
+ *   request: import('../../../types.internal').Request;
+ *   options: import('../../../types.internal').SSRRenderOptions;
  *   $session: any;
- *   route: import('../../types').Page;
+ *   route: import('../../../types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../types').Response>}
+ * @returns {Promise<import('../../../types.internal').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../types').Response>} */
+	/** @type {Record<string, import('../../../types.internal').Response>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -43,7 +43,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/**
 	 * @param {string} url
-	 * @param {RequestInit} opts
+	 * @param {import('node-fetch').RequestInit} opts
 	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
@@ -55,6 +55,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		const parsed = parse(url);
 
+		// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 		if (opts.credentials !== 'omit') {
 			uses_credentials = true;
 		}
@@ -68,14 +69,17 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
 
-			// is this a request for a static asset?
+			// handle fetch requests for static assets. e.g. prebaked data, etc.
+			// we need to support everything the browser's fetch supports
 			const filename = resolved.slice(1);
-			const filename_html = `${filename}/index.html`;
+			const filename_html = `${filename}/index.html`; // path may also match path/index.html
 			const asset = options.manifest.assets.find(
 				(d) => d.file === filename || d.file === filename_html
 			);
 
 			if (asset) {
+				// we don't have a running server while prerendering because jumping between
+				// processes would be inefficient so we have get_static_file instead
 				if (options.get_static_file) {
 					response = new Response(options.get_static_file(asset.file), {
 						headers: {
@@ -120,7 +124,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../../types').Headers} */
+			/** @type {import('../../../types.internal').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -144,9 +148,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 		});
 	};
 
-	const parts = error ? [options.manifest.layout] : [options.manifest.layout, ...route.parts];
+	const component_promises = error
+		? [options.manifest.layout()]
+		: [options.manifest.layout(), ...route.parts.map((part) => part.load())];
 
-	const component_promises = parts.map((loader) => loader());
 	const components = [];
 	const props_promises = [];
 
@@ -184,9 +189,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 		} catch (e) {
 			// if load fails when we're already rendering the
 			// error page, there's not a lot we can do
-			if (error) throw e;
+			if (error) throw e instanceof Error ? e : new Error(e);
 
-			loaded = { error: e, status: 500 };
+			loaded = {
+				error: e instanceof Error ? e : { name: 'Error', message: e.toString() },
+				status: 500
+			};
 		}
 
 		if (loaded) {
@@ -267,7 +275,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	try {
 		rendered = options.root.render(props);
 	} catch (e) {
-		if (error) throw e;
+		if (error) throw e instanceof Error ? e : new Error(e);
 
 		return await get_response({
 			request,
@@ -275,7 +283,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			$session,
 			route,
 			status: 500,
-			error: e
+			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
 	}
 
@@ -287,6 +295,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const style = route ? route.style : '';
 
 	const s = JSON.stringify;
+	const prefix = `${options.paths.assets}/${options.app_dir}`;
 
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
@@ -294,8 +303,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 				style || (await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))).join('\n')
 		  }</style>`
 		: [
-				...js_deps.map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...css_deps.map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...js_deps.map((dep) => `<link rel="modulepreload" href="${prefix}/${dep}">`),
+				...css_deps.map((dep) => `<link rel="stylesheet" href="${prefix}/${dep}">`)
 		  ].join('\n\t\t\t');
 
 	const init = options.amp
@@ -306,13 +315,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `
 		<script type="module">
 			import { start } from ${s(options.entry)};
-			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				host: ${host ? s(host) : 'location.host'},
 				paths: ${s(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
-				session: ${serialized_session}
+				session: ${serialized_session},
+				nodes: [
+					${(route ? route.parts : [])
+						.map((part) => `import(${s(options.get_component_path(part.id))})`)
+						.join(',\n\t\t\t\t\t')}
+				],
+				page: {
+					host: ${host ? s(host) : 'location.host'},
+					path: ${s(request.path)},
+					query: new URLSearchParams(${s(request.query.toString())}),
+					params: ${s(params)}
+				}
 			});
 		</script>`;
 
@@ -332,7 +351,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../../types').Headers} */
+	/** @type {import('../../../types.internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -350,14 +369,14 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../../types').Request} request
+ * @param {import('../../../types.internal').Request} request
  * @param {any} context
- * @param {import('../../types').RenderOptions} options
+ * @param {import('../../../types.internal').SSRRenderOptions} options
  */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
-	const $session = await (options.setup.getSession && options.setup.getSession(context));
+	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
 	if (!route) {
 		if (options.fetched) {

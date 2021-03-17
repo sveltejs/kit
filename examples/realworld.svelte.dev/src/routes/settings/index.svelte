@@ -1,18 +1,16 @@
 <script context="module">
 	export function load({ session }) {
 		if (!session.user) {
-			return {
-				redirect: { to: '/login', status: 302 }
-			};
+			return { redirect: '/login', status: 302 };
 		}
 	}
 </script>
 
 <script>
 	import { goto } from '$app/navigation';
-	import ListErrors from '$components/ListErrors.svelte';
+	import ListErrors from '$lib/ListErrors.svelte';
 	import SettingsForm from './_SettingsForm.svelte';
-	import { post } from '$common/utils.js';
+	import { post } from '$lib/utils.js';
 
 	let inProgress;
 	let errors;

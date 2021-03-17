@@ -17,7 +17,7 @@ const s = (value) => JSON.stringify(value);
  * }>} ClientManifest */
 
 /**
- * @param {import('../../types').ValidatedConfig} config
+ * @param {import('../../../types.internal').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
  *   runtime?: string;
@@ -64,8 +64,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -109,12 +109,6 @@ async function build_client({
 		});
 	});
 
-	manifest.endpoints.forEach((endpoint) => {
-		const resolved = path.resolve(cwd, endpoint.file);
-		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('endpoints', relative)] = resolved;
-	});
-
 	// client build
 	await vite.build({
 		root: cwd,
@@ -143,17 +137,12 @@ async function build_client({
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
 			svelte({
-				emitCss: true,
-				compilerOptions: {
-					dev: true,
-					hydratable: true
-				},
-				hot: true,
 				extensions: config.extensions
 			})
 		]
@@ -170,8 +159,8 @@ async function build_client({
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -207,26 +196,70 @@ async function build_server(
 	/** @param {string} c */
 	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
 
+	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
+
+	/** @type {Set<string>} */
+	const common_js_deps = new Set();
+
+	/** @type {Set<string>} */
+	const common_css_deps = new Set();
+
+	/** @type {Map<string, Set<string>>} */
+	const js_deps_by_file = new Map();
+
+	/** @type {Map<string, Set<string>>} */
+	const css_deps_by_file = new Map();
+
+	/**
+	 * @param {string} file
+	 * @param {Set<string>} js_deps
+	 * @param {Set<string>} css_deps
+	 */
+	function find_deps(file, js_deps, css_deps) {
+		const chunk = client_manifest[file];
+
+		js_deps.add(chunk.file);
+
+		if (chunk.css) {
+			chunk.css.forEach((file) => css_deps.add(file));
+		}
+
+		if (chunk.imports) {
+			chunk.imports.forEach((file) => find_deps(file, js_deps, css_deps));
+		}
+	}
+
+	find_deps(client_entry_file, common_js_deps, common_css_deps);
+
 	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
 	// way to be able to inline CSS into AMP documents. if we come up with
 	// something better, we could use it for non-AMP documents too, as
 	// critical CSS below a certain threshold _should_ be inlined
-	const css_lookup = {};
-	// manifest.pages.forEach((data) => {
-	// 	data.parts.forEach((c) => {
-	// 		const deps = client.deps[c];
-	// 		deps.css.forEach((dep) => {
-	// 			const url = `${config.kit.paths.assets}/${config.kit.appDir}/${dep}`.replace(/^\/\./, '');
-	// 			const file = `${OPTIMIZED}/client/${config.kit.appDir}/${dep}`;
 
-	// 			css_lookup[url] = fs.readFileSync(file, 'utf-8');
-	// 		});
-	// 	});
-	// });
+	/** @type {Record<string, string>} */
+	const amp_css_lookup = {};
 
-	// TODO get_stack, below, just returns the stack as-is, without sourcemapping
+	/** @type {Record<string, string>} */
+	const client_component_lookup = {};
 
-	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
+	[client_entry_file, ...manifest.components].forEach((file) => {
+		client_component_lookup[file] = client_manifest[file].file;
+
+		const js_deps = new Set();
+		const css_deps = new Set();
+
+		js_deps_by_file.set(file, js_deps);
+		css_deps_by_file.set(file, css_deps);
+
+		find_deps(file, js_deps, css_deps);
+
+		css_deps.forEach((file) => {
+			const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
+			const contents = fs.readFileSync(resolved, 'utf-8');
+
+			amp_css_lookup[file] = contents;
+		});
+	});
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -234,7 +267,7 @@ async function build_server(
 		`
 			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths } from './runtime/internal/singletons.js';
+			import { set_paths } from './runtime/paths.js';
 			import * as setup from ${s(app_relative(setup_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
@@ -248,8 +281,6 @@ async function build_server(
 				set_paths(paths);
 			}
 
-			init({ paths: ${s(config.kit.paths)} });
-
 			const d = decodeURIComponent;
 			const empty = () => ({});
 
@@ -258,7 +289,9 @@ async function build_server(
 			];
 
 			${config.kit.amp ? `
-			const css_lookup = ${s(css_lookup)};` : ''}
+			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
+
+			const client_component_lookup = ${s(client_component_lookup)};
 
 			const manifest = {
 				assets: ${s(manifest.assets)},
@@ -268,32 +301,19 @@ async function build_server(
 					${manifest.pages
 						.map((data) => {
 							const params = get_params(data.params);
-							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
+							const parts = data.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
 
-							const prefix = config.kit.paths.assets === '/.' ? '' : config.kit.paths.assets;
+							const js_deps = new Set(common_js_deps);
+							const css_deps = new Set(common_css_deps);
 
-							/** @param {string} dep */
-							const path_to_dep = dep => prefix + `/${config.kit.appDir}/${dep}`;
+							for (const file of data.parts) {
+								js_deps_by_file.get(file).forEach(asset => {
+									js_deps.add(asset);
+								});
 
-							const js_deps = new Set();
-							const css_deps = new Set();
-
-							/** @param {string} id */
-							function find_deps(id) {
-								const chunk = client_manifest[id];
-								js_deps.add(path_to_dep(chunk.file));
-
-								if (chunk.css) {
-									chunk.css.forEach(file => css_deps.add(path_to_dep(file)));
-								}
-
-								if (chunk.imports) {
-									chunk.imports.forEach(find_deps);
-								}
-							}
-
-							for (const part of data.parts) {
-								find_deps(part);
+								css_deps_by_file.get(file).forEach(asset => {
+									css_deps.add(asset);
+								});
 							}
 
 							return `{
@@ -329,9 +349,7 @@ async function build_server(
 					local,
 					template,
 					manifest,
-					target: ${s(config.kit.target)},${
-						config.kit.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.kit.startGlobal)},` : ''
-					}
+					target: ${s(config.kit.target)},
 					entry: ${s(entry)},
 					root,
 					setup,
@@ -341,9 +359,10 @@ async function build_server(
 					app_dir: ${s(config.kit.appDir)},
 					host: ${s(config.kit.host)},
 					host_header: ${s(config.kit.hostHeader)},
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => css_lookup[dep]
+					get_amp_css: dep => amp_css_lookup[dep]
 				});
 			}
 		`
@@ -361,26 +380,26 @@ async function build_server(
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${output_dir}/server`
+			outDir: `${output_dir}/server`,
+			target: 'es2018'
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`)
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
 			svelte({
-				emitCss: true,
-				compilerOptions: {
-					dev: true,
-					hydratable: true
-				},
-				hot: true,
 				extensions: config.extensions
 			})
 		],
+		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
+		// it's not exposed in the typescript definitions as a result
+		// so we need to ignore the fact that it's missing
+		// @ts-ignore
 		ssr: {
-			noExternal: ['svelte']
+			noExternal: ['svelte', '@sveltejs/kit']
 		},
 		optimizeDeps: {
 			entries: []
@@ -392,8 +411,8 @@ async function build_server(
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -504,7 +523,7 @@ function get_params(array) {
 				array
 					.map((param, i) => {
 						return param.startsWith('...')
-							? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+							? `${param.slice(3)}: d(m[${i + 1}])`
 							: `${param}: d(m[${i + 1}])`;
 					})
 					.join(', ') +

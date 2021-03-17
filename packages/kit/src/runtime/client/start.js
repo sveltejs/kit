@@ -1,4 +1,6 @@
+// @ts-ignore
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
+// @ts-ignore
 import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
@@ -11,15 +13,16 @@ import { set_paths } from '../paths.js';
  *     base: string;
  *   },
  *   target: Node;
- *   host: string;
  *   session: any;
  *   error: Error;
  *   status: number;
+ *   nodes: import('./types').NavigationTarget["nodes"];
+ *   page: import('./types').NavigationTarget["page"];
  * }} opts */
-export async function start({ paths, target, host, session, error, status }) {
+export async function start({ paths, target, session, error, status, nodes, page }) {
 	const router = new Router({
 		base: paths.base,
-		host,
+		host: page.host,
 		pages,
 		ignore
 	});
@@ -28,15 +31,16 @@ export async function start({ paths, target, host, session, error, status }) {
 		Root,
 		layout,
 		target,
-		error,
-		status,
 		session
 	});
 
 	init({ router, renderer });
 	set_paths(paths);
 
-	await router.init(renderer);
+	router.init(renderer);
+	await renderer.start({ nodes, page }, status, error);
+
+	dispatchEvent(new CustomEvent('sveltekit:start'));
 }
 
 if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {

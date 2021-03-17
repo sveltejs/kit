@@ -7,6 +7,6 @@ export function prepare() {
 }
 
 /** @param {any} context */
-export function getSession(context) {
+export function getSession({ context }) {
 	return context;
 }
