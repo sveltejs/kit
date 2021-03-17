@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 9212aa5: Add options to adapter-node, and add adapter types
+
 ## 1.0.0-next.7
 
 ### Patch Changes
