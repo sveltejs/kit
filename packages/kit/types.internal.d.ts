@@ -40,7 +40,6 @@ export type ValidatedConfig = {
 			force: boolean;
 			pages: string[];
 		};
-		startGlobal: string;
 		target: string;
 	};
 	preprocess: any;
@@ -141,7 +140,6 @@ export type RenderOptions = {
 	template?: ({ head, body }: { head: string; body: string }) => string;
 	manifest?: Manifest;
 	target?: string;
-	start_global?: string;
 	entry?: string;
 	root?: SSRComponent['default'];
 	setup?: {

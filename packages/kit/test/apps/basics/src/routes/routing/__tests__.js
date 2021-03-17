@@ -12,7 +12,7 @@ export default function (test) {
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
-				await app.start();
+				await page.evaluate(() => window.started);
 				await app.goto('/routing/');
 				assert.equal(await page.url(), `${base}/routing`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
@@ -30,7 +30,7 @@ export default function (test) {
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
-				await app.start();
+				await page.evaluate(() => window.started);
 				await app.goto('/routing/?');
 				assert.equal(await page.url(), `${base}/routing`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
@@ -48,7 +48,7 @@ export default function (test) {
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
-				await app.start();
+				await page.evaluate(() => window.started);
 				await app.goto('/routing/?foo=bar');
 				assert.equal(await page.url(), `${base}/routing?foo=bar`);
 				assert.equal(await page.textContent('h1'), 'Great success!');

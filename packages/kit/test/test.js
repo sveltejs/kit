@@ -11,17 +11,40 @@ import { fileURLToPath, pathToFileURL } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
-	const page = await browser.newPage();
+
+	const contexts = {
+		js: await browser.newContext({ javaScriptEnabled: true }),
+		nojs: await browser.newContext({ javaScriptEnabled: false })
+	};
+
+	const pages = {
+		js: await contexts.js.newPage(),
+		nojs: await contexts.nojs.newPage()
+	};
+
+	pages.js.addInitScript({
+		content: `
+			window.started = new Promise(fulfil => {
+				setTimeout(() => {
+					reject(new Error('Timed out'));
+				}, 5000);
+
+				addEventListener('sveltekit:start', () => {
+					fulfil();
+				});
+			});
+		`
+	});
 
 	const capture_requests = async (operations) => {
 		const requests = [];
 		const on_request = (request) => requests.push(request.url());
-		page.on('request', on_request);
+		pages.js.on('request', on_request);
 
 		try {
 			await operations();
 		} finally {
-			page.off('request', on_request);
+			pages.js.off('request', on_request);
 		}
 
 		return requests;
@@ -43,16 +66,15 @@ async function setup({ port }) {
 
 	return {
 		base,
-		page,
+		pages,
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,
 
 		// these are assumed to have been put in the global scope by the layout
 		app: {
-			start: () => page.evaluate(() => start()),
-			goto: (url) => page.evaluate((url) => goto(url), url),
-			prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-			prefetchRoutes: () => page.evaluate(() => prefetchRoutes())
+			goto: (url) => pages.js.evaluate((url) => goto(url), url),
+			prefetch: (url) => pages.js.evaluate((url) => prefetch(url), url),
+			prefetchRoutes: () => pages.js.evaluate(() => prefetchRoutes())
 		},
 
 		reset: () => browser && browser.close()
@@ -71,11 +93,12 @@ function duplicate(test_fn, config) {
 			let response;
 
 			if (start) {
-				response = await context.page.goto(context.base + start);
+				response = await context.pages.nojs.goto(context.base + start);
 			}
 
 			await callback({
 				...context,
+				page: context.pages.nojs,
 				response,
 				js: false
 			});
@@ -86,12 +109,13 @@ function duplicate(test_fn, config) {
 				let response;
 
 				if (start) {
-					response = await context.page.goto(context.base + start);
-					await context.page.evaluate(() => window.start());
+					response = await context.pages.js.goto(context.base + start);
+					await context.pages.js.evaluate(() => window.started);
 				}
 
 				await callback({
 					...context,
+					page: context.pages.js,
 					js: true,
 					response
 				});

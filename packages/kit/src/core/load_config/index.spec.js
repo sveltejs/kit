@@ -32,8 +32,7 @@ test('fills in defaults', () => {
 				force: false,
 				pages: ['*']
 			},
-			target: null,
-			startGlobal: null
+			target: null
 		},
 		preprocess: null
 	});
@@ -105,7 +104,6 @@ test('fills in partial blanks', () => {
 				force: false,
 				pages: ['*']
 			},
-			startGlobal: null,
 			target: null
 		},
 		preprocess: null
