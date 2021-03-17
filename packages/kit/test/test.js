@@ -99,7 +99,7 @@ function duplicate(test_fn, config) {
 			await callback({
 				...context,
 				page: context.pages.nojs,
-				click: (selector) => context.pages.nojs.click(selector),
+				clicknav: (selector) => context.pages.nojs.click(selector),
 				response,
 				js: false
 			});
@@ -117,7 +117,7 @@ function duplicate(test_fn, config) {
 				await callback({
 					...context,
 					page: context.pages.js,
-					click: async (selector) => {
+					clicknav: async (selector) => {
 						await context.pages.js.evaluate(() => {
 							window.navigated = new Promise((fulfil, reject) => {
 								addEventListener('sveltekit:navigation-end', function handler() {
