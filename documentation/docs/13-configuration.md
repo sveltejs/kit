@@ -37,7 +37,6 @@ module.exports = {
 			force: false,
 			pages: ['*']
 		},
-		startGlobal: null,
 		target: null
 	},
 
@@ -103,12 +102,6 @@ See [Prerendering](#prerendering). An object containing zero or more of the foll
 * `enabled` — set to `false` to disable prerendering altogether
 * `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
 * `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
-
-#### startGlobal
-
-You probably don't need this, it's mainly useful for SvelteKit's integration tests.
-
-If specified, the client-side app will not start automatically. Instead, a global function will be created with the specified name. Calling it will start the app and return a promise that resolves (or rejects) once everything has initialised.
 
 #### target
 

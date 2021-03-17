@@ -342,9 +342,7 @@ async function build_server(
 					local,
 					template,
 					manifest,
-					target: ${s(config.kit.target)},${
-						config.kit.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.kit.startGlobal)},` : ''
-					}
+					target: ${s(config.kit.target)},
 					entry: ${s(entry)},
 					root,
 					setup,

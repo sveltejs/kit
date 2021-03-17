@@ -8,7 +8,7 @@ export default function (test) {
 
 		if (js) {
 			await page.click('button');
-			await page.waitForTimeout(1);
+			await page.waitForTimeout(10);
 			assert.equal(await page.innerHTML('h1'), 'answer via props: 43');
 			assert.equal(await page.innerHTML('h2'), 'answer via store: 43');
 		}

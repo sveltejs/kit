@@ -33,7 +33,6 @@ suite('load default config', async () => {
 			hostHeader: null,
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
-			startGlobal: null,
 			target: null
 		},
 		preprocess: null

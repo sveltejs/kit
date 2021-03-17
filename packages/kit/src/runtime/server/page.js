@@ -314,7 +314,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `
 		<script type="module">
 			import { start } from ${s(options.entry)};
-			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				host: ${host ? s(host) : 'location.host'},
 				paths: ${s(options.paths)},

@@ -27,7 +27,6 @@ export type Config = {
 			force?: boolean;
 			pages?: string[];
 		};
-		startGlobal?: string;
 		target?: string;
 	};
 	preprocess?: any;

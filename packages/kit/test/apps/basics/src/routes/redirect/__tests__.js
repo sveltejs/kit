@@ -2,21 +2,17 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('redirect', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([page.waitForNavigation(), page.click('[href="/redirect/a"]')]);
-
-		if (js) await page.waitForTimeout(50);
+	test('redirect', '/redirect', async ({ base, page, clicknav }) => {
+		await clicknav('[href="/redirect/a"]');
 
 		assert.equal(await page.url(), `${base}/redirect/b`);
 		assert.equal(await page.textContent('h1'), 'b');
 	});
 
-	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/loopy/a"]');
+	test('prevents redirect loops', '/redirect', async ({ base, page, clicknav, js }) => {
+		await clicknav('[href="/redirect/loopy/a"]');
 
 		if (js) {
-			await page.waitForTimeout(50);
-
 			assert.equal(await page.url(), `${base}/redirect/loopy/b`);
 			assert.equal(await page.textContent('h1'), '500');
 			assert.equal(
@@ -29,13 +25,8 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test('errors on missing status', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([
-			page.waitForNavigation(),
-			page.click('[href="/redirect/missing-status/a"]')
-		]);
-
-		if (js) await page.waitForTimeout(50);
+	test('errors on missing status', '/redirect', async ({ base, page, clicknav }) => {
+		await clicknav('[href="/redirect/missing-status/a"]');
 
 		assert.equal(await page.url(), `${base}/redirect/missing-status/a`);
 		assert.equal(await page.textContent('h1'), '500');
@@ -45,13 +36,8 @@ export default function (test, is_dev) {
 		);
 	});
 
-	test('errors on invalid status', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([
-			page.waitForNavigation(),
-			page.click('[href="/redirect/missing-status/b"]')
-		]);
-
-		if (js) await page.waitForTimeout(50);
+	test('errors on invalid status', '/redirect', async ({ base, page, clicknav }) => {
+		await clicknav('[href="/redirect/missing-status/b"]');
 
 		assert.equal(await page.url(), `${base}/redirect/missing-status/b`);
 		assert.equal(await page.textContent('h1'), '500');

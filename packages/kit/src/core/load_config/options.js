@@ -107,9 +107,6 @@ const options = {
 				}
 			},
 
-			// used for testing
-			startGlobal: expect_string(null),
-
 			target: expect_string(null)
 		}
 	},
