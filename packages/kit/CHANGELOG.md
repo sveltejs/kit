@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- 0512fd1: Remove startGlobal option
+- 9212aa5: Add options to adapter-node, and add adapter types
+- 0512fd1: Fire custom events for start, and navigation start/end
+
 ## 1.0.0-next.49
 
 ### Patch Changes
