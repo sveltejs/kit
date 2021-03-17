@@ -120,9 +120,9 @@ function duplicate(test_fn, config) {
 					click: async (selector) => {
 						await context.pages.js.evaluate(() => {
 							window.navigated = new Promise((fulfil, reject) => {
-								addEventListener('sveltekit:navigationend', function handler() {
+								addEventListener('sveltekit:navigation-end', function handler() {
 									fulfil();
-									removeEventListener('sveltekit:navigationend', handler);
+									removeEventListener('sveltekit:navigation-end', handler);
 								});
 
 								setTimeout(() => reject(new Error('Timed out')), 2000);

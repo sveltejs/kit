@@ -160,7 +160,7 @@ export class Renderer {
 
 	/** @param {import('./types').NavigationTarget} selected */
 	notify(selected) {
-		dispatchEvent(new CustomEvent('sveltekit:navigationstart'));
+		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		this.stores.navigating.set({
 			from: this.current.page,
@@ -198,7 +198,7 @@ export class Renderer {
 			this.root.$set(hydrated.props);
 			await this.stores.navigating.set(null);
 
-			dispatchEvent(new CustomEvent('sveltekit:navigationend'));
+			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 		}
 	}
 
