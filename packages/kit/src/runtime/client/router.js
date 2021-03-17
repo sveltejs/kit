@@ -134,12 +134,6 @@ export class Router {
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
-
-		// load current page
-		// this.history.replaceState({}, '', location.href);
-
-		// const selected = this.select(new URL(location.href));
-		// if (selected) return this.renderer.start(selected);
 	}
 
 	/**
