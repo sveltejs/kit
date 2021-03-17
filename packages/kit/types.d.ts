@@ -33,7 +33,7 @@ export type Config = {
 	preprocess?: any;
 };
 
-export type Builder = {
+type Builder = {
 	copy_client_files: (dest: string) => void;
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
@@ -43,4 +43,48 @@ export type Builder = {
 
 export type Adapter = {
 	adapt: (builder: Builder) => Promise<void>;
+};
+
+interface ReadOnlyFormData extends Iterator<[string, string]> {
+	get: (key: string) => string;
+	getAll: (key: string) => string[];
+	has: (key: string) => boolean;
+	entries: () => Iterator<[string, string]>;
+	keys: () => Iterator<string>;
+	values: () => Iterator<string>;
+}
+
+export type RequestHandler = (
+	request?: {
+		host: string;
+		headers: Record<string, string>;
+		path: string;
+		params: Record<string, string>;
+		query: URLSearchParams;
+		body: string | Buffer | ReadOnlyFormData;
+	},
+	context?: any
+) => {
+	status?: number;
+	headers?: Record<string, string>;
+	body?: any;
+};
+
+export type Load = (
+	page: {
+		host: string;
+		path: string;
+		params: Record<string, string>;
+		query: URLSearchParams;
+	},
+	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>,
+	session: any,
+	context: Record<string, any>
+) => {
+	status?: number;
+	error?: Error | string;
+	redirect?: string;
+	maxage?: number;
+	props?: Record<string, any>;
+	context?: Record<string, any>;
 };

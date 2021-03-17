@@ -9,6 +9,7 @@ export default function render_route(request, context, options) {
 	if (!route) return null;
 
 	return route.load().then(async (mod) => {
+		/** @type {import('../../../types').RequestHandler} */
 		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 		if (handler) {

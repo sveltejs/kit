@@ -352,11 +352,11 @@ function get_params(array) {
 
 	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
-		/** @type {Record<string, string | string[]>} */
+		/** @type {Record<string, string>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
-				params[key.slice(3)] = decodeURIComponent(match[i + 1]).split('/');
+				params[key.slice(3)] = decodeURIComponent(match[i + 1]);
 			} else {
 				params[key] = decodeURIComponent(match[i + 1]);
 			}
