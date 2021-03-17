@@ -8,9 +8,9 @@ import { ssr } from './index.js';
 /**
  * @param {{
  *   request: import('../../../types.internal').Request;
- *   options: import('../../../types.internal').RenderOptions;
+ *   options: import('../../../types.internal').SSRRenderOptions;
  *   $session: any;
- *   route: import('../../../types.internal').Page;
+ *   route: import('../../../types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
@@ -148,9 +148,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 		});
 	};
 
-	const parts = error ? [options.manifest.layout] : [options.manifest.layout, ...route.parts];
+	const component_promises = error
+		? [options.manifest.layout()]
+		: [options.manifest.layout(), ...route.parts.map((part) => part.load())];
 
-	const component_promises = parts.map((loader) => loader());
 	const components = [];
 	const props_promises = [];
 
@@ -316,11 +317,21 @@ async function get_response({ request, options, $session, route, status = 200, e
 			import { start } from ${s(options.entry)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				host: ${host ? s(host) : 'location.host'},
 				paths: ${s(options.paths)},
 				status: ${status},
 				error: ${serialize_error(error)},
-				session: ${serialized_session}
+				session: ${serialized_session},
+				nodes: [
+					${(route ? route.parts : [])
+						.map((part) => `import(${s(options.get_component_path(part.id))})`)
+						.join(',\n\t\t\t\t\t')}
+				],
+				page: {
+					host: ${host ? s(host) : 'location.host'},
+					path: ${s(request.path)},
+					query: new URLSearchParams(${s(request.query.toString())}),
+					params: ${s(params)}
+				}
 			});
 		</script>`;
 
@@ -360,7 +371,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 /**
  * @param {import('../../../types.internal').Request} request
  * @param {any} context
- * @param {import('../../../types.internal').RenderOptions} options
+ * @param {import('../../../types.internal').SSRRenderOptions} options
  */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));

@@ -16,7 +16,7 @@ export class Router {
 	/** @param {{
 	 *    base: string;
 	 *    host: string;
-	 *    pages: import('../../../types.internal').Page[];
+	 *    pages: import('../../../types.internal').CSRPage[];
 	 *    ignore: RegExp[];
 	 * }} opts */
 	constructor({ base, host, pages, ignore }) {
@@ -112,7 +112,7 @@ export class Router {
 			const selected = this.select(url);
 			if (selected) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.renderer.notify(selected);
+				this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
 				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
@@ -134,12 +134,6 @@ export class Router {
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
-
-		// load current page
-		this.history.replaceState({}, '', location.href);
-
-		const selected = this.select(new URL(location.href));
-		if (selected) return this.renderer.start(selected);
 	}
 
 	/**
@@ -166,9 +160,13 @@ export class Router {
 				const query = new URLSearchParams(url.search);
 				const params = route.params(match);
 
+				/** @type {import('../../../types.internal').Page} */
 				const page = { host: this.host, path, query, params };
 
-				return { href: url.href, route, match, page };
+				return {
+					nodes: route.parts.map((loader) => loader()),
+					page
+				};
 			}
 		}
 	}
@@ -183,7 +181,7 @@ export class Router {
 		const selected = this.select(url);
 
 		if (selected) {
-			this.renderer.notify(selected);
+			this.renderer.notify(selected.page);
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);

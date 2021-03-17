@@ -37,14 +37,11 @@ export class Renderer {
 	 *   Root: import('../../../types.internal').CSRComponent;
 	 *   layout: import('../../../types.internal').CSRComponent;
 	 *   target: Node;
-	 *   error: Error;
-	 *   status: number;
 	 *   session: any;
 	 * }} opts */
-	constructor({ Root, layout, target, error, status, session }) {
+	constructor({ Root, layout, target, session }) {
 		this.Root = Root;
 		this.layout = layout;
-		this.layout_loader = () => layout;
 
 		/** @type {import('./router').Router} */
 		this.router = null;
@@ -52,10 +49,7 @@ export class Renderer {
 		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
-		this.initial = {
-			error,
-			status
-		};
+		this.started = false;
 
 		this.current = {
 			page: null,
@@ -117,17 +111,21 @@ export class Renderer {
 		ready = true;
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	async start(selected) {
+	/**
+	 * @param {import('./types').NavigationTarget} selected
+	 * @param {number} status
+	 * @param {Error} error
+	 */
+	async start(selected, status, error) {
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: this.stores,
-			error: this.initial.error,
-			status: this.initial.status,
+			error,
+			status,
 			page: selected.page
 		};
 
-		if (this.initial.error) {
+		if (error) {
 			props.components = [this.layout.default];
 		} else {
 			const hydrated = await this.hydrate(selected);
@@ -155,16 +153,16 @@ export class Renderer {
 			hydrate: true
 		});
 
-		this.initial = null;
+		this.started = true;
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	notify(selected) {
+	/** @param {import('../../../types.internal').Page} page */
+	notify(page) {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		this.stores.navigating.set({
 			from: this.current.page,
-			to: selected.page
+			to: page
 		});
 	}
 
@@ -203,7 +201,7 @@ export class Renderer {
 	}
 
 	/** @param {import('./types').NavigationTarget} selected */
-	async hydrate({ route, page }) {
+	async hydrate({ nodes, page }) {
 		/** @type {Record<string, any>} */
 		const props = {
 			status: 200,
@@ -220,7 +218,7 @@ export class Renderer {
 		 * @param {RequestInit} opts
 		 */
 		const fetcher = (url, opts) => {
-			if (this.initial) {
+			if (!this.started) {
 				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
 				if (script) {
 					const { body, ...init } = JSON.parse(script.textContent);
@@ -254,7 +252,7 @@ export class Renderer {
 			contexts: []
 		};
 
-		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
+		const component_promises = [this.layout, ...nodes];
 		const props_promises = [];
 
 		/** @type {Record<string, any>} */
@@ -302,7 +300,7 @@ export class Renderer {
 					/** @type {Branch} */
 					let node;
 
-					/** @type {import('../../../types.internal').LoadResult} */
+					/** @type {import('../../../types.internal').LoadOutput} */
 					let loaded;
 
 					if (cached && (!changed.context || !cached.node.uses.context)) {
@@ -444,11 +442,11 @@ export class Renderer {
 
 	/** @param {URL} url */
 	async prefetch(url) {
-		const page = this.router.select(url);
+		const selected = this.router.select(url);
 
-		if (page) {
+		if (selected) {
 			if (url.href !== this.prefetching.href) {
-				this.prefetching = { href: url.href, promise: this.hydrate(page) };
+				this.prefetching = { href: url.href, promise: this.hydrate(selected) };
 			}
 
 			return this.prefetching.promise;

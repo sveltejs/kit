@@ -239,7 +239,12 @@ async function build_server(
 	/** @type {Record<string, string>} */
 	const amp_css_lookup = {};
 
+	/** @type {Record<string, string>} */
+	const client_component_lookup = {};
+
 	[client_entry_file, ...manifest.components].forEach((file) => {
+		client_component_lookup[file] = client_manifest[file].file;
+
 		const js_deps = new Set();
 		const css_deps = new Set();
 
@@ -286,6 +291,8 @@ async function build_server(
 			${config.kit.amp ? `
 			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
 
+			const client_component_lookup = ${s(client_component_lookup)};
+
 			const manifest = {
 				assets: ${s(manifest.assets)},
 				layout: ${stringify_component(manifest.layout)},
@@ -294,7 +301,7 @@ async function build_server(
 					${manifest.pages
 						.map((data) => {
 							const params = get_params(data.params);
-							const parts = data.parts.map(c => `components[${component_indexes.get(c)}]`);
+							const parts = data.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
 
 							const js_deps = new Set(common_js_deps);
 							const css_deps = new Set(common_css_deps);
@@ -352,6 +359,7 @@ async function build_server(
 					app_dir: ${s(config.kit.appDir)},
 					host: ${s(config.kit.host)},
 					host_header: ${s(config.kit.hostHeader)},
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
 					get_amp_css: dep => amp_css_lookup[dep]
