@@ -17,7 +17,7 @@ const s = (value) => JSON.stringify(value);
  * }>} ClientManifest */
 
 /**
- * @param {import('../../types').ValidatedConfig} config
+ * @param {import('../../../types.internal').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
  *   runtime?: string;
@@ -64,8 +64,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -159,8 +159,8 @@ async function build_client({
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -342,9 +342,7 @@ async function build_server(
 					local,
 					template,
 					manifest,
-					target: ${s(config.kit.target)},${
-						config.kit.startGlobal ? `\n\t\t\t\t\tstart_global: ${s(config.kit.startGlobal)},` : ''
-					}
+					target: ${s(config.kit.target)},
 					entry: ${s(entry)},
 					root,
 					setup,
@@ -405,8 +403,8 @@ async function build_server(
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../types').ValidatedConfig
- *   manifest: import('../../types').ManifestData
+ *   config: import('../../../types.internal').ValidatedConfig
+ *   manifest: import('../../../types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -517,7 +515,7 @@ function get_params(array) {
 				array
 					.map((param, i) => {
 						return param.startsWith('...')
-							? `${param.slice(3)}: d(m[${i + 1}]).split('/')`
+							? `${param.slice(3)}: d(m[${i + 1}])`
 							: `${param}: d(m[${i + 1}])`;
 					})
 					.join(', ') +

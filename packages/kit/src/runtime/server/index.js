@@ -8,8 +8,8 @@ function md5(body) {
 }
 
 /**
- * @param {import('../../types').Request} request
- * @param {import('../../types').RenderOptions} options
+ * @param {import('../../../types.internal').Request} request
+ * @param {import('../../../types.internal').RenderOptions} options
  */
 export async function ssr(request, options) {
 	if (request.path.endsWith('/') && request.path !== '/') {

@@ -14,7 +14,7 @@ import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
 import svelte from '@svitejs/vite-plugin-svelte';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../types').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
 
 /** @param {Options} opts */
 export function dev(opts) {
@@ -193,7 +193,6 @@ class Watcher extends EventEmitter {
 							root,
 							setup,
 							only_prerender: false,
-							start_global: this.config.kit.startGlobal,
 							host: this.config.kit.host,
 							host_header: this.config.kit.hostHeader,
 							get_stack: (error) => {
@@ -352,11 +351,11 @@ function get_params(array) {
 
 	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
-		/** @type {Record<string, string | string[]>} */
+		/** @type {Record<string, string>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
-				params[key.slice(3)] = decodeURIComponent(match[i + 1]).split('/');
+				params[key.slice(3)] = decodeURIComponent(match[i + 1]);
 			} else {
 				params[key] = decodeURIComponent(match[i + 1]);
 			}

@@ -10,8 +10,8 @@
 	export let rest;
 </script>
 
-<h1>{$page.params.rest.join(',')}</h1>
-<h2>{rest.join(',')}</h2>
+<h1>{$page.params.rest}</h1>
+<h2>{rest}</h2>
 
 <a href="/routing/xyz/abc/qwe/deep.json">deep</a>
 <a href="/routing/xyz/abc">back</a>

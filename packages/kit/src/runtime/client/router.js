@@ -16,7 +16,7 @@ export class Router {
 	/** @param {{
 	 *    base: string;
 	 *    host: string;
-	 *    pages: import('../../types').Page[];
+	 *    pages: import('../../../types.internal').Page[];
 	 *    ignore: RegExp[];
 	 * }} opts */
 	constructor({ base, host, pages, ignore }) {

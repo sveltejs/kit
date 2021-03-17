@@ -7,19 +7,19 @@ import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../../types').Request;
- *   options: import('../../types').RenderOptions;
+ *   request: import('../../../types.internal').Request;
+ *   options: import('../../../types.internal').RenderOptions;
  *   $session: any;
- *   route: import('../../types').Page;
+ *   route: import('../../../types.internal').Page;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../types').Response>}
+ * @returns {Promise<import('../../../types.internal').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../types').Response>} */
+	/** @type {Record<string, import('../../../types.internal').Response>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -69,14 +69,17 @@ async function get_response({ request, options, $session, route, status = 200, e
 			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
 
-			// is this a request for a static asset?
+			// handle fetch requests for static assets. e.g. prebaked data, etc.
+			// we need to support everything the browser's fetch supports
 			const filename = resolved.slice(1);
-			const filename_html = `${filename}/index.html`;
+			const filename_html = `${filename}/index.html`; // path may also match path/index.html
 			const asset = options.manifest.assets.find(
 				(d) => d.file === filename || d.file === filename_html
 			);
 
 			if (asset) {
+				// we don't have a running server while prerendering because jumping between
+				// processes would be inefficient so we have get_static_file instead
 				if (options.get_static_file) {
 					response = new Response(options.get_static_file(asset.file), {
 						headers: {
@@ -121,7 +124,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../../types').Headers} */
+			/** @type {import('../../../types.internal').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -311,7 +314,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `
 		<script type="module">
 			import { start } from ${s(options.entry)};
-			${options.start_global ? `window.${options.start_global} = () => ` : ''}start({
+			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				host: ${host ? s(host) : 'location.host'},
 				paths: ${s(options.paths)},
@@ -337,7 +340,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../../types').Headers} */
+	/** @type {import('../../../types.internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -355,9 +358,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../../types').Request} request
+ * @param {import('../../../types.internal').Request} request
  * @param {any} context
- * @param {import('../../types').RenderOptions} options
+ * @param {import('../../../types.internal').RenderOptions} options
  */
 export default async function render_page(request, context, options) {
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));

@@ -34,8 +34,8 @@ function page_store(value) {
 
 export class Renderer {
 	/** @param {{
-	 *   Root: import('../../types').CSRComponent;
-	 *   layout: import('../../types').CSRComponent;
+	 *   Root: import('../../../types.internal').CSRComponent;
+	 *   layout: import('../../../types.internal').CSRComponent;
 	 *   target: Node;
 	 *   error: Error;
 	 *   status: number;
@@ -160,6 +160,8 @@ export class Renderer {
 
 	/** @param {import('./types').NavigationTarget} selected */
 	notify(selected) {
+		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
+
 		this.stores.navigating.set({
 			from: this.current.page,
 			to: selected.page
@@ -194,7 +196,9 @@ export class Renderer {
 			this.current = hydrated.state;
 
 			this.root.$set(hydrated.props);
-			this.stores.navigating.set(null);
+			await this.stores.navigating.set(null);
+
+			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 		}
 	}
 
@@ -207,7 +211,7 @@ export class Renderer {
 			/** @type {Error} */
 			error: null,
 
-			/** @type {import('../../types').CSRComponent[]} */
+			/** @type {import('../../../types.internal').CSRComponent[]} */
 			components: []
 		};
 
@@ -231,7 +235,7 @@ export class Renderer {
 
 		// TODO come up with a better name
 		/** @typedef {{
-		 *   component: import('../../types').CSRComponent;
+		 *   component: import('../../../types.internal').CSRComponent;
 		 *   uses: {
 		 *     params: Set<string>;
 		 *     query: boolean;
@@ -298,7 +302,7 @@ export class Renderer {
 					/** @type {Branch} */
 					let node;
 
-					/** @type {import('../../types').LoadResult} */
+					/** @type {import('../../../types.internal').LoadResult} */
 					let loaded;
 
 					if (cached && (!changed.context || !cached.node.uses.context)) {

@@ -40,7 +40,6 @@ export type ValidatedConfig = {
 			force: boolean;
 			pages: string[];
 		};
-		startGlobal: string;
 		target: string;
 	};
 	preprocess: any;
@@ -66,6 +65,7 @@ export type Request = {
 	headers: Headers;
 	path: string;
 	body: any;
+	params: Record<string, string>;
 	query: URLSearchParams;
 };
 
@@ -110,7 +110,7 @@ export type CSRComponent = any; // TODO
 
 export type Page = {
 	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string | string[]>;
+	params: (match: RegExpExecArray) => Record<string, string>;
 	parts: SSRComponentLoader[];
 	style: string;
 	css: string[];
@@ -119,7 +119,7 @@ export type Page = {
 
 export type Endpoint = {
 	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string | string[]>;
+	params: (match: RegExpExecArray) => Record<string, string>;
 	load: () => Promise<any>; // TODO
 };
 
@@ -140,7 +140,6 @@ export type RenderOptions = {
 	template?: ({ head, body }: { head: string; body: string }) => string;
 	manifest?: Manifest;
 	target?: string;
-	start_global?: string;
 	entry?: string;
 	root?: SSRComponent['default'];
 	setup?: {

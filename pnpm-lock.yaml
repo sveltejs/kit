@@ -94,17 +94,21 @@ importers:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
       '@sveltejs/app-utils': link:../app-utils
+      '@sveltejs/kit': link:../kit
       compression: 1.7.4
       polka: 0.5.2
       rollup: 2.41.1
       sirv: 1.0.11
+      typescript: 4.2.3
     specifiers:
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/app-utils': workspace:*
+      '@sveltejs/kit': workspace:*
       compression: ^1.7.4
       polka: ^0.5.2
       rollup: ^2.41.1
       sirv: ^1.0.11
+      typescript: ^4.2.3
   packages/adapter-static:
     specifiers: {}
   packages/adapter-vercel:
@@ -199,30 +203,6 @@ importers:
       typescript: ^4.2.3
       uvu: ^0.5.1
       vite: ^2.1.0
-  packages/vite-plugin-svelte:
-    dependencies:
-      '@rollup/pluginutils': 4.1.0_rollup@2.41.1
-      chalk: 4.1.0
-      hash-sum: 2.0.0
-      require-relative: 0.8.7
-      slash: 3.0.0
-      source-map: 0.7.3
-      svelte-hmr: 0.12.9
-    devDependencies:
-      '@rollup/plugin-typescript': 8.2.0_rollup@2.41.1
-      eslint: 7.21.0
-      rollup: 2.41.1
-    specifiers:
-      '@rollup/plugin-typescript': ^8.2.0
-      '@rollup/pluginutils': ^4.1.0
-      chalk: ^4.1.0
-      eslint: ^7.21.0
-      hash-sum: ^2.0.0
-      require-relative: ^0.8.7
-      rollup: ^2.41.1
-      slash: ^3.0.0
-      source-map: ^0.7.3
-      svelte-hmr: ^0.12.9
 lockfileVersion: 5.2
 packages:
   /@architect/parser/3.0.1:
@@ -556,20 +536,6 @@ packages:
       rollup: ^1.20.0 || ^2.0.0
     resolution:
       integrity: sha512-XwC1oK5rrtRJ0tn1ioLHS6OV5JTluJF7QE1J/q1hN3bquwjnVxjtMyY9iCnoyH9DQbf92CxajB3o98wZbP3oAQ==
-  /@rollup/plugin-typescript/8.2.0_rollup@2.41.1:
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.41.1
-      resolve: 1.20.0
-      rollup: 2.41.1
-    dev: true
-    engines:
-      node: '>=8.0.0'
-    peerDependencies:
-      rollup: ^2.14.0
-      tslib: '*'
-      typescript: '>=3.4.0'
-    resolution:
-      integrity: sha512-5DyVsb7L+ehLfNPu/nat8Gq3uJGzku4bMFPt90XahtgiSBf7z9YKPLqFUJKMT41W/mJ98SVGDPOhzikGrr/Lhg==
   /@rollup/pluginutils/3.1.0_rollup@2.41.1:
     dependencies:
       '@types/estree': 0.0.39
@@ -669,13 +635,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-oJqcTrgPUF29oUP8AsUqbXGJNuPutsetaa9kTQAQce5Lx5dTYWV02ScBiT/k1BX/Z7pKeqedmvp39Wu4zR7N7g==
+  /@types/node/14.14.34:
+    dev: true
+    resolution:
+      integrity: sha512-dBPaxocOK6UVyvhbnpFIj2W+S+1cBTkHQbFQfeeJhoKFbzYcVUGHvddeWPSucKATb3F0+pgDq0i6ghEaZjsugA==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.14.33
+      '@types/node': 14.14.34
     dev: true
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
@@ -2415,13 +2385,13 @@ packages:
   /ms/2.1.2:
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
-  /nanoid/3.1.20:
+  /nanoid/3.1.21:
     dev: true
     engines:
       node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1
     hasBin: true
     resolution:
-      integrity: sha512-a1cQNyczgKbLX9jwbS/+d7W8fX/RfgYR7lVWwWOGIPNgK2m0MWvrGF6/m4kk6U3QcFMnZf3RIhL0v2Jgh/0Uxw==
+      integrity: sha512-A6oZraK4DJkAOICstsGH98dvycPr/4GGDH7ZWKmMdd3vGcOurZ6JmWFUt0DA5bzrrn2FrUjmv6mFNWvv8jpppA==
   /natural-compare/1.4.0:
     dev: true
     resolution:
@@ -2765,7 +2735,7 @@ packages:
   /postcss/8.2.8:
     dependencies:
       colorette: 1.2.2
-      nanoid: 3.1.20
+      nanoid: 3.1.21
       source-map: 0.6.1
     dev: true
     engines:
@@ -3266,12 +3236,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==
-  /svelte-hmr/0.12.9:
-    dev: false
-    peerDependencies:
-      svelte: '>=3.19.0'
-    resolution:
-      integrity: sha512-SGE7Odznj4dqZtUVIWcoPCvZ9gHImxVIIjrz+O3DDSi0j4OaSLim6MRF4UdhlBKeW3glSRc+tXNSKYvM5x+Dyw==
   /svelte-hmr/0.13.0-2_svelte@3.35.0:
     dependencies:
       svelte: 3.35.0
