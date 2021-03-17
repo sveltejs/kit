@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.51
+
+### Patch Changes
+
+- 34a00f9: Bypass router on hydration
+
 ## 1.0.0-next.50
 
 ### Patch Changes
