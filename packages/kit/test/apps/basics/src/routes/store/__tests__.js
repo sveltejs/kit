@@ -19,7 +19,7 @@ export default function (test) {
 		assert.equal(await page.textContent('#navigating'), 'not currently navigating');
 
 		if (js) {
-			await Promise.all([page.waitForNavigation(), page.click('a[href="/store/navigating/b"]')]);
+			await page.click('a[href="/store/navigating/b"]');
 
 			assert.equal(
 				await page.textContent('#navigating'),

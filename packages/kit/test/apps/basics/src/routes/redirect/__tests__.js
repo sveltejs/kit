@@ -2,10 +2,8 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('redirect', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([page.waitForNavigation(), page.click('[href="/redirect/a"]')]);
-
-		if (js) await page.waitForTimeout(50);
+	test('redirect', '/redirect', async ({ base, page, click }) => {
+		await click('[href="/redirect/a"]');
 
 		assert.equal(await page.url(), `${base}/redirect/b`);
 		assert.equal(await page.textContent('h1'), 'b');
@@ -29,13 +27,8 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test('errors on missing status', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([
-			page.waitForNavigation(),
-			page.click('[href="/redirect/missing-status/a"]')
-		]);
-
-		if (js) await page.waitForTimeout(50);
+	test('errors on missing status', '/redirect', async ({ base, page, click }) => {
+		await click('[href="/redirect/missing-status/a"]');
 
 		assert.equal(await page.url(), `${base}/redirect/missing-status/a`);
 		assert.equal(await page.textContent('h1'), '500');
@@ -45,13 +38,8 @@ export default function (test, is_dev) {
 		);
 	});
 
-	test('errors on invalid status', '/redirect', async ({ base, page, js }) => {
-		await Promise.all([
-			page.waitForNavigation(),
-			page.click('[href="/redirect/missing-status/b"]')
-		]);
-
-		if (js) await page.waitForTimeout(50);
+	test('errors on invalid status', '/redirect', async ({ base, page, click }) => {
+		await click('[href="/redirect/missing-status/b"]');
 
 		assert.equal(await page.url(), `${base}/redirect/missing-status/b`);
 		assert.equal(await page.textContent('h1'), '500');
