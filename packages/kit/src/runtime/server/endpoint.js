@@ -1,7 +1,7 @@
 /**
  * @param {import('../../../types.internal').Request} request
  * @param {*} context // TODO
- * @param {import('../../../types.internal').RenderOptions} options
+ * @param {import('../../../types.internal').SSRRenderOptions} options
  * @returns {Promise<import('../../../types.internal').Response>}
  */
 export default function render_route(request, context, options) {

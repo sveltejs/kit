@@ -44,7 +44,6 @@ export class Renderer {
 	constructor({ Root, layout, target, error, status, session }) {
 		this.Root = Root;
 		this.layout = layout;
-		this.layout_loader = () => layout;
 
 		/** @type {import('./router').Router} */
 		this.router = null;
@@ -158,13 +157,13 @@ export class Renderer {
 		this.initial = null;
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	notify(selected) {
+	/** @param {import('../../../types.internal').Page} page */
+	notify(page) {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		this.stores.navigating.set({
 			from: this.current.page,
-			to: selected.page
+			to: page
 		});
 	}
 
@@ -203,7 +202,7 @@ export class Renderer {
 	}
 
 	/** @param {import('./types').NavigationTarget} selected */
-	async hydrate({ route, page }) {
+	async hydrate({ nodes, page }) {
 		/** @type {Record<string, any>} */
 		const props = {
 			status: 200,
@@ -254,7 +253,7 @@ export class Renderer {
 			contexts: []
 		};
 
-		const component_promises = [this.layout_loader(), ...route.parts.map((loader) => loader())];
+		const component_promises = [this.layout, ...nodes];
 		const props_promises = [];
 
 		/** @type {Record<string, any>} */
@@ -302,7 +301,7 @@ export class Renderer {
 					/** @type {Branch} */
 					let node;
 
-					/** @type {import('../../../types.internal').LoadResult} */
+					/** @type {import('../../../types.internal').LoadOutput} */
 					let loaded;
 
 					if (cached && (!changed.context || !cached.node.uses.context)) {
@@ -444,11 +443,11 @@ export class Renderer {
 
 	/** @param {URL} url */
 	async prefetch(url) {
-		const page = this.router.select(url);
+		const selected = this.router.select(url);
 
-		if (page) {
+		if (selected) {
 			if (url.href !== this.prefetching.href) {
-				this.prefetching = { href: url.href, promise: this.hydrate(page) };
+				this.prefetching = { href: url.href, promise: this.hydrate(selected) };
 			}
 
 			return this.prefetching.promise;

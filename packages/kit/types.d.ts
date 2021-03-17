@@ -1,4 +1,4 @@
-import { Logger } from './types.internal';
+import { LoadInput, LoadOutput, Logger } from './types.internal';
 
 export type Config = {
 	compilerOptions?: any;
@@ -69,21 +69,4 @@ export type RequestHandler = (
 	body?: any;
 };
 
-export type Load = (
-	page: {
-		host: string;
-		path: string;
-		params: Record<string, string>;
-		query: URLSearchParams;
-	},
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>,
-	session: any,
-	context: Record<string, any>
-) => {
-	status?: number;
-	error?: Error | string;
-	redirect?: string;
-	maxage?: number;
-	props?: Record<string, any>;
-	context?: Record<string, any>;
-};
+export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
