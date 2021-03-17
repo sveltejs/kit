@@ -3,6 +3,7 @@ import { dirname, join, resolve as resolve_path, sep as path_separator } from 'p
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '@sveltejs/app-utils/files';
+import { Headers } from '../../runtime/app/headers.js';
 
 /** @param {string} html */
 function clean_html(html) {
@@ -83,14 +84,15 @@ export async function prerender({ cwd, out, log, config, force }) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		const rendered = await app.render(
+		const rendered = app.render(
 			{
 				host: config.kit.host,
 				method: 'GET',
-				headers: {},
+				headers: new Headers(),
 				path,
 				body: null,
-				query: new URLSearchParams()
+				query: new URLSearchParams(),
+				params: null
 			},
 			{
 				local: true,
@@ -102,7 +104,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
 			const headers = rendered.headers;
-			const type = headers && headers['content-type'];
+			const type = headers && headers.get('content-type');
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const parts = path.split('/');
@@ -114,7 +116,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const { location } = headers;
+				const location = headers.get('location');
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
 				writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
@@ -136,7 +138,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 					const result = dependencies[path];
 					const response_type = Math.floor(result.status / 100);
 
-					const is_html = result.headers['content-type'] === 'text/html';
+					const is_html = result.headers.get('content-type') === 'text/html';
 
 					const parts = path.split('/');
 					if (is_html && parts[parts.length - 1] !== 'index.html') {

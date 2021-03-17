@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import { Headers } from '../app/headers.js';
 import render_page from './page.js';
 import render_endpoint from './endpoint.js';
 
@@ -17,13 +18,13 @@ export async function ssr(request, options) {
 
 		return {
 			status: 301,
-			headers: {
+			headers: new Headers({
 				location: request.path.slice(0, -1) + (q ? `?${q}` : '')
-			}
+			})
 		};
 	}
 
-	const { context, headers = {} } =
+	const { context, headers = new Headers({}) } =
 		(await (options.setup.prepare && options.setup.prepare({ headers: request.headers }))) || {};
 
 	try {
@@ -33,24 +34,24 @@ export async function ssr(request, options) {
 		if (response) {
 			// inject ETags for 200 responses
 			if (response.status === 200) {
-				if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
+				if (!/(no-store|immutable)/.test(response.headers.get('cache-control'))) {
 					const etag = `"${md5(response.body)}"`;
 
-					if (request.headers['if-none-match'] === etag) {
+					if (request.headers.get('if-none-match') === etag) {
 						return {
 							status: 304,
-							headers: {},
+							headers: new Headers({}),
 							body: null
 						};
 					}
 
-					response.headers['etag'] = etag;
+					response.headers.set('etag', etag);
 				}
 			}
 
 			return {
 				status: response.status,
-				headers: { ...headers, ...response.headers },
+				headers: new Headers({ ...headers.asMap(), ...response.headers.asMap() }),
 				body: response.body,
 				dependencies: response.dependencies
 			};

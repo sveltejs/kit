@@ -4,6 +4,7 @@ import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '@sveltejs/app-utils/http';
 import { join, resolve } from 'path';
+import { Headers } from '../../runtime/app/headers.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -45,10 +46,12 @@ export async function start({ port, config, cwd = process.cwd() }) {
 					const rendered = await app.render(
 						{
 							method: req.method,
-							headers: req.headers,
+							headers: new Headers(req.headers),
 							path: parsed.pathname,
 							body: await get_body(req),
-							query: new URLSearchParams(parsed.query || '')
+							query: new URLSearchParams(parsed.query || ''),
+							params: null,
+							host: null
 						},
 						{
 							paths: {
@@ -61,7 +64,7 @@ export async function start({ port, config, cwd = process.cwd() }) {
 					);
 
 					if (rendered) {
-						res.writeHead(rendered.status, rendered.headers);
+						res.writeHead(rendered.status, rendered.headers.asMap());
 						res.end(rendered.body);
 					} else {
 						res.statusCode = 404;

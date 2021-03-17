@@ -1,3 +1,5 @@
+import { Headers } from '../app/headers.js';
+
 /**
  * @param {import('../../../types.internal').Request} request
  * @param {*} context // TODO
@@ -18,7 +20,7 @@ export default function render_route(request, context, options) {
 
 			const response = await handler(
 				{
-					host: options.host || request.headers[options.host_header || 'host'],
+					host: options.host || request.headers.get(options.host_header || 'host'),
 					path: request.path,
 					headers: request.headers,
 					query: request.query,
@@ -34,19 +36,17 @@ export default function render_route(request, context, options) {
 					body: `Invalid response from route ${request.path}; ${
 						response.body == null ? 'body is missing' : `expected an object, got ${typeof response}`
 					}`,
-					headers: {}
+					headers: new Headers()
 				};
 			}
 
-			let { status = 200, body, headers = {} } = response;
-
-			headers = lowercase_keys(headers);
+			let { status = 200, body, headers = new Headers() } = response;
 
 			if (
 				(typeof body === 'object' && !('content-type' in headers)) ||
-				headers['content-type'] === 'application/json'
+				headers.get('content-type') === 'application/json'
 			) {
-				headers = { ...headers, 'content-type': 'application/json' };
+				headers.set('content-type', 'application/json');
 				body = JSON.stringify(body);
 			}
 
@@ -55,20 +55,8 @@ export default function render_route(request, context, options) {
 			return {
 				status: 501,
 				body: `${request.method} is not implemented for ${request.path}`,
-				headers: {}
+				headers: new Headers()
 			};
 		}
 	});
-}
-
-/** @param {Record<string, string>} obj */
-function lowercase_keys(obj) {
-	/** @type {Record<string, string>} */
-	const clone = {};
-
-	for (const key in obj) {
-		clone[key.toLowerCase()] = obj[key];
-	}
-
-	return clone;
 }

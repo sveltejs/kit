@@ -9,6 +9,7 @@ import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '@sveltejs/app-utils/files';
+import { Headers } from '../../runtime/app/headers.js';
 import { ssr } from '../../runtime/server/index.js';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
@@ -126,12 +127,13 @@ class Watcher extends EventEmitter {
 
 					const rendered = await ssr(
 						{
-							headers: req.headers,
+							headers: new Headers(req.headers),
 							method: req.method,
 							host: null,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
-							body
+							body,
+							params: null
 						},
 						{
 							paths: this.config.kit.paths,
@@ -208,7 +210,7 @@ class Watcher extends EventEmitter {
 					);
 
 					if (rendered) {
-						res.writeHead(rendered.status, rendered.headers);
+						res.writeHead(rendered.status, rendered.headers.asMap());
 						res.end(rendered.body);
 					} else {
 						res.statusCode = 404;

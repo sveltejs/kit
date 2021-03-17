@@ -1,4 +1,4 @@
-import { LoadInput, LoadOutput, Logger } from './types.internal';
+import { Headers, LoadInput, LoadOutput, Logger } from './types.internal';
 
 export type Config = {
 	compilerOptions?: any;
@@ -56,7 +56,7 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 export type RequestHandler = (
 	request?: {
 		host: string;
-		headers: Record<string, string>;
+		headers: Headers;
 		path: string;
 		params: Record<string, string>;
 		query: URLSearchParams;
@@ -65,7 +65,7 @@ export type RequestHandler = (
 	context?: any
 ) => {
 	status?: number;
-	headers?: Record<string, string>;
+	headers?: Headers;
 	body?: any;
 };
 

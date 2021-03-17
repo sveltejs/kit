@@ -1,7 +1,8 @@
 import devalue from 'devalue';
-import fetch, { Response } from 'node-fetch';
+import fetch, { Headers, Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
+import { Headers as KitHeaders } from '../app/headers.js';
 import { normalize } from '../load.js';
 import { ssr } from './index.js';
 
@@ -17,7 +18,7 @@ import { ssr } from './index.js';
  * @returns {Promise<import('../../../types.internal').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
-	const host = options.host || request.headers[options.host_header];
+	const host = options.host || request.headers.get(options.host_header);
 
 	/** @type {Record<string, import('../../../types.internal').Response>} */
 	const dependencies = {};
@@ -56,6 +57,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		const parsed = parse(url);
 
 		// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
+		// @ts-ignore
 		if (opts.credentials !== 'omit') {
 			uses_credentials = true;
 		}
@@ -97,10 +99,11 @@ async function get_response({ request, options, $session, route, status = 200, e
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: opts.headers || {}, // TODO inject credentials...
+						headers: new KitHeaders(new Headers(opts.headers || []).raw()), // TODO inject credentials...
 						path: resolved,
 						body: opts.body,
-						query: new URLSearchParams(parsed.query || '')
+						query: new URLSearchParams(parsed.query || ''),
+						params
 					},
 					{
 						...options,
@@ -115,7 +118,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 					response = new Response(rendered.body, {
 						status: rendered.status,
-						headers: rendered.headers
+						headers: rendered.headers.asSingleValuedMap()
 					});
 				}
 			}
@@ -125,9 +128,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 			const clone = response.clone();
 
 			/** @type {import('../../../types.internal').Headers} */
-			const headers = {};
+			const headers = new KitHeaders();
 			clone.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
+				if (key !== 'etag') headers.set(key, value);
 			});
 
 			const payload = JSON.stringify({
@@ -216,9 +219,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 			if (loaded.redirect) {
 				return {
 					status: loaded.status,
-					headers: {
+					headers: new KitHeaders({
 						location: loaded.redirect
-					}
+					})
 				};
 			}
 
@@ -352,12 +355,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 		`.replace(/^\t{2}/gm, '');
 
 	/** @type {import('../../../types.internal').Headers} */
-	const headers = {
+	const headers = new KitHeaders({
 		'content-type': 'text/html'
-	};
+	});
 
 	if (maxage) {
-		headers['cache-control'] = `${uses_credentials ? 'private' : 'public'}, max-age=${maxage}`;
+		headers.set('cache-control', `${uses_credentials ? 'private' : 'public'}, max-age=${maxage}`);
 	}
 
 	return {

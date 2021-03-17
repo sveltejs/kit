@@ -59,7 +59,13 @@ export type App = {
 	render: (request: Request, options: SSRRenderOptions) => Response;
 };
 
-export type Headers = Record<string, string>;
+export type Headers = {
+	set: (key: string, value: string) => void;
+	get: (key: string) => string;
+	getAll: (key: string) => string[];
+	asMap: () => Record<string, string | string[]>;
+	asSingleValuedMap: () => Record<string, string>;
+};
 
 export type Request = {
 	host: string;
@@ -182,7 +188,7 @@ export type SSRRenderOptions = {
 	app_dir?: string;
 	host?: string;
 	host_header?: string;
-	get_component_path: (id: string) => string;
+	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;
