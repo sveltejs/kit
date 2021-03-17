@@ -9,12 +9,10 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'b');
 	});
 
-	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
-		await page.click('[href="/redirect/loopy/a"]');
+	test('prevents redirect loops', '/redirect', async ({ base, page, click, js }) => {
+		await click('[href="/redirect/loopy/a"]');
 
 		if (js) {
-			await page.waitForTimeout(50);
-
 			assert.equal(await page.url(), `${base}/redirect/loopy/b`);
 			assert.equal(await page.textContent('h1'), '500');
 			assert.equal(

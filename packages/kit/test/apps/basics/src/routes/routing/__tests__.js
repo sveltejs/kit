@@ -150,30 +150,26 @@ export default function (test) {
 		}
 	);
 
-	test('navigates to ...rest', '/routing/abc/xyz', async ({ page }) => {
+	test('navigates to ...rest', '/routing/abc/xyz', async ({ page, click }) => {
 		assert.equal(await page.textContent('h1'), 'abc/xyz');
 
-		await page.click('[href="/routing/xyz/abc/def/ghi"]');
+		await click('[href="/routing/xyz/abc/def/ghi"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def/ghi');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def/ghi');
 
-		await page.click('[href="/routing/xyz/abc/def"]');
+		await click('[href="/routing/xyz/abc/def"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def');
 
-		await page.click('[href="/routing/xyz/abc/def"]');
-		assert.equal(await page.textContent('h1'), 'xyz/abc/def');
-		assert.equal(await page.textContent('h2'), 'xyz/abc/def');
-
-		await page.click('[href="/routing/xyz/abc"]');
+		await click('[href="/routing/xyz/abc"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await page.click('[href="/routing/xyz/abc/deep"]');
+		await click('[href="/routing/xyz/abc/deep"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await page.click('[href="/routing/xyz/abc/qwe/deep.json"]');
+		await click('[href="/routing/xyz/abc/qwe/deep.json"]');
 		assert.equal(await page.textContent('body'), 'xyz/abc/qwe');
 	});
 

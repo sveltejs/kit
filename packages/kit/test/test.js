@@ -52,7 +52,7 @@ async function setup({ port }) {
 	const base = `http://localhost:${port}`;
 
 	// Uncomment this for debugging
-	// page.on('console', msg => {
+	// pages.js.on('console', (msg) => {
 	// 	const type = msg.type();
 	// 	const text = msg.text();
 
