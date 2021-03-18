@@ -59,6 +59,10 @@ export type App = {
 	render: (request: Request, options: SSRRenderOptions) => Response;
 };
 
+// TODO we want to differentiate between request headers, which
+// always follow this type, and response headers, in which
+// 'set-cookie' is a `string[]` (or at least `string | string[]`)
+// but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
 
 export type Request = {
