@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.38
+
+### Patch Changes
+
+- c04887c: create-svelte: Include globals.d.ts in tsconfig
+
 ## 2.0.0-next.37
 
 ### Patch Changes
