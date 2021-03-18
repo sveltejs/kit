@@ -114,6 +114,7 @@ async function build_client({
 
 	await vite.build({
 		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
@@ -383,6 +384,7 @@ async function build_server(
 
 	await vite.build({
 		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
@@ -478,6 +480,7 @@ async function build_service_worker(
 
 	await vite.build({
 		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
