@@ -417,7 +417,12 @@ async function build_server(
 		// so we need to ignore the fact that it's missing
 		// @ts-ignore
 		ssr: {
-			noExternal: ['svelte', '@sveltejs/kit']
+			...user_config.ssr,
+			noExternal: [
+				'svelte',
+				'@sveltejs/kit',
+				...((user_config.ssr && user_config.ssr.noExternal) || [])
+			]
 		},
 		optimizeDeps: {
 			entries: []
