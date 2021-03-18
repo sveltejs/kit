@@ -17,7 +17,7 @@ export function stores() {
  *   host: string;
  *   path: string;
  *   query: URLSearchParams;
- *   params: Record<string, string | string[]>
+ *   params: Record<string, string>
  * }>} PageStore */
 
 export const getStores = () => {

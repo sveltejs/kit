@@ -43,7 +43,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/**
 	 * @param {string} url
-	 * @param {import('node-fetch').RequestInit} opts
+	 * @param {RequestInit} opts
 	 */
 	const fetcher = async (url, opts = {}) => {
 		if (options.local && url.startsWith(options.paths.assets)) {
@@ -64,7 +64,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		if (parsed.protocol) {
 			// external fetch
-			response = await fetch(parsed.href, opts);
+			response = await fetch(parsed.href, /** @type {import('node-fetch').RequestInit} */ (opts));
 		} else {
 			// otherwise we're dealing with an internal fetch
 			const resolved = resolve(request.path, parsed.pathname);
