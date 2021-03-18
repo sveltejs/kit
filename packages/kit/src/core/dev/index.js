@@ -126,7 +126,7 @@ class Watcher extends EventEmitter {
 
 					const rendered = await ssr(
 						{
-							headers: req.headers,
+							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							method: req.method,
 							host: null,
 							path: parsed.pathname,

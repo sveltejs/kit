@@ -50,6 +50,8 @@ export async function ssr(request, options) {
 
 			return {
 				status: response.status,
+				// TODO header merging is more involved than this — see the 'message.headers'
+				// section of https://nodejs.org/api/http.html#http_class_http_incomingmessage
 				headers: { ...headers, ...response.headers },
 				body: response.body,
 				dependencies: response.dependencies

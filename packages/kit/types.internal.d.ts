@@ -59,6 +59,10 @@ export type App = {
 	render: (request: Request, options: SSRRenderOptions) => Response;
 };
 
+// TODO we want to differentiate between request headers, which
+// always follow this type, and response headers, in which
+// 'set-cookie' is a `string[]` (or at least `string | string[]`)
+// but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
 
 export type Request = {
@@ -67,7 +71,6 @@ export type Request = {
 	headers: Headers;
 	path: string;
 	body: any;
-	params: Record<string, string>;
 	query: URLSearchParams;
 };
 
@@ -156,6 +159,7 @@ export type SSRManifest = {
 	endpoints: Endpoint[];
 };
 
+// TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
 	paths?: {
 		base: string;
@@ -174,7 +178,7 @@ export type SSRRenderOptions = {
 			context?: any;
 			headers?: Headers;
 		};
-		getSession: ({ context }: { context: any }) => any;
+		getSession?: ({ context }: { context: any }) => any;
 	};
 	dev?: boolean;
 	amp?: boolean;
@@ -182,7 +186,7 @@ export type SSRRenderOptions = {
 	app_dir?: string;
 	host?: string;
 	host_header?: string;
-	get_component_path: (id: string) => string;
+	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;
