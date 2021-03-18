@@ -44,8 +44,9 @@ export async function start({ port, config, cwd = process.cwd() }) {
 				static_handler(req, res, async () => {
 					const rendered = await app.render(
 						{
+							host: `localhost:${port}`,
 							method: req.method,
-							headers: req.headers,
+							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							path: parsed.pathname,
 							body: await get_body(req),
 							query: new URLSearchParams(parsed.query || '')

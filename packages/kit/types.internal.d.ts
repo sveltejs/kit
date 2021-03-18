@@ -174,7 +174,7 @@ export type SSRRenderOptions = {
 			context?: any;
 			headers?: Headers;
 		};
-		getSession: ({ context }: { context: any }) => any;
+		getSession?: ({ context }: { context: any }) => any;
 	};
 	dev?: boolean;
 	amp?: boolean;

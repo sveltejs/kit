@@ -88,7 +88,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 					});
 				} else {
 					// TODO we need to know what protocol to use
-					response = await fetch(`http://${page.host}/${asset.file}`, opts);
+					response = await fetch(
+						`http://${page.host}/${asset.file}`,
+						/** @type {import('node-fetch').RequestInit} */ (opts)
+					);
 				}
 			}
 
@@ -97,7 +100,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: opts.headers || {}, // TODO inject credentials...
+						headers: /** @type {import('../../../types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
 						path: resolved,
 						body: opts.body,
 						query: new URLSearchParams(parsed.query || '')
