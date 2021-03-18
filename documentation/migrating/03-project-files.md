@@ -4,9 +4,11 @@ title: Project files
 
 The bulk of your app, in `src/routes`, can be left where it is, but several project files will need to be moved or updated.
 
-### Config
+### Configuration
 
 Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte.config.cjs`, as documented [here](/docs#configuration). Svelte preprocessor options should be moved to `config.preprocess`.
+
+You will need to add an [adapter](/docs#adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 
 If you were using plugins for filetypes that are not automatically handled by [Vite](https://vitejs.dev), you will need to find Vite equivalents and add them to the [Vite config](/docs#configuration-vite).
 
@@ -20,7 +22,12 @@ This file also has no direct equivalent, since SvelteKit apps can run in serverl
 
 ### src/service-worker.js
 
-SvelteKit will continue using your [service worker](/docs#service-workers), but you will need to update any imports from `@sapper/service-worker` to `$service-worker`. The `files` array is now called `build`.
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](/docs#modules-service-worker):
+
+* `timestamp` is unchanged
+* `files` is unchanged
+* `shell` is now `build`
+* `routes` has been removed
 
 ### src/template.html
 
