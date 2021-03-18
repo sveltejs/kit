@@ -67,7 +67,6 @@ export type Request = {
 	headers: Headers;
 	path: string;
 	body: any;
-	params: Record<string, string>;
 	query: URLSearchParams;
 };
 
@@ -156,6 +155,7 @@ export type SSRManifest = {
 	endpoints: Endpoint[];
 };
 
+// TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
 	paths?: {
 		base: string;
@@ -182,7 +182,7 @@ export type SSRRenderOptions = {
 	app_dir?: string;
 	host?: string;
 	host_header?: string;
-	get_component_path: (id: string) => string;
+	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;

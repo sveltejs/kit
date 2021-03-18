@@ -98,7 +98,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('../../../../types.internal').Config} config
+ * @param {import('../../../types').Config} config
  * @returns {import('../../../types.internal.js').ValidatedConfig}
  */
 export function validate_config(config) {
