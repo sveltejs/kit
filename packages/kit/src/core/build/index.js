@@ -388,6 +388,7 @@ async function build_server(
 		root: cwd,
 		base,
 		build: {
+			target: 'es2018',
 			...user_config.build,
 			ssr: true,
 			lib: {
@@ -395,8 +396,7 @@ async function build_server(
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${output_dir}/server`,
-			target: 'es2018'
+			outDir: `${output_dir}/server`
 		},
 		resolve: {
 			...user_config.resolve,
