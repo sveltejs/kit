@@ -1,3 +1,5 @@
+const pkg = require('./package.json');
+
 /** @type {import('@sveltejs/kit').Config} */
 module.exports = {
 	kit: {
@@ -7,6 +9,12 @@ module.exports = {
 		adapter: '@sveltejs/adapter-node',
 
 		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte'
+		target: '#svelte',
+
+		vite: {
+			ssr: {
+				noExternal: Object.keys(pkg.dependencies || {})
+			}
+		}
 	}
 };

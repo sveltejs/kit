@@ -14,6 +14,8 @@ suite('load default config', async () => {
 
 	const config = await load_config({ cwd });
 
+	delete config.kit.vite; // can't test equality of a function
+
 	assert.equal(config, {
 		compilerOptions: null,
 		extensions: ['.svelte'],

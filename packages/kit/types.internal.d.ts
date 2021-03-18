@@ -43,6 +43,7 @@ export type ValidatedConfig = {
 			pages: string[];
 		};
 		target: string;
+		vite: () => {};
 	};
 	preprocess: any;
 };

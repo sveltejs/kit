@@ -107,7 +107,26 @@ const options = {
 				}
 			},
 
-			target: expect_string(null)
+			target: expect_string(null),
+
+			vite: {
+				type: 'leaf',
+				default: () => ({}),
+				validate: (option, keypath) => {
+					if (typeof option === 'object') {
+						const config = option;
+						option = () => config;
+					}
+
+					if (typeof option !== 'function') {
+						throw new Error(
+							`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
+						);
+					}
+
+					return option;
+				}
+			}
 		}
 	},
 
