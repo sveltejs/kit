@@ -1,15 +1,15 @@
-# @sveltejs/kit
+# The fastest way to build Svelte apps
 
-Here be dragons, etc etc.
+This is the [SvelteKit](https://kit.svelte.dev) framework and CLI. 
 
-This project aims to replicate Sapper's functionality in its entirety, minus building for deployment (which can be handled by 'adapters' that do various opinionated things with the output of `snowpack build`).
+The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) package:
 
-It's currently missing a ton of stuff but I figured I'd throw it up on GitHub anyway partly for the sake of 'working in the open' but mostly because I need an issue tracker to organise my thoughts.
+```bash
+mkdir my-app
+cd my-app
+npm init svelte@next
+npm install
+npm run dev
+```
 
-There are no tests yet or anything like that. Some of the code has just been straight copied over from the existing Sapper repo, but a pleasing amount of it can safely be left behind.
-
-## Trying it out
-
-Clone this repo, `npm install`, and `npm link`. That will create a global link to the `svelte` bin. You can then either `npm run build` or `npm run dev`, if you intend to make changes and see them immediately reflected.
-
-Then, clone the corresponding [svelte-app-demo](https://github.com/sveltejs/svelte-app-demo) repo and follow the instructions therein.
+See the [documentation](https://kit.svelte.dev/docs) to learn more.
