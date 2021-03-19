@@ -136,6 +136,7 @@ test('sorts routes correctly', () => {
 			['samples/sorting/post/bar.svelte'],
 			['samples/sorting/post/foo.svelte'],
 			['samples/sorting/post/f[xx].svelte'],
+			['samples/sorting/post/f[yy].svelte'],
 			['samples/sorting/post/[id].svelte'],
 			['samples/sorting/[wildcard].svelte'],
 			['samples/sorting/[...spread]/deep/[...deep_spread]/xyz.svelte'],
@@ -175,16 +176,6 @@ test('allows multiple slugs', () => {
 			params: ['file', 'ext']
 		}
 	]);
-});
-
-test('fails on clashes', () => {
-	assert.throws(() => {
-		create('samples/clash-pages');
-	}, /The samples\/clash-pages\/\[bar\]\/index\.svelte and samples\/clash-pages\/\[foo\]\.svelte routes clash/);
-
-	assert.throws(() => {
-		create('samples/clash-routes');
-	}, /The samples\/clash-routes\/\[bar\]\/index\.js and samples\/clash-routes\/\[foo\]\.js routes clash/);
 });
 
 test('fails if dynamic params are not separated', () => {

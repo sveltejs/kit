@@ -46,23 +46,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('../../../types.internal').EndpointData[]} */
 	const endpoints = [];
 
-	/** @type {Map<string, string>} */
-	const seen = new Map();
-
-	/**
-	 * @param {RegExp} pattern
-	 * @param {string} file
-	 */
-	const check_pattern = (pattern, file) => {
-		const str = pattern.toString();
-
-		if (seen.has(str)) {
-			throw new Error(`The ${seen.get(str)} and ${file} routes clash`);
-		}
-
-		seen.set(str, file);
-	};
-
 	const default_layout = path.relative(cwd, `${output}/components/layout.svelte`);
 	const default_error = path.relative(cwd, `${output}/components/error.svelte`);
 
@@ -173,7 +156,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						: stack.concat(item.file);
 
 				const pattern = get_pattern(segments, true);
-				check_pattern(pattern, item.file);
 
 				pages.push({
 					pattern,
@@ -182,7 +164,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
-				check_pattern(pattern, item.file);
 
 				endpoints.push({
 					pattern,
