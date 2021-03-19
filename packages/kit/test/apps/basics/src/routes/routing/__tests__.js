@@ -204,4 +204,11 @@ export default function (test) {
 			assert.equal(await page.textContent('h1'), 'y/1');
 		}
 	);
+
+	test('back button returns to initial route', '/routing', async ({ page, clicknav }) => {
+		await clicknav('[href="/routing/a"]');
+
+		await page.goBack();
+		assert.equal(await page.textContent('h1'), 'Great success!');
+	});
 }
