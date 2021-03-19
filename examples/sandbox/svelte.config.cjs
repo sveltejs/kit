@@ -1,8 +1,9 @@
+const node = require('@sveltejs/adapter-node');
 const pkg = require('./package.json');
 
 module.exports = {
 	kit: {
-		adapter: '@sveltejs/adapter-node',
+		adapter: node(),
 		target: '#svelte',
 		vite: {
 			build: {

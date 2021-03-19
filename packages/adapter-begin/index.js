@@ -3,27 +3,29 @@ import { copy } from '@sveltejs/app-utils/files';
 import { resolve, join } from 'path';
 import parse from '@architect/parser';
 
-function parse_arc(arcPath) {
-	if (!existsSync(arcPath)) {
-		throw new Error(`No ${arcPath} found. See the documentation.`);
+/** @param {string} file */
+function parse_arc(file) {
+	if (!existsSync(file)) {
+		throw new Error(`No ${file} found. See the documentation.`);
 	}
 
 	try {
-		const text = readFileSync(arcPath).toString();
+		const text = readFileSync(file).toString();
 		const arc = parse(text);
 
 		return {
 			static: arc.static[0][1]
 		};
 	} catch (e) {
-		throw new Error(
-			`Error parsing ${arcPath}. Please consult the documentation for correct syntax.`
-		);
+		throw new Error(`Error parsing ${file}. Please consult the documentation for correct syntax.`);
 	}
 }
 
 export default function () {
-	return {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-begin',
+
 		async adapt(builder) {
 			builder.log.minor('Parsing app.arc file');
 			const { static: static_mount_point } = parse_arc('app.arc');
@@ -49,4 +51,6 @@ export default function () {
 			});
 		}
 	};
+
+	return adapter;
 }

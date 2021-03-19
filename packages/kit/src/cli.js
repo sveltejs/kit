@@ -97,7 +97,7 @@ prog
 
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
-			if (config.kit.adapter[0]) {
+			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
 				await adapt(config, { verbose });
 			} else {

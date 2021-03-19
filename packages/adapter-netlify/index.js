@@ -1,12 +1,12 @@
-import { existsSync, readFileSync, copyFileSync, writeFileSync, renameSync } from 'fs';
-import { dirname, resolve } from 'path';
-import toml from 'toml';
-import { fileURLToPath } from 'url';
+const { existsSync, readFileSync, copyFileSync, writeFileSync, renameSync } = require('fs');
+const { resolve } = require('path');
+const toml = require('toml');
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+module.exports = function () {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-netlify',
 
-export default function () {
-	return {
 		async adapt(builder) {
 			let netlify_config;
 
@@ -60,4 +60,6 @@ export default function () {
 			});
 		}
 	};
-}
+
+	return adapter;
+};

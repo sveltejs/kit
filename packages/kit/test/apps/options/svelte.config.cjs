@@ -1,6 +1,5 @@
 module.exports = {
 	kit: {
-		adapter: '@sveltejs/adapter-node',
 		files: {
 			assets: 'public',
 			lib: 'source/components',

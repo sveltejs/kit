@@ -1,5 +1,8 @@
-export default function ({ pages = 'build', assets = 'build' } = {}) {
-	return {
+module.exports = function ({ pages = 'build', assets = 'build' } = {}) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-static',
+
 		async adapt(builder) {
 			builder.copy_static_files(assets);
 			builder.copy_client_files(assets);
@@ -10,4 +13,6 @@ export default function ({ pages = 'build', assets = 'build' } = {}) {
 			});
 		}
 	};
-}
+
+	return adapter;
+};

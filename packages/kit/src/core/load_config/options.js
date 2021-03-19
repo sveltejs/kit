@@ -39,13 +39,16 @@ const options = {
 				type: 'leaf',
 				default: [null],
 				validate: (option, keypath) => {
-					// support both `adapter: 'foo'` and `adapter: ['foo', opts]`
-					if (!Array.isArray(option)) {
-						option = [option];
-					}
+					if (typeof option !== 'object' || !option.adapt) {
+						let message = `${keypath} should be an object with an "adapt" method`;
 
-					// TODO allow inline functions
-					assert_is_string(option[0], keypath);
+						if (Array.isArray(option) || typeof option === 'string') {
+							// for the early adapter adopters
+							message += ', rather than the name of an adapter';
+						}
+
+						throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
+					}
 
 					return option;
 				}

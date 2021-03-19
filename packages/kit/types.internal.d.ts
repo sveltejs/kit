@@ -1,4 +1,4 @@
-import { Load } from './types';
+import { Adapter, Load } from './types';
 
 declare global {
 	interface ImportMeta {
@@ -19,7 +19,7 @@ export type ValidatedConfig = {
 	compilerOptions: any;
 	extensions: string[];
 	kit: {
-		adapter: [string, any];
+		adapter: Adapter;
 		amp: boolean;
 		appDir: string;
 		files: {
