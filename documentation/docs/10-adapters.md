@@ -8,9 +8,11 @@ For example, if you want to run your app as a simple Node server, you would use 
 
 ```js
 // svelte.config.cjs
+const node = require('@sveltejs/adapter-node');
+
 module.exports = {
 	kit: {
-		adapter: '@sveltejs/adapter-node'
+		adapter: node()
 	}
 };
 ```
@@ -19,26 +21,25 @@ With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will gen
 
 ```diff
 // svelte.config.cjs
+const node = require('@sveltejs/adapter-node');
+
 module.exports = {
 	kit: {
--		adapter: '@sveltejs/adapter-node'
-+		adapter: ['@sveltejs/adapter-node', {
-+			out: 'my-output-directory'
-+		}]
+-		adapter: node()
++		adapter: node({ out: 'my-output-directory' })
 	}
 };
 ```
 
 A variety of official adapters exist for serverless platforms...
 
-* [`adapter-begin`](https://github.com/sveltejs/kit/tree/master/packages/adapter-begin) — for [begin.com](https://begin.com)
-* [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [netlify.com](https://netlify.com)
-* [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [vercel.com](https://vercel.com)
+- [`adapter-begin`](https://github.com/sveltejs/kit/tree/master/packages/adapter-begin) — for [begin.com](https://begin.com)
+- [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [netlify.com](https://netlify.com)
+- [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [vercel.com](https://vercel.com)
 
 ...and others:
 
-* [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
-* [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
-
+- [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
+- [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
 > The adapter API is still in flux and will likely change before 1.0.

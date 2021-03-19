@@ -78,18 +78,27 @@ importers:
       '@architect/parser': 3.0.1
       '@sveltejs/app-utils': link:../app-utils
     devDependencies:
+      '@sveltejs/kit': link:../kit
       rollup: 2.41.1
       sirv: 1.0.11
+      typescript: 4.2.3
     specifiers:
       '@architect/parser': ^3.0.1
       '@sveltejs/app-utils': workspace:*
+      '@sveltejs/kit': workspace:*
       rollup: ^2.41.1
       sirv: ^1.0.11
+      typescript: ^4.2.3
   packages/adapter-netlify:
     dependencies:
       toml: 3.0.0
+    devDependencies:
+      '@sveltejs/kit': link:../kit
+      typescript: 4.2.3
     specifiers:
+      '@sveltejs/kit': workspace:*
       toml: ^3.0.0
+      typescript: ^4.2.3
   packages/adapter-node:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
@@ -110,17 +119,26 @@ importers:
       sirv: ^1.0.11
       typescript: ^4.2.3
   packages/adapter-static:
-    specifiers: {}
+    devDependencies:
+      '@sveltejs/kit': link:../kit
+      typescript: 4.2.3
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      typescript: ^4.2.3
   packages/adapter-vercel:
     dependencies:
       '@sveltejs/app-utils': link:../app-utils
     devDependencies:
+      '@sveltejs/kit': link:../kit
       rollup: 2.41.1
       sirv: 1.0.11
+      typescript: 4.2.3
     specifiers:
       '@sveltejs/app-utils': workspace:*
+      '@sveltejs/kit': workspace:*
       rollup: ^2.41.1
       sirv: ^1.0.11
+      typescript: ^4.2.3
   packages/app-utils:
     devDependencies:
       '@types/node': 14.14.33
@@ -635,17 +653,17 @@ packages:
     dev: true
     resolution:
       integrity: sha512-oJqcTrgPUF29oUP8AsUqbXGJNuPutsetaa9kTQAQce5Lx5dTYWV02ScBiT/k1BX/Z7pKeqedmvp39Wu4zR7N7g==
-  /@types/node/14.14.34:
+  /@types/node/14.14.35:
     dev: true
     resolution:
-      integrity: sha512-dBPaxocOK6UVyvhbnpFIj2W+S+1cBTkHQbFQfeeJhoKFbzYcVUGHvddeWPSucKATb3F0+pgDq0i6ghEaZjsugA==
+      integrity: sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
   /@types/resolve/1.17.1:
     dependencies:
-      '@types/node': 14.14.34
+      '@types/node': 14.14.35
     dev: true
     resolution:
       integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==
@@ -2385,13 +2403,13 @@ packages:
   /ms/2.1.2:
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
-  /nanoid/3.1.21:
+  /nanoid/3.1.22:
     dev: true
     engines:
       node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1
     hasBin: true
     resolution:
-      integrity: sha512-A6oZraK4DJkAOICstsGH98dvycPr/4GGDH7ZWKmMdd3vGcOurZ6JmWFUt0DA5bzrrn2FrUjmv6mFNWvv8jpppA==
+      integrity: sha512-/2ZUaJX2ANuLtTvqTlgqBQNJoQO398KyJgZloL0PZkC0dpysjncRUPsFe3DUPzz/y3h+u7C46np8RMuvF3jsSQ==
   /natural-compare/1.4.0:
     dev: true
     resolution:
@@ -2735,7 +2753,7 @@ packages:
   /postcss/8.2.8:
     dependencies:
       colorette: 1.2.2
-      nanoid: 3.1.21
+      nanoid: 3.1.22
       source-map: 0.6.1
     dev: true
     engines:

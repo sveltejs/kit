@@ -1,6 +1,8 @@
+const netlify = require('@sveltejs/adapter-netlify');
+
 module.exports = {
 	kit: {
-		adapter: '@sveltejs/adapter-netlify',
+		adapter: netlify(),
 		target: '#svelte'
 	}
 };

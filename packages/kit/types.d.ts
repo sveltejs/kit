@@ -4,7 +4,7 @@ export type Config = {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
-		adapter?: string | [string, any];
+		adapter?: Adapter;
 		amp?: boolean;
 		appDir?: string;
 		files?: {
@@ -42,6 +42,7 @@ type Builder = {
 };
 
 export type Adapter = {
+	name: string;
 	adapt: (builder: Builder) => Promise<void>;
 };
 

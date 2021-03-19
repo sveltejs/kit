@@ -1,12 +1,12 @@
 import { writeFileSync, mkdirSync, renameSync } from 'fs';
-import { dirname, resolve, join } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve, join } from 'path';
 import { copy } from '@sveltejs/app-utils/files';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+module.exports = function () {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-vercel',
 
-export default function () {
-	return {
 		async adapt(builder) {
 			const vercel_output_directory = resolve('.vercel_build_output');
 			const config_directory = join(vercel_output_directory, 'config');
@@ -49,4 +49,6 @@ export default function () {
 			);
 		}
 	};
-}
+
+	return adapter;
+};
