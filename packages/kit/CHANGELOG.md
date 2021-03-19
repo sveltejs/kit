@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.53
+
+### Patch Changes
+
+- 9cf2f21: Only require page components to export prerender
+- e860de0: Invalidate page when query changes
+- 7bb1cf0: Disable vite-plugin-svelte transform cache
+
 ## 1.0.0-next.52
 
 ### Patch Changes
