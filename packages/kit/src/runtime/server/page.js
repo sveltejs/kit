@@ -161,16 +161,21 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let context = {};
 	let maxage;
 
+	if (options.only_render_prerenderable_pages) {
+		if (error) return; // don't prerender an error page
+
+		// if the page has `export const prerender = true`, continue,
+		// otherwise bail out at this point
+		const mod = await component_promises[component_promises.length - 1];
+		if (!mod.prerender) return;
+	}
+
 	for (let i = 0; i < component_promises.length; i += 1) {
 		let loaded;
 
 		try {
 			const mod = await component_promises[i];
 			components[i] = mod.default;
-
-			if (options.only_prerender && !mod.prerender) {
-				return;
-			}
 
 			if (mod.preload) {
 				throw new Error(

@@ -183,7 +183,7 @@ export type SSRRenderOptions = {
 	};
 	dev?: boolean;
 	amp?: boolean;
-	only_prerender?: boolean;
+	only_render_prerenderable_pages?: boolean;
 	app_dir?: string;
 	host?: string;
 	host_header?: string;
