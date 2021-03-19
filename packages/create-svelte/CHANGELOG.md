@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.39
+
+### Patch Changes
+
+- ac3669e: Move Vite config into svelte.config.cjs
+
 ## 2.0.0-next.38
 
 ### Patch Changes
