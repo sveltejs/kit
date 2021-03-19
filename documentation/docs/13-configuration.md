@@ -17,6 +17,7 @@ module.exports = {
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		clientSideRouting: true,
 		files: {
 			assets: 'static',
 			lib: 'src/lib',
@@ -56,6 +57,10 @@ Enable [AMP](#amp) mode.
 #### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely).
+
+#### clientSideRouting
+
+Disable client side routing so that navigation will result in a full page reload.
 
 #### files
 
