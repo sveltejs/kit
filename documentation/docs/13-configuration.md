@@ -48,7 +48,7 @@ module.exports = {
 
 #### adapter
 
-Determines how the output of `svelte-kit build` is converted for different platforms. Can be specified as a `string` or a `[string, object]` tuple if you need to pass options.
+Determines how the output of `svelte-kit build` is converted for different platforms. See [Adapters](#adapters).
 
 #### amp
 
