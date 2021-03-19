@@ -31,7 +31,7 @@ npm run dev -- --open
 
 Svelte apps are built with _adapters_, which optimise your project for deployment to different environments.
 
-By default, `npm run build` will generate a Node app that you can run with `node build`. To use a different adapter, add it to the `devDependencies` in `package.json` making sure to specify the version as `next` and update your `svelte.config.cjs` to specify your chosen adapter in the `kit.adapter` option. The following official adapters are available:
+By default, `npm run build` will generate a Node app that you can run with `node build`. To use a different adapter, add it to the `devDependencies` in `package.json` making sure to specify the version as `next` and update your `svelte.config.cjs` to [specify your chosen adapter](#configuration-adapter). The following official adapters are available:
 
 - [@sveltejs/adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node)
 - [@sveltejs/adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)
