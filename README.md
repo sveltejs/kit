@@ -1,14 +1,10 @@
 # READ THIS FIRST!
 
-We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting, and documentation will be available. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some known issues to resolve and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
+We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some known issues to resolve and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
 
----
+## Documentation
 
-# @sveltejs/kit
-
-Everything you need to build a Svelte app.
-
-To get started, run `npm init svelte@next` — this will fetch and run the [`create-svelte`](packages/create-svelte) package.
+Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
 
 ## Developing
 
@@ -50,6 +46,6 @@ New packages will need to be published manually the first time if they are scope
 npm publish --access=public
 ```
 
-## Testing
+### Testing
 
 Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.

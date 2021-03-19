@@ -4,4 +4,4 @@ This package provides the `svelte-kit` CLI. It's responsible for SSR rendering a
 
 ## Documentation
 
-Documentation coming soon. For now it lives in GitHub: https://github.com/sveltejs/kit/tree/master/documentation
+Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
