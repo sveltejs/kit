@@ -196,6 +196,7 @@ class Watcher extends EventEmitter {
 							only_prerender: false,
 							host: this.config.kit.host,
 							host_header: this.config.kit.hostHeader,
+							client_side_routing: this.config.kit.clientSideRouting,
 							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);

@@ -17,12 +17,14 @@ export class Router {
 	 *    base: string;
 	 *    host: string;
 	 *    pages: import('../../../types.internal').CSRPage[];
+	 * 	  client_side_routing: boolean;
 	 *    ignore: RegExp[];
 	 * }} opts */
-	constructor({ base, host, pages, ignore }) {
+	constructor({ base, host, pages, client_side_routing, ignore }) {
 		this.base = base;
 		this.host = host;
 		this.pages = pages;
+		this.client_side_routing = client_side_routing;
 		this.ignore = ignore;
 
 		this.history = window.history || {
@@ -177,15 +179,17 @@ export class Router {
 	 * @param {string[]} chain
 	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
-		const url = new URL(href, get_base_uri(document));
-		const selected = this.select(url);
+		if (this.client_side_routing) {
+			const url = new URL(href, get_base_uri(document));
+			const selected = this.select(url);
 
-		if (selected) {
-			this.renderer.notify(selected.page);
+			if (selected) {
+				this.renderer.notify(selected.page);
 
-			// TODO shouldn't need to pass the hash here
-			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+				// TODO shouldn't need to pass the hash here
+				this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
+				return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+			}
 		}
 
 		location.href = href;

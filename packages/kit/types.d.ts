@@ -7,6 +7,7 @@ export type Config = {
 		adapter?: string | [string, any];
 		amp?: boolean;
 		appDir?: string;
+		clientSideRouting?: boolean;
 		files?: {
 			assets?: string;
 			lib?: string;

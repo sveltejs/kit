@@ -55,6 +55,8 @@ const options = {
 
 			appDir: expect_string('_app', false),
 
+			clientSideRouting: expect_boolean(true),
+
 			files: {
 				type: 'branch',
 				children: {

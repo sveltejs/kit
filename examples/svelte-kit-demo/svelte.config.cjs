@@ -5,6 +5,8 @@ module.exports = {
 		// specifying a different adapter
 		adapter: '@sveltejs/adapter-node',
 
+		clientSideRouting: false,
+
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte'
 	}

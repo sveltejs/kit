@@ -12,6 +12,7 @@ test('fills in defaults', () => {
 			adapter: [null],
 			amp: false,
 			appDir: '_app',
+			clientSideRouting: true,
 			files: {
 				assets: 'static',
 				lib: 'src/lib',
@@ -84,6 +85,7 @@ test('fills in partial blanks', () => {
 			adapter: [null],
 			amp: false,
 			appDir: '_app',
+			clientSideRouting: true,
 			files: {
 				assets: 'public',
 				lib: 'src/lib',

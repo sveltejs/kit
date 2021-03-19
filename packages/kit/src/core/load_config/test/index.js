@@ -21,6 +21,7 @@ suite('load default config', async () => {
 			adapter: [null],
 			amp: false,
 			appDir: '_app',
+			clientSideRouting: true,
 			files: {
 				assets: join(cwd, 'static'),
 				lib: join(cwd, 'src/lib'),

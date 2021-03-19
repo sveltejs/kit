@@ -16,14 +16,16 @@ import { set_paths } from '../paths.js';
  *   session: any;
  *   error: Error;
  *   status: number;
+ *   client_side_routing: boolean;
  *   nodes: import('./types').NavigationTarget["nodes"];
  *   page: import('./types').NavigationTarget["page"];
  * }} opts */
-export async function start({ paths, target, session, error, status, nodes, page }) {
+export async function start({ paths, target, session, error, status, client_side_routing, nodes, page }) {
 	const router = new Router({
 		base: paths.base,
 		host: page.host,
 		pages,
+		client_side_routing,
 		ignore
 	});
 
@@ -37,7 +39,7 @@ export async function start({ paths, target, session, error, status, nodes, page
 	init({ router, renderer });
 	set_paths(paths);
 
-	router.init(renderer);
+	if (client_side_routing) router.init(renderer);
 	await renderer.start({ nodes, page }, status, error);
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));

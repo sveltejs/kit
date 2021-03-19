@@ -22,6 +22,7 @@ export type ValidatedConfig = {
 		adapter: [string, any];
 		amp: boolean;
 		appDir: string;
+		clientSideRouting: boolean;
 		files: {
 			assets: string;
 			lib: string;
@@ -186,6 +187,7 @@ export type SSRRenderOptions = {
 	app_dir?: string;
 	host?: string;
 	host_header?: string;
+	client_side_routing?: boolean;
 	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;

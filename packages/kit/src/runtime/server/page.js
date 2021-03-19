@@ -324,6 +324,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: ${status},
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
+				client_side_routing: ${options.client_side_routing},
 				nodes: [
 					${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
