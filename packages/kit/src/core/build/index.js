@@ -359,7 +359,7 @@ async function build_server(
 					app_dir: ${s(config.kit.appDir)},
 					host: ${s(config.kit.host)},
 					host_header: ${s(config.kit.hostHeader)},
-					client_side_routing: this.config.kit.clientSideRouting,
+					client_side_routing: ${s(config.kit.clientSideRouting)},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
