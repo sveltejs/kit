@@ -28,6 +28,7 @@ export type Config = {
 			pages?: string[];
 		};
 		target?: string;
+		vite?: {} | (() => {});
 	};
 	preprocess?: any;
 };

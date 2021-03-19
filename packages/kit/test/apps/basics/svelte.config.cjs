@@ -1,8 +1,12 @@
 module.exports = {
 	kit: {
-		// TODO adapterless builds
 		adapter: '@sveltejs/adapter-node',
-
-		hostHeader: 'x-forwarded-host'
+		hostHeader: 'x-forwarded-host',
+		vite: {
+			build: {
+				minify: false
+			},
+			clearScreen: false
+		}
 	}
 };

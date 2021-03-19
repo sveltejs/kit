@@ -109,11 +109,16 @@ async function build_client({
 		});
 	});
 
-	// client build
+	/** @type {any} */
+	const user_config = config.kit.vite();
+
 	await vite.build({
+		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
+			...user_config.build,
 			cssCodeSplit: true,
 			manifest: true,
 			lib: {
@@ -126,6 +131,7 @@ async function build_client({
 			},
 			outDir: client_out_dir,
 			rollupOptions: {
+				...(user_config.build && user_config.build.rollupOptions),
 				input,
 				output: {
 					entryFileNames: '[name]-[hash].js',
@@ -136,12 +142,15 @@ async function build_client({
 			}
 		},
 		resolve: {
+			...user_config.resolve,
 			alias: {
+				...(user_config.resolve && user_config.resolve.alias),
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
+			...(user_config.plugins || []),
 			svelte({
 				extensions: config.extensions
 			})
@@ -370,26 +379,35 @@ async function build_server(
 			.trim()
 	);
 
+	/** @type {any} */
+	const user_config = config.kit.vite();
+
 	await vite.build({
+		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
+			target: 'es2018',
+			...user_config.build,
 			ssr: true,
 			lib: {
 				entry: app_file,
 				name: 'app',
 				formats: ['es']
 			},
-			outDir: `${output_dir}/server`,
-			target: 'es2018'
+			outDir: `${output_dir}/server`
 		},
 		resolve: {
+			...user_config.resolve,
 			alias: {
+				...(user_config.resolve && user_config.resolve.alias),
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
+			...(user_config.plugins || []),
 			svelte({
 				extensions: config.extensions
 			})
@@ -399,7 +417,12 @@ async function build_server(
 		// so we need to ignore the fact that it's missing
 		// @ts-ignore
 		ssr: {
-			noExternal: ['svelte', '@sveltejs/kit']
+			...user_config.ssr,
+			noExternal: [
+				'svelte',
+				'@sveltejs/kit',
+				...((user_config.ssr && user_config.ssr.noExternal) || [])
+			]
 		},
 		optimizeDeps: {
 			entries: []
@@ -457,16 +480,23 @@ async function build_service_worker(
 			.trim()
 	);
 
+	/** @type {any} */
+	const user_config = config.kit.vite();
+
 	await vite.build({
+		...user_config,
+		configFile: false,
 		root: cwd,
 		base,
 		build: {
+			...user_config.build,
 			lib: {
 				entry: service_worker_entry_file,
 				name: 'app',
 				formats: ['es']
 			},
 			rollupOptions: {
+				...(user_config.build && user_config.build.rollupOptions),
 				output: {
 					entryFileNames: 'service-worker.js'
 				}
@@ -475,7 +505,9 @@ async function build_service_worker(
 			emptyOutDir: false
 		},
 		resolve: {
+			...user_config.resolve,
 			alias: {
+				...(user_config.resolve && user_config.resolve.alias),
 				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
 			}
 		},

@@ -8,26 +8,13 @@ async function get_config() {
 	if (existsSync('snowpack.config.js') || existsSync('snowpack.config.cjs')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
-			'SvelteKit now uses https://vitejs.dev. Please replace snowpack.config.js with vite.config.js:'
+			'SvelteKit now uses https://vitejs.dev. Please remove snowpack.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
 		));
-
+	} else if (existsSync('vite.config.js')) {
 		// prettier-ignore
-		console.error(`
-			// Consult https://vitejs.dev/config/ to learn about these options
-			import { join } from 'path';
-			import { readFileSync } from 'fs';
-			import { cwd } from 'process';
-
-			const pkg = JSON.parse(readFileSync(join(cwd(), 'package.json')));
-
-			/** @type {import('vite').UserConfig} */
-			export default {
-				ssr: {
-					noExternal: Object.keys(pkg.dependencies || {})
-				}
-			};
-
-		`.replace(/^\t{3}/gm, '').replace(/\t/gm, '  ').trim());
+		console.error(colors.bold().red(
+			'Please remove vite.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
+		));
 	}
 
 	try {
@@ -38,8 +25,7 @@ async function get_config() {
 		if (error.code === 'MODULE_NOT_FOUND') {
 			if (existsSync('svelte.config.js')) {
 				// TODO this is temporary, for the benefit of early adopters
-				message =
-					'You must rename svelte.config.js to svelte.config.cjs, and snowpack.config.js to snowpack.config.cjs';
+				message = 'You must rename svelte.config.js to svelte.config.cjs';
 			} else {
 				message = 'Missing svelte.config.cjs';
 			}

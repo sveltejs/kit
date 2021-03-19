@@ -37,7 +37,8 @@ module.exports = {
 			force: false,
 			pages: ['*']
 		},
-		target: null
+		target: null,
+		vite: () => ({})
 	},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
@@ -61,12 +62,12 @@ The directory relative to `paths.assets` where the built JS and CSS (and importe
 
 An object containing zero or more of the following `string` values:
 
-* `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
-* `lib` — your app's internal library, accessible throughout the codebase as `$lib`
-* `routes` — the files that define the structure of your app (see [Routing](#routing))
-* `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
-* `setup` — the location of your setup file (see [Setup](#setup))
-* `template` — the location of the template for HTML responses
+- `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+- `lib` — your app's internal library, accessible throughout the codebase as `$lib`
+- `routes` — the files that define the structure of your app (see [Routing](#routing))
+- `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
+- `setup` — the location of your setup file (see [Setup](#setup))
+- `template` — the location of the template for HTML responses
 
 #### host
 
@@ -91,18 +92,22 @@ module.exports = {
 
 An object containing zero or more of the following `string` values:
 
-* `assets` — an absolute path, or a path relative to `base`, where your app's files are served from. This is useful if your files are served from a storage bucket of some kind
-* `base` — a root-relative (i.e. starts with `/`) path that specifies where your app is served from. This allows the app to live on a non-root path
+- `assets` — an absolute path, or a path relative to `base`, where your app's files are served from. This is useful if your files are served from a storage bucket of some kind
+- `base` — a root-relative (i.e. starts with `/`) path that specifies where your app is served from. This allows the app to live on a non-root path
 
 #### prerender
 
 See [Prerendering](#prerendering). An object containing zero or more of the following:
 
-* `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
-* `enabled` — set to `false` to disable prerendering altogether
-* `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
-* `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
+- `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
+- `enabled` — set to `false` to disable prerendering altogether
+- `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
+- `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
 #### target
 
 Specifies an element to mount the app to. It must be a DOM selector that identifies an element that exists in your template file. If unspecified, the app will be mounted to `document.body`.
+
+#### vite
+
+A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.

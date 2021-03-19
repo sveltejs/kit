@@ -73,24 +73,33 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
+		/** @type {any} */
+		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
+
 		/**
 		 * @type {vite.ViteDevServer}
 		 */
 		this.viteDevServer = await vite.createServer({
+			...user_config,
+			configFile: false,
 			root: this.cwd,
 			resolve: {
+				...user_config.resolve,
 				alias: {
+					...(user_config.resolve && user_config.resolve.alias),
 					$app: path.resolve(`${this.dir}/runtime/app`),
 					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [
+				...(user_config.plugins || []),
 				svelte({
 					extensions: this.config.extensions
 				})
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
+				...user_config.server,
 				middlewareMode: true
 			}
 		});
