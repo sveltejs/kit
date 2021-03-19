@@ -34,3 +34,5 @@
 
 <pre id="one">{JSON.stringify(values)}</pre>
 <pre id="two">{JSON.stringify(to_pojo($page.query))}</pre>
+
+<a href="/query/echo?bar=2">?bar=2</a>

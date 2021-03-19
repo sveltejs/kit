@@ -429,7 +429,7 @@ export class Renderer {
 				}
 			});
 
-			if (!this.current.page || page.path !== this.current.page.path) {
+			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
 				props.page = page;
 			}
 		} catch (error) {
