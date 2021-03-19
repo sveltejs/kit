@@ -184,16 +184,6 @@ export default function (test) {
 		}
 	);
 
-	test('find regexp routes', '/routing/qwe', async ({ page, clicknav }) => {
-		assert.equal(await page.textContent('h1'), 'qwe');
-
-		await clicknav('[href="234"]');
-		assert.equal(await page.textContent('h1'), 'Regexp page 234');
-
-		await clicknav('[href="regexp/234"]');
-		assert.equal(await page.textContent('h1'), 'Nested regexp page 234');
-	});
-
 	test(
 		'invalidates page when a segment is skipped',
 		'/routing/skipped/x/1',

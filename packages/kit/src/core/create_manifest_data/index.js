@@ -6,7 +6,6 @@ import mime from 'mime';
  *   content: string;
  *   dynamic: boolean;
  *   spread: boolean;
- *   qualifier: string;
  * }} Part */
 
 /** @typedef {{
@@ -96,16 +95,14 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					throw new Error(`Invalid route ${file} — parameters must be separated`);
 				}
 
-				const parts = get_parts(segment);
+				if (count_occurrences('[', segment) !== count_occurrences(']', segment)) {
+					throw new Error(`Invalid route ${file} — brackets are unbalanced`);
+				}
+
+				const parts = get_parts(segment, file);
 				const is_index = is_dir ? false : basename.startsWith('index.');
 				const is_page = config.extensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
-
-				parts.forEach((part) => {
-					if (part.qualifier && /[()?:]/.test(part.qualifier.slice(1, -1))) {
-						throw new Error(`Invalid route ${file} — cannot use (, ), ? or : in route qualifiers`);
-					}
-				});
 
 				return {
 					basename,
@@ -134,15 +131,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 							last_segment.push({
 								dynamic: false,
 								spread: false,
-								content: item.route_suffix,
-								qualifier: null
+								content: item.route_suffix
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
 								spread: false,
-								content: `${last_part.content}${item.route_suffix}`,
-								qualifier: null
+								content: `${last_part.content}${item.route_suffix}`
 							};
 						}
 
@@ -217,6 +212,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	};
 }
 
+/**
+ * @param {string} needle
+ * @param {string} haystack
+ */
+function count_occurrences(needle, haystack) {
+	let count = 0;
+	for (let i = 0; i < haystack.length; i += 1) {
+		if (haystack[i] === needle) count += 1;
+	}
+	return count;
+}
+
 /** @param {string} str */
 function posixify(str) {
 	return str.replace(/\\/g, '/');
@@ -286,21 +293,27 @@ function comparator(a, b) {
 	}
 }
 
-/** @param {string} part */
-function get_parts(part) {
+/**
+ * @param {string} part
+ * @param {string} file
+ */
+function get_parts(part, file) {
 	return part
 		.split(/\[(.+?\(.+?\)|.+?)\]/)
 		.map((str, i) => {
 			if (!str) return null;
 			const dynamic = i % 2 === 1;
 
-			const [, content, qualifier] = dynamic ? /([^(]+)(\(.+\))?$/.exec(str) : [null, str, null];
+			const [, content] = dynamic ? /([^(]+)$/.exec(str) : [null, str];
+
+			if (dynamic && !/^(\.\.\.)?[a-zA-Z0-9_$]+$/.test(content)) {
+				throw new Error(`Invalid route ${file} — parameter name must match /^[a-zA-Z0-9_$]+$/`);
+			}
 
 			return {
 				content,
 				dynamic,
-				spread: dynamic && /^\.{3}.+$/.test(content),
-				qualifier
+				spread: dynamic && /^\.{3}.+$/.test(content)
 			};
 		})
 		.filter(Boolean);
@@ -316,7 +329,9 @@ function get_pattern(segments, add_trailing_slash) {
 			return segment
 				.map((part) => {
 					return part.dynamic
-						? part.qualifier || (part.spread ? '(.+)' : '([^/]+?)')
+						? part.spread
+							? '(.+)'
+							: '([^/]+?)'
 						: encodeURI(part.content.normalize())
 								.replace(/\?/g, '%3F')
 								.replace(/#/g, '%23')

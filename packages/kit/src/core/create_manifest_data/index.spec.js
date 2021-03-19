@@ -124,15 +124,6 @@ test('encodes invalid characters', () => {
 	);
 });
 
-test('allows regex qualifiers', () => {
-	const { pages } = create('samples/qualifiers');
-
-	assert.equal(
-		pages.map((p) => p.pattern),
-		[/^\/([0-9-a-z]{3,})\/?$/, /^\/([a-z]{2})\/?$/, /^\/([^/]+?)\/?$/]
-	);
-});
-
 test('sorts routes correctly', () => {
 	const { pages } = create('samples/sorting');
 
@@ -145,7 +136,6 @@ test('sorts routes correctly', () => {
 			['samples/sorting/post/bar.svelte'],
 			['samples/sorting/post/foo.svelte'],
 			['samples/sorting/post/f[xx].svelte'],
-			['samples/sorting/post/[id([0-9-a-z]{3,})].svelte'],
 			['samples/sorting/post/[id].svelte'],
 			['samples/sorting/[wildcard].svelte'],
 			['samples/sorting/[...spread]/deep/[...deep_spread]/xyz.svelte'],
@@ -187,18 +177,6 @@ test('allows multiple slugs', () => {
 	]);
 });
 
-test('allows multiple slugs with nested square brackets', () => {
-	const { endpoints } = create('samples/nested-square-brackets');
-
-	assert.equal(endpoints, [
-		{
-			pattern: /^\/([a-z]+)\.([a-z]+)$/,
-			file: 'samples/nested-square-brackets/[file([a-z]+)].[ext([a-z]+)].js',
-			params: ['file', 'ext']
-		}
-	]);
-});
-
 test('fails on clashes', () => {
 	assert.throws(() => {
 		create('samples/clash-pages');
@@ -213,12 +191,6 @@ test('fails if dynamic params are not separated', () => {
 	assert.throws(() => {
 		create('samples/invalid-params');
 	}, /Invalid route samples\/invalid-params\/\[foo\]\[bar\]\.js — parameters must be separated/);
-});
-
-test('errors when trying to use reserved characters in route regexp', () => {
-	assert.throws(() => {
-		create('samples/invalid-qualifier');
-	}, /Invalid route samples\/invalid-qualifier\/\[foo\(\[a-z\]\(\[0-9\]\)\)\].js — cannot use \(, \), \? or : in route qualifiers/);
 });
 
 test('ignores things that look like lockfiles', () => {
