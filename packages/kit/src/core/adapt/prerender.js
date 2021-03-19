@@ -94,7 +94,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 			},
 			{
 				local: true,
-				only_prerender: !force,
+				only_render_prerenderable_pages: !force,
 				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
 			}
 		);

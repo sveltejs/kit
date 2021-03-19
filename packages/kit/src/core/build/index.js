@@ -350,7 +350,7 @@ async function build_server(
 			export function render(request, {
 				paths = ${s(config.kit.paths)},
 				local = false,
-				only_prerender = false,
+				only_render_prerenderable_pages = false,
 				get_static_file
 			} = {}) {
 				return ssr(request, {
@@ -364,7 +364,7 @@ async function build_server(
 					setup,
 					dev: false,
 					amp: ${config.kit.amp},
-					only_prerender,
+					only_render_prerenderable_pages,
 					app_dir: ${s(config.kit.appDir)},
 					host: ${s(config.kit.host)},
 					host_header: ${s(config.kit.hostHeader)},

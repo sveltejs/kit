@@ -202,7 +202,7 @@ class Watcher extends EventEmitter {
 							amp: this.config.kit.amp,
 							root,
 							setup,
-							only_prerender: false,
+							only_render_prerenderable_pages: false,
 							host: this.config.kit.host,
 							host_header: this.config.kit.hostHeader,
 							get_component_path: (id) => `/${id}?import`,
