@@ -345,7 +345,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const head = [
 		rendered.head,
-		options.amp ? '' : `<style data-svelte>${style}</style>`,
+		style && !options.amp ? `<style data-svelte>${style}</style>` : '',
 		links,
 		init
 	].join('\n\n');
