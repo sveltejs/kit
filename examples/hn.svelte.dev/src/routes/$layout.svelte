@@ -1,7 +1,3 @@
-<script context="module">
-	export const prerender = true;
-</script>
-
 <script>
 	import { page, navigating } from '$app/stores';
 	import Nav from '$lib/Nav.svelte';
