@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.52
+
+### Patch Changes
+
+- ac3669e: Move Vite config into svelte.config.cjs
+
 ## 1.0.0-next.51
 
 ### Patch Changes
