@@ -1,7 +1,15 @@
-# @sveltejs/kit
+# The fastest way to build Svelte apps
 
-This package provides the `svelte-kit` CLI. It's responsible for SSR rendering and Vite integration. It also provides the client-side library that end users call from their projects via `$app` and `$navigation`.
+This is the [SvelteKit](https://kit.svelte.dev) framework and CLI. 
 
-## Documentation
+The quickest way to get started is via the [create-svelte](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) package:
 
-Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
+```bash
+mkdir my-app
+cd my-app
+npm init svelte@next
+npm install
+npm run dev
+```
+
+See the [documentation](https://kit.svelte.dev/docs) to learn more.
