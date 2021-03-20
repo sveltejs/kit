@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import("../../../../../../../types").Load} */
 	export async function load({ page, fetch }) {
-		const res = await fetch(`/routing/fallthrough/vegetable.json?q=${page.params.vegetable}`);
+		const res = await fetch(`/routing/fallthrough/${page.params.vegetable}.json`);
 
 		if (res.ok) {
 			const { type } = await res.json();

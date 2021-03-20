@@ -202,6 +202,6 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'camel is an animal');
 
 		await clicknav('[href="/routing/fallthrough/potato"]');
-		assert.equal(await page.textContent('h1'), 'not found');
+		assert.equal(await page.textContent('h1'), '404');
 	});
 }

@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import("../../../../../../../types").Load} */
 	export async function load({ page, fetch }) {
-		const res = await fetch(`/routing/fallthrough/mineral.json?q=${page.params.mineral}`);
+		const res = await fetch(`/routing/fallthrough/${page.params.mineral}.json`);
 
 		if (res.ok) {
 			const { type } = await res.json();
