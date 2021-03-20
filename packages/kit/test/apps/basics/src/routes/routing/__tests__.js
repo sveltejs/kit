@@ -194,4 +194,14 @@ export default function (test) {
 			assert.equal(await page.textContent('h1'), 'y/1');
 		}
 	);
+
+	test.only('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('h1'), 'borax is a mineral');
+
+		await clicknav('[href="/routing/fallthrough/camel"]');
+		assert.equal(await page.textContent('h1'), 'camel is an animal');
+
+		await clicknav('[href="/routing/fallthrough/potato"]');
+		assert.equal(await page.textContent('h1'), 'not found');
+	});
 }

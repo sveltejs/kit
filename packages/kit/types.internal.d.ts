@@ -57,7 +57,7 @@ export type App = {
 			assets: string;
 		};
 	}) => void;
-	render: (request: Request, options: SSRRenderOptions) => Response;
+	render: (request: Request, options: SSRRenderOptions) => SKResponse;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -75,11 +75,11 @@ export type Request = {
 	query: URLSearchParams;
 };
 
-export type Response = {
+export type SKResponse = {
 	status: number;
 	headers: Headers;
 	body?: any;
-	dependencies?: Record<string, Response>;
+	dependencies?: Record<string, SKResponse>;
 };
 
 export type Page = {

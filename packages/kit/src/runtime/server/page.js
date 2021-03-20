@@ -183,9 +183,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 				);
 			}
 
-			loaded =
-				mod.load &&
-				(await mod.load.call(null, {
+			if (mod.load) {
+				loaded = await mod.load.call(null, {
 					page,
 					get session() {
 						uses_credentials = true;
@@ -193,7 +192,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 					},
 					fetch: fetcher,
 					context: { ...context }
-				}));
+				});
+
+				if (!loaded) return;
+			}
 		} catch (e) {
 			// if load fails when we're already rendering the
 			// error page, there's not a lot we can do
@@ -382,36 +384,54 @@ async function get_response({ request, options, $session, route, status = 200, e
  * @param {import('../../../types.internal').SSRRenderOptions} options
  */
 export default async function render_page(request, context, options) {
+	if (options.manifest.endpoints.find((route) => route.pattern.test(request.path))) {
+		// TODO this is temporarily necessary, because endpoint matches are often
+		// _also_ page matches, and circularity ensues (/blog/foo.json fails
+		// as an endpoint, so we try it as a page with `foo.json` as the slug,
+		// which causes us to try /blog.foo.json.json, etc, until it crashes.
+		// it would probably be better if endpoints and pages were in the
+		// same list
+		return;
+	}
+
 	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
 
 	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
-	if (!route) {
-		if (options.fetched) {
-			// we came here because of a bad request in a `load` function.
-			// rather than render the error page — which could lead to an
-			// infinite loop, if the `load` belonged to the root layout,
-			// we respond with a bare-bones 500
-			throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
-		}
+	// see if this page falls through to another
+	const pattern = route.pattern.toString();
+	const routes = options.manifest.pages.filter((route) => route.pattern.toString() === pattern);
 
-		return await get_response({
+	for (const route of routes) {
+		const response = await get_response({
 			request,
 			options,
 			$session,
 			route,
-			status: 404,
-			error: new Error(`Not found: ${request.path}`)
+			status: 200,
+			error: null
 		});
+
+		if (response) {
+			return response;
+		}
+	}
+
+	if (options.fetched) {
+		// we came here because of a bad request in a `load` function.
+		// rather than render the error page — which could lead to an
+		// infinite loop, if the `load` belonged to the root layout,
+		// we respond with a bare-bones 500
+		throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
 	}
 
 	return await get_response({
 		request,
 		options,
 		$session,
-		route,
-		status: 200,
-		error: null
+		route: null,
+		status: 404,
+		error: new Error(`Not found: ${request.path}`)
 	});
 }
 

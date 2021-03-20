@@ -27,8 +27,9 @@ export async function ssr(request, options) {
 		(await (options.setup.prepare && options.setup.prepare({ headers: request.headers }))) || {};
 
 	try {
-		const response = await (render_endpoint(request, context, options) ||
-			render_page(request, context, options));
+		const response =
+			(await render_endpoint(request, context, options)) ||
+			(await render_page(request, context, options));
 
 		if (response) {
 			// inject ETags for 200 responses
