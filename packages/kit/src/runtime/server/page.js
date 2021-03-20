@@ -14,12 +14,12 @@ import { ssr } from './index.js';
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../../types.internal').Response>}
+ * @returns {Promise<import('../../../types.internal').SKResponse>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../../types.internal').Response>} */
+	/** @type {Record<string, import('../../../types.internal').SKResponse>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {

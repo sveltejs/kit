@@ -2,7 +2,7 @@
  * @param {import('../../../types.internal').Request} request
  * @param {*} context // TODO
  * @param {import('../../../types.internal').SSRRenderOptions} options
- * @returns {Promise<import('../../../types.internal').Response>}
+ * @returns {Promise<import('../../../types.internal').SKResponse>}
  */
 export default async function render_route(request, context, options) {
 	const route = options.manifest.endpoints.find((route) => route.pattern.test(request.path));
