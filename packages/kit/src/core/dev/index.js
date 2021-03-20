@@ -12,7 +12,7 @@ import { rimraf } from '@sveltejs/app-utils/files';
 import { ssr } from '../../runtime/server/index.js';
 import { get_body } from '@sveltejs/app-utils/http';
 import { copy_assets } from '../utils.js';
-import svelte from '@svitejs/vite-plugin-svelte';
+import svelte from '@sveltejs/vite-plugin-svelte';
 
 /** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
 /** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
