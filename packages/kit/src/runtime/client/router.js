@@ -134,6 +134,9 @@ export class Router {
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
+
+		// create initial history entry, so we can return here
+		this.history.replaceState({}, '', location.href);
 	}
 
 	/**
