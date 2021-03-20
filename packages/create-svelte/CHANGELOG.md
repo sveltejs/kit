@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.40
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
 ## 2.0.0-next.39
 
 ### Patch Changes

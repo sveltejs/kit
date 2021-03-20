@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
 ## 1.0.0-next.8
 
 ### Patch Changes
