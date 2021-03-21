@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.54
+
+### Patch Changes
+
+- 3037530: Create history entry for initial route
+- 04f17f5: Prevent erronous <style>undefined</style>
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
 ## 1.0.0-next.53
 
 ### Patch Changes

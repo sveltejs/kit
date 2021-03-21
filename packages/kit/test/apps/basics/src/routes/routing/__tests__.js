@@ -195,6 +195,13 @@ export default function (test) {
 		}
 	);
 
+	test('back button returns to initial route', '/routing', async ({ page, clicknav }) => {
+		await clicknav('[href="/routing/a"]');
+
+		await page.goBack();
+		assert.equal(await page.textContent('h1'), 'Great success!');
+	});
+
 	test.skip('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'borax is a mineral');
 
