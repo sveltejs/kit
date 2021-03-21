@@ -7,19 +7,19 @@ import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../../../types.internal').Request;
- *   options: import('../../../types.internal').SSRRenderOptions;
+ *   request: import('types.internal').Request;
+ *   options: import('types.internal').SSRRenderOptions;
  *   $session: any;
- *   route: import('../../../types.internal').SSRPage;
+ *   route: import('types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../../types.internal').SKResponse>}
+ * @returns {Promise<import('types.internal').SKResponse>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../../types.internal').SKResponse>} */
+	/** @type {Record<string, import('types.internal').SKResponse>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -100,7 +100,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: /** @type {import('../../../types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
+						headers: /** @type {import('types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
 						path: resolved,
 						body: opts.body,
 						query: new URLSearchParams(parsed.query || '')
@@ -127,7 +127,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../../../types.internal').Headers} */
+			/** @type {import('types.internal').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -361,7 +361,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../../../types.internal').Headers} */
+	/** @type {import('types.internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -379,42 +379,25 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../../../types.internal').Request} request
+ * @param {import('types.internal').Request} request
+ * @param {import('types.internal').SSRPage} route
  * @param {any} context
- * @param {import('../../../types.internal').SSRRenderOptions} options
+ * @param {import('types.internal').SSRRenderOptions} options
  */
-export default async function render_page(request, context, options) {
-	if (options.manifest.endpoints.find((route) => route.pattern.test(request.path))) {
-		// TODO this is temporarily necessary, because endpoint matches are often
-		// _also_ page matches, and circularity ensues (/blog/foo.json fails
-		// as an endpoint, so we try it as a page with `foo.json` as the slug,
-		// which causes us to try /blog.foo.json.json, etc, until it crashes.
-		// it would probably be better if endpoints and pages were in the
-		// same list
-		return;
-	}
-
-	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
-
+export default async function render_page(request, route, context, options) {
 	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
-	// see if this page falls through to another
-	const pattern = route.pattern.toString();
-	const routes = options.manifest.pages.filter((route) => route.pattern.toString() === pattern);
+	const response = await get_response({
+		request,
+		options,
+		$session,
+		route,
+		status: route ? 200 : 404,
+		error: route ? null : new Error(`Not found: ${request.path}`)
+	});
 
-	for (const route of routes) {
-		const response = await get_response({
-			request,
-			options,
-			$session,
-			route,
-			status: 200,
-			error: null
-		});
-
-		if (response) {
-			return response;
-		}
+	if (response) {
+		return response;
 	}
 
 	if (options.fetched) {
@@ -424,15 +407,6 @@ export default async function render_page(request, context, options) {
 		// we respond with a bare-bones 500
 		throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
 	}
-
-	return await get_response({
-		request,
-		options,
-		$session,
-		route: null,
-		status: 404,
-		error: new Error(`Not found: ${request.path}`)
-	});
 }
 
 /**

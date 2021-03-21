@@ -14,10 +14,9 @@ export type TestContext = {
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
-		start: () => Promise<void>;
 		goto: (url: string) => Promise<void>;
 		prefetch: (url: string) => Promise<void>;
-		prefetchRoutes: () => Promise<void>;
+		prefetchRoutes: (urls?: string[]) => Promise<void>;
 	};
 
 	reset: () => Promise<void>;

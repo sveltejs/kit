@@ -1,7 +1,7 @@
 // @ts-ignore
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
 // @ts-ignore
-import { pages, ignore, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
+import { routes, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
@@ -22,16 +22,15 @@ import { set_paths } from '../paths.js';
 export async function start({ paths, target, session, error, status, nodes, page }) {
 	const router = new Router({
 		base: paths.base,
-		host: page.host,
-		pages,
-		ignore
+		routes
 	});
 
 	const renderer = new Renderer({
 		Root,
 		layout,
 		target,
-		session
+		session,
+		host: page.host
 	});
 
 	init({ router, renderer });

@@ -101,12 +101,10 @@ async function build_client({
 		start: path.resolve(cwd, client_entry_file)
 	};
 
-	manifest.pages.forEach((page) => {
-		page.parts.forEach((file) => {
-			const resolved = path.resolve(cwd, file);
-			const relative = path.relative(config.kit.files.routes, resolved);
-			input[path.join('pages', relative)] = resolved;
-		});
+	manifest.components.forEach((file) => {
+		const resolved = path.resolve(cwd, file);
+		const relative = path.relative(config.kit.files.routes, resolved);
+		input[path.join('pages', relative)] = resolved;
 	});
 
 	/** @type {any} */
@@ -306,42 +304,45 @@ async function build_server(
 				assets: ${s(manifest.assets)},
 				layout: ${stringify_component(manifest.layout)},
 				error: ${stringify_component(manifest.error)},
-				pages: [
-					${manifest.pages
-						.map((data) => {
-							const params = get_params(data.params);
-							const parts = data.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
+				routes: [
+					${manifest.routes
+						.map((route) => {
+							if (route.type === 'page') {
+								const params = get_params(route.params);
+								const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
 
-							const js_deps = new Set(common_js_deps);
-							const css_deps = new Set(common_css_deps);
+								const js_deps = new Set(common_js_deps);
+								const css_deps = new Set(common_css_deps);
 
-							for (const file of data.parts) {
-								js_deps_by_file.get(file).forEach(asset => {
-									js_deps.add(asset);
-								});
+								for (const file of route.parts) {
+									js_deps_by_file.get(file).forEach(asset => {
+										js_deps.add(asset);
+									});
 
-								css_deps_by_file.get(file).forEach(asset => {
-									css_deps.add(asset);
-								});
+									css_deps_by_file.get(file).forEach(asset => {
+										css_deps.add(asset);
+									});
+								}
+
+								return `{
+									type: 'page',
+									pattern: ${route.pattern},
+									params: ${params},
+									parts: [${parts.join(', ')}],
+									css: [${Array.from(css_deps).map(s).join(', ')}],
+									js: [${Array.from(js_deps).map(s).join(', ')}]
+								}`;
+							} else {
+								const params = get_params(route.params);
+								const load = `() => import(${s(app_relative(route.file))})`;
+
+								return `{
+									type: 'endpoint',
+									pattern: ${route.pattern},
+									params: ${params},
+									load: ${load}
+								}`;
 							}
-
-							return `{
-								pattern: ${data.pattern},
-								params: ${params},
-								parts: [${parts.join(', ')}],
-								css: [${Array.from(css_deps).map(s).join(', ')}],
-								js: [${Array.from(js_deps).map(s).join(', ')}]
-							}`;
-						})
-						.join(',\n\t\t\t\t\t')}
-				],
-				endpoints: [
-					${manifest.endpoints
-						.map((data) => {
-							const params = get_params(data.params);
-							const load = `() => import(${s(app_relative(data.file))})`;
-
-							return `{ pattern: ${data.pattern}, params: ${params}, load: ${load} }`;
 						})
 						.join(',\n\t\t\t\t\t')}
 				]

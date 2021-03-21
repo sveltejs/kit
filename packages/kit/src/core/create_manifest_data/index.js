@@ -21,11 +21,11 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('../../../types.internal').ValidatedConfig;
+ *   config: import('types.internal').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('../../../types.internal').ManifestData}
+ * @returns {import('types.internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -40,11 +40,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('../../../types.internal').PageData[]} */
-	const pages = [];
-
-	/** @type {import('../../../types.internal').EndpointData[]} */
-	const endpoints = [];
+	/** @type {import('types.internal').RouteData[]} */
+	const routes = [];
 
 	const default_layout = path.relative(cwd, `${output}/components/layout.svelte`);
 	const default_error = path.relative(cwd, `${output}/components/error.svelte`);
@@ -157,7 +154,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				const pattern = get_pattern(segments, true);
 
-				pages.push({
+				routes.push({
+					type: 'page',
 					pattern,
 					params,
 					parts
@@ -165,7 +163,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
 
-				endpoints.push({
+				routes.push({
+					type: 'endpoint',
 					pattern,
 					file: item.file,
 					params
@@ -188,8 +187,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		layout,
 		error,
 		components,
-		pages,
-		endpoints
+		routes
 	};
 }
 
@@ -254,24 +252,16 @@ function comparator(a, b) {
 				(a_sub_part.content < b_sub_part.content ? -1 : 1)
 			);
 		}
-
-		// If both parts dynamic, check for regexp patterns
-		if (a_sub_part.dynamic && b_sub_part.dynamic) {
-			const regexp_pattern = /\((.*?)\)/;
-			const a_match = regexp_pattern.exec(a_sub_part.content);
-			const b_match = regexp_pattern.exec(b_sub_part.content);
-
-			if (!a_match && b_match) {
-				return 1; // No regexp, so less specific than b
-			}
-			if (!b_match && a_match) {
-				return -1;
-			}
-			if (a_match && b_match && a_match[1] !== b_match[1]) {
-				return b_match[1].length - a_match[1].length;
-			}
-		}
 	}
+
+	// TODO endpoints before pages (this allows e.g. endpoint POST handlers
+	// to shadow pages)
+	if (a.is_page !== b.is_page) {
+		return a.is_page ? 1 : -1;
+	}
+
+	// otherwise sort alphabetically
+	return a.file < b.file ? -1 : 1;
 }
 
 /**
@@ -332,7 +322,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('../../../types.internal').Asset[]} files
+ * @param {import('types.internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

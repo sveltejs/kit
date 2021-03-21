@@ -6,6 +6,11 @@ import create_manifest_data from './index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
+/**
+ * @param {string} dir
+ * @param {string[]} [extensions]
+ * @returns
+ */
 const create = (dir, extensions = ['.svelte']) => {
 	return create_manifest_data({
 		config: {
@@ -23,7 +28,7 @@ const create = (dir, extensions = ['.svelte']) => {
 };
 
 test('creates routes', () => {
-	const { components, pages, endpoints } = create('samples/basic');
+	const { components, routes } = create('samples/basic');
 
 	const index = 'samples/basic/index.svelte';
 	const about = 'samples/basic/about.svelte';
@@ -32,49 +37,53 @@ test('creates routes', () => {
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
 
-	assert.equal(pages, [
+	assert.equal(routes, [
 		{
+			type: 'page',
 			pattern: /^\/$/,
 			params: [],
 			parts: [index]
 		},
 
 		{
+			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
 			parts: [about]
 		},
 
 		{
-			pattern: /^\/blog\/?$/,
-			params: [],
-			parts: [blog]
-		},
-
-		{
-			pattern: /^\/blog\/([^/]+?)\/?$/,
-			params: ['slug'],
-			parts: [blog_$slug]
-		}
-	]);
-
-	assert.equal(endpoints, [
-		{
+			type: 'endpoint',
 			pattern: /^\/blog\.json$/,
 			file: 'samples/basic/blog/index.json.js',
 			params: []
 		},
 
 		{
+			type: 'page',
+			pattern: /^\/blog\/?$/,
+			params: [],
+			parts: [blog]
+		},
+
+		{
+			type: 'endpoint',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'samples/basic/blog/[slug].json.ts',
 			params: ['slug']
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/blog\/([^/]+?)\/?$/,
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 });
 
 test('creates routes with layout', () => {
-	const { layout, components, pages } = create('samples/basic-layout');
+	const { layout, components, routes } = create('samples/basic-layout');
 
 	const $layout = 'samples/basic-layout/$layout.svelte';
 	const index = 'samples/basic-layout/index.svelte';
@@ -84,14 +93,16 @@ test('creates routes with layout', () => {
 	assert.equal(layout, $layout);
 	assert.equal(components, [index, foo_$layout, foo]);
 
-	assert.equal(pages, [
+	assert.equal(routes, [
 		{
+			type: 'page',
 			pattern: /^\/$/,
 			params: [],
 			parts: [index]
 		},
 
 		{
+			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
 			parts: [foo_$layout, foo]
@@ -100,7 +111,7 @@ test('creates routes with layout', () => {
 });
 
 test('encodes invalid characters', () => {
-	const { components, pages } = create('samples/encoding');
+	const { components, routes } = create('samples/encoding');
 
 	// had to remove ? and " because windows
 
@@ -115,7 +126,7 @@ test('encodes invalid characters', () => {
 	]);
 
 	assert.equal(
-		pages.map((p) => p.pattern),
+		routes.map((p) => p.pattern),
 		[
 			// /^\/%22\/?$/,
 			/^\/%23\/?$/
@@ -125,19 +136,21 @@ test('encodes invalid characters', () => {
 });
 
 test('sorts routes correctly', () => {
-	const { pages } = create('samples/sorting');
+	const { routes } = create('samples/sorting');
 
 	assert.equal(
-		pages.map((p) => p.parts),
+		routes.map((p) => (p.type === 'page' ? p.parts : p.file)),
 		[
 			['samples/sorting/index.svelte'],
 			['samples/sorting/about.svelte'],
 			['samples/sorting/post/index.svelte'],
 			['samples/sorting/post/bar.svelte'],
 			['samples/sorting/post/foo.svelte'],
+			'samples/sorting/post/f[zz].ts',
 			['samples/sorting/post/f[xx].svelte'],
 			['samples/sorting/post/f[yy].svelte'],
 			['samples/sorting/post/[id].svelte'],
+			'samples/sorting/[endpoint].js',
 			['samples/sorting/[wildcard].svelte'],
 			['samples/sorting/[...spread]/deep/[...deep_spread]/xyz.svelte'],
 			['samples/sorting/[...spread]/deep/[...deep_spread]/index.svelte'],
@@ -149,33 +162,35 @@ test('sorts routes correctly', () => {
 });
 
 test('ignores files and directories with leading underscores', () => {
-	const { endpoints } = create('samples/hidden-underscore');
+	const { routes } = create('samples/hidden-underscore');
 
-	assert.equal(
-		endpoints.map((r) => r.file),
-		['samples/hidden-underscore/e/f/g/h.js']
-	);
+	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
+		'samples/hidden-underscore/e/f/g/h.js'
+	]);
 });
 
 test('ignores files and directories with leading dots except .well-known', () => {
-	const { endpoints } = create('samples/hidden-dot');
+	const { routes } = create('samples/hidden-dot');
 
-	assert.equal(
-		endpoints.map((r) => r.file),
-		['samples/hidden-dot/.well-known/dnt-policy.txt.js']
-	);
+	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
+		'samples/hidden-dot/.well-known/dnt-policy.txt.js'
+	]);
 });
 
 test('allows multiple slugs', () => {
-	const { endpoints } = create('samples/multiple-slugs');
+	const { routes } = create('samples/multiple-slugs');
 
-	assert.equal(endpoints, [
-		{
-			pattern: /^\/([^/]+?)\.([^/]+?)$/,
-			file: 'samples/multiple-slugs/[file].[ext].js',
-			params: ['file', 'ext']
-		}
-	]);
+	assert.equal(
+		routes.filter((route) => route.type === 'endpoint'),
+		[
+			{
+				type: 'endpoint',
+				pattern: /^\/([^/]+?)\.([^/]+?)$/,
+				file: 'samples/multiple-slugs/[file].[ext].js',
+				params: ['file', 'ext']
+			}
+		]
+	);
 });
 
 test('fails if dynamic params are not separated', () => {
@@ -185,10 +200,11 @@ test('fails if dynamic params are not separated', () => {
 });
 
 test('ignores things that look like lockfiles', () => {
-	const { endpoints } = create('samples/lockfiles');
+	const { routes } = create('samples/lockfiles');
 
-	assert.equal(endpoints, [
+	assert.equal(routes, [
 		{
+			type: 'endpoint',
 			file: 'samples/lockfiles/foo.js',
 			params: [],
 			pattern: /^\/foo\/?$/
@@ -197,7 +213,7 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('works with custom extensions', () => {
-	const { components, pages, endpoints } = create('samples/custom-extension', [
+	const { components, routes } = create('samples/custom-extension', [
 		'.jazz',
 		'.beebop',
 		'.funk',
@@ -211,42 +227,47 @@ test('works with custom extensions', () => {
 
 	assert.equal(components, [index, about, blog, blog_$slug]);
 
-	assert.equal(pages, [
+	assert.equal(routes, [
 		{
+			type: 'page',
 			pattern: /^\/$/,
 			params: [],
 			parts: [index]
 		},
 
 		{
+			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
 			parts: [about]
 		},
 
 		{
+			type: 'endpoint',
+			pattern: /^\/blog\.json$/,
+			file: 'samples/custom-extension/blog/index.json.js',
+			params: []
+		},
+
+		{
+			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
 			parts: [blog]
 		},
 
 		{
-			pattern: /^\/blog\/([^/]+?)\/?$/,
-			params: ['slug'],
-			parts: [blog_$slug]
-		}
-	]);
-
-	assert.equal(endpoints, [
-		{
-			pattern: /^\/blog\.json$/,
-			file: 'samples/custom-extension/blog/index.json.js',
-			params: []
-		},
-		{
+			type: 'endpoint',
 			pattern: /^\/blog\/([^/]+?)\.json$/,
 			file: 'samples/custom-extension/blog/[slug].json.js',
 			params: ['slug']
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/blog\/([^/]+?)\/?$/,
+			params: ['slug'],
+			parts: [blog_$slug]
 		}
 	]);
 });

@@ -32,11 +32,15 @@ function prefetch_(href) {
 
 /** @param {string[]} [pathnames] */
 async function prefetchRoutes_(pathnames) {
-	const path_routes = pathnames
-		? router.pages.filter((page) => pathnames.some((pathname) => page.pattern.test(pathname)))
-		: router.pages;
+	const matching = pathnames
+		? router.routes.filter((route) => pathnames.some((pathname) => route.pattern.test(pathname)))
+		: router.routes;
 
-	const promises = path_routes.map((r) => Promise.all(r.parts.map((load) => load())));
+	console.log(matching);
+
+	const promises = matching.map(
+		(r) => r.type === 'page' && Promise.all(r.parts.map((load) => load()))
+	);
 
 	await Promise.all(promises);
 }

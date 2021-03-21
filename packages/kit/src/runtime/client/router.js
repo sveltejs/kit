@@ -15,15 +15,11 @@ function scroll_state() {
 export class Router {
 	/** @param {{
 	 *    base: string;
-	 *    host: string;
-	 *    pages: import('../../../types.internal').CSRPage[];
-	 *    ignore: RegExp[];
+	 *    routes: import('types.internal').CSRRoute[];
 	 * }} opts */
-	constructor({ base, host, pages, ignore }) {
+	constructor({ base, routes }) {
 		this.base = base;
-		this.host = host;
-		this.pages = pages;
-		this.ignore = ignore;
+		this.routes = routes;
 
 		this.history = window.history || {
 			pushState: () => {},
@@ -112,7 +108,8 @@ export class Router {
 			const selected = this.select(url);
 			if (selected) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.renderer.notify(selected.page);
+				// TODO @fallthrough
+				// this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
 				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
@@ -138,36 +135,22 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {import('./types').NavigationTarget}
+	 * @returns {import('./types').Navigation}
 	 */
 	select(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
 
-		let path = url.pathname.slice(this.base.length);
+		const path = url.pathname.slice(this.base.length) || '/';
 
-		if (path === '') {
-			path = '/';
-		}
+		const routes = this.routes.filter((route) => route.pattern.test(path));
 
-		// avoid accidental clashes between server routes and page routes
-		if (this.ignore.some((pattern) => pattern.test(path))) return;
-
-		for (const route of this.pages) {
-			const match = route.pattern.exec(path);
-
-			if (match) {
-				const query = new URLSearchParams(url.search);
-				const params = route.params(match);
-
-				/** @type {import('../../../types.internal').Page} */
-				const page = { host: this.host, path, query, params };
-
-				return {
-					nodes: route.parts.map((loader) => loader()),
-					page
-				};
-			}
+		if (routes) {
+			return {
+				routes,
+				path,
+				query: new URLSearchParams(url.search)
+			};
 		}
 	}
 
@@ -181,7 +164,8 @@ export class Router {
 		const selected = this.select(url);
 
 		if (selected) {
-			this.renderer.notify(selected.page);
+			// TODO @fallthrough
+			// this.renderer.notify(selected.page);
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
@@ -195,7 +179,7 @@ export class Router {
 	}
 
 	/**
-	 * @param {*} selected
+	 * @param {import('./types').Navigation} selected
 	 * @param {{ x: number, y: number }} scroll
 	 * @param {string[]} chain
 	 * @param {string} [hash]

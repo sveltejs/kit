@@ -38,10 +38,12 @@ export class Renderer {
 	 *   layout: import('../../../types.internal').CSRComponent;
 	 *   target: Node;
 	 *   session: any;
+	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, target, session }) {
+	constructor({ Root, layout, target, session, host }) {
 		this.Root = Root;
 		this.layout = layout;
+		this.host = host;
 
 		/** @type {import('./router').Router} */
 		this.router = null;
@@ -105,8 +107,9 @@ export class Renderer {
 			if (!ready) return;
 			this.current.session_changed = true;
 
-			const selected = this.router.select(new URL(location.href));
-			this.render(selected);
+			// TODO @fallthrough
+			// const selected = this.router.select(new URL(location.href));
+			// this.render(selected);
 		});
 		ready = true;
 	}
@@ -167,36 +170,50 @@ export class Renderer {
 	}
 
 	/**
-	 * @param {import('./types').NavigationTarget} selected
+	 * @param {import('./types').Navigation} selected
 	 * @param {string[]} [chain]
 	 */
 	async render(selected, chain) {
 		const token = (this.token = {});
 
-		const hydrated = await this.hydrate(selected);
-
-		if (this.token === token) {
-			if (hydrated.redirect) {
-				if (chain.length > 10 || chain.includes(this.current.page.path)) {
-					hydrated.props.status = 500;
-					hydrated.props.error = new Error('Redirect loop');
-				} else {
-					this.router.goto(hydrated.redirect, { replaceState: true }, [
-						...(chain || []),
-						this.current.page.path
-					]);
-
-					return;
-				}
+		for (const route of selected.routes) {
+			if (route.type === 'endpoint') {
+				return location.reload();
 			}
 
-			// check render wasn't aborted
-			this.current = hydrated.state;
+			const nodes = route.parts.map((loader) => loader());
+			const page = {
+				host: this.host,
+				path: selected.path,
+				params: route.params(route.pattern.exec(selected.path)),
+				query: selected.query
+			};
 
-			this.root.$set(hydrated.props);
-			await this.stores.navigating.set(null);
+			const hydrated = await this.hydrate({ nodes, page });
 
-			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+			if (this.token === token) {
+				if (hydrated.redirect) {
+					if (chain.length > 10 || chain.includes(this.current.page.path)) {
+						hydrated.props.status = 500;
+						hydrated.props.error = new Error('Redirect loop');
+					} else {
+						this.router.goto(hydrated.redirect, { replaceState: true }, [
+							...(chain || []),
+							this.current.page.path
+						]);
+
+						return;
+					}
+				}
+
+				// check render wasn't aborted
+				this.current = hydrated.state;
+
+				this.root.$set(hydrated.props);
+				await this.stores.navigating.set(null);
+
+				dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+			}
 		}
 	}
 
@@ -443,16 +460,15 @@ export class Renderer {
 
 	/** @param {URL} url */
 	async prefetch(url) {
-		const selected = this.router.select(url);
-
-		if (selected) {
-			if (url.href !== this.prefetching.href) {
-				this.prefetching = { href: url.href, promise: this.hydrate(selected) };
-			}
-
-			return this.prefetching.promise;
-		} else {
-			throw new Error(`Could not prefetch ${url.href}`);
-		}
+		// TODO @fallthrough
+		// const selected = this.router.select(url);
+		// if (selected) {
+		// 	if (url.href !== this.prefetching.href) {
+		// 		this.prefetching = { href: url.href, promise: this.hydrate(selected) };
+		// 	}
+		// 	return this.prefetching.promise;
+		// } else {
+		// 	throw new Error(`Could not prefetch ${url.href}`);
+		// }
 	}
 }
