@@ -191,7 +191,7 @@ export class Renderer {
 
 			const hydrated = await this.hydrate({ nodes, page });
 
-			if (this.token === token) {
+			if (hydrated && this.token === token) {
 				if (hydrated.redirect) {
 					if (chain.length > 10 || chain.includes(this.current.page.path)) {
 						hydrated.props.status = 500;
@@ -213,6 +213,8 @@ export class Renderer {
 				await this.stores.navigating.set(null);
 
 				dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+
+				break;
 			}
 		}
 	}
@@ -346,9 +348,8 @@ export class Renderer {
 
 						const session = this.$session;
 
-						loaded =
-							load &&
-							(await load.call(null, {
+						if (load) {
+							loaded = await load.call(null, {
 								page: {
 									host: page.host,
 									path: page.path,
@@ -367,7 +368,10 @@ export class Renderer {
 									return { ...context };
 								},
 								fetch: fetcher
-							}));
+							});
+
+							if (!loaded) return;
+						}
 					}
 
 					if (loaded) {
