@@ -82,7 +82,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'test-slug');
 	});
 
-	test.only(
+	test(
 		'navigates to a new page without reloading',
 		'/routing',
 		async ({ app, capture_requests, page, clicknav, js }) => {
@@ -113,14 +113,18 @@ export default function (test) {
 		}
 	});
 
-	test('prefetches programmatically', '/routing/a', async ({ base, capture_requests, app, js }) => {
-		if (js) {
-			const requests = await capture_requests(() => app.prefetch('b'));
+	test.only(
+		'prefetches programmatically',
+		'/routing/a',
+		async ({ base, capture_requests, app, js }) => {
+			if (js) {
+				const requests = await capture_requests(() => app.prefetch('b'));
 
-			assert.equal(requests.length, 2);
-			assert.equal(requests[1], `${base}/routing/b.json`);
+				assert.equal(requests.length, 2);
+				assert.equal(requests[1], `${base}/routing/b.json`);
+			}
 		}
-	});
+	);
 
 	test(
 		'does not attempt client-side navigation to server routes',
