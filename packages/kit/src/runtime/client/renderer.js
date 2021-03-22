@@ -239,9 +239,24 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async _get_navigation_result(info) {
-		for (const route of info.routes) {
+		for (let i = 0; i < info.routes.length; i += 1) {
+			const route = info.routes[i];
+
 			if (route.type === 'endpoint') {
 				return { reload: true };
+			}
+
+			// load code for subsequent routes immediately, if they are as
+			// likely to match the current path/query as the current one
+			let j = i + 1;
+			while (j < info.routes.length) {
+				const next = info.routes[j];
+				if (next.pattern.toString() === route.pattern.toString()) {
+					if (next.type === 'page') next.parts.forEach((loader) => loader());
+					j += 1;
+				} else {
+					break;
+				}
 			}
 
 			const nodes = route.parts.map((loader) => loader());
