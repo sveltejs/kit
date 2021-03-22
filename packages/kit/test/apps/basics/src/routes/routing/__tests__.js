@@ -150,26 +150,26 @@ export default function (test) {
 		}
 	);
 
-	test('navigates to ...rest', '/routing/abc/xyz', async ({ page, clicknav }) => {
+	test('navigates to ...rest', '/routing/rest/abc/xyz', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'abc/xyz');
 
-		await clicknav('[href="/routing/xyz/abc/def/ghi"]');
+		await clicknav('[href="/routing/rest/xyz/abc/def/ghi"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def/ghi');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def/ghi');
 
-		await clicknav('[href="/routing/xyz/abc/def"]');
+		await clicknav('[href="/routing/rest/xyz/abc/def"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def');
 
-		await clicknav('[href="/routing/xyz/abc"]');
+		await clicknav('[href="/routing/rest/xyz/abc"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await clicknav('[href="/routing/xyz/abc/deep"]');
+		await clicknav('[href="/routing/rest/xyz/abc/deep"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await clicknav('[href="/routing/xyz/abc/qwe/deep.json"]');
+		await clicknav('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
 		assert.equal(await page.textContent('body'), 'xyz/abc/qwe');
 	});
 
@@ -202,7 +202,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Great success!');
 	});
 
-	test.skip('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
+	test('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'borax is a mineral');
 
 		await clicknav('[href="/routing/fallthrough/camel"]');

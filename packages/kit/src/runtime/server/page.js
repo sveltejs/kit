@@ -107,7 +107,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 					},
 					{
 						...options,
-						fetched: url
+						fetched: url,
+						initiator: route
 					}
 				);
 
@@ -383,6 +384,7 @@ async function get_response({ request, options, $session, route, status = 200, e
  * @param {import('types.internal').SSRPage} route
  * @param {any} context
  * @param {import('types.internal').SSRRenderOptions} options
+ * @returns {Promise<import('types.internal').SKResponse>}
  */
 export default async function render_page(request, route, context, options) {
 	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
@@ -405,7 +407,11 @@ export default async function render_page(request, route, context, options) {
 		// rather than render the error page — which could lead to an
 		// infinite loop, if the `load` belonged to the root layout,
 		// we respond with a bare-bones 500
-		throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
+		return {
+			status: 500,
+			headers: {},
+			body: `Bad request in load function: failed to fetch ${options.fetched}`
+		};
 	}
 }
 

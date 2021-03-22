@@ -186,33 +186,32 @@ export class Renderer {
 		// abort if user navigated during update
 		if (token !== this.token) return;
 
-		if (navigation_result) {
-			if (navigation_result.reload) {
-				location.reload();
-			} else if (navigation_result.redirect) {
-				if (chain.length > 10 || chain.includes(this.current.page.path)) {
-					this.root.$set({
-						status: 500,
-						error: new Error('Redirect loop')
-					});
-				} else {
-					this.router.goto(navigation_result.redirect, { replaceState: true }, [
-						...chain,
-						this.current.page.path
-					]);
-
-					return;
-				}
+		if (navigation_result.reload) {
+			location.reload();
+		} else if (navigation_result.redirect) {
+			if (chain.length > 10 || chain.includes(this.current.page.path)) {
+				this.root.$set({
+					status: 500,
+					error: new Error('Redirect loop')
+				});
 			} else {
-				this.current = navigation_result.state;
+				this.router.goto(navigation_result.redirect, { replaceState: true }, [
+					...chain,
+					this.current.page.path
+				]);
 
-				this.root.$set(navigation_result.props);
-				this.stores.navigating.set(null);
-
-				await 0;
-				dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+				return;
 			}
+		} else {
+			this.current = navigation_result.state;
+
+			this.root.$set(navigation_result.props);
+			this.stores.navigating.set(null);
+
+			await 0;
 		}
+
+		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 	}
 
 	/**
@@ -256,6 +255,20 @@ export class Renderer {
 			const hydrated = await this._hydrate({ nodes, page });
 			if (hydrated) return hydrated;
 		}
+
+		return {
+			state: {
+				page: null,
+				query: null,
+				session_changed: false,
+				contexts: [],
+				nodes: []
+			},
+			props: {
+				status: 404,
+				error: new Error(`Not found: ${info.path}`)
+			}
+		};
 	}
 
 	/** @param {import('./types').NavigationCandidate} selected */

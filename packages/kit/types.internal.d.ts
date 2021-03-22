@@ -203,6 +203,7 @@ export type SSRRenderOptions = {
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;
 	fetched?: string;
+	initiator?: SSRPage;
 };
 
 export type Asset = {
