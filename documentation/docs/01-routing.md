@@ -2,7 +2,7 @@
 title: Routing
 ---
 
-At the heart of SvelteKit is a *filesystem-based router*. This means that the structure of your application is defined by the structure of your codebase — specifically, the contents of `src/routes`.
+At the heart of SvelteKit is a _filesystem-based router_. This means that the structure of your application is defined by the structure of your codebase — specifically, the contents of `src/routes`.
 
 > You can change this to a different directory by editing the [project config](#configuration).
 
@@ -74,22 +74,17 @@ export async function get(request, context) {
 
 	const article = await db.get(slug);
 
-	if (article !== null) {
+	if (article) {
 		return {
 			body: {
 				article
 			}
 		};
-	} else {
-		return {
-			status: 404,
-			body: {
-				error: 'Not found'
-			}
-		};
 	}
 }
 ```
+
+> Returning nothing is equivalent to an explicit 404 response.
 
 Because this module only runs on the server (or when you build your site, if [prerendering](#prerendering)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
 
@@ -109,13 +104,13 @@ Since `delete` is a reserved word in JavaScript, DELETE requests are handled wit
 >
 > The `body` property of the request object exists in the case of POST requests. If you're posting form data, it will be a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
-
 ### Private modules
 
 A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.
 
-
 ### Advanced
+
+#### Rest parameters
 
 A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
@@ -134,12 +129,18 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
-Finally, you can use a subset of regular expression syntax to control whether routes match or not:
+#### Fallthrough routes
 
-```bash
-# matches /2021/04/25 but not /a/b/c or /1/2/3
-src/routes/[year(\d{4})]/[month(\d{2})]/[day(\d{2})].svelte
+Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
+
+```
+src/routes/foo-[bar].svelte
+src/routes/[baz].svelte
+src/routes/[qux].svelte
 ```
 
-Because of technical limitations, the following characters cannot be used: `/`, `\`, `?`, `:`, `(` and `)`.
+...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].svelte` and `[qux].svelte` (which are also valid matches for `/foo-xyz`, but less specific) in alphabetical order. The first page that returns something from [`load`](#loading), or has no `load` function, will handle the request.
 
+Similarly, multiple endpoints that match a given path will 'fall through' until one of them responds with something.
+
+If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.
