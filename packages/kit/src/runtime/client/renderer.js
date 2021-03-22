@@ -109,7 +109,7 @@ export class Renderer {
 
 			// TODO @fallthrough
 			// const selected = this.router.select(new URL(location.href));
-			// this.render(selected);
+			// this.update(selected);
 		});
 		ready = true;
 	}
@@ -131,7 +131,7 @@ export class Renderer {
 		if (error) {
 			props.components = [this.layout.default];
 		} else {
-			const hydrated = await this.hydrate(selected);
+			const hydrated = await this._hydrate(selected);
 
 			if (hydrated.redirect) {
 				throw new Error('TODO client-side redirects');
@@ -173,7 +173,7 @@ export class Renderer {
 	 * @param {import('./types').Navigation} selected
 	 * @param {string[]} [chain]
 	 */
-	async render(selected, chain) {
+	async update(selected, chain) {
 		const token = (this.token = {});
 
 		for (const route of selected.routes) {
@@ -189,7 +189,7 @@ export class Renderer {
 				query: selected.query
 			};
 
-			const hydrated = await this.hydrate({ nodes, page });
+			const hydrated = await this._hydrate({ nodes, page });
 
 			if (hydrated && this.token === token) {
 				if (hydrated.redirect) {
@@ -219,8 +219,22 @@ export class Renderer {
 		}
 	}
 
+	/** @param {URL} url */
+	async prefetch(url) {
+		// TODO @fallthrough
+		// const selected = this.router.select(url);
+		// if (selected) {
+		// 	if (url.href !== this.prefetching.href) {
+		// 		this.prefetching = { href: url.href, promise: this._hydrate(selected) };
+		// 	}
+		// 	return this.prefetching.promise;
+		// } else {
+		// 	throw new Error(`Could not prefetch ${url.href}`);
+		// }
+	}
+
 	/** @param {import('./types').NavigationTarget} selected */
-	async hydrate({ nodes, page }) {
+	async _hydrate({ nodes, page }) {
 		/** @type {Record<string, any>} */
 		const props = {
 			status: 200,
@@ -460,19 +474,5 @@ export class Renderer {
 		}
 
 		return { redirect, props, state };
-	}
-
-	/** @param {URL} url */
-	async prefetch(url) {
-		// TODO @fallthrough
-		// const selected = this.router.select(url);
-		// if (selected) {
-		// 	if (url.href !== this.prefetching.href) {
-		// 		this.prefetching = { href: url.href, promise: this.hydrate(selected) };
-		// 	}
-		// 	return this.prefetching.promise;
-		// } else {
-		// 	throw new Error(`Could not prefetch ${url.href}`);
-		// }
 	}
 }

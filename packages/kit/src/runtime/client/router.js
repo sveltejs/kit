@@ -111,7 +111,7 @@ export class Router {
 				// TODO @fallthrough
 				// this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
+				this._navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
 			}
 		});
@@ -121,7 +121,7 @@ export class Router {
 				const url = new URL(location.href);
 				const selected = this.select(url);
 				if (selected) {
-					this.navigate(selected, event.state['sveltekit:scroll'], []);
+					this._navigate(selected, event.state['sveltekit:scroll'], []);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -172,7 +172,7 @@ export class Router {
 
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+			return this._navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
 		}
 
 		location.href = href;
@@ -187,13 +187,13 @@ export class Router {
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async navigate(selected, scroll, chain, hash) {
+	async _navigate(selected, scroll, chain, hash) {
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.render(selected, chain);
+		await this.renderer.update(selected, chain);
 
 		document.body.focus();
 
