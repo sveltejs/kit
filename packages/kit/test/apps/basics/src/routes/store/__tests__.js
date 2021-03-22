@@ -14,19 +14,23 @@ export default function (test) {
 		assert.ok(!oops, oops);
 	});
 
-	test('navigating store contains from and to', '/store/navigating/a', async ({ page, js }) => {
-		assert.equal(await page.textContent('#navigating'), 'not currently navigating');
-
-		if (js) {
-			await page.click('a[href="/store/navigating/b"]');
-
-			assert.equal(
-				await page.textContent('#navigating'),
-				'navigating from /store/navigating/a to /store/navigating/b'
-			);
-
-			await page.waitForTimeout(100);
+	test.only(
+		'navigating store contains from and to',
+		'/store/navigating/a',
+		async ({ page, js }) => {
 			assert.equal(await page.textContent('#navigating'), 'not currently navigating');
+
+			if (js) {
+				await page.click('a[href="/store/navigating/b"]');
+
+				assert.equal(
+					await page.textContent('#navigating'),
+					'navigating from /store/navigating/a to /store/navigating/b'
+				);
+
+				await page.waitForTimeout(100);
+				assert.equal(await page.textContent('#navigating'), 'not currently navigating');
+			}
 		}
-	});
+	);
 }

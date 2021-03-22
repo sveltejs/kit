@@ -105,13 +105,11 @@ export class Router {
 			// Don't handle hash changes
 			if (url.pathname === location.pathname && url.search === location.search) return;
 
-			const selected = this.select(url);
-			if (selected) {
+			const info = this.parse(url);
+			if (info) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				// TODO @fallthrough
-				// this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
-				this._navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
+				this._navigate(info, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
 			}
 		});
@@ -119,9 +117,9 @@ export class Router {
 		addEventListener('popstate', (event) => {
 			if (event.state) {
 				const url = new URL(location.href);
-				const selected = this.select(url);
-				if (selected) {
-					this._navigate(selected, event.state['sveltekit:scroll'], []);
+				const info = this.parse(url);
+				if (info) {
+					this._navigate(info, event.state['sveltekit:scroll'], []);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -138,9 +136,9 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {import('./types').Navigation}
+	 * @returns {import('./types').NavigationInfo}
 	 */
-	select(url) {
+	parse(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
 
@@ -148,7 +146,7 @@ export class Router {
 
 		const routes = this.routes.filter((route) => route.pattern.test(path));
 
-		if (routes) {
+		if (routes.length > 0) {
 			return {
 				routes,
 				path,
@@ -164,15 +162,12 @@ export class Router {
 	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
 		const url = new URL(href, get_base_uri(document));
-		const selected = this.select(url);
+		const info = this.parse(url);
 
-		if (selected) {
-			// TODO @fallthrough
-			// this.renderer.notify(selected.page);
-
+		if (info) {
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this._navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+			return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
 		}
 
 		location.href = href;
@@ -182,18 +177,23 @@ export class Router {
 	}
 
 	/**
-	 * @param {import('./types').Navigation} selected
+	 * @param {import('./types').NavigationInfo} info
 	 * @param {{ x: number, y: number }} scroll
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async _navigate(selected, scroll, chain, hash) {
+	async _navigate(info, scroll, chain, hash) {
+		this.renderer.notify({
+			path: info.path,
+			query: info.query
+		});
+
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.update(selected, chain);
+		await this.renderer.update(info, chain);
 
 		document.body.focus();
 

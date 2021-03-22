@@ -16,8 +16,8 @@ import { set_paths } from '../paths.js';
  *   session: any;
  *   error: Error;
  *   status: number;
- *   nodes: import('./types').NavigationTarget["nodes"];
- *   page: import('./types').NavigationTarget["page"];
+ *   nodes: import('./types').NavigationCandidate["nodes"];
+ *   page: import('./types').NavigationCandidate["page"];
  * }} opts */
 export async function start({ paths, target, session, error, status, nodes, page }) {
 	const router = new Router({
