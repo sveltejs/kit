@@ -133,7 +133,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
 
-```
+```bash
 src/routes/[baz].js
 src/routes/[baz].svelte
 src/routes/[qux].svelte
