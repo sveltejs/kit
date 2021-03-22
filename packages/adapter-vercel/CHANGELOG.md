@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- 17e82eb: Fix adapter-vercel imports
+
 ## 1.0.0-next.6
 
 ### Patch Changes
