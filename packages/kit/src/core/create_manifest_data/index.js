@@ -254,8 +254,6 @@ function comparator(a, b) {
 		}
 	}
 
-	// TODO endpoints before pages (this allows e.g. endpoint POST handlers
-	// to shadow pages)
 	if (a.is_page !== b.is_page) {
 		return a.is_page ? 1 : -1;
 	}
