@@ -130,7 +130,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 	org: 'sveltejs',
 	repo: 'kit',
 	branch: 'master',
-	file: ['documentation', 'docs', '01-routing.md']
+	file: 'documentation/docs/01-routing.md'
 }
 ```
 
