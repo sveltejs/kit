@@ -1,6 +1,6 @@
-import { writeFileSync, mkdirSync, renameSync } from 'fs';
-import { resolve, join } from 'path';
-import { copy } from '@sveltejs/app-utils/files';
+const { writeFileSync, mkdirSync, renameSync } = require('fs');
+const { resolve, join } = require('path');
+const { copy } = require('@sveltejs/app-utils/files');
 
 module.exports = function () {
 	/** @type {import('@sveltejs/kit').Adapter} */

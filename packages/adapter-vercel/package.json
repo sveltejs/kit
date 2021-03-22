@@ -2,7 +2,6 @@
 	"name": "@sveltejs/adapter-vercel",
 	"version": "1.0.0-next.6",
 	"main": "index.js",
-	"type": "module",
 	"files": [
 		"files"
 	],
