@@ -87,14 +87,14 @@ export default function (test) {
 		'/routing',
 		async ({ app, capture_requests, page, clicknav, js }) => {
 			if (js) {
-				await app.prefetchRoutes().catch((e) => {
+				await app.prefetchRoutes(['/routing/a']).catch((e) => {
 					// from error handler tests; ignore
 					if (!e.message.includes('Crashing now')) throw e;
 				});
 
-				// weird flakiness — without this, some requests are
-				// reported after prefetchRoutes has finished
-				await page.waitForTimeout(500);
+				// // weird flakiness — without this, some requests are
+				// // reported after prefetchRoutes has finished
+				// await page.waitForTimeout(500);
 
 				const requests = await capture_requests(async () => {
 					await clicknav('a[href="/routing/a"]');
@@ -150,26 +150,26 @@ export default function (test) {
 		}
 	);
 
-	test('navigates to ...rest', '/routing/abc/xyz', async ({ page, clicknav }) => {
+	test('navigates to ...rest', '/routing/rest/abc/xyz', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'abc/xyz');
 
-		await clicknav('[href="/routing/xyz/abc/def/ghi"]');
+		await clicknav('[href="/routing/rest/xyz/abc/def/ghi"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def/ghi');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def/ghi');
 
-		await clicknav('[href="/routing/xyz/abc/def"]');
+		await clicknav('[href="/routing/rest/xyz/abc/def"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc/def');
 		assert.equal(await page.textContent('h2'), 'xyz/abc/def');
 
-		await clicknav('[href="/routing/xyz/abc"]');
+		await clicknav('[href="/routing/rest/xyz/abc"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await clicknav('[href="/routing/xyz/abc/deep"]');
+		await clicknav('[href="/routing/rest/xyz/abc/deep"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await clicknav('[href="/routing/xyz/abc/qwe/deep.json"]');
+		await clicknav('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
 		assert.equal(await page.textContent('body'), 'xyz/abc/qwe');
 	});
 
@@ -183,16 +183,6 @@ export default function (test) {
 			assert.equal(await page.textContent('h1'), 'B page');
 		}
 	);
-
-	test('find regexp routes', '/routing/qwe', async ({ page, clicknav }) => {
-		assert.equal(await page.textContent('h1'), 'qwe');
-
-		await clicknav('[href="234"]');
-		assert.equal(await page.textContent('h1'), 'Regexp page 234');
-
-		await clicknav('[href="regexp/234"]');
-		assert.equal(await page.textContent('h1'), 'Nested regexp page 234');
-	});
 
 	test(
 		'invalidates page when a segment is skipped',
@@ -210,5 +200,15 @@ export default function (test) {
 
 		await page.goBack();
 		assert.equal(await page.textContent('h1'), 'Great success!');
+	});
+
+	test('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('h1'), 'borax is a mineral');
+
+		await clicknav('[href="/routing/fallthrough/camel"]');
+		assert.equal(await page.textContent('h1'), 'camel is an animal');
+
+		await clicknav('[href="/routing/fallthrough/potato"]');
+		assert.equal(await page.textContent('h1'), '404');
 	});
 }

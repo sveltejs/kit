@@ -10,9 +10,10 @@ export default function (test, is_dev) {
 	});
 
 	test('prevents redirect loops', '/redirect', async ({ base, page, clicknav, js }) => {
-		await clicknav('[href="/redirect/loopy/a"]');
+		await page.click('[href="/redirect/loopy/a"]');
 
 		if (js) {
+			await page.waitForTimeout(100);
 			assert.equal(await page.url(), `${base}/redirect/loopy/b`);
 			assert.equal(await page.textContent('h1'), '500');
 			assert.equal(

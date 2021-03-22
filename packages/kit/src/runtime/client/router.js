@@ -15,15 +15,11 @@ function scroll_state() {
 export class Router {
 	/** @param {{
 	 *    base: string;
-	 *    host: string;
-	 *    pages: import('../../../types.internal').CSRPage[];
-	 *    ignore: RegExp[];
+	 *    routes: import('types.internal').CSRRoute[];
 	 * }} opts */
-	constructor({ base, host, pages, ignore }) {
+	constructor({ base, routes }) {
 		this.base = base;
-		this.host = host;
-		this.pages = pages;
-		this.ignore = ignore;
+		this.routes = routes;
 
 		this.history = window.history || {
 			pushState: () => {},
@@ -109,12 +105,11 @@ export class Router {
 			// Don't handle hash changes
 			if (url.pathname === location.pathname && url.search === location.search) return;
 
-			const selected = this.select(url);
-			if (selected) {
+			const info = this.parse(url);
+			if (info) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.renderer.notify(selected.page);
 				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
+				this._navigate(info, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
 			}
 		});
@@ -122,9 +117,9 @@ export class Router {
 		addEventListener('popstate', (event) => {
 			if (event.state) {
 				const url = new URL(location.href);
-				const selected = this.select(url);
-				if (selected) {
-					this.navigate(selected, event.state['sveltekit:scroll'], []);
+				const info = this.parse(url);
+				if (info) {
+					this._navigate(info, event.state['sveltekit:scroll'], []);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -141,36 +136,22 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {import('./types').NavigationTarget}
+	 * @returns {import('./types').NavigationInfo}
 	 */
-	select(url) {
+	parse(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
 
-		let path = url.pathname.slice(this.base.length);
+		const path = url.pathname.slice(this.base.length) || '/';
 
-		if (path === '') {
-			path = '/';
-		}
+		const routes = this.routes.filter((route) => route.pattern.test(path));
 
-		// avoid accidental clashes between server routes and page routes
-		if (this.ignore.some((pattern) => pattern.test(path))) return;
-
-		for (const route of this.pages) {
-			const match = route.pattern.exec(path);
-
-			if (match) {
-				const query = new URLSearchParams(url.search);
-				const params = route.params(match);
-
-				/** @type {import('../../../types.internal').Page} */
-				const page = { host: this.host, path, query, params };
-
-				return {
-					nodes: route.parts.map((loader) => loader()),
-					page
-				};
-			}
+		if (routes.length > 0) {
+			return {
+				routes,
+				path,
+				query: new URLSearchParams(url.search)
+			};
 		}
 	}
 
@@ -181,14 +162,12 @@ export class Router {
 	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
 		const url = new URL(href, get_base_uri(document));
-		const selected = this.select(url);
+		const info = this.parse(url);
 
-		if (selected) {
-			this.renderer.notify(selected.page);
-
+		if (info) {
 			// TODO shouldn't need to pass the hash here
 			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+			return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
 		}
 
 		location.href = href;
@@ -198,18 +177,23 @@ export class Router {
 	}
 
 	/**
-	 * @param {*} selected
+	 * @param {import('./types').NavigationInfo} info
 	 * @param {{ x: number, y: number }} scroll
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async navigate(selected, scroll, chain, hash) {
+	async _navigate(info, scroll, chain, hash) {
+		this.renderer.notify({
+			path: info.path,
+			query: info.query
+		});
+
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.render(selected, chain);
+		await this.renderer.update(info, chain);
 
 		document.body.focus();
 

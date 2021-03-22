@@ -7,19 +7,19 @@ import { ssr } from './index.js';
 
 /**
  * @param {{
- *   request: import('../../../types.internal').Request;
- *   options: import('../../../types.internal').SSRRenderOptions;
+ *   request: import('types.internal').Request;
+ *   options: import('types.internal').SSRRenderOptions;
  *   $session: any;
- *   route: import('../../../types.internal').SSRPage;
+ *   route: import('types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('../../../types.internal').Response>}
+ * @returns {Promise<import('types.internal').SKResponse>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
-	/** @type {Record<string, import('../../../types.internal').Response>} */
+	/** @type {Record<string, import('types.internal').SKResponse>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -100,14 +100,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: /** @type {import('../../../types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
+						headers: /** @type {import('types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
 						path: resolved,
 						body: opts.body,
 						query: new URLSearchParams(parsed.query || '')
 					},
 					{
 						...options,
-						fetched: url
+						fetched: url,
+						initiator: route
 					}
 				);
 
@@ -127,7 +128,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		if (response) {
 			const clone = response.clone();
 
-			/** @type {import('../../../types.internal').Headers} */
+			/** @type {import('types.internal').Headers} */
 			const headers = {};
 			clone.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
@@ -183,9 +184,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 				);
 			}
 
-			loaded =
-				mod.load &&
-				(await mod.load.call(null, {
+			if (mod.load) {
+				loaded = await mod.load.call(null, {
 					page,
 					get session() {
 						uses_credentials = true;
@@ -193,7 +193,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 					},
 					fetch: fetcher,
 					context: { ...context }
-				}));
+				});
+
+				if (!loaded) return;
+			}
 		} catch (e) {
 			// if load fails when we're already rendering the
 			// error page, there's not a lot we can do
@@ -359,7 +362,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('../../../types.internal').Headers} */
+	/** @type {import('types.internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
@@ -377,42 +380,39 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('../../../types.internal').Request} request
+ * @param {import('types.internal').Request} request
+ * @param {import('types.internal').SSRPage} route
  * @param {any} context
- * @param {import('../../../types.internal').SSRRenderOptions} options
+ * @param {import('types.internal').SSRRenderOptions} options
+ * @returns {Promise<import('types.internal').SKResponse>}
  */
-export default async function render_page(request, context, options) {
-	const route = options.manifest.pages.find((route) => route.pattern.test(request.path));
-
+export default async function render_page(request, route, context, options) {
 	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
-	if (!route) {
-		if (options.fetched) {
-			// we came here because of a bad request in a `load` function.
-			// rather than render the error page — which could lead to an
-			// infinite loop, if the `load` belonged to the root layout,
-			// we respond with a bare-bones 500
-			throw new Error(`Bad request in load function: failed to fetch ${options.fetched}`);
-		}
-
-		return await get_response({
-			request,
-			options,
-			$session,
-			route,
-			status: 404,
-			error: new Error(`Not found: ${request.path}`)
-		});
-	}
-
-	return await get_response({
+	const response = await get_response({
 		request,
 		options,
 		$session,
 		route,
-		status: 200,
-		error: null
+		status: route ? 200 : 404,
+		error: route ? null : new Error(`Not found: ${request.path}`)
 	});
+
+	if (response) {
+		return response;
+	}
+
+	if (options.fetched) {
+		// we came here because of a bad request in a `load` function.
+		// rather than render the error page — which could lead to an
+		// infinite loop, if the `load` belonged to the root layout,
+		// we respond with a bare-bones 500
+		return {
+			status: 500,
+			headers: {},
+			body: `Bad request in load function: failed to fetch ${options.fetched}`
+		};
+	}
 }
 
 /**

@@ -72,9 +72,23 @@ async function setup({ port }) {
 
 		// these are assumed to have been put in the global scope by the layout
 		app: {
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
 			goto: (url) => pages.js.evaluate((url) => goto(url), url),
+
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
 			prefetch: (url) => pages.js.evaluate((url) => prefetch(url), url),
-			prefetchRoutes: () => pages.js.evaluate(() => prefetchRoutes())
+
+			/**
+			 * @param {string[]} [urls]
+			 * @returns {Promise<void>}
+			 */
+			prefetchRoutes: (urls) => pages.js.evaluate((urls) => prefetchRoutes(urls), urls)
 		},
 
 		reset: () => browser && browser.close()

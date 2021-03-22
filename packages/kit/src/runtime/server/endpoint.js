@@ -1,33 +1,33 @@
 /**
- * @param {import('../../../types.internal').Request} request
- * @param {*} context // TODO
- * @param {import('../../../types.internal').SSRRenderOptions} options
- * @returns {Promise<import('../../../types.internal').Response>}
+ * @param {import('types.internal').Request} request
+ * @param {import('types.internal').SSREndpoint} route
+ * @param {any} context
+ * @param {import('types.internal').SSRRenderOptions} options
+ * @returns {Promise<import('types.internal').SKResponse>}
  */
-export default function render_route(request, context, options) {
-	const route = options.manifest.endpoints.find((route) => route.pattern.test(request.path));
-	if (!route) return null;
+export default async function render_route(request, route, context, options) {
+	const mod = await route.load();
 
-	return route.load().then(async (mod) => {
-		/** @type {import('../../../types').RequestHandler} */
-		const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
+	/** @type {import('types').RequestHandler} */
+	const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
-		if (handler) {
-			const match = route.pattern.exec(request.path);
-			const params = route.params(match);
+	if (handler) {
+		const match = route.pattern.exec(request.path);
+		const params = route.params(match);
 
-			const response = await handler(
-				{
-					host: options.host || request.headers[options.host_header || 'host'],
-					path: request.path,
-					headers: request.headers,
-					query: request.query,
-					body: request.body,
-					params
-				},
-				context
-			);
+		const response = await handler(
+			{
+				host: options.host || request.headers[options.host_header || 'host'],
+				path: request.path,
+				headers: request.headers,
+				query: request.query,
+				body: request.body,
+				params
+			},
+			context
+		);
 
+		if (response) {
 			if (typeof response !== 'object' || response.body == null) {
 				return {
 					status: 500,
@@ -51,14 +51,8 @@ export default function render_route(request, context, options) {
 			}
 
 			return { status, body, headers };
-		} else {
-			return {
-				status: 501,
-				body: `${request.method} is not implemented for ${request.path}`,
-				headers: {}
-			};
 		}
-	});
+	}
 }
 
 /** @param {Record<string, string>} obj */

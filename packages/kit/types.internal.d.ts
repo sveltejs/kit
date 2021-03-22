@@ -57,7 +57,7 @@ export type App = {
 			assets: string;
 		};
 	}) => void;
-	render: (request: Request, options: SSRRenderOptions) => Response;
+	render: (request: Request, options: SSRRenderOptions) => SKResponse;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -75,11 +75,11 @@ export type Request = {
 	query: URLSearchParams;
 };
 
-export type Response = {
+export type SKResponse = {
 	status: number;
 	headers: Headers;
 	body?: any;
-	dependencies?: Record<string, Response>;
+	dependencies?: Record<string, SKResponse>;
 };
 
 export type Page = {
@@ -132,6 +132,7 @@ export type SSRPagePart = {
 };
 
 export type SSRPage = {
+	type: 'page';
 	pattern: RegExp;
 	params: (match: RegExpExecArray) => Record<string, string>;
 	parts: SSRPagePart[];
@@ -140,24 +141,34 @@ export type SSRPage = {
 	js: string[];
 };
 
-export type CSRPage = {
-	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string>;
-	parts: CSRComponentLoader[];
-};
-
-export type Endpoint = {
+export type SSREndpoint = {
+	type: 'endpoint';
 	pattern: RegExp;
 	params: (match: RegExpExecArray) => Record<string, string>;
 	load: () => Promise<any>; // TODO
 };
 
+export type SSRRoute = SSREndpoint | SSRPage;
+
+export type CSRPage = {
+	type: 'page';
+	pattern: RegExp;
+	params: (match: RegExpExecArray) => Record<string, string>;
+	parts: CSRComponentLoader[];
+};
+
+export type CSREndpoint = {
+	type: 'endpoint';
+	pattern: RegExp;
+};
+
+export type CSRRoute = CSREndpoint | CSRPage;
+
 export type SSRManifest = {
 	assets: Asset[];
 	layout: SSRComponentLoader;
 	error: SSRComponentLoader;
-	pages: SSRPage[];
-	endpoints: Endpoint[];
+	routes: SSRRoute[];
 };
 
 // TODO separate out runtime options from the ones fixed in dev/build
@@ -192,6 +203,7 @@ export type SSRRenderOptions = {
 	get_static_file?: (file: string) => Buffer;
 	get_amp_css?: (dep: string) => string;
 	fetched?: string;
+	initiator?: SSRPage;
 };
 
 export type Asset = {
@@ -201,22 +213,25 @@ export type Asset = {
 };
 
 export type PageData = {
+	type: 'page';
 	pattern: RegExp;
 	params: string[];
 	parts: any[]; // TODO
 };
 
 export type EndpointData = {
+	type: 'endpoint';
 	pattern: RegExp;
 	params: string[];
 	file: string;
 };
+
+export type RouteData = PageData | EndpointData;
 
 export type ManifestData = {
 	assets: Asset[];
 	layout: string;
 	error: string;
 	components: string[];
-	pages: PageData[];
-	endpoints: EndpointData[];
+	routes: RouteData[];
 };

@@ -314,45 +314,50 @@ class Watcher extends EventEmitter {
 				});
 				return mod;
 			},
-			pages: manifest_data.pages.map((data) => {
-				// This is a bit of a hack, but it means we can inject the correct <style>
-				// contents without needing to do any analysis before loading
-				const css_deps = new Set();
+			routes: manifest_data.routes.map((route) => {
+				if (route.type === 'page') {
+					// This is a bit of a hack, but it means we can inject the correct <style>
+					// contents without needing to do any analysis before loading
+					const css_deps = new Set();
+
+					return {
+						type: 'page',
+						pattern: route.pattern,
+						params: get_params(route.params),
+						parts: route.parts.map((id) => {
+							return {
+								id,
+								async load() {
+									const { mod, css } = await load(id);
+
+									css.forEach((mod) => {
+										css_deps.add(mod);
+									});
+
+									return mod;
+								}
+							};
+						}),
+						get style() {
+							// TODO is it possible to inject <link> elements with
+							// the current Vite plugin? would be better than this
+							return [...common_css_deps, ...css_deps].join('\n');
+						},
+						css: [],
+						js: []
+					};
+				}
 
 				return {
-					pattern: data.pattern,
-					params: get_params(data.params),
-					parts: data.parts.map((id) => {
-						return {
-							id,
-							async load() {
-								const { mod, css } = await load(id);
-
-								css.forEach((mod) => {
-									css_deps.add(mod);
-								});
-
-								return mod;
-							}
-						};
-					}),
-					get style() {
-						// TODO is it possible to inject <link> elements with
-						// the current Vite plugin? would be better than this
-						return [...common_css_deps, ...css_deps].join('\n');
-					},
-					css: [],
-					js: []
+					type: 'endpoint',
+					pattern: route.pattern,
+					params: get_params(route.params),
+					load: async () => {
+						const url = path.resolve(this.cwd, route.file);
+						return await this.viteDevServer.ssrLoadModule(url);
+					}
 				};
-			}),
-			endpoints: manifest_data.endpoints.map((data) => ({
-				pattern: data.pattern,
-				params: get_params(data.params),
-				load: async () => {
-					const url = path.resolve(this.cwd, data.file);
-					return await this.viteDevServer.ssrLoadModule(url);
-				}
-			}))
+			})
 		};
 	}
 

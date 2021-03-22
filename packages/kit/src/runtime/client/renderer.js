@@ -34,14 +34,16 @@ function page_store(value) {
 
 export class Renderer {
 	/** @param {{
-	 *   Root: import('../../../types.internal').CSRComponent;
-	 *   layout: import('../../../types.internal').CSRComponent;
+	 *   Root: import('types.internal').CSRComponent;
+	 *   layout: import('types.internal').CSRComponent;
 	 *   target: Node;
 	 *   session: any;
+	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, target, session }) {
+	constructor({ Root, layout, target, session, host }) {
 		this.Root = Root;
 		this.layout = layout;
+		this.host = host;
 
 		/** @type {import('./router').Router} */
 		this.router = null;
@@ -51,6 +53,7 @@ export class Renderer {
 
 		this.started = false;
 
+		/** @type {import('./types').NavigationState} */
 		this.current = {
 			page: null,
 			query: null,
@@ -105,14 +108,14 @@ export class Renderer {
 			if (!ready) return;
 			this.current.session_changed = true;
 
-			const selected = this.router.select(new URL(location.href));
-			this.render(selected);
+			const info = this.router.parse(new URL(location.href));
+			this.update(info, []);
 		});
 		ready = true;
 	}
 
 	/**
-	 * @param {import('./types').NavigationTarget} selected
+	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {number} status
 	 * @param {Error} error
 	 */
@@ -128,7 +131,7 @@ export class Renderer {
 		if (error) {
 			props.components = [this.layout.default];
 		} else {
-			const hydrated = await this.hydrate(selected);
+			const hydrated = await this._hydrate(selected);
 
 			if (hydrated.redirect) {
 				throw new Error('TODO client-side redirects');
@@ -156,52 +159,135 @@ export class Renderer {
 		this.started = true;
 	}
 
-	/** @param {import('../../../types.internal').Page} page */
-	notify(page) {
+	/** @param {{ path: string, query: URLSearchParams }} destination */
+	notify({ path, query }) {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		this.stores.navigating.set({
-			from: this.current.page,
-			to: page
+			from: {
+				path: this.current.page.path,
+				query: this.current.page.query
+			},
+			to: {
+				path,
+				query
+			}
 		});
 	}
 
 	/**
-	 * @param {import('./types').NavigationTarget} selected
-	 * @param {string[]} [chain]
+	 * @param {import('./types').NavigationInfo} info
+	 * @param {string[]} chain
 	 */
-	async render(selected, chain) {
+	async update(info, chain) {
 		const token = (this.token = {});
+		const navigation_result = await this._get_navigation_result(info);
 
-		const hydrated = await this.hydrate(selected);
+		// abort if user navigated during update
+		if (token !== this.token) return;
 
-		if (this.token === token) {
-			if (hydrated.redirect) {
-				if (chain.length > 10 || chain.includes(this.current.page.path)) {
-					hydrated.props.status = 500;
-					hydrated.props.error = new Error('Redirect loop');
-				} else {
-					this.router.goto(hydrated.redirect, { replaceState: true }, [
-						...(chain || []),
-						this.current.page.path
-					]);
+		if (navigation_result.reload) {
+			location.reload();
+		} else if (navigation_result.redirect) {
+			if (chain.length > 10 || chain.includes(this.current.page.path)) {
+				this.root.$set({
+					status: 500,
+					error: new Error('Redirect loop')
+				});
+			} else {
+				this.router.goto(navigation_result.redirect, { replaceState: true }, [
+					...chain,
+					this.current.page.path
+				]);
 
-					return;
-				}
+				return;
+			}
+		} else {
+			this.current = navigation_result.state;
+
+			this.root.$set(navigation_result.props);
+			this.stores.navigating.set(null);
+
+			await 0;
+		}
+
+		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+	}
+
+	/**
+	 * @param {URL} url
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
+	async prefetch(url) {
+		const info = this.router.parse(url);
+		if (info) {
+			if (url.href !== this.prefetching.href) {
+				this.prefetching = {
+					href: url.href,
+					promise: this._get_navigation_result(info)
+				};
 			}
 
-			// check render wasn't aborted
-			this.current = hydrated.state;
-
-			this.root.$set(hydrated.props);
-			await this.stores.navigating.set(null);
-
-			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+			return this.prefetching.promise;
+		} else {
+			throw new Error(`Could not prefetch ${url.href}`);
 		}
 	}
 
-	/** @param {import('./types').NavigationTarget} selected */
-	async hydrate({ nodes, page }) {
+	/**
+	 * @param {import('./types').NavigationInfo} info
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
+	async _get_navigation_result(info) {
+		for (let i = 0; i < info.routes.length; i += 1) {
+			const route = info.routes[i];
+
+			if (route.type === 'endpoint') {
+				return { reload: true };
+			}
+
+			// load code for subsequent routes immediately, if they are as
+			// likely to match the current path/query as the current one
+			let j = i + 1;
+			while (j < info.routes.length) {
+				const next = info.routes[j];
+				if (next.pattern.toString() === route.pattern.toString()) {
+					if (next.type === 'page') next.parts.forEach((loader) => loader());
+					j += 1;
+				} else {
+					break;
+				}
+			}
+
+			const nodes = route.parts.map((loader) => loader());
+			const page = {
+				host: this.host,
+				path: info.path,
+				params: route.params(route.pattern.exec(info.path)),
+				query: info.query
+			};
+
+			const hydrated = await this._hydrate({ nodes, page });
+			if (hydrated) return hydrated;
+		}
+
+		return {
+			state: {
+				page: null,
+				query: null,
+				session_changed: false,
+				contexts: [],
+				nodes: []
+			},
+			props: {
+				status: 404,
+				error: new Error(`Not found: ${info.path}`)
+			}
+		};
+	}
+
+	/** @param {import('./types').NavigationCandidate} selected */
+	async _hydrate({ nodes, page }) {
 		/** @type {Record<string, any>} */
 		const props = {
 			status: 200,
@@ -209,7 +295,7 @@ export class Renderer {
 			/** @type {Error} */
 			error: null,
 
-			/** @type {import('../../../types.internal').CSRComponent[]} */
+			/** @type {import('types.internal').CSRComponent[]} */
 			components: []
 		};
 
@@ -231,24 +317,12 @@ export class Renderer {
 
 		const query = page.query.toString();
 
-		// TODO come up with a better name
-		/** @typedef {{
-		 *   component: import('../../../types.internal').CSRComponent;
-		 *   uses: {
-		 *     params: Set<string>;
-		 *     query: boolean;
-		 *     session: boolean;
-		 *     context: boolean;
-		 *   }
-		 * }} Branch */
-
+		/** @type {import('./types').NavigationState} */
 		const state = {
 			page,
 			query,
 			session_changed: false,
-			/** @type {Branch[]} */
 			nodes: [],
-			/** @type {Record<string, any>[]} */
 			contexts: []
 		};
 
@@ -297,10 +371,10 @@ export class Renderer {
 					const cache = this.caches.get(component);
 					const cached = cache && cache.get(hash);
 
-					/** @type {Branch} */
+					/** @type {import('./types').PageNode} */
 					let node;
 
-					/** @type {import('../../../types.internal').LoadOutput} */
+					/** @type {import('types.internal').LoadOutput} */
 					let loaded;
 
 					if (cached && (!changed.context || !cached.node.uses.context)) {
@@ -329,9 +403,8 @@ export class Renderer {
 
 						const session = this.$session;
 
-						loaded =
-							load &&
-							(await load.call(null, {
+						if (load) {
+							loaded = await load.call(null, {
 								page: {
 									host: page.host,
 									path: page.path,
@@ -350,7 +423,10 @@ export class Renderer {
 									return { ...context };
 								},
 								fetch: fetcher
-							}));
+							});
+
+							if (!loaded) return;
+						}
 					}
 
 					if (loaded) {
@@ -439,20 +515,5 @@ export class Renderer {
 		}
 
 		return { redirect, props, state };
-	}
-
-	/** @param {URL} url */
-	async prefetch(url) {
-		const selected = this.router.select(url);
-
-		if (selected) {
-			if (url.href !== this.prefetching.href) {
-				this.prefetching = { href: url.href, promise: this.hydrate(selected) };
-			}
-
-			return this.prefetching.promise;
-		} else {
-			throw new Error(`Could not prefetch ${url.href}`);
-		}
 	}
 }

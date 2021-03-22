@@ -57,11 +57,13 @@ type Loaded = {
 
 `load` is the SvelteKit equivalent of `getStaticProps` or `getServerSideProps` in Next.js or `asyncData` in Nuxt.js.
 
+If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+
 > `load` only applies to components that define pages, not the components that they import.
 
 ### Input
 
-The `load` function receives an object containing four fields —  `page`, `fetch`, `session` and `context`.
+The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`.
 
 #### page
 

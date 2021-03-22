@@ -7,7 +7,11 @@
 		"target": "es2020",
 		"module": "es2020",
 		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"paths": {
+			"types": ["./types"],
+			"types.internal": ["./types.internal"]
+		}
 	},
 	"include": ["src/**/*", "test/**/*"]
 }

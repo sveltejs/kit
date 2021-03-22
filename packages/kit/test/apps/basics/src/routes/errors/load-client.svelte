@@ -5,5 +5,7 @@
 		if (browser) {
 			throw new Error('Crashing now');
 		}
+
+		return {};
 	}
 </script>

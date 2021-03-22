@@ -49,12 +49,6 @@ function trim(str) {
  * @param {string} base
  */
 function generate_client_manifest(manifest_data, base) {
-	const page_ids = new Set(manifest_data.pages.map((page) => page.pattern.toString()));
-
-	const endpoints_to_ignore = manifest_data.endpoints.filter(
-		(route) => !page_ids.has(route.pattern.toString())
-	);
-
 	/** @type {Record<string, number>} */
 	const component_indexes = {};
 
@@ -71,29 +65,38 @@ function generate_client_manifest(manifest_data, base) {
 			.join(',\n\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	const pages = `[
-		${manifest_data.pages
-			.map((page) => {
-				const params = page.params.length
-					? '(m) => ({ ' +
-					  page.params
-							.map((param, i) => {
-								return param.startsWith('...')
-									? `${param.slice(3)}: d(m[${i + 1}])`
-									: `${param}: d(m[${i + 1}])`;
-							})
-							.join(', ') +
-					  '})'
-					: 'empty';
+	const routes = `[
+		${manifest_data.routes
+			.map((route) => {
+				if (route.type === 'page') {
+					const params = route.params.length
+						? '(m) => ({ ' +
+						  route.params
+								.map((param, i) => {
+									return param.startsWith('...')
+										? `${param.slice(3)}: d(m[${i + 1}])`
+										: `${param}: d(m[${i + 1}])`;
+								})
+								.join(', ') +
+						  '})'
+						: 'empty';
 
-				return `{
-					// ${page.parts[page.parts.length - 1]}
-					pattern: ${page.pattern},
-					params: ${params},
-					parts: [${page.parts.map((part) => `components[${component_indexes[part]}]`).join(', ')}]
-				}`;
+					return `{
+						// ${route.parts[route.parts.length - 1]}
+						type: 'page',
+						pattern: ${route.pattern},
+						params: ${params},
+						parts: [${route.parts.map((part) => `components[${component_indexes[part]}]`).join(', ')}]
+					}`;
+				} else {
+					return `{
+						type: 'endpoint',
+						pattern: ${route.pattern},
+						reload: true
+					}`;
+				}
 			})
-			.join(',\n\n\t\t')}
+			.join(',\n\n\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
 	return trim(`
@@ -104,11 +107,7 @@ function generate_client_manifest(manifest_data, base) {
 		const d = decodeURIComponent;
 		const empty = () => ({});
 
-		export const pages = ${pages};
-
-		export const ignore = [
-			${endpoints_to_ignore.map((route) => route.pattern).join(',\n\t\t\t')}
-		];
+		export const routes = ${routes};
 
 		export { layout };
 	`);
@@ -122,7 +121,9 @@ function generate_app(manifest_data, base) {
 	// TODO remove default layout altogether
 
 	const max_depth = Math.max(
-		...manifest_data.pages.map((page) => page.parts.filter(Boolean).length)
+		...manifest_data.routes.map((route) =>
+			route.type === 'page' ? route.parts.filter(Boolean).length : 0
+		)
 	);
 
 	const levels = [];

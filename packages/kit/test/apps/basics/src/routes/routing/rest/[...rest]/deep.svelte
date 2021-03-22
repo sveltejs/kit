@@ -13,5 +13,5 @@
 <h1>{$page.params.rest}</h1>
 <h2>{rest}</h2>
 
-<a href="/routing/xyz/abc/qwe/deep.json">deep</a>
-<a href="/routing/xyz/abc">back</a>
+<a href="/routing/rest/xyz/abc/qwe/deep.json">deep</a>
+<a href="/routing/rest/xyz/abc">back</a>
