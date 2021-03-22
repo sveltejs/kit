@@ -134,13 +134,12 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
 
 ```
-src/routes/foo-[bar].svelte
+src/routes/[baz].js
 src/routes/[baz].svelte
 src/routes/[qux].svelte
+src/routes/foo-[bar].svelte
 ```
 
-...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].svelte` and `[qux].svelte` (which are also valid matches for `/foo-xyz`, but less specific) in alphabetical order. The first page that returns something from [`load`](#loading), or has no `load` function, will handle the request.
-
-Similarly, multiple endpoints that match a given path will 'fall through' until one of them responds with something.
+...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].js` (which is also a valid match for `/foo-xyz`, but less specific), then `[baz].svelte` and `[qux].svelte` in alphabetical order (endpoints have higher precedence than pages). The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
 
 If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.
