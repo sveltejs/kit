@@ -467,14 +467,14 @@ async function build_service_worker(
 
 			export const build = [
 				${Array.from(app_files)
-				.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
-				.join(',\n\t\t\t\t')}
+					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
+					.join(',\n\t\t\t\t')}
 			];
 
 			export const assets = [
 				${manifest.assets
-				.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-				.join(',\n\t\t\t\t')}
+					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+					.join(',\n\t\t\t\t')}
 			];
 		`
 			.replace(/^\t{3}/gm, '')
@@ -553,13 +553,13 @@ function get_params(array) {
 	// that turns a RexExpMatchArray into ({ x, y, z })
 	return array.length
 		? '(m) => ({ ' +
-		array
-			.map((param, i) => {
-				return param.startsWith('...')
-					? `${param.slice(3)}: d(m[${i + 1}])`
-					: `${param}: d(m[${i + 1}])`;
-			})
-			.join(', ') +
-		'})'
+				array
+					.map((param, i) => {
+						return param.startsWith('...')
+							? `${param.slice(3)}: d(m[${i + 1}])`
+							: `${param}: d(m[${i + 1}])`;
+					})
+					.join(', ') +
+				'})'
 		: 'empty';
 }

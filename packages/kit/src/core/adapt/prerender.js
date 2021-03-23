@@ -72,11 +72,11 @@ export async function prerender({ cwd, out, log, config, force }) {
 	/** @type {(status: number, path: string) => void} */
 	const error = config.kit.prerender.force
 		? (status, path) => {
-			log.error(`${status} ${path}`);
-		}
+				log.error(`${status} ${path}`);
+		  }
 		: (status, path) => {
-			throw new Error(`${status} ${path}`);
-		};
+				throw new Error(`${status} ${path}`);
+		  };
 
 	/** @param {string} path */
 	async function visit(path) {

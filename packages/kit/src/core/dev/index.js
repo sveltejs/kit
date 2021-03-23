@@ -184,8 +184,9 @@ class Watcher extends EventEmitter {
 												.map(
 													(error) => `
 												<h2>${error.severity}</h2>
-												<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${error.code
-														}</a>)</p>
+												<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
+														error.code
+													}</a>)</p>
 												<pre>${escape(lines[error.line - 1])}</pre>
 											`
 												)

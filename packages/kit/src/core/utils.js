@@ -24,7 +24,7 @@ export function copy_assets(dest) {
 	} while (true); // eslint-disable-line
 }
 
-function noop() { }
+function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
