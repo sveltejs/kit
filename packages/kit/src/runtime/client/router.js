@@ -1,10 +1,5 @@
 import { find_anchor, get_base_uri } from './utils';
 
-/** @param {MouseEvent} event */
-function which(event) {
-	return event.which === null ? event.button : event.which;
-}
-
 function scroll_state() {
 	return {
 		x: pageXOffset,
@@ -73,7 +68,7 @@ export class Router {
 		addEventListener('click', (event) => {
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
-			if (which(event) !== 1) return;
+			if (event.button || event.which !== 1) return;
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
