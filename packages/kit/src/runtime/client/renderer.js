@@ -241,8 +241,9 @@ export class Renderer {
 	async _get_navigation_result(info) {
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
+			const [pattern, parts, params] = route;
 
-			if (route.type === 'endpoint') {
+			if (route.length === 1) {
 				return { reload: true };
 			}
 
@@ -251,19 +252,19 @@ export class Renderer {
 			let j = i + 1;
 			while (j < info.routes.length) {
 				const next = info.routes[j];
-				if (next.pattern.toString() === route.pattern.toString()) {
-					if (next.type === 'page') next.parts.forEach((loader) => loader());
+				if (next[0].toString() === pattern.toString()) {
+					if (next.length !== 1) next[1].forEach((loader) => loader());
 					j += 1;
 				} else {
 					break;
 				}
 			}
 
-			const nodes = route.parts.map((loader) => loader());
+			const nodes = parts.map((loader) => loader());
 			const page = {
 				host: this.host,
 				path: info.path,
-				params: route.params(route.pattern.exec(info.path)),
+				params: params ? params(route[0].exec(info.path)) : {},
 				query: info.query
 			};
 
