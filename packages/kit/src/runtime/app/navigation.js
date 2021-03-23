@@ -18,7 +18,7 @@ export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : pr
  * @param {string} href
  * @param {{
  *   noscroll?: boolean;
- *   resplaceState?: boolean;
+ *   replaceState?: boolean;
  * }} [opts]
  */
 async function goto_(href, opts) {
