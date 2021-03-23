@@ -15,7 +15,6 @@
 	},
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
-		"@sveltejs/app-utils": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"compression": "^1.7.4",
 		"polka": "^0.5.2",

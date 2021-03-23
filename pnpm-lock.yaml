@@ -100,7 +100,6 @@ importers:
   packages/adapter-node:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
-      '@sveltejs/app-utils': link:../app-utils
       '@sveltejs/kit': link:../kit
       compression: 1.7.4
       polka: 0.5.2
@@ -109,7 +108,6 @@ importers:
       typescript: 4.2.3
     specifiers:
       '@rollup/plugin-json': ^4.1.0
-      '@sveltejs/app-utils': workspace:*
       '@sveltejs/kit': workspace:*
       compression: ^1.7.4
       polka: ^0.5.2
@@ -134,15 +132,6 @@ importers:
       rollup: ^2.41.1
       sirv: ^1.0.11
       typescript: ^4.2.3
-  packages/app-utils:
-    devDependencies:
-      '@types/node': 14.14.33
-      typescript: 4.2.3
-      uvu: 0.5.1
-    specifiers:
-      '@types/node': ^14.14.33
-      typescript: ^4.2.3
-      uvu: ^0.5.1
   packages/create-svelte:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
