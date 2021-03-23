@@ -68,13 +68,10 @@ export default [
 	},
 
 	{
-		input: {
-			http: 'src/core/filesystem/index.js'
-		},
+		input: 'src/core/filesystem/index.js',
 		output: {
-			dir: 'dist',
 			format: 'cjs',
-			chunkFileNames: 'chunks/[name].cjs'
+			file: 'dist/filesystem.cjs'
 		},
 		external: (id) => {
 			return external.includes(id);
