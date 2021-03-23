@@ -1,6 +1,6 @@
 # READ THIS FIRST!
 
-We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some known issues to resolve and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
+Here we are, finally SvelteKit is public beta. It's not finished — there are a few known bugs and several missing features — but we're really happy with how it's shaping up and can't wait for you to try it. You can read [announcement](https://svelte.dev/blog/sveltekit-beta) on our blog, where You will find also some informations about how to start with SvelteKit. We still have a lot of work to do to version 1.0, like bringing new adapters, upgrading documentation, and kill some bugs, that want to eat our dinner.
 
 ## Documentation
 
