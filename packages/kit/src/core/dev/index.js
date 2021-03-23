@@ -8,7 +8,7 @@ import amp_validator from 'amphtml-validator';
 import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '../filesystem/filesystem.js';
+import { rimraf } from '../filesystem/index.js';
 import { ssr } from '../../runtime/server/index.js';
 import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';

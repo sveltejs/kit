@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'path';
 import colors from 'kleur';
-import { copy } from './filesystem/filesystem';
+import { copy } from './filesystem/index.js';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 

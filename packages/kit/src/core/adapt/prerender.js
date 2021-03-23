@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
-import { mkdirp } from '../filesystem/filesystem.js';
+import { mkdirp } from '../filesystem/index.js';
 
 /** @param {string} html */
 function clean_html(html) {

@@ -1,4 +1,4 @@
-import { copy, rimraf, mkdirp } from '../filesystem/filesystem.js';
+import { copy, rimraf, mkdirp } from '../filesystem/index.js';
 import { prerender } from './prerender.js';
 
 export default class Builder {

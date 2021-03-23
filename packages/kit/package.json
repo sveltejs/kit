@@ -9,7 +9,6 @@
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^2.4.1",
-		"@sveltejs/app-utils": "workspace:*",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.33",
@@ -63,10 +62,11 @@
 			"import": "./dist/ssr.js"
 		},
 		"./http": {
-			"require": "./dist/http/index.js"
+			"import": "./dist/http.js"
 		},
-		"./files": {
-			"import": "./dist/files/index.js"
+		"./filesystem": {
+			"import": "./dist/filesystem.js",
+			"require": "./dist/filesystem.cjs"
 		},
 		"./types.d.ts": "./types.d.ts"
 	},
