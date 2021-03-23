@@ -69,34 +69,32 @@ function generate_client_manifest(manifest_data, base) {
 		${manifest_data.routes
 			.map((route) => {
 				if (route.type === 'page') {
-					const params = route.params.length
-						? '(m) => ({ ' +
-						  route.params
+					const params =
+						route.params.length > 0 &&
+						'(m) => ({ ' +
+							route.params
 								.map((param, i) => {
 									return param.startsWith('...')
 										? `${param.slice(3)}: d(m[${i + 1}])`
 										: `${param}: d(m[${i + 1}])`;
 								})
 								.join(', ') +
-						  '})'
-						: 'empty';
+							'})';
 
-					return `{
-						// ${route.parts[route.parts.length - 1]}
-						type: 'page',
-						pattern: ${route.pattern},
-						params: ${params},
-						parts: [${route.parts.map((part) => `components[${component_indexes[part]}]`).join(', ')}]
-					}`;
+					const tuple = [
+						route.pattern,
+						`[${route.parts.map((part) => `components[${component_indexes[part]}]`).join(', ')}]`,
+						params
+					]
+						.filter(Boolean)
+						.join(', ');
+
+					return `// ${route.parts[route.parts.length - 1]}\n\t[${tuple}]`;
 				} else {
-					return `{
-						type: 'endpoint',
-						pattern: ${route.pattern},
-						reload: true
-					}`;
+					return `// ${route.file}\n\t[${route.pattern}]`;
 				}
 			})
-			.join(',\n\n\t\t\t')}
+			.join(',\n\n\t')}
 	]`.replace(/^\t/gm, '');
 
 	return trim(`

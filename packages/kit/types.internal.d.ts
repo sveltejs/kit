@@ -131,10 +131,12 @@ export type SSRPagePart = {
 	load: SSRComponentLoader;
 };
 
+export type GetParams = (match: RegExpExecArray) => Record<string, string>;
+
 export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string>;
+	params: GetParams;
 	parts: SSRPagePart[];
 	style: string;
 	css: string[];
@@ -144,23 +146,15 @@ export type SSRPage = {
 export type SSREndpoint = {
 	type: 'endpoint';
 	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string>;
+	params: GetParams;
 	load: () => Promise<any>; // TODO
 };
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = {
-	type: 'page';
-	pattern: RegExp;
-	params: (match: RegExpExecArray) => Record<string, string>;
-	parts: CSRComponentLoader[];
-};
+export type CSRPage = [RegExp, CSRComponentLoader[], GetParams?];
 
-export type CSREndpoint = {
-	type: 'endpoint';
-	pattern: RegExp;
-};
+export type CSREndpoint = [RegExp];
 
 export type CSRRoute = CSREndpoint | CSRPage;
 

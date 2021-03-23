@@ -144,7 +144,7 @@ export class Router {
 
 		const path = url.pathname.slice(this.base.length) || '/';
 
-		const routes = this.routes.filter((route) => route.pattern.test(path));
+		const routes = this.routes.filter(([pattern]) => pattern.test(path));
 
 		if (routes.length > 0) {
 			return {
