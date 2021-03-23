@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { mkdirp } from '../filesystem/filesystem.js';
 
 /** @param {string} html */
 function clean_html(html) {
@@ -72,11 +72,11 @@ export async function prerender({ cwd, out, log, config, force }) {
 	/** @type {(status: number, path: string) => void} */
 	const error = config.kit.prerender.force
 		? (status, path) => {
-				log.error(`${status} ${path}`);
-		  }
+			log.error(`${status} ${path}`);
+		}
 		: (status, path) => {
-				throw new Error(`${status} ${path}`);
-		  };
+			throw new Error(`${status} ${path}`);
+		};
 
 	/** @param {string} path */
 	async function visit(path) {

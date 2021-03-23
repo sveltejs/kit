@@ -1,4 +1,4 @@
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { mkdirp } from '@sveltejs/kit/files';
 import fs from 'fs';
 import parser from 'gitignore-parser';
 import { bold, cyan, gray, green, red } from 'kleur/colors';

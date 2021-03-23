@@ -14,8 +14,7 @@
 		"files"
 	],
 	"dependencies": {
-		"@architect/parser": "^3.0.1",
-		"@sveltejs/app-utils": "workspace:*"
+		"@architect/parser": "^3.0.1"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

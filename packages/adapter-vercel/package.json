@@ -13,9 +13,6 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
-	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*"
-	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"rollup": "^2.41.1",

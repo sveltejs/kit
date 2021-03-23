@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { mkdirp } from '../filesystem/filesystem';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -72,14 +72,14 @@ function generate_client_manifest(manifest_data, base) {
 					const params =
 						route.params.length > 0 &&
 						'(m) => ({ ' +
-							route.params
-								.map((param, i) => {
-									return param.startsWith('...')
-										? `${param.slice(3)}: d(m[${i + 1}])`
-										: `${param}: d(m[${i + 1}])`;
-								})
-								.join(', ') +
-							'})';
+						route.params
+							.map((param, i) => {
+								return param.startsWith('...')
+									? `${param.slice(3)}: d(m[${i + 1}])`
+									: `${param}: d(m[${i + 1}])`;
+							})
+							.join(', ') +
+						'})';
 
 					const tuple = [
 						route.pattern,

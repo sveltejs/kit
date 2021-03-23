@@ -1,6 +1,5 @@
 const { writeFileSync, mkdirSync, renameSync } = require('fs');
 const { resolve, join } = require('path');
-const { copy } = require('@sveltejs/app-utils/files');
 
 module.exports = function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -22,7 +21,7 @@ module.exports = function () {
 			builder.copy_server_files(server_directory);
 			renameSync(join(server_directory, 'app.js'), join(server_directory, 'app.mjs'));
 
-			copy(join(__dirname, 'files'), lambda_directory);
+			builder.copy(join(__dirname, 'files'), lambda_directory);
 
 			builder.log.minor('Prerendering static pages...');
 			await builder.prerender({

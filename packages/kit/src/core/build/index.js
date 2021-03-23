@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { rimraf } from '@sveltejs/app-utils/files';
+import { rimraf } from '../filesystem/filesystem';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { copy_assets } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
@@ -306,25 +306,25 @@ async function build_server(
 				error: ${stringify_component(manifest.error)},
 				routes: [
 					${manifest.routes
-						.map((route) => {
-							if (route.type === 'page') {
-								const params = get_params(route.params);
-								const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
+				.map((route) => {
+					if (route.type === 'page') {
+						const params = get_params(route.params);
+						const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
 
-								const js_deps = new Set(common_js_deps);
-								const css_deps = new Set(common_css_deps);
+						const js_deps = new Set(common_js_deps);
+						const css_deps = new Set(common_css_deps);
 
-								for (const file of route.parts) {
-									js_deps_by_file.get(file).forEach(asset => {
-										js_deps.add(asset);
-									});
+						for (const file of route.parts) {
+							js_deps_by_file.get(file).forEach(asset => {
+								js_deps.add(asset);
+							});
 
-									css_deps_by_file.get(file).forEach(asset => {
-										css_deps.add(asset);
-									});
-								}
+							css_deps_by_file.get(file).forEach(asset => {
+								css_deps.add(asset);
+							});
+						}
 
-								return `{
+						return `{
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
@@ -332,19 +332,19 @@ async function build_server(
 									css: [${Array.from(css_deps).map(s).join(', ')}],
 									js: [${Array.from(js_deps).map(s).join(', ')}]
 								}`;
-							} else {
-								const params = get_params(route.params);
-								const load = `() => import(${s(app_relative(route.file))})`;
+					} else {
+						const params = get_params(route.params);
+						const load = `() => import(${s(app_relative(route.file))})`;
 
-								return `{
+						return `{
 									type: 'endpoint',
 									pattern: ${route.pattern},
 									params: ${params},
 									load: ${load}
 								}`;
-							}
-						})
-						.join(',\n\t\t\t\t\t')}
+					}
+				})
+				.join(',\n\t\t\t\t\t')}
 				]
 			};
 
@@ -467,14 +467,14 @@ async function build_service_worker(
 
 			export const build = [
 				${Array.from(app_files)
-					.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
-					.join(',\n\t\t\t\t')}
+				.map((file) => `${s(`${config.kit.paths.base}/${config.kit.appDir}/${file}`)}`)
+				.join(',\n\t\t\t\t')}
 			];
 
 			export const assets = [
 				${manifest.assets
-					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
-					.join(',\n\t\t\t\t')}
+				.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
+				.join(',\n\t\t\t\t')}
 			];
 		`
 			.replace(/^\t{3}/gm, '')
@@ -553,13 +553,13 @@ function get_params(array) {
 	// that turns a RexExpMatchArray into ({ x, y, z })
 	return array.length
 		? '(m) => ({ ' +
-				array
-					.map((param, i) => {
-						return param.startsWith('...')
-							? `${param.slice(3)}: d(m[${i + 1}])`
-							: `${param}: d(m[${i + 1}])`;
-					})
-					.join(', ') +
-				'})'
+		array
+			.map((param, i) => {
+				return param.startsWith('...')
+					? `${param.slice(3)}: d(m[${i + 1}])`
+					: `${param}: d(m[${i + 1}])`;
+			})
+			.join(', ') +
+		'})'
 		: 'empty';
 }

@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'path';
 import colors from 'kleur';
-import { copy } from '@sveltejs/app-utils/files';
+import { copy } from './filesystem/filesystem';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 
@@ -24,7 +24,7 @@ export function copy_assets(dest) {
 	} while (true); // eslint-disable-line
 }
 
-function noop() {}
+function noop() { }
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {

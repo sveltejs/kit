@@ -62,6 +62,12 @@
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		},
+		"./http": {
+			"require": "./dist/http/index.js"
+		},
+		"./files": {
+			"import": "./dist/files/index.js"
+		},
 		"./types.d.ts": "./types.d.ts"
 	},
 	"types": "types.d.ts"

@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { copy } from './index.js';
+import { copy } from './index.js.js';
 
 const suite_copy = suite('#copy()');
 

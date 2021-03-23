@@ -8,9 +8,9 @@ import amp_validator from 'amphtml-validator';
 import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '@sveltejs/app-utils/files';
+import { rimraf } from '../filesystem/filesystem.js';
 import { ssr } from '../../runtime/server/index.js';
-import { get_body } from '@sveltejs/app-utils/http';
+import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 
@@ -184,9 +184,8 @@ class Watcher extends EventEmitter {
 												.map(
 													(error) => `
 												<h2>${error.severity}</h2>
-												<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
-														error.code
-													}</a>)</p>
+												<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${error.code
+														}</a>)</p>
 												<pre>${escape(lines[error.line - 1])}</pre>
 											`
 												)
