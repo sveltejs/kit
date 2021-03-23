@@ -1,14 +1,23 @@
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 
-export default {
-	input: 'src/index.js',
-	output: {
-		file: 'files/index.js',
-		format: 'cjs',
-		sourcemap: true,
-		exports: 'default'
+export default [
+	{
+		input: 'src/entry.js',
+		output: {
+			file: 'files/entry.mjs',
+			format: 'es',
+			sourcemap: true,
+			exports: 'default'
+		},
+		plugins: [nodeResolve(), commonjs()],
+		external: [...require('module').builtinModules, './server/app.mjs']
 	},
-	plugins: [nodeResolve(), commonjs()],
-	external: require('module').builtinModules
-};
+	{
+		input: 'src/index.cjs',
+		output: {
+			file: 'files/index.js'
+		},
+		external: './entry.mjs'
+	}
+];

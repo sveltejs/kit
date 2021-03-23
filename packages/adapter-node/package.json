@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.0",
+	"version": "1.0.0-next.9",
 	"main": "index.js",
 	"files": [
 		"files"
@@ -14,8 +14,13 @@
 		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
+		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/app-utils": "workspace:*",
-		"rollup": "^2.32.0",
-		"sirv": "^1.0.7"
+		"@sveltejs/kit": "workspace:*",
+		"compression": "^1.7.4",
+		"polka": "^0.5.2",
+		"rollup": "^2.41.1",
+		"sirv": "^1.0.11",
+		"typescript": "^4.2.3"
 	}
 }

@@ -1,43 +1,30 @@
 {
 	"name": "@sveltejs/app-utils",
-	"version": "1.0.0-next.0",
+	"version": "1.0.0-next.3",
 	"scripts": {
-		"clean": "node rimraf.js files http renderer",
-		"dev": "npm run clean && rollup -cw",
-		"build": "npm run clean && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"build": "tsc",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"prepublishOnly": "npm run build",
-		"test": "uvu -r esm"
-	},
-	"dependencies": {
-		"mime": "^2.4.6"
+		"test": "uvu",
+		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
-		"@types/mime": "^2.0.3",
-		"@types/node": "^14.14.0",
-		"@types/node-fetch": "^2.5.7",
-		"devalue": "^2.0.1",
-		"esm": "^3.2.25",
-		"node-fetch": "^2.6.1",
-		"rollup": "^2.32.0",
-		"svelte": "^3.29.0",
-		"uvu": "^0.3.4"
+		"@types/node": "^14.14.33",
+		"typescript": "^4.2.3",
+		"uvu": "^0.5.1"
 	},
+	"type": "module",
 	"exports": {
 		"./files": {
-			"require": "./files/index.js",
-			"import": "./files/index.mjs"
+			"import": "./files/index.js"
 		},
 		"./http": {
-			"require": "./http/index.js",
-			"import": "./http/index.mjs"
+			"import": "./http/index.js"
 		}
 	},
 	"files": [
 		"files",
-		"http",
-		"renderer"
+		"http"
 	]
 }

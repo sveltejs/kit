@@ -1,4 +1,4 @@
-export function prepare(headers) {
+export function prepare({ headers }) {
 	return {
 		context: {
 			answer: 42
@@ -9,6 +9,6 @@ export function prepare(headers) {
 	};
 }
 
-export function getSession(context) {
+export function getSession({ context }) {
 	return context;
 }

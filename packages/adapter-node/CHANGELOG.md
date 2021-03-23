@@ -1,5 +1,59 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 9212aa5: Add options to adapter-node, and add adapter types
+
+## 1.0.0-next.7
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 222fe9d: Compress adapter-node responses
+
+## 1.0.0-next.4
+
+### Minor Changes
+
+- Make adapter node work under esm
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- ab2367d: Convert to ESM
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
+## 1.0.0-next.1
+
+### Patch Changes
+
+- 13e8fa3: Make adapter-node work
+
 ## 0.0.18
 
 ### Patch Changes

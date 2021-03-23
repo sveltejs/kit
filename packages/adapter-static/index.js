@@ -1,11 +1,18 @@
-'use strict';
+module.exports = function ({ pages = 'build', assets = 'build' } = {}) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-static',
 
-module.exports = async function adapter(builder, { pages = 'build', assets = 'build' } = {}) {
-	builder.copy_static_files(assets);
-	builder.copy_client_files(assets);
+		async adapt(builder) {
+			builder.copy_static_files(assets);
+			builder.copy_client_files(assets);
 
-	await builder.prerender({
-		force: true,
-		dest: pages
-	});
+			await builder.prerender({
+				force: true,
+				dest: pages
+			});
+		}
+	};
+
+	return adapter;
 };

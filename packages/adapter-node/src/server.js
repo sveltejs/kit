@@ -1,10 +1,15 @@
-import * as fs from 'fs';
-import * as http from 'http';
-import { parse, URLSearchParams } from 'url';
+import compression from 'compression';
+import fs from 'fs';
+import polka from 'polka';
+import { dirname, join } from 'path';
 import sirv from 'sirv';
+import { parse, URLSearchParams, fileURLToPath } from 'url';
 import { get_body } from '@sveltejs/app-utils/http';
+// App is a dynamic file built from the application layer.
+/*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
+import * as app from './app.js';
 
-const app = require('./app.js');
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const { PORT = 3000 } = process.env; // TODO configure via svelte.config.js
 
@@ -16,44 +21,36 @@ const mutable = (dir) =>
 
 const noop_handler = (_req, _res, next) => next();
 
-// TODO how to handle the case where `paths.assets !== ''` and `paths.generated !== '/app'`?
-// Does that even make sense in the context of adapter-node?
-const static_handler = fs.existsSync(app.files.assets) ? mutable(app.files.assets) : noop_handler;
-const prerendered_handler = fs.existsSync('build/prerendered')
-	? mutable('build/prerendered')
-	: noop_handler;
+const prerendered_handler = fs.existsSync('prerendered') ? mutable('prerendered') : noop_handler;
 
-const assets_handler = sirv('build/assets', {
+const assets_handler = sirv(join(__dirname, '/assets'), {
 	maxAge: 31536000,
 	immutable: true
 });
 
-const server = http.createServer((req, res) => {
-	const parsed = parse(req.url || '');
-
-	assets_handler(req, res, () => {
-		static_handler(req, res, () => {
-			prerendered_handler(req, res, async () => {
-				const rendered = await app.render({
-					method: req.method,
-					headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-					path: parsed.pathname,
-					body: await get_body(req),
-					query: new URLSearchParams(parsed.query || '')
-				});
-
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					res.end(rendered.body);
-				} else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
-			});
+polka()
+	.use(compression({ threshold: 0 }), assets_handler, prerendered_handler, async (req, res) => {
+		const parsed = parse(req.url || '');
+		const rendered = await app.render({
+			method: req.method,
+			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+			path: parsed.pathname,
+			body: await get_body(req),
+			query: new URLSearchParams(parsed.query || '')
 		});
-	});
-});
 
-server.listen(PORT, () => {
-	console.log(`Listening on port ${PORT}`);
-});
+		if (rendered) {
+			res.writeHead(rendered.status, rendered.headers);
+			res.end(rendered.body);
+		} else {
+			res.statusCode = 404;
+			res.end('Not found');
+		}
+	})
+	.listen(PORT, (err) => {
+		if (err) {
+			console.log('error', err);
+		} else {
+			console.log(`Listening on port ${PORT}`);
+		}
+	});

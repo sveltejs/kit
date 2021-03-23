@@ -1,5 +1,24 @@
 # @sveltejs/app-utils
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- 73dd998: Check file/directory exists before copying
+- b800049: Include type declarations
+
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Convert everything to ESM
+
 ## 0.0.18
 
 ### Patch Changes

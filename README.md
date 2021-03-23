@@ -1,9 +1,10 @@
-# @sveltejs/kit
+# READ THIS FIRST!
 
-Everything you need to build a Svelte app.
+We're getting ready to open up the SvelteKit public beta, which means that things will be in a stable enough state to start experimenting. Right now, even though [this repo is open](https://www.reddit.com/r/sveltejs/comments/m337r7/sveltekit_repository_is_now_public_on_github/gqmvj9k), there are still some known issues to resolve and there are aspects of the design that _will_ change over the next few days. We're close. Please bear with us!
 
-To get started, run `npm init svelte@next` — this will fetch and run the [`create-svelte`](packages/create-svelte) package.
+## Documentation
 
+Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
 
 ## Developing
 
@@ -13,12 +14,38 @@ This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
 npm i -g pnpm
 ```
 
-...then install this repo's dependencies:
+...then install this repo's dependencies...
 
 ```bash
 pnpm i
 ```
 
-(This will also have the effect of building all the packages.)
+...then build SvelteKit and the other packages:
+
+```bash
+pnpm -r build
+```
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
+
+Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
+
+### Changelogs
+
+For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts.
+
+### Releases
+
+The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
+
+> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
+
+New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
+
+```
+npm publish --access=public
+```
+
+### Testing
+
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.

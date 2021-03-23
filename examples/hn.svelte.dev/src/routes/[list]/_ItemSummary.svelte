@@ -13,8 +13,8 @@
 	{:else}
 		<p>
 			{item.points} points by
-			<a rel="prefetch" href="/user/{item.user}">{item.user}</a> {item.time_ago}
-			 | <a rel="prefetch" href="/item/{item.id}">{item.comments_count} {item.comments_count === 1 ? 'comment' : 'comments'}</a>
+			<a sveltekit:prefetch href="/user/{item.user}">{item.user}</a> {item.time_ago}
+			 | <a sveltekit:prefetch href="/item/{item.id}">{item.comments_count} {item.comments_count === 1 ? 'comment' : 'comments'}</a>
 		</p>
 	{/if}
 

@@ -1,7 +1,7 @@
 <script>
-	export let error, status;
+	import { dev } from '$app/env';
 
-	let dev = import.meta.env.MODE === 'development';
+	export let error, status;
 </script>
 
 <svelte:head>

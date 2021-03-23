@@ -1,5 +1,29 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- 512b8c9: adapter-netlify: Use CJS entrypoint
+
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Fix adapters and convert to ES modules
+
 ## 0.0.13
 
 ### Patch Changes

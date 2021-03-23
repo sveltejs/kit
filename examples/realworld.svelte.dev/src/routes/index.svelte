@@ -17,8 +17,8 @@
 
 <script>
 	import { page, session } from '$app/stores';
-	import ArticleList from '$components/ArticleList/index.svelte';
-	import Pagination from '$components/Pagination.svelte';
+	import ArticleList from '$lib/ArticleList/index.svelte';
+	import Pagination from '$lib/Pagination.svelte';
 
 	export let articles;
 	export let pages;

@@ -1,7 +1,8 @@
 {
 	"name": "sandbox",
-	"version": "1.0.0",
+	"version": "1.0.1-next.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
@@ -10,7 +11,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/snowpack-config": "workspace:*",
-		"svelte": "^3.29.0"
+		"svelte": "^3.35.0"
 	}
 }

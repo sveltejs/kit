@@ -1,9 +1,9 @@
 'use strict';
 
-const url = require('url');
-const app = require('./app.js');
+import { URLSearchParams } from 'url';
+import { render } from './app.mjs'; // eslint-disable-line import/no-unresolved
 
-exports.handler = async (event) => {
+export async function handler(event) {
 	const {
 		path,
 		httpMethod,
@@ -13,7 +13,7 @@ exports.handler = async (event) => {
 		// isBase64Encoded // TODO is this useful?
 	} = event;
 
-	const query = new url.URLSearchParams();
+	const query = new URLSearchParams();
 	for (const k in queryStringParameters) {
 		const value = queryStringParameters[k];
 		value.split(', ').forEach((v) => {
@@ -21,7 +21,7 @@ exports.handler = async (event) => {
 		});
 	}
 
-	const rendered = await app.render({
+	const rendered = await render({
 		method: httpMethod,
 		headers,
 		path,
@@ -41,4 +41,4 @@ exports.handler = async (event) => {
 		statusCode: 404,
 		body: 'Not found'
 	};
-};
+}

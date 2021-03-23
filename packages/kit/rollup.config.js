@@ -1,29 +1,29 @@
 import commonjs from '@rollup/plugin-commonjs';
-import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
-	Object.keys(process.binding('natives')),
-	resolve('snowpack/pkg')
+	Object.keys(pkg.peerDependencies || {}),
+	Object.keys(process.binding('natives'))
 );
 
 export default [
 	{
-		// TODO could we just put `start.js` in `assets`, and everything
-		// else gets installed to `/web_modules`?
 		input: {
-			'internal/start': 'src/runtime/internal/start.js',
-			'internal/singletons': 'src/runtime/internal/singletons.js',
-			'app/navigation': 'src/runtime/app/navigation/index.js',
-			'app/stores': 'src/runtime/app/stores/index.js',
-			'app/paths': 'src/runtime/app/paths/index.js'
+			'internal/start': 'src/runtime/client/start.js',
+			'internal/singletons': 'src/runtime/client/singletons.js',
+			'app/navigation': 'src/runtime/app/navigation.js',
+			'app/stores': 'src/runtime/app/stores.js',
+			'app/paths': 'src/runtime/app/paths.js',
+			'app/env': 'src/runtime/app/env.js',
+			paths: 'src/runtime/paths.js'
 		},
 		output: {
 			dir: 'assets/runtime',
 			format: 'esm',
-			sourcemap: true,
+			chunkFileNames: 'chunks/[name].js',
 			paths: {
 				ROOT: '../../generated/root.svelte',
 				MANIFEST: '../../generated/manifest.js'
@@ -40,21 +40,23 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			api: 'src/api/index.js',
-			renderer: 'src/renderer/index.js'
+			ssr: 'src/runtime/server/index.js'
 		},
 		output: {
 			dir: 'dist',
-			format: 'cjs',
-			sourcemap: true,
-			chunkFileNames: '[name].js'
+			format: 'esm',
+			chunkFileNames: 'chunks/[name].js'
 		},
 		external: (id) => {
-			if (id.includes('snowpack/snowpack')) return true;
 			return external.includes(id);
 		},
 		plugins: [
-			json(),
+			replace({
+				preventAssignment: true,
+				values: {
+					__VERSION__: pkg.version
+				}
+			}),
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),

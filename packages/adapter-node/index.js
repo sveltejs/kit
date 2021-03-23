@@ -1,17 +1,33 @@
-'use strict';
+const { copyFileSync } = require('fs');
+const { join } = require('path');
 
-const fs = require('fs');
+/**
+ * @param {{
+ *   out?: string;
+ * }} options
+ */
+module.exports = function ({ out = 'build' } = {}) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	const adapter = {
+		name: '@sveltejs/adapter-node',
 
-module.exports = async function adapter(builder) {
-	const out = 'build'; // TODO implement adapter options
+		async adapt(builder) {
+			builder.log.minor('Copying assets');
+			const static_directory = join(out, 'assets');
+			builder.copy_client_files(static_directory);
+			builder.copy_static_files(static_directory);
 
-	builder.copy_server_files(out);
-	builder.copy_client_files(`${out}/assets`);
+			builder.log.minor('Copying server');
+			builder.copy_server_files(out);
 
-	fs.copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
+			copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
 
-	builder.log.info('Prerendering static pages...');
-	await builder.prerender({
-		dest: `${out}/prerendered`
-	});
+			builder.log.minor('Prerendering static pages');
+			await builder.prerender({
+				dest: `${out}/prerendered`
+			});
+		}
+	};
+
+	return adapter;
 };

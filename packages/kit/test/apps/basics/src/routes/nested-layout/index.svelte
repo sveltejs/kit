@@ -1,0 +1,1 @@
+<h1>Hello from inside the nested layout component</h1>

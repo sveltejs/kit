@@ -4,7 +4,8 @@
 
 		if (!user) {
 			return {
-				redirect: { to: '/login', status: 302 }
+				status: 302,
+				redirect: '/login'
 			};
 		}
 
@@ -16,8 +17,8 @@
 
 <script>
 	import { session } from '$app/stores';
-	import ListErrors from '$components/ListErrors.svelte';
-	import { post } from '$common/utils.js';
+	import ListErrors from '$lib/ListErrors.svelte';
+	import { post } from '$lib/utils.js';
 
 	export let user;
 

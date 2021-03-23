@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: 'Bug'
 assignees: ''
-
 ---
 
 **Describe the bug**
@@ -18,8 +17,8 @@ Please make sure you've tested with the latest versions of Svelte and SvelteKit.
 
 To help us help you, if you've found a bug please consider the following:
 
-* If possible, we recommend creating a small repo that illustrates the problem.
-* Reproductions should be small, self-contained, correct examples – http://sscce.org.
+- If possible, we recommend creating a small repo that illustrates the problem.
+- Reproductions should be small, self-contained, correct examples – http://sscce.org.
 
 Occasionally, this won't be possible, and that's fine – we still appreciate you raising the issue. But please understand that Svelte is run by unpaid volunteers in their free time, and issues that follow these instructions will get fixed faster.
 
@@ -32,12 +31,13 @@ If you have a stack trace to include, we recommend putting inside a `<details>` 
 <details>
   <summary>Stack trace</summary>
 
-  Stack trace goes here...
+Stack trace goes here...
+
 </details>
 
 **Information about your SvelteKit Installation:**
 
-- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/snowpack-config --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit --binaries --browsers`
 
 - Your browser
 

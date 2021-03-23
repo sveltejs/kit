@@ -1,5 +1,31 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.2
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+- Updated dependencies [c3cf3f3]
+  - @sveltejs/app-utils@1.0.0-next.3
+
+## 1.0.0-next.1
+
+### Patch Changes
+
+- Use new app-utils format
+
 ## 0.0.5
 
 ### Patch Changes

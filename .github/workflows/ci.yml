@@ -14,52 +14,76 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        # Run only on Node 12 while repo is private to save minutes
-        # node-version: [12, 14]
-        node-version: [12]
-        # don't include macOS-latest while repo is private because it is charged at 10x rate
-        # same with windows-latest charged at 2x rate
-        # os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [ubuntu-latest]
+        node-version: [12, 14, 15]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
-    - run: git config --global core.autocrlf false
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm install -g pnpm
-    - run: pnpm install --frozen-lockfile
-    - run: pnpm build --filter ./packages
-    - run: pnpm test
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Get windows pnpm cache path
+        if: runner.os == 'windows'
+        run: echo "cache_path=D:\.pnpm-store\v3" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Get non-windows pnpm cache path
+        if: runner.os != 'windows'
+        run: echo "cache_path=~/.pnpm-store/v3" >> $GITHUB_ENV
+      - name: Cache ~/.pnpm-store
+        uses: actions/cache@main
+        with:
+          path: ${{ env.cache_path }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}
+      - run: npm install -g pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter ./packages
+      - run: pnpm test
   Examples:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 6
     strategy:
       matrix:
-        # Run only on Node 12 while repo is private to save minutes
-        # node-version: [12, 14]
-        node-version: [12]
-        # don't include macOS-latest while repo is private because it is charged at 10x rate
-        # same with windows-latest charged at 2x rate
-        # os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [ubuntu-latest]
+        node-version: [12, 14, 15]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
     steps:
-    - run: git config --global core.autocrlf false
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - run: npm install -g pnpm
-    - run: pnpm install --frozen-lockfile
-    - run: pnpm -r build
+      - run: git config --global core.autocrlf false
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Get windows pnpm cache path
+        if: runner.os == 'windows'
+        run: echo "cache_path=D:\.pnpm-store\v3" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Get non-windows pnpm cache path
+        if: runner.os != 'windows'
+        run: echo "cache_path=~/.pnpm-store/v3" >> $GITHUB_ENV
+      - name: Cache ~/.pnpm-store
+        uses: actions/cache@main
+        with:
+          path: ${{ env.cache_path }}
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}
+      - run: npm install -g pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
   Lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-    - run: npm install -g pnpm
-    - run: pnpm install --frozen-lockfile
-    - run: pnpm build --filter ./packages
-    - run: pnpm lint
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Cache ~/.pnpm-store
+        uses: actions/cache@main
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}
+      - run: npm install -g pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter ./packages
+      - run: pnpm lint
+      - run: pnpm check
