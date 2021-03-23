@@ -1,6 +1,6 @@
 # READ THIS FIRST!
 
-Here we are, finally SvelteKit is public beta. It's not finished — there are a few known bugs and several missing features — but we're really happy with how it's shaping up and can't wait for you to try it. You can read [announcement](https://svelte.dev/blog/sveltekit-beta) on our blog, where You will find also some informations about how to start with SvelteKit. We still have a lot of work to do to version 1.0, like bringing new adapters, upgrading documentation, and kill some bugs, that want to eat our dinner.
+SvelteKit is still in beta. Expect bugs! Read more [here](https://svelte.dev/blog/sveltekit-beta), and track progress towards 1.0 [here](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0).
 
 ## Documentation
 
