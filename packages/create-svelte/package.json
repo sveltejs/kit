@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.40",
+	"version": "2.0.0-next.41",
 	"bin": "./bin",
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",

@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.41
+
+### Patch Changes
+
+- 8024178: remove @sveltejs/app-utils
+
 ## 2.0.0-next.40
 
 ### Patch Changes
