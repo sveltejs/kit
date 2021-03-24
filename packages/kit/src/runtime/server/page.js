@@ -26,7 +26,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
 
-	/** @type {Array<{ url: string, headers: import('types.internal').Headers, response: Response }>} */
+	/** @type {Array<{ url: string, response: Response }>} */
 	const inline_data = [];
 
 	const match = route && route.pattern.exec(request.path);
@@ -126,23 +126,10 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			const clone = response.clone();
-
-			/** @type {import('types.internal').Headers} */
-			const headers = {};
-			clone.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
+			inline_data.push({
+				url,
+				response: response.clone()
 			});
-
-			const payload = JSON.stringify({
-				status: clone.status,
-				statusText: clone.statusText,
-				headers,
-				body: await clone.text() // TODO handle binary data
-			});
-
-			// TODO i guess we need to sanitize/escape this... somehow?
-			inline_data.push({ url, headers, response: clone });
 
 			return response;
 		}
@@ -356,7 +343,13 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let body = rendered.html;
 
 	if (!options.amp) {
-		for (const { url, headers, response } of inline_data) {
+		for (const { url, response } of inline_data) {
+			/** @type {import('types.internal').Headers} */
+			const headers = {};
+			response.headers.forEach((value, key) => {
+				if (key !== 'etag') headers[key] = value;
+			});
+
 			const payload = JSON.stringify({
 				status: response.status,
 				statusText: response.statusText,
@@ -364,6 +357,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				body: await response.text() // TODO handle binary data
 			});
 
+			// TODO i guess we need to sanitize/escape this... somehow?
 			body += `\n\n\t<script type="svelte-data" url="${url}">${payload}</script>`;
 		}
 	}
