@@ -387,6 +387,15 @@ async function get_response({ request, options, $session, route, status = 200, e
  * @returns {Promise<import('types.internal').SKResponse>}
  */
 export default async function render_page(request, route, context, options) {
+	if (options.initiator === route) {
+		// infinite request cycle detected
+		return {
+			status: 404,
+			headers: {},
+			body: `Not found: ${request.path}`
+		};
+	}
+
 	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
 
 	const response = await get_response({
