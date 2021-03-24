@@ -1,5 +1,5 @@
-import * as api from '$common/api.js';
-import { page_size } from '$common/constants.js';
+import * as api from '$lib/api.js';
+import { page_size } from '$lib/constants.js';
 
 export async function get_articles(request, context, type) {
 	const p = +request.query.get('page') || 1;

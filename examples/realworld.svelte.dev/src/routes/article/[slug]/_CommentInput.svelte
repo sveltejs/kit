@@ -1,7 +1,7 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import { placeholder } from '$common/constants.js';
-	import { ajax } from '$common/actions.js';
+	import { placeholder } from '$lib/constants.js';
+	import { ajax } from '$lib/actions.js';
 
 	export let slug;
 	export let user;

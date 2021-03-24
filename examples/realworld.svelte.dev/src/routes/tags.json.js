@@ -1,4 +1,4 @@
-import * as api from '$common/api';
+import * as api from '$lib/api';
 
 export async function get() {
 	const { tags } = await api.get('tags');

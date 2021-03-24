@@ -1,4 +1,4 @@
-import * as api from '$common/api.js';
+import * as api from '$lib/api.js';
 
 export async function del(request, context) {
 	if (!context.user) {

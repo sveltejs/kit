@@ -1,5 +1,5 @@
-import * as api from '$common/api';
-import { page_size } from '$common/constants';
+import * as api from '$lib/api';
+import { page_size } from '$lib/constants';
 
 export async function get(request, context) {
 	const tab = request.query.get('tab') || 'all';

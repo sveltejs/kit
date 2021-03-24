@@ -1,4 +1,4 @@
-import * as api from '$common/api.js';
+import * as api from '$lib/api.js';
 
 export async function get(request, context) {
 	const { profile } = await api.get(

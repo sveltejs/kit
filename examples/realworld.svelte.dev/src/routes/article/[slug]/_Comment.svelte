@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import { ajax } from '$common/actions.js';
+	import { ajax } from '$lib/actions.js';
 
 	export let comment;
 	export let slug;
