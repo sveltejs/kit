@@ -14,9 +14,9 @@ Then in your `svelte.config.js`:
 const vercel = require('@sveltejs/adapter-vercel');
 
 module.exports = {
-  kit: {
-    adapter: vercel(),
-    target: '#svelte',
-  }
+	kit: {
+		...
+		adapter: vercel()
+	}
 };
 ```
