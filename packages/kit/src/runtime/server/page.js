@@ -397,9 +397,10 @@ async function get_response({ request, options, context, $session, route, status
 	}
 
 	let template = options.template({ head, body });
-	template =
-		(await (options.setup.transformTemplate &&
-			options.setup.transformTemplate({ template, context }))) || template;
+
+	if (options.setup.transformTemplate) {
+		template = (await options.setup.transformTemplate({ template, context })) || template;
+	}
 
 	return {
 		status,
