@@ -42,10 +42,32 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let uses_credentials = false;
 
 	/**
-	 * @param {string} url
+	 * @param {RequestInfo} resource
 	 * @param {RequestInit} opts
 	 */
-	const fetcher = async (url, opts = {}) => {
+	const fetcher = async (resource, opts = {}) => {
+		/** @type {string} */
+		let url;
+
+		if (typeof resource === 'string') {
+			url = resource;
+		} else {
+			url = resource.url;
+
+			opts = {
+				method: resource.method,
+				headers: resource.headers,
+				body: resource.body,
+				mode: resource.mode,
+				credentials: resource.credentials,
+				cache: resource.cache,
+				redirect: resource.redirect,
+				referrer: resource.referrer,
+				integrity: resource.integrity,
+				...opts
+			};
+		}
+
 		if (options.local && url.startsWith(options.paths.assets)) {
 			// when running `start`, or prerendering, `assets` should be
 			// config.kit.paths.assets, but we should still be able to fetch
