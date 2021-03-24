@@ -1,12 +1,14 @@
 <script context="module">
+	/** @type {import('../../../../../../../types').Load} */
 	export async function load({ fetch }) {
-		const letter = await fetch('/routing/prefetched.json').then(r => r.json());
-		return { props: { letter } };
+		const message = await fetch('/routing/prefetched.json').then(r => r.json());
+		return { props: { message } };
 	}
 </script>
 
 <script>
-	export let letter;
+	/** @type {string} */
+	export let message;
 </script>
 
-<h1>{letter}</h1>
+<h1>{message}</h1>
