@@ -2,9 +2,9 @@
 title: Setup
 ---
 
-An optional `src/setup.js` (or `src/setup.ts`, or `src/setup/index.js`) file exports two functions that run on the server — **prepare** and **getSession**.
+An optional `src/setup.js` (or `src/setup.ts`, or `src/setup/index.js`) file exports three functions that run on the server — **prepare**, **transformTemplate** and **getSession**.
 
-Both functions, if provided, run for every page or endpoint request SvelteKit receives.
+These functions, if provided, run for every page or endpoint request SvelteKit receives.
 
 > The location of this file can be [configured](#configuration) as `config.kit.files.setup`
 
@@ -65,16 +65,18 @@ export async function prepare(incoming) {
 		headers['set-cookie'] = `session_id=${uuid()}; HttpOnly`;
 	}
 
+	const darkMode = cookies.darkMode || false;
+
 	return {
 -		headers
 +		headers,
 +		context: {
-+			user: await db.get_user(cookies.session_id)
++			user: await db.get_user(cookies.session_id),
++			darkMode,
 +		}
 	};
 }
 ```
-
 
 ### getSession
 
@@ -102,3 +104,41 @@ export function getSession({ context }) {
 ```
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+
+### transformTemplate
+
+This function takes the `src/app.html template` and the `context` returned from `prepare`. It should return the template after transforming it.
+
+```js
+/**
+ * @param {{
+ *   template: string
+ *   context: any
+ * }} options
+ * @returns {string}
+ */
+export function getSession({ context, template }) {
+	if (!context.darkMode) {
+		return template;
+	}
+
+	return template.replace('%My.HtmlClass%', 'dark');
+}
+```
+
+> The corresponding `src/app.html` file would look like this:
+
+```html
+<!DOCTYPE html>
+<html class="%My.HtmlClass%" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		%svelte.head%
+	</head>
+	<body>
+		<div id="svelte">%svelte.body%</div>
+	</body>
+</html>
+```

@@ -185,6 +185,7 @@ export type SSRRenderOptions = {
 			headers?: Headers;
 		};
 		getSession?: ({ context }: { context: any }) => any;
+		transformTemplate?: ({ context, template }: { context: any; template: string }) => string;
 	};
 	dev?: boolean;
 	amp?: boolean;

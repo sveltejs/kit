@@ -10,13 +10,14 @@ import { ssr } from './index.js';
  *   request: import('types.internal').Request;
  *   options: import('types.internal').SSRRenderOptions;
  *   $session: any;
+ *   context: any;
  *   route: import('types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
  * @returns {Promise<import('types.internal').SKResponse>}
  */
-async function get_response({ request, options, $session, route, status = 200, error }) {
+async function get_response({ request, options, context, $session, route, status = 200, error }) {
 	const host = options.host || request.headers[options.host_header];
 
 	/** @type {Record<string, import('types.internal').SKResponse>} */
@@ -181,7 +182,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const components = [];
 	const props_promises = [];
 
-	let context = {};
+	let loadContext = {};
 	let maxage;
 
 	if (options.only_render_prerenderable_pages) {
@@ -214,7 +215,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						return $session;
 					},
 					fetch: fetcher,
-					context: { ...context }
+					context: { ...loadContext }
 				});
 
 				if (!loaded) return;
@@ -241,6 +242,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					options,
 					$session,
 					route,
+					context,
 					status: loaded.status,
 					error: loaded.error
 				});
@@ -256,8 +258,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 			}
 
 			if (loaded.context) {
-				context = {
-					...context,
+				loadContext = {
+					...loadContext,
 					...loaded.context
 				};
 			}
@@ -314,6 +316,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			request,
 			options,
 			$session,
+			context,
 			route,
 			status: 500,
 			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
@@ -393,10 +396,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 		headers['cache-control'] = `${uses_credentials ? 'private' : 'public'}, max-age=${maxage}`;
 	}
 
+	let template = options.template({ head, body });
+	template =
+		(await (options.setup.transformTemplate &&
+			options.setup.transformTemplate({ template, context }))) || template;
+
 	return {
 		status,
 		headers,
-		body: options.template({ head, body }),
+		body: template,
 		dependencies
 	};
 }
@@ -424,6 +432,7 @@ export default async function render_page(request, route, context, options) {
 		request,
 		options,
 		$session,
+		context,
 		route,
 		status: route ? 200 : 404,
 		error: route ? null : new Error(`Not found: ${request.path}`)
