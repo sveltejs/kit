@@ -1,10 +1,6 @@
-import fs from 'fs';
 import { bold, green } from 'kleur/colors';
-import { join } from 'path';
 import {
-	add_svelte_preprocess_to_config,
 	copy_from_template_additions,
-	update_component,
 	update_package_json_dev_deps,
 	upsert_package_json_scripts
 } from './utils';
