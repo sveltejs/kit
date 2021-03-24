@@ -86,7 +86,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'the answer is 42');
 	});
 
-	test.only('handles large responses', '/load', async ({ base, page, app, js }) => {
+	test('handles large responses', '/load', async ({ base, page }) => {
 		const port = await ports.find(4000);
 
 		const chunk_size = 50000;
