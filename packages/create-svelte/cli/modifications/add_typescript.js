@@ -1,11 +1,22 @@
 import fs from 'fs';
 import { bold, green } from 'kleur/colors';
 import { join } from 'path';
-import { add_svelte_preprocess_to_config, update_component, update_package_json } from './utils';
+import {
+	add_svelte_preprocess_to_config,
+	copy_from_template_additions,
+	update_component,
+	update_package_json_dev_deps
+} from './utils';
 
+/**
+ * Add TypeScript if user wants it.
+ *
+ * @param {string} cwd
+ * @param {boolean} yes
+ */
 export default async function add_typescript(cwd, yes) {
 	if (yes) {
-		update_package_json(cwd, {
+		update_package_json_dev_deps(cwd, {
 			typescript: '^4.0.0',
 			tslib: '^2.0.0',
 			'svelte-preprocess': '^4.0.0'
@@ -31,11 +42,10 @@ export default async function add_typescript(cwd, yes) {
 	}
 }
 
+/**
+ * @param {string} cwd
+ */
 function add_tsconfig(cwd) {
 	fs.unlinkSync(join(cwd, 'jsconfig.json'));
-	copy_from_ts_template(cwd, 'tsconfig.json');
-}
-
-function copy_from_ts_template(cwd, ...path) {
-	fs.copyFileSync(join(__dirname, 'ts-template', ...path), join(cwd, ...path));
+	copy_from_template_additions(cwd, ['tsconfig.json']);
 }

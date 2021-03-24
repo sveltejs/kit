@@ -22,6 +22,6 @@
 	},
 	"files": [
 		"template",
-		"ts-template"
+		"template-additions"
 	]
 }
