@@ -28,15 +28,6 @@ export async function ssr(request, options) {
 
 	try {
 		for (const route of options.manifest.routes) {
-			if (options.initiator === route) {
-				// infinite request cycle detected
-				return {
-					status: 404,
-					headers: {},
-					body: `Not found: ${request.path}`
-				};
-			}
-
 			if (route.pattern.test(request.path)) {
 				const response =
 					route.type === 'endpoint'
