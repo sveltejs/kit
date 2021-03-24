@@ -26,8 +26,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
 
-	/** @type {Array<{ url: string, payload: string }>} */
-	const serialized_data = [];
+	/** @type {Array<{ url: string, headers: import('types.internal').Headers, response: Response }>} */
+	const inline_data = [];
 
 	const match = route && route.pattern.exec(request.path);
 	const params = route && route.params(match);
@@ -142,7 +142,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			});
 
 			// TODO i guess we need to sanitize/escape this... somehow?
-			serialized_data.push({ url, payload });
+			inline_data.push({ url, headers, response: clone });
 
 			return response;
 		}
@@ -353,14 +353,20 @@ async function get_response({ request, options, $session, route, status = 200, e
 		init
 	].join('\n\n');
 
-	const body = options.amp
-		? rendered.html
-		: `${rendered.html}
+	let body = rendered.html;
 
-			${serialized_data
-				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)
-				.join('\n\n\t\t\t')}
-		`.replace(/^\t{2}/gm, '');
+	if (!options.amp) {
+		for (const { url, headers, response } of inline_data) {
+			const payload = JSON.stringify({
+				status: response.status,
+				statusText: response.statusText,
+				headers,
+				body: await response.text() // TODO handle binary data
+			});
+
+			body += `\n\n\t<script type="svelte-data" url="${url}">${payload}</script>`;
+		}
+	}
 
 	/** @type {import('types.internal').Headers} */
 	const headers = {
