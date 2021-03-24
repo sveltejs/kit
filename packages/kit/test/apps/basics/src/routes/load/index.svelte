@@ -17,3 +17,5 @@
 </script>
 
 <h1>bar == {foo}?</h1>
+
+<a href="/load/fetch-request">fetch request</a>

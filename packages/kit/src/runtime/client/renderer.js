@@ -301,11 +301,12 @@ export class Renderer {
 		};
 
 		/**
-		 * @param {string} url
+		 * @param {RequestInfo} resource
 		 * @param {RequestInit} opts
 		 */
-		const fetcher = (url, opts) => {
+		const fetcher = (resource, opts) => {
 			if (!this.started) {
+				const url = typeof resource === 'string' ? resource : resource.url;
 				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
 				if (script) {
 					const { body, ...init } = JSON.parse(script.textContent);
@@ -313,7 +314,7 @@ export class Renderer {
 				}
 			}
 
-			return fetch(url, opts);
+			return fetch(resource, opts);
 		};
 
 		const query = page.query.toString();
