@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.56
+
+### Patch Changes
+
+- 82cbe2b: Shrink client manifest
+- 8024178: remove @sveltejs/app-utils
+
 ## 1.0.0-next.55
 
 ### Patch Changes

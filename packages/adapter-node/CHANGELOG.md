@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- 8024178: remove @sveltejs/app-utils
+
 ## 1.0.0-next.9
 
 ### Patch Changes
