@@ -37,6 +37,15 @@ export default class Builder {
 		rimraf(path);
 	}
 
+	/**
+	 * @param {string} from
+	 * @param {string} to
+	 * @param {(basename: string) => boolean} filter
+	 */
+	copy(from, to, filter = () => true) {
+		copy(from, to, filter);
+	}
+
 	/** @param {string} dir */
 	mkdirp(dir) {
 		mkdirp(dir);
