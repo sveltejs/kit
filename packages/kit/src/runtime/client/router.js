@@ -142,11 +142,10 @@ export class Router {
 		const routes = this.routes.filter(([pattern]) => pattern.test(path));
 
 		if (routes.length > 0) {
-			return {
-				routes,
-				path,
-				query: new URLSearchParams(url.search)
-			};
+			const query = new URLSearchParams(url.search);
+			const id = `${path}?${query}`;
+
+			return { id, routes, path, query };
 		}
 	}
 
