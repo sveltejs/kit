@@ -1,5 +1,6 @@
 import { URL, URLSearchParams } from 'url';
-import { get_body } from '@sveltejs/app-utils/http';
+// eslint-disable-next-line import/no-unresolved
+import { get_body } from '@sveltejs/kit/http';
 
 export default async (req, res) => {
 	const host = `${req.headers['x-forwarded-proto']}://${req.headers.host}`;

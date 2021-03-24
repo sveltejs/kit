@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { mkdirp } from '../filesystem/index.js';
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();

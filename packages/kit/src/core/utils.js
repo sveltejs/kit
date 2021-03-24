@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'path';
 import colors from 'kleur';
-import { copy } from '@sveltejs/app-utils/files';
+import { copy } from './filesystem/index.js';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
 

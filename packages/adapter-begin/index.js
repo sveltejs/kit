@@ -1,5 +1,4 @@
 import { readFileSync, existsSync } from 'fs';
-import { copy } from '@sveltejs/app-utils/files';
 import { resolve, join } from 'path';
 import parse from '@architect/parser';
 
@@ -40,7 +39,7 @@ export default function () {
 
 			builder.log.minor('Building lambda...');
 			const local_lambda_dir = join(__dirname, 'files');
-			copy(local_lambda_dir, lambda_directory);
+			builder.copy(local_lambda_dir, lambda_directory);
 
 			builder.log.minor('Writing server application...');
 			builder.copy_server_files(server_directory);
