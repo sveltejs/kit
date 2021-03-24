@@ -117,7 +117,7 @@ This function takes the `src/app.html template` and the `context` returned from 
  * }} options
  * @returns {string}
  */
-export function getSession({ context, template }) {
+export function transformTemplate({ context, template }) {
 	if (!context.darkMode) {
 		return template;
 	}
