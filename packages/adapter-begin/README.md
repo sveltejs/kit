@@ -4,12 +4,18 @@ Adapter for Svelte apps that creates a [Begin](https://begin.com/) app, using a 
 
 ## Configuration
 
-Add the adapter to your `svelte.config.cjs`:
+Add `"@sveltejs/adapter-begin": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
+
+Then add the adapter to your `svelte.config.cjs`:
 
 ```js
+const begin = require('@sveltejs/adapter-begin');
+
 module.exports = {
-  ...
-	adapter: '@sveltejs/adapter-begin'
+	kit: {
+		...
+		adapter: begin()
+	}
 };
 ```
 
