@@ -148,23 +148,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			const clone = response.clone();
+			// const clone = response.clone();
 
-			/** @type {import('types.internal').Headers} */
-			const headers = {};
-			clone.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
-			});
+			// /** @type {import('types.internal').Headers} */
+			// const headers = {};
+			// clone.headers.forEach((value, key) => {
+			// 	if (key !== 'etag') headers[key] = value;
+			// });
 
-			const payload = JSON.stringify({
-				status: clone.status,
-				statusText: clone.statusText,
-				headers,
-				body: await clone.text() // TODO handle binary data
-			});
+			// const payload = JSON.stringify({
+			// 	status: clone.status,
+			// 	statusText: clone.statusText,
+			// 	headers,
+			// 	body: await clone.text() // TODO handle binary data
+			// });
 
-			// TODO i guess we need to sanitize/escape this... somehow?
-			serialized_data.push({ url, payload });
+			// // TODO i guess we need to sanitize/escape this... somehow?
+			// serialized_data.push({ url, payload });
 
 			return response;
 		}
