@@ -76,6 +76,12 @@ async function main() {
 
 	await prompt_modifications(target);
 
+	console.log(
+		'\nWant to add other parts to your code base? ' +
+			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
+			'to add particular functionality to Svelte projects\n'
+	);
+
 	console.log('\nNext steps:');
 	let i = 1;
 
