@@ -17,7 +17,7 @@ export default async function render_route(request, route, context, options) {
 
 		const response = await handler(
 			{
-				host: options.host || request.headers[options.host_header || 'host'],
+				host: request.host,
 				path: request.path,
 				headers: request.headers,
 				query: request.query,

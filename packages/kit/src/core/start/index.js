@@ -44,7 +44,8 @@ export async function start({ port, config, cwd = process.cwd() }) {
 				static_handler(req, res, async () => {
 					const rendered = await app.render(
 						{
-							host: `localhost:${port}`,
+							host: /** @type {string} */ (config.kit.host ||
+								req.headers[config.kit.hostHeader || 'host']),
 							method: req.method,
 							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							path: parsed.pathname,

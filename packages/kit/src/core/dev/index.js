@@ -135,11 +135,14 @@ class Watcher extends EventEmitter {
 
 					const body = await get_body(req);
 
+					const host = /** @type {string} */ (this.config.kit.host ||
+						req.headers[this.config.kit.hostHeader || 'host']);
+
 					const rendered = await ssr(
 						{
 							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							method: req.method,
-							host: null,
+							host,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body
@@ -205,8 +208,6 @@ class Watcher extends EventEmitter {
 							root,
 							setup,
 							only_render_prerenderable_pages: false,
-							host: this.config.kit.host,
-							host_header: this.config.kit.hostHeader,
 							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);

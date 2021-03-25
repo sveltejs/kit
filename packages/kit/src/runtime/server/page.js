@@ -19,8 +19,6 @@ const s = JSON.stringify;
  * @returns {Promise<import('types.internal').SKResponse>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
-	const host = options.host || request.headers[options.host_header];
-
 	/** @type {Record<string, import('types.internal').SKResponse>} */
 	const dependencies = {};
 
@@ -43,7 +41,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const params = route && route.params(match);
 
 	const page = {
-		host,
+		host: request.host,
 		path: request.path,
 		query: request.query,
 		params
@@ -395,7 +393,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						.join(',\n\t\t\t\t\t')}
 				],
 				page: {
-					host: ${host ? s(host) : 'location.host'},
+					host: ${s(request.host || 'location.host')},
 					path: ${s(request.path)},
 					query: new URLSearchParams(${s(request.query.toString())}),
 					params: ${s(params)}
