@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Check if router is defined when prefetching
+Move prefetch handling to `Router` init
