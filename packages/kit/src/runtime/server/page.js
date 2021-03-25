@@ -9,17 +9,17 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types.internal').Request;
+ *   request: import('types').Request;
  *   options: import('types.internal').SSRRenderOptions;
  *   $session: any;
  *   route: import('types.internal').SSRPage;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('types.internal').SKResponse>}
+ * @returns {Promise<import('types.internal').ResponseWithDependencies>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
-	/** @type {Record<string, import('types.internal').SKResponse>} */
+	/** @type {Record<string, import('types.internal').ResponseWithDependencies>} */
 	const dependencies = {};
 
 	const serialized_session = try_serialize($session, (error) => {
@@ -132,7 +132,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						method: opts.method || 'GET',
 						headers: /** @type {import('types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
 						path: resolved,
-						body: opts.body,
+						body: /** @type {any} */ (opts.body),
 						query: new URLSearchParams(parsed.query || '')
 					},
 					{
@@ -435,13 +435,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 }
 
 /**
- * @param {import('types.internal').Request} request
+ * @param {import('types').Request} request
  * @param {import('types.internal').SSRPage} route
- * @param {any} context
  * @param {import('types.internal').SSRRenderOptions} options
- * @returns {Promise<import('types.internal').SKResponse>}
+ * @returns {Promise<import('types.internal').ResponseWithDependencies>}
  */
-export default async function render_page(request, route, context, options) {
+export default async function render_page(request, route, options) {
 	if (options.initiator === route) {
 		// infinite request cycle detected
 		return {
@@ -451,7 +450,7 @@ export default async function render_page(request, route, context, options) {
 		};
 	}
 
-	const $session = await (options.setup.getSession && options.setup.getSession({ context }));
+	const $session = await options.hooks.getSession({ context: request.context });
 
 	const response = await get_response({
 		request,

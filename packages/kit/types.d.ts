@@ -9,10 +9,10 @@ export type Config = {
 		appDir?: string;
 		files?: {
 			assets?: string;
+			hooks?: string;
 			lib?: string;
 			routes?: string;
 			serviceWorker?: string;
-			setup?: string;
 			template?: string;
 		};
 		host?: string;
@@ -55,22 +55,34 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 	values: () => Iterator<string>;
 }
 
-export interface RequestHandlerResponse {
-	status?: number;
-	headers?: Record<string, string>;
-	body?: any;
-}
+export type Incoming = {
+	method: string;
+	host: string;
+	headers: Headers;
+	path: string;
+	query: URLSearchParams;
+	body: string | Buffer | ReadOnlyFormData;
+};
 
-export type RequestHandler = (
-	request?: {
-		host: string;
-		headers: Headers;
-		path: string;
-		params: Record<string, string>;
-		query: URLSearchParams;
-		body: string | Buffer | ReadOnlyFormData;
-	},
-	context?: any
-) => RequestHandlerResponse | Promise<RequestHandlerResponse>;
+export type Request<Context = any> = {
+	method: string;
+	host: string;
+	headers: Headers;
+	path: string;
+	params: Record<string, string>;
+	query: URLSearchParams;
+	body: string | Buffer | ReadOnlyFormData;
+	context: Context;
+};
+
+export type Response = {
+	status?: number;
+	headers?: Headers;
+	body?: any;
+};
+
+export type RequestHandler<Context = any> = (
+	request?: Request<Context>
+) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;

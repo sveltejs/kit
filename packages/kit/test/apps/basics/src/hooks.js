@@ -1,8 +1,6 @@
-export function prepare() {
+export function getContext() {
 	return {
-		context: {
-			answer: 42
-		}
+		answer: 42
 	};
 }
 

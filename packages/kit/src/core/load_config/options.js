@@ -62,9 +62,11 @@ const options = {
 				type: 'branch',
 				children: {
 					assets: expect_string('static'),
+					hooks: expect_string('src/hooks'),
 					lib: expect_string('src/lib'),
 					routes: expect_string('src/routes'),
 					serviceWorker: expect_string('src/service-worker'),
+					// TODO remove this, eventually
 					setup: expect_string('src/setup'),
 					template: expect_string('src/app.html')
 				}

@@ -1,1 +1,1 @@
-export async function post(request, context) {}
+export async function post(request) {}

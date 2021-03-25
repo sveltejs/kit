@@ -183,9 +183,12 @@ export default function (test, is_dev) {
 		assert.match(await res.text(), /PUT is not implemented/);
 	});
 
-	test('error in endpoint', async ({ base, page }) => {
+	test('error in endpoint', null, async ({ base, page }) => {
+		/** @type {string[]} */
 		const console_errors = [];
 		const { error: original_error } = console;
+
+		/** @param {string} text */
 		console.error = (text) => {
 			console_errors.push(text);
 		};

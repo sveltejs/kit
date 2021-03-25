@@ -8,63 +8,64 @@ function md5(body) {
 }
 
 /**
- * @param {import('../../../types.internal').Request} request
+ * @param {import('../../../types').Incoming} incoming
  * @param {import('../../../types.internal').SSRRenderOptions} options
  */
-export async function ssr(request, options) {
-	if (request.path.endsWith('/') && request.path !== '/') {
-		const q = request.query.toString();
+export async function ssr(incoming, options) {
+	if (incoming.path.endsWith('/') && incoming.path !== '/') {
+		const q = incoming.query.toString();
 
 		return {
 			status: 301,
 			headers: {
-				location: request.path.slice(0, -1) + (q ? `?${q}` : '')
+				location: incoming.path.slice(0, -1) + (q ? `?${q}` : '')
 			}
 		};
 	}
 
-	const { context, headers = {} } =
-		(await (options.setup.prepare && options.setup.prepare({ headers: request.headers }))) || {};
+	const context = (await options.hooks.getContext(incoming)) || {};
 
 	try {
-		for (const route of options.manifest.routes) {
-			if (route.pattern.test(request.path)) {
-				const response =
-					route.type === 'endpoint'
-						? await render_endpoint(request, route, context, options)
-						: await render_page(request, route, context, options);
+		return await options.hooks.handle(
+			{
+				...incoming,
+				params: null,
+				context
+			},
+			async (request) => {
+				for (const route of options.manifest.routes) {
+					if (route.pattern.test(request.path)) {
+						const response =
+							route.type === 'endpoint'
+								? await render_endpoint(request, route)
+								: await render_page(request, route, options);
 
-				if (response) {
-					// inject ETags for 200 responses
-					if (response.status === 200) {
-						if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-							const etag = `"${md5(response.body)}"`;
+						if (response) {
+							// inject ETags for 200 responses
+							if (response.status === 200) {
+								if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
+									const etag = `"${md5(response.body)}"`;
 
-							if (request.headers['if-none-match'] === etag) {
-								return {
-									status: 304,
-									headers: {},
-									body: null
-								};
+									if (request.headers['if-none-match'] === etag) {
+										return {
+											status: 304,
+											headers: {},
+											body: null
+										};
+									}
+
+									response.headers['etag'] = etag;
+								}
 							}
 
-							response.headers['etag'] = etag;
+							return response;
 						}
 					}
-
-					return {
-						status: response.status,
-						// TODO header merging is more involved than this — see the 'message.headers'
-						// section of https://nodejs.org/api/http.html#http_class_http_incomingmessage
-						headers: { ...headers, ...response.headers },
-						body: response.body,
-						dependencies: response.dependencies
-					};
 				}
-			}
-		}
 
-		return await render_page(request, null, context, options);
+				return await render_page(request, null, options);
+			}
+		);
 	} catch (e) {
 		if (e && e.stack) {
 			e.stack = await options.get_stack(e);
@@ -74,7 +75,7 @@ export async function ssr(request, options) {
 
 		return {
 			status: 500,
-			headers,
+			headers: {},
 			body: options.dev ? e.stack : e.message
 		};
 	}
