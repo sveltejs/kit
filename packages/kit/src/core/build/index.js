@@ -472,7 +472,7 @@ async function build_service_worker(
 					.join(',\n\t\t\t\t')}
 			];
 
-			export const assets = [
+			export const files = [
 				${manifest.assets
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
