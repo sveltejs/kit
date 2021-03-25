@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.59
+
+### Patch Changes
+
+- 826f39e: Make prefetching work
+
 ## 1.0.0-next.58
 
 ### Patch Changes
