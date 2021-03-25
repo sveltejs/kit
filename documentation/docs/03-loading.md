@@ -32,7 +32,7 @@ type LoadOutput = {
 ```html
 <script context="module">
 	/**
-	 * @type {import('@sveltejs/kit).Load}
+	 * @type {import('@sveltejs/kit').Load}
 	 */
 	export async function load({ page, fetch, session, context }) {
 		const url = `/blog/${page.params.slug}.json`;
