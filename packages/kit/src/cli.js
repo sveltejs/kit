@@ -49,7 +49,13 @@ function handle_error(error) {
 /** @param {number} port */
 async function launch(port) {
 	const { exec } = await import('child_process');
-	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
+	let cmd = 'open';
+	if (process.platform == 'win32') {
+		cmd = 'start';
+	} else if (process.platform == 'linux') {
+		cmd = 'xdg-open';
+	}
+	exec(`${cmd} http://localhost:${port}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
