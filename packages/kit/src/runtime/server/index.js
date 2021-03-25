@@ -34,32 +34,32 @@ export async function ssr(incoming, options) {
 			},
 			async (request) => {
 				for (const route of options.manifest.routes) {
-					if (route.pattern.test(request.path)) {
-						const response =
-							route.type === 'endpoint'
-								? await render_endpoint(request, route)
-								: await render_page(request, route, options);
+					if (!route.pattern.test(request.path)) continue;
 
-						if (response) {
-							// inject ETags for 200 responses
-							if (response.status === 200) {
-								if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-									const etag = `"${md5(response.body)}"`;
+					const response =
+						route.type === 'endpoint'
+							? await render_endpoint(request, route)
+							: await render_page(request, route, options);
 
-									if (request.headers['if-none-match'] === etag) {
-										return {
-											status: 304,
-											headers: {},
-											body: null
-										};
-									}
+					if (response) {
+						// inject ETags for 200 responses
+						if (response.status === 200) {
+							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
+								const etag = `"${md5(response.body)}"`;
 
-									response.headers['etag'] = etag;
+								if (request.headers['if-none-match'] === etag) {
+									return {
+										status: 304,
+										headers: {},
+										body: null
+									};
 								}
-							}
 
-							return response;
+								response.headers['etag'] = etag;
+							}
 						}
+
+						return response;
 					}
 				}
 
