@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### getContext
 
-This function runs on every incoming request, and generates the `context` property passed to [endpoint handlers](#routing-endpoints) and used to derive the [`session`](#hooks-getsession) object available in the browser.
+This function runs on every incoming request. It generates the `context` object that is available to [endpoint handlers](#routing-endpoints) as `request.context`, and used to derive the [`session`](#hooks-getsession) object available in the browser.
 
 If unimplemented, context is `{}`.
 
