@@ -190,8 +190,6 @@ export type SSRRenderOptions = {
 	amp?: boolean;
 	only_render_prerenderable_pages?: boolean;
 	app_dir?: string;
-	host?: string;
-	host_header?: string;
 	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;

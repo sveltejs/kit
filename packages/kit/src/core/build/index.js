@@ -354,7 +354,10 @@ async function build_server(
 				only_render_prerenderable_pages = false,
 				get_static_file
 			} = {}) {
-				return ssr(request, {
+				return ssr({
+					...request,
+					host: ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`}
+				}, {
 					paths,
 					local,
 					template,
@@ -367,8 +370,6 @@ async function build_server(
 					amp: ${config.kit.amp},
 					only_render_prerenderable_pages,
 					app_dir: ${s(config.kit.appDir)},
-					host: ${s(config.kit.host)},
-					host_header: ${s(config.kit.hostHeader)},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
