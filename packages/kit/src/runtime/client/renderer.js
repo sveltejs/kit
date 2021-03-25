@@ -224,14 +224,14 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async prefetch(url) {
-		const info = this.router.parse(url);
+		const info = this.router && this.router.parse(url);
 
 		if (info) {
 			this.prefetching.promise = this._get_navigation_result(info);
 			this.prefetching.id = info.id;
 
 			return await this.prefetching.promise;
-		} else {
+		} else if (this.router) {
 			throw new Error(`Could not prefetch ${url.href}`);
 		}
 	}
