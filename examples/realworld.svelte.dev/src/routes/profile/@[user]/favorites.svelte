@@ -4,7 +4,7 @@
 </script>
 
 <script>
-	import ArticleList from '$components/ArticleList/index.svelte';
+	import ArticleList from '$lib/ArticleList/index.svelte';
 
 	export let articles;
 </script>
