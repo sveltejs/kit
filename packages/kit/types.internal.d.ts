@@ -1,4 +1,4 @@
-import { Adapter, Load } from './types';
+import { Adapter, GetContext, GetSession, Handle, Incoming, Load, Response } from './types';
 
 declare global {
 	interface ImportMeta {
@@ -24,6 +24,7 @@ export type ValidatedConfig = {
 		appDir: string;
 		files: {
 			assets: string;
+			hooks: string;
 			lib: string;
 			routes: string;
 			serviceWorker: string;
@@ -57,7 +58,7 @@ export type App = {
 			assets: string;
 		};
 	}) => void;
-	render: (request: Request, options: SSRRenderOptions) => SKResponse;
+	render: (incoming: Incoming, options: SSRRenderOptions) => ResponseWithDependencies;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -66,20 +67,8 @@ export type App = {
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
 
-export type Request = {
-	host: string;
-	method: string;
-	headers: Headers;
-	path: string;
-	body: any;
-	query: URLSearchParams;
-};
-
-export type SKResponse = {
-	status: number;
-	headers: Headers;
-	body?: any;
-	dependencies?: Record<string, SKResponse>;
+export type ResponseWithDependencies = Response & {
+	dependencies?: Record<string, Response>;
 };
 
 export type Page = {
@@ -165,6 +154,12 @@ export type SSRManifest = {
 	routes: SSRRoute[];
 };
 
+export type Hooks = {
+	getContext?: GetContext;
+	getSession?: GetSession;
+	handle?: Handle;
+};
+
 // TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
 	paths?: {
@@ -177,15 +172,7 @@ export type SSRRenderOptions = {
 	target?: string;
 	entry?: string;
 	root?: SSRComponent['default'];
-	setup?: {
-		prepare?: (incoming: {
-			headers: Headers;
-		}) => {
-			context?: any;
-			headers?: Headers;
-		};
-		getSession?: ({ context }: { context: any }) => any;
-	};
+	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
 	only_render_prerenderable_pages?: boolean;

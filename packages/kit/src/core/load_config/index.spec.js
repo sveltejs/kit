@@ -16,6 +16,7 @@ test('fills in defaults', () => {
 			appDir: '_app',
 			files: {
 				assets: 'static',
+				hooks: 'src/hooks',
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
@@ -92,6 +93,7 @@ test('fills in partial blanks', () => {
 			appDir: '_app',
 			files: {
 				assets: 'public',
+				hooks: 'src/hooks',
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',

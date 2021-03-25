@@ -19,10 +19,10 @@ module.exports = {
 		appDir: '_app',
 		files: {
 			assets: 'static',
+			hooks: 'src/hooks',
 			lib: 'src/lib',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
-			setup: 'src/setup',
 			template: 'src/app.html'
 		},
 		host: null,
@@ -66,7 +66,7 @@ An object containing zero or more of the following `string` values:
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
-- `setup` — the location of your setup file (see [Setup](#setup))
+- `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
 
 #### host

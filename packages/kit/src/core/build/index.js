@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets } from '../utils.js';
+import { copy_assets, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
@@ -181,10 +181,10 @@ async function build_server(
 	client_manifest,
 	runtime
 ) {
-	let setup_file = resolve_entry(config.kit.files.setup);
-	if (!fs.existsSync(setup_file)) {
-		setup_file = path.resolve(cwd, '.svelte/build/setup.js');
-		fs.writeFileSync(setup_file, '');
+	let hooks_file = resolve_entry(config.kit.files.hooks);
+	if (!fs.existsSync(hooks_file)) {
+		hooks_file = path.resolve(cwd, '.svelte/build/hooks.js');
+		fs.writeFileSync(hooks_file, '');
 	}
 
 	const app_file = `${build_dir}/app.js`;
@@ -275,7 +275,7 @@ async function build_server(
 			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
 			import { set_paths } from './runtime/paths.js';
-			import * as setup from ${s(app_relative(setup_file))};
+			import * as user_hooks from ${s(app_relative(hooks_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
@@ -348,6 +348,14 @@ async function build_server(
 				]
 			};
 
+			const get_hooks = hooks => ({
+				getContext: hooks.getContext || (() => ({})),
+				getSession: hooks.getSession || (() => ({})),
+				handle: hooks.handle || ((request, render) => render(request))
+			});
+
+			const hooks = get_hooks(user_hooks);
+
 			export function render(request, {
 				paths = ${s(config.kit.paths)},
 				local = false,
@@ -365,7 +373,7 @@ async function build_server(
 					target: ${s(config.kit.target)},
 					entry: ${s(entry)},
 					root,
-					setup,
+					hooks,
 					dev: false,
 					amp: ${config.kit.amp},
 					only_render_prerenderable_pages,
@@ -517,34 +525,6 @@ async function build_service_worker(
 			entries: []
 		}
 	});
-}
-
-/**
- * @param {string} entry
- * @returns {string}
- */
-function resolve_entry(entry) {
-	if (fs.existsSync(entry)) {
-		const stats = fs.statSync(entry);
-		if (stats.isDirectory()) {
-			return resolve_entry(path.join(entry, 'index'));
-		}
-
-		return entry;
-	} else {
-		const dir = path.dirname(entry);
-
-		if (fs.existsSync(dir)) {
-			const base = path.basename(entry);
-			const files = fs.readdirSync(dir);
-
-			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
-
-			if (found) return path.join(dir, found);
-		}
-	}
-
-	return null;
 }
 
 /** @param {string[]} array */

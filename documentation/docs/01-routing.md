@@ -39,10 +39,10 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Each function receives HTTP `request` and `context` objects as arguments. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```ts
-type Request = {
+type Request<Context = any> = {
 	host: string;
 	method: 'GET';
 	headers: Record<string, string>;
@@ -50,6 +50,7 @@ type Request = {
 	params: Record<string, string | string[]>;
 	query: URLSearchParams;
 	body: string | Buffer | ReadOnlyFormData;
+	context: Context; // see getContext, below
 };
 
 type Response = {
@@ -57,6 +58,10 @@ type Response = {
 	headers?: Record<string, string>;
 	body?: any;
 };
+
+type RequestHandler<Context = any> = {
+	(request: Request<Context>) => Response | Promise<Response>;
+}
 ```
 
 ```js
@@ -65,10 +70,10 @@ import db from '$lib/database';
 /**
  * @type {import('@sveltejs/kit').RequestHandler}
  */
-export async function get(request, context) {
+export async function get({ params }) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
-	const { slug } = request.params;
+	const { slug } = params;
 
 	const article = await db.get(slug);
 
@@ -86,14 +91,12 @@ export async function get(request, context) {
 
 Because this module only runs on the server (or when you build your site, if [prerendering](#prerendering)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
 
-The second argument, `context`, is something you define during [setup](#setup), if necessary.
-
 The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response.
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
 ```js
-export function post(request, context) {...}
+export function post(request) {...}
 ```
 
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
