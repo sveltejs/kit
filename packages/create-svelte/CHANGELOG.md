@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.42
+
+### Patch Changes
+
+- a52cf82: add eslint and prettier setup options
+
 ## 2.0.0-next.41
 
 ### Patch Changes
