@@ -28,7 +28,7 @@
 		left: 0;
 		top: 0;
 		height: 100%;
-		background-color: #ff6600;
+		background-color: #5cb85c;
 		transition: width 0.4s;
 	}
 

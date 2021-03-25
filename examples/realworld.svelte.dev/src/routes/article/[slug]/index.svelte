@@ -1,18 +1,18 @@
 <script context="module">
-	import * as api from '$lib/api.js';
-
-	export async function load({ page }) {
+	export async function load({ page, fetch }) {
 		const { slug } = page.params;
-		const { article } = await api.get(`articles/${slug}`, null);
+		const [article, comments] = await Promise.all([
+			fetch(`/article/${slug}.json`).then((r) => r.json()),
+			fetch(`/article/${slug}/comments.json`).then((r) => r.json())
+		]);
 
 		return {
-			props: { article, slug }
+			props: { article, comments, slug }
 		};
 	}
 </script>
 
 <script>
-	import { onMount } from 'svelte';
 	import { session } from '$app/stores';
 	import marked from 'marked';
 
@@ -20,16 +20,10 @@
 	import CommentContainer from './_CommentContainer.svelte';
 
 	export let article;
+	export let comments;
 	export let slug;
 
-	let commentErrors, comments = []; // we'll lazy-load these in onMount
 	$: markup = marked(article.body);
-
-	onMount(() => {
-		api.get(`articles/${slug}/comments`).then((res) => {
-			comments = res.comments;
-		});
-	});
 </script>
 
 <svelte:head>
@@ -40,20 +34,20 @@
 	<div class="banner">
 		<div class="container">
 			<h1>{article.title}</h1>
-			<ArticleMeta {article} user={$session.user}/>
+			<ArticleMeta {article} user={$session.user} />
 		</div>
 	</div>
 
 	<div class="container page">
 		<div class="row article-content">
 			<div class="col-xs-12">
-				<div>{@html markup}</div>
+				<div>
+					{@html markup}
+				</div>
 
 				<ul class="tag-list">
 					{#each article.tagList as tag}
-						<li class="tag-default tag-pill tag-outline">
-							{tag}
-						</li>
+						<li class="tag-default tag-pill tag-outline">{tag}</li>
 					{/each}
 				</ul>
 			</div>
@@ -61,10 +55,10 @@
 
 		<hr />
 
-		<div class="article-actions"></div>
+		<div class="article-actions" />
 
 		<div class="row">
-			<CommentContainer {slug} {comments} user={$session.user} errors={commentErrors}/>
+			<CommentContainer {slug} {comments} user={$session.user} errors={[]} />
 		</div>
 	</div>
 </div>

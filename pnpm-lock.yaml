@@ -41,6 +41,7 @@ importers:
       svelte: ^3.35.0
   examples/realworld.svelte.dev:
     dependencies:
+      cookie: 0.4.1
       node-fetch: 2.6.1
     devDependencies:
       '@sveltejs/adapter-node': link:../../packages/adapter-node
@@ -50,6 +51,7 @@ importers:
     specifiers:
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
       marked: ^2.0.1
       node-fetch: ^2.6.1
       svelte: ^3.35.0
@@ -1181,6 +1183,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-/ozxhP9mcLa67wGp1IYaXL7EEgo=
+  /cookie/0.4.1:
+    dev: false
+    engines:
+      node: '>= 0.6'
+    resolution:
+      integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==
   /cross-spawn/5.1.0:
     dependencies:
       lru-cache: 4.1.5
