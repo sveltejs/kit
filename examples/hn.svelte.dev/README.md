@@ -1,15 +1,17 @@
-# sveltejs/app-template
+# hn.svelte.dev
 
-Clone this repo to start building an app with Svelte:
+Hacker News clone built with [Svelte](https://svelte.dev) and [SvelteKit](https://kit.svelte.dev) using the [hnpwa-api](https://github.com/davideast/hnpwa-api) by David East.
 
+## Running locally
+
+```bash
+pnpm install
+pnpm dev
 ```
-npx degit @sveltejs/app-template my-app
-cd my-app
-npm install
-```
 
-Start the development server:
+...then open [localhost:3000](http://localhost:3000). To build and start in prod mode:
 
-```
-npm run dev -- --open
+```bash
+pnpm build
+pnpm start
 ```
