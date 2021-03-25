@@ -115,10 +115,12 @@ export default function (test) {
 
 	test('prefetches programmatically', '/routing/a', async ({ base, capture_requests, app, js }) => {
 		if (js) {
-			const requests = await capture_requests(() => app.prefetch('b'));
+			const requests1 = await capture_requests(() => app.prefetch('/routing/prefetched'));
+			assert.equal(requests1.length, 2, requests1.join(','));
+			assert.equal(requests1[1], `${base}/routing/prefetched.json`);
 
-			assert.equal(requests.length, 2);
-			assert.equal(requests[1], `${base}/routing/b.json`);
+			const requests2 = await capture_requests(() => app.goto('/routing/prefetched'));
+			assert.equal(requests2, []);
 		}
 	});
 

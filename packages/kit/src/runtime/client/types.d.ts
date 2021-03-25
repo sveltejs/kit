@@ -1,6 +1,7 @@
 import { CSRComponent, CSRRoute, Page } from '../../../types.internal';
 
 export type NavigationInfo = {
+	id: string;
 	routes: CSRRoute[];
 	path: string;
 	query: URLSearchParams;

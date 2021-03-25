@@ -65,7 +65,7 @@ export class Renderer {
 		this.caches = new Map();
 
 		this.prefetching = {
-			href: null,
+			id: null,
 			promise: null
 		};
 
@@ -212,6 +212,8 @@ export class Renderer {
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+		this.prefetching.promise = null;
+		this.prefetching.id = null;
 	}
 
 	/**
@@ -220,15 +222,12 @@ export class Renderer {
 	 */
 	async prefetch(url) {
 		const info = this.router.parse(url);
-		if (info) {
-			if (url.href !== this.prefetching.href) {
-				this.prefetching = {
-					href: url.href,
-					promise: this._get_navigation_result(info)
-				};
-			}
 
-			return this.prefetching.promise;
+		if (info) {
+			this.prefetching.promise = this._get_navigation_result(info);
+			this.prefetching.id = info.id;
+
+			return await this.prefetching.promise;
 		} else {
 			throw new Error(`Could not prefetch ${url.href}`);
 		}
@@ -239,6 +238,10 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async _get_navigation_result(info) {
+		if (this.prefetching.id === info.id) {
+			return this.prefetching.promise;
+		}
+
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 			const [pattern, parts, params] = route;
