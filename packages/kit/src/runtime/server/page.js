@@ -5,6 +5,8 @@ import { parse, resolve, URLSearchParams } from 'url';
 import { normalize } from '../load.js';
 import { ssr } from './index.js';
 
+const s = JSON.stringify;
+
 /**
  * @param {{
  *   request: import('types.internal').Request;
@@ -26,7 +28,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
 
-	/** @type {Array<{ url: string, payload: string }>} */
+	/** @type {Array<{
+	 *   url: string;
+	 *   payload: {
+	 *     status: number;
+	 *     statusText: string;
+	 *     headers: import('types.internal').Headers;
+	 *     body: string;
+	 *   }
+	 * }>} */
 	const serialized_data = [];
 
 	const match = route && route.pattern.exec(request.path);
@@ -148,25 +158,51 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			const clone = response.clone();
-
 			/** @type {import('types.internal').Headers} */
 			const headers = {};
-			clone.headers.forEach((value, key) => {
+			response.headers.forEach((value, key) => {
 				if (key !== 'etag') headers[key] = value;
 			});
 
-			const payload = JSON.stringify({
-				status: clone.status,
-				statusText: clone.statusText,
-				headers,
-				body: await clone.text() // TODO handle binary data
+			const inline = {
+				url,
+				payload: {
+					status: response.status,
+					statusText: response.statusText,
+					headers,
+
+					/** @type {string} */
+					body: null
+				}
+			};
+
+			const proxy = new Proxy(response, {
+				get(response, key, receiver) {
+					if (key === 'text') {
+						return async () => {
+							const text = await response.text();
+							inline.payload.body = text;
+							serialized_data.push(inline);
+							return text;
+						};
+					}
+
+					if (key === 'json') {
+						return async () => {
+							const json = await response.json();
+							inline.payload.body = s(json);
+							serialized_data.push(inline);
+							return json;
+						};
+					}
+
+					// TODO arrayBuffer?
+
+					return Reflect.get(response, key, receiver);
+				}
 			});
 
-			// TODO i guess we need to sanitize/escape this... somehow?
-			serialized_data.push({ url, payload });
-
-			return response;
+			return proxy;
 		}
 
 		return new Response('Not found', {
@@ -327,7 +363,6 @@ async function get_response({ request, options, $session, route, status = 200, e
 	const css_deps = route ? route.css : [];
 	const style = route ? route.style : '';
 
-	const s = JSON.stringify;
 	const prefix = `${options.paths.assets}/${options.app_dir}`;
 
 	// TODO strip the AMP stuff out of the build if not relevant
@@ -380,7 +415,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `${rendered.html}
 
 			${serialized_data
-				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${payload}</script>`)
+				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${s(payload)}</script>`)
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
