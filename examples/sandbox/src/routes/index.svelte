@@ -1,8 +1,7 @@
 <script context="module">
-	export function load({ page, session }) {
+	export function load({ session }) {
 		return {
 			props: {
-				host: page.host,
 				answer: session.answer
 			}
 		};
@@ -12,7 +11,6 @@
 <script>
 	import Counter from '$lib/Counter.svelte';
 
-	export let host;
 	export let answer;
 
 	let result;
@@ -30,8 +28,6 @@
 
 <main>
 	<h1>Hello world!</h1>
-
-	<p>the host is {host}</p>
 
 	<p>the answer is {answer}</p>
 
