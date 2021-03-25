@@ -3,7 +3,6 @@ import path from 'path';
 import colors from 'kleur';
 import { copy } from './filesystem/index.js';
 import { fileURLToPath } from 'url';
-import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +15,7 @@ export function copy_assets(dest) {
 		// works whether or not it's been bundled
 		const resolved = path.resolve(__dirname, `${prefix}/assets`);
 
-		if (existsSync(resolved)) {
+		if (fs.existsSync(resolved)) {
 			copy(resolved, dest);
 			return;
 		}

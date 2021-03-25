@@ -96,7 +96,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	// TODO remove this, eventually
 	if (resolve_entry(validated.kit.files.setup)) {
 		throw new Error(
-			`config.kit.files.setup has been replaced with config.kit.files.hooks. See https://kit.svelte.dev/docs#hooks`
+			'config.kit.files.setup has been replaced with config.kit.files.hooks. See https://kit.svelte.dev/docs#hooks'
 		);
 	}
 
