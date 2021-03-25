@@ -126,7 +126,7 @@ export class Router {
 		document.body.setAttribute('tabindex', '-1');
 
 		// create initial history entry, so we can return here
-		this.history.replaceState({}, '', location.href);
+		this.history.replaceState(history.state || {}, '', location.href);
 	}
 
 	/**
