@@ -12,13 +12,13 @@ export async function get({ params, context }) {
 	};
 }
 
-export async function post({ params, body, headers, context }) {
+export async function post({ params, body: form, headers, context }) {
 	if (!context.user) {
 		return { status: 401 };
 	}
 
 	const { slug } = params;
-	const body = body.get('comment');
+	const body = form.get('comment');
 
 	const { comment } = await api.post(
 		`articles/${slug}/comments`,
