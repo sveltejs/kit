@@ -22,7 +22,10 @@ async function get_config() {
 	} catch (error) {
 		let message = error.message;
 
-		if (error.code === 'MODULE_NOT_FOUND') {
+		if (
+			error.code === 'MODULE_NOT_FOUND' &&
+			/Cannot find module svelte\.config\.cjs/.test(error.message)
+		) {
 			if (existsSync('svelte.config.js')) {
 				// TODO this is temporary, for the benefit of early adopters
 				message = 'You must rename svelte.config.js to svelte.config.cjs';
