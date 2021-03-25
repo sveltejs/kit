@@ -65,7 +65,7 @@ export class Renderer {
 		this.caches = new Map();
 
 		this.prefetching = {
-			href: null,
+			id: null,
 			promise: null
 		};
 
@@ -212,6 +212,8 @@ export class Renderer {
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+		this.prefetching.promise = null;
+		this.prefetching.id = null;
 	}
 
 	/**
@@ -220,15 +222,12 @@ export class Renderer {
 	 */
 	async prefetch(url) {
 		const info = this.router.parse(url);
-		if (info) {
-			if (url.href !== this.prefetching.href) {
-				this.prefetching = {
-					href: url.href,
-					promise: this._get_navigation_result(info)
-				};
-			}
 
-			return this.prefetching.promise;
+		if (info) {
+			this.prefetching.promise = this._get_navigation_result(info);
+			this.prefetching.id = info.id;
+
+			return await this.prefetching.promise;
 		} else {
 			throw new Error(`Could not prefetch ${url.href}`);
 		}
@@ -239,10 +238,15 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async _get_navigation_result(info) {
+		if (this.prefetching.id === info.id) {
+			return this.prefetching.promise;
+		}
+
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
+			const [pattern, parts, params] = route;
 
-			if (route.type === 'endpoint') {
+			if (route.length === 1) {
 				return { reload: true };
 			}
 
@@ -251,19 +255,19 @@ export class Renderer {
 			let j = i + 1;
 			while (j < info.routes.length) {
 				const next = info.routes[j];
-				if (next.pattern.toString() === route.pattern.toString()) {
-					if (next.type === 'page') next.parts.forEach((loader) => loader());
+				if (next[0].toString() === pattern.toString()) {
+					if (next.length !== 1) next[1].forEach((loader) => loader());
 					j += 1;
 				} else {
 					break;
 				}
 			}
 
-			const nodes = route.parts.map((loader) => loader());
+			const nodes = parts.map((loader) => loader());
 			const page = {
 				host: this.host,
 				path: info.path,
-				params: route.params(route.pattern.exec(info.path)),
+				params: params ? params(route[0].exec(info.path)) : {},
 				query: info.query
 			};
 
@@ -300,11 +304,12 @@ export class Renderer {
 		};
 
 		/**
-		 * @param {string} url
+		 * @param {RequestInfo} resource
 		 * @param {RequestInit} opts
 		 */
-		const fetcher = (url, opts) => {
+		const fetcher = (resource, opts) => {
 			if (!this.started) {
+				const url = typeof resource === 'string' ? resource : resource.url;
 				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
 				if (script) {
 					const { body, ...init } = JSON.parse(script.textContent);
@@ -312,7 +317,7 @@ export class Renderer {
 				}
 			}
 
-			return fetch(url, opts);
+			return fetch(resource, opts);
 		};
 
 		const query = page.query.toString();

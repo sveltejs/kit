@@ -9,8 +9,28 @@ env:
   CI: true
 
 jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Cache ~/.pnpm-store
+        uses: actions/cache@main
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.node-version }}
+      - run: npm install -g pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build --filter ./packages
+      - run: pnpm lint
+      - run: pnpm check
   Tests:
     runs-on: ${{ matrix.os }}
+    needs: Lint
     timeout-minutes: 6
     strategy:
       matrix:
@@ -41,6 +61,7 @@ jobs:
       - run: pnpm test
   Examples:
     runs-on: ${{ matrix.os }}
+    needs: Tests
     timeout-minutes: 6
     strategy:
       matrix:
@@ -68,22 +89,3 @@ jobs:
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm -r build
-  Lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
-      - name: Cache ~/.pnpm-store
-        uses: actions/cache@main
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.node-version }}
-      - run: npm install -g pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build --filter ./packages
-      - run: pnpm lint
-      - run: pnpm check

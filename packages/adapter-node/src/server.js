@@ -4,7 +4,8 @@ import polka from 'polka';
 import { dirname, join } from 'path';
 import sirv from 'sirv';
 import { parse, URLSearchParams, fileURLToPath } from 'url';
-import { get_body } from '@sveltejs/app-utils/http';
+// eslint-disable-next-line import/no-unresolved
+import { get_body } from '@sveltejs/kit/http';
 // App is a dynamic file built from the application layer.
 /*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
 import * as app from './app.js';

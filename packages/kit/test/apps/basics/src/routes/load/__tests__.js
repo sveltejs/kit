@@ -78,4 +78,9 @@ export default function (test, is_dev) {
 			}
 		}
 	);
+
+	test('fetch accepts a Request object', '/load', async ({ page, clicknav }) => {
+		await clicknav('[href="/load/fetch-request"]');
+		assert.equal(await page.textContent('h1'), 'the answer is 42');
+	});
 }

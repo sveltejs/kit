@@ -2,7 +2,7 @@ import fs from 'fs';
 import http from 'http';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
-import { get_body } from '@sveltejs/app-utils/http';
+import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
 
 /** @param {string} dir */

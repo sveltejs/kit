@@ -40,12 +40,38 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			ssr: 'src/runtime/server/index.js'
+			ssr: 'src/runtime/server/index.js',
+			filesystem: 'src/core/filesystem/index.js',
+			http: 'src/core/http/index.js'
 		},
 		output: {
 			dir: 'dist',
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js'
+		},
+		external: (id) => {
+			return external.includes(id);
+		},
+		plugins: [
+			replace({
+				preventAssignment: true,
+				values: {
+					__VERSION__: pkg.version
+				}
+			}),
+			resolve({
+				extensions: ['.mjs', '.js', '.ts']
+			}),
+			commonjs()
+		],
+		preserveEntrySignatures: true
+	},
+
+	{
+		input: 'src/core/filesystem/index.js',
+		output: {
+			format: 'cjs',
+			file: 'dist/filesystem.cjs'
 		},
 		external: (id) => {
 			return external.includes(id);

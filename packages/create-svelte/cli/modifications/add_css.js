@@ -1,11 +1,21 @@
 import { bold, green } from 'kleur/colors';
-import { add_svelte_preprocess_to_config, update_component, update_package_json } from './utils';
+import {
+	add_svelte_preprocess_to_config,
+	update_component,
+	update_package_json_dev_deps
+} from './utils';
 
+/**
+ * Add chosen CSS language to the project.
+ *
+ * @param {string} cwd
+ * @param {'css' | 'scss' | 'less'} which
+ */
 export default async function add_css(cwd, which) {
 	if (which === 'css') {
 		console.log('You can add support for CSS preprocessors like SCSS/Less/PostCSS later.');
 	} else if (which === 'less') {
-		update_package_json(cwd, {
+		update_package_json_dev_deps(cwd, {
 			less: '^3.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
@@ -21,7 +31,7 @@ export default async function add_css(cwd, which) {
 			)
 		);
 	} else if (which === 'scss') {
-		update_package_json(cwd, {
+		update_package_json_dev_deps(cwd, {
 			sass: '^1.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});

@@ -55,6 +55,12 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 	values: () => Iterator<string>;
 }
 
+export interface RequestHandlerResponse {
+	status?: number;
+	headers?: Record<string, string>;
+	body?: any;
+}
+
 export type RequestHandler = (
 	request?: {
 		host: string;
@@ -65,10 +71,6 @@ export type RequestHandler = (
 		body: string | Buffer | ReadOnlyFormData;
 	},
 	context?: any
-) => {
-	status?: number;
-	headers?: Record<string, string>;
-	body?: any;
-};
+) => RequestHandlerResponse | Promise<RequestHandlerResponse>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;

@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.59
+
+### Patch Changes
+
+- 826f39e: Make prefetching work
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- 26893b0: Allow first argument to fetch in load to be a request
+- 924db15: Add copy function to Builder.js
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- 391189f: Check for options.initiator in correct place
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- 82cbe2b: Shrink client manifest
+- 8024178: remove @sveltejs/app-utils
+
 ## 1.0.0-next.55
 
 ### Patch Changes
