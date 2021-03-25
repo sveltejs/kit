@@ -49,7 +49,7 @@ If unimplemented, session is `{}`.
 
 ```ts
 type GetSession<Context = any, Session = any> = {
-	({ context }: { context: Context }): Session;
+	({ context }: { context: Context }): Session | Promise<Session>;
 };
 ```
 

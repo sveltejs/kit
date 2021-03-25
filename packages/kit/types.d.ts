@@ -90,7 +90,7 @@ export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
 export type GetContext<Context = any> = (incoming: Incoming) => Context;
 
 export type GetSession<Context = any, Session = any> = {
-	({ context }: { context: Context }): Session;
+	({ context }: { context: Context }): Session | Promise<Session>;
 };
 
 export type Handle<Context = any> = (
