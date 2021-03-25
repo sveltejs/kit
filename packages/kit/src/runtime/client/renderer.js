@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import { normalize } from '../load';
-import { find_anchor } from './utils';
 
 /** @param {any} value */
 function page_store(value) {
