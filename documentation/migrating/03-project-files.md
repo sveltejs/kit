@@ -18,16 +18,16 @@ This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start
 
 ### src/server.js
 
-This file also has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [setup module](/docs#setup) to implement session logic.
+This file also has no direct equivalent, since SvelteKit apps can run in serverless environments. You can, however, use the [hooks module](/docs#hooks) to implement session logic.
 
 ### src/service-worker.js
 
 Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](/docs#modules-service-worker):
 
-* `timestamp` is unchanged
-* `files` is unchanged
-* `shell` is now `build`
-* `routes` has been removed
+- `timestamp` is unchanged
+- `files` is unchanged
+- `shell` is now `build`
+- `routes` has been removed
 
 ### src/template.html
 

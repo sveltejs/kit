@@ -86,3 +86,14 @@ export type RequestHandler<Context = any> = (
 ) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
+
+export type GetContext<Context = any> = (incoming: Incoming) => Context;
+
+export type GetSession<Context = any, Session = any> = {
+	({ context }: { context: Context }): Session;
+};
+
+export type Handle<Context = any> = (
+	request: Request<Context>,
+	render: (request: Request<Context>) => Response | Promise<Response>
+) => Response | Promise<Response>;

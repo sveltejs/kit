@@ -1,4 +1,4 @@
-import { Adapter, Incoming, Load, Request, Response } from './types';
+import { Adapter, GetContext, GetSession, Handle, Incoming, Load, Response } from './types';
 
 declare global {
 	interface ImportMeta {
@@ -155,12 +155,9 @@ export type SSRManifest = {
 };
 
 export type Hooks = {
-	getContext?: (incoming: Incoming) => any;
-	getSession?: ({ context }: { context: any }) => any;
-	handle?: (
-		request: Request,
-		render: (request: Request) => Response | Promise<Response>
-	) => Response | Promise<Response>;
+	getContext?: GetContext;
+	getSession?: GetSession;
+	handle?: Handle;
 };
 
 // TODO separate out runtime options from the ones fixed in dev/build
