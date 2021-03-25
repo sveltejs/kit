@@ -68,11 +68,13 @@ importers:
     devDependencies:
       '@sveltejs/adapter-node': link:../../packages/adapter-node
       '@sveltejs/adapter-static': link:../../packages/adapter-static
+      '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.35.0
     specifiers:
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/adapter-static': workspace:*
+      '@sveltejs/adapter-vercel': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.35.0
   packages/adapter-begin:
