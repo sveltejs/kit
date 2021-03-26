@@ -17,16 +17,19 @@ import { set_paths } from '../paths.js';
  *   error: Error;
  *   status: number;
  *   host: string;
+ *   route: boolean;
  *   hydrate: {
  *     nodes: import('./types').NavigationCandidate["nodes"];
  *     page: import('./types').NavigationCandidate["page"];
  *   }
  * }} opts */
-export async function start({ paths, target, session, error, status, host, hydrate }) {
-	const router = new Router({
-		base: paths.base,
-		routes
-	});
+export async function start({ paths, target, session, error, status, host, route, hydrate }) {
+	const router =
+		route &&
+		new Router({
+			base: paths.base,
+			routes
+		});
 
 	const renderer = new Renderer({
 		Root,
@@ -40,7 +43,7 @@ export async function start({ paths, target, session, error, status, host, hydra
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate, status, error);
-	router.init(renderer);
+	if (route) router.init(renderer);
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
 }

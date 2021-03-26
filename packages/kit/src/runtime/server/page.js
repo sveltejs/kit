@@ -409,6 +409,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
 				host: ${s(request.host || 'location.host')},
+				route: ${!!page_config.router},
 				hydrate: ${page_config.hydrate? `{
 					nodes: [
 						${(route ? route.parts : [])

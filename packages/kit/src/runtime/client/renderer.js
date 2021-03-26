@@ -108,6 +108,7 @@ export class Renderer {
 			if (!ready) return;
 			this.current.session_changed = true;
 
+			// TODO #231 handle router=false
 			const info = this.router.parse(new URL(location.href));
 			this.update(info, []);
 		});
@@ -200,10 +201,15 @@ export class Renderer {
 					error: new Error('Redirect loop')
 				});
 			} else {
-				this.router.goto(navigation_result.redirect, { replaceState: true }, [
-					...chain,
-					this.current.page.path
-				]);
+				if (this.router) {
+					// TODO #231 check router is currently enabled
+					this.router.goto(navigation_result.redirect, { replaceState: true }, [
+						...chain,
+						this.current.page.path
+					]);
+				} else {
+					location.href = new URL(navigation_result.redirect, location.href).href;
+				}
 
 				return;
 			}
@@ -234,17 +240,23 @@ export class Renderer {
 	 * @param {URL} url
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async prefetch(url) {
-		const info = this.router.parse(url);
+	prefetch(url) {
+		return Promise.resolve().then(async () => {
+			if (this.router) {
+				const info = this.router.parse(url);
 
-		if (info) {
-			this.prefetching.promise = this._get_navigation_result(info);
-			this.prefetching.id = info.id;
+				if (info) {
+					this.prefetching.promise = this._get_navigation_result(info);
+					this.prefetching.id = info.id;
 
-			return await this.prefetching.promise;
-		} else {
-			throw new Error(`Could not prefetch ${url.href}`);
-		}
+					return await this.prefetching.promise;
+				} else {
+					throw new Error(`Could not prefetch ${url.href}`);
+				}
+			} else {
+				throw new Error('Router is disabled');
+			}
+		});
 	}
 
 	/**
