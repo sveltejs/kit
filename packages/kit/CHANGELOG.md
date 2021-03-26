@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.61
+
+### Patch Changes
+
+- 4b2c97e: Initialise router with history.state
+
 ## 1.0.0-next.60
 
 ### Patch Changes
