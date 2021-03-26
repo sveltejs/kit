@@ -22,6 +22,8 @@ This function has been renamed from `preload` to [`load`](/docs#loading), and it
 
 There is no more `this` object, and consequently no `this.fetch`, `this.error` or `this.redirect`. Instead of returning props directly, `load` now returns an object that _contains_ `props`, alongside various other things.
 
+Lastly if your page has `load`, make sure to return something otherwise you will get `Not found`.
+
 ### Stores
 
 In Sapper, you would get references to provided stores like so:
