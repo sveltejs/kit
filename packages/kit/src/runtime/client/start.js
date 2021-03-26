@@ -16,10 +16,13 @@ import { set_paths } from '../paths.js';
  *   session: any;
  *   error: Error;
  *   status: number;
- *   nodes: import('./types').NavigationCandidate["nodes"];
- *   page: import('./types').NavigationCandidate["page"];
+ *   host: string;
+ *   hydrate: {
+ *     nodes: import('./types').NavigationCandidate["nodes"];
+ *     page: import('./types').NavigationCandidate["page"];
+ *   }
  * }} opts */
-export async function start({ paths, target, session, error, status, nodes, page }) {
+export async function start({ paths, target, session, error, status, host, hydrate }) {
 	const router = new Router({
 		base: paths.base,
 		routes
@@ -30,13 +33,13 @@ export async function start({ paths, target, session, error, status, nodes, page
 		layout,
 		target,
 		session,
-		host: page.host
+		host
 	});
 
 	init({ router, renderer });
 	set_paths(paths);
 
-	await renderer.start({ nodes, page }, status, error);
+	if (hydrate) await renderer.start(hydrate, status, error);
 	router.init(renderer);
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));

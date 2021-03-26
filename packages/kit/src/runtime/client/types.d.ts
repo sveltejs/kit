@@ -13,6 +13,8 @@ export type NavigationCandidate = {
 };
 
 export type NavigationResult = {
+	nodes: Array<Promise<CSRComponent>>;
+	page: Page;
 	reload?: boolean;
 	redirect?: string;
 	state?: NavigationState;

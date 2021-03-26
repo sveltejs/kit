@@ -220,9 +220,11 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	const page_component = await component_promises[component_promises.length - 1];
 
-	const ssr = 'ssr' in page_component ? page_component.ssr : true;
-	const router = 'router' in page_component ? page_component.router : true;
-	const hydrate = 'hydrate' in page_component ? page_component.hydrate : true;
+	const page_config = {
+		ssr: 'ssr' in page_component ? page_component.ssr : true,
+		router: 'router' in page_component ? page_component.router : true,
+		hydrate: 'hydrate' in page_component ? page_component.hydrate : true
+	};
 
 	if (options.only_render_prerenderable_pages) {
 		if (error) return; // don't prerender an error page
@@ -235,7 +237,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	/** @type {{ head: string, html: string, css: string }} */
 	let rendered;
 
-	if (ssr) {
+	if (page_config.ssr) {
 		for (let i = 0; i < component_promises.length; i += 1) {
 			let loaded;
 
@@ -395,7 +397,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
-	} else if (router || hydrate) {
+	} else if (page_config.router || page_config.hydrate) {
+		// prettier-ignore
 		init = `
 		<script type="module">
 			import { start } from ${s(options.entry)};
@@ -405,17 +408,20 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: ${status},
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
-				nodes: [
-					${(route ? route.parts : [])
+				host: ${s(request.host || 'location.host')},
+				hydrate: ${page_config.hydrate? `{
+					nodes: [
+						${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
-						.join(',\n\t\t\t\t\t')}
-				],
-				page: {
-					host: ${s(request.host || 'location.host')},
-					path: ${s(request.path)},
-					query: new URLSearchParams(${s(request.query.toString())}),
-					params: ${s(params)}
-				}
+						.join(',\n\t\t\t\t\t\t')}
+					],
+					page: {
+						host: ${s(request.host || 'location.host')}, // TODO this is redundant
+						path: ${s(request.path)},
+						query: new URLSearchParams(${s(request.query.toString())}),
+						params: ${s(params)}
+					}
+				}` : 'null'}
 			});
 		</script>`;
 	}

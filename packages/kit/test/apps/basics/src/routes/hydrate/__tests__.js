@@ -10,8 +10,8 @@ export default function (test, is_dev) {
 			assert.equal(await page.textContent('button'), 'clicks: 0');
 
 			if (js) {
-				await clicknav('[href="/hydrate/other"]');
-				await clicknav('[href="/hydrate"]');
+				await Promise.all([page.click('[href="/hydrate/other"]'), page.waitForNavigation()]);
+				await Promise.all([page.click('[href="/hydrate"]'), page.waitForNavigation()]);
 
 				await page.click('button');
 				assert.equal(await page.textContent('button'), 'clicks: 1');

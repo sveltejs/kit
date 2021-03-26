@@ -166,16 +166,18 @@ export class Renderer {
 	notify({ path, query }) {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
-		this.stores.navigating.set({
-			from: {
-				path: this.current.page.path,
-				query: this.current.page.query
-			},
-			to: {
-				path,
-				query
-			}
-		});
+		if (this.started) {
+			this.stores.navigating.set({
+				from: {
+					path: this.current.page.path,
+					query: this.current.page.query
+				},
+				to: {
+					path,
+					query
+				}
+			});
+		}
 	}
 
 	/**
@@ -205,13 +207,22 @@ export class Renderer {
 
 				return;
 			}
-		} else {
+		} else if (this.started) {
 			this.current = navigation_result.state;
 
 			this.root.$set(navigation_result.props);
 			this.stores.navigating.set(null);
 
 			await 0;
+		} else {
+			this.start(
+				{
+					nodes: navigation_result.nodes,
+					page: navigation_result.page
+				},
+				navigation_result.props.status,
+				navigation_result.props.error
+			);
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
@@ -279,6 +290,8 @@ export class Renderer {
 		}
 
 		return {
+			nodes: [],
+			page: null,
 			state: {
 				page: null,
 				query: null,
@@ -444,7 +457,7 @@ export class Renderer {
 							props.error = loaded.error;
 							props.status = loaded.status || 500;
 							state.nodes = [];
-							return { redirect, props, state };
+							return { nodes, page, redirect, props, state };
 						}
 
 						if (loaded.redirect) {
@@ -522,6 +535,6 @@ export class Renderer {
 			state.nodes = [];
 		}
 
-		return { redirect, props, state };
+		return { nodes, page, redirect, props, state };
 	}
 }
