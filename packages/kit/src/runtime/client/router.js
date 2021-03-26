@@ -99,7 +99,7 @@ export class Router {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
 				history.pushState({}, '', url.href);
 				this._navigate(info, noscroll ? scroll_state() : null, [], url.hash);
-				event.preventDefault();f
+				event.preventDefault();
 			}
 		});
 
