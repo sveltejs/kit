@@ -22,6 +22,7 @@
 		outline: none;
 		width: 200px;
 		font-variant-numeric: tabular-nums;
+		cursor: pointer;
 	}
 
 	button:focus {
