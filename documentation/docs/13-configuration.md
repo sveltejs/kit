@@ -27,6 +27,7 @@ module.exports = {
 		},
 		host: null,
 		hostHeader: null,
+		hydrate: true,
 		paths: {
 			assets: '',
 			base: ''
@@ -37,6 +38,8 @@ module.exports = {
 			force: false,
 			pages: ['*']
 		},
+		router: true,
+		ssr: true,
 		target: null,
 		vite: () => ({})
 	},
@@ -88,6 +91,10 @@ module.exports = {
 
 **You should only do this if you trust the reverse proxy**, which is why it isn't the default.
 
+#### hydrate
+
+Whether to [hydrate](#rendering-and-routing-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
 #### paths
 
 An object containing zero or more of the following `string` values:
@@ -103,6 +110,14 @@ See [Prerendering](#prerendering). An object containing zero or more of the foll
 - `enabled` — set to `false` to disable prerendering altogether
 - `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
 - `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
+
+#### router
+
+Enables or disables the client-side [router](#rendering-and-routing-router) app-wide.
+
+#### ssr
+
+Enables or disables [server-side rendering](#rendering-and-routing-ssr) app-wide.
 
 #### target
 
