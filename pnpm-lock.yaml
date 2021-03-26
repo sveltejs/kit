@@ -55,15 +55,6 @@ importers:
       marked: ^2.0.1
       node-fetch: ^2.6.1
       svelte: ^3.35.0
-  examples/sandbox:
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/kit': link:../../packages/kit
-      svelte: 3.35.0
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.35.0
   examples/svelte-kit-demo:
     devDependencies:
       '@sveltejs/adapter-cloudflare-workers': link:../../packages/adapter-cloudflare-workers
