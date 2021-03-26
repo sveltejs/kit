@@ -8,7 +8,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
-	test('data is serialized', async ({ base, page, capture_requests, js }) => {
+	test('data is serialized', null, async ({ base, page, capture_requests, js }) => {
 		const requests = await capture_requests(async () => {
 			await page.goto(`${base}/load/serialization`);
 		});
@@ -132,5 +132,14 @@ export default function (test, is_dev) {
 		assert.equal(times_responded, 1);
 
 		server.close();
+	});
+
+	test('request headers are passed to endpoint', '/load', async ({ page, clicknav }) => {
+		await clicknav('[href="/load/headers"]');
+
+		assert.equal(JSON.parse(await page.textContent('pre')), {
+			foo: 'bar',
+			accept: '*/*'
+		});
 	});
 }

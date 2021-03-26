@@ -20,3 +20,4 @@
 
 <a href="/load/fetch-request">fetch request</a>
 <a href="/load/large-response">large response</a>
+<a href="/load/headers">headers</a>
