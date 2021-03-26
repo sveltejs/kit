@@ -15,12 +15,6 @@ export class Router {
 	constructor({ base, routes }) {
 		this.base = base;
 		this.routes = routes;
-
-		this.history = window.history || {
-			pushState: () => {},
-			replaceState: () => {},
-			scrollRestoration: 'auto'
-		};
 	}
 
 	/** @param {import('./renderer').Renderer} renderer */
@@ -29,8 +23,8 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
-		if ('scrollRestoration' in this.history) {
-			this.history.scrollRestoration = 'manual';
+		if ('scrollRestoration' in history) {
+			history.scrollRestoration = 'manual';
 		}
 
 		// Adopted from Nuxt.js
@@ -38,12 +32,12 @@ export class Router {
 		// and back-navigation from other pages to use the browser to restore the
 		// scrolling position.
 		addEventListener('beforeunload', () => {
-			this.history.scrollRestoration = 'auto';
+			history.scrollRestoration = 'auto';
 		});
 
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
-			this.history.scrollRestoration = 'manual';
+			history.scrollRestoration = 'manual';
 		});
 
 		// There's no API to capture the scroll location right before the user
@@ -103,9 +97,9 @@ export class Router {
 			const info = this.parse(url);
 			if (info) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.history.pushState({}, '', url.href);
+				history.pushState({}, '', url.href);
 				this._navigate(info, noscroll ? scroll_state() : null, [], url.hash);
-				event.preventDefault();
+				event.preventDefault();f
 			}
 		});
 
@@ -126,7 +120,7 @@ export class Router {
 		document.body.setAttribute('tabindex', '-1');
 
 		// create initial history entry, so we can return here
-		this.history.replaceState(history.state || {}, '', location.href);
+		history.replaceState(history.state || {}, '', location.href);
 	}
 
 	/**
@@ -160,7 +154,7 @@ export class Router {
 
 		if (info) {
 			// TODO shouldn't need to pass the hash here
-			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
+			history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 			return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
 		}
 
