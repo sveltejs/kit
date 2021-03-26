@@ -79,33 +79,11 @@ export class Renderer {
 
 		this.root = null;
 
-		/** @param {MouseEvent} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(/** @type {Node} */ (event.target));
-			if (a && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(new URL(/** @type {string} */ (a.href)));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				trigger_prefetch(event);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-
 		let ready = false;
 		this.stores.session.subscribe(async (value) => {
 			this.$session = value;
 
-			if (!ready) return;
+			if (!ready || !this.router) return;
 			this.current.session_changed = true;
 
 			const info = this.router.parse(new URL(location.href));
@@ -224,14 +202,14 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async prefetch(url) {
-		const info = this.router && this.router.parse(url);
+		const info = this.router.parse(url);
 
 		if (info) {
 			this.prefetching.promise = this._get_navigation_result(info);
 			this.prefetching.id = info.id;
 
 			return await this.prefetching.promise;
-		} else if (this.router) {
+		} else {
 			throw new Error(`Could not prefetch ${url.href}`);
 		}
 	}

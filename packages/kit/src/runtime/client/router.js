@@ -121,6 +121,28 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
+
+		/** @param {MouseEvent} event */
+		const trigger_prefetch = (event) => {
+			const a = find_anchor(/** @type {Node} */ (event.target));
+			if (a && a.hasAttribute('sveltekit:prefetch')) {
+				renderer.prefetch(new URL(/** @type {string} */ (a.href)));
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				trigger_prefetch(event);
+			}, 20);
+		};
+
+		addEventListener('touchstart', trigger_prefetch);
+		addEventListener('mousemove', handle_mousemove);
 	}
 
 	/**
