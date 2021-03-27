@@ -1,5 +1,14 @@
 # create-svelte
 
+## 2.0.0-next.43
+
+### Patch Changes
+
+- bdf4ed9: Fix typo in `ignorePatterns` for the `.eslintrc.cjs` generated for TypeScript projects so that `.eslintrc.cjs` correctly ignores itself.
+- f7badf1: Add '\$service-worker' to paths in tsconfig.json
+- 9a664e1: Set `.eslintrc.cjs` to ignore all `.cjs` files.
+- df380e6: Add env options to eslint config
+
 ## 2.0.0-next.42
 
 ### Patch Changes
