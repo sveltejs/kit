@@ -2,7 +2,7 @@
 title: SSR and JavaScript
 ---
 
-By default, SvelteKit will server-render pages on-demand, then **hydrate** the rendered HTML in the client with an interactive Svelte app while initialising a **router** that takes over subsequent navigations.
+By default, SvelteKit will server-render pages on demand, then **hydrate** the rendered HTML in the client with an interactive Svelte app while initialising a **router** that takes over subsequent navigations.
 
 You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
 
@@ -52,7 +52,7 @@ It's likely that at least some pages of your app can be represented as a simple 
 
 If your entire app is suitable for prerendering, you could use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will generate HTML files for every page, plus additional files that are requested by `load` functions in those pages.
 
-More likely, you'll only want to prerender specific pages in your app. You'll need to annotate these pages:
+In many cases, you'll only want to prerender specific pages in your app. You'll need to annotate these pages:
 
 ```html
 <script context="module">
@@ -64,9 +64,11 @@ The prerenderer will start at the root of your app and generate HTML for any pre
 
 #### When not to prerender
 
-The basic rule is this: for a page to be prerenderable, any two users hitting the same page of your app must get the same content from the server. In other words, any app that involves user sessions or authentication is _not_ a candidate for the static adapter.
+The basic rule is this: for a page to be prerenderable, any two users hitting it directly must get the same content from the server.
 
-Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The static adapter will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
+> In other words, any app that involves user sessions or authentication is _not_ a candidate for `adapter-static`, even if individual pages within an app _are_ suitable for prerendering.
+
+Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The prerenderer will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
 
 #### Route conflicts
 
