@@ -118,9 +118,9 @@ class Watcher extends EventEmitter {
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
-					const setup = await this.viteDevServer
-						.ssrLoadModule(`/${this.config.kit.files.setup}`)
-						.catch(() => ({}));
+					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.viteDevServer
+						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
+						.catch(() => ({})));
 
 					let root;
 
@@ -135,11 +135,14 @@ class Watcher extends EventEmitter {
 
 					const body = await get_body(req);
 
+					const host = /** @type {string} */ (this.config.kit.host ||
+						req.headers[this.config.kit.hostHeader || 'host']);
+
 					const rendered = await ssr(
 						{
 							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							method: req.method,
-							host: null,
+							host,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body
@@ -203,10 +206,12 @@ class Watcher extends EventEmitter {
 							dev: true,
 							amp: this.config.kit.amp,
 							root,
-							setup,
+							hooks: {
+								getContext: hooks.getContext || (() => ({})),
+								getSession: hooks.getSession || (() => ({})),
+								handle: hooks.handle || ((request, render) => render(request))
+							},
 							only_render_prerenderable_pages: false,
-							host: this.config.kit.host,
-							host_header: this.config.kit.hostHeader,
 							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);

@@ -1,11 +1,9 @@
 /**
- * @param {import('types.internal').Request} request
+ * @param {import('types').Request} request
  * @param {import('types.internal').SSREndpoint} route
- * @param {any} context
- * @param {import('types.internal').SSRRenderOptions} options
- * @returns {Promise<import('types.internal').SKResponse>}
+ * @returns {Promise<import('types.internal').ResponseWithDependencies>}
  */
-export default async function render_route(request, route, context, options) {
+export default async function render_route(request, route) {
 	const mod = await route.load();
 
 	/** @type {import('types').RequestHandler} */
@@ -15,17 +13,7 @@ export default async function render_route(request, route, context, options) {
 		const match = route.pattern.exec(request.path);
 		const params = route.params(match);
 
-		const response = await handler(
-			{
-				host: options.host || request.headers[options.host_header || 'host'],
-				path: request.path,
-				headers: request.headers,
-				query: request.query,
-				body: request.body,
-				params
-			},
-			context
-		);
+		const response = await handler({ ...request, params });
 
 		if (response) {
 			if (typeof response !== 'object' || response.body == null) {

@@ -2,6 +2,10 @@
 title: package.json
 ---
 
+### type : "module"
+
+Add `"type": "module"` to your `package.json`
+
 ### dependencies
 
 Remove `polka` or `express`, if you're using one of those, and any middleware such as `sirv` or `compression`.

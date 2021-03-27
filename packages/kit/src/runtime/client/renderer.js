@@ -134,7 +134,10 @@ export class Renderer {
 			const hydrated = await this._hydrate(selected);
 
 			if (hydrated.redirect) {
-				throw new Error('TODO client-side redirects');
+				// this is a real edge case — `load` would need to return
+				// a redirect but only in the browser
+				location.href = new URL(hydrated.redirect, location.href).href;
+				return;
 			}
 
 			Object.assign(props, hydrated.props);

@@ -22,7 +22,10 @@ async function get_config() {
 	} catch (error) {
 		let message = error.message;
 
-		if (error.code === 'MODULE_NOT_FOUND') {
+		if (
+			error.code === 'MODULE_NOT_FOUND' &&
+			/Cannot find module svelte\.config\.cjs/.test(error.message)
+		) {
 			if (existsSync('svelte.config.js')) {
 				// TODO this is temporary, for the benefit of early adopters
 				message = 'You must rename svelte.config.js to svelte.config.cjs';
@@ -49,7 +52,13 @@ function handle_error(error) {
 /** @param {number} port */
 async function launch(port) {
 	const { exec } = await import('child_process');
-	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
+	let cmd = 'open';
+	if (process.platform == 'win32') {
+		cmd = 'start';
+	} else if (process.platform == 'linux') {
+		cmd = 'xdg-open';
+	}
+	exec(`${cmd} http://localhost:${port}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');

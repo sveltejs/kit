@@ -1,9 +1,7 @@
 import * as api from '$lib/api.js';
 import { respond } from './_respond';
 
-export async function post(request, context) {
-	const user = request.body;
-
+export async function post({ body: user, context }) {
 	if (!context.user) {
 		return {
 			status: 401
