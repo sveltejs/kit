@@ -76,6 +76,8 @@ const options = {
 
 			hostHeader: expect_string(null),
 
+			hydrate: expect_boolean(true),
+
 			paths: {
 				type: 'branch',
 				children: {
@@ -111,6 +113,10 @@ const options = {
 					}
 				}
 			},
+
+			router: expect_boolean(true),
+
+			ssr: expect_boolean(true),
 
 			target: expect_string(null),
 

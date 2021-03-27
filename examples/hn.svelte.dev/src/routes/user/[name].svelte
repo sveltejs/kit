@@ -1,4 +1,6 @@
 <script context="module">
+	export const hydrate = false;
+
 	export async function load({ page, fetch }) {
 		const res = await fetch(`https://api.hnpwa.com/v0/user/${page.params.name}.json`);
 		const user = await res.json();

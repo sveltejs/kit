@@ -33,6 +33,7 @@ export type ValidatedConfig = {
 		};
 		host: string;
 		hostHeader: string;
+		hydrate: boolean;
 		paths: {
 			base: string;
 			assets: string;
@@ -43,6 +44,8 @@ export type ValidatedConfig = {
 			force: boolean;
 			pages: string[];
 		};
+		router: boolean;
+		ssr: boolean;
 		target: string;
 		vite: () => {};
 	};
@@ -186,6 +189,9 @@ export type SSRRenderOptions = {
 	get_amp_css?: (dep: string) => string;
 	fetched?: string;
 	initiator?: SSRPage;
+	ssr?: boolean;
+	router?: boolean;
+	hydrate?: boolean;
 };
 
 export type Asset = {

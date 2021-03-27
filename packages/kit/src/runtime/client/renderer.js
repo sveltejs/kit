@@ -234,7 +234,6 @@ export class Renderer {
 		this.prefetching.id = null;
 
 		const leaf_node = navigation_result.state.nodes[navigation_result.state.nodes.length - 1];
-		console.log({ leaf_node });
 		if (leaf_node.module.router === false) {
 			this.router.disable();
 		} else {

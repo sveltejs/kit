@@ -234,9 +234,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 	}
 
 	const page_config = {
-		ssr: 'ssr' in page_component ? page_component.ssr : true,
-		router: 'router' in page_component ? page_component.router : true,
-		hydrate: 'hydrate' in page_component ? page_component.hydrate : true
+		ssr: 'ssr' in page_component ? page_component.ssr : options.ssr,
+		router: 'router' in page_component ? page_component.router : options.router,
+		hydrate: 'hydrate' in page_component ? page_component.hydrate : options.hydrate
 	};
 
 	if (options.only_render_prerenderable_pages) {
