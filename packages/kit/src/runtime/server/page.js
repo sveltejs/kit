@@ -218,7 +218,20 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let context = {};
 	let maxage;
 
-	const page_component = await component_promises[component_promises.length - 1];
+	let page_component;
+
+	try {
+		page_component = await component_promises[component_promises.length - 1];
+	} catch (e) {
+		return await get_response({
+			request,
+			options,
+			$session,
+			route,
+			status: 500,
+			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
+		});
+	}
 
 	const page_config = {
 		ssr: 'ssr' in page_component ? page_component.ssr : true,

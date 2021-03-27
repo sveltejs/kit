@@ -108,7 +108,6 @@ export class Renderer {
 			if (!ready) return;
 			this.current.session_changed = true;
 
-			// TODO #231 handle router=false
 			const info = this.router.parse(new URL(location.href));
 			this.update(info, []);
 		});
@@ -202,7 +201,6 @@ export class Renderer {
 				});
 			} else {
 				if (this.router) {
-					// TODO #231 check router is currently enabled
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
 						...chain,
 						this.current.page.path
@@ -234,6 +232,14 @@ export class Renderer {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 		this.prefetching.promise = null;
 		this.prefetching.id = null;
+
+		const leaf_node = navigation_result.state.nodes[navigation_result.state.nodes.length - 1];
+		console.log({ leaf_node });
+		if (leaf_node.module.router === false) {
+			this.router.disable();
+		} else {
+			this.router.enable();
+		}
 	}
 
 	/**
@@ -318,17 +324,33 @@ export class Renderer {
 		};
 	}
 
-	/** @param {import('./types').NavigationCandidate} selected */
+	/**
+	 * @param {import('./types').NavigationCandidate} selected
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
 	async _hydrate({ nodes, page }) {
-		/** @type {Record<string, any>} */
-		const props = {
-			status: 200,
+		const query = page.query.toString();
 
-			/** @type {Error} */
-			error: null,
+		/** @type {import('./types').NavigationResult} */
+		const hydrated = {
+			nodes, // TODO are these and page duplicative?
+			page,
+			state: {
+				page,
+				query,
+				session_changed: false,
+				nodes: [],
+				contexts: []
+			},
+			props: {
+				status: 200,
 
-			/** @type {import('types.internal').CSRComponent[]} */
-			components: []
+				/** @type {Error} */
+				error: null,
+
+				/** @type {import('types.internal').CSRComponent[]} */
+				components: []
+			}
 		};
 
 		/**
@@ -348,23 +370,11 @@ export class Renderer {
 			return fetch(resource, opts);
 		};
 
-		const query = page.query.toString();
-
-		/** @type {import('./types').NavigationState} */
-		const state = {
-			page,
-			query,
-			session_changed: false,
-			nodes: [],
-			contexts: []
-		};
-
 		const component_promises = [this.layout, ...nodes];
 		const props_promises = [];
 
 		/** @type {Record<string, any>} */
 		let context;
-		let redirect;
 
 		const changed = {
 			params: Object.keys(page.params).filter((key) => {
@@ -380,8 +390,9 @@ export class Renderer {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
 
-				const { default: component, preload, load } = await component_promises[i];
-				props.components[i] = component;
+				const module = await component_promises[i];
+				const { default: component, preload, load } = module;
+				hydrated.props.components[i] = component;
 
 				if (preload) {
 					throw new Error(
@@ -391,7 +402,7 @@ export class Renderer {
 
 				const changed_since_last_render =
 					!previous ||
-					component !== previous.component ||
+					module !== previous.module ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
@@ -401,7 +412,7 @@ export class Renderer {
 					const hash = page.path + query;
 
 					// see if we have some cached data
-					const cache = this.caches.get(component);
+					const cache = this.caches.get(module);
 					const cached = cache && cache.get(hash);
 
 					/** @type {import('./types').PageNode} */
@@ -414,7 +425,7 @@ export class Renderer {
 						({ node, loaded } = cached);
 					} else {
 						node = {
-							component,
+							module,
 							uses: {
 								params: new Set(),
 								query: false,
@@ -466,16 +477,16 @@ export class Renderer {
 						loaded = normalize(loaded);
 
 						if (loaded.error) {
-							props.error = loaded.error;
-							props.status = loaded.status || 500;
-							state.nodes = [];
-							return { nodes, page, redirect, props, state };
+							hydrated.props.error = loaded.error;
+							hydrated.props.status = loaded.status || 500;
+							hydrated.state.nodes = [];
+							return hydrated;
 						}
 
 						if (loaded.redirect) {
-							// TODO return from here?
-							redirect = loaded.redirect;
-							break;
+							return {
+								redirect: loaded.redirect
+							};
 						}
 
 						if (loaded.context) {
@@ -488,11 +499,11 @@ export class Renderer {
 						}
 
 						if (loaded.maxage) {
-							if (!this.caches.has(component)) {
-								this.caches.set(component, new Map());
+							if (!this.caches.has(module)) {
+								this.caches.set(module, new Map());
 							}
 
-							const cache = this.caches.get(component);
+							const cache = this.caches.get(module);
 							const cached = { node, loaded };
 
 							cache.set(hash, cached);
@@ -522,11 +533,11 @@ export class Renderer {
 						props_promises[i] = loaded.props;
 					}
 
-					state.nodes[i] = node;
-					state.contexts[i] = context;
+					hydrated.state.nodes[i] = node;
+					hydrated.state.contexts[i] = context;
 				} else {
-					state.nodes[i] = previous;
-					state.contexts[i] = context = previous_context;
+					hydrated.state.nodes[i] = previous;
+					hydrated.state.contexts[i] = context = previous_context;
 				}
 			}
 
@@ -534,19 +545,19 @@ export class Renderer {
 
 			new_props.forEach((p, i) => {
 				if (p) {
-					props[`props_${i}`] = p;
+					hydrated.props[`props_${i}`] = p;
 				}
 			});
 
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
-				props.page = page;
+				hydrated.props.page = page;
 			}
 		} catch (error) {
-			props.error = error;
-			props.status = 500;
-			state.nodes = [];
+			hydrated.props.error = error;
+			hydrated.props.status = 500;
+			hydrated.state.nodes = [];
 		}
 
-		return { nodes, page, redirect, props, state };
+		return hydrated;
 	}
 }

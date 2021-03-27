@@ -8,3 +8,5 @@
 
 <a href="/routing/disabled/a">a</a>
 <a href="/routing/disabled/b">b</a>
+
+<slot></slot>

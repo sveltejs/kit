@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test.only('does not SSR page with ssr=false', '/ssr', async ({ page, js }) => {
+	test('does not SSR page with ssr=false', '/ssr', async ({ page, js }) => {
 		if (js) {
 			assert.equal(await page.textContent('h1'), 'content was rendered');
 		} else {
