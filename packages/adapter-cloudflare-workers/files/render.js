@@ -1,5 +1,5 @@
-import { render } from './app.js';
-import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
+import { render } from './app.js'; // eslint-disable-line import/no-unresolved
+import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
 
 // From https://developers.cloudflare.com/workers/examples/read-post
 async function readRequestBody(request) {
