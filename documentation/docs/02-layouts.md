@@ -12,7 +12,7 @@ To create a layout component that applies to every page, make a file called `src
 <slot></slot>
 ```
 
-> Notice: `$` is a special symbol that needs to be escaped when created via terminal instead of `src/routes/$layout.svelte` we need to use `src/routes/\$layout.svelte` to create the file
+> To create `src/routes/$layout.svelte` using the terminal we need to escape the `$`; by using `src/routes/\$layout.svelte` instead.
 
 ...but we can add whatever markup, styles and behaviour we want. For example, let's add a nav bar:
 
