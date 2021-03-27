@@ -93,7 +93,7 @@ module.exports = {
 
 #### hydrate
 
-Whether to [hydrate](#rendering-and-routing-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
 #### paths
 
@@ -113,11 +113,11 @@ See [Prerendering](#prerendering). An object containing zero or more of the foll
 
 #### router
 
-Enables or disables the client-side [router](#rendering-and-routing-router) app-wide.
+Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
 
 #### ssr
 
-Enables or disables [server-side rendering](#rendering-and-routing-ssr) app-wide.
+Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
 #### target
 

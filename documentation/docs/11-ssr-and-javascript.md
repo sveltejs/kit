@@ -1,5 +1,5 @@
 ---
-title: Rendering and routing
+title: SSR and JavaScript
 ---
 
 By default, SvelteKit will server-render pages on-demand, then **hydrate** the rendered HTML in the client with an interactive Svelte app while initialising a **router** that takes over subsequent navigations.
