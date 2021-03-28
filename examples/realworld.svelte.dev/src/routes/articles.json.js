@@ -2,9 +2,9 @@ import * as api from '$lib/api';
 import { page_size } from '$lib/constants';
 
 export async function get({ query, context }) {
-	const tab = request.query.get('tab') || 'all';
-	const tag = request.query.get('tag');
-	const page = +request.query.get('page') || 1;
+	const tab = query.get('tab') || 'all';
+	const tag = query.get('tag');
+	const page = +query.get('page') || 1;
 
 	const endpoint = tab === 'feed' ? 'articles/feed' : 'articles';
 
