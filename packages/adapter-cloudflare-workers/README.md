@@ -1,6 +1,6 @@
 # adapter-cloundflare-workers
 
-Adapter for Svelte apps that creates a cloudflare workers site, using a function for dynamic server rendering.
+SvelteKit adapter that creates a Cloudflare Workers site using a function for dynamic server rendering.
 
 This is very experimental; the adapter API isn't at all fleshed out, and things will definitely change.
 
