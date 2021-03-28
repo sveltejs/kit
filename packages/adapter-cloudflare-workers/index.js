@@ -43,7 +43,6 @@ module.exports = function () {
 			builder.copy(path.resolve(__dirname, 'files/render.js'), `${entrypoint}/index.js`);
 			builder.copy(path.resolve(__dirname, 'files/_package.json'), `${entrypoint}/package.json`);
 
-			// prerender
 			builder.log.info('Prerendering static pages...');
 			await builder.prerender({
 				dest: bucket
