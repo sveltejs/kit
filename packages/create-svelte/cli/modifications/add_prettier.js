@@ -32,7 +32,7 @@ export default async function add_prettier(cwd, yes, usesEslint) {
 		});
 		add_prettier_to_eslint_extends(cwd);
 		upsert_package_json_scripts(cwd, {
-			lint: 'prettier --check . && eslint .',
+			lint: 'prettier --check . && eslint --ignore-path .gitignore .',
 			format: 'prettier --write .'
 		});
 	} else {
