@@ -21,7 +21,10 @@ export default async function add_typescript(cwd, yes) {
 			tslib: '^2.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/lib/Counter.svelte', [['<script>', '<script lang="ts">']]);
+		update_component(cwd, 'src/lib/Counter.svelte', [
+			['<script>', '<script lang="ts">'],
+			['const increment = () => {', 'const increment = (): void => {']
+		]);
 		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
 		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
