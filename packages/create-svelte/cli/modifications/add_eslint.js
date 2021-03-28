@@ -18,7 +18,7 @@ export default async function add_eslint(cwd, yes, use_typescript) {
 	}
 
 	upsert_package_json_scripts(cwd, {
-		lint: 'eslint .'
+		lint: 'eslint --ignore-path .gitignore .'
 	});
 
 	if (use_typescript) {

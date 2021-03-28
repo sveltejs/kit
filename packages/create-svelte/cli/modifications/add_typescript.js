@@ -23,7 +23,7 @@ export default async function add_typescript(cwd, yes) {
 		});
 		update_component(cwd, 'src/lib/Counter.svelte', [
 			['<script>', '<script lang="ts">'],
-			['let count = 0', 'let count: number = 0']
+			['const increment = () => {', 'const increment = (): void => {']
 		]);
 		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
 		add_svelte_preprocess_to_config(cwd);
