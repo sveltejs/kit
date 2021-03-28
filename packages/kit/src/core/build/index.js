@@ -119,15 +119,8 @@ async function build_client({
 			...user_config.build,
 			cssCodeSplit: true,
 			manifest: true,
-			lib: {
-				// TODO i'm not convinced this block is necessary if we're
-				// providing inputs explicitly via rollupOptions, but without
-				// it Vite complains about the dynamic import polyfill
-				entry: client_entry_file,
-				name: 'app',
-				formats: ['es']
-			},
 			outDir: client_out_dir,
+			polyfillDynamicImport: false,
 			rollupOptions: {
 				...(user_config.build && user_config.build.rollupOptions),
 				input,
