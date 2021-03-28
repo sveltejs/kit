@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import create_manifest_data from './core/create_manifest_data/index.js';
 import { load_config } from './core/load_config/index.js';
 
 async function get_config() {
@@ -150,6 +151,16 @@ prog
 	.option('--verbose', 'Log more stuff', false)
 	.action(async () => {
 		console.log('"svelte-kit build" will now run the adapter');
+	});
+
+prog
+	.command('routes')
+	.describe('View routes and endpoints for your app')
+	.action(async () => {
+		const config = await get_config();
+
+		const { routes } = create_manifest_data({ config });
+		console.log(routes);
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
