@@ -49,19 +49,19 @@ module.exports = {
 };
 ```
 
-#### adapter
+### adapter
 
 Determines how the output of `svelte-kit build` is converted for different platforms. See [Adapters](#adapters).
 
-#### amp
+### amp
 
 Enable [AMP](#amp) mode.
 
-#### appDir
+### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely).
 
-#### files
+### files
 
 An object containing zero or more of the following `string` values:
 
@@ -72,11 +72,11 @@ An object containing zero or more of the following `string` values:
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
 
-#### host
+### host
 
 A value that overrides the `Host` header when populating `page.host`
 
-#### hostHeader
+### hostHeader
 
 If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying host is exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) header and you should specify this in your config if you need to access `page.host`:
 
@@ -91,18 +91,18 @@ module.exports = {
 
 **You should only do this if you trust the reverse proxy**, which is why it isn't the default.
 
-#### hydrate
+### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
-#### paths
+### paths
 
 An object containing zero or more of the following `string` values:
 
 - `assets` — an absolute path, or a path relative to `base`, where your app's files are served from. This is useful if your files are served from a storage bucket of some kind
 - `base` — a root-relative (i.e. starts with `/`) path that specifies where your app is served from. This allows the app to live on a non-root path
 
-#### prerender
+### prerender
 
 See [Prerendering](#prerendering). An object containing zero or more of the following:
 
@@ -111,18 +111,18 @@ See [Prerendering](#prerendering). An object containing zero or more of the foll
 - `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
 - `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
-#### router
+### router
 
 Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
 
-#### ssr
+### ssr
 
 Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
-#### target
+### target
 
 Specifies an element to mount the app to. It must be a DOM selector that identifies an element that exists in your template file. If unspecified, the app will be mounted to `document.body`.
 
-#### vite
+### vite
 
 A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
