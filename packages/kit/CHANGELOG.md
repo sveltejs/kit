@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.64
+
+### Patch Changes
+
+- 7f58512: Prevent Vite prebundling from crashing on startup
+
 ## 1.0.0-next.63
 
 ### Patch Changes
