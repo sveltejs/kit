@@ -95,8 +95,9 @@ importers:
       typescript: ^4.2.3
   packages/adapter-cloudflare-workers:
     dependencies:
-      '@sveltejs/kit': link:../kit
       toml: 3.0.0
+    devDependencies:
+      '@sveltejs/kit': link:../kit
     specifiers:
       '@sveltejs/kit': workspace:*
       toml: ^3.0.0

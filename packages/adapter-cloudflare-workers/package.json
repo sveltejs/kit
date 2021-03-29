@@ -11,7 +11,9 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"toml": "^3.0.0",
+		"toml": "^3.0.0"
+	},
+	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"
 	}
 }
