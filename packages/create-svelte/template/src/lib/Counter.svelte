@@ -21,7 +21,12 @@
 		border: 2px solid #ff3e00;
 		outline: none;
 		width: 200px;
+		height: 60px;
 		font-variant-numeric: tabular-nums;
+	}
+	
+	button:hover {
+		border: 3px solid #ff3e00;
 	}
 
 	button:active {
