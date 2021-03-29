@@ -34,6 +34,8 @@ In certain circumstances you might need to disable this behaviour with the app-w
 </script>
 ```
 
+Note that this will disabling client-side routing for any navigation from this page, regardless of whether the router is already active.
+
 ### hydrate
 
 Ordinarily, SvelteKit 'hydrates' your server-rendered HTML into an interactive page. Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category. In these cases you can skip hydration when the app boots up with the app-wide [`hydrate` config option](#configuration-hydrate) or the page-level `hydrate` export:
