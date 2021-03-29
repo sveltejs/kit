@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.63
+
+### Patch Changes
+
+- 31f94fe: Add ssr, router and hydrate options
+
 ## 1.0.0-next.62
 
 ### Patch Changes
