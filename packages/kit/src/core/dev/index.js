@@ -103,6 +103,10 @@ class Watcher extends EventEmitter {
 			server: {
 				...user_config.server,
 				middlewareMode: true
+			},
+			optimizeDeps: {
+				...user_config.optimizeDeps,
+				entries: []
 			}
 		});
 
