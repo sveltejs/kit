@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.44
+
+### Patch Changes
+
+- 7e51473: fix eslint error in ts starter template, add eslint and prettier ignore config
+- 7d42f72: Add a global stylesheet during create-svelte depending on the chosen CSS preprocessor
+
 ## 2.0.0-next.43
 
 ### Patch Changes

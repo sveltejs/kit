@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.62
+
+### Patch Changes
+
+- 864c3d4: Assets imported from css and js/ts files are emitted as files instead of being inlined
+
 ## 1.0.0-next.61
 
 ### Patch Changes
