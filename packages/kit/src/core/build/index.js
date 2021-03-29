@@ -394,12 +394,22 @@ async function build_server(
 			target: 'es2018',
 			...user_config.build,
 			ssr: true,
-			lib: {
-				entry: app_file,
-				name: 'app',
-				formats: ['es']
-			},
-			outDir: `${output_dir}/server`
+			outDir: `${output_dir}/server`,
+			polyfillDynamicImport: false,
+			rollupOptions: {
+				...(user_config.build && user_config.build.rollupOptions),
+				input: {
+					app: app_file
+				},
+				output: {
+					format: 'esm',
+					entryFileNames: '[name].js',
+					chunkFileNames: 'chunks/[name]-[hash].js',
+					assetFileNames: 'assets/[name]-[hash][extname]',
+					inlineDynamicImports: true
+				},
+				preserveEntrySignatures: 'strict'
+			}
 		},
 		resolve: {
 			...user_config.resolve,
