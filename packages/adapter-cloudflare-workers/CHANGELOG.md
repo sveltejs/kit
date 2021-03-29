@@ -1,0 +1,1 @@
+# @sveltejs/adapter-cloudflare-workers

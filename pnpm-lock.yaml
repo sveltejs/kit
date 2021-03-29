@@ -66,12 +66,14 @@ importers:
       svelte: ^3.35.0
   examples/svelte-kit-demo:
     devDependencies:
+      '@sveltejs/adapter-cloudflare-workers': link:../../packages/adapter-cloudflare-workers
       '@sveltejs/adapter-node': link:../../packages/adapter-node
       '@sveltejs/adapter-static': link:../../packages/adapter-static
       '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.35.0
     specifiers:
+      '@sveltejs/adapter-cloudflare-workers': workspace:*
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/adapter-static': workspace:*
       '@sveltejs/adapter-vercel': workspace:*
@@ -91,6 +93,13 @@ importers:
       rollup: ^2.41.1
       sirv: ^1.0.11
       typescript: ^4.2.3
+  packages/adapter-cloudflare-workers:
+    dependencies:
+      '@sveltejs/kit': link:../kit
+      toml: 3.0.0
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      toml: ^3.0.0
   packages/adapter-netlify:
     dependencies:
       toml: 3.0.0
