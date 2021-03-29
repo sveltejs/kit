@@ -25,6 +25,7 @@ test('fills in defaults', () => {
 			},
 			host: null,
 			hostHeader: null,
+			hydrate: true,
 			paths: {
 				base: '',
 				assets: '/.'
@@ -35,6 +36,8 @@ test('fills in defaults', () => {
 				force: false,
 				pages: ['*']
 			},
+			router: true,
+			ssr: true,
 			target: null
 		},
 		preprocess: null
@@ -102,6 +105,7 @@ test('fills in partial blanks', () => {
 			},
 			host: null,
 			hostHeader: null,
+			hydrate: true,
 			paths: {
 				base: '',
 				assets: '/.'
@@ -112,6 +116,8 @@ test('fills in partial blanks', () => {
 				force: false,
 				pages: ['*']
 			},
+			router: true,
+			ssr: true,
 			target: null
 		},
 		preprocess: null

@@ -23,6 +23,8 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
+		this.enabled = true;
+
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
 		}
@@ -60,6 +62,8 @@ export class Router {
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
+			if (!this.enabled) return;
+
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
 			if (event.button || event.which !== 1) return;
@@ -104,7 +108,7 @@ export class Router {
 		});
 
 		addEventListener('popstate', (event) => {
-			if (event.state) {
+			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 				const info = this.parse(url);
 				if (info) {
@@ -149,13 +153,15 @@ export class Router {
 	 * @param {string[]} chain
 	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
-		const url = new URL(href, get_base_uri(document));
-		const info = this.parse(url);
+		if (this.enabled) {
+			const url = new URL(href, get_base_uri(document));
+			const info = this.parse(url);
 
-		if (info) {
-			// TODO shouldn't need to pass the hash here
-			history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
+			if (info) {
+				// TODO shouldn't need to pass the hash here
+				history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
+				return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
+			}
 		}
 
 		location.href = href;
@@ -194,5 +200,13 @@ export class Router {
 		} else {
 			scrollTo(0, 0);
 		}
+	}
+
+	enable() {
+		this.enabled = true;
+	}
+
+	disable() {
+		this.enabled = false;
 	}
 }

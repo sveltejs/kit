@@ -218,132 +218,11 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let context = {};
 	let maxage;
 
-	if (options.only_render_prerenderable_pages) {
-		if (error) return; // don't prerender an error page
-
-		// if the page has `export const prerender = true`, continue,
-		// otherwise bail out at this point
-		const mod = await component_promises[component_promises.length - 1];
-		if (!mod.prerender) return;
-	}
-
-	for (let i = 0; i < component_promises.length; i += 1) {
-		let loaded;
-
-		try {
-			const mod = await component_promises[i];
-			components[i] = mod.default;
-
-			if (mod.preload) {
-				throw new Error(
-					'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
-				);
-			}
-
-			if (mod.load) {
-				loaded = await mod.load.call(null, {
-					page,
-					get session() {
-						uses_credentials = true;
-						return $session;
-					},
-					fetch: fetcher,
-					context: { ...context }
-				});
-
-				if (!loaded) return;
-			}
-		} catch (e) {
-			// if load fails when we're already rendering the
-			// error page, there's not a lot we can do
-			if (error) throw e instanceof Error ? e : new Error(e);
-
-			loaded = {
-				error: e instanceof Error ? e : { name: 'Error', message: e.toString() },
-				status: 500
-			};
-		}
-
-		if (loaded) {
-			loaded = normalize(loaded);
-
-			// TODO there's some logic that's duplicated in the client runtime,
-			// it would be nice to DRY it out if possible
-			if (loaded.error) {
-				return await get_response({
-					request,
-					options,
-					$session,
-					route,
-					status: loaded.status,
-					error: loaded.error
-				});
-			}
-
-			if (loaded.redirect) {
-				return {
-					status: loaded.status,
-					headers: {
-						location: loaded.redirect
-					}
-				};
-			}
-
-			if (loaded.context) {
-				context = {
-					...context,
-					...loaded.context
-				};
-			}
-
-			maxage = loaded.maxage || 0;
-
-			props_promises[i] = loaded.props;
-		}
-	}
-
-	const session = writable($session);
-	let session_tracking_active = false;
-	const unsubscribe = session.subscribe(() => {
-		if (session_tracking_active) uses_credentials = true;
-	});
-	session_tracking_active = true;
-
-	if (error) {
-		if (options.dev) {
-			error.stack = await options.get_stack(error);
-		} else {
-			// remove error.stack in production
-			error.stack = String(error);
-		}
-	}
-
-	/** @type {Record<string, any>} */
-	const props = {
-		status,
-		error,
-		stores: {
-			page: writable(null),
-			navigating: writable(null),
-			session
-		},
-		page,
-		components
-	};
-
-	// leveln (instead of levels[n]) makes it easy to avoid
-	// unnecessary updates for layout components
-	for (let i = 0; i < props_promises.length; i += 1) {
-		props[`props_${i}`] = await props_promises[i];
-	}
-
-	let rendered;
+	let page_component;
 
 	try {
-		rendered = options.root.render(props);
+		page_component = await component_promises[component_promises.length - 1];
 	} catch (e) {
-		if (error) throw e instanceof Error ? e : new Error(e);
-
 		return await get_response({
 			request,
 			options,
@@ -354,7 +233,157 @@ async function get_response({ request, options, $session, route, status = 200, e
 		});
 	}
 
-	unsubscribe();
+	const page_config = {
+		ssr: 'ssr' in page_component ? page_component.ssr : options.ssr,
+		router: 'router' in page_component ? page_component.router : options.router,
+		hydrate: 'hydrate' in page_component ? page_component.hydrate : options.hydrate
+	};
+
+	if (options.only_render_prerenderable_pages) {
+		if (error) return; // don't prerender an error page
+
+		// if the page has `export const prerender = true`, continue,
+		// otherwise bail out at this point
+		if (!page_component.prerender) return;
+	}
+
+	/** @type {{ head: string, html: string, css: string }} */
+	let rendered;
+
+	if (page_config.ssr) {
+		for (let i = 0; i < component_promises.length; i += 1) {
+			let loaded;
+
+			try {
+				const mod = await component_promises[i];
+				components[i] = mod.default;
+
+				if (mod.preload) {
+					throw new Error(
+						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
+					);
+				}
+
+				if (mod.load) {
+					loaded = await mod.load.call(null, {
+						page,
+						get session() {
+							uses_credentials = true;
+							return $session;
+						},
+						fetch: fetcher,
+						context: { ...context }
+					});
+
+					if (!loaded) return;
+				}
+			} catch (e) {
+				// if load fails when we're already rendering the
+				// error page, there's not a lot we can do
+				if (error) throw e instanceof Error ? e : new Error(e);
+
+				loaded = {
+					error: e instanceof Error ? e : { name: 'Error', message: e.toString() },
+					status: 500
+				};
+			}
+
+			if (loaded) {
+				loaded = normalize(loaded);
+
+				// TODO there's some logic that's duplicated in the client runtime,
+				// it would be nice to DRY it out if possible
+				if (loaded.error) {
+					return await get_response({
+						request,
+						options,
+						$session,
+						route,
+						status: loaded.status,
+						error: loaded.error
+					});
+				}
+
+				if (loaded.redirect) {
+					return {
+						status: loaded.status,
+						headers: {
+							location: loaded.redirect
+						}
+					};
+				}
+
+				if (loaded.context) {
+					context = {
+						...context,
+						...loaded.context
+					};
+				}
+
+				maxage = loaded.maxage || 0;
+
+				props_promises[i] = loaded.props;
+			}
+		}
+
+		const session = writable($session);
+		let session_tracking_active = false;
+		const unsubscribe = session.subscribe(() => {
+			if (session_tracking_active) uses_credentials = true;
+		});
+		session_tracking_active = true;
+
+		if (error) {
+			if (options.dev) {
+				error.stack = await options.get_stack(error);
+			} else {
+				// remove error.stack in production
+				error.stack = String(error);
+			}
+		}
+
+		/** @type {Record<string, any>} */
+		const props = {
+			status,
+			error,
+			stores: {
+				page: writable(null),
+				navigating: writable(null),
+				session
+			},
+			page,
+			components
+		};
+
+		// leveln (instead of levels[n]) makes it easy to avoid
+		// unnecessary updates for layout components
+		for (let i = 0; i < props_promises.length; i += 1) {
+			props[`props_${i}`] = await props_promises[i];
+		}
+
+		try {
+			rendered = options.root.render(props);
+		} catch (e) {
+			if (error) throw e instanceof Error ? e : new Error(e);
+
+			return await get_response({
+				request,
+				options,
+				$session,
+				route,
+				status: 500,
+				error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
+			});
+		}
+
+		unsubscribe();
+	} else {
+		rendered = {
+			head: '',
+			html: '',
+			css: ''
+		};
+	}
 
 	// TODO all the `route &&` stuff is messy
 	const js_deps = route ? route.js : [];
@@ -373,12 +402,17 @@ async function get_response({ request, options, $session, route, status = 200, e
 				...css_deps.map((dep) => `<link rel="stylesheet" href="${prefix}/${dep}">`)
 		  ].join('\n\t\t\t');
 
-	const init = options.amp
-		? `
+	/** @type {string} */
+	let init = '';
+
+	if (options.amp) {
+		init = `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
-		<script async src="https://cdn.ampproject.org/v0.js"></script>`
-		: `
+		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
+	} else if (page_config.router || page_config.hydrate) {
+		// prettier-ignore
+		init = `
 		<script type="module">
 			import { start } from ${s(options.entry)};
 			start({
@@ -387,19 +421,24 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: ${status},
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
-				nodes: [
-					${(route ? route.parts : [])
+				host: ${s(request.host || 'location.host')},
+				route: ${!!page_config.router},
+				hydrate: ${page_config.hydrate? `{
+					nodes: [
+						${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
-						.join(',\n\t\t\t\t\t')}
-				],
-				page: {
-					host: ${s(request.host || 'location.host')},
-					path: ${s(request.path)},
-					query: new URLSearchParams(${s(request.query.toString())}),
-					params: ${s(params)}
-				}
+						.join(',\n\t\t\t\t\t\t')}
+					],
+					page: {
+						host: ${s(request.host || 'location.host')}, // TODO this is redundant
+						path: ${s(request.path)},
+						query: new URLSearchParams(${s(request.query.toString())}),
+						params: ${s(params)}
+					}
+				}` : 'null'}
 			});
 		</script>`;
+	}
 
 	const head = [
 		rendered.head,

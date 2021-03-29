@@ -13,6 +13,8 @@ export type NavigationCandidate = {
 };
 
 export type NavigationResult = {
+	nodes?: Array<Promise<CSRComponent>>;
+	page?: Page;
 	reload?: boolean;
 	redirect?: string;
 	state?: NavigationState;
@@ -28,7 +30,7 @@ export type NavigationState = {
 };
 
 type PageNode = {
-	component: CSRComponent;
+	module: CSRComponent;
 	uses: {
 		params: Set<string>;
 		query: boolean;

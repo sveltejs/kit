@@ -219,7 +219,10 @@ class Watcher extends EventEmitter {
 							},
 							get_static_file: (file) =>
 								fs.readFileSync(path.join(this.config.kit.files.assets, file)),
-							get_amp_css: (url) => '' // TODO: implement this
+							get_amp_css: (url) => '', // TODO: implement this
+							ssr: this.config.kit.ssr,
+							router: this.config.kit.router,
+							hydrate: this.config.kit.hydrate
 						}
 					);
 

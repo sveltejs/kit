@@ -374,7 +374,10 @@ async function build_server(
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => amp_css_lookup[dep]
+					get_amp_css: dep => amp_css_lookup[dep],
+					ssr: ${s(config.kit.ssr)},
+					router: ${s(config.kit.router)},
+					hydrate: ${s(config.kit.hydrate)}
 				});
 			}
 		`

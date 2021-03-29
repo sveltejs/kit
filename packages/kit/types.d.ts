@@ -17,6 +17,7 @@ export type Config = {
 		};
 		host?: string;
 		hostHeader?: string;
+		hydrate?: boolean;
 		paths?: {
 			base?: string;
 			assets?: string;
@@ -27,6 +28,8 @@ export type Config = {
 			force?: boolean;
 			pages?: string[];
 		};
+		router?: boolean;
+		ssr?: boolean;
 		target?: string;
 		vite?: {} | (() => {});
 	};
