@@ -18,7 +18,8 @@
     "realworld.svelte.dev": "1.0.0",
     "sandbox": "1.0.0",
     "svelte-kit-demo": "1.0.0",
-    "@sveltejs/vite-plugin-svelte": "1.0.0-next.0"
+    "@sveltejs/vite-plugin-svelte": "1.0.0-next.0",
+    "@sveltejs/adapter-cloudflare-workers": "0.0.1"
   },
   "changesets": [
     "beige-bananas-press",
@@ -89,8 +90,10 @@
     "nasty-waves-kneel",
     "neat-worms-tell",
     "new-birds-march",
+    "nice-bags-bathe",
     "nine-actors-whisper",
     "old-files-jump",
+    "pink-ducks-press",
     "plenty-cougars-invite",
     "poor-snakes-explode",
     "poor-years-hear",
@@ -152,6 +155,7 @@
     "violet-jars-give",
     "warm-ads-invite",
     "weak-swans-lie",
+    "wet-dingos-perform",
     "wet-worms-cross",
     "wicked-items-repair",
     "wicked-oranges-share",
