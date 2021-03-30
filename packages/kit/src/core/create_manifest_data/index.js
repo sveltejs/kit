@@ -79,6 +79,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					throw new Error(`Invalid route ${file} — brackets are unbalanced`);
 				}
 
+				if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment)) {
+					throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
+				}
+
 				const parts = get_parts(segment, file);
 				const is_index = is_dir ? false : basename.startsWith('index.');
 				const is_page = config.extensions.indexOf(ext) !== -1;
@@ -295,26 +299,27 @@ function get_parts(part, file) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment
-				.map((part) => {
-					return part.dynamic
-						? part.spread
-							? '(.+)'
-							: '([^/]+?)'
-						: encodeURI(part.content.normalize())
-								.replace(/\?/g, '%3F')
-								.replace(/#/g, '%23')
-								.replace(/%5B/g, '[')
-								.replace(/%5D/g, ']')
-								.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-				})
-				.join('');
+			return segment[0].spread
+				? '\\/?(.*)'
+				: '\\/' +
+						segment
+							.map((part) => {
+								return part.dynamic
+									? '([^/]+?)'
+									: encodeURI(part.content.normalize())
+											.replace(/\?/g, '%3F')
+											.replace(/#/g, '%23')
+											.replace(/%5B/g, '[')
+											.replace(/%5D/g, ']')
+											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+							})
+							.join('');
 		})
-		.join('\\/');
+		.join('');
 
 	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
 
-	return new RegExp(`^\\/${path}${trailing}`);
+	return new RegExp(`^${path || '\\/'}${trailing}`);
 }
 
 /**

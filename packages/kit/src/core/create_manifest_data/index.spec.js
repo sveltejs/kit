@@ -152,12 +152,27 @@ test('sorts routes correctly', () => {
 			['samples/sorting/post/[id].svelte'],
 			'samples/sorting/[endpoint].js',
 			['samples/sorting/[wildcard].svelte'],
-			['samples/sorting/[...spread]/deep/[...deep_spread]/xyz.svelte'],
-			['samples/sorting/[...spread]/deep/[...deep_spread]/index.svelte'],
-			['samples/sorting/[...spread]/deep/index.svelte'],
-			['samples/sorting/[...spread]/abc.svelte'],
-			['samples/sorting/[...spread]/index.svelte']
+			['samples/sorting/[...rest]/deep/[...deep_rest]/xyz.svelte'],
+			['samples/sorting/[...rest]/deep/[...deep_rest]/index.svelte'],
+			['samples/sorting/[...rest]/deep/index.svelte'],
+			['samples/sorting/[...rest]/abc.svelte'],
+			['samples/sorting/[...rest]/index.svelte']
 		]
+	);
+});
+
+test('disallows rest parameters inside segments', () => {
+	assert.throws(
+		() => {
+			create('samples/invalid-rest');
+		},
+		/** @param {Error} e */
+		(e) => {
+			return (
+				e.message ===
+				'Invalid route samples/invalid-rest/foo-[...rest]-bar.svelte — rest parameter must be a standalone segment'
+			);
+		}
 	);
 });
 
