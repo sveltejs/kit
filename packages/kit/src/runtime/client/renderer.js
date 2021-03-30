@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import { normalize } from '../load';
-import { find_anchor } from './utils';
 
 /** @param {any} value */
 function page_store(value) {
@@ -64,7 +63,7 @@ export class Renderer {
 
 		this.caches = new Map();
 
-		this.prefetching = {
+		this.loading = {
 			id: null,
 			promise: null
 		};
@@ -78,28 +77,6 @@ export class Renderer {
 		this.$session = null;
 
 		this.root = null;
-
-		/** @param {MouseEvent} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(/** @type {Node} */ (event.target));
-			if (a && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(new URL(/** @type {string} */ (a.href)));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				trigger_prefetch(event);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
 
 		let ready = false;
 		this.stores.session.subscribe(async (value) => {
@@ -230,8 +207,8 @@ export class Renderer {
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
-		this.prefetching.promise = null;
-		this.prefetching.id = null;
+		this.loading.promise = null;
+		this.loading.id = null;
 
 		const leaf_node = navigation_result.state.nodes[navigation_result.state.nodes.length - 1];
 		if (leaf_node.module.router === false) {
@@ -242,26 +219,14 @@ export class Renderer {
 	}
 
 	/**
-	 * @param {URL} url
+	 * @param {import('./types').NavigationInfo} info
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	prefetch(url) {
-		return Promise.resolve().then(async () => {
-			if (this.router) {
-				const info = this.router.parse(url);
+	load(info) {
+		this.loading.promise = this._get_navigation_result(info);
+		this.loading.id = info.id;
 
-				if (info) {
-					this.prefetching.promise = this._get_navigation_result(info);
-					this.prefetching.id = info.id;
-
-					return await this.prefetching.promise;
-				} else {
-					throw new Error(`Could not prefetch ${url.href}`);
-				}
-			} else {
-				throw new Error('Router is disabled');
-			}
-		});
+		return this.loading.promise;
 	}
 
 	/**
@@ -269,8 +234,8 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async _get_navigation_result(info) {
-		if (this.prefetching.id === info.id) {
-			return this.prefetching.promise;
+		if (this.loading.id === info.id) {
+			return this.loading.promise;
 		}
 
 		for (let i = 0; i < info.routes.length; i += 1) {
