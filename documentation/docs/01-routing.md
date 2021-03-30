@@ -105,7 +105,7 @@ Since `delete` is a reserved word in JavaScript, DELETE requests are handled wit
 >
 > The `body` property of the request object exists in the case of POST requests. If you're posting form data, it will be a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
-If your return statement contains **cookies**, you can specify multiple cookies in one `set-cookie` like so: `return { headers: { 'set-cookie': [cookie1], [cookie2] } }`
+If your return statement contains **cookies**, you can specify multiple cookies in one `set-cookie` like so: `return { headers: { 'set-cookie': [cookie1, cookie2] } }`
 
 ### Private modules
 
