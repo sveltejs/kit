@@ -70,5 +70,8 @@
 		},
 		"./types.d.ts": "./types.d.ts"
 	},
-	"types": "types.d.ts"
+	"types": "types.d.ts",
+	"engines": {
+		"node": ">= 12.17.0"
+	}
 }
