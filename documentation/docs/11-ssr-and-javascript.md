@@ -46,7 +46,7 @@ Ordinarily, SvelteKit 'hydrates' your server-rendered HTML into an interactive p
 </script>
 ```
 
-> If `hydrate` and `router` are both `false`, SvelteKit will not add any JavaScript to the page at all. As a result, anchor elements with [`sveltekit:` prefix](#anchor-options) won't work either.
+> If `hydrate` and `router` are both `false`, SvelteKit will not add any JavaScript to the page at all.
 
 ### prerender
 
