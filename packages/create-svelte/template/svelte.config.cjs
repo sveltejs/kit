@@ -12,7 +12,11 @@ module.exports = {
 		// hydrate the <div id="svelte"> element in src/app.html
 		target: '#svelte',
 
+		// visit https://vitejs.dev/config/ for more details
 		vite: {
+			optimizeDeps: {
+				include: Object.keys(pkg.dependencies || {})
+			},
 			ssr: {
 				noExternal: Object.keys(pkg.dependencies || {})
 			}
