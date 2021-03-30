@@ -28,12 +28,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/** @type {Array<{
 	 *   url: string;
-	 *   payload: {
-	 *     status: number;
-	 *     statusText: string;
-	 *     headers: import('types.internal').Headers;
-	 *     body: string;
-	 *   }
+	 *   json: string;
 	 * }>} */
 	const serialized_data = [];
 
@@ -156,38 +151,33 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			/** @type {import('types.internal').Headers} */
-			const headers = {};
-			response.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
-			});
-
-			const inline = {
-				url,
-				payload: {
-					status: response.status,
-					statusText: response.statusText,
-					headers,
-
-					/** @type {string} */
-					body: null
-				}
-			};
-
 			const proxy = new Proxy(response, {
 				get(response, key, receiver) {
+					async function text() {
+						const body = await response.text();
+
+						/** @type {import('types.internal').Headers} */
+						const headers = {};
+						response.headers.forEach((value, key) => {
+							if (key !== 'etag') headers[key] = value;
+						});
+
+						// prettier-ignore
+						serialized_data.push({
+							url,
+							json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
+						});
+
+						return body;
+					}
+
 					if (key === 'text') {
-						return async () => {
-							const text = await response.text();
-							inline.payload.body = escape(text);
-							serialized_data.push(inline);
-							return text;
-						};
+						return text;
 					}
 
 					if (key === 'json') {
 						return async () => {
-							return JSON.parse(await response.text());
+							return JSON.parse(await text());
 						};
 					}
 
@@ -449,7 +439,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `${rendered.html}
 
 			${serialized_data
-				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${s(payload)}</script>`)
+				.map(({ url, json }) => `<script type="svelte-data" url="${url}">${json}</script>`)
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
