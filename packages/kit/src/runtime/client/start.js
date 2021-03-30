@@ -39,7 +39,7 @@ export async function start({ paths, target, session, error, status, host, route
 		host
 	});
 
-	init({ router, renderer });
+	init(router);
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate, status, error);

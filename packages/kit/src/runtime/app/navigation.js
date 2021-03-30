@@ -1,4 +1,4 @@
-import { router, renderer } from '../client/singletons.js';
+import { router } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 /**
