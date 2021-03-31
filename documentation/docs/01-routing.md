@@ -105,6 +105,16 @@ Since `delete` is a reserved word in JavaScript, DELETE requests are handled wit
 >
 > The `body` property of the request object exists in the case of POST requests. If you're posting form data, it will be a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
+To set multiple cookies in a single set of response headers, you can return an array:
+
+```js
+return {
+	headers: {
+		'set-cookie': [cookie1, cookie2]
+	}
+};
+```
+
 ### Private modules
 
 A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.
@@ -129,6 +139,8 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 	file: 'documentation/docs/01-routing.md'
 }
 ```
+
+> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
 #### Fallthrough routes
 

@@ -8,13 +8,13 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
+	status: number;
+	error: Error;
 	nodes: Array<Promise<CSRComponent>>;
 	page: Page;
 };
 
 export type NavigationResult = {
-	nodes?: Array<Promise<CSRComponent>>;
-	page?: Page;
 	reload?: boolean;
 	redirect?: string;
 	state?: NavigationState;

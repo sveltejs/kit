@@ -8,7 +8,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
-	test('data is serialized', async ({ base, page, capture_requests, js }) => {
+	test('data is serialized', null, async ({ base, page, capture_requests, js }) => {
 		const requests = await capture_requests(async () => {
 			await page.goto(`${base}/load/serialization`);
 		});

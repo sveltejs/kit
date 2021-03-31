@@ -1,5 +1,6 @@
 import { Adapter, GetContext, GetSession, Handle, Incoming, Load, Response } from './types';
 import { UserConfig as ViteConfig } from 'vite';
+import { Response as NodeFetchResponse } from 'node-fetch';
 
 declare global {
 	interface ImportMeta {
@@ -84,7 +85,7 @@ export type Page = {
 
 export type LoadInput = {
 	page: Page;
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
+	fetch: (info: RequestInfo, init?: RequestInit) => Promise<NodeFetchResponse>;
 	session: any;
 	context: Record<string, any>;
 };

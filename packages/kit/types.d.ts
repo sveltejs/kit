@@ -68,14 +68,17 @@ export type Incoming = {
 	body: string | Buffer | ReadOnlyFormData;
 };
 
-export type Request<Context = any> = {
+type BaseBody = string | Buffer | ReadOnlyFormData;
+type ParameterizedBody<Body = unknown> = BaseBody & Body;
+
+export type Request<Context = any, Body = unknown> = {
 	method: string;
 	host: string;
 	headers: Headers;
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	body: string | Buffer | ReadOnlyFormData;
+	body: ParameterizedBody<Body>;
 	context: Context;
 };
 
@@ -85,8 +88,8 @@ export type Response = {
 	body?: any;
 };
 
-export type RequestHandler<Context = any> = (
-	request?: Request<Context>
+export type RequestHandler<Context = any, Body = unknown> = (
+	request?: Request<Context, Body>
 ) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;

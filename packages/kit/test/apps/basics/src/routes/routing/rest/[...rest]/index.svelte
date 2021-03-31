@@ -14,6 +14,7 @@
 <h2>{rest}</h2>
 
 <a href="/routing/rest/xyz/abc/deep">deep</a>
-<a href="/routing/rest/xyz/abc">deep</a>
-<a href="/routing/rest/xyz/abc/def">deep</a>
-<a href="/routing/rest/xyz/abc/def/ghi">deep</a>
+<a href="/routing/rest/xyz/abc">abc</a>
+<a href="/routing/rest/xyz/abc/def">def</a>
+<a href="/routing/rest/xyz/abc/def/ghi">ghi</a>
+<a href="/routing/rest">empty</a>

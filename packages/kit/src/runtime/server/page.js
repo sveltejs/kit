@@ -28,17 +28,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/** @type {Array<{
 	 *   url: string;
-	 *   payload: {
-	 *     status: number;
-	 *     statusText: string;
-	 *     headers: import('types.internal').Headers;
-	 *     body: string;
-	 *   }
+	 *   json: string;
 	 * }>} */
 	const serialized_data = [];
 
-	const match = route && route.pattern.exec(request.path);
-	const params = route && route.params(match);
+	const match = error ? null : route.pattern.exec(request.path);
+	const params = error ? {} : route.params(match);
 
 	const page = {
 		host: request.host,
@@ -156,41 +151,33 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			/** @type {import('types.internal').Headers} */
-			const headers = {};
-			response.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
-			});
-
-			const inline = {
-				url,
-				payload: {
-					status: response.status,
-					statusText: response.statusText,
-					headers,
-
-					/** @type {string} */
-					body: null
-				}
-			};
-
 			const proxy = new Proxy(response, {
 				get(response, key, receiver) {
+					async function text() {
+						const body = await response.text();
+
+						/** @type {import('types.internal').Headers} */
+						const headers = {};
+						response.headers.forEach((value, key) => {
+							if (key !== 'etag') headers[key] = value;
+						});
+
+						// prettier-ignore
+						serialized_data.push({
+							url,
+							json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
+						});
+
+						return body;
+					}
+
 					if (key === 'text') {
-						return async () => {
-							const text = await response.text();
-							inline.payload.body = text;
-							serialized_data.push(inline);
-							return text;
-						};
+						return text;
 					}
 
 					if (key === 'json') {
 						return async () => {
-							const json = await response.json();
-							inline.payload.body = s(json);
-							serialized_data.push(inline);
-							return json;
+							return JSON.parse(await text());
 						};
 					}
 
@@ -221,13 +208,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let page_component;
 
 	try {
-		page_component = await component_promises[component_promises.length - 1];
+		page_component = error
+			? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
+			: await component_promises[component_promises.length - 1];
 	} catch (e) {
 		return await get_response({
 			request,
 			options,
 			$session,
-			route,
+			route: null,
 			status: 500,
 			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
@@ -260,7 +249,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 				if (mod.preload) {
 					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
+						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
 					);
 				}
 
@@ -275,7 +264,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						context: { ...context }
 					});
 
-					if (!loaded) return;
+					if (!loaded && mod === page_component) return;
 				}
 			} catch (e) {
 				// if load fails when we're already rendering the
@@ -298,7 +287,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						request,
 						options,
 						$session,
-						route,
+						route: null,
 						status: loaded.status,
 						error: loaded.error
 					});
@@ -370,7 +359,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				request,
 				options,
 				$session,
-				route,
+				route: null,
 				status: 500,
 				error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 			});
@@ -418,19 +407,19 @@ async function get_response({ request, options, $session, route, status = 200, e
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
-				status: ${status},
-				error: ${serialize_error(error)},
 				session: ${serialized_session},
-				host: ${s(request.host || 'location.host')},
+				host: ${request.host ? s(request.host) : 'location.host'},
 				route: ${!!page_config.router},
 				hydrate: ${page_config.hydrate? `{
-					nodes: [
+					status: ${status},
+					error: ${serialize_error(error)},
+					nodes: ${route ? `[
 						${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
 						.join(',\n\t\t\t\t\t\t')}
-					],
+					]` : '[]'},
 					page: {
-						host: ${s(request.host || 'location.host')}, // TODO this is redundant
+						host: ${request.host ? s(request.host) : 'location.host'}, // TODO this is redundant
 						path: ${s(request.path)},
 						query: new URLSearchParams(${s(request.query.toString())}),
 						params: ${s(params)}
@@ -452,7 +441,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `${rendered.html}
 
 			${serialized_data
-				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${s(payload)}</script>`)
+				.map(({ url, json }) => `<script type="svelte-data" url="${url}">${json}</script>`)
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
@@ -544,4 +533,51 @@ function serialize_error(error) {
 		serialized = '{}';
 	}
 	return serialized;
+}
+
+/** @type {Record<string, string>} */
+const escaped = {
+	'<': '\\u003C',
+	'>': '\\u003E',
+	'/': '\\u002F',
+	'\\': '\\\\',
+	'\b': '\\b',
+	'\f': '\\f',
+	'\n': '\\n',
+	'\r': '\\r',
+	'\t': '\\t',
+	'\0': '\\0',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+/** @param {string} str */
+function escape(str) {
+	let result = '"';
+
+	for (let i = 0; i < str.length; i += 1) {
+		const char = str.charAt(i);
+		const code = char.charCodeAt(0);
+
+		if (char === '"') {
+			result += '\\"';
+		} else if (char in escaped) {
+			result += escaped[char];
+		} else if (code >= 0xd800 && code <= 0xdfff) {
+			const next = str.charCodeAt(i + 1);
+
+			// If this is the beginning of a [high, low] surrogate pair,
+			// add the next two characters, otherwise escape
+			if (code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
+				result += char + str[++i];
+			} else {
+				result += `\\u${code.toString(16).toUpperCase()}`;
+			}
+		} else {
+			result += char;
+		}
+	}
+
+	result += '"';
+	return result;
 }
