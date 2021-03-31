@@ -34,7 +34,7 @@ In certain circumstances you might need to disable this behaviour with the app-w
 </script>
 ```
 
-Note that this will disabling client-side routing for any navigation from this page, regardless of whether the router is already active.
+Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
 
 ### hydrate
 

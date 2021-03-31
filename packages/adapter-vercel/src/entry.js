@@ -1,10 +1,10 @@
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 // eslint-disable-next-line import/no-unresolved
 import { get_body } from '@sveltejs/kit/http';
 
 export default async (req, res) => {
 	const host = `${req.headers['x-forwarded-proto']}://${req.headers.host}`;
-	const { pathname, query = '' } = new URL(req.url || '', host);
+	const { pathname, searchParams } = new URL(req.url || '', host);
 
 	const { render } = await import('./server/app.mjs');
 
@@ -12,7 +12,7 @@ export default async (req, res) => {
 		method: req.method,
 		headers: req.headers,
 		path: pathname,
-		query: new URLSearchParams(query),
+		query: searchParams,
 		body: await get_body(req)
 	});
 
