@@ -34,13 +34,17 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        node-version: [14]
+        node-version: [12, 14, 15]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        include:
+        exclude:
           - node: 12
-            os: ubuntu-latest
+            os: macOS-latest
+          - node: 12
+            os: windows-latest
           - node: 15
-            os: ubuntu-latest
+            os: macOS-latest
+          - node: 15
+            os: windows-latest
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
@@ -72,11 +76,15 @@ jobs:
       matrix:
         node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        include:
+        exclude:
           - node: 12
-            os: ubuntu-latest
+            os: macOS-latest
+          - node: 12
+            os: windows-latest
           - node: 15
-            os: ubuntu-latest
+            os: macOS-latest
+          - node: 15
+            os: windows-latest
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
