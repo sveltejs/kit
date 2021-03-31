@@ -8,7 +8,7 @@ export default function (test, is_dev) {
 			await page.waitForTimeout(50);
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 
-			await clicknav('[href="/routing/disabled/b"]');
+			await Promise.all([page.click('[href="/routing/disabled/b"]'), page.waitForNavigation()]);
 			assert.equal(await page.textContent('button'), 'clicks: 0');
 
 			await page.click('button');
@@ -18,7 +18,7 @@ export default function (test, is_dev) {
 			await clicknav('[href="/routing/disabled/a"]');
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 
-			await clicknav('[href="/routing/disabled/b"]');
+			await Promise.all([page.click('[href="/routing/disabled/b"]'), page.waitForNavigation()]);
 			assert.equal(await page.textContent('button'), 'clicks: 0');
 		}
 	});
