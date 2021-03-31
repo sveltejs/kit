@@ -31,7 +31,7 @@ const assets_handler = sirv(join(__dirname, '/assets'), {
 
 polka()
 	.use(compression({ threshold: 0 }), assets_handler, prerendered_handler, async (req, res) => {
-		const parsed = new URL(req.url || '');
+		const parsed = new URL(req.url || '', 'http://localhost');
 		const rendered = await app.render({
 			method: req.method,
 			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
