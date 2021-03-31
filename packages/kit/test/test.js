@@ -144,8 +144,8 @@ function duplicate(test_fn, config) {
 						});
 
 						await context.pages.js.click(selector);
-
 						await context.pages.js.evaluate(() => window.navigated);
+						await context.pages.js.evaluate(() => window.started); // in case router=false
 					},
 					js: true,
 					response
