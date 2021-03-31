@@ -176,7 +176,7 @@ export class Renderer {
 		if (navigation_result.reload) {
 			location.reload();
 		} else if (navigation_result.redirect) {
-			if (chain.length > 10 || chain.includes(this.current.page.path)) {
+			if (chain.length > 10 || chain.includes(info.path)) {
 				this.root.$set({
 					status: 500,
 					error: new Error('Redirect loop')
@@ -185,7 +185,7 @@ export class Renderer {
 				if (this.router) {
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
 						...chain,
-						this.current.page.path
+						info.path
 					]);
 				} else {
 					location.href = new URL(navigation_result.redirect, location.href).href;
