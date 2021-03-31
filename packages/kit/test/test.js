@@ -24,7 +24,7 @@ async function setup({ port }) {
 
 	pages.js.addInitScript({
 		content: `
-			window.started = new Promise(fulfil => {
+			window.started = new Promise((fulfil, reject) => {
 				setTimeout(() => {
 					reject(new Error('Timed out'));
 				}, 5000);
@@ -145,7 +145,6 @@ function duplicate(test_fn, config) {
 
 						await context.pages.js.click(selector);
 						await context.pages.js.evaluate(() => window.navigated);
-						await context.pages.js.evaluate(() => window.started); // in case router=false
 					},
 					js: true,
 					response
