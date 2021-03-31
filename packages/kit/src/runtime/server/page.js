@@ -37,8 +37,8 @@ async function get_response({ request, options, $session, route, status = 200, e
 	 * }>} */
 	const serialized_data = [];
 
-	const match = route && route.pattern.exec(request.path);
-	const params = route && route.params(match);
+	const match = error ? null : route.pattern.exec(request.path);
+	const params = error ? {} : route.params(match);
 
 	const page = {
 		host: request.host,
@@ -277,7 +277,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						context: { ...context }
 					});
 
-					if (!loaded) return;
+					if (!loaded && mod === page_component) return;
 				}
 			} catch (e) {
 				// if load fails when we're already rendering the
@@ -420,12 +420,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
-				status: ${status},
-				error: ${serialize_error(error)},
 				session: ${serialized_session},
 				host: ${request.host ? s(request.host) : 'location.host'},
 				route: ${!!page_config.router},
 				hydrate: ${page_config.hydrate? `{
+					status: ${status},
+					error: ${serialize_error(error)},
 					nodes: ${route ? `[
 						${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)

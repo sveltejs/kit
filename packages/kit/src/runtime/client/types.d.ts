@@ -8,6 +8,8 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
+	status: number;
+	error: Error;
 	nodes: Array<Promise<CSRComponent>>;
 	page: Page;
 };
