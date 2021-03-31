@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- feb2db7: Simplify parsing of URLS of incoming requests
+
 ## 1.0.0-next.9
 
 ### Patch Changes

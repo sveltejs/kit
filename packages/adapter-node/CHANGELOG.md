@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- feb2db7: Fix fatal error when trying to parse URLs of incoming requests
+
 ## 1.0.0-next.11
 
 ### Patch Changes
