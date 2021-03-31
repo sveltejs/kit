@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.65",
+	"version": "1.0.0-next.66",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",

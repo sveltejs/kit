@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.66
+
+### Patch Changes
+
+- d9ce2a2: Correct response type for fetch
+
 ## 1.0.0-next.65
 
 ### Patch Changes
