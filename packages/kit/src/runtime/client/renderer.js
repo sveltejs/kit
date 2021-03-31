@@ -118,38 +118,16 @@ export class Renderer {
 	 * @param {import('./types').NavigationCandidate} selected
 	 */
 	async start(selected) {
-		const hydrated = await this._hydrate(selected);
+		const result = await this._load(selected);
 
-		if (hydrated.redirect) {
+		if (result.redirect) {
 			// this is a real edge case — `load` would need to return
 			// a redirect but only in the browser
-			location.href = new URL(hydrated.redirect, location.href).href;
+			location.href = new URL(result.redirect, location.href).href;
 			return;
 		}
 
-		this.current = hydrated.state;
-
-		// remove dev-mode SSR <style> insert, since it doesn't apply
-		// to hydrated markup (HMR requires hashes to be rewritten)
-		// TODO only in dev
-		// TODO it seems this doesn't always work with the classname
-		// stabilisation in vite-plugin-svelte? see e.g.
-		// hn.svelte.dev
-		// const style = document.querySelector('style[data-svelte]');
-		// if (style) style.remove();
-
-		this.root = new this.Root({
-			target: this.target,
-			props: {
-				// TODO should these be part of `hydrated`?
-				stores: this.stores,
-				page: selected.page,
-				...hydrated.props
-			},
-			hydrate: true
-		});
-
-		this.started = true;
+		this._init(result);
 	}
 
 	/** @param {{ path: string, query: URLSearchParams }} destination */
@@ -209,14 +187,7 @@ export class Renderer {
 
 			await 0;
 		} else {
-			this.start(
-				{
-					nodes: navigation_result.nodes,
-					page: navigation_result.page
-				},
-				navigation_result.props.status,
-				navigation_result.props.error
-			);
+			this._init(navigation_result);
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
@@ -292,8 +263,8 @@ export class Renderer {
 				query: info.query
 			};
 
-			const hydrated = await this._hydrate({ status: 200, error: null, nodes, page });
-			if (hydrated) return hydrated;
+			const result = await this._load({ status: 200, error: null, nodes, page });
+			if (result) return result;
 		}
 
 		return {
@@ -313,15 +284,42 @@ export class Renderer {
 		};
 	}
 
+	/** @param {import('./types').NavigationResult} result */
+	_init(result) {
+		this.current = result.state;
+
+		// remove dev-mode SSR <style> insert, since it doesn't apply
+		// to hydrated markup (HMR requires hashes to be rewritten)
+		// TODO only in dev
+		// TODO it seems this doesn't always work with the classname
+		// stabilisation in vite-plugin-svelte? see e.g.
+		// hn.svelte.dev
+		// const style = document.querySelector('style[data-svelte]');
+		// if (style) style.remove();
+
+		this.root = new this.Root({
+			target: this.target,
+			props: {
+				// TODO should these be part of `result`?
+				stores: this.stores,
+				page: result.page,
+				...result.props
+			},
+			hydrate: true
+		});
+
+		this.started = true;
+	}
+
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _hydrate({ status, error, nodes, page }) {
+	async _load({ status, error, nodes, page }) {
 		const query = page.query.toString();
 
 		/** @type {import('./types').NavigationResult} */
-		const hydrated = {
+		const result = {
 			nodes, // TODO are these and page duplicative?
 			page,
 			state: {
@@ -378,7 +376,7 @@ export class Renderer {
 				const previous_context = this.current.contexts[i];
 
 				const module = await component_promises[i];
-				hydrated.props.components[i] = module.default;
+				result.props.components[i] = module.default;
 
 				if (module.preload) {
 					throw new Error(
@@ -470,7 +468,7 @@ export class Renderer {
 								throw error;
 							}
 
-							return await this._hydrate({
+							return await this._load({
 								status: loaded.status || 500,
 								error: loaded.error,
 								nodes: [],
@@ -533,11 +531,11 @@ export class Renderer {
 						props_promises[i] = loaded.props;
 					}
 
-					hydrated.state.nodes[i] = node;
-					hydrated.state.contexts[i] = context;
+					result.state.nodes[i] = node;
+					result.state.contexts[i] = context;
 				} else {
-					hydrated.state.nodes[i] = previous;
-					hydrated.state.contexts[i] = context = previous_context;
+					result.state.nodes[i] = previous;
+					result.state.contexts[i] = context = previous_context;
 				}
 			}
 
@@ -545,19 +543,19 @@ export class Renderer {
 
 			new_props.forEach((p, i) => {
 				if (p) {
-					hydrated.props[`props_${i}`] = p;
+					result.props[`props_${i}`] = p;
 				}
 			});
 
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
-				hydrated.props.page = page;
+				result.props.page = page;
 			}
 		} catch (e) {
 			if (error) {
 				throw error;
 			}
 
-			return await this._hydrate({
+			return await this._load({
 				status: 500,
 				error: e,
 				nodes: [],
@@ -570,6 +568,6 @@ export class Renderer {
 			});
 		}
 
-		return hydrated;
+		return result;
 	}
 }

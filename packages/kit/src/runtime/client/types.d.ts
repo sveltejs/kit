@@ -15,10 +15,11 @@ export type NavigationCandidate = {
 };
 
 export type NavigationResult = {
-	nodes?: Array<Promise<CSRComponent>>;
-	page?: Page;
 	reload?: boolean;
 	redirect?: string;
+
+	nodes?: Array<Promise<CSRComponent>>;
+	page?: Page;
 	state?: NavigationState;
 	props?: Record<string, any>;
 };
