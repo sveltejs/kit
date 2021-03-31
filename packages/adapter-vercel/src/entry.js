@@ -3,8 +3,7 @@ import { URL } from 'url';
 import { get_body } from '@sveltejs/kit/http';
 
 export default async (req, res) => {
-	const host = `${req.headers['x-forwarded-proto']}://${req.headers.host}`;
-	const { pathname, searchParams } = new URL(req.url || '', host);
+	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
 
 	const { render } = await import('./server/app.mjs');
 
