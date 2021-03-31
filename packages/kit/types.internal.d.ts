@@ -1,4 +1,5 @@
 import { Adapter, GetContext, GetSession, Handle, Incoming, Load, Response } from './types';
+import { UserConfig as ViteConfig } from 'vite';
 
 declare global {
 	interface ImportMeta {
@@ -47,7 +48,7 @@ export type ValidatedConfig = {
 		router: boolean;
 		ssr: boolean;
 		target: string;
-		vite: () => {};
+		vite: () => ViteConfig;
 	};
 	preprocess: any;
 };

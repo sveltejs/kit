@@ -1,4 +1,5 @@
 import { Headers, LoadInput, LoadOutput, Logger } from './types.internal';
+import { UserConfig as ViteConfig } from 'vite';
 
 export type Config = {
 	compilerOptions?: any;
@@ -31,7 +32,7 @@ export type Config = {
 		router?: boolean;
 		ssr?: boolean;
 		target?: string;
-		vite?: {} | (() => {});
+		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
 };
