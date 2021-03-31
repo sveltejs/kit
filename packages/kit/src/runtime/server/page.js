@@ -28,12 +28,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 	/** @type {Array<{
 	 *   url: string;
-	 *   payload: {
-	 *     status: number;
-	 *     statusText: string;
-	 *     headers: import('types.internal').Headers;
-	 *     body: string;
-	 *   }
+	 *   json: string;
 	 * }>} */
 	const serialized_data = [];
 
@@ -156,41 +151,33 @@ async function get_response({ request, options, $session, route, status = 200, e
 		}
 
 		if (response) {
-			/** @type {import('types.internal').Headers} */
-			const headers = {};
-			response.headers.forEach((value, key) => {
-				if (key !== 'etag') headers[key] = value;
-			});
-
-			const inline = {
-				url,
-				payload: {
-					status: response.status,
-					statusText: response.statusText,
-					headers,
-
-					/** @type {string} */
-					body: null
-				}
-			};
-
 			const proxy = new Proxy(response, {
 				get(response, key, receiver) {
+					async function text() {
+						const body = await response.text();
+
+						/** @type {import('types.internal').Headers} */
+						const headers = {};
+						response.headers.forEach((value, key) => {
+							if (key !== 'etag') headers[key] = value;
+						});
+
+						// prettier-ignore
+						serialized_data.push({
+							url,
+							json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
+						});
+
+						return body;
+					}
+
 					if (key === 'text') {
-						return async () => {
-							const text = await response.text();
-							inline.payload.body = text;
-							serialized_data.push(inline);
-							return text;
-						};
+						return text;
 					}
 
 					if (key === 'json') {
 						return async () => {
-							const json = await response.json();
-							inline.payload.body = s(json);
-							serialized_data.push(inline);
-							return json;
+							return JSON.parse(await text());
 						};
 					}
 
@@ -454,7 +441,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		: `${rendered.html}
 
 			${serialized_data
-				.map(({ url, payload }) => `<script type="svelte-data" url="${url}">${s(payload)}</script>`)
+				.map(({ url, json }) => `<script type="svelte-data" url="${url}">${json}</script>`)
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
@@ -546,4 +533,51 @@ function serialize_error(error) {
 		serialized = '{}';
 	}
 	return serialized;
+}
+
+/** @type {Record<string, string>} */
+const escaped = {
+	'<': '\\u003C',
+	'>': '\\u003E',
+	'/': '\\u002F',
+	'\\': '\\\\',
+	'\b': '\\b',
+	'\f': '\\f',
+	'\n': '\\n',
+	'\r': '\\r',
+	'\t': '\\t',
+	'\0': '\\0',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+/** @param {string} str */
+function escape(str) {
+	let result = '"';
+
+	for (let i = 0; i < str.length; i += 1) {
+		const char = str.charAt(i);
+		const code = char.charCodeAt(0);
+
+		if (char === '"') {
+			result += '\\"';
+		} else if (char in escaped) {
+			result += escaped[char];
+		} else if (code >= 0xd800 && code <= 0xdfff) {
+			const next = str.charCodeAt(i + 1);
+
+			// If this is the beginning of a [high, low] surrogate pair,
+			// add the next two characters, otherwise escape
+			if (code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
+				result += char + str[++i];
+			} else {
+				result += `\\u${code.toString(16).toUpperCase()}`;
+			}
+		} else {
+			result += char;
+		}
+	}
+
+	result += '"';
+	return result;
 }
