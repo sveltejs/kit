@@ -7,51 +7,55 @@ import { URL, fileURLToPath } from 'url';
 // eslint-disable-next-line import/no-unresolved
 import { get_body } from '@sveltejs/kit/http';
 // App is a dynamic file built from the application layer.
-/*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
-import * as app from './app.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-const { PORT = 3000 } = process.env; // TODO configure via svelte.config.js
-
-const mutable = (dir) =>
-	sirv(dir, {
-		etag: true,
-		maxAge: 0
-	});
-
 const noop_handler = (_req, _res, next) => next();
+const paths = {
+	assets: join(__dirname, '/assets'),
+	prerendered: join(__dirname, '/prerendered')
+};
 
-const prerendered_handler = fs.existsSync('prerendered') ? mutable('prerendered') : noop_handler;
-
-const assets_handler = sirv(join(__dirname, '/assets'), {
-	maxAge: 31536000,
-	immutable: true
-});
-
-polka()
-	.use(compression({ threshold: 0 }), assets_handler, prerendered_handler, async (req, res) => {
-		const parsed = new URL(req.url || '', 'http://localhost');
-		const rendered = await app.render({
-			method: req.method,
-			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-			path: parsed.pathname,
-			body: await get_body(req),
-			query: parsed.searchParams
+export function createServer({ render }) {
+	const mutable = (dir) =>
+		sirv(dir, {
+			etag: true,
+			maxAge: 0
 		});
 
-		if (rendered) {
-			res.writeHead(rendered.status, rendered.headers);
-			res.end(rendered.body);
-		} else {
-			res.statusCode = 404;
-			res.end('Not found');
+	const prerendered_handler = fs.existsSync(paths.prerendered)
+		? mutable(paths.prerendered)
+		: noop_handler;
+
+	const assets_handler = fs.existsSync(paths.assets)
+		? sirv(paths.assets, {
+				maxAge: 31536000,
+				immutable: true
+		  })
+		: noop_handler;
+
+	const server = polka().use(
+		compression({ threshold: 0 }),
+		assets_handler,
+		prerendered_handler,
+		async (req, res) => {
+			const parsed = new URL(req.url || '', 'http://localhost');
+			const rendered = await render({
+				method: req.method,
+				headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+				path: parsed.pathname,
+				body: await get_body(req),
+				query: parsed.searchParams
+			});
+
+			if (rendered) {
+				res.writeHead(rendered.status, rendered.headers);
+				res.end(rendered.body);
+			} else {
+				res.statusCode = 404;
+				res.end('Not found');
+			}
 		}
-	})
-	.listen(PORT, (err) => {
-		if (err) {
-			console.log('error', err);
-		} else {
-			console.log(`Listening on port ${PORT}`);
-		}
-	});
+	);
+
+	return server;
+}
