@@ -1,5 +1,6 @@
 import { Headers, LoadInput, LoadOutput, Logger } from './types.internal';
 import { UserConfig as ViteConfig } from 'vite';
+import { Response as NodeFetchResponse } from 'node-fetch';
 
 export type Config = {
 	compilerOptions?: any;
@@ -82,11 +83,7 @@ export type Request<Context = any, Body = unknown> = {
 	context: Context;
 };
 
-export type Response = {
-	status?: number;
-	headers?: Headers;
-	body?: any;
-};
+export type Response = NodeFetchResponse;
 
 export type RequestHandler<Context = any, Body = unknown> = (
 	request?: Request<Context, Body>
