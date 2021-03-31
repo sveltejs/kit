@@ -32,6 +32,21 @@ function page_store(value) {
 	return { notify, set, subscribe };
 }
 
+/**
+ * @param {RequestInfo} resource
+ * @param {RequestInit} opts
+ */
+function initial_fetch(resource, opts) {
+	const url = typeof resource === 'string' ? resource : resource.url;
+	const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+	if (script) {
+		const { body, ...init } = JSON.parse(script.textContent);
+		return Promise.resolve(new Response(body, init));
+	}
+
+	return fetch(resource, opts);
+}
+
 export class Renderer {
 	/** @param {{
 	 *   Root: import('types.internal').CSRComponent;
@@ -48,7 +63,6 @@ export class Renderer {
 		/** @type {import('./router').Router} */
 		this.router = null;
 
-		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
 		this.started = false;
@@ -330,29 +344,6 @@ export class Renderer {
 			}
 		};
 
-		/**
-		 * @param {RequestInfo} resource
-		 * @param {RequestInit} opts
-		 */
-		const fetcher = (resource, opts) => {
-			if (!this.started) {
-				const url = typeof resource === 'string' ? resource : resource.url;
-				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
-				if (script) {
-					const { body, ...init } = JSON.parse(script.textContent);
-					return Promise.resolve(new Response(body, init));
-				}
-			}
-
-			return fetch(resource, opts);
-		};
-
-		const component_promises = error ? [this.layout] : [this.layout, ...nodes];
-		const props_promises = [];
-
-		/** @type {Record<string, any>} */
-		let context;
-
 		const changed = {
 			params: Object.keys(page.params).filter((key) => {
 				return !this.current.page || this.current.page.params[key] !== page.params[key];
@@ -363,6 +354,12 @@ export class Renderer {
 		};
 
 		try {
+			const component_promises = [this.layout, ...nodes];
+			const props_promises = [];
+
+			/** @type {Record<string, any>} */
+			let context;
+
 			for (let i = 0; i < component_promises.length; i += 1) {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
@@ -442,7 +439,7 @@ export class Renderer {
 									node.uses.context = true;
 									return { ...context };
 								},
-								fetch: fetcher
+								fetch: this.started ? fetch : initial_fetch
 							});
 
 							// if the page component returns nothing from load, fall through
@@ -531,9 +528,9 @@ export class Renderer {
 				}
 			}
 
-			const new_props = await Promise.all(props_promises);
-
-			new_props.forEach((p, i) => {
+			// we allow returned `props` to be a Promise so that
+			// layout/page loads can happen in parallel
+			(await Promise.all(props_promises)).forEach((p, i) => {
 				if (p) {
 					result.props[`props_${i}`] = p;
 				}
@@ -542,6 +539,8 @@ export class Renderer {
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
 				result.props.page = page;
 			}
+
+			return result;
 		} catch (e) {
 			if (error) {
 				throw error;
@@ -559,7 +558,5 @@ export class Renderer {
 				}
 			});
 		}
-
-		return result;
 	}
 }
