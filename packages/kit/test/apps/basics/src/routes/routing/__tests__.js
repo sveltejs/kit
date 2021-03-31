@@ -167,6 +167,10 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
+		await clicknav('[href="/routing/rest"]');
+		assert.equal(await page.textContent('h1'), '');
+		assert.equal(await page.textContent('h2'), '');
+
 		await clicknav('[href="/routing/rest/xyz/abc/deep"]');
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
