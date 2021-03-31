@@ -267,19 +267,17 @@ export class Renderer {
 			if (result) return result;
 		}
 
-		return {
-			state: {
-				page: null,
-				query: null,
-				session_changed: false,
-				contexts: [],
-				nodes: []
-			},
-			props: {
-				status: 404,
-				error: new Error(`Not found: ${info.path}`)
+		return await this._load({
+			status: 404,
+			error: new Error(`Not found: ${info.path}`),
+			nodes: [],
+			page: {
+				host: this.host,
+				path: info.path,
+				query: info.query,
+				params: {}
 			}
-		};
+		});
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -316,7 +314,6 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
-			page, // TODO is this duplicative?
 			state: {
 				page,
 				query,
