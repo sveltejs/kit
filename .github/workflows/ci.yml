@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '14.x'
       - name: Cache ~/.pnpm-store
         uses: actions/cache@main
         with:
@@ -34,8 +34,13 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        node-version: [12, 14, 15]
+        node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+          - node-version: 12
+            os: ubuntu-latest
+          - node-version: 15
+            os: ubuntu-latest
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
@@ -65,8 +70,13 @@ jobs:
     timeout-minutes: 6
     strategy:
       matrix:
-        node-version: [12, 14, 15]
+        node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+          - node-version: 12
+            os: ubuntu-latest
+          - node-version: 15
+            os: ubuntu-latest
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
