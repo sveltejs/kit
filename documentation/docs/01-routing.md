@@ -140,6 +140,8 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
+> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
+
 #### Fallthrough routes
 
 Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
