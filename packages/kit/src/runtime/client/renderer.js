@@ -268,8 +268,6 @@ export class Renderer {
 		}
 
 		return {
-			nodes: [],
-			page: null,
 			state: {
 				page: null,
 				query: null,
@@ -300,9 +298,7 @@ export class Renderer {
 		this.root = new this.Root({
 			target: this.target,
 			props: {
-				// TODO should these be part of `result`?
 				stores: this.stores,
-				page: result.page,
 				...result.props
 			},
 			hydrate: true
@@ -320,8 +316,7 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
-			nodes, // TODO are these and page duplicative?
-			page,
+			page, // TODO is this duplicative?
 			state: {
 				page,
 				query,
