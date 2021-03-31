@@ -46,5 +46,7 @@ export async function start({ paths, target, session, host, route, hydrate }) {
 }
 
 if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {
-	navigator.serviceWorker.register(import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER);
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.register(import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER);
+	}
 }
