@@ -32,6 +32,21 @@ function page_store(value) {
 	return { notify, set, subscribe };
 }
 
+/**
+ * @param {RequestInfo} resource
+ * @param {RequestInit} opts
+ */
+function initial_fetch(resource, opts) {
+	const url = typeof resource === 'string' ? resource : resource.url;
+	const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+	if (script) {
+		const { body, ...init } = JSON.parse(script.textContent);
+		return Promise.resolve(new Response(body, init));
+	}
+
+	return fetch(resource, opts);
+}
+
 export class Renderer {
 	/** @param {{
 	 *   Root: import('types.internal').CSRComponent;
@@ -48,7 +63,6 @@ export class Renderer {
 		/** @type {import('./router').Router} */
 		this.router = null;
 
-		// TODO ideally we wouldn't need to store these...
 		this.target = target;
 
 		this.started = false;
@@ -116,50 +130,18 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
-	 * @param {number} status
-	 * @param {Error} error
 	 */
-	async start(selected, status, error) {
-		/** @type {Record<string, any>} */
-		const props = {
-			stores: this.stores,
-			error,
-			status,
-			page: selected.page
-		};
+	async start(selected) {
+		const result = await this._load(selected);
 
-		if (error) {
-			props.components = [this.layout.default];
-		} else {
-			const hydrated = await this._hydrate(selected);
-
-			if (hydrated.redirect) {
-				// this is a real edge case — `load` would need to return
-				// a redirect but only in the browser
-				location.href = new URL(hydrated.redirect, location.href).href;
-				return;
-			}
-
-			Object.assign(props, hydrated.props);
-			this.current = hydrated.state;
+		if (result.redirect) {
+			// this is a real edge case — `load` would need to return
+			// a redirect but only in the browser
+			location.href = new URL(result.redirect, location.href).href;
+			return;
 		}
 
-		// remove dev-mode SSR <style> insert, since it doesn't apply
-		// to hydrated markup (HMR requires hashes to be rewritten)
-		// TODO only in dev
-		// TODO it seems this doesn't always work with the classname
-		// stabilisation in vite-plugin-svelte? see e.g.
-		// hn.svelte.dev
-		// const style = document.querySelector('style[data-svelte]');
-		// if (style) style.remove();
-
-		this.root = new this.Root({
-			target: this.target,
-			props,
-			hydrate: true
-		});
-
-		this.started = true;
+		this._init(result);
 	}
 
 	/** @param {{ path: string, query: URLSearchParams }} destination */
@@ -219,14 +201,7 @@ export class Renderer {
 
 			await 0;
 		} else {
-			this.start(
-				{
-					nodes: navigation_result.nodes,
-					page: navigation_result.page
-				},
-				navigation_result.props.status,
-				navigation_result.props.error
-			);
+			this._init(navigation_result);
 		}
 
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
@@ -302,38 +277,57 @@ export class Renderer {
 				query: info.query
 			};
 
-			const hydrated = await this._hydrate({ nodes, page });
-			if (hydrated) return hydrated;
+			const result = await this._load({ status: 200, error: null, nodes, page });
+			if (result) return result;
 		}
 
-		return {
+		return await this._load({
+			status: 404,
+			error: new Error(`Not found: ${info.path}`),
 			nodes: [],
-			page: null,
-			state: {
-				page: null,
-				query: null,
-				session_changed: false,
-				contexts: [],
-				nodes: []
-			},
-			props: {
-				status: 404,
-				error: new Error(`Not found: ${info.path}`)
+			page: {
+				host: this.host,
+				path: info.path,
+				query: info.query,
+				params: {}
 			}
-		};
+		});
+	}
+
+	/** @param {import('./types').NavigationResult} result */
+	_init(result) {
+		this.current = result.state;
+
+		// remove dev-mode SSR <style> insert, since it doesn't apply
+		// to hydrated markup (HMR requires hashes to be rewritten)
+		// TODO only in dev
+		// TODO it seems this doesn't always work with the classname
+		// stabilisation in vite-plugin-svelte? see e.g.
+		// hn.svelte.dev
+		// const style = document.querySelector('style[data-svelte]');
+		// if (style) style.remove();
+
+		this.root = new this.Root({
+			target: this.target,
+			props: {
+				stores: this.stores,
+				...result.props
+			},
+			hydrate: true
+		});
+
+		this.started = true;
 	}
 
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _hydrate({ nodes, page }) {
+	async _load({ status, error, nodes, page }) {
 		const query = page.query.toString();
 
 		/** @type {import('./types').NavigationResult} */
-		const hydrated = {
-			nodes, // TODO are these and page duplicative?
-			page,
+		const result = {
 			state: {
 				page,
 				query,
@@ -342,38 +336,13 @@ export class Renderer {
 				contexts: []
 			},
 			props: {
-				status: 200,
-
-				/** @type {Error} */
-				error: null,
+				status,
+				error,
 
 				/** @type {import('types.internal').CSRComponent[]} */
 				components: []
 			}
 		};
-
-		/**
-		 * @param {RequestInfo} resource
-		 * @param {RequestInit} opts
-		 */
-		const fetcher = (resource, opts) => {
-			if (!this.started) {
-				const url = typeof resource === 'string' ? resource : resource.url;
-				const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
-				if (script) {
-					const { body, ...init } = JSON.parse(script.textContent);
-					return Promise.resolve(new Response(body, init));
-				}
-			}
-
-			return fetch(resource, opts);
-		};
-
-		const component_promises = [this.layout, ...nodes];
-		const props_promises = [];
-
-		/** @type {Record<string, any>} */
-		let context;
 
 		const changed = {
 			params: Object.keys(page.params).filter((key) => {
@@ -385,17 +354,22 @@ export class Renderer {
 		};
 
 		try {
+			const component_promises = [this.layout, ...nodes];
+			const props_promises = [];
+
+			/** @type {Record<string, any>} */
+			let context;
+
 			for (let i = 0; i < component_promises.length; i += 1) {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
 
 				const module = await component_promises[i];
-				const { default: component, preload, load } = module;
-				hydrated.props.components[i] = component;
+				result.props.components[i] = module.default;
 
-				if (preload) {
+				if (module.preload) {
 					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
+						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
 					);
 				}
 
@@ -446,8 +420,8 @@ export class Renderer {
 
 						const session = this.$session;
 
-						if (load) {
-							loaded = await load.call(null, {
+						if (module.load) {
+							loaded = await module.load.call(null, {
 								page: {
 									host: page.host,
 									path: page.path,
@@ -465,10 +439,12 @@ export class Renderer {
 									node.uses.context = true;
 									return { ...context };
 								},
-								fetch: fetcher
+								fetch: this.started ? fetch : initial_fetch
 							});
 
-							if (!loaded) return;
+							// if the page component returns nothing from load, fall through
+							const is_leaf = i === component_promises.length - 1 && !error;
+							if (!loaded && is_leaf) return;
 						}
 					}
 
@@ -476,10 +452,22 @@ export class Renderer {
 						loaded = normalize(loaded);
 
 						if (loaded.error) {
-							hydrated.props.error = loaded.error;
-							hydrated.props.status = loaded.status || 500;
-							hydrated.state.nodes = [];
-							return hydrated;
+							if (error) {
+								// error while rendering error page, oops
+								throw error;
+							}
+
+							return await this._load({
+								status: loaded.status || 500,
+								error: loaded.error,
+								nodes: [],
+								page: {
+									host: page.host,
+									path: page.path,
+									query: page.query,
+									params: {}
+								}
+							});
 						}
 
 						if (loaded.redirect) {
@@ -532,31 +520,43 @@ export class Renderer {
 						props_promises[i] = loaded.props;
 					}
 
-					hydrated.state.nodes[i] = node;
-					hydrated.state.contexts[i] = context;
+					result.state.nodes[i] = node;
+					result.state.contexts[i] = context;
 				} else {
-					hydrated.state.nodes[i] = previous;
-					hydrated.state.contexts[i] = context = previous_context;
+					result.state.nodes[i] = previous;
+					result.state.contexts[i] = context = previous_context;
 				}
 			}
 
-			const new_props = await Promise.all(props_promises);
-
-			new_props.forEach((p, i) => {
+			// we allow returned `props` to be a Promise so that
+			// layout/page loads can happen in parallel
+			(await Promise.all(props_promises)).forEach((p, i) => {
 				if (p) {
-					hydrated.props[`props_${i}`] = p;
+					result.props[`props_${i}`] = p;
 				}
 			});
 
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
-				hydrated.props.page = page;
+				result.props.page = page;
 			}
-		} catch (error) {
-			hydrated.props.error = error;
-			hydrated.props.status = 500;
-			hydrated.state.nodes = [];
-		}
 
-		return hydrated;
+			return result;
+		} catch (e) {
+			if (error) {
+				throw error;
+			}
+
+			return await this._load({
+				status: 500,
+				error: e,
+				nodes: [],
+				page: {
+					host: page.host,
+					path: page.path,
+					query: page.query,
+					params: {}
+				}
+			});
+		}
 	}
 }

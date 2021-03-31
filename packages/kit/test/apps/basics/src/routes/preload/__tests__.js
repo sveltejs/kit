@@ -9,7 +9,7 @@ export default function test(test) {
 		assert.equal(await page.textContent('footer'), 'Custom layout');
 		assert.equal(
 			await page.textContent('#message'),
-			'This is your custom error page saying: "preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load"'
+			'This is your custom error page saying: "preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading"'
 		);
 	});
 }
