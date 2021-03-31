@@ -221,13 +221,15 @@ async function get_response({ request, options, $session, route, status = 200, e
 	let page_component;
 
 	try {
-		page_component = await component_promises[component_promises.length - 1];
+		page_component = error
+			? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
+			: await component_promises[component_promises.length - 1];
 	} catch (e) {
 		return await get_response({
 			request,
 			options,
 			$session,
-			route,
+			route: null,
 			status: 500,
 			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
@@ -260,7 +262,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 				if (mod.preload) {
 					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#load'
+						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
 					);
 				}
 
@@ -298,7 +300,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						request,
 						options,
 						$session,
-						route,
+						route: null,
 						status: loaded.status,
 						error: loaded.error
 					});
@@ -370,7 +372,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				request,
 				options,
 				$session,
-				route,
+				route: null,
 				status: 500,
 				error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 			});
@@ -421,16 +423,16 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: ${status},
 				error: ${serialize_error(error)},
 				session: ${serialized_session},
-				host: ${s(request.host || 'location.host')},
+				host: ${request.host ? s(request.host) : 'location.host'},
 				route: ${!!page_config.router},
 				hydrate: ${page_config.hydrate? `{
-					nodes: [
+					nodes: ${route ? `[
 						${(route ? route.parts : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
 						.join(',\n\t\t\t\t\t\t')}
-					],
+					]` : '[]'},
 					page: {
-						host: ${s(request.host || 'location.host')}, // TODO this is redundant
+						host: ${request.host ? s(request.host) : 'location.host'}, // TODO this is redundant
 						path: ${s(request.path)},
 						query: new URLSearchParams(${s(request.query.toString())}),
 						params: ${s(params)}
