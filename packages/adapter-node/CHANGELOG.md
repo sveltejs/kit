@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- ca33a35: Fix adapter-vercel query parsing and update adapter-node's
+
 ## 1.0.0-next.10
 
 ### Patch Changes

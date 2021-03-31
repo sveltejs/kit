@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.65
+
+### Patch Changes
+
+- c0b9873: Always apply layout props when hydrating
+- b8a8e53: Add type to config.kit.vite
+- 9b09bcc: Prevent XSS when serializing fetch results
+
 ## 1.0.0-next.64
 
 ### Patch Changes

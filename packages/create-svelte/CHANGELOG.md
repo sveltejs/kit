@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.45
+
+### Patch Changes
+
+- dac29c5: allow importing JSON modules
+- 8dc89ba: Set target to es2019 in default tsconfig.json
+
 ## 2.0.0-next.44
 
 ### Patch Changes
