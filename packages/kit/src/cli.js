@@ -1,7 +1,9 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import * as ports from 'port-authority';
 import { load_config } from './core/load_config/index.js';
+import { networkInterfaces } from 'os';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -69,6 +71,8 @@ prog
 	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
+		await check_port(port);
+
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
 
@@ -85,8 +89,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			console.log(colors.bold().cyan(`> Listening on http://localhost:${watcher.port}`));
-			if (open) launch(watcher.port);
+			welcome({ open, port });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -128,6 +131,8 @@ prog
 	.option('-p, --port', 'Port', 3000)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, open }) => {
+		await check_port(port);
+
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
@@ -136,8 +141,7 @@ prog
 		try {
 			await start({ port, config });
 
-			console.log(colors.bold().cyan(`> Listening on http://localhost:${port}`));
-			if (open) if (open) launch(port);
+			welcome({ open, port });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -153,3 +157,45 @@ prog
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
+
+/** @param {number} port */
+async function check_port(port) {
+	const n = await ports.blame(port);
+
+	if (n) {
+		console.log(colors.bold().red(`Port ${port} is occupied`));
+
+		// prettier-ignore
+		console.log(
+			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
+		);
+
+		process.exit(1);
+	}
+}
+
+/**
+ * @param {{
+ *   open: boolean;
+ *   port: number;
+ * }} param0
+ */
+function welcome({ open, port }) {
+	if (open) launch(port);
+
+	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
+
+	Object.values(networkInterfaces()).forEach((interfaces) => {
+		interfaces.forEach((details) => {
+			if (details.family !== 'IPv4') return;
+			if (!details.internal && details.mac === '00:00:00:00:00:00') return;
+
+			const prefix = colors.gray(details.internal ? 'local:  ' : 'network:');
+			const address = details.internal ? 'localhost' : details.address;
+
+			console.log(`  ${prefix} http://${colors.bold(`${address}:${port}`)}`);
+		});
+	});
+
+	console.log('\n');
+}
