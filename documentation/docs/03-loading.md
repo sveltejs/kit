@@ -54,7 +54,7 @@ type LoadOutput = {
 </script>
 ```
 
-`load` is similar to Next.js's `getStaticProps` or `getServerSideProps` or Nuxt.js's `asyncData`, except that it runs on both the server and the client.
+`load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
