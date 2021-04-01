@@ -1,10 +1,19 @@
-import { find_anchor, get_base_uri } from './utils';
+import { get_base_uri } from './utils';
 
 function scroll_state() {
 	return {
 		x: pageXOffset,
 		y: pageYOffset
 	};
+}
+
+/**
+ * @param {Node} node
+ * @returns {HTMLAnchorElement | SVGAElement}
+ */
+function find_anchor(node) {
+	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
+	return /** @type {HTMLAnchorElement | SVGAElement} */ (node);
 }
 
 export class Router {
@@ -59,6 +68,28 @@ export class Router {
 				history.replaceState(new_state, document.title, window.location.href);
 			}, 50);
 		});
+
+		/** @param {MouseEvent} event */
+		const trigger_prefetch = (event) => {
+			const a = find_anchor(/** @type {Node} */ (event.target));
+			if (a && a.hasAttribute('sveltekit:prefetch')) {
+				this.prefetch(new URL(/** @type {string} */ (a.href)));
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				trigger_prefetch(event);
+			}, 20);
+		};
+
+		addEventListener('touchstart', trigger_prefetch);
+		addEventListener('mousemove', handle_mousemove);
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
@@ -170,6 +201,28 @@ export class Router {
 		});
 	}
 
+	enable() {
+		this.enabled = true;
+	}
+
+	disable() {
+		this.enabled = false;
+	}
+
+	/**
+	 * @param {URL} url
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
+	async prefetch(url) {
+		const info = this.parse(url);
+
+		if (info) {
+			return this.renderer.load(info);
+		} else {
+			throw new Error(`Could not prefetch ${url.href}`);
+		}
+	}
+
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {{ x: number, y: number }} scroll
@@ -200,13 +253,5 @@ export class Router {
 		} else {
 			scrollTo(0, 0);
 		}
-	}
-
-	enable() {
-		this.enabled = true;
-	}
-
-	disable() {
-		this.enabled = false;
 	}
 }

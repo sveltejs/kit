@@ -1,4 +1,4 @@
-import { router, renderer } from '../client/singletons.js';
+import { router } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 /**
@@ -27,7 +27,7 @@ async function goto_(href, opts) {
 
 /** @param {string} href */
 function prefetch_(href) {
-	return renderer.prefetch(new URL(href, get_base_uri(document)));
+	return router.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /** @param {string[]} [pathnames] */
