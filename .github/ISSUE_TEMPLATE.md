@@ -1,8 +1,6 @@
 ---
-
 Before filing an issue we'd appreciate it if you could take a moment to ensure
 there isn't already an open issue or pull-request.
-
 ---
 
 If there's an existing issue, please add a :+1: reaction to the description of
@@ -20,7 +18,7 @@ change, please create an [RFC](https://github.com/sveltejs/rfcs).
 If you're filing an issue about a bug please include as much information
 as you can, including the following.
 
-- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,vite --binaries --browsers`
 - Your browser
 - Your adapter (e.g. Node, static, Vercel, Begin, etc...)
 
