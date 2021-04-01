@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- 679e997: Fix client-side redirect loop detection
+- 8d453c8: Specify minimum Node version number in @sveltejs/kit and add .npmrc to enforce it
+- 78aec0c: Detect service worker support
+- f33a22c: Make ...rest parameters optional
+
 ## 1.0.0-next.66
 
 ### Patch Changes
