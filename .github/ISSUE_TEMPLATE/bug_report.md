@@ -37,7 +37,7 @@ Stack trace goes here...
 
 **Information about your SvelteKit Installation:**
 
-- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,vite --binaries --browsers`
 
 - Your browser
 
