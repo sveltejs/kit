@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.46
+
+### Patch Changes
+
+- 570f90c: Update tsconfig to use module and lib es2020
+- 8d453c8: Specify minimum Node version number in @sveltejs/kit and add .npmrc to enforce it
+
 ## 2.0.0-next.45
 
 ### Patch Changes
