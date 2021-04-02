@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.68
+
+### Patch Changes
+
+- 24fab19: Add --https flag to dev and start
+- ba4f9b7: Check port, only expose to network with --host flag
+
 ## 1.0.0-next.67
 
 ### Patch Changes
