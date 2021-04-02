@@ -7,6 +7,8 @@ export default function (test, is_dev) {
 			assert.equal(await page.textContent('h1'), 'content was rendered');
 		} else {
 			assert.ok(await page.evaluate(() => !document.querySelector('h1')));
+			assert.ok(await page.evaluate(() => !document.querySelector('style[data-svelte]')));
+			assert.ok(await page.evaluate(() => !document.querySelector('link[rel=stylesheet]')));
 		}
 	});
 }
