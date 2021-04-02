@@ -11,7 +11,7 @@ import https from 'https';
  */
 export async function get_server(port, host, use_https, handler) {
 	/** @type {https.ServerOptions} */
-	let https_options = {};
+	const https_options = {};
 
 	if (use_https) {
 		https_options.key = https_options.cert = (await import('./cert')).createCertificate();
