@@ -386,9 +386,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 	}
 
 	// TODO all the `route &&` stuff is messy
-	const js_deps = route ? route.js : [];
-	const css_deps = route ? route.css : [];
-	const style = route ? route.style : '';
+	const js_deps = route && page_config.ssr ? route.js : [];
+	const css_deps = route && page_config.ssr ? route.css : [];
+	const style = route && page_config.ssr ? route.style : '';
 
 	const prefix = `${options.paths.assets}/${options.app_dir}`;
 
