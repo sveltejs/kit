@@ -179,6 +179,7 @@ async function check_port(port) {
 /**
  * @param {{
  *   open: boolean;
+ *   host: string;
  *   port: number;
  * }} param0
  */
