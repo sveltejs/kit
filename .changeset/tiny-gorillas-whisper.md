@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Check port, expose network address
+Check port, only expose to network with --host flag
