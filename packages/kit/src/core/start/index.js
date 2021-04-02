@@ -15,12 +15,13 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
+ *   host: string;
  *   config: import('../../../types.internal').ValidatedConfig;
  *   cwd?: string;
  * }} opts
  * @returns {Promise<import('http').Server>}
  */
-export async function start({ port, config, cwd = process.cwd() }) {
+export async function start({ port, host, config, cwd = process.cwd() }) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
 	/** @type {import('../../../types.internal').App} */
@@ -73,7 +74,7 @@ export async function start({ port, config, cwd = process.cwd() }) {
 			});
 		});
 
-		server.listen(port, () => {
+		server.listen(port, host || '0.0.0.0', () => {
 			fulfil(server);
 		});
 

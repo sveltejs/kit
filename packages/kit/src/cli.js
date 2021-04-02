@@ -69,8 +69,9 @@ prog
 	.command('dev')
 	.describe('Start a development server')
 	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, open }) => {
+	.action(async ({ port, host, open }) => {
 		await check_port(port);
 
 		process.env.NODE_ENV = 'development';
@@ -79,7 +80,7 @@ prog
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, config });
+			const watcher = await dev({ port, host, config });
 
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
@@ -89,7 +90,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			welcome({ open, port });
+			welcome({ port, host, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -129,8 +130,9 @@ prog
 	.command('start')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, open }) => {
+	.action(async ({ port, host, open }) => {
 		await check_port(port);
 
 		process.env.NODE_ENV = 'production';
@@ -139,9 +141,9 @@ prog
 		const { start } = await import('./core/start/index.js');
 
 		try {
-			await start({ port, config });
+			await start({ port, host, config });
 
-			welcome({ open, port });
+			welcome({ port, host, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -180,22 +182,31 @@ async function check_port(port) {
  *   port: number;
  * }} param0
  */
-function welcome({ open, port }) {
+function welcome({ port, host, open }) {
 	if (open) launch(port);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
+	const exposed = host !== 'localhost' && host !== '127.0.0.1';
+
 	Object.values(networkInterfaces()).forEach((interfaces) => {
 		interfaces.forEach((details) => {
 			if (details.family !== 'IPv4') return;
-			if (!details.internal && details.mac === '00:00:00:00:00:00') return;
 
-			const prefix = colors.gray(details.internal ? 'local:  ' : 'network:');
-			const address = details.internal ? 'localhost' : details.address;
-
-			console.log(`  ${prefix} http://${colors.bold(`${address}:${port}`)}`);
+			// prettier-ignore
+			if (details.internal) {
+				console.log(`  ${colors.gray('local:  ')} http://${colors.bold(`localhost:${port}`)}`);
+			} else if (exposed) {
+				console.log(`  ${colors.gray('network:')} http://${colors.bold(`${details.address}:${port}`)}`);
+			} else {
+				console.log(`  ${colors.gray('network: not exposed')}`);
+			}
 		});
 	});
+
+	if (!exposed) {
+		console.log('\n  Use --host to expose server to other devices on this network');
+	}
 
 	console.log('\n');
 }
