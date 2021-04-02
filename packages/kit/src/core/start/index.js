@@ -20,7 +20,6 @@ const mutable = (dir) =>
  *   https?: boolean | import('https').ServerOptions;
  *   cwd?: string;
  * }} opts
- * @returns {Promise<http.Server | https.Server>}
  */
 export async function start({
 	port,

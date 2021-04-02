@@ -7,7 +7,7 @@ import https from 'https';
  * @param {string} host
  * @param {boolean | https.ServerOptions} https_options
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- * @returns
+ * @returns {Promise<http.Server | https.Server>}
  */
 export async function get_server(port, host, https_options, handler) {
 	if (https_options) {

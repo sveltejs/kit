@@ -81,7 +81,7 @@ class Watcher extends EventEmitter {
 		/**
 		 * @type {vite.ViteDevServer}
 		 */
-		this.viteDevServer = await vite.createServer({
+		this.vite = await vite.createServer({
 			...user_config,
 			configFile: false,
 			root: this.cwd,
@@ -115,7 +115,7 @@ class Watcher extends EventEmitter {
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
 		this.server = await get_server(this.port, this.host, this.https, (req, res) => {
-			this.viteDevServer.middlewares(req, res, async () => {
+			this.vite.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);
 
@@ -124,15 +124,14 @@ class Watcher extends EventEmitter {
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
-					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.viteDevServer
+					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.vite
 						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						.catch(() => ({})));
 
 					let root;
 
 					try {
-						root = (await this.viteDevServer.ssrLoadModule(`/${this.dir}/generated/root.svelte`))
-							.default;
+						root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`)).default;
 					} catch (e) {
 						res.statusCode = 500;
 						res.end(e.stack);
@@ -220,7 +219,7 @@ class Watcher extends EventEmitter {
 							only_render_prerenderable_pages: false,
 							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
-								this.viteDevServer.ssrFixStacktrace(error);
+								this.vite.ssrFixStacktrace(error);
 								return error.stack;
 							},
 							get_static_file: (file) =>
@@ -240,7 +239,7 @@ class Watcher extends EventEmitter {
 						res.end('Not found');
 					}
 				} catch (e) {
-					this.viteDevServer.ssrFixStacktrace(e);
+					this.vite.ssrFixStacktrace(e);
 					res.end(e.stack);
 				}
 			});
@@ -272,8 +271,8 @@ class Watcher extends EventEmitter {
 		const load = async (file) => {
 			const url = path.resolve(this.cwd, file);
 
-			const mod = /** @type {SSRComponent} */ (await this.viteDevServer.ssrLoadModule(url));
-			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
+			const mod = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
+			const node = await this.vite.moduleGraph.getModuleByUrl(url);
 
 			const deps = new Set();
 			find_deps(node, deps);
@@ -283,7 +282,7 @@ class Watcher extends EventEmitter {
 				// TODO what about .scss files, etc?
 				if (dep.file.endsWith('.css')) {
 					try {
-						const mod = await this.viteDevServer.ssrLoadModule(dep.url);
+						const mod = await this.vite.ssrLoadModule(dep.url);
 						css.add(mod.default);
 					} catch {
 						// this can happen with dynamically imported modules, I think
@@ -366,7 +365,7 @@ class Watcher extends EventEmitter {
 					params: get_params(route.params),
 					load: async () => {
 						const url = path.resolve(this.cwd, route.file);
-						return await this.viteDevServer.ssrLoadModule(url);
+						return await this.vite.ssrLoadModule(url);
 					}
 				};
 			})
@@ -377,7 +376,7 @@ class Watcher extends EventEmitter {
 		if (this.closed) return;
 		this.closed = true;
 
-		this.viteDevServer.close();
+		this.vite.close();
 		this.server.close();
 		this.cheapwatch.close();
 	}
