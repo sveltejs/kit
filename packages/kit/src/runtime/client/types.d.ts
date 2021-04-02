@@ -33,6 +33,7 @@ type PageNode = {
 	module: CSRComponent;
 	uses: {
 		params: Set<string>;
+		path: boolean;
 		query: boolean;
 		session: boolean;
 		context: boolean;
