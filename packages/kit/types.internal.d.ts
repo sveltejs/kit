@@ -56,12 +56,14 @@ export type ValidatedConfig = {
 
 export type App = {
 	init: ({
-		paths
+		paths,
+		prerendering
 	}: {
 		paths: {
 			base: string;
 			assets: string;
 		};
+		prerendering: boolean;
 	}) => void;
 	render: (incoming: Incoming, options: SSRRenderOptions) => ResponseWithDependencies;
 };

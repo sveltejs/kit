@@ -66,7 +66,8 @@ export async function prerender({ cwd, out, log, config, force }) {
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
-		paths: config.kit.paths
+		paths: config.kit.paths,
+		prerendering: true
 	});
 
 	/** @type {(status: number, path: string) => void} */
