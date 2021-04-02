@@ -1,9 +1,9 @@
 import fs from 'fs';
-import http from 'http';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
+import { get_server } from '../server/index.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -16,15 +16,21 @@ const mutable = (dir) =>
  * @param {{
  *   port: number;
  *   host: string;
- *   config: import('../../../types.internal').ValidatedConfig;
+ *   config: import('types.internal').ValidatedConfig;
+ *   https?: boolean | import('https').ServerOptions;
  *   cwd?: string;
  * }} opts
- * @returns {Promise<import('http').Server>}
  */
-export async function start({ port, host, config, cwd = process.cwd() }) {
+export async function start({
+	port,
+	host,
+	config,
+	https: https_options = false,
+	cwd = process.cwd()
+}) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
-	/** @type {import('../../../types.internal').App} */
+	/** @type {import('types.internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
@@ -37,47 +43,39 @@ export async function start({ port, host, config, cwd = process.cwd() }) {
 		immutable: true
 	});
 
-	return new Promise((fulfil) => {
-		const server = http.createServer((req, res) => {
-			const parsed = parse(req.url || '');
+	return get_server(port, host, https_options, (req, res) => {
+		const parsed = parse(req.url || '');
 
-			assets_handler(req, res, () => {
-				static_handler(req, res, async () => {
-					const rendered = await app.render(
-						{
-							host: /** @type {string} */ (config.kit.host ||
-								req.headers[config.kit.hostHeader || 'host']),
-							method: req.method,
-							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
-							path: parsed.pathname,
-							body: await get_body(req),
-							query: new URLSearchParams(parsed.query || '')
+		assets_handler(req, res, () => {
+			static_handler(req, res, async () => {
+				const rendered = await app.render(
+					{
+						host: /** @type {string} */ (config.kit.host ||
+							req.headers[config.kit.hostHeader || 'host']),
+						method: req.method,
+						headers: /** @type {import('types.internal').Headers} */ (req.headers),
+						path: parsed.pathname,
+						body: await get_body(req),
+						query: new URLSearchParams(parsed.query || '')
+					},
+					{
+						paths: {
+							base: '',
+							assets: '/.'
 						},
-						{
-							paths: {
-								base: '',
-								assets: '/.'
-							},
-							get_stack: (error) => error.stack, // TODO should this return a sourcemapped stacktrace?
-							get_static_file: (file) => fs.readFileSync(join(config.kit.files.assets, file))
-						}
-					);
-
-					if (rendered) {
-						res.writeHead(rendered.status, rendered.headers);
-						res.end(rendered.body);
-					} else {
-						res.statusCode = 404;
-						res.end('Not found');
+						get_stack: (error) => error.stack, // TODO should this return a sourcemapped stacktrace?
+						get_static_file: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 					}
-				});
+				);
+
+				if (rendered) {
+					res.writeHead(rendered.status, rendered.headers);
+					res.end(rendered.body);
+				} else {
+					res.statusCode = 404;
+					res.end('Not found');
+				}
 			});
 		});
-
-		server.listen(port, host || '0.0.0.0', () => {
-			fulfil(server);
-		});
-
-		return server;
 	});
 }

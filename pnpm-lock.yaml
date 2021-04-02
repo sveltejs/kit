@@ -180,6 +180,7 @@ importers:
       port-authority: 1.1.2
       rimraf: 3.0.2
       rollup: 2.41.1
+      selfsigned: 1.10.8
       sirv: 1.0.11
       svelte: 3.35.0
       tiny-glob: 0.2.8
@@ -204,6 +205,7 @@ importers:
       rimraf: ^3.0.2
       rollup: ^2.41.1
       sade: ^1.7.4
+      selfsigned: ^1.10.8
       sirv: ^1.0.11
       svelte: ^3.35.0
       tiny-glob: ^0.2.8
@@ -477,6 +479,10 @@ packages:
       node: '>= 8'
     resolution:
       integrity: sha512-8Broas6vTtW4GIXTAHDoE32hnN2M5ykgCpWGbuXHQ15vEMqr23pB76e/GZcYsZCHALv50ktd24qhEyKr6wBtow==
+  /@polka/url/1.0.0-next.11:
+    dev: true
+    resolution:
+      integrity: sha512-3NsZsJIA/22P3QUyrEDNA2D133H4j224twJrdipXN38dpnIOzAbUDtOwkcJ5pXmn75w7LSQDjA4tO9dm1XlqlA==
   /@polka/url/1.0.0-next.12:
     dev: true
     resolution:
@@ -2500,6 +2506,12 @@ packages:
       node: ^10.17 || >=12.3
     resolution:
       integrity: sha512-RdbZCEynH2tH46+tj0ua9caUHVWrd/RHnRfvly2EVdqGmI3ndS1Vn/xjm5KuGejDt2RNDQsVRLPNd2QPwcewVg==
+  /node-forge/0.10.0:
+    dev: true
+    engines:
+      node: '>= 6.0.0'
+    resolution:
+      integrity: sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
   /normalize-package-data/2.5.0:
     dependencies:
       hosted-git-info: 2.8.8
@@ -3092,6 +3104,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
+  /selfsigned/1.10.8:
+    dependencies:
+      node-forge: 0.10.0
+    dev: true
+    resolution:
+      integrity: sha512-2P4PtieJeEwVgTU9QEcwIRDQ/mXJLX8/+I3ur+Pg16nS8oNbrGxEso9NyYWy8NAmXiNl4dlAp5MwoNeCWzON4w==
   /semver/5.7.1:
     dev: true
     hasBin: true
@@ -3153,7 +3171,7 @@ packages:
       integrity: sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
   /sirv/1.0.11:
     dependencies:
-      '@polka/url': 1.0.0-next.12
+      '@polka/url': 1.0.0-next.11
       mime: 2.5.2
       totalist: 1.1.0
     dev: true

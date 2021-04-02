@@ -70,8 +70,9 @@ prog
 	.describe('Start a development server')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('--https', 'use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, host, open }) => {
+	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
 
 		process.env.NODE_ENV = 'development';
@@ -80,7 +81,7 @@ prog
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, host, config });
+			const watcher = await dev({ port, host, https, config });
 
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
@@ -90,7 +91,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			welcome({ port, host, open });
+			welcome({ port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -131,8 +132,9 @@ prog
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('--https', 'use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, host, open }) => {
+	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
 
 		process.env.NODE_ENV = 'production';
@@ -141,9 +143,9 @@ prog
 		const { start } = await import('./core/start/index.js');
 
 		try {
-			await start({ port, host, config });
+			await start({ port, host, config, https });
 
-			welcome({ port, host, open });
+			welcome({ port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -180,14 +182,16 @@ async function check_port(port) {
  * @param {{
  *   open: boolean;
  *   host: string;
+ *   https: boolean;
  *   port: number;
  * }} param0
  */
-function welcome({ port, host, open }) {
+function welcome({ port, host, https, open }) {
 	if (open) launch(port);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
+	const protocol = https ? 'https:' : 'http:';
 	const exposed = host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
@@ -196,12 +200,12 @@ function welcome({ port, host, open }) {
 
 			// prettier-ignore
 			if (details.internal) {
-				console.log(`  ${colors.gray('local:  ')} http://${colors.bold(`localhost:${port}`)}`);
+				console.log(`  ${colors.gray('local:  ')} ${protocol}//${colors.bold(`localhost:${port}`)}`);
 			} else {
 				if (details.mac === '00:00:00:00:00:00') return;
 
 				if (exposed) {
-					console.log(`  ${colors.gray('network:')} http://${colors.bold(`${details.address}:${port}`)}`);
+					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}
