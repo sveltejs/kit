@@ -133,4 +133,13 @@ export default function (test, is_dev) {
 
 		server.close();
 	});
+
+	test(
+		'makes credentialed fetches to endpoints by default',
+		'/load',
+		async ({ page, clicknav }) => {
+			await clicknav('[href="/load/fetch-credentialed"]');
+			assert.equal(await page.textContent('h1'), 'Hello SvelteKit!');
+		}
+	);
 }

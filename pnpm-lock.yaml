@@ -173,6 +173,7 @@ importers:
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
+      cookie: 0.4.1
       devalue: 2.0.1
       eslint: 7.21.0
       kleur: 4.1.4
@@ -197,6 +198,7 @@ importers:
       '@types/sade': ^1.7.2
       amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.3
+      cookie: ^0.4.1
       devalue: ^2.0.1
       eslint: ^7.21.0
       kleur: ^4.1.4
@@ -1187,7 +1189,6 @@ packages:
     resolution:
       integrity: sha1-/ozxhP9mcLa67wGp1IYaXL7EEgo=
   /cookie/0.4.1:
-    dev: false
     engines:
       node: '>= 0.6'
     resolution:
