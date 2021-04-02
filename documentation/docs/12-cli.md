@@ -34,4 +34,4 @@ Like `svelte-kit dev`, it accepts the following options:
 - `-p`/`--port`
 - `-o`/`--open`
 - `-h`/`--host` (note the security caveat [above](#command-line-interface-svelte-kit-dev))
-- `-H`,`-https`
+- `-H`/`--https`
