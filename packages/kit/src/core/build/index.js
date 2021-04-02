@@ -268,6 +268,7 @@ async function build_server(
 			import { ssr } from '${runtime}';
 			import root from './generated/root.svelte';
 			import { set_paths } from './runtime/paths.js';
+			import { set_prerendering } from './runtime/env.js';
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
@@ -277,8 +278,9 @@ async function build_server(
 			set_paths(${s(config.kit.paths)});
 
 			// allow paths to be overridden in svelte-kit start
-			export function init({ paths }) {
+			export function init({ paths, prerendering }) {
 				set_paths(paths);
+				set_prerendering(prerendering);
 			}
 
 			const d = decodeURIComponent;
