@@ -70,7 +70,7 @@ prog
 	.describe('Start a development server')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('--https', 'use self-signed HTTPS certificate', false)
+	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
@@ -132,7 +132,7 @@ prog
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('--https', 'use self-signed HTTPS certificate', false)
+	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
