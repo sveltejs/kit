@@ -80,11 +80,6 @@ async function get_response({ request, options, $session, route, status = 200, e
 
 		const parsed = parse(url);
 
-		// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
-		if (opts.credentials !== 'omit') {
-			uses_credentials = true;
-		}
-
 		let response;
 
 		if (parsed.protocol) {
@@ -121,11 +116,24 @@ async function get_response({ request, options, $session, route, status = 200, e
 			}
 
 			if (!response) {
+				const headers = /** @type {import('types.internal').Headers} */ ({ ...opts.headers });
+
+				// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
+				if (opts.credentials !== 'omit') {
+					uses_credentials = true;
+
+					headers.cookie = request.headers.cookie;
+
+					if (!headers.authorization) {
+						headers.authorization = request.headers.authorization;
+					}
+				}
+
 				const rendered = await ssr(
 					{
 						host: request.host,
 						method: opts.method || 'GET',
-						headers: /** @type {import('types.internal').Headers} */ (opts.headers || {}), // TODO inject credentials...
+						headers,
 						path: resolved,
 						body: /** @type {any} */ (opts.body),
 						query: new URLSearchParams(parsed.query || '')
@@ -159,7 +167,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 						/** @type {import('types.internal').Headers} */
 						const headers = {};
 						response.headers.forEach((value, key) => {
-							if (key !== 'etag') headers[key] = value;
+							if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
 						});
 
 						// prettier-ignore

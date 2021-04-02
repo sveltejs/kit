@@ -134,7 +134,7 @@ export default function (test, is_dev) {
 		server.close();
 	});
 
-	test.only(
+	test(
 		'makes credentialed fetches to endpoints by default',
 		'/load',
 		async ({ page, clicknav }) => {

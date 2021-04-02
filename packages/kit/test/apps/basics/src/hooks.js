@@ -24,7 +24,7 @@ export async function handle(request, render) {
 			...response,
 			headers: {
 				...response.headers,
-				'set-cookie': 'name=SvelteKit; path=/; HttpOnly'
+				'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
 			}
 		};
 	}
