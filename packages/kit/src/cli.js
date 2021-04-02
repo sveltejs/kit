@@ -197,10 +197,14 @@ function welcome({ port, host, open }) {
 			// prettier-ignore
 			if (details.internal) {
 				console.log(`  ${colors.gray('local:  ')} http://${colors.bold(`localhost:${port}`)}`);
-			} else if (exposed) {
-				console.log(`  ${colors.gray('network:')} http://${colors.bold(`${details.address}:${port}`)}`);
 			} else {
-				console.log(`  ${colors.gray('network: not exposed')}`);
+				if (details.mac === '00:00:00:00:00:00') return;
+
+				if (exposed) {
+					console.log(`  ${colors.gray('network:')} http://${colors.bold(`${details.address}:${port}`)}`);
+				} else {
+					console.log(`  ${colors.gray('network: not exposed')}`);
+				}
 			}
 		});
 	});
