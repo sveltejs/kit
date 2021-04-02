@@ -310,6 +310,7 @@ export class Renderer {
 		};
 
 		const changed = {
+			path: !this.current.page || page.path !== this.current.page.path,
 			params: Object.keys(page.params).filter((key) => {
 				return !this.current.page || this.current.page.params[key] !== page.params[key];
 			}),
@@ -341,6 +342,7 @@ export class Renderer {
 				const changed_since_last_render =
 					!previous ||
 					module !== previous.module ||
+					(changed.path && previous.uses.path) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
@@ -366,6 +368,7 @@ export class Renderer {
 							module,
 							uses: {
 								params: new Set(),
+								path: false,
 								query: false,
 								session: false,
 								context: false
@@ -389,8 +392,11 @@ export class Renderer {
 							loaded = await module.load.call(null, {
 								page: {
 									host: page.host,
-									path: page.path,
 									params,
+									get path() {
+										node.uses.path = true;
+										return page.path;
+									},
 									get query() {
 										node.uses.query = true;
 										return page.query;
