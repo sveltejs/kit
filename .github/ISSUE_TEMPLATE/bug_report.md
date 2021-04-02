@@ -37,11 +37,15 @@ Stack trace goes here...
 
 **Information about your SvelteKit Installation:**
 
+<details>
+  <summary>Diagnostics</summary>
+
 - The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,vite --binaries --browsers`
 
 - Your browser
 
 - Your adapter (e.g. Node, static, Vercel, Begin, etc...)
+</details>
 
 **Severity**
 How severe an issue is this bug to you? Is this annoying, blocking some users, blocking an upgrade or blocking your usage of SvelteKit entirely?
