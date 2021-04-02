@@ -150,7 +150,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			}
 		}
 
-		if (response) {
+		if (response && page_config.hydrate) {
 			const proxy = new Proxy(response, {
 				get(response, key, receiver) {
 					async function text() {
@@ -190,9 +190,12 @@ async function get_response({ request, options, $session, route, status = 200, e
 			return proxy;
 		}
 
-		return new Response('Not found', {
-			status: 404
-		});
+		return (
+			response ||
+			new Response('Not found', {
+				status: 404
+			})
+		);
 	};
 
 	const component_promises = error

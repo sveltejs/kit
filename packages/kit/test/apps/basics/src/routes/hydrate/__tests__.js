@@ -12,6 +12,12 @@ export default function (test, is_dev) {
 
 			await page.click('button');
 			assert.equal(await page.textContent('button'), 'clicks: 1');
+		} else {
+			// ensure data wasn't inlined
+			assert.equal(
+				await page.evaluate(() => document.querySelectorAll('script[type="svelte-data"]').length),
+				0
+			);
 		}
 	});
 }
