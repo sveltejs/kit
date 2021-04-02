@@ -17,17 +17,11 @@ const mutable = (dir) =>
  *   port: number;
  *   host: string;
  *   config: import('types.internal').ValidatedConfig;
- *   https?: boolean | import('https').ServerOptions;
+ *   https?: boolean;
  *   cwd?: string;
  * }} opts
  */
-export async function start({
-	port,
-	host,
-	config,
-	https: https_options = false,
-	cwd = process.cwd()
-}) {
+export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
 	/** @type {import('types.internal').App} */
@@ -43,7 +37,7 @@ export async function start({
 		immutable: true
 	});
 
-	return get_server(port, host, https_options, (req, res) => {
+	return get_server(port, host, use_https, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {

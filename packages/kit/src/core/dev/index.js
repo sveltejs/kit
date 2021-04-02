@@ -14,7 +14,7 @@ import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 
-/** @typedef {{ cwd?: string, port: number, host: string, https: boolean | import('https').ServerOptions, config: import('../../../types.internal').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('../../../types.internal').ValidatedConfig }} Options */
 /** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
