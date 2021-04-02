@@ -10,12 +10,25 @@ import { load_config } from '../src/core/load_config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 async function setup({ port }) {
+	const base = `http://localhost:${port}`;
+
 	const browser = await chromium.launch();
 
 	const contexts = {
 		js: await browser.newContext({ javaScriptEnabled: true }),
 		nojs: await browser.newContext({ javaScriptEnabled: false })
 	};
+
+	const cookie = {
+		name: 'name',
+		value: 'SvelteKit',
+		domain: base,
+		path: '/',
+		httpOnly: true
+	};
+
+	await contexts.js.addCookies([cookie]);
+	await contexts.nojs.addCookies([cookie]);
 
 	const pages = {
 		js: await contexts.js.newPage(),
@@ -49,7 +62,6 @@ async function setup({ port }) {
 
 		return requests;
 	};
-	const base = `http://localhost:${port}`;
 
 	// Uncomment this for debugging
 	// pages.js.on('console', (msg) => {
