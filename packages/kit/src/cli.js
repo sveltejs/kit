@@ -1,7 +1,9 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import * as ports from 'port-authority';
 import { load_config } from './core/load_config/index.js';
+import { networkInterfaces } from 'os';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -67,15 +69,18 @@ prog
 	.command('dev')
 	.describe('Start a development server')
 	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, open }) => {
+	.action(async ({ port, host, open }) => {
+		await check_port(port);
+
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
 
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, config });
+			const watcher = await dev({ port, host, config });
 
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
@@ -85,8 +90,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			console.log(colors.bold().cyan(`> Listening on http://localhost:${watcher.port}`));
-			if (open) launch(watcher.port);
+			welcome({ port, host, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -126,18 +130,20 @@ prog
 	.command('start')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, open }) => {
+	.action(async ({ port, host, open }) => {
+		await check_port(port);
+
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
 		const { start } = await import('./core/start/index.js');
 
 		try {
-			await start({ port, config });
+			await start({ port, host, config });
 
-			console.log(colors.bold().cyan(`> Listening on http://localhost:${port}`));
-			if (open) if (open) launch(port);
+			welcome({ port, host, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -153,3 +159,59 @@ prog
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
+
+/** @param {number} port */
+async function check_port(port) {
+	const n = await ports.blame(port);
+
+	if (n) {
+		console.log(colors.bold().red(`Port ${port} is occupied`));
+
+		// prettier-ignore
+		console.log(
+			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
+		);
+
+		process.exit(1);
+	}
+}
+
+/**
+ * @param {{
+ *   open: boolean;
+ *   host: string;
+ *   port: number;
+ * }} param0
+ */
+function welcome({ port, host, open }) {
+	if (open) launch(port);
+
+	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
+
+	const exposed = host !== 'localhost' && host !== '127.0.0.1';
+
+	Object.values(networkInterfaces()).forEach((interfaces) => {
+		interfaces.forEach((details) => {
+			if (details.family !== 'IPv4') return;
+
+			// prettier-ignore
+			if (details.internal) {
+				console.log(`  ${colors.gray('local:  ')} http://${colors.bold(`localhost:${port}`)}`);
+			} else {
+				if (details.mac === '00:00:00:00:00:00') return;
+
+				if (exposed) {
+					console.log(`  ${colors.gray('network:')} http://${colors.bold(`${details.address}:${port}`)}`);
+				} else {
+					console.log(`  ${colors.gray('network: not exposed')}`);
+				}
+			}
+		});
+	});
+
+	if (!exposed) {
+		console.log('\n  Use --host to expose server to other devices on this network');
+	}
+
+	console.log('\n');
+}

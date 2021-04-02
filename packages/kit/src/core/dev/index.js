@@ -14,7 +14,7 @@ import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, host: string, config: import('../../../types.internal').ValidatedConfig }} Options */
 /** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
@@ -24,13 +24,14 @@ export function dev(opts) {
 
 class Watcher extends EventEmitter {
 	/** @param {Options} opts */
-	constructor({ cwd = process.cwd(), port, config }) {
+	constructor({ cwd = process.cwd(), port, host, config }) {
 		super();
 
 		this.cwd = cwd;
 		this.dir = path.resolve(cwd, '.svelte/dev');
 
 		this.port = port;
+		this.host = host;
 		this.config = config;
 
 		process.env.NODE_ENV = 'development';
@@ -244,7 +245,7 @@ class Watcher extends EventEmitter {
 			});
 		});
 
-		this.server.listen(this.port);
+		this.server.listen(this.port, this.host || '0.0.0.0');
 	}
 
 	update() {
