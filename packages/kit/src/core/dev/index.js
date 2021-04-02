@@ -1,4 +1,3 @@
-import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { parse, URLSearchParams } from 'url';
@@ -13,8 +12,9 @@ import { ssr } from '../../runtime/server/index.js';
 import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
+import { get_server } from '../server/index.js';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, host: string, https: boolean | import('https').ServerOptions, config: import('../../../types.internal').ValidatedConfig }} Options */
 /** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
@@ -24,13 +24,15 @@ export function dev(opts) {
 
 class Watcher extends EventEmitter {
 	/** @param {Options} opts */
-	constructor({ cwd = process.cwd(), port, config }) {
+	constructor({ cwd = process.cwd(), port, host, https, config }) {
 		super();
 
 		this.cwd = cwd;
 		this.dir = path.resolve(cwd, '.svelte/dev');
 
 		this.port = port;
+		this.host = host;
+		this.https = https;
 		this.config = config;
 
 		process.env.NODE_ENV = 'development';
@@ -112,7 +114,7 @@ class Watcher extends EventEmitter {
 
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
-		this.server = http.createServer((req, res) => {
+		this.server = await get_server(this.port, this.host, this.https, (req, res) => {
 			this.viteDevServer.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);
@@ -243,8 +245,6 @@ class Watcher extends EventEmitter {
 				}
 			});
 		});
-
-		this.server.listen(this.port);
 	}
 
 	update() {

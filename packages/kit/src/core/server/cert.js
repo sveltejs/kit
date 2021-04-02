@@ -1,4 +1,6 @@
+// @ts-ignore
 import { generate } from 'selfsigned';
+
 /**
  * https://github.com/webpack/webpack-dev-server/blob/master/lib/utils/createCertificate.js
  *
@@ -13,10 +15,6 @@ export function createCertificate() {
 		days: 30,
 		keySize: 2048,
 		extensions: [
-			// {
-			//   name: 'basicConstraints',
-			//   cA: true,
-			// },
 			{
 				name: 'keyUsage',
 				keyCertSign: true,
@@ -69,5 +67,6 @@ export function createCertificate() {
 			}
 		]
 	});
+
 	return pems.private + pems.cert;
 }

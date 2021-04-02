@@ -79,6 +79,7 @@ export default [
 		plugins: [
 			replace({
 				preventAssignment: true,
+				delimiters: ['', ''],
 				values: {
 					__VERSION__: pkg.version
 				}

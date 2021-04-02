@@ -1,10 +1,9 @@
 import fs from 'fs';
-import http from 'http';
-import http2 from 'http2';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
 import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
+import { get_server } from '../server/index.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -16,13 +15,20 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
+ *   host: string;
  *   config: import('types.internal').ValidatedConfig;
  *   https?: boolean | import('https').ServerOptions;
  *   cwd?: string;
  * }} opts
- * @returns {Promise<http.Server | http2.Http2SecureServer>}
+ * @returns {Promise<http.Server | https.Server>}
  */
-export async function start({ port, config, https = false, cwd = process.cwd() }) {
+export async function start({
+	port,
+	host,
+	config,
+	https: https_options = false,
+	cwd = process.cwd()
+}) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
 	/** @type {import('types.internal').App} */
@@ -38,11 +44,7 @@ export async function start({ port, config, https = false, cwd = process.cwd() }
 		immutable: true
 	});
 
-	/**
-	 * @param {http.IncomingMessage} req
-	 * @param {http.ServerResponse} res
-	 */
-	const handler = (req, res) => {
+	return get_server(port, host, https_options, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {
@@ -75,30 +77,6 @@ export async function start({ port, config, https = false, cwd = process.cwd() }
 					res.end('Not found');
 				}
 			});
-		});
-	};
-
-	/** @type {http.Server | http2.Http2SecureServer} */
-	let server;
-
-	if (https) {
-		const https_options = typeof https === 'boolean' ? {} : https;
-
-		if (!https_options.key || !https_options.cert) {
-			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
-		}
-
-		server = http2.createSecureServer(
-			{ ...https_options, allowHTTP1: true },
-			/** @type {(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) => void} */ (handler)
-		);
-	} else {
-		server = http.createServer(handler);
-	}
-
-	return new Promise((fulfil) => {
-		server.listen(port, () => {
-			fulfil(server);
 		});
 	});
 }
