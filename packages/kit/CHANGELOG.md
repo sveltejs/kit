@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.69
+
+### Patch Changes
+
+- 4d2cd62: Add prerendering to \$app/env
+- e2eeeea: Call load when path changes if page.path is used
+- 50b5526: Pass through credentials when fetching in load
+- 6384af6: Only inline data if hydrate=true
+
 ## 1.0.0-next.68
 
 ### Patch Changes
