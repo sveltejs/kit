@@ -14,14 +14,16 @@ npx svelte-kit dev
 
 Starts a development server. It accepts the following options:
 
-* `-p`/`--port` — which port to start the server on
-* `-o`/`--open` — open a browser tab once the server starts
+- `-p`/`--port` — which port to start the server on
+- `-o`/`--open` — open a browser tab once the server starts
+- `-h`/`--host` — expose the server to the network. This will allow people using the same coffee shop WiFi as you to see files on your computer; use it with care
+- `-H`/`--https` — launch an HTTPS server using a self-signed certificate. Useful for testing HTTPS-only features on an external device
 
 ### svelte-kit build
 
 Builds a production version of your app, and runs your adapter if you have one specified in your [config](#configuration). It accepts the following option:
 
-* `--verbose` — log more detail
+- `--verbose` — log more detail
 
 ### svelte-kit start
 
@@ -29,5 +31,7 @@ After you've built your app with `svelte-kit build`, you can start the productio
 
 Like `svelte-kit dev`, it accepts the following options:
 
-* `-p`/`--port` — which port to start the server on
-* `-o`/`--open` — open a browser tab once the server starts
+- `-p`/`--port`
+- `-o`/`--open`
+- `-h`/`--host` (note the security caveat [above](#command-line-interface-svelte-kit-dev))
+- `-H`/`--https`
