@@ -3,7 +3,7 @@ import http from 'http';
 import http2 from 'http2';
 import { parse, pathToFileURL, URLSearchParams } from 'url';
 import sirv from 'sirv';
-import { get_body } from '@sveltejs/app-utils/http';
+import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
 
 /** @param {string} dir */
@@ -16,16 +16,16 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
- *   config: import('../../types').ValidatedConfig;
+ *   config: import('types.internal').ValidatedConfig;
  *   https?: boolean | import('https').ServerOptions;
  *   cwd?: string;
  * }} opts
- * @returns {Promise<import('http').Server>}
+ * @returns {Promise<http.Server | http2.Http2SecureServer>}
  */
 export async function start({ port, config, https = false, cwd = process.cwd() }) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
-	/** @type {import('../../types').App} */
+	/** @type {import('types.internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
@@ -38,6 +38,10 @@ export async function start({ port, config, https = false, cwd = process.cwd() }
 		immutable: true
 	});
 
+	/**
+	 * @param {http.IncomingMessage} req
+	 * @param {http.ServerResponse} res
+	 */
 	const handler = (req, res) => {
 		const parsed = parse(req.url || '');
 
@@ -45,8 +49,10 @@ export async function start({ port, config, https = false, cwd = process.cwd() }
 			static_handler(req, res, async () => {
 				const rendered = await app.render(
 					{
+						host: /** @type {string} */ (config.kit.host ||
+							req.headers[config.kit.hostHeader || 'host']),
 						method: req.method,
-						headers: req.headers,
+						headers: /** @type {import('types.internal').Headers} */ (req.headers),
 						path: parsed.pathname,
 						body: await get_body(req),
 						query: new URLSearchParams(parsed.query || '')
@@ -72,15 +78,22 @@ export async function start({ port, config, https = false, cwd = process.cwd() }
 		});
 	};
 
+	/** @type {http.Server | http2.Http2SecureServer} */
 	let server;
-	if (!https) {
-		server = http.createServer(handler);
-	} else {
-		const httpsOptions = typeof https === 'boolean' ? {} : https;
-		if (!httpsOptions.key || !httpsOptions.cert) {
-			httpsOptions.key = httpsOptions.cert = (await import('./cert')).createCertificate();
+
+	if (https) {
+		const https_options = typeof https === 'boolean' ? {} : https;
+
+		if (!https_options.key || !https_options.cert) {
+			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}
-		server = http2.createSecureServer({ ...httpsOptions, allowHTTP1: true }, handler);
+
+		server = http2.createSecureServer(
+			{ ...https_options, allowHTTP1: true },
+			/** @type {(req: http2.Http2ServerRequest, res: http2.Http2ServerResponse) => void} */ (handler)
+		);
+	} else {
+		server = http.createServer(handler);
 	}
 
 	return new Promise((fulfil) => {

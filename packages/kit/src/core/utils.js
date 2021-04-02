@@ -1,11 +1,11 @@
-import { dirname, resolve } from 'path';
+import fs from 'fs';
+import path from 'path';
 import colors from 'kleur';
-import { copy } from '@sveltejs/app-utils/files';
+import { copy } from './filesystem/index.js';
 import { fileURLToPath } from 'url';
-import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
 /** @param {string} dest */
 export function copy_assets(dest) {
@@ -13,9 +13,9 @@ export function copy_assets(dest) {
 	do {
 		// we jump through these hoops so that this function
 		// works whether or not it's been bundled
-		const resolved = resolve(__dirname, `${prefix}/assets`);
+		const resolved = path.resolve(__dirname, `${prefix}/assets`);
 
-		if (existsSync(resolved)) {
+		if (fs.existsSync(resolved)) {
 			copy(resolved, dest);
 			return;
 		}
@@ -28,7 +28,7 @@ function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
-	/** @type {import('../types').Logger} */
+	/** @type {import('../../types.internal').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
 	log.success = (msg) => log(colors.green(`✔ ${msg}`));
@@ -39,4 +39,33 @@ export function logger({ verbose }) {
 	log.info = verbose ? log : noop;
 
 	return log;
+}
+
+/**
+ * Given an entry point like [cwd]/src/hooks, returns a filename like [cwd]/src/hooks.js or [cwd]/src/hooks/index.js
+ * @param {string} entry
+ * @returns {string}
+ */
+export function resolve_entry(entry) {
+	if (fs.existsSync(entry)) {
+		const stats = fs.statSync(entry);
+		if (stats.isDirectory()) {
+			return resolve_entry(path.join(entry, 'index'));
+		}
+
+		return entry;
+	} else {
+		const dir = path.dirname(entry);
+
+		if (fs.existsSync(dir)) {
+			const base = path.basename(entry);
+			const files = fs.readdirSync(dir);
+
+			const found = files.find((file) => file.replace(/\.[^.]+$/, '') === base);
+
+			if (found) return path.join(dir, found);
+		}
+	}
+
+	return null;
 }

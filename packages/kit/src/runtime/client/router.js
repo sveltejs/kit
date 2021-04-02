@@ -1,9 +1,4 @@
-import { find_anchor, get_base_uri } from './utils';
-
-/** @param {MouseEvent} event */
-function which(event) {
-	return event.which === null ? event.button : event.which;
-}
+import { get_base_uri } from './utils';
 
 function scroll_state() {
 	return {
@@ -12,24 +7,23 @@ function scroll_state() {
 	};
 }
 
+/**
+ * @param {Node} node
+ * @returns {HTMLAnchorElement | SVGAElement}
+ */
+function find_anchor(node) {
+	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
+	return /** @type {HTMLAnchorElement | SVGAElement} */ (node);
+}
+
 export class Router {
 	/** @param {{
 	 *    base: string;
-	 *    host: string;
-	 *    pages: import('../../types').Page[];
-	 *    ignore: RegExp[];
+	 *    routes: import('types.internal').CSRRoute[];
 	 * }} opts */
-	constructor({ base, host, pages, ignore }) {
+	constructor({ base, routes }) {
 		this.base = base;
-		this.host = host;
-		this.pages = pages;
-		this.ignore = ignore;
-
-		this.history = window.history || {
-			pushState: () => {},
-			replaceState: () => {},
-			scrollRestoration: 'auto'
-		};
+		this.routes = routes;
 	}
 
 	/** @param {import('./renderer').Renderer} renderer */
@@ -38,8 +32,10 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
-		if ('scrollRestoration' in this.history) {
-			this.history.scrollRestoration = 'manual';
+		this.enabled = true;
+
+		if ('scrollRestoration' in history) {
+			history.scrollRestoration = 'manual';
 		}
 
 		// Adopted from Nuxt.js
@@ -47,12 +43,12 @@ export class Router {
 		// and back-navigation from other pages to use the browser to restore the
 		// scrolling position.
 		addEventListener('beforeunload', () => {
-			this.history.scrollRestoration = 'auto';
+			history.scrollRestoration = 'auto';
 		});
 
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
-			this.history.scrollRestoration = 'manual';
+			history.scrollRestoration = 'manual';
 		});
 
 		// There's no API to capture the scroll location right before the user
@@ -74,15 +70,38 @@ export class Router {
 		});
 
 		/** @param {MouseEvent} event */
+		const trigger_prefetch = (event) => {
+			const a = find_anchor(/** @type {Node} */ (event.target));
+			if (a && a.hasAttribute('sveltekit:prefetch')) {
+				this.prefetch(new URL(/** @type {string} */ (a.href)));
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				trigger_prefetch(event);
+			}, 20);
+		};
+
+		addEventListener('touchstart', trigger_prefetch);
+		addEventListener('mousemove', handle_mousemove);
+
+		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
+			if (!this.enabled) return;
+
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
-			if (which(event) !== 1) return;
+			if (event.button || event.which !== 1) return;
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			/** @type {HTMLAnchorElement | SVGAElement} */
-			const a = find_anchor(event.target);
+			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (!a) return;
 
 			if (!a.href) return;
@@ -90,7 +109,7 @@ export class Router {
 			// check if link is inside an svg
 			// in this case, both href and target are always inside an object
 			const svg = typeof a.href === 'object' && a.href.constructor.name === 'SVGAnimatedString';
-			const href = String(svg ? a.href.baseVal : a.href);
+			const href = String(svg ? /** @type {SVGAElement} */ (a).href.baseVal : a.href);
 
 			if (href === location.href) {
 				if (!location.hash) event.preventDefault();
@@ -103,29 +122,28 @@ export class Router {
 			if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
 
 			// Ignore if <a> has a target
-			if (svg ? a.target.baseVal : a.target) return;
+			if (svg ? /** @type {SVGAElement} */ (a).target.baseVal : a.target) return;
 
 			const url = new URL(href);
 
 			// Don't handle hash changes
 			if (url.pathname === location.pathname && url.search === location.search) return;
 
-			const selected = this.select(url);
-			if (selected) {
+			const info = this.parse(url);
+			if (info) {
 				const noscroll = a.hasAttribute('sveltekit:noscroll');
-				this.renderer.notify(selected);
-				this.history.pushState({}, '', url.href);
-				this.navigate(selected, noscroll ? scroll_state() : null, [], url.hash);
+				history.pushState({}, '', url.href);
+				this._navigate(info, noscroll ? scroll_state() : null, [], url.hash);
 				event.preventDefault();
 			}
 		});
 
 		addEventListener('popstate', (event) => {
-			if (event.state) {
+			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				const selected = this.select(url);
-				if (selected) {
-					this.navigate(selected, event.state['sveltekit:scroll'], []);
+				const info = this.parse(url);
+				if (info) {
+					this._navigate(info, event.state['sveltekit:scroll'], []);
 				} else {
 					// eslint-disable-next-line
 					location.href = location.href; // nosonar
@@ -136,41 +154,27 @@ export class Router {
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
-		// load current page
-		this.history.replaceState({}, '', location.href);
-
-		const selected = this.select(new URL(location.href));
-		if (selected) return this.renderer.start(selected);
+		// create initial history entry, so we can return here
+		history.replaceState(history.state || {}, '', location.href);
 	}
 
 	/**
 	 * @param {URL} url
-	 * @returns {import('./types').NavigationTarget}
+	 * @returns {import('./types').NavigationInfo}
 	 */
-	select(url) {
+	parse(url) {
 		if (url.origin !== location.origin) return null;
 		if (!url.pathname.startsWith(this.base)) return null;
 
-		let path = url.pathname.slice(this.base.length);
+		const path = url.pathname.slice(this.base.length) || '/';
 
-		if (path === '') {
-			path = '/';
-		}
+		const routes = this.routes.filter(([pattern]) => pattern.test(path));
 
-		// avoid accidental clashes between server routes and page routes
-		if (this.ignore.some((pattern) => pattern.test(path))) return;
+		if (routes.length > 0) {
+			const query = new URLSearchParams(url.search);
+			const id = `${path}?${query}`;
 
-		for (const route of this.pages) {
-			const match = route.pattern.exec(path);
-
-			if (match) {
-				const query = new URLSearchParams(url.search);
-				const params = route.params(match);
-
-				const page = { host: this.host, path, query, params };
-
-				return { href: url.href, route, match, page };
-			}
+			return { id, routes, path, query };
 		}
 	}
 
@@ -180,15 +184,15 @@ export class Router {
 	 * @param {string[]} chain
 	 */
 	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
-		const url = new URL(href, get_base_uri(document));
-		const selected = this.select(url);
+		if (this.enabled) {
+			const url = new URL(href, get_base_uri(document));
+			const info = this.parse(url);
 
-		if (selected) {
-			this.renderer.notify(selected);
-
-			// TODO shouldn't need to pass the hash here
-			this.history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this.navigate(selected, noscroll ? scroll_state() : null, chain, url.hash);
+			if (info) {
+				// TODO shouldn't need to pass the hash here
+				history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
+				return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
+			}
 		}
 
 		location.href = href;
@@ -197,19 +201,46 @@ export class Router {
 		});
 	}
 
+	enable() {
+		this.enabled = true;
+	}
+
+	disable() {
+		this.enabled = false;
+	}
+
 	/**
-	 * @param {*} selected
+	 * @param {URL} url
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
+	async prefetch(url) {
+		const info = this.parse(url);
+
+		if (info) {
+			return this.renderer.load(info);
+		} else {
+			throw new Error(`Could not prefetch ${url.href}`);
+		}
+	}
+
+	/**
+	 * @param {import('./types').NavigationInfo} info
 	 * @param {{ x: number, y: number }} scroll
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async navigate(selected, scroll, chain, hash) {
+	async _navigate(info, scroll, chain, hash) {
+		this.renderer.notify({
+			path: info.path,
+			query: info.query
+		});
+
 		// remove trailing slashes
 		if (location.pathname.endsWith('/') && location.pathname !== '/') {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.render(selected, chain);
+		await this.renderer.update(info, chain);
 
 		document.body.focus();
 

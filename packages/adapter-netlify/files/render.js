@@ -1,7 +1,7 @@
 'use strict';
 
 import { URLSearchParams } from 'url';
-import { render } from './app.js'; // eslint-disable-line import/no-unresolved
+import { render } from './app.mjs'; // eslint-disable-line import/no-unresolved
 
 export async function handler(event) {
 	const {

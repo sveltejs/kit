@@ -8,4 +8,11 @@ export default function (test) {
 			'rgb(255, 0, 0)'
 		);
 	});
+
+	test('applies layout styles', '/css', async ({ page }) => {
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('footer')).color),
+			'rgb(128, 0, 128)'
+		);
+	});
 }

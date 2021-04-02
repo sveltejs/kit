@@ -1,6 +1,9 @@
-import { router, renderer } from '../client/singletons.js';
+import { router } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
+/**
+ * @param {string} name
+ */
 function guard(name) {
 	return () => {
 		throw new Error(`Cannot call ${name}(...) on the server`);
@@ -15,7 +18,7 @@ export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : pr
  * @param {string} href
  * @param {{
  *   noscroll?: boolean;
- *   resplaceState?: boolean;
+ *   replaceState?: boolean;
  * }} [opts]
  */
 async function goto_(href, opts) {
@@ -24,16 +27,16 @@ async function goto_(href, opts) {
 
 /** @param {string} href */
 function prefetch_(href) {
-	return renderer.prefetch(new URL(href, get_base_uri(document)));
+	return router.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /** @param {string[]} [pathnames] */
 async function prefetchRoutes_(pathnames) {
-	const path_routes = pathnames
-		? router.pages.filter((page) => pathnames.some((pathname) => page.pattern.test(pathname)))
-		: router.pages;
+	const matching = pathnames
+		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+		: router.routes;
 
-	const promises = path_routes.map((r) => Promise.all(r.parts.map((load) => load())));
+	const promises = matching.map((r) => r.length !== 1 && Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
 }

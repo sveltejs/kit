@@ -1,4 +1,5 @@
-import { mkdirp } from '@sveltejs/app-utils/files';
+//eslint-disable-next-line import/no-unresolved
+import { mkdirp } from '@sveltejs/kit/filesystem';
 import fs from 'fs';
 import parser from 'gitignore-parser';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
@@ -10,28 +11,14 @@ import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
 // import versions from './versions';
 import { version } from '../package.json';
+import add_prettier from './modifications/add_prettier';
+import add_eslint from './modifications/add_eslint';
 
 const disclaimer = `
-█████████  ███████████    ███████    ███████████  ███
-███░░░░░███░█░░░███░░░█  ███░░░░░███ ░░███░░░░░███░███
-░███    ░░░ ░   ░███  ░  ███     ░░███ ░███    ░███░███
-░░█████████     ░███    ░███      ░███ ░██████████ ░███
-░░░░░░░░███    ░███    ░███      ░███ ░███░░░░░░  ░███
-███    ░███    ░███    ░░███     ███  ░███        ░░░
-░░█████████     █████    ░░░███████░   █████        ███
-░░░░░░░░░     ░░░░░       ░░░░░░░    ░░░░░        ░░░
+Welcome to the SvelteKit setup wizard!
 
-Pump the brakes! A little disclaimer...
-
-svelte@next is not ready for use yet. It definitely can't
-run your apps, and it might not run at all.
-
-We haven't yet started accepting community contributions,
-and we don't need people to start raising issues yet.
-
-Given these warnings, please feel free to experiment, but
-you're on your own for now. We'll have something to show
-soon.
+SvelteKit is in public beta now. There are definitely bugs and some feature might not work yet.
+If you encounter an issue, have a look at https://github.com/sveltejs/kit/issues and open a new one, if it is not already tracked.
 `;
 
 async function main() {
@@ -89,6 +76,12 @@ async function main() {
 
 	await prompt_modifications(target);
 
+	console.log(
+		'\nWant to add other parts to your code base? ' +
+			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
+			'to add particular functionality to Svelte projects\n'
+	);
+
 	console.log('\nNext steps:');
 	let i = 1;
 
@@ -104,6 +97,11 @@ async function main() {
 	console.log('\nStuck? Visit us at https://svelte.dev/chat\n');
 }
 
+/**
+ * Go through the prompts to let the user setup his project.
+ *
+ * @param {string} target
+ */
 async function prompt_modifications(target) {
 	const ts_response = await prompts({
 		type: 'confirm',
@@ -124,6 +122,22 @@ async function prompt_modifications(target) {
 		]
 	});
 	await add_css(target, css_response.value);
+
+	const eslint_response = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message: 'Add ESLint for code linting?',
+		initial: false
+	});
+	await add_eslint(target, eslint_response.value, ts_response.value);
+
+	const prettier_response = await prompts({
+		type: 'confirm',
+		name: 'value',
+		message: 'Add Prettier for code formatting?',
+		initial: false
+	});
+	await add_prettier(target, prettier_response.value, eslint_response.value);
 }
 
 main();

@@ -1,5 +1,53 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- feb2db7: Fix fatal error when trying to parse URLs of incoming requests
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- ca33a35: Fix adapter-vercel query parsing and update adapter-node's
+
+## 1.0.0-next.10
+
+### Patch Changes
+
+- 8024178: remove @sveltejs/app-utils
+
+## 1.0.0-next.9
+
+### Patch Changes
+
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 9212aa5: Add options to adapter-node, and add adapter types
+
+## 1.0.0-next.7
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 222fe9d: Compress adapter-node responses
+
 ## 1.0.0-next.4
 
 ### Minor Changes

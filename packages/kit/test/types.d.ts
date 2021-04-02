@@ -7,15 +7,16 @@ import { Page, Response } from 'playwright';
 export type TestContext = {
 	base: string;
 	page: Page;
+	clicknav: (selector: string) => Promise<void>;
 	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
 	capture_requests: (fn: () => void) => Promise<string[]>;
+	js: boolean;
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
-		start: () => Promise<void>;
 		goto: (url: string) => Promise<void>;
 		prefetch: (url: string) => Promise<void>;
-		prefetchRoutes: () => Promise<void>;
+		prefetchRoutes: (urls?: string[]) => Promise<void>;
 	};
 
 	reset: () => Promise<void>;

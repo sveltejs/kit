@@ -5,6 +5,8 @@ import { validate_config } from './index.js';
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
+	delete validated.kit.vite;
+
 	assert.equal(validated, {
 		compilerOptions: null,
 		extensions: ['.svelte'],
@@ -14,12 +16,16 @@ test('fills in defaults', () => {
 			appDir: '_app',
 			files: {
 				assets: 'static',
+				hooks: 'src/hooks',
+				lib: 'src/lib',
 				routes: 'src/routes',
+				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			host: null,
 			hostHeader: null,
+			hydrate: true,
 			paths: {
 				base: '',
 				assets: '/.'
@@ -30,8 +36,9 @@ test('fills in defaults', () => {
 				force: false,
 				pages: ['*']
 			},
-			target: null,
-			startGlobal: null
+			router: true,
+			ssr: true,
+			target: null
 		},
 		preprocess: null
 	});
@@ -76,6 +83,10 @@ test('fills in partial blanks', () => {
 		}
 	});
 
+	assert.equal(validated.kit.vite(), {});
+
+	delete validated.kit.vite;
+
 	assert.equal(validated, {
 		compilerOptions: null,
 		extensions: ['.svelte'],
@@ -85,12 +96,16 @@ test('fills in partial blanks', () => {
 			appDir: '_app',
 			files: {
 				assets: 'public',
+				hooks: 'src/hooks',
+				lib: 'src/lib',
 				routes: 'src/routes',
+				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			host: null,
 			hostHeader: null,
+			hydrate: true,
 			paths: {
 				base: '',
 				assets: '/.'
@@ -101,7 +116,8 @@ test('fills in partial blanks', () => {
 				force: false,
 				pages: ['*']
 			},
-			startGlobal: null,
+			router: true,
+			ssr: true,
 			target: null
 		},
 		preprocess: null

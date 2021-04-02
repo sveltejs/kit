@@ -1,8 +1,7 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.2",
+	"version": "1.0.0-next.10",
 	"main": "index.js",
-	"type": "module",
 	"files": [
 		"files"
 	],
@@ -14,11 +13,10 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
-	"dependencies": {
-		"@sveltejs/app-utils": "workspace:*"
-	},
 	"devDependencies": {
-		"rollup": "^2.38.3",
-		"sirv": "^1.0.11"
+		"@sveltejs/kit": "workspace:*",
+		"rollup": "^2.41.1",
+		"sirv": "^1.0.11",
+		"typescript": "^4.2.3"
 	}
 }

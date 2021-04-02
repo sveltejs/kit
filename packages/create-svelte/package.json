@@ -1,16 +1,15 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.29",
+	"version": "2.0.0-next.46",
 	"bin": "./bin",
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/adapter-node": "workspace:*",
-		"@sveltejs/app-utils": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.4",
 		"prompts": "^2.4.0",
-		"rollup": "^2.38.3",
+		"rollup": "^2.41.1",
 		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
@@ -22,6 +21,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
-		"template"
+		"template",
+		"template-additions"
 	]
 }

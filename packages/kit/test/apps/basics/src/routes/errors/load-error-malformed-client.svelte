@@ -3,5 +3,7 @@
 		if (typeof window !== 'undefined') {
 			return { status: 555, error: {} };
 		}
+
+		return {};
 	}
 </script>

@@ -39,13 +39,16 @@ const options = {
 				type: 'leaf',
 				default: [null],
 				validate: (option, keypath) => {
-					// support both `adapter: 'foo'` and `adapter: ['foo', opts]`
-					if (!Array.isArray(option)) {
-						option = [option];
-					}
+					if (typeof option !== 'object' || !option.adapt) {
+						let message = `${keypath} should be an object with an "adapt" method`;
 
-					// TODO allow inline functions
-					assert_is_string(option[0], keypath);
+						if (Array.isArray(option) || typeof option === 'string') {
+							// for the early adapter adopters
+							message += ', rather than the name of an adapter';
+						}
+
+						throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
+					}
 
 					return option;
 				}
@@ -59,7 +62,11 @@ const options = {
 				type: 'branch',
 				children: {
 					assets: expect_string('static'),
+					hooks: expect_string('src/hooks'),
+					lib: expect_string('src/lib'),
 					routes: expect_string('src/routes'),
+					serviceWorker: expect_string('src/service-worker'),
+					// TODO remove this, eventually
 					setup: expect_string('src/setup'),
 					template: expect_string('src/app.html')
 				}
@@ -68,6 +75,8 @@ const options = {
 			host: expect_string(null),
 
 			hostHeader: expect_string(null),
+
+			hydrate: expect_boolean(true),
 
 			paths: {
 				type: 'branch',
@@ -105,10 +114,30 @@ const options = {
 				}
 			},
 
-			// used for testing
-			startGlobal: expect_string(null),
+			router: expect_boolean(true),
 
-			target: expect_string(null)
+			ssr: expect_boolean(true),
+
+			target: expect_string(null),
+
+			vite: {
+				type: 'leaf',
+				default: () => ({}),
+				validate: (option, keypath) => {
+					if (typeof option === 'object') {
+						const config = option;
+						option = () => config;
+					}
+
+					if (typeof option !== 'function') {
+						throw new Error(
+							`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
+						);
+					}
+
+					return option;
+				}
+			}
 		}
 	},
 

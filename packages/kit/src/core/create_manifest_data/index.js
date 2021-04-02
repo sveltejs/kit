@@ -6,7 +6,6 @@ import mime from 'mime';
  *   content: string;
  *   dynamic: boolean;
  *   spread: boolean;
- *   qualifier: string;
  * }} Part */
 
 /** @typedef {{
@@ -22,11 +21,11 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('../../types').ValidatedConfig;
+ *   config: import('types.internal').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('../../types').ManifestData}
+ * @returns {import('types.internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -41,28 +40,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('../../types').PageData[]} */
-	const pages = [];
-
-	/** @type {import('../../types').EndpointData[]} */
-	const endpoints = [];
-
-	/** @type {Map<string, string>} */
-	const seen = new Map();
-
-	/**
-	 * @param {RegExp} pattern
-	 * @param {string} file
-	 */
-	const check_pattern = (pattern, file) => {
-		const str = pattern.toString();
-
-		if (seen.has(str)) {
-			throw new Error(`The ${seen.get(str)} and ${file} routes clash`);
-		}
-
-		seen.set(str, file);
-	};
+	/** @type {import('types.internal').RouteData[]} */
+	const routes = [];
 
 	const default_layout = path.relative(cwd, `${output}/components/layout.svelte`);
 	const default_error = path.relative(cwd, `${output}/components/error.svelte`);
@@ -96,16 +75,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					throw new Error(`Invalid route ${file} — parameters must be separated`);
 				}
 
-				const parts = get_parts(segment);
+				if (count_occurrences('[', segment) !== count_occurrences(']', segment)) {
+					throw new Error(`Invalid route ${file} — brackets are unbalanced`);
+				}
+
+				if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment)) {
+					throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
+				}
+
+				const parts = get_parts(segment, file);
 				const is_index = is_dir ? false : basename.startsWith('index.');
 				const is_page = config.extensions.indexOf(ext) !== -1;
 				const route_suffix = basename.slice(basename.indexOf('.'), -ext.length);
-
-				parts.forEach((part) => {
-					if (part.qualifier && /[()?:]/.test(part.qualifier.slice(1, -1))) {
-						throw new Error(`Invalid route ${file} — cannot use (, ), ? or : in route qualifiers`);
-					}
-				});
 
 				return {
 					basename,
@@ -134,15 +115,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 							last_segment.push({
 								dynamic: false,
 								spread: false,
-								content: item.route_suffix,
-								qualifier: null
+								content: item.route_suffix
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
 								spread: false,
-								content: `${last_part.content}${item.route_suffix}`,
-								qualifier: null
+								content: `${last_part.content}${item.route_suffix}`
 							};
 						}
 
@@ -178,18 +157,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						: stack.concat(item.file);
 
 				const pattern = get_pattern(segments, true);
-				check_pattern(pattern, item.file);
 
-				pages.push({
+				routes.push({
+					type: 'page',
 					pattern,
 					params,
 					parts
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
-				check_pattern(pattern, item.file);
 
-				endpoints.push({
+				routes.push({
+					type: 'endpoint',
 					pattern,
 					file: item.file,
 					params
@@ -212,9 +191,20 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		layout,
 		error,
 		components,
-		pages,
-		endpoints
+		routes
 	};
+}
+
+/**
+ * @param {string} needle
+ * @param {string} haystack
+ */
+function count_occurrences(needle, haystack) {
+	let count = 0;
+	for (let i = 0; i < haystack.length; i += 1) {
+		if (haystack[i] === needle) count += 1;
+	}
+	return count;
 }
 
 /** @param {string} str */
@@ -266,41 +256,37 @@ function comparator(a, b) {
 				(a_sub_part.content < b_sub_part.content ? -1 : 1)
 			);
 		}
-
-		// If both parts dynamic, check for regexp patterns
-		if (a_sub_part.dynamic && b_sub_part.dynamic) {
-			const regexp_pattern = /\((.*?)\)/;
-			const a_match = regexp_pattern.exec(a_sub_part.content);
-			const b_match = regexp_pattern.exec(b_sub_part.content);
-
-			if (!a_match && b_match) {
-				return 1; // No regexp, so less specific than b
-			}
-			if (!b_match && a_match) {
-				return -1;
-			}
-			if (a_match && b_match && a_match[1] !== b_match[1]) {
-				return b_match[1].length - a_match[1].length;
-			}
-		}
 	}
+
+	if (a.is_page !== b.is_page) {
+		return a.is_page ? 1 : -1;
+	}
+
+	// otherwise sort alphabetically
+	return a.file < b.file ? -1 : 1;
 }
 
-/** @param {string} part */
-function get_parts(part) {
+/**
+ * @param {string} part
+ * @param {string} file
+ */
+function get_parts(part, file) {
 	return part
 		.split(/\[(.+?\(.+?\)|.+?)\]/)
 		.map((str, i) => {
 			if (!str) return null;
 			const dynamic = i % 2 === 1;
 
-			const [, content, qualifier] = dynamic ? /([^(]+)(\(.+\))?$/.exec(str) : [null, str, null];
+			const [, content] = dynamic ? /([^(]+)$/.exec(str) : [null, str];
+
+			if (dynamic && !/^(\.\.\.)?[a-zA-Z0-9_$]+$/.test(content)) {
+				throw new Error(`Invalid route ${file} — parameter name must match /^[a-zA-Z0-9_$]+$/`);
+			}
 
 			return {
 				content,
 				dynamic,
-				spread: dynamic && /^\.{3}.+$/.test(content),
-				qualifier
+				spread: dynamic && /^\.{3}.+$/.test(content)
 			};
 		})
 		.filter(Boolean);
@@ -313,30 +299,33 @@ function get_parts(part) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment
-				.map((part) => {
-					return part.dynamic
-						? part.qualifier || (part.spread ? '(.+)' : '([^/]+?)')
-						: encodeURI(part.content.normalize())
-								.replace(/\?/g, '%3F')
-								.replace(/#/g, '%23')
-								.replace(/%5B/g, '[')
-								.replace(/%5D/g, ']')
-								.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-				})
-				.join('');
+			return segment[0].spread
+				? '\\/?(.*)'
+				: '\\/' +
+						segment
+							.map((part) => {
+								return part.dynamic
+									? '([^/]+?)'
+									: encodeURI(part.content.normalize())
+											.replace(/\?/g, '%3F')
+											.replace(/#/g, '%23')
+											.replace(/%5B/g, '[')
+											.replace(/%5D/g, ']')
+											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+							})
+							.join('');
 		})
-		.join('\\/');
+		.join('');
 
 	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
 
-	return new RegExp(`^\\/${path}${trailing}`);
+	return new RegExp(`^${path || '\\/'}${trailing}`);
 }
 
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('../../types').Asset[]} files
+ * @param {import('types.internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

@@ -11,17 +11,40 @@ import { fileURLToPath, pathToFileURL } from 'url';
 
 async function setup({ port }) {
 	const browser = await chromium.launch();
-	const page = await browser.newPage();
+
+	const contexts = {
+		js: await browser.newContext({ javaScriptEnabled: true }),
+		nojs: await browser.newContext({ javaScriptEnabled: false })
+	};
+
+	const pages = {
+		js: await contexts.js.newPage(),
+		nojs: await contexts.nojs.newPage()
+	};
+
+	pages.js.addInitScript({
+		content: `
+			window.started = new Promise((fulfil, reject) => {
+				setTimeout(() => {
+					reject(new Error('Timed out'));
+				}, 5000);
+
+				addEventListener('sveltekit:start', () => {
+					fulfil();
+				});
+			});
+		`
+	});
 
 	const capture_requests = async (operations) => {
 		const requests = [];
 		const on_request = (request) => requests.push(request.url());
-		page.on('request', on_request);
+		pages.js.on('request', on_request);
 
 		try {
 			await operations();
 		} finally {
-			page.off('request', on_request);
+			pages.js.off('request', on_request);
 		}
 
 		return requests;
@@ -29,7 +52,7 @@ async function setup({ port }) {
 	const base = `http://localhost:${port}`;
 
 	// Uncomment this for debugging
-	// page.on('console', msg => {
+	// pages.js.on('console', (msg) => {
 	// 	const type = msg.type();
 	// 	const text = msg.text();
 
@@ -43,16 +66,29 @@ async function setup({ port }) {
 
 	return {
 		base,
-		page,
+		pages,
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,
 
 		// these are assumed to have been put in the global scope by the layout
 		app: {
-			start: () => page.evaluate(() => start()),
-			goto: (url) => page.evaluate((url) => goto(url), url),
-			prefetch: (url) => page.evaluate((url) => prefetch(url), url),
-			prefetchRoutes: () => page.evaluate(() => prefetchRoutes())
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
+			goto: (url) => pages.js.evaluate((url) => goto(url), url),
+
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
+			prefetch: (url) => pages.js.evaluate((url) => prefetch(url), url),
+
+			/**
+			 * @param {string[]} [urls]
+			 * @returns {Promise<void>}
+			 */
+			prefetchRoutes: (urls) => pages.js.evaluate((urls) => prefetchRoutes(urls), urls)
 		},
 
 		reset: () => browser && browser.close()
@@ -71,11 +107,13 @@ function duplicate(test_fn, config) {
 			let response;
 
 			if (start) {
-				response = await context.page.goto(context.base + start);
+				response = await context.pages.nojs.goto(context.base + start);
 			}
 
 			await callback({
 				...context,
+				page: context.pages.nojs,
+				clicknav: (selector) => context.pages.nojs.click(selector),
 				response,
 				js: false
 			});
@@ -86,12 +124,28 @@ function duplicate(test_fn, config) {
 				let response;
 
 				if (start) {
-					response = await context.page.goto(context.base + start);
-					await context.page.evaluate(() => window.start());
+					response = await context.pages.js.goto(context.base + start);
+					await context.pages.js.evaluate(() => window.started);
 				}
 
 				await callback({
 					...context,
+					page: context.pages.js,
+					clicknav: async (selector) => {
+						await context.pages.js.evaluate(() => {
+							window.navigated = new Promise((fulfil, reject) => {
+								addEventListener('sveltekit:navigation-end', function handler() {
+									fulfil();
+									removeEventListener('sveltekit:navigation-end', handler);
+								});
+
+								setTimeout(() => reject(new Error('Timed out')), 2000);
+							});
+						});
+
+						await context.pages.js.click(selector);
+						await context.pages.js.evaluate(() => window.navigated);
+					},
 					js: true,
 					response
 				});
@@ -196,8 +250,13 @@ async function main() {
 
 		const config = await load_config({ cwd });
 
-		await test_dev(app, cwd, config, tests);
-		await test_build(app, cwd, config, tests);
+		if (process.env.DEV !== 'false') {
+			await test_dev(app, cwd, config, tests);
+		}
+
+		if (process.env.BUILD !== 'false') {
+			await test_build(app, cwd, config, tests);
+		}
 	}
 
 	await uvu.exec();

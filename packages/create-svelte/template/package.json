@@ -10,10 +10,7 @@
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.29.0",
-		"vite": "^2.0.4"
+		"vite": "^2.1.0"
 	},
-	"type": "module",
-	"engines": {
-		"node": ">= 12.17.0"
-	}
+	"type": "module"
 }

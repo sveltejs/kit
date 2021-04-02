@@ -1,22 +1,33 @@
 import fs from 'fs';
 import { bold, green } from 'kleur/colors';
-import path from 'path';
-import { add_svelte_preprocess_to_config, update_component, update_package_json } from './utils';
+import { join } from 'path';
+import {
+	add_svelte_preprocess_to_config,
+	copy_from_template_additions,
+	update_component,
+	update_package_json_dev_deps
+} from './utils';
 
+/**
+ * Add TypeScript if user wants it.
+ *
+ * @param {string} cwd
+ * @param {boolean} yes
+ */
 export default async function add_typescript(cwd, yes) {
 	if (yes) {
-		update_package_json(cwd, {
+		update_package_json_dev_deps(cwd, {
 			typescript: '^4.0.0',
 			tslib: '^2.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/components/Counter.svelte', [
+		update_component(cwd, 'src/lib/Counter.svelte', [
 			['<script>', '<script lang="ts">'],
-			['let count = 0', 'let count: number = 0']
+			['const increment = () => {', 'const increment = (): void => {']
 		]);
+		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
 		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
-		add_d_ts_file(cwd);
 
 		console.log(
 			bold(
@@ -31,95 +42,10 @@ export default async function add_typescript(cwd, yes) {
 	}
 }
 
+/**
+ * @param {string} cwd
+ */
 function add_tsconfig(cwd) {
-	fs.writeFileSync(
-		path.join(cwd, 'tsconfig.json'),
-		`{
-	"compilerOptions": {
-		"moduleResolution": "node",
-		"target": "es2017",
-		/**
-			svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
-			to enforce using \`import type\` instead of \`import\` for Types.
-			*/
-		"importsNotUsedAsValues": "error",
-		"isolatedModules": true,
-		/**
-			To have warnings/errors of the Svelte compiler at the correct position,
-			enable source maps by default.
-			*/
-		"sourceMap": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"baseUrl": ".",
-		"paths": {
-			"$components/*": ["./src/components/*"]
-		}
-	},
-	"include": ["src/**/*"],
-	"exclude": ["node_modules/*", ".svelte"]
-}`
-	);
-}
-
-function add_d_ts_file(cwd) {
-	fs.writeFileSync(
-		path.join(cwd, 'src', 'globals.d.ts'),
-		`/// <reference types="@sveltejs/kit" />
-
-//#region Ensure Svelte file endings have a type for TypeScript
-/**
- * These declarations tell TypeScript that we allow import of Svelte files in TS files, e.g.
- * \`\`\`
-		import Component from './Component.svelte';
-	 \`\`\`
- */
-declare module '*.svelte' {
-	export { SvelteComponent as default } from 'svelte';
-}
-//#endregion
-
-//#region Ensure image file endings have a type for TypeScript
-/**
- * These declarations tell TypeScript that we allow import of images, e.g.
- * \`\`\`
-		<script lang='ts'>
-			import successkid from 'images/successkid.jpg';
-		</script>
-		<img src="{successkid}">
-	 \`\`\`
- */
-declare module "*.gif" {
-	const value: string;
-	export = value;
-}
-
-declare module "*.jpg" {
-	const value: string;
-	export = value;
-}
-
-declare module "*.jpeg" {
-	const value: string;
-	export = value;
-}
-
-declare module "*.png" {
-	const value: string;
-	export = value;
-}
-
-declare module "*.svg" {
-	const value: string;
-	export = value;
-}
-
-declare module "*.webp" {
-	const value: string;
-	export = value;
-}
-//#endregion
-`
-	);
+	fs.unlinkSync(join(cwd, 'jsconfig.json'));
+	copy_from_template_additions(cwd, ['tsconfig.json']);
 }

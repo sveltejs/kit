@@ -14,6 +14,8 @@ suite('load default config', async () => {
 
 	const config = await load_config({ cwd });
 
+	delete config.kit.vite; // can't test equality of a function
+
 	assert.equal(config, {
 		compilerOptions: null,
 		extensions: ['.svelte'],
@@ -23,15 +25,20 @@ suite('load default config', async () => {
 			appDir: '_app',
 			files: {
 				assets: join(cwd, 'static'),
+				hooks: join(cwd, 'src/hooks'),
+				lib: join(cwd, 'src/lib'),
 				routes: join(cwd, 'src/routes'),
+				serviceWorker: join(cwd, 'src/service-worker'),
 				setup: join(cwd, 'src/setup'),
 				template: join(cwd, 'src/app.html')
 			},
 			host: null,
 			hostHeader: null,
+			hydrate: true,
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
-			startGlobal: null,
+			router: true,
+			ssr: true,
 			target: null
 		},
 		preprocess: null

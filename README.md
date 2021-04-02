@@ -1,8 +1,10 @@
-# @sveltejs/kit
+# READ THIS FIRST!
 
-Everything you need to build a Svelte app.
+SvelteKit is still in beta. Expect bugs! Read more [here](https://svelte.dev/blog/sveltekit-beta), and track progress towards 1.0 [here](https://github.com/sveltejs/kit/issues?q=is%3Aopen+is%3Aissue+milestone%3A1.0).
 
-To get started, run `npm init svelte@next` — this will fetch and run the [`create-svelte`](packages/create-svelte) package.
+## Documentation
+
+Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
 
 ## Developing
 
@@ -44,6 +46,6 @@ New packages will need to be published manually the first time if they are scope
 npm publish --access=public
 ```
 
-## Testing
+### Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subpackages of `test/` such as `test/apps/basics/`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.

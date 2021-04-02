@@ -8,21 +8,13 @@ async function get_config() {
 	if (existsSync('snowpack.config.js') || existsSync('snowpack.config.cjs')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
-			'SvelteKit now uses https://vitejs.dev. Please replace snowpack.config.js with vite.config.js:'
+			'SvelteKit now uses https://vitejs.dev. Please remove snowpack.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
 		));
-
+	} else if (existsSync('vite.config.js')) {
 		// prettier-ignore
-		console.error(`
-			import { resolve } from 'path';
-
-			export default {
-				resolve: {
-					alias: {
-						$components: resolve('src/components')
-					}
-				}
-			};
-		`.replace(/^\t{3}/gm, '').replace(/\t/gm, '  ').trim());
+		console.error(colors.bold().red(
+			'Please remove vite.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
+		));
 	}
 
 	try {
@@ -30,11 +22,13 @@ async function get_config() {
 	} catch (error) {
 		let message = error.message;
 
-		if (error.code === 'MODULE_NOT_FOUND') {
+		if (
+			error.code === 'MODULE_NOT_FOUND' &&
+			/Cannot find module svelte\.config\.cjs/.test(error.message)
+		) {
 			if (existsSync('svelte.config.js')) {
 				// TODO this is temporary, for the benefit of early adopters
-				message =
-					'You must rename svelte.config.js to svelte.config.cjs, and snowpack.config.js to snowpack.config.cjs';
+				message = 'You must rename svelte.config.js to svelte.config.cjs';
 			} else {
 				message = 'Missing svelte.config.cjs';
 			}
@@ -58,7 +52,13 @@ function handle_error(error) {
 /** @param {number} port */
 async function launch(port) {
 	const { exec } = await import('child_process');
-	exec(`${process.platform == 'win32' ? 'start' : 'open'} http://localhost:${port}`);
+	let cmd = 'open';
+	if (process.platform == 'win32') {
+		cmd = 'start';
+	} else if (process.platform == 'linux') {
+		cmd = 'xdg-open';
+	}
+	exec(`${cmd} http://localhost:${port}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
@@ -106,7 +106,7 @@ prog
 
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
-			if (config.kit.adapter[0]) {
+			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
 				await adapt(config, { verbose });
 			} else {

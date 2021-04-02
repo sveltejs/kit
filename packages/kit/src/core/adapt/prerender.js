@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
 import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
 import glob from 'tiny-glob/sync.js';
-import { mkdirp } from '@sveltejs/app-utils/files';
+import { mkdirp } from '../filesystem/index.js';
 
 /** @param {string} html */
 function clean_html(html) {
@@ -50,8 +50,8 @@ const REDIRECT = 3;
 /** @param {{
  *   cwd: string;
  *   out: string;
- *   log: import('../../types').Logger;
- *   config: import('../../types').ValidatedConfig;
+ *   log: import('../../../types.internal').Logger;
+ *   config: import('../../../types.internal').ValidatedConfig;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, force }) {
@@ -62,7 +62,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('../../types').App} */
+	/** @type {import('../../../types.internal').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
@@ -94,7 +94,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 			},
 			{
 				local: true,
-				only_prerender: !force,
+				only_render_prerenderable_pages: !force,
 				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
 			}
 		);

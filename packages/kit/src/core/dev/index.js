@@ -8,13 +8,14 @@ import amp_validator from 'amphtml-validator';
 import vite from 'vite';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '@sveltejs/app-utils/files';
+import { rimraf } from '../filesystem/index.js';
 import { ssr } from '../../runtime/server/index.js';
-import { get_body } from '@sveltejs/app-utils/http';
+import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';
-import svelte from '@svitejs/vite-plugin-svelte';
+import svelte from '@sveltejs/vite-plugin-svelte';
 
-/** @typedef {{ cwd?: string, port: number, config: import('../../types').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, config: import('../../../types.internal').ValidatedConfig }} Options */
+/** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
 export function dev(opts) {
@@ -42,7 +43,7 @@ class Watcher extends EventEmitter {
 	async init() {
 		rimraf(this.dir);
 		copy_assets(this.dir);
-		process.env.VITE_AMP = this.config.kit.amp ? 'true' : '';
+		process.env.VITE_SVELTEKIT_AMP = this.config.kit.amp ? 'true' : '';
 
 		await this.init_filewatcher();
 		await this.init_server();
@@ -72,30 +73,40 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
+		/** @type {any} */
+		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
+
 		/**
 		 * @type {vite.ViteDevServer}
 		 */
 		this.viteDevServer = await vite.createServer({
+			...user_config,
+			configFile: false,
 			root: this.cwd,
 			resolve: {
+				...user_config.resolve,
 				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`)
+					...(user_config.resolve && user_config.resolve.alias),
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [
+				...(user_config.plugins || []),
 				svelte({
-					emitCss: true,
-					compilerOptions: {
-						dev: true,
-						hydratable: true
-					},
-					hot: true,
+					// TODO remove this once vite-plugin-svelte caching bugs are fixed
+					disableTransformCache: true,
 					extensions: this.config.extensions
 				})
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
+				...user_config.server,
 				middlewareMode: true
+			},
+			optimizeDeps: {
+				...user_config.optimizeDeps,
+				entries: []
 			}
 		});
 
@@ -111,9 +122,9 @@ class Watcher extends EventEmitter {
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
-					const setup = await this.viteDevServer
-						.ssrLoadModule(`/${this.config.kit.files.setup}`)
-						.catch(() => ({}));
+					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.viteDevServer
+						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
+						.catch(() => ({})));
 
 					let root;
 
@@ -128,10 +139,14 @@ class Watcher extends EventEmitter {
 
 					const body = await get_body(req);
 
+					const host = /** @type {string} */ (this.config.kit.host ||
+						req.headers[this.config.kit.hostHeader || 'host']);
+
 					const rendered = await ssr(
 						{
-							headers: req.headers,
+							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
 							method: req.method,
+							host,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
 							body
@@ -195,18 +210,23 @@ class Watcher extends EventEmitter {
 							dev: true,
 							amp: this.config.kit.amp,
 							root,
-							setup,
-							only_prerender: false,
-							start_global: this.config.kit.startGlobal,
-							host: this.config.kit.host,
-							host_header: this.config.kit.hostHeader,
+							hooks: {
+								getContext: hooks.getContext || (() => ({})),
+								getSession: hooks.getSession || (() => ({})),
+								handle: hooks.handle || ((request, render) => render(request))
+							},
+							only_render_prerenderable_pages: false,
+							get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.viteDevServer.ssrFixStacktrace(error);
 								return error.stack;
 							},
 							get_static_file: (file) =>
 								fs.readFileSync(path.join(this.config.kit.files.assets, file)),
-							get_amp_css: (url) => '' // TODO: implement this
+							get_amp_css: (url) => '', // TODO: implement this
+							ssr: this.config.kit.ssr,
+							router: this.config.kit.router,
+							hydrate: this.config.kit.hydrate
 						}
 					);
 
@@ -244,11 +264,15 @@ class Watcher extends EventEmitter {
 
 		/**
 		 * @param {string} file
+		 * @returns {Promise<{
+		 *   mod: SSRComponent;
+		 *   css: Set<string>;
+		 * }>}
 		 */
 		const load = async (file) => {
 			const url = path.resolve(this.cwd, file);
 
-			const mod = await this.viteDevServer.ssrLoadModule(url);
+			const mod = /** @type {SSRComponent} */ (await this.viteDevServer.ssrLoadModule(url));
 			const node = await this.viteDevServer.moduleGraph.getModuleByUrl(url);
 
 			const deps = new Set();
@@ -285,6 +309,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
+		/** @type {import('../../../types.internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: async () => {
@@ -301,38 +326,50 @@ class Watcher extends EventEmitter {
 				});
 				return mod;
 			},
-			pages: manifest_data.pages.map((data) => {
-				// This is a bit of a hack, but it means we can inject the correct <style>
-				// contents without needing to do any analysis before loading
-				const css_deps = new Set();
+			routes: manifest_data.routes.map((route) => {
+				if (route.type === 'page') {
+					// This is a bit of a hack, but it means we can inject the correct <style>
+					// contents without needing to do any analysis before loading
+					const css_deps = new Set();
+
+					return {
+						type: 'page',
+						pattern: route.pattern,
+						params: get_params(route.params),
+						parts: route.parts.map((id) => {
+							return {
+								id,
+								async load() {
+									const { mod, css } = await load(id);
+
+									css.forEach((mod) => {
+										css_deps.add(mod);
+									});
+
+									return mod;
+								}
+							};
+						}),
+						get style() {
+							// TODO is it possible to inject <link> elements with
+							// the current Vite plugin? would be better than this
+							return [...common_css_deps, ...css_deps].join('\n');
+						},
+						css: [],
+						js: []
+					};
+				}
 
 				return {
-					pattern: data.pattern,
-					params: get_params(data.params),
-					parts: data.parts.map((file) => async () => {
-						const { mod, css } = await load(file);
-
-						css.forEach((mod) => {
-							css_deps.add(mod);
-						});
-
-						return mod;
-					}),
-					get style() {
-						return [...common_css_deps, ...css_deps].join('\n');
-					},
-					css: [],
-					js: []
+					type: 'endpoint',
+					pattern: route.pattern,
+					params: get_params(route.params),
+					load: async () => {
+						const url = path.resolve(this.cwd, route.file);
+						return await this.viteDevServer.ssrLoadModule(url);
+					}
 				};
-			}),
-			endpoints: manifest_data.endpoints.map((data) => ({
-				pattern: data.pattern,
-				params: get_params(data.params),
-				load: async () => {
-					const url = path.resolve(this.cwd, data.file);
-					return await this.viteDevServer.ssrLoadModule(url);
-				}
-			}))
+			})
 		};
 	}
 
@@ -354,11 +391,11 @@ function get_params(array) {
 
 	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
-		/** @type {Record<string, string | string[]>} */
+		/** @type {Record<string, string>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
-				params[key.slice(3)] = decodeURIComponent(match[i + 1]).split('/');
+				params[key.slice(3)] = decodeURIComponent(match[i + 1]);
 			} else {
 				params[key] = decodeURIComponent(match[i + 1]);
 			}

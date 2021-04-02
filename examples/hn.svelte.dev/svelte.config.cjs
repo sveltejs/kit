@@ -1,8 +1,8 @@
+const netlify = require('@sveltejs/adapter-netlify');
+
 module.exports = {
 	kit: {
-		adapter: '@sveltejs/adapter-netlify',
-
-		// hydrate the <div id="svelte"> element in src/app.html
+		adapter: netlify(),
 		target: '#svelte'
 	}
 };

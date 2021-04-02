@@ -1,6 +1,7 @@
 import options from './options.js';
 import * as url from 'url';
 import path from 'path';
+import { resolve_entry } from '../utils.js';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -85,9 +86,19 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	const validated = validate_config(config.default);
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
+	validated.kit.files.hooks = path.resolve(cwd, validated.kit.files.hooks);
+	validated.kit.files.lib = path.resolve(cwd, validated.kit.files.lib);
 	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
+	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
+
+	// TODO remove this, eventually
+	if (resolve_entry(validated.kit.files.setup)) {
+		throw new Error(
+			'config.kit.files.setup has been replaced with config.kit.files.hooks. See https://kit.svelte.dev/docs#hooks'
+		);
+	}
 
 	// TODO check all the `files` exist when the config is loaded?
 	// TODO check that `target` is present in the provided template
@@ -96,11 +107,11 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('../../types').Config} config
- * @returns {import('../../types.js').ValidatedConfig}
+ * @param {import('../../../types').Config} config
+ * @returns {import('../../../types.internal.js').ValidatedConfig}
  */
 export function validate_config(config) {
-	/** @type {import('../../types.js').ValidatedConfig} */
+	/** @type {import('../../../types.internal.js').ValidatedConfig} */
 	const validated = validate(options, config, 'config');
 
 	// resolve paths

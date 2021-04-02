@@ -1,5 +1,222 @@
 # @sveltejs/kit
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- 679e997: Fix client-side redirect loop detection
+- 8d453c8: Specify minimum Node version number in @sveltejs/kit and add .npmrc to enforce it
+- 78aec0c: Detect service worker support
+- f33a22c: Make ...rest parameters optional
+
+## 1.0.0-next.66
+
+### Patch Changes
+
+- d9ce2a2: Correct response type for fetch
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- c0b9873: Always apply layout props when hydrating
+- b8a8e53: Add type to config.kit.vite
+- 9b09bcc: Prevent XSS when serializing fetch results
+
+## 1.0.0-next.64
+
+### Patch Changes
+
+- 7f58512: Prevent Vite prebundling from crashing on startup
+
+## 1.0.0-next.63
+
+### Patch Changes
+
+- 31f94fe: Add ssr, router and hydrate options
+
+## 1.0.0-next.62
+
+### Patch Changes
+
+- 864c3d4: Assets imported from css and js/ts files are emitted as files instead of being inlined
+
+## 1.0.0-next.61
+
+### Patch Changes
+
+- 4b2c97e: Initialise router with history.state
+
+## 1.0.0-next.60
+
+### Patch Changes
+
+- 84e9023: Fix host property
+- 272148b: Rename \$service-worker::assets to files, per the docs
+- d5071c5: Hydrate initial page before starting router
+- 4a1c04a: More accurate MODULE_NOT_FOUND errors
+- d881b7e: Replace setup with hooks
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- 826f39e: Make prefetching work
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- 26893b0: Allow first argument to fetch in load to be a request
+- 924db15: Add copy function to Builder.js
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- 391189f: Check for options.initiator in correct place
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- 82cbe2b: Shrink client manifest
+- 8024178: remove @sveltejs/app-utils
+
+## 1.0.0-next.55
+
+### Patch Changes
+
+- d0a7019: switch to @sveltejs/vite-plugin-svelte
+- 8a88fad: Replace regex routes with fallthrough routes
+
+## 1.0.0-next.54
+
+### Patch Changes
+
+- 3037530: Create history entry for initial route
+- 04f17f5: Prevent erronous <style>undefined</style>
+- 8805c6d: Pass adapters directly to svelte.config.cjs
+
+## 1.0.0-next.53
+
+### Patch Changes
+
+- 9cf2f21: Only require page components to export prerender
+- e860de0: Invalidate page when query changes
+- 7bb1cf0: Disable vite-plugin-svelte transform cache
+
+## 1.0.0-next.52
+
+### Patch Changes
+
+- ac3669e: Move Vite config into svelte.config.cjs
+
+## 1.0.0-next.51
+
+### Patch Changes
+
+- 34a00f9: Bypass router on hydration
+
+## 1.0.0-next.50
+
+### Patch Changes
+
+- 0512fd1: Remove startGlobal option
+- 9212aa5: Add options to adapter-node, and add adapter types
+- 0512fd1: Fire custom events for start, and navigation start/end
+
+## 1.0.0-next.49
+
+### Patch Changes
+
+- ab28c0a: kit: include missing types.d.ts
+- c76c9bf: Upgrade Vite
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- e37a302: Make getSession future-proof
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- 5554acc: Add \$lib alias
+- 5cd6f11: bump vite-plugin-svelte to 0.11.0
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- f35a5cd: Change adapter signature
+
+## 1.0.0-next.45
+
+### Minor Changes
+
+- 925638a: Remove endpoints from the files built for the client
+
+### Patch Changes
+
+- c3cf3f3: Bump deps
+- 625747d: kit: bundle @sveltejs/kit into built application
+- Updated dependencies [c3cf3f3]
+  - @sveltejs/vite-plugin-svelte@1.0.0-next.3
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- e6449d2: Fix AMP styles for real
+
+## 1.0.0-next.43
+
+### Patch Changes
+
+- 672e9be: Fix AMP styles, again
+
+## 1.0.0-next.42
+
+### Patch Changes
+
+- 0f54ebc: Fix AMP styles
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- 4aa5a73: Future-proof prepare argument
+- 58dc400: Call correct set_paths function
+- 2322291: Update to node-fetch@3
+
+## 1.0.0-next.40
+
+### Patch Changes
+
+- 4c5fd3c: Include layout/error styles in SSR
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- b7fdb0d: Skip pre-bundling
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- 15402b1: Add service worker support
+- 0c630b5: Ignore dynamically imported components when constructing styles in dev mode
+- ac06af5: Fix svelte-kit adapt for Windows
+- 061fa46: Implement improved redirect API
+- b800049: Include type declarations
+- 07c6de4: Use posix paths in manifest even on Windows
+- 27ba872: Error if preload function exists
+- 0c630b5: Add default paths in case singletons module is invalidated
+- 73dd998: Allow custom extensions
+
 ## 1.0.0-next.37
 
 ### Patch Changes

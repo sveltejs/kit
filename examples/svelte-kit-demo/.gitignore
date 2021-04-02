@@ -2,3 +2,5 @@
 /node_modules
 /build
 /.svelte
+/.vercel_build_output
+/workers-site

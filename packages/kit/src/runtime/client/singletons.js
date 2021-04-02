@@ -1,8 +1,5 @@
-/** @type {any} */
+/** @type {import('./router').Router} */
 export let router;
-
-/** @type {any} */
-export let renderer;
 
 /** @type {string} */
 export let base = '';
@@ -10,9 +7,9 @@ export let base = '';
 /** @type {string} */
 export let assets = '/.';
 
-/** @param {any} opts */
-export function init(opts) {
-	({ router, renderer } = opts);
+/** @param {import('./router').Router} _ */
+export function init(_) {
+	router = _;
 }
 
 /** @param {{ base: string, assets: string }} paths */
