@@ -37,17 +37,18 @@ export type Config = {
 	preprocess?: any;
 };
 
-type Builder = {
+type AdapterUtils = {
 	copy_client_files: (dest: string) => void;
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
+	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
 	prerender: ({ force, dest }: { force?: boolean; dest: string }) => Promise<void>;
 	log: Logger;
 };
 
 export type Adapter = {
 	name: string;
-	adapt: (builder: Builder) => Promise<void>;
+	adapt: (utils: AdapterUtils) => Promise<void>;
 };
 
 interface ReadOnlyFormData extends Iterator<[string, string]> {

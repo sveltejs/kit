@@ -7,7 +7,7 @@ module.exports = function () {
 	const adapter = {
 		name: '@sveltejs/adapter-netlify',
 
-		async adapt(builder) {
+		async adapt(utils) {
 			let netlify_config;
 
 			if (existsSync('netlify.toml')) {
@@ -37,9 +37,9 @@ module.exports = function () {
 			const publish = resolve(netlify_config.build.publish);
 			const functions = resolve(netlify_config.build.functions);
 
-			builder.copy_static_files(publish);
-			builder.copy_client_files(publish);
-			builder.copy_server_files(`${functions}/render`);
+			utils.copy_static_files(publish);
+			utils.copy_client_files(publish);
+			utils.copy_server_files(`${functions}/render`);
 
 			// rename app to .mjs
 			renameSync(`${functions}/render/app.js`, `${functions}/render/app.mjs`);
@@ -54,8 +54,8 @@ module.exports = function () {
 			writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
 
 			// prerender
-			builder.log.info('Prerendering static pages...');
-			await builder.prerender({
+			utils.log.info('Prerendering static pages...');
+			await utils.prerender({
 				dest: publish
 			});
 		}

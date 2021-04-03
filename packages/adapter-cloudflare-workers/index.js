@@ -9,7 +9,7 @@ module.exports = function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
-		async adapt(builder) {
+		async adapt(utils) {
 			let wrangler_config;
 
 			if (fs.existsSync('wrangler.toml')) {
@@ -35,29 +35,29 @@ module.exports = function () {
 			const bucket = path.resolve(wrangler_config.site.bucket);
 			const entrypoint = path.resolve(wrangler_config.site['entry-point'] ?? 'workers-site');
 
-			builder.copy_static_files(bucket);
-			builder.copy_client_files(bucket);
-			builder.copy_server_files(entrypoint);
+			utils.copy_static_files(bucket);
+			utils.copy_client_files(bucket);
+			utils.copy_server_files(entrypoint);
 
 			// copy the renderer
-			builder.copy(path.resolve(__dirname, 'files/render.js'), `${entrypoint}/index.js`);
-			builder.copy(path.resolve(__dirname, 'files/_package.json'), `${entrypoint}/package.json`);
+			utils.copy(path.resolve(__dirname, 'files/render.js'), `${entrypoint}/index.js`);
+			utils.copy(path.resolve(__dirname, 'files/_package.json'), `${entrypoint}/package.json`);
 
-			builder.log.info('Prerendering static pages...');
-			await builder.prerender({
+			utils.log.info('Prerendering static pages...');
+			await utils.prerender({
 				dest: bucket
 			});
 
-			builder.log.info('Installing Worker Dependencies...');
+			utils.log.info('Installing Worker Dependencies...');
 			exec(
 				'npm install',
 				{
 					cwd: entrypoint
 				},
 				(error, stdout, stderr) => {
-					builder.log.info(stderr);
+					utils.log.info(stderr);
 					if (error) {
-						builder.log.error(error);
+						utils.log.error(error);
 					}
 				}
 			);

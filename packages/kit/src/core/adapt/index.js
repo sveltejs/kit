@@ -1,6 +1,6 @@
 import colors from 'kleur';
 import { logger } from '../utils.js';
-import Builder from './Builder.js';
+import AdapterUtils from './AdapterUtils.js';
 
 /**
  * @param {import('../../../types.internal').ValidatedConfig} config
@@ -12,8 +12,8 @@ export async function adapt(config, { cwd = process.cwd(), verbose }) {
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
 
 	const log = logger({ verbose });
-	const builder = new Builder({ cwd, config, log });
-	await adapt(builder);
+	const utils = new AdapterUtils({ cwd, config, log });
+	await adapt(utils);
 
 	log.success('done');
 }

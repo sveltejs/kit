@@ -16,6 +16,7 @@ const create = (dir, extensions = ['.svelte']) => {
 		config: {
 			extensions,
 			kit: {
+				// @ts-ignore
 				files: {
 					assets: path.resolve(cwd, 'static'),
 					routes: path.resolve(cwd, dir)
