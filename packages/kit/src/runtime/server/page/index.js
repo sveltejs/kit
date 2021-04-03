@@ -2,8 +2,8 @@ import devalue from 'devalue';
 import fetch, { Response } from 'node-fetch';
 import { writable } from 'svelte/store';
 import { parse, resolve, URLSearchParams } from 'url';
-import { normalize } from '../load.js';
-import { ssr } from './index.js';
+import { normalize } from '../../load.js';
+import { ssr } from '../index.js';
 
 const s = JSON.stringify;
 
