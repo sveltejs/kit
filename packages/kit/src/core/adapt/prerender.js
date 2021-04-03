@@ -123,10 +123,10 @@ export async function prerender({ cwd, out, log, config, force }) {
 				return;
 			}
 
-			if (response_type === OK) {
+			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
-			} else {
+			} else if (response_type !== OK) {
 				error(rendered.status, path);
 			}
 
