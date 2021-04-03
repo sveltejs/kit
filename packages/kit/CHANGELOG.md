@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.71
+
+### Patch Changes
+
+- 108c26c: Always return a response from render function in handle
+
 ## 1.0.0-next.70
 
 ### Patch Changes
