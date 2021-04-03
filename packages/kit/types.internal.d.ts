@@ -65,7 +65,7 @@ export type App = {
 		};
 		prerendering: boolean;
 	}) => void;
-	render: (incoming: Incoming, options: SSRRenderOptions) => ResponseWithDependencies;
+	render: (incoming: Incoming, options: SSRRenderOptions) => Response;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -73,10 +73,6 @@ export type App = {
 // 'set-cookie' is a `string[]` (or at least `string | string[]`)
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
-
-export type ResponseWithDependencies = Response & {
-	dependencies?: Record<string, Response>;
-};
 
 export type Page = {
 	host: string;
@@ -185,6 +181,7 @@ export type SSRRenderOptions = {
 	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
+	dependencies?: Map<string, Response>;
 	only_render_prerenderable_pages?: boolean;
 	app_dir?: string;
 	get_component_path?: (id: string) => string;
