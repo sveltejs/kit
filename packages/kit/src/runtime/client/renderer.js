@@ -263,14 +263,8 @@ export class Renderer {
 	_init(result) {
 		this.current = result.state;
 
-		// remove dev-mode SSR <style> insert, since it doesn't apply
-		// to hydrated markup (HMR requires hashes to be rewritten)
-		// TODO only in dev
-		// TODO it seems this doesn't always work with the classname
-		// stabilisation in vite-plugin-svelte? see e.g.
-		// hn.svelte.dev
-		// const style = document.querySelector('style[data-svelte]');
-		// if (style) style.remove();
+		const style = document.querySelector('style[data-svelte]');
+		if (style) style.remove();
 
 		this.root = new this.Root({
 			target: this.target,
