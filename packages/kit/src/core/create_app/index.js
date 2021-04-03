@@ -83,13 +83,14 @@ function generate_client_manifest(manifest_data, base) {
 
 					const tuple = [
 						route.pattern,
-						`[${route.parts.map((part) => `${component_indexes[part]}`).join(', ')}]`,
+						`[${route.good.map((part) => `${component_indexes[part]}`).join(', ')}]`,
+						`[${route.bad.map((part) => `${component_indexes[part]}`).join(', ')}]`,
 						params
 					]
 						.filter(Boolean)
 						.join(', ');
 
-					return `// ${route.parts[route.parts.length - 1]}\n\t\t[${tuple}]`;
+					return `// ${route.good[route.good.length - 1]}\n\t\t[${tuple}]`;
 				} else {
 					return `// ${route.file}\n\t\t[${route.pattern}]`;
 				}
@@ -113,7 +114,7 @@ function generate_client_manifest(manifest_data, base) {
 function generate_app(manifest_data, base) {
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
-			route.type === 'page' ? route.parts.filter(Boolean).length : 0
+			route.type === 'page' ? route.good.filter(Boolean).length : 0
 		)
 	);
 

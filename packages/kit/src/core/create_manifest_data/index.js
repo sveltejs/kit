@@ -50,9 +50,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} stack
+	 * @param {string[]} layout_stack
+	 * @param {string[]} error_stack
 	 */
-	function walk(dir, parent_segments, parent_params, stack) {
+	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
@@ -138,31 +139,49 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const component = find_layout('$layout', item.file);
+				const layout_component = find_layout('$layout', item.file);
+				const error_component = find_layout('$error', item.file);
 
-				if (component) components.push(component);
+				if (layout_component) components.push(layout_component);
+				if (error_component) components.push(error_component);
 
 				walk(
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat(component) : stack
+					layout_stack.concat(layout_component),
+					error_stack.concat(error_component)
 				);
 			} else if (item.is_page) {
 				components.push(item.file);
 
-				const parts =
-					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat(item.file)
-						: stack.concat(item.file);
+				const good = [...layout_stack, item.file];
+				const bad = [...error_stack];
 
-				const pattern = get_pattern(segments, true);
+				let i = bad.length;
+				let trim = true;
+
+				while (i--) {
+					if (bad[i]) {
+						trim = false;
+					} else {
+						if (!good[i]) {
+							good.splice(i, 1);
+							bad.splice(i, 1);
+						}
+
+						if (trim) {
+							bad.length = i;
+						}
+					}
+				}
 
 				routes.push({
 					type: 'page',
-					pattern,
+					pattern: get_pattern(segments, true),
 					params,
-					parts
+					good,
+					bad
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
@@ -183,7 +202,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	const error = find_layout('$error', base) || default_error;
 
 	components.push(layout);
-	walk(config.kit.files.routes, [], [], [layout]);
+	components.push(error);
+
+	walk(config.kit.files.routes, [], [], [layout], [error]);
 
 	const assets_dir = config.kit.files.assets;
 

@@ -309,12 +309,13 @@ async function build_server(
 				.map((route) => {
 					if (route.type === 'page') {
 						const params = get_params(route.params);
-						const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
+						const good = route.good.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
+						const bad = route.bad.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
 
 						const js_deps = new Set(common_js_deps);
 						const css_deps = new Set(common_css_deps);
 
-						for (const file of route.parts) {
+						for (const file of [...route.good, ...route.bad]) {
 							js_deps_by_file.get(file).forEach(asset => {
 								js_deps.add(asset);
 							});
@@ -328,7 +329,8 @@ async function build_server(
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
-									parts: [${parts.join(', ')}],
+									good: [${good.join(', ')}],
+									bad: [${bad.join(', ')}],
 									css: [${Array.from(css_deps).map(s).join(', ')}],
 									js: [${Array.from(js_deps).map(s).join(', ')}]
 								}`;

@@ -6,6 +6,7 @@ import create_manifest_data from './index.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 const layout = 'components/layout.svelte';
+const error = 'components/error.svelte';
 
 /**
  * @param {string} dir
@@ -37,21 +38,23 @@ test('creates routes', () => {
 	const blog = 'samples/basic/blog/index.svelte';
 	const blog_$slug = 'samples/basic/blog/[slug].svelte';
 
-	assert.equal(components, [layout, index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [layout, index]
+			good: [layout, index],
+			bad: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [layout, about]
+			good: [layout, about],
+			bad: [error]
 		},
 
 		{
@@ -65,7 +68,8 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [layout, blog]
+			good: [layout, blog],
+			bad: [error]
 		},
 
 		{
@@ -79,7 +83,8 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [layout, blog_$slug]
+			good: [layout, blog_$slug],
+			bad: [error]
 		}
 	]);
 });
@@ -92,21 +97,23 @@ test('creates routes with layout', () => {
 	const foo_$layout = 'samples/basic-layout/foo/$layout.svelte';
 	const foo = 'samples/basic-layout/foo/index.svelte';
 
-	assert.equal(components, [$layout, index, foo_$layout, foo]);
+	assert.equal(components, [$layout, error, index, foo_$layout, foo]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [$layout, index]
+			good: [$layout, index],
+			bad: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
-			parts: [$layout, foo_$layout, foo]
+			good: [$layout, foo_$layout, foo],
+			bad: [error]
 		}
 	]);
 });
@@ -122,6 +129,7 @@ test('encodes invalid characters', () => {
 
 	assert.equal(components, [
 		layout,
+		error,
 		// quote,
 		hash
 		// question_mark
@@ -141,7 +149,7 @@ test('sorts routes correctly', () => {
 	const { routes } = create('samples/sorting');
 
 	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.parts : p.file)),
+		routes.map((p) => (p.type === 'page' ? p.good : p.file)),
 		[
 			[layout, 'samples/sorting/index.svelte'],
 			[layout, 'samples/sorting/about.svelte'],
@@ -242,21 +250,23 @@ test('works with custom extensions', () => {
 	const blog = 'samples/custom-extension/blog/index.svelte';
 	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
 
-	assert.equal(components, [layout, index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [layout, index]
+			good: [layout, index],
+			bad: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [layout, about]
+			good: [layout, about],
+			bad: [error]
 		},
 
 		{
@@ -270,7 +280,8 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [layout, blog]
+			good: [layout, blog],
+			bad: [error]
 		},
 
 		{
@@ -284,7 +295,8 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [layout, blog_$slug]
+			good: [layout, blog_$slug],
+			bad: [error]
 		}
 	]);
 });

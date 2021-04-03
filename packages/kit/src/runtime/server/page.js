@@ -206,7 +206,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		);
 	};
 
-	const component_promises = error ? [] : route.parts.map((part) => part.load());
+	const component_promises = error ? [] : route.good.map((part) => part.load());
 
 	const components = [];
 	const props_promises = [];
@@ -423,7 +423,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: ${route ? `[
-						${(route ? route.parts : [])
+						${(route ? route.good : [])
 						.map((part) => `import(${s(options.get_component_path(part.id))})`)
 						.join(',\n\t\t\t\t\t\t')}
 					]` : '[]'},

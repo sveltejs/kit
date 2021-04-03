@@ -324,24 +324,26 @@ class Watcher extends EventEmitter {
 					// contents without needing to do any analysis before loading
 					const css_deps = new Set();
 
+					/** @param {string} id */
+					const map_route = (id) => ({
+						id,
+						async load() {
+							const { mod, css } = await load(id);
+
+							css.forEach((mod) => {
+								css_deps.add(mod);
+							});
+
+							return mod;
+						}
+					});
+
 					return {
 						type: 'page',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						parts: route.parts.map((id) => {
-							return {
-								id,
-								async load() {
-									const { mod, css } = await load(id);
-
-									css.forEach((mod) => {
-										css_deps.add(mod);
-									});
-
-									return mod;
-								}
-							};
-						}),
+						good: route.good.map(map_route),
+						bad: route.bad.map(map_route),
 						get style() {
 							// TODO is it possible to inject <link> elements with
 							// the current Vite plugin? would be better than this

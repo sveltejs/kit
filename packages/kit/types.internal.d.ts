@@ -136,7 +136,8 @@ export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
-	parts: SSRPagePart[];
+	good: SSRPagePart[];
+	bad: SSRPagePart[];
 	style: string;
 	css: string[];
 	js: string[];
@@ -207,7 +208,8 @@ export type PageData = {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
-	parts: any[]; // TODO
+	good: string[];
+	bad: string[];
 };
 
 export type EndpointData = {
