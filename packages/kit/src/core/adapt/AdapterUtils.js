@@ -1,7 +1,7 @@
 import { copy, rimraf, mkdirp } from '../filesystem/index.js';
 import { prerender } from './prerender.js';
 
-export default class Builder {
+export default class AdapterUtils {
 	#cwd;
 	#config;
 

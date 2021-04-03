@@ -48,6 +48,7 @@ test('errors on invalid values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
+				// @ts-ignore
 				target: 42
 			}
 		});
@@ -59,6 +60,7 @@ test('errors on invalid nested values', () => {
 		validate_config({
 			kit: {
 				files: {
+					// @ts-ignore
 					potato: 'blah'
 				}
 			}
@@ -158,11 +160,17 @@ test('fails if prerender.pages are invalid', () => {
 	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
+/**
+ * @param {string} name
+ * @param {{ base?: string, assets?: string }} input
+ * @param {{ base?: string, assets?: string }} output
+ */
 function validate_paths(name, input, output) {
 	test(name, () => {
 		assert.equal(
 			validate_config({
 				kit: {
+					// @ts-ignore
 					paths: input
 				}
 			}).kit.paths,

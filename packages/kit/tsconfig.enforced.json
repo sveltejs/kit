@@ -13,6 +13,5 @@
 			"types.internal": ["./types.internal"]
 		}
 	},
-	"include": ["src/**/*"],
-	"exclude": ["src/**/test/*", "src/**/*.spec.js"]
+	"include": ["src/**/*"]
 }

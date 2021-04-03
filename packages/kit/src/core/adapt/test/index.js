@@ -3,20 +3,41 @@ import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
 import rimraf from 'rimraf';
 import glob from 'tiny-glob/sync.js';
-import Builder from '../Builder.js';
+import AdapterUtils from '../AdapterUtils.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-const suite = uvu.suite('Builder');
+/** @param {string} _msg */
+const log = (_msg) => {};
 
-suite('builder ', () => {
-	assert.ok(Builder);
+/**
+ * @param {string} cwd
+ * @param {any} config
+ */
+const get_utils = (cwd, config) =>
+	new AdapterUtils({
+		cwd,
+		config,
+		log: Object.assign(log, {
+			info: log,
+			minor: log,
+			warn: log,
+			error: log,
+			success: log
+		})
+	});
+
+const suite = uvu.suite('AdapterUtils');
+
+suite('utils ', () => {
+	assert.ok(AdapterUtils);
 });
 
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
+
 	const config = {
 		kit: {
 			files: {
@@ -27,31 +48,22 @@ suite('copy files', () => {
 		}
 	};
 
-	const builder = new Builder({
-		cwd,
-		config,
-		log: Object.assign((_msg) => {}, {
-			info: (_msg) => {},
-			warn: (_msg) => {},
-			error: (_msg) => {},
-			success: (_msg) => {}
-		})
-	});
+	const utils = get_utils(cwd, config);
 
 	const dest = join(__dirname, 'output');
 
 	rimraf.sync(dest);
-	builder.copy_static_files(dest);
+	utils.copy_static_files(dest);
 
 	assert.equal(glob('**', { cwd: config.kit.files.assets }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
-	builder.copy_client_files(dest);
+	utils.copy_client_files(dest);
 
 	assert.equal(glob('**', { cwd: `${cwd}/.svelte/output/client` }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
-	builder.copy_server_files(dest);
+	utils.copy_server_files(dest);
 
 	assert.equal(glob('**', { cwd: `${cwd}/.svelte/output/server` }), glob('**', { cwd: dest }));
 });
@@ -74,21 +86,12 @@ suite('prerender', async () => {
 		}
 	};
 
-	const builder = new Builder({
-		cwd,
-		config,
-		log: Object.assign((_msg) => {}, {
-			info: (_msg) => {},
-			warn: (_msg) => {},
-			error: (_msg) => {},
-			success: (_msg) => {}
-		})
-	});
+	const utils = get_utils(cwd, config);
 
 	const dest = join(__dirname, 'output');
 
 	rimraf.sync(dest);
-	await builder.prerender({
+	await utils.prerender({
 		force: true,
 		dest
 	});

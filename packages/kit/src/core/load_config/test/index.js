@@ -1,5 +1,5 @@
 import { join } from 'path';
-import * as uvu from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
 import { load_config } from '../index.js';
@@ -7,9 +7,7 @@ import { load_config } from '../index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-const suite = uvu.suite('Builder');
-
-suite('load default config', async () => {
+test('load default config', async () => {
 	const cwd = join(__dirname, 'fixtures');
 
 	const config = await load_config({ cwd });
@@ -45,4 +43,4 @@ suite('load default config', async () => {
 	});
 });
 
-suite.run();
+test.run();
