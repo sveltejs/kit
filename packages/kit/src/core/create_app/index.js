@@ -83,27 +83,26 @@ function generate_client_manifest(manifest_data, base) {
 
 					const tuple = [
 						route.pattern,
-						`[${route.parts.map((part) => `components[${component_indexes[part]}]`).join(', ')}]`,
+						`[${route.parts.map((part) => `${component_indexes[part]}`).join(', ')}]`,
 						params
 					]
 						.filter(Boolean)
 						.join(', ');
 
-					return `// ${route.parts[route.parts.length - 1]}\n\t[${tuple}]`;
+					return `// ${route.parts[route.parts.length - 1]}\n\t\t[${tuple}]`;
 				} else {
-					return `// ${route.file}\n\t[${route.pattern}]`;
+					return `// ${route.file}\n\t\t[${route.pattern}]`;
 				}
 			})
-			.join(',\n\n\t')}
+			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
 
 	return trim(`
 		import * as layout from ${s(get_path(manifest_data.layout))};
 
-		const components = ${components};
+		export const components = ${components};
 
 		const d = decodeURIComponent;
-		const empty = () => ({});
 
 		export const routes = ${routes};
 
