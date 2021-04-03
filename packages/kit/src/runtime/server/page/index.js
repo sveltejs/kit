@@ -383,9 +383,9 @@ async function respond({ request, options, $session, route, status = 200, error 
 				status: 500,
 				error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 			});
+		} finally {
+			unsubscribe();
 		}
-
-		unsubscribe();
 	} else {
 		rendered = {
 			head: '',
