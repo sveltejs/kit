@@ -16,12 +16,9 @@ const s = JSON.stringify;
  *   status: number;
  *   error: Error
  * }} opts
- * @returns {Promise<import('types.internal').ResponseWithDependencies>}
+ * @returns {Promise<import('types').Response>}
  */
 async function get_response({ request, options, $session, route, status = 200, error }) {
-	/** @type {Record<string, import('types.internal').ResponseWithDependencies>} */
-	const dependencies = {};
-
 	const serialized_session = try_serialize($session, (error) => {
 		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
@@ -146,9 +143,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 				);
 
 				if (rendered) {
-					// TODO this is primarily for the benefit of the static case,
-					// but could it be used elsewhere?
-					dependencies[resolved] = rendered;
+					if (options.dependencies) {
+						options.dependencies.set(resolved, rendered);
+					}
 
 					response = new Response(rendered.body, {
 						status: rendered.status,
@@ -480,8 +477,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 	return {
 		status,
 		headers,
-		body: options.template({ head, body }),
-		dependencies
+		body: options.template({ head, body })
 	};
 }
 
@@ -489,7 +485,7 @@ async function get_response({ request, options, $session, route, status = 200, e
  * @param {import('types').Request} request
  * @param {import('types.internal').SSRPage} route
  * @param {import('types.internal').SSRRenderOptions} options
- * @returns {Promise<import('types.internal').ResponseWithDependencies>}
+ * @returns {Promise<import('types').Response>}
  */
 export default async function render_page(request, route, options) {
 	if (options.initiator === route) {

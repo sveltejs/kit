@@ -1,7 +1,7 @@
 /**
  * @param {import('types').Request} request
  * @param {import('types.internal').SSREndpoint} route
- * @returns {Promise<import('types.internal').ResponseWithDependencies>}
+ * @returns {Promise<import('types').Response>}
  */
 export default async function render_route(request, route) {
 	const mod = await route.load();
