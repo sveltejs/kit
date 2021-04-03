@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.70
+
+### Patch Changes
+
+- 6d9f7b1: Only include CSS on an SSR'd page
+- 6ecfa2c: Remove duplicate <style> element
+
 ## 1.0.0-next.69
 
 ### Patch Changes
