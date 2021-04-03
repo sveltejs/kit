@@ -256,12 +256,6 @@ async function get_response({ request, options, $session, route, status = 200, e
 				const mod = await component_promises[i];
 				components[i] = mod.default;
 
-				if (mod.preload) {
-					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
-					);
-				}
-
 				if (mod.load) {
 					loaded = await mod.load.call(null, {
 						page,
@@ -372,9 +366,9 @@ async function get_response({ request, options, $session, route, status = 200, e
 				status: 500,
 				error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 			});
+		} finally {
+			unsubscribe();
 		}
-
-		unsubscribe();
 	} else {
 		rendered = {
 			head: '',
