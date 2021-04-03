@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
-		"test": "uvu tests",
+		"test": "c8 uvu tests",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
@@ -18,6 +18,7 @@
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
+		"c8": "^7.7.0",
 		"compression": "^1.7.4",
 		"node-fetch": "^2.6.1",
 		"polka": "^1.0.0-next.13",
