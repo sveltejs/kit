@@ -19,6 +19,9 @@ async function setup({ port }) {
 		nojs: await browser.newContext({ javaScriptEnabled: false })
 	};
 
+	contexts.js.setDefaultTimeout(5000);
+	contexts.nojs.setDefaultTimeout(5000);
+
 	const cookie = {
 		name: 'name',
 		value: 'SvelteKit',
