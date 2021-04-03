@@ -97,7 +97,7 @@ type Response = {
 
 type Handle<Context = any> = (
 	request: Request<Context>,
-	render: (request: Request<Context>) => Response | Promise<Response>
+	render: (request: Request<Context>) => Promise<Response>
 ) => Response | Promise<Response>;
 ```
 

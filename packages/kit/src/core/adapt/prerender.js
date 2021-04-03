@@ -84,6 +84,9 @@ export async function prerender({ cwd, out, log, config, force }) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
+		/** @type {Map<string, import('types').Response>} */
+		const dependencies = new Map();
+
 		const rendered = await app.render(
 			{
 				host: config.kit.host,
@@ -95,6 +98,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 			},
 			{
 				local: true,
+				dependencies,
 				only_render_prerenderable_pages: !force,
 				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
 			}
@@ -123,39 +127,34 @@ export async function prerender({ cwd, out, log, config, force }) {
 				return;
 			}
 
-			if (response_type === OK) {
+			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
-			} else {
+			} else if (response_type !== OK) {
 				error(rendered.status, path);
 			}
 
-			const { dependencies } = rendered;
+			dependencies.forEach((result, path) => {
+				const response_type = Math.floor(result.status / 100);
 
-			if (dependencies) {
-				for (const path in dependencies) {
-					const result = dependencies[path];
-					const response_type = Math.floor(result.status / 100);
+				const is_html = result.headers['content-type'] === 'text/html';
 
-					const is_html = result.headers['content-type'] === 'text/html';
-
-					const parts = path.split('/');
-					if (is_html && parts[parts.length - 1] !== 'index.html') {
-						parts.push('index.html');
-					}
-
-					const file = `${out}${parts.join('/')}`;
-					mkdirp(dirname(file));
-
-					writeFileSync(file, result.body);
-
-					if (response_type === OK) {
-						log.info(`${result.status} ${path}`);
-					} else {
-						error(result.status, path);
-					}
+				const parts = path.split('/');
+				if (is_html && parts[parts.length - 1] !== 'index.html') {
+					parts.push('index.html');
 				}
-			}
+
+				const file = `${out}${parts.join('/')}`;
+				mkdirp(dirname(file));
+
+				writeFileSync(file, result.body);
+
+				if (response_type === OK) {
+					log.info(`${result.status} ${path}`);
+				} else {
+					error(result.status, path);
+				}
+			});
 
 			if (is_html && config.kit.prerender.crawl) {
 				const cleaned = clean_html(rendered.body);
