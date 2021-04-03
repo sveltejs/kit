@@ -267,12 +267,6 @@ async function respond({ request, options, $session, route, status = 200, error 
 				const mod = await component_promises[i];
 				components[i] = mod.default;
 
-				if (mod.preload) {
-					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
-					);
-				}
-
 				if (mod.load) {
 					loaded = await mod.load.call(null, {
 						page,
