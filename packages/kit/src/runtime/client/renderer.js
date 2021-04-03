@@ -49,14 +49,12 @@ function initial_fetch(resource, opts) {
 export class Renderer {
 	/** @param {{
 	 *   Root: import('types.internal').CSRComponent;
-	 *   layout: import('types.internal').CSRComponent;
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, target, session, host }) {
+	constructor({ Root, target, session, host }) {
 		this.Root = Root;
-		this.layout = layout;
 		this.host = host;
 
 		/** @type {import('./router').Router} */
@@ -314,17 +312,16 @@ export class Renderer {
 		};
 
 		try {
-			const component_promises = [this.layout, ...nodes];
 			const props_promises = [];
 
 			/** @type {Record<string, any>} */
 			let context;
 
-			for (let i = 0; i < component_promises.length; i += 1) {
+			for (let i = 0; i < nodes.length; i += 1) {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
 
-				const module = await component_promises[i];
+				const module = await nodes[i];
 				result.props.components[i] = module.default;
 
 				if (module.preload) {
@@ -408,7 +405,7 @@ export class Renderer {
 							});
 
 							// if the page component returns nothing from load, fall through
-							const is_leaf = i === component_promises.length - 1 && !error;
+							const is_leaf = i === nodes.length - 1 && !error;
 							if (!loaded && is_leaf) return;
 						}
 					}

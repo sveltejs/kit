@@ -159,7 +159,6 @@ export type CSRRoute = CSREndpoint | CSRPage;
 
 export type SSRManifest = {
 	assets: Asset[];
-	layout: SSRComponentLoader;
 	error: SSRComponentLoader;
 	routes: SSRRoute[];
 };
@@ -222,7 +221,6 @@ export type RouteData = PageData | EndpointData;
 
 export type ManifestData = {
 	assets: Asset[];
-	layout: string;
 	error: string;
 	components: string[];
 	routes: RouteData[];

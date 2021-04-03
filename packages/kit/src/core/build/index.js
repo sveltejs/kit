@@ -104,7 +104,13 @@ async function build_client({
 	manifest.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('pages', relative)] = resolved;
+
+		if (relative[0] === '.') {
+			// default layout/error component
+			input[path.basename(file)] = resolved;
+		} else {
+			input[path.join('pages', relative)] = resolved;
+		}
 	});
 
 	/** @type {any} */
@@ -297,7 +303,6 @@ async function build_server(
 
 			const manifest = {
 				assets: ${s(manifest.assets)},
-				layout: ${stringify_component(manifest.layout)},
 				error: ${stringify_component(manifest.error)},
 				routes: [
 					${manifest.routes

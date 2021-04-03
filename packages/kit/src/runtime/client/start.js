@@ -1,7 +1,7 @@
 // @ts-ignore
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
 // @ts-ignore
-import { components, routes, layout } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
+import { components, routes } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
@@ -36,7 +36,6 @@ export async function start({ paths, target, session, host, route, hydrate }) {
 
 	const renderer = new Renderer({
 		Root,
-		layout,
 		target,
 		session,
 		host

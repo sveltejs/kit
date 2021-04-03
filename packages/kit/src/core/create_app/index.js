@@ -98,15 +98,11 @@ function generate_client_manifest(manifest_data, base) {
 	]`.replace(/^\t/gm, '');
 
 	return trim(`
-		import * as layout from ${s(get_path(manifest_data.layout))};
+		const d = decodeURIComponent;
 
 		export const components = ${components};
 
-		const d = decodeURIComponent;
-
 		export const routes = ${routes};
-
-		export { layout };
 	`);
 }
 
@@ -115,8 +111,6 @@ function generate_client_manifest(manifest_data, base) {
  * @param {string} base
  */
 function generate_app(manifest_data, base) {
-	// TODO remove default layout altogether
-
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
 			route.type === 'page' ? route.parts.filter(Boolean).length : 0
@@ -163,8 +157,6 @@ function generate_app(manifest_data, base) {
 			export let components;
 			${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
 
-			const Layout = components[0];
-
 			setContext('__svelte__', stores);
 
 			$: stores.page.set(page);
@@ -187,13 +179,13 @@ function generate_app(manifest_data, base) {
 			});
 		</script>
 
-		<Layout {...(props_0 || {})}>
+		<svelte:component this={components[0]} {...(props_0 || {})}>
 			{#if error}
 				<ErrorComponent {status} {error}/>
 			{:else}
 				${pyramid.replace(/\n/g, '\n\t\t\t\t')}
 			{/if}
-		</Layout>
+		</svelte:component>
 
 		{#if mounted}
 			<div id="svelte-announcer" aria-live="assertive" aria-atomic="true">

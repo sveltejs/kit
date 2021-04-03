@@ -206,9 +206,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		);
 	};
 
-	const component_promises = error
-		? [options.manifest.layout()]
-		: [options.manifest.layout(), ...route.parts.map((part) => part.load())];
+	const component_promises = error ? [] : route.parts.map((part) => part.load());
 
 	const components = [];
 	const props_promises = [];

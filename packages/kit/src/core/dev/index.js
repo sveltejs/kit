@@ -311,13 +311,6 @@ class Watcher extends EventEmitter {
 		/** @type {import('../../../types.internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,
-			layout: async () => {
-				const { mod, css } = await load(manifest_data.layout);
-				css.forEach((mod) => {
-					common_css_deps.add(mod);
-				});
-				return mod;
-			},
 			error: async () => {
 				const { mod, css } = await load(manifest_data.error);
 				css.forEach((mod) => {
