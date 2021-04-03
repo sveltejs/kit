@@ -240,11 +240,23 @@ async function get_response({ request, options, $session, route, status = 200, e
 	};
 
 	if (options.only_render_prerenderable_pages) {
-		if (error) return; // don't prerender an error page
+		if (error) {
+			return {
+				status,
+				headers: {},
+				body: error.message
+			};
+		}
 
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
-		if (!page_component.prerender) return;
+		if (!page_component.prerender) {
+			return {
+				status: 204,
+				headers: {},
+				body: null
+			};
+		}
 	}
 
 	/** @type {{ head: string, html: string, css: string }} */
