@@ -18,7 +18,7 @@ const s = JSON.stringify;
  * }} opts
  * @returns {Promise<import('types').Response>}
  */
-async function get_response({ request, options, $session, route, status = 200, error }) {
+async function respond({ request, options, $session, route, status = 200, error }) {
 	const serialized_session = try_serialize($session, (error) => {
 		throw new Error(`Failed to serialize session data: ${error.message}`);
 	});
@@ -220,7 +220,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 			? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
 			: await component_promises[component_promises.length - 1];
 	} catch (e) {
-		return await get_response({
+		return await respond({
 			request,
 			options,
 			$session,
@@ -303,7 +303,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 				// TODO there's some logic that's duplicated in the client runtime,
 				// it would be nice to DRY it out if possible
 				if (loaded.error) {
-					return await get_response({
+					return await respond({
 						request,
 						options,
 						$session,
@@ -375,7 +375,7 @@ async function get_response({ request, options, $session, route, status = 200, e
 		} catch (e) {
 			if (error) throw e instanceof Error ? e : new Error(e);
 
-			return await get_response({
+			return await respond({
 				request,
 				options,
 				$session,
@@ -499,7 +499,7 @@ export default async function render_page(request, route, options) {
 
 	const $session = await options.hooks.getSession({ context: request.context });
 
-	const response = await get_response({
+	const response = await respond({
 		request,
 		options,
 		$session,
