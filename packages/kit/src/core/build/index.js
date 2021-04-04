@@ -200,12 +200,6 @@ async function build_server(
 	function find_deps(file, js_deps, css_deps) {
 		const chunk = client_manifest[file];
 
-		if (!chunk) {
-			// trying to debug windows via CI
-			console.log(`no chunk for ${file}`);
-			console.log(client_manifest);
-		}
-
 		js_deps.add(chunk.file);
 
 		if (chunk.css) {
