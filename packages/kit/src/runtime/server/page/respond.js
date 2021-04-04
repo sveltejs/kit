@@ -232,7 +232,7 @@ export async function respond({ request, options, $session, route, status = 200,
 	let maxage;
 
 	const page_component = error
-		? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
+		? { ssr: options.ssr, router: options.router, hydrate: options.hydrate, prerender: false }
 		: nodes[nodes.length - 1].module;
 
 	const page_config = {
