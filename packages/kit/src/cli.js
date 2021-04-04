@@ -131,7 +131,7 @@ prog
 	.command('start')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('-h, --host', 'Host (only use this on trusted networks)', '0.0.0.0')
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
