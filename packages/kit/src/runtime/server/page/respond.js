@@ -434,7 +434,8 @@ export async function respond({ request, options, $session, route, status = 200,
 				session: ${serialized_session},
 				host: ${request.host ? s(request.host) : 'location.host'},
 				route: ${!!page_config.router},
-				hydrate: ${page_config.hydrate? `{
+				spa: ${!page_config.ssr},
+				hydrate: ${page_config.ssr && page_config.hydrate? `{
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: ${route ? `[
