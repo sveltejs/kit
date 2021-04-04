@@ -5,7 +5,7 @@ description: 'Set variables based on the environment'
 outputs:
   pnpm_cache_path:
     description: 'the pnpm cache path'
-  browser_cache_path":
+  browser_cache_path:
     description: 'The browser cache path'
 
 runs:
