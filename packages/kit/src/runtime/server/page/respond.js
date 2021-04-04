@@ -203,25 +203,17 @@ export async function respond({ request, options, $session, route, status = 200,
 		);
 	};
 
-	const component_promises = error
-		? [options.load_component(options.manifest.layout)]
-		: [
-				options.load_component(options.manifest.layout),
-				...route.parts.map((id) => options.load_component(id))
-		  ];
-
-	const components = [];
-	const props_promises = [];
-
-	let context = {};
-	let maxage;
-
-	let page_component;
+	let nodes;
 
 	try {
-		page_component = error
-			? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
-			: (await component_promises[component_promises.length - 1]).module;
+		nodes = await Promise.all(
+			error
+				? [options.load_component(options.manifest.layout)]
+				: [
+						options.load_component(options.manifest.layout),
+						...route.parts.map((id) => options.load_component(id))
+				  ]
+		);
 	} catch (e) {
 		return await respond({
 			request,
@@ -232,6 +224,16 @@ export async function respond({ request, options, $session, route, status = 200,
 			error: e instanceof Error ? e : { name: 'Error', message: e.toString() }
 		});
 	}
+
+	const components = [];
+	const props_promises = [];
+
+	let context = {};
+	let maxage;
+
+	const page_component = error
+		? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
+		: nodes[nodes.length - 1].module;
 
 	const page_config = {
 		ssr: 'ssr' in page_component ? page_component.ssr : options.ssr,
@@ -263,11 +265,11 @@ export async function respond({ request, options, $session, route, status = 200,
 	let rendered;
 
 	if (page_config.ssr) {
-		for (let i = 0; i < component_promises.length; i += 1) {
+		for (let i = 0; i < nodes.length; i += 1) {
 			let loaded;
 
 			try {
-				const { module } = await component_promises[i];
+				const { module } = nodes[i];
 				components[i] = module.default;
 
 				if (module.load) {
@@ -394,8 +396,6 @@ export async function respond({ request, options, $session, route, status = 200,
 	const css = new Set();
 	const js = new Set();
 	const styles = new Set();
-
-	const nodes = await Promise.all(component_promises);
 
 	if (page_config.ssr) {
 		nodes.forEach((part) => {

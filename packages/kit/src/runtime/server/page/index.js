@@ -48,7 +48,7 @@ export default async function render_page(request, route, options) {
 			request,
 			options,
 			$session,
-			route,
+			route: null,
 			status: 404,
 			error: new Error(`Not found: ${request.path}`)
 		});
