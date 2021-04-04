@@ -98,7 +98,9 @@ async function build_client({
 
 	/** @type {Record<string, string>} */
 	const input = {
-		start: path.resolve(cwd, client_entry_file)
+		start: path.resolve(cwd, client_entry_file),
+		layout: path.resolve(cwd, manifest.layout),
+		error: path.resolve(cwd, manifest.error)
 	};
 
 	manifest.components.forEach((file) => {
@@ -188,27 +190,7 @@ async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const component_indexes = new Map();
-	manifest.components.forEach((c, i) => {
-		component_indexes.set(c, i);
-	});
-
-	/** @param {string} c */
-	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
-
-	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
-
-	/** @type {Set<string>} */
-	const common_js_deps = new Set();
-
-	/** @type {Set<string>} */
-	const common_css_deps = new Set();
-
-	/** @type {Map<string, Set<string>>} */
-	const js_deps_by_file = new Map();
-
-	/** @type {Map<string, Set<string>>} */
-	const css_deps_by_file = new Map();
+	const prefix = `${config.kit.paths.assets}/${config.kit.appDir}/`;
 
 	/**
 	 * @param {string} file
@@ -229,36 +211,32 @@ async function build_server(
 		}
 	}
 
-	find_deps(client_entry_file, common_js_deps, common_css_deps);
+	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
+	const metadata_lookup = {};
 
-	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
-	// way to be able to inline CSS into AMP documents. if we come up with
-	// something better, we could use it for non-AMP documents too, as
-	// critical CSS below a certain threshold _should_ be inlined
-
-	/** @type {Record<string, string>} */
-	const amp_css_lookup = {};
-
-	/** @type {Record<string, string>} */
-	const client_component_lookup = {};
-
-	[client_entry_file, ...manifest.components].forEach((file) => {
-		client_component_lookup[file] = client_manifest[file].file;
-
+	// TODO include layout and error in manifest.components
+	[manifest.layout, manifest.error, ...manifest.components].forEach((file) => {
 		const js_deps = new Set();
 		const css_deps = new Set();
 
-		js_deps_by_file.set(file, js_deps);
-		css_deps_by_file.set(file, css_deps);
-
 		find_deps(file, js_deps, css_deps);
 
-		css_deps.forEach((file) => {
-			const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
-			const contents = fs.readFileSync(resolved, 'utf-8');
+		const js = Array.from(js_deps).map((url) => prefix + url);
+		const css = Array.from(css_deps).map((url) => prefix + url);
 
-			amp_css_lookup[file] = contents;
-		});
+		const styles = config.kit.amp
+			? Array.from(css_deps).map((url) => {
+					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
+					return fs.readFileSync(resolved, 'utf-8');
+			  })
+			: null;
+
+		metadata_lookup[file] = {
+			entry: prefix + client_manifest[file].file,
+			css,
+			js,
+			styles
+		};
 	});
 
 	// prettier-ignore
@@ -286,46 +264,21 @@ async function build_server(
 			const d = decodeURIComponent;
 			const empty = () => ({});
 
-			const components = [
-				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
-			];
-
-			${config.kit.amp ? `
-			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
-
-			const client_component_lookup = ${s(client_component_lookup)};
-
 			const manifest = {
 				assets: ${s(manifest.assets)},
-				layout: ${stringify_component(manifest.layout)},
-				error: ${stringify_component(manifest.error)},
+				layout: ${s(manifest.layout)},
+				error: ${s(manifest.error)},
 				routes: [
 					${manifest.routes
 				.map((route) => {
 					if (route.type === 'page') {
 						const params = get_params(route.params);
-						const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
-
-						const js_deps = new Set(common_js_deps);
-						const css_deps = new Set(common_css_deps);
-
-						for (const file of route.parts) {
-							js_deps_by_file.get(file).forEach(asset => {
-								js_deps.add(asset);
-							});
-
-							css_deps_by_file.get(file).forEach(asset => {
-								css_deps.add(asset);
-							});
-						}
 
 						return `{
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
-									parts: [${parts.join(', ')}],
-									css: [${Array.from(css_deps).map(s).join(', ')}],
-									js: [${Array.from(js_deps).map(s).join(', ')}]
+									parts: [${route.parts.map(file => s(file)).join(', ')}]
 								}`;
 					} else {
 						const params = get_params(route.params);
@@ -351,6 +304,22 @@ async function build_server(
 
 			const hooks = get_hooks(user_hooks);
 
+			const module_lookup = {
+				${[manifest.layout, manifest.error, ...manifest.components].map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
+			};
+
+			const metadata_lookup = ${s(metadata_lookup)};
+
+			async function load_component(file) {
+				if (!module_lookup[file]) {
+					console.log({ file });
+				}
+				return {
+					module: await module_lookup[file](),
+					...metadata_lookup[file]
+				};
+			}
+
 			export function render(request, {
 				paths = ${s(config.kit.paths)},
 				local = false,
@@ -366,19 +335,18 @@ async function build_server(
 					local,
 					template,
 					manifest,
+					load_component,
 					target: ${s(config.kit.target)},
-					entry: ${s(entry)},
+					entry: ${s(prefix + client_manifest[client_entry_file].file)},
 					root,
 					hooks,
 					dev: false,
 					amp: ${config.kit.amp},
 					dependencies,
 					only_render_prerenderable_pages,
-					app_dir: ${s(config.kit.appDir)},
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => amp_css_lookup[dep],
 					ssr: ${s(config.kit.ssr)},
 					router: ${s(config.kit.router)},
 					hydrate: ${s(config.kit.hydrate)}
