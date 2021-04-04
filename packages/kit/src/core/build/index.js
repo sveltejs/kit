@@ -344,7 +344,6 @@ async function build_server(
 					amp: ${config.kit.amp},
 					dependencies,
 					only_render_prerenderable_pages,
-					app_dir: ${s(config.kit.appDir)},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,

@@ -405,8 +405,6 @@ export async function respond({ request, options, $session, route, status = 200,
 		});
 	}
 
-	const prefix = `${options.paths.assets}/${options.app_dir}`;
-
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? styles.size > 0

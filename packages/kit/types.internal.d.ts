@@ -202,7 +202,6 @@ export type SSRRenderOptions = {
 	amp?: boolean;
 	dependencies?: Map<string, Response>;
 	only_render_prerenderable_pages?: boolean;
-	app_dir?: string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
 	fetched?: string;
