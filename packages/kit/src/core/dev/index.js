@@ -310,42 +310,6 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		const common_css_deps = new Set();
-
-		/**
-		 * @param {string} file
-		 * @returns {Promise<{
-		 *   mod: SSRComponent;
-		 *   css: Set<string>;
-		 * }>}
-		 */
-		const load = async (file) => {
-			const url = path.resolve(this.cwd, file);
-
-			const mod = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
-			const node = await this.vite.moduleGraph.getModuleByUrl(url);
-
-			const deps = new Set();
-			find_deps(node, deps);
-
-			const css = new Set();
-			for (const dep of deps) {
-				// TODO what about .scss files, etc?
-				if (dep.file.endsWith('.css')) {
-					try {
-						const mod = await this.vite.ssrLoadModule(dep.url);
-						css.add(mod.default);
-					} catch {
-						// this can happen with dynamically imported modules, I think
-						// because the Vite module graph doesn't distinguish between
-						// static and dynamic imports? TODO investigate, submit fix
-					}
-				}
-			}
-
-			return { mod, css };
-		};
-
 		/**
 		 * @param {import('vite').ModuleNode} node
 		 * @param {Set<import('vite').ModuleNode>} deps
@@ -366,10 +330,6 @@ class Watcher extends EventEmitter {
 			error: manifest_data.error,
 			routes: manifest_data.routes.map((route) => {
 				if (route.type === 'page') {
-					// This is a bit of a hack, but it means we can inject the correct <style>
-					// contents without needing to do any analysis before loading
-					const css_deps = new Set();
-
 					return {
 						type: 'page',
 						pattern: route.pattern,
