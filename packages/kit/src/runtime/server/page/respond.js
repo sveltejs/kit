@@ -204,8 +204,11 @@ export async function respond({ request, options, $session, route, status = 200,
 	};
 
 	const component_promises = error
-		? [options.manifest.layout()]
-		: [options.manifest.layout(), ...route.parts.map((part) => part.load())];
+		? [options.load_component(options.manifest.layout)]
+		: [
+				options.load_component(options.manifest.layout),
+				...route.parts.map((id) => options.load_component(id))
+		  ];
 
 	const components = [];
 	const props_promises = [];
@@ -218,7 +221,7 @@ export async function respond({ request, options, $session, route, status = 200,
 	try {
 		page_component = error
 			? { ssr: options.ssr, router: options.router, hydrate: options.hydrate }
-			: await component_promises[component_promises.length - 1];
+			: (await component_promises[component_promises.length - 1]).module;
 	} catch (e) {
 		return await respond({
 			request,
@@ -264,11 +267,11 @@ export async function respond({ request, options, $session, route, status = 200,
 			let loaded;
 
 			try {
-				const mod = await component_promises[i];
-				components[i] = mod.default;
+				const { module } = await component_promises[i];
+				components[i] = module.default;
 
-				if (mod.load) {
-					loaded = await mod.load.call(null, {
+				if (module.load) {
+					loaded = await module.load.call(null, {
 						page,
 						get session() {
 							uses_credentials = true;
@@ -278,7 +281,7 @@ export async function respond({ request, options, $session, route, status = 200,
 						context: { ...context }
 					});
 
-					if (!loaded && mod === page_component) return;
+					if (!loaded && module === page_component) return;
 				}
 			} catch (e) {
 				// if load fails when we're already rendering the
@@ -388,21 +391,30 @@ export async function respond({ request, options, $session, route, status = 200,
 		};
 	}
 
-	// TODO all the `route &&` stuff is messy
-	const js_deps = route && page_config.ssr ? route.js : [];
-	const css_deps = route && page_config.ssr ? route.css : [];
-	const style = route && page_config.ssr ? route.style : '';
+	const css = new Set();
+	const js = new Set();
+	const styles = new Set();
+
+	const nodes = await Promise.all(component_promises);
+
+	if (page_config.ssr) {
+		nodes.forEach((part) => {
+			if (part.css) part.css.forEach((url) => css.add(url));
+			if (part.js) part.js.forEach((url) => js.add(url));
+			if (part.styles) part.styles.forEach((content) => styles.add(content));
+		});
+	}
 
 	const prefix = `${options.paths.assets}/${options.app_dir}`;
 
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
-		? `<style amp-custom>${
-				style || (await Promise.all(css_deps.map((dep) => options.get_amp_css(dep)))).join('\n')
-		  }</style>`
+		? styles.size > 0
+			? `<style amp-custom>${Array.from(styles).join('\n')}</style>`
+			: ''
 		: [
-				...js_deps.map((dep) => `<link rel="modulepreload" href="${prefix}/${dep}">`),
-				...css_deps.map((dep) => `<link rel="stylesheet" href="${prefix}/${dep}">`)
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
 		  ].join('\n\t\t\t');
 
 	/** @type {string} */
@@ -428,8 +440,8 @@ export async function respond({ request, options, $session, route, status = 200,
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: ${route ? `[
-						${(route ? route.parts : [])
-						.map((part) => `import(${s(options.get_component_path(part.id))})`)
+						${nodes.slice(1) // TODO the slice is temporary
+						.map((node) => `import(${s(node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					]` : '[]'},
 					page: {
@@ -445,7 +457,9 @@ export async function respond({ request, options, $session, route, status = 200,
 
 	const head = [
 		rendered.head,
-		style && !options.amp ? `<style data-svelte>${style}</style>` : '',
+		styles.size && !options.amp
+			? `<style data-svelte>${Array.from(styles).join('\n')}</style>`
+			: '',
 		links,
 		init
 	].join('\n\n');

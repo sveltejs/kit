@@ -17,6 +17,8 @@ declare global {
 	}
 }
 
+type PageId = string;
+
 export type Logger = {
 	(msg: string): void;
 	success: (msg: string) => void;
@@ -141,10 +143,7 @@ export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
-	parts: SSRPagePart[];
-	style: string;
-	css: string[];
-	js: string[];
+	parts: PageId[];
 };
 
 export type SSREndpoint = {
@@ -166,8 +165,8 @@ export type CSRRoute = CSREndpoint | CSRPage;
 
 export type SSRManifest = {
 	assets: Asset[];
-	layout: SSRComponentLoader;
-	error: SSRComponentLoader;
+	layout: string;
+	error: string;
 	routes: SSRRoute[];
 };
 
@@ -186,6 +185,15 @@ export type SSRRenderOptions = {
 	local?: boolean;
 	template?: ({ head, body }: { head: string; body: string }) => string;
 	manifest?: SSRManifest;
+	load_component?: (
+		id: PageId
+	) => Promise<{
+		module: SSRComponent;
+		entry: string; // client-side module corresponding to this component
+		css: string[];
+		js: string[];
+		styles: string[];
+	}>;
 	target?: string;
 	entry?: string;
 	root?: SSRComponent['default'];
@@ -195,10 +203,8 @@ export type SSRRenderOptions = {
 	dependencies?: Map<string, Response>;
 	only_render_prerenderable_pages?: boolean;
 	app_dir?: string;
-	get_component_path?: (id: string) => string;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
-	get_amp_css?: (dep: string) => string;
 	fetched?: string;
 	initiator?: SSRPage;
 	ssr?: boolean;
