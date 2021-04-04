@@ -310,19 +310,6 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		/**
-		 * @param {import('vite').ModuleNode} node
-		 * @param {Set<import('vite').ModuleNode>} deps
-		 */
-		const find_deps = (node, deps) => {
-			for (const dep of node.importedModules) {
-				if (!deps.has(dep)) {
-					deps.add(dep);
-					find_deps(dep, deps);
-				}
-			}
-		};
-
 		/** @type {import('../../../types.internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,

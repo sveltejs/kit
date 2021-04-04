@@ -211,7 +211,7 @@ async function build_server(
 		}
 	}
 
-	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }} */
+	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
 	const metadata_lookup = {};
 
 	// TODO include layout and error in manifest.components
