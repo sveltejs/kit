@@ -9,7 +9,8 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\""
+		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"playwright": "pnpm add playwright -w"
 	},
 	"repository": {
 		"type": "git",

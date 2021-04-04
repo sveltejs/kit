@@ -30,6 +30,11 @@ importers:
       prettier: 2.2.1
       rollup: ^2.42.3
       typescript: ^4.2.3
+  .github/actions/env:
+    devDependencies:
+      '@actions/core': 1.2.6
+    specifiers:
+      '@actions/core': ^1.2.6
   examples/hn.svelte.dev:
     devDependencies:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
@@ -218,6 +223,10 @@ importers:
       vite: ^2.1.0
 lockfileVersion: 5.2
 packages:
+  /@actions/core/1.2.6:
+    dev: true
+    resolution:
+      integrity: sha512-ZQYitnqiyBc3D+k7LsgSBmMDVkOVidaagDG7j3fOym77jNunWRuYx7VSHa9GNfFZh+zh61xsCjRj4JxMZlDqTA==
   /@architect/parser/3.0.1:
     dev: false
     engines:
