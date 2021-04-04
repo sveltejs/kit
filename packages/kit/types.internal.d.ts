@@ -1,4 +1,13 @@
-import { Adapter, GetContext, GetSession, Handle, Incoming, Load, Response } from './types';
+import {
+	Adapter,
+	GetContext,
+	GetSession,
+	Handle,
+	Incoming,
+	Load,
+	RequestHandler,
+	Response
+} from './types';
 import { UserConfig as ViteConfig } from 'vite';
 import { Response as NodeFetchResponse } from 'node-fetch';
 
@@ -142,7 +151,9 @@ export type SSREndpoint = {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: GetParams;
-	load: () => Promise<any>; // TODO
+	load: () => Promise<{
+		[method: string]: RequestHandler;
+	}>;
 };
 
 export type SSRRoute = SSREndpoint | SSRPage;
