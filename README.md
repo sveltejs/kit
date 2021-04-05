@@ -26,7 +26,7 @@ pnpm i
 pnpm -r build
 ```
 
-You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`. For example, to run `svelte-kit-demo` enter the following command:
+You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`. For example, to run `svelte-kit-demo` enter the following commands:
 
 ```bash
 cd examples/svelte-kit-demo
