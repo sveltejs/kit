@@ -1,5 +1,6 @@
 import fetch, { Response } from 'node-fetch';
 import { parse, resolve, URLSearchParams } from 'url';
+import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
 
 const s = JSON.stringify;
@@ -219,7 +220,7 @@ export async function load_node({
 
 	return {
 		node,
-		loaded,
+		loaded: normalize(loaded),
 		fetched,
 		uses_credentials
 	};

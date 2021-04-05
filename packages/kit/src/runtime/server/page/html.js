@@ -32,11 +32,12 @@ export async function get_html({ options, $session, page_config, status, error, 
 
 	if (branch) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
-			node.css.forEach((url) => css.add(url));
-			node.js.forEach((url) => js.add(url));
-			node.styles.forEach((content) => styles.add(content));
+			if (node.css) node.css.forEach((url) => css.add(url));
+			if (node.js) node.js.forEach((url) => js.add(url));
+			if (node.styles) node.styles.forEach((content) => styles.add(content));
 
-			if (fetched) serialized_data.push(...fetched);
+			// TODO probably better if `fetched` wasn't populated unless `hydrate`
+			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
 
 			if (uses_credentials) is_private = true;
 

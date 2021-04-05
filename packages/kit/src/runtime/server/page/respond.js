@@ -83,6 +83,17 @@ export async function respond({ request, options, $session, route }) {
 					context,
 					is_leaf: i === nodes.length - 1
 				});
+
+				if (!loaded) return;
+
+				if (loaded.loaded.redirect) {
+					return {
+						status: loaded.loaded.status,
+						headers: {
+							location: loaded.loaded.redirect
+						}
+					};
+				}
 			} catch (e) {
 				// TODO
 				loaded = {
