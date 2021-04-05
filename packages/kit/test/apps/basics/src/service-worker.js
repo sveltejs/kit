@@ -2,8 +2,6 @@ import { timestamp, build } from '$service-worker';
 
 const name = `cache-${timestamp}`;
 
-console.log('build', build);
-
 self.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(name).then((cache) => cache.addAll(build)));
 });

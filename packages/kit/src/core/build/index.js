@@ -98,11 +98,12 @@ async function build_client({
 
 	/** @type {Record<string, string>} */
 	const input = {
-		start: path.resolve(cwd, client_entry_file),
-		layout: path.resolve(cwd, manifest.layout),
-		error: path.resolve(cwd, manifest.error)
+		start: path.resolve(cwd, client_entry_file)
 	};
 
+	// This step is optional — Vite/Rollup will create the necessary chunks
+	// for everything regardless — but it means that entry chunks reflect
+	// their location in the source code, which is helpful for debugging
 	manifest.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
@@ -154,7 +155,7 @@ async function build_client({
 
 	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
-	fs.unlinkSync(client_manifest_file);
+	fs.renameSync(client_manifest_file, `${output_dir}/manifest.json`); // inspectable but not shipped
 
 	return client_manifest;
 }
