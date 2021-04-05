@@ -40,7 +40,7 @@ test('creates routes', () => {
 	const blog = 'samples/basic/blog/index.svelte';
 	const blog_$slug = 'samples/basic/blog/[slug].svelte';
 
-	assert.equal(components, [index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
@@ -96,7 +96,7 @@ test('creates routes with layout', () => {
 	const foo = 'samples/basic-layout/foo/index.svelte';
 
 	assert.equal(layout, $layout);
-	assert.equal(components, [index, foo_$layout, foo]);
+	assert.equal(components, [layout, error, index, foo_$layout, foo]);
 
 	assert.equal(routes, [
 		{
@@ -125,6 +125,8 @@ test('encodes invalid characters', () => {
 	// const question_mark = 'samples/encoding/?.svelte';
 
 	assert.equal(components, [
+		layout,
+		error,
 		// quote,
 		hash
 		// question_mark
@@ -245,7 +247,7 @@ test('works with custom extensions', () => {
 	const blog = 'samples/custom-extension/blog/index.svelte';
 	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
 
-	assert.equal(components, [index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
