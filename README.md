@@ -26,7 +26,11 @@ pnpm i
 pnpm -r build
 ```
 
-You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
+You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`. For example, to run `svelte-kit-demo` enter the following command:
+
+```bash
+cd examples/svelte-kit-demo && pnpm dev
+```
 
 Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
 
