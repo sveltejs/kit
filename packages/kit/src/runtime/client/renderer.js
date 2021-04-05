@@ -50,13 +50,15 @@ export class Renderer {
 	/** @param {{
 	 *   Root: import('types.internal').CSRComponent;
 	 *   layout: import('types.internal').CSRComponent;
+	 *   error: import('types.internal').CSRComponent;
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, target, session, host }) {
+	constructor({ Root, layout, error, target, session, host }) {
 		this.Root = Root;
 		this.layout = layout;
+		this.error = error;
 		this.host = host;
 
 		/** @type {import('./router').Router} */

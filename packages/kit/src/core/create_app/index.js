@@ -99,6 +99,7 @@ function generate_client_manifest(manifest_data, base) {
 
 	return trim(`
 		import * as layout from ${s(get_path(manifest_data.layout))};
+		import * as error from ${s(get_path(manifest_data.error))};
 
 		const components = ${components};
 
@@ -107,7 +108,7 @@ function generate_client_manifest(manifest_data, base) {
 
 		export const routes = ${routes};
 
-		export { layout };
+		export { layout, error };
 	`);
 }
 
