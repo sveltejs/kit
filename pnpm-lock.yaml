@@ -11,7 +11,7 @@ importers:
       eslint: 7.22.0
       eslint-plugin-import: 2.22.1_eslint@7.22.0
       eslint-plugin-svelte3: 3.1.2_eslint@7.22.0
-      playwright: 1.9.2
+      playwright-chromium: 1.10.0
       prettier: 2.2.1
       rollup: 2.42.3
       typescript: 4.2.3
@@ -26,7 +26,7 @@ importers:
       eslint: ^7.22.0
       eslint-plugin-import: ^2.22.1
       eslint-plugin-svelte3: ^3.1.2
-      playwright: ^1.9.2
+      playwright-chromium: ^1.10.0
       prettier: 2.2.1
       rollup: ^2.42.3
       typescript: ^4.2.3
@@ -695,6 +695,11 @@ packages:
     dev: true
     resolution:
       integrity: sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
+  /@types/node/14.14.37:
+    dev: true
+    optional: true
+    resolution:
+      integrity: sha512-XYmBiy+ohOR4Lh5jE379fV2IU+6Jn4g5qASinhitfyO71b/sCo6MKsMLF5tc7Zf2CE8hViVQyYSobJNke8OvUw==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
@@ -724,7 +729,7 @@ packages:
       integrity: sha512-RxAwYt4rGwK5GyoRwuP0jT6ZHAVTdz2EqgsHmX0PYNjGsko+OeT4WFXXTs/lM3teJUJodM+SNtAL5/pXIJ61IQ==
   /@types/yauzl/2.9.1:
     dependencies:
-      '@types/node': 14.14.35
+      '@types/node': 14.14.37
     dev: true
     optional: true
     resolution:
@@ -2912,7 +2917,7 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==
-  /playwright/1.9.2:
+  /playwright-chromium/1.10.0:
     dependencies:
       commander: 6.2.1
       debug: 4.3.1
@@ -2933,7 +2938,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-Hsgfk3GZO+hgewRNW9xl9/tHjdZvVwxTseHagbiNpDf90PXICEh8UHXy/2eykeIXrZFMA6W6petEtRWNPi3gfQ==
+      integrity: sha512-ry/60/YKGJfrnaS7j5C3+xmA2DAMv6pBE351FoTHe4Llq0WU92IL0rBYK3TkK3PzSHYtp1KdCRsRjDnJhImA3g==
   /pngjs/5.0.0:
     dev: true
     engines:
