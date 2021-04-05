@@ -98,16 +98,13 @@ function generate_client_manifest(manifest_data, base) {
 	]`.replace(/^\t/gm, '');
 
 	return trim(`
-		import * as layout from ${s(get_path(manifest_data.layout))};
-		import * as error from ${s(get_path(manifest_data.error))};
-
 		const components = ${components};
 
 		const d = decodeURIComponent;
 
 		export const routes = ${routes};
 
-		export { layout, error };
+		export const fallback = [components[0](), components[1]()];
 	`);
 }
 

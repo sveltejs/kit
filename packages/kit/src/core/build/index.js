@@ -202,6 +202,7 @@ async function build_server(
 	function find_deps(file, js_deps, css_deps) {
 		const chunk = client_manifest[file];
 
+		if (js_deps.has(chunk.file)) return;
 		js_deps.add(chunk.file);
 
 		if (chunk.css) {
@@ -216,8 +217,7 @@ async function build_server(
 	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
 	const metadata_lookup = {};
 
-	// TODO include layout and error in manifest.components
-	[manifest.layout, manifest.error, ...manifest.components].forEach((file) => {
+	manifest.components.forEach((file) => {
 		const js_deps = new Set();
 		const css_deps = new Set();
 
@@ -307,7 +307,7 @@ async function build_server(
 			const hooks = get_hooks(user_hooks);
 
 			const module_lookup = {
-				${[manifest.layout, manifest.error, ...manifest.components].map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
+				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
 			};
 
 			const metadata_lookup = ${s(metadata_lookup)};

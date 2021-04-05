@@ -46,19 +46,19 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
+/** @typedef {import('types.internal').CSRComponent} CSRComponent */
+
 export class Renderer {
 	/** @param {{
-	 *   Root: import('types.internal').CSRComponent;
-	 *   layout: import('types.internal').CSRComponent;
-	 *   error: import('types.internal').CSRComponent;
+	 *   Root: CSRComponent;
+	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, error, target, session, host }) {
+	constructor({ Root, fallback, target, session, host }) {
 		this.Root = Root;
-		this.layout = layout;
-		this.error = error;
+		this.fallback = fallback;
 		this.host = host;
 
 		/** @type {import('./router').Router} */
@@ -156,24 +156,27 @@ export class Renderer {
 			location.reload();
 		} else if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
+				// TODO this is a lil hacky. investigate why we can't
+				// just use this._load_error(...)
+				const layout = await this.fallback[0];
+				const error = await this.fallback[1];
+
 				const props = {
 					status: 500,
 					error: new Error('Redirect loop'),
-					components: [this.layout.default, this.error.default]
+					components: [layout.default, error.default]
 				};
 
 				this.root.$set(props);
 
-				// TODO this is a lil hacky. investigate why we can't
-				// just use this._load_error(...)
 				navigation_result = {
 					state: {
 						page: null,
 						query: null,
 						session_changed: false,
 						nodes: [
-							{ module: this.layout, uses: null },
-							{ module: this.error, uses: null }
+							{ module: layout, uses: null },
+							{ module: error, uses: null }
 						],
 						contexts: []
 					},
@@ -314,7 +317,7 @@ export class Renderer {
 				status,
 				error,
 
-				/** @type {import('types.internal').CSRComponent[]} */
+				/** @type {CSRComponent[]} */
 				components: []
 			}
 		};
@@ -543,7 +546,7 @@ export class Renderer {
 		return await this._load({
 			status,
 			error,
-			nodes: [this.layout, this.error],
+			nodes: this.fallback,
 			page: {
 				host: this.host,
 				path,

@@ -1,7 +1,7 @@
 // @ts-ignore
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
 // @ts-ignore
-import { routes, layout, error } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
+import { routes, fallback } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
@@ -31,8 +31,7 @@ export async function start({ paths, target, session, host, route, spa, hydrate 
 
 	const renderer = new Renderer({
 		Root,
-		layout,
-		error,
+		fallback,
 		target,
 		session,
 		host
