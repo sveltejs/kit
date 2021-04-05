@@ -82,8 +82,6 @@ export async function get_html({ options, $session, page_config, status, error, 
 
 		try {
 			rendered = options.root.render(props);
-		} catch (e) {
-			throw e;
 		} finally {
 			unsubscribe();
 		}

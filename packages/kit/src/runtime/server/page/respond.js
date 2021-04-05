@@ -2,8 +2,6 @@ import { get_html } from './html.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
 
-const s = JSON.stringify;
-
 /**
  * @param {{
  *   request: import('types').Request;
