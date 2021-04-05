@@ -2,7 +2,7 @@ import fs from 'fs';
 import glob from 'tiny-glob/sync.js';
 import ports from 'port-authority';
 import fetch from 'node-fetch';
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-chromium';
 import { dev } from '../src/core/dev/index.js';
 import { build } from '../src/core/build/index.js';
 import { start } from '../src/core/start/index.js';
