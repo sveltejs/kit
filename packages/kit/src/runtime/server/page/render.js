@@ -17,7 +17,15 @@ const s = JSON.stringify;
  *   page: import('types.internal').Page
  * }} opts
  */
-export async function get_html({ options, $session, page_config, status, error, branch, page }) {
+export async function render_response({
+	options,
+	$session,
+	page_config,
+	status,
+	error,
+	branch,
+	page
+}) {
 	const css = new Set();
 	const js = new Set();
 	const styles = new Set();
@@ -68,7 +76,7 @@ export async function get_html({ options, $session, page_config, status, error, 
 			components: branch.map(({ node }) => node.module.default)
 		};
 
-		// leveln (instead of levels[n]) makes it easy to avoid
+		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
 		for (let i = 0; i < branch.length; i += 1) {
 			props[`props_${i}`] = await branch[i].loaded.props;

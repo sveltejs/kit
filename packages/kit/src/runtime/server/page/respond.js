@@ -1,4 +1,4 @@
-import { get_html } from './html.js';
+import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
 
@@ -29,13 +29,13 @@ export async function respond({ request, options, $session, route }) {
 			options.load_component(options.manifest.layout),
 			...route.parts.map((id) => options.load_component(id))
 		]);
-	} catch (e) {
+	} catch (error) {
 		return await respond_with_error({
 			request,
 			options,
 			$session,
 			status: 500,
-			error: e
+			error
 		});
 	}
 
@@ -131,7 +131,7 @@ export async function respond({ request, options, $session, route }) {
 	}
 
 	try {
-		return await get_html({
+		return await render_response({
 			request,
 			options,
 			$session,

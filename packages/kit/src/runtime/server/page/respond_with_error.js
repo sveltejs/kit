@@ -1,4 +1,4 @@
-import { get_html } from './html.js';
+import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 
 /**
@@ -43,7 +43,7 @@ export async function respond_with_error({ request, options, $session, status, e
 	];
 
 	try {
-		return await get_html({
+		return await render_response({
 			request,
 			options,
 			$session,
