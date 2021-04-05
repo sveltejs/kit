@@ -176,6 +176,14 @@ export type Hooks = {
 	handle?: Handle;
 };
 
+export type SSRNode = {
+	module: SSRComponent;
+	entry: string; // client-side module corresponding to this component
+	css: string[];
+	js: string[];
+	styles: string[];
+};
+
 // TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
 	paths?: {
@@ -185,15 +193,7 @@ export type SSRRenderOptions = {
 	local?: boolean;
 	template?: ({ head, body }: { head: string; body: string }) => string;
 	manifest?: SSRManifest;
-	load_component?: (
-		id: PageId
-	) => Promise<{
-		module: SSRComponent;
-		entry: string; // client-side module corresponding to this component
-		css: string[];
-		js: string[];
-		styles: string[];
-	}>;
+	load_component?: (id: PageId) => Promise<SSRNode>;
 	target?: string;
 	entry?: string;
 	root?: SSRComponent['default'];
