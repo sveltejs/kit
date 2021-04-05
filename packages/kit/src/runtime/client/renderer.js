@@ -246,16 +246,11 @@ export class Renderer {
 			if (result) return result;
 		}
 
-		return await this._load({
+		return await this._load_error({
 			status: 404,
 			error: new Error(`Not found: ${info.path}`),
-			nodes: [],
-			page: {
-				host: this.host,
-				path: info.path,
-				query: info.query,
-				params: {}
-			}
+			path: info.path,
+			query: info.query
 		});
 	}
 
@@ -422,16 +417,11 @@ export class Renderer {
 								throw error;
 							}
 
-							return await this._load({
+							return await this._load_error({
 								status: loaded.status || 500,
 								error: loaded.error,
-								nodes: [],
-								page: {
-									host: page.host,
-									path: page.path,
-									query: page.query,
-									params: {}
-								}
+								path: page.path,
+								query: page.query
 							});
 						}
 
@@ -511,17 +501,34 @@ export class Renderer {
 				throw error;
 			}
 
-			return await this._load({
+			return await this._load_error({
 				status: 500,
 				error: e,
-				nodes: [],
-				page: {
-					host: page.host,
-					path: page.path,
-					query: page.query,
-					params: {}
-				}
+				path: page.path,
+				query: page.query
 			});
 		}
+	}
+
+	/**
+	 * @param {{
+	 *   status: number;
+	 *   error: Error;
+	 *   path: string;
+	 *   query: URLSearchParams
+	 * }} opts
+	 */
+	async _load_error({ status, error, path, query }) {
+		return await this._load({
+			status,
+			error,
+			nodes: [],
+			page: {
+				host: this.host,
+				path,
+				query,
+				params: {}
+			}
+		});
 	}
 }
