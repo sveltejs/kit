@@ -147,7 +147,7 @@ export class Renderer {
 	 */
 	async update(info, chain) {
 		const token = (this.token = {});
-		const navigation_result = await this._get_navigation_result(info);
+		let navigation_result = await this._get_navigation_result(info);
 
 		// abort if user navigated during update
 		if (token !== this.token) return;
@@ -156,10 +156,28 @@ export class Renderer {
 			location.reload();
 		} else if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
-				this.root.$set({
+				const props = {
 					status: 500,
-					error: new Error('Redirect loop')
-				});
+					error: new Error('Redirect loop'),
+					components: [this.layout.default, this.error.default]
+				};
+
+				this.root.$set(props);
+
+				// TODO this is a lil hacky
+				navigation_result = {
+					state: {
+						page: null,
+						query: null,
+						session_changed: false,
+						nodes: [
+							{ module: this.layout, uses: null },
+							{ module: this.error, uses: null }
+						],
+						contexts: []
+					},
+					props
+				};
 			} else {
 				if (this.router) {
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
@@ -311,7 +329,7 @@ export class Renderer {
 		};
 
 		try {
-			const component_promises = [this.layout, ...nodes];
+			const component_promises = nodes; // TODO redundant
 			const props_promises = [];
 
 			/** @type {Record<string, any>} */
@@ -524,7 +542,7 @@ export class Renderer {
 		return await this._load({
 			status,
 			error,
-			nodes: [],
+			nodes: [this.layout, this.error],
 			page: {
 				host: this.host,
 				path,

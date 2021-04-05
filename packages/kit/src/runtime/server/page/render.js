@@ -133,7 +133,7 @@ export async function render_response({
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [
-						${branch.slice(1) // TODO the slice is temporary
+						${branch
 						.map(({ node }) => `import(${s(node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],

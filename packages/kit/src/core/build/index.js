@@ -106,7 +106,9 @@ async function build_client({
 	manifest.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('pages', relative)] = resolved;
+
+		const name = relative.startsWith('..') ? path.basename(file) : path.join('pages', relative);
+		input[name] = resolved;
 	});
 
 	/** @type {any} */
