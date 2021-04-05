@@ -44,13 +44,6 @@ export async function get_html({ options, $session, page_config, status, error, 
 			maxage = loaded.maxage;
 		});
 
-		const session = writable($session);
-		let session_tracking_active = false;
-		const unsubscribe = session.subscribe(() => {
-			if (session_tracking_active) is_private = true;
-		});
-		session_tracking_active = true;
-
 		if (error) {
 			if (options.dev) {
 				error.stack = await options.get_stack(error);
@@ -59,6 +52,8 @@ export async function get_html({ options, $session, page_config, status, error, 
 				error.stack = String(error);
 			}
 		}
+
+		const session = writable($session);
 
 		/** @type {Record<string, any>} */
 		const props = {
@@ -79,11 +74,18 @@ export async function get_html({ options, $session, page_config, status, error, 
 			props[`props_${i}`] = await branch[i].loaded.props;
 		}
 
+		let session_tracking_active = false;
+		const unsubscribe = session.subscribe(() => {
+			if (session_tracking_active) is_private = true;
+		});
+		session_tracking_active = true;
+
 		try {
 			rendered = options.root.render(props);
 		} catch (e) {
-			unsubscribe();
 			throw e;
+		} finally {
+			unsubscribe();
 		}
 	} else {
 		rendered = { head: '', html: '', css: '' };
