@@ -35,8 +35,6 @@ class Watcher extends EventEmitter {
 		this.https = https;
 		this.config = config;
 
-		process.env.NODE_ENV = 'development';
-
 		process.on('exit', () => {
 			this.close();
 		});

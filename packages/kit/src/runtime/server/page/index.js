@@ -1,4 +1,5 @@
 import { respond } from './respond.js';
+import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {import('types').Request} request
@@ -23,9 +24,7 @@ export default async function render_page(request, route, options) {
 			request,
 			options,
 			$session,
-			route,
-			status: 200,
-			error: null
+			route
 		});
 
 		if (response) {
@@ -44,11 +43,10 @@ export default async function render_page(request, route, options) {
 			};
 		}
 	} else {
-		return await respond({
+		return await respond_with_error({
 			request,
 			options,
 			$session,
-			route: null,
 			status: 404,
 			error: new Error(`Not found: ${request.path}`)
 		});
