@@ -164,7 +164,8 @@ export class Renderer {
 
 				this.root.$set(props);
 
-				// TODO this is a lil hacky
+				// TODO this is a lil hacky. investigate why we can't
+				// just use this._load_error(...)
 				navigation_result = {
 					state: {
 						page: null,
