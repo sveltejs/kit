@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^2.4.1",
+		"@sveltejs/kit": "workspace:*",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.33",

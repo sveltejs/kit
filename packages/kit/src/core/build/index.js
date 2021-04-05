@@ -98,15 +98,18 @@ async function build_client({
 
 	/** @type {Record<string, string>} */
 	const input = {
-		start: path.resolve(cwd, client_entry_file),
-		layout: path.resolve(cwd, manifest.layout),
-		error: path.resolve(cwd, manifest.error)
+		start: path.resolve(cwd, client_entry_file)
 	};
 
+	// This step is optional — Vite/Rollup will create the necessary chunks
+	// for everything regardless — but it means that entry chunks reflect
+	// their location in the source code, which is helpful for debugging
 	manifest.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('pages', relative)] = resolved;
+
+		const name = relative.startsWith('..') ? path.basename(file) : path.join('pages', relative);
+		input[name] = resolved;
 	});
 
 	/** @type {any} */
@@ -152,7 +155,7 @@ async function build_client({
 
 	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
-	fs.unlinkSync(client_manifest_file);
+	fs.renameSync(client_manifest_file, `${output_dir}/manifest.json`); // inspectable but not shipped
 
 	return client_manifest;
 }
@@ -200,6 +203,7 @@ async function build_server(
 	function find_deps(file, js_deps, css_deps) {
 		const chunk = client_manifest[file];
 
+		if (js_deps.has(chunk.file)) return;
 		js_deps.add(chunk.file);
 
 		if (chunk.css) {
@@ -214,8 +218,7 @@ async function build_server(
 	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
 	const metadata_lookup = {};
 
-	// TODO include layout and error in manifest.components
-	[manifest.layout, manifest.error, ...manifest.components].forEach((file) => {
+	manifest.components.forEach((file) => {
 		const js_deps = new Set();
 		const css_deps = new Set();
 
@@ -305,7 +308,7 @@ async function build_server(
 			const hooks = get_hooks(user_hooks);
 
 			const module_lookup = {
-				${[manifest.layout, manifest.error, ...manifest.components].map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
+				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
 			};
 
 			const metadata_lookup = ${s(metadata_lookup)};

@@ -11,7 +11,7 @@ test('fills in defaults', () => {
 		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
-			adapter: [null],
+			adapter: null,
 			amp: false,
 			appDir: '_app',
 			files: {
@@ -93,7 +93,7 @@ test('fills in partial blanks', () => {
 		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
-			adapter: [null],
+			adapter: null,
 			amp: false,
 			appDir: '_app',
 			files: {

@@ -174,6 +174,7 @@ importers:
       sade: 1.7.4
     devDependencies:
       '@rollup/plugin-replace': 2.4.1_rollup@2.41.1
+      '@sveltejs/kit': 'link:'
       '@types/amphtml-validator': 1.0.1
       '@types/mime': 2.0.3
       '@types/node': 14.14.33
@@ -197,6 +198,7 @@ importers:
       vite: 2.1.0
     specifiers:
       '@rollup/plugin-replace': ^2.4.1
+      '@sveltejs/kit': workspace:*
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.5
       '@types/amphtml-validator': ^1.0.1
       '@types/mime': ^2.0.3

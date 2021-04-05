@@ -182,7 +182,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	const layout = find_layout('$layout', base) || default_layout;
 	const error = find_layout('$error', base) || default_error;
 
-	walk(config.kit.files.routes, [], [], []);
+	components.push(layout, error);
+
+	walk(config.kit.files.routes, [], [], [layout]);
 
 	const assets_dir = config.kit.files.assets;
 

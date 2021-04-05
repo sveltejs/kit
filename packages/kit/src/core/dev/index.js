@@ -218,9 +218,6 @@ class Watcher extends EventEmitter {
 							},
 							manifest: this.manifest,
 							load_component: async (id) => {
-								// if (id === 'layout') id = this.manifest.layout;
-								// if (id === 'error') id = this.manifest.error;
-
 								const url = path.resolve(this.cwd, id);
 
 								const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));

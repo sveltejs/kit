@@ -46,17 +46,19 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
+/** @typedef {import('types.internal').CSRComponent} CSRComponent */
+
 export class Renderer {
 	/** @param {{
-	 *   Root: import('types.internal').CSRComponent;
-	 *   layout: import('types.internal').CSRComponent;
+	 *   Root: CSRComponent;
+	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts */
-	constructor({ Root, layout, target, session, host }) {
+	constructor({ Root, fallback, target, session, host }) {
 		this.Root = Root;
-		this.layout = layout;
+		this.fallback = fallback;
 		this.host = host;
 
 		/** @type {import('./router').Router} */
@@ -145,7 +147,7 @@ export class Renderer {
 	 */
 	async update(info, chain) {
 		const token = (this.token = {});
-		const navigation_result = await this._get_navigation_result(info);
+		let navigation_result = await this._get_navigation_result(info);
 
 		// abort if user navigated during update
 		if (token !== this.token) return;
@@ -154,10 +156,32 @@ export class Renderer {
 			location.reload();
 		} else if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
-				this.root.$set({
+				// TODO this is a lil hacky. investigate why we can't
+				// just use this._load_error(...)
+				const layout = await this.fallback[0];
+				const error = await this.fallback[1];
+
+				const props = {
 					status: 500,
-					error: new Error('Redirect loop')
-				});
+					error: new Error('Redirect loop'),
+					components: [layout.default, error.default]
+				};
+
+				this.root.$set(props);
+
+				navigation_result = {
+					state: {
+						page: null,
+						query: null,
+						session_changed: false,
+						nodes: [
+							{ module: layout, uses: null },
+							{ module: error, uses: null }
+						],
+						contexts: []
+					},
+					props
+				};
 			} else {
 				if (this.router) {
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
@@ -246,16 +270,11 @@ export class Renderer {
 			if (result) return result;
 		}
 
-		return await this._load({
+		return await this._load_error({
 			status: 404,
 			error: new Error(`Not found: ${info.path}`),
-			nodes: [],
-			page: {
-				host: this.host,
-				path: info.path,
-				query: info.query,
-				params: {}
-			}
+			path: info.path,
+			query: info.query
 		});
 	}
 
@@ -298,7 +317,7 @@ export class Renderer {
 				status,
 				error,
 
-				/** @type {import('types.internal').CSRComponent[]} */
+				/** @type {CSRComponent[]} */
 				components: []
 			}
 		};
@@ -314,7 +333,7 @@ export class Renderer {
 		};
 
 		try {
-			const component_promises = [this.layout, ...nodes];
+			const component_promises = nodes; // TODO redundant
 			const props_promises = [];
 
 			/** @type {Record<string, any>} */
@@ -422,16 +441,11 @@ export class Renderer {
 								throw error;
 							}
 
-							return await this._load({
+							return await this._load_error({
 								status: loaded.status || 500,
 								error: loaded.error,
-								nodes: [],
-								page: {
-									host: page.host,
-									path: page.path,
-									query: page.query,
-									params: {}
-								}
+								path: page.path,
+								query: page.query
 							});
 						}
 
@@ -511,17 +525,34 @@ export class Renderer {
 				throw error;
 			}
 
-			return await this._load({
+			return await this._load_error({
 				status: 500,
 				error: e,
-				nodes: [],
-				page: {
-					host: page.host,
-					path: page.path,
-					query: page.query,
-					params: {}
-				}
+				path: page.path,
+				query: page.query
 			});
 		}
+	}
+
+	/**
+	 * @param {{
+	 *   status: number;
+	 *   error: Error;
+	 *   path: string;
+	 *   query: URLSearchParams
+	 * }} opts
+	 */
+	async _load_error({ status, error, path, query }) {
+		return await this._load({
+			status,
+			error,
+			nodes: this.fallback,
+			page: {
+				host: this.host,
+				path,
+				query,
+				params: {}
+			}
+		});
 	}
 }

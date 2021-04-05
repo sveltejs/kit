@@ -105,7 +105,7 @@ export async function render_response({
 		: [
 				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
 				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
-		  ].join('\n\t\t\t');
+		  ].join('\n\t\t');
 
 	/** @type {string} */
 	let init = '';
@@ -117,8 +117,7 @@ export async function render_response({
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
 	} else if (page_config.router || page_config.hydrate) {
 		// prettier-ignore
-		init = `
-		<script type="module">
+		init = `<script type="module">
 			import { start } from ${s(options.entry)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
@@ -133,7 +132,7 @@ export async function render_response({
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [
-						${branch.slice(1) // TODO the slice is temporary
+						${branch
 						.map(({ node }) => `import(${s(node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
@@ -155,7 +154,7 @@ export async function render_response({
 			: '',
 		links,
 		init
-	].join('\n\n');
+	].join('\n\n\t\t');
 
 	const body = options.amp
 		? rendered.html
