@@ -7,6 +7,12 @@ import AdapterUtils from './AdapterUtils.js';
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
 export async function adapt(config, { cwd = process.cwd(), verbose }) {
+	if (!config.kit.adapter) {
+		console.log(colors.bold().cyan('\nNo adapter specified'));
+		console.log('See https://kit.svelte.dev/docs#adapters for more information');
+		return;
+	}
+
 	const { name, adapt } = config.kit.adapter;
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
