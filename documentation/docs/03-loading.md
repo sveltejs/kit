@@ -79,7 +79,8 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `/bl
 
 `fetch` is equivalent to the native `fetch` web API, and can make credentialled requests. It can be used across both client and server contexts.
 
-> When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately without an additional network request.
+> When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately (keyed on URL) without an additional network request.
+> If you make multiple requests to the same URL with different parameters in the request body, you will need to adjust your request to use unique URL parameters to avoid deduplication.
 
 #### session
 
