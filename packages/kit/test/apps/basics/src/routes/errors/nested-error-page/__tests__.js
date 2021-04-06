@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test.only(
+	test(
 		'renders the closest error page',
 		'/errors/nested-error-page',
 		async ({ page, clicknav }) => {

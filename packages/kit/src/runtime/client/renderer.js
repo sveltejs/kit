@@ -239,7 +239,7 @@ export class Renderer {
 
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
-			const [pattern, parts, params] = route;
+			const [pattern, a, b, params] = route;
 
 			if (route.length === 1) {
 				return { reload: true };
@@ -258,7 +258,7 @@ export class Renderer {
 				}
 			}
 
-			const nodes = parts.map((loader) => loader());
+			const nodes = a.map((loader) => loader());
 			const page = {
 				host: this.host,
 				path: info.path,
