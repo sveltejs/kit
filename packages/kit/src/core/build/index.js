@@ -281,8 +281,8 @@ async function build_server(
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
-									a: [${route.a.map(file => s(file)).join(', ')}],
-									b: [${route.b.map(file => s(file)).join(', ')}]
+									a: [${route.a.map(file => file && s(file)).join(', ')}],
+									b: [${route.b.map(file => file && s(file)).join(', ')}]
 								}`;
 					} else {
 						const params = get_params(route.params);

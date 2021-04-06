@@ -221,6 +221,7 @@ export async function load_node({
 	return {
 		node,
 		loaded: normalize(loaded),
+		context: loaded.context || context,
 		fetched,
 		uses_credentials
 	};
