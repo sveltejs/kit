@@ -143,7 +143,8 @@ export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
-	parts: PageId[];
+	a: PageId[];
+	b: PageId[];
 };
 
 export type SSREndpoint = {

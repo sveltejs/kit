@@ -25,7 +25,7 @@ export async function respond({ request, options, $session, route }) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.parts.map((id) => options.load_component(id)));
+		nodes = await Promise.all(route.a.map((id) => options.load_component(id)));
 	} catch (error) {
 		return await respond_with_error({
 			request,
