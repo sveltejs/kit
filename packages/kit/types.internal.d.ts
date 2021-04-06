@@ -221,7 +221,8 @@ export type PageData = {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
-	parts: any[]; // TODO
+	a: string[];
+	b: string[];
 };
 
 export type EndpointData = {

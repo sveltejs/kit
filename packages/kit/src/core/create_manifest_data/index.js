@@ -50,9 +50,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} stack
+	 * @param {string[]} layout_stack
+	 * @param {string[]} error_stack
 	 */
-	function walk(dir, parent_segments, parent_params, stack) {
+	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
@@ -138,31 +139,48 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const component = find_layout('$layout', item.file);
+				const layout = find_layout('$layout', item.file);
+				const error = find_layout('$error', item.file);
 
-				if (component) components.push(component);
+				if (layout) components.push(layout);
+				if (error) components.push(error);
 
 				walk(
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat(component) : stack
+					layout_stack.concat(layout),
+					error_stack.concat(error)
 				);
 			} else if (item.is_page) {
 				components.push(item.file);
 
-				const parts =
-					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat(item.file)
-						: stack.concat(item.file);
+				const a = layout_stack.concat(item.file);
+				const b = error_stack;
 
 				const pattern = get_pattern(segments, true);
+
+				let i = a.length;
+				while (i--) {
+					if (!b[i] && !a[i]) {
+						b.splice(i, 1);
+						a.splice(i, 1);
+					}
+				}
+
+				i = b.length;
+				while (i--) {
+					if (b[i]) break;
+				}
+
+				b.splice(i + 1);
 
 				routes.push({
 					type: 'page',
 					pattern,
 					params,
-					parts
+					a,
+					b
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
@@ -184,7 +202,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [layout]);
+	walk(config.kit.files.routes, [], [], [layout], [error]);
 
 	const assets_dir = config.kit.files.assets;
 
