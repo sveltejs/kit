@@ -90,7 +90,7 @@ export type Response = {
 };
 
 export type RequestHandler<Context = any, Body = unknown> = (
-	request?: Request<Context, Body>
+	request: Request<Context, Body>
 ) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
