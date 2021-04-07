@@ -3,7 +3,7 @@ import sade from 'sade';
 import colors from 'kleur';
 import * as ports from 'port-authority';
 import { load_config } from './core/load_config/index.js';
-import { networkInterfaces } from 'os';
+import { networkInterfaces, release } from 'os';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -51,16 +51,23 @@ function handle_error(error) {
 	process.exit(1);
 }
 
-/** @param {number} port */
-async function launch(port) {
+/**
+ * @param {number} port
+ * @param {boolean} https
+ */
+async function launch(port, https) {
 	const { exec } = await import('child_process');
 	let cmd = 'open';
 	if (process.platform == 'win32') {
 		cmd = 'start';
 	} else if (process.platform == 'linux') {
-		cmd = 'xdg-open';
+		if (/microsoft/i.test(release())) {
+			cmd = 'cmd.exe /c start';
+		} else {
+			cmd = 'xdg-open';
+		}
 	}
-	exec(`${cmd} http://localhost:${port}`);
+	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
@@ -187,7 +194,7 @@ async function check_port(port) {
  * }} param0
  */
 function welcome({ port, host, https, open }) {
-	if (open) launch(port);
+	if (open) launch(port, https);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
