@@ -1,4 +1,4 @@
-const { existsSync, readFileSync, copyFileSync, writeFileSync, renameSync } = require('fs');
+const { existsSync, readFileSync, copyFileSync, appendFileSync, renameSync } = require('fs');
 const { resolve } = require('path');
 const toml = require('toml');
 
@@ -51,7 +51,7 @@ module.exports = function () {
 			copyFileSync(resolve(__dirname, 'files/index.cjs'), `${functions}/render/index.js`);
 
 			// create _redirects
-			writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
+			appendFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
 
 			// prerender
 			utils.log.info('Prerendering static pages...');
