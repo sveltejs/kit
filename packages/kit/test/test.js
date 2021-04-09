@@ -118,6 +118,8 @@ function duplicate(test_fn, config) {
 			start = null;
 		}
 
+		if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+
 		test_fn(`${name} [no js]`, async (context) => {
 			let response;
 
