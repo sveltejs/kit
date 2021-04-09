@@ -314,9 +314,6 @@ export class Renderer {
 				contexts: []
 			},
 			props: {
-				status,
-				error,
-
 				/** @type {CSRComponent[]} */
 				components: []
 			}
@@ -333,17 +330,16 @@ export class Renderer {
 		};
 
 		try {
-			const component_promises = nodes; // TODO redundant
 			const props_promises = [];
 
 			/** @type {Record<string, any>} */
 			let context;
 
-			for (let i = 0; i < component_promises.length; i += 1) {
+			for (let i = 0; i < nodes.length; i += 1) {
 				const previous = this.current.nodes[i];
 				const previous_context = this.current.contexts[i];
 
-				const module = await component_promises[i];
+				const module = await nodes[i];
 				result.props.components[i] = module.default;
 
 				if (module.preload) {
@@ -388,6 +384,7 @@ export class Renderer {
 							}
 						};
 
+						/** @type {Record<string, string>} */
 						const params = {};
 						for (const key in page.params) {
 							Object.defineProperty(params, key, {
@@ -402,7 +399,8 @@ export class Renderer {
 						const session = this.$session;
 
 						if (module.load) {
-							loaded = await module.load.call(null, {
+							/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+							const load_input = {
 								page: {
 									host: page.host,
 									params,
@@ -424,10 +422,17 @@ export class Renderer {
 									return { ...context };
 								},
 								fetch: this.started ? fetch : initial_fetch
-							});
+							};
+
+							if (error) {
+								/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
+								/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
+							}
+
+							loaded = await module.load.call(null, load_input);
 
 							// if the page component returns nothing from load, fall through
-							const is_leaf = i === component_promises.length - 1 && !error;
+							const is_leaf = i === nodes.length - 1 && !error;
 							if (!loaded && is_leaf) return;
 						}
 					}

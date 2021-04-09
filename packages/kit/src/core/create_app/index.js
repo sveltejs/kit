@@ -65,6 +65,10 @@ function generate_client_manifest(manifest_data, base) {
 			.join(',\n\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
+	/** @param {string[]} parts */
+	const get_indices = (parts) =>
+		`[${parts.map((part) => (part ? `c[${component_indexes[part]}]` : '')).join(', ')}]`;
+
 	const routes = `[
 		${manifest_data.routes
 			.map((route) => {
@@ -81,16 +85,10 @@ function generate_client_manifest(manifest_data, base) {
 								.join(', ') +
 							'})';
 
-					const tuple = [
-						route.pattern,
-						`[${route.a.map((part) => `components[${component_indexes[part]}]`).join(', ')}]`,
-						`[${route.b.map((part) => `components[${component_indexes[part]}]`).join(', ')}]`,
-						params
-					]
-						.filter(Boolean)
-						.join(', ');
+					const tuple = [route.pattern, get_indices(route.a), get_indices(route.b)];
+					if (params) tuple.push(params);
 
-					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple}]`;
+					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
 				} else {
 					return `// ${route.file}\n\t\t[${route.pattern}]`;
 				}
@@ -99,13 +97,13 @@ function generate_client_manifest(manifest_data, base) {
 	]`.replace(/^\t/gm, '');
 
 	return trim(`
-		const components = ${components};
+		const c = ${components};
 
 		const d = decodeURIComponent;
 
 		export const routes = ${routes};
 
-		export const fallback = [components[0](), components[1]()];
+		export const fallback = [c[0](), c[1]()];
 	`);
 }
 
