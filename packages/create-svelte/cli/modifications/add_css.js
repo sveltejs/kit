@@ -7,59 +7,12 @@ import {
 } from './utils';
 
 /**
- * Get the file modifications required in order to add support to CSS/LESS/SCSS
- *
- * @param {string} template
- * @param {string} which
- */
-const get_css_modifications_by_template = (template, which) => {
-	if (!template || !which) return [];
-
-	const modifications = {
-		common: [
-			{
-				file: 'src/routes/$layout.svelte',
-				changes: [['../app.css', `../app.${which}`]]
-			},
-			{
-				file: 'src/routes/index.svelte',
-				changes: [['<style>', `<style lang="${which}">`]]
-			}
-		],
-		skeleton: [],
-		default: [
-			{
-				file: 'src/lib/Counter.svelte',
-				changes: [['<style>', `<style lang="${which}">`]]
-			},
-			{
-				file: 'src/routes/$layout.svelte',
-				changes: [['<style>', `<style lang="${which}">`]]
-			},
-			{
-				file: 'src/lib/DarkModeToggle.svelte',
-				changes: [['<style>', `<style lang="${which}">`]]
-			},
-			{
-				file: 'src/lib/HeaderNavigation.svelte',
-				changes: [['<style>', `<style lang="${which}">`]]
-			}
-		]
-	};
-
-	return [
-		...modifications.common,
-		...(template === 'default' ? modifications.default : modifications.skeleton)
-	];
-};
-
-/**
  * Add chosen CSS language to the project.
  *
  * @param {string} cwd
  * @param {'css' | 'scss' | 'less'} which
  */
-export default async function add_css(cwd, which, project_template) {
+export default async function add_css(cwd, which) {
 	if (which === 'css') {
 		copy_from_template_additions(cwd, ['src', 'app.css']);
 		console.log('You can add support for CSS preprocessors like SCSS/Less/PostCSS later.');
@@ -70,10 +23,16 @@ export default async function add_css(cwd, which, project_template) {
 		});
 		copy_from_template_additions(cwd, ['src', 'app.less']);
 
-		const modification_list = get_css_modifications_by_template(project_template, which);
-		modification_list.forEach((modification) => {
-			update_component(cwd, modification.file, modification.changes);
-		});
+		update_component(cwd, 'src/routes/$layout.svelte', [['../app.css', `../app.${which}`]]);
+		update_component(cwd, 'src/routes/index.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/lib/Counter.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/routes/$layout.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/lib/DarkModeToggle.svelte', [
+			['<style>', `<style lang="${which}">`]
+		]);
+		update_component(cwd, 'src/lib/HeaderNavigation.svelte', [
+			['<style>', `<style lang="${which}">`]
+		]);
 
 		add_svelte_preprocess_to_config(cwd);
 		console.log(
@@ -91,10 +50,16 @@ export default async function add_css(cwd, which, project_template) {
 		});
 		copy_from_template_additions(cwd, ['src', 'app.scss']);
 
-		const modification_list = get_css_modifications_by_template(project_template, which);
-		modification_list.forEach((modification) => {
-			update_component(cwd, modification.file, modification.changes);
-		});
+		update_component(cwd, 'src/routes/$layout.svelte', [['../app.css', `../app.${which}`]]);
+		update_component(cwd, 'src/routes/index.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/lib/Counter.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/routes/$layout.svelte', [['<style>', `<style lang="${which}">`]]);
+		update_component(cwd, 'src/lib/DarkModeToggle.svelte', [
+			['<style>', `<style lang="${which}">`]
+		]);
+		update_component(cwd, 'src/lib/HeaderNavigation.svelte', [
+			['<style>', `<style lang="${which}">`]
+		]);
 
 		add_svelte_preprocess_to_config(cwd);
 		console.log(

@@ -8,9 +8,7 @@
 
 	let isDarkMode = true;
 
-	isDarkModeStore.subscribe(value => {
-		isDarkMode = value;
-	})
+	isDarkModeStore.subscribe(value => isDarkMode = value)
 </script>
 
 
