@@ -99,6 +99,11 @@ export type LoadInput = {
 	context: Record<string, any>;
 };
 
+export type ErrorLoadInput = LoadInput & {
+	status: number;
+	error: Error;
+};
+
 export type LoadOutput = {
 	status?: number;
 	error?: Error;

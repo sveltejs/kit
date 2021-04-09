@@ -59,6 +59,12 @@ export async function respond({ request, options, $session, route }) {
 	/** @type {Loaded[]} */
 	let branch;
 
+	/** @type {number} */
+	let status = 200;
+
+	/** @type {Error} */
+	let error;
+
 	ssr: if (page_config.ssr) {
 		let context = {};
 		branch = [];
@@ -70,11 +76,6 @@ export async function respond({ request, options, $session, route }) {
 			let loaded;
 
 			if (node) {
-				/** @type {number} */
-				let status;
-				/** @type {Error} */
-				let error;
-
 				try {
 					loaded = await load_node({
 						request,
@@ -84,7 +85,8 @@ export async function respond({ request, options, $session, route }) {
 						node,
 						$session,
 						context,
-						is_leaf: i === nodes.length - 1
+						is_leaf: i === nodes.length - 1,
+						is_error: false
 					});
 
 					if (!loaded) return;
@@ -128,7 +130,10 @@ export async function respond({ request, options, $session, route }) {
 									node: error_node,
 									$session,
 									context: node_loaded.context,
-									is_leaf: false
+									is_leaf: false,
+									is_error: true,
+									status,
+									error
 								});
 
 								if (error_loaded.loaded.error) {
@@ -174,9 +179,9 @@ export async function respond({ request, options, $session, route }) {
 			options,
 			$session,
 			page_config,
-			status: 200,
-			error: null,
-			branch: branch.filter(Boolean),
+			status,
+			error,
+			branch: branch && branch.filter(Boolean),
 			page
 		});
 	} catch (error) {

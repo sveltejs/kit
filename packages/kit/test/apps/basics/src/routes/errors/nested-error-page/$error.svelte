@@ -1,8 +1,10 @@
 <script context="module">
-	export async function load() {
+	export async function load({ status, error }) {
 		return {
 			props: {
-				answer: 42
+				answer: 42,
+				status,
+				error
 			}
 		};
 	}

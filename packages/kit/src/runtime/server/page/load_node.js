@@ -16,6 +16,9 @@ const s = JSON.stringify;
  *   $session: any;
  *   context: Record<string, any>;
  *   is_leaf: boolean;
+ *   is_error: boolean;
+ *   status?: number;
+ *   error?: Error;
  * }} opts
  * @returns {Promise<import('./types').Loaded>}
  */
@@ -27,7 +30,10 @@ export async function load_node({
 	node,
 	$session,
 	context,
-	is_leaf
+	is_leaf,
+	is_error,
+	status,
+	error
 }) {
 	const { module } = node;
 
@@ -39,184 +45,196 @@ export async function load_node({
 	 * }>} */
 	const fetched = [];
 
-	const loaded = module.load
-		? await module.load.call(null, {
-				page,
-				get session() {
-					uses_credentials = true;
-					return $session;
-				},
-				/**
-				 * @param {RequestInfo} resource
-				 * @param {RequestInit} opts
-				 */
-				fetch: async (resource, opts = {}) => {
-					/** @type {string} */
-					let url;
+	let loaded;
 
-					if (typeof resource === 'string') {
-						url = resource;
-					} else {
-						url = resource.url;
+	if (module.load) {
+		/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+		const load_input = {
+			page,
+			get session() {
+				uses_credentials = true;
+				return $session;
+			},
+			/**
+			 * @param {RequestInfo} resource
+			 * @param {RequestInit} opts
+			 */
+			fetch: async (resource, opts = {}) => {
+				/** @type {string} */
+				let url;
 
-						opts = {
-							method: resource.method,
-							headers: resource.headers,
-							body: resource.body,
-							mode: resource.mode,
-							credentials: resource.credentials,
-							cache: resource.cache,
-							redirect: resource.redirect,
-							referrer: resource.referrer,
-							integrity: resource.integrity,
-							...opts
-						};
-					}
+				if (typeof resource === 'string') {
+					url = resource;
+				} else {
+					url = resource.url;
 
-					if (options.local && url.startsWith(options.paths.assets)) {
-						// when running `start`, or prerendering, `assets` should be
-						// config.kit.paths.assets, but we should still be able to fetch
-						// assets directly from `static`
-						url = url.replace(options.paths.assets, '');
-					}
+					opts = {
+						method: resource.method,
+						headers: resource.headers,
+						body: resource.body,
+						mode: resource.mode,
+						credentials: resource.credentials,
+						cache: resource.cache,
+						redirect: resource.redirect,
+						referrer: resource.referrer,
+						integrity: resource.integrity,
+						...opts
+					};
+				}
 
-					const parsed = parse(url);
+				if (options.local && url.startsWith(options.paths.assets)) {
+					// when running `start`, or prerendering, `assets` should be
+					// config.kit.paths.assets, but we should still be able to fetch
+					// assets directly from `static`
+					url = url.replace(options.paths.assets, '');
+				}
 
-					let response;
+				const parsed = parse(url);
 
-					if (parsed.protocol) {
-						// external fetch
-						response = await fetch(
-							parsed.href,
-							/** @type {import('node-fetch').RequestInit} */ (opts)
-						);
-					} else {
-						// otherwise we're dealing with an internal fetch
-						const resolved = resolve(request.path, parsed.pathname);
+				let response;
 
-						// handle fetch requests for static assets. e.g. prebaked data, etc.
-						// we need to support everything the browser's fetch supports
-						const filename = resolved.slice(1);
-						const filename_html = `${filename}/index.html`; // path may also match path/index.html
-						const asset = options.manifest.assets.find(
-							(d) => d.file === filename || d.file === filename_html
-						);
-
-						if (asset) {
-							// we don't have a running server while prerendering because jumping between
-							// processes would be inefficient so we have get_static_file instead
-							if (options.get_static_file) {
-								response = new Response(options.get_static_file(asset.file), {
-									headers: {
-										'content-type': asset.type
-									}
-								});
-							} else {
-								// TODO we need to know what protocol to use
-								response = await fetch(
-									`http://${page.host}/${asset.file}`,
-									/** @type {import('node-fetch').RequestInit} */ (opts)
-								);
-							}
-						}
-
-						if (!response) {
-							const headers = /** @type {import('types.internal').Headers} */ ({ ...opts.headers });
-
-							// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
-							if (opts.credentials !== 'omit') {
-								uses_credentials = true;
-
-								headers.cookie = request.headers.cookie;
-
-								if (!headers.authorization) {
-									headers.authorization = request.headers.authorization;
-								}
-							}
-
-							const rendered = await ssr(
-								{
-									host: request.host,
-									method: opts.method || 'GET',
-									headers,
-									path: resolved,
-									body: /** @type {any} */ (opts.body),
-									query: new URLSearchParams(parsed.query || '')
-								},
-								{
-									...options,
-									fetched: url,
-									initiator: route
-								}
-							);
-
-							if (rendered) {
-								if (options.dependencies) {
-									options.dependencies.set(resolved, rendered);
-								}
-
-								response = new Response(rendered.body, {
-									status: rendered.status,
-									headers: rendered.headers
-								});
-							}
-						}
-					}
-
-					if (response) {
-						const proxy = new Proxy(response, {
-							get(response, key, receiver) {
-								async function text() {
-									const body = await response.text();
-
-									/** @type {import('types.internal').Headers} */
-									const headers = {};
-									response.headers.forEach((value, key) => {
-										if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
-									});
-
-									// prettier-ignore
-									fetched.push({
-										url,
-										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
-									});
-
-									return body;
-								}
-
-								if (key === 'text') {
-									return text;
-								}
-
-								if (key === 'json') {
-									return async () => {
-										return JSON.parse(await text());
-									};
-								}
-
-								// TODO arrayBuffer?
-
-								return Reflect.get(response, key, receiver);
-							}
-						});
-
-						return proxy;
-					}
-
-					return (
-						response ||
-						new Response('Not found', {
-							status: 404
-						})
+				if (parsed.protocol) {
+					// external fetch
+					response = await fetch(
+						parsed.href,
+						/** @type {import('node-fetch').RequestInit} */ (opts)
 					);
-				},
-				context: { ...context }
-		  })
-		: {};
+				} else {
+					// otherwise we're dealing with an internal fetch
+					const resolved = resolve(request.path, parsed.pathname);
+
+					// handle fetch requests for static assets. e.g. prebaked data, etc.
+					// we need to support everything the browser's fetch supports
+					const filename = resolved.slice(1);
+					const filename_html = `${filename}/index.html`; // path may also match path/index.html
+					const asset = options.manifest.assets.find(
+						(d) => d.file === filename || d.file === filename_html
+					);
+
+					if (asset) {
+						// we don't have a running server while prerendering because jumping between
+						// processes would be inefficient so we have get_static_file instead
+						if (options.get_static_file) {
+							response = new Response(options.get_static_file(asset.file), {
+								headers: {
+									'content-type': asset.type
+								}
+							});
+						} else {
+							// TODO we need to know what protocol to use
+							response = await fetch(
+								`http://${page.host}/${asset.file}`,
+								/** @type {import('node-fetch').RequestInit} */ (opts)
+							);
+						}
+					}
+
+					if (!response) {
+						const headers = /** @type {import('types.internal').Headers} */ ({ ...opts.headers });
+
+						// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
+						if (opts.credentials !== 'omit') {
+							uses_credentials = true;
+
+							headers.cookie = request.headers.cookie;
+
+							if (!headers.authorization) {
+								headers.authorization = request.headers.authorization;
+							}
+						}
+
+						const rendered = await ssr(
+							{
+								host: request.host,
+								method: opts.method || 'GET',
+								headers,
+								path: resolved,
+								body: /** @type {any} */ (opts.body),
+								query: new URLSearchParams(parsed.query || '')
+							},
+							{
+								...options,
+								fetched: url,
+								initiator: route
+							}
+						);
+
+						if (rendered) {
+							if (options.dependencies) {
+								options.dependencies.set(resolved, rendered);
+							}
+
+							response = new Response(rendered.body, {
+								status: rendered.status,
+								headers: rendered.headers
+							});
+						}
+					}
+				}
+
+				if (response) {
+					const proxy = new Proxy(response, {
+						get(response, key, receiver) {
+							async function text() {
+								const body = await response.text();
+
+								/** @type {import('types.internal').Headers} */
+								const headers = {};
+								response.headers.forEach((value, key) => {
+									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
+								});
+
+								// prettier-ignore
+								fetched.push({
+									url,
+									json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
+								});
+
+								return body;
+							}
+
+							if (key === 'text') {
+								return text;
+							}
+
+							if (key === 'json') {
+								return async () => {
+									return JSON.parse(await text());
+								};
+							}
+
+							// TODO arrayBuffer?
+
+							return Reflect.get(response, key, receiver);
+						}
+					});
+
+					return proxy;
+				}
+
+				return (
+					response ||
+					new Response('Not found', {
+						status: 404
+					})
+				);
+			},
+			context: { ...context }
+		};
+
+		if (is_error) {
+			/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
+			/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
+		}
+
+		loaded = await module.load.call(null, load_input);
+	} else {
+		loaded = {};
+	}
 
 	// if leaf node (i.e. page component) has a load function
 	// that returns nothing, we fall through to the next one
-	if (!loaded && is_leaf) return;
+	if (!loaded && is_leaf && !is_error) return;
 
 	return {
 		node,
