@@ -78,8 +78,8 @@ export class Renderer {
 			branch: []
 		};
 
-		/** @type {Map<CSRComponent, Map<string, import('./types').BranchNode>>} */
-		this.caches = new Map();
+		/** @type {Map<string, import('./types').NavigationResult>} */
+		this.cache = new Map();
 
 		this.loading = {
 			id: null,
@@ -288,6 +288,12 @@ export class Renderer {
 	async _load({ status, error, nodes, page }) {
 		const query = page.query.toString();
 
+		const hash = page.path + query;
+
+		if (this.cache.has(hash)) {
+			return this.cache.get(hash);
+		}
+
 		/** @type {import('./types').NavigationResult} */
 		const result = {
 			state: {
@@ -335,82 +341,72 @@ export class Renderer {
 				let node;
 
 				if (changed_since_last_render) {
-					const hash = page.path + query;
-
 					const is_leaf = i === nodes.length - 1 && !error;
 
-					// see if we have some cached data
-					const cache = this.caches.get(module);
-					const cached = cache && cache.get(hash);
+					node = {
+						module,
+						uses: {
+							params: new Set(),
+							path: false,
+							query: false,
+							session: false,
+							context: false
+						},
+						loaded: null,
+						context: null
+					};
 
-					if (cached && (!changed.context || !cached.uses.context)) {
-						node = cached;
-					} else {
-						node = {
-							module,
-							uses: {
-								params: new Set(),
-								path: false,
-								query: false,
-								session: false,
-								context: false
+					/** @type {Record<string, string>} */
+					const params = {};
+					for (const key in page.params) {
+						Object.defineProperty(params, key, {
+							get() {
+								node.uses.params.add(key);
+								return page.params[key];
 							},
-							loaded: null,
-							context: null
+							enumerable: true
+						});
+					}
+
+					const session = this.$session;
+
+					if (module.load) {
+						/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+						const load_input = {
+							page: {
+								host: page.host,
+								params,
+								get path() {
+									node.uses.path = true;
+									return page.path;
+								},
+								get query() {
+									node.uses.query = true;
+									return page.query;
+								}
+							},
+							get session() {
+								node.uses.session = true;
+								return session;
+							},
+							get context() {
+								node.uses.context = true;
+								return { ...context };
+							},
+							fetch: this.started ? fetch : initial_fetch
 						};
 
-						/** @type {Record<string, string>} */
-						const params = {};
-						for (const key in page.params) {
-							Object.defineProperty(params, key, {
-								get() {
-									node.uses.params.add(key);
-									return page.params[key];
-								},
-								enumerable: true
-							});
+						if (error) {
+							/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
+							/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
 						}
 
-						const session = this.$session;
+						const loaded = await module.load.call(null, load_input);
 
-						if (module.load) {
-							/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
-							const load_input = {
-								page: {
-									host: page.host,
-									params,
-									get path() {
-										node.uses.path = true;
-										return page.path;
-									},
-									get query() {
-										node.uses.query = true;
-										return page.query;
-									}
-								},
-								get session() {
-									node.uses.session = true;
-									return session;
-								},
-								get context() {
-									node.uses.context = true;
-									return { ...context };
-								},
-								fetch: this.started ? fetch : initial_fetch
-							};
+						// if the page component returns nothing from load, fall through
+						if (!loaded && is_leaf) return;
 
-							if (error) {
-								/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
-								/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
-							}
-
-							const loaded = await module.load.call(null, load_input);
-
-							// if the page component returns nothing from load, fall through
-							if (!loaded && is_leaf) return;
-
-							node.loaded = normalize(loaded);
-						}
+						node.loaded = normalize(loaded);
 					}
 
 					if (node.loaded) {
@@ -437,38 +433,6 @@ export class Renderer {
 						if (node.loaded.context) {
 							changed.context = true;
 						}
-
-						if (is_leaf && node.loaded.maxage) {
-							if (!this.caches.has(module)) {
-								this.caches.set(module, new Map());
-							}
-
-							const cache = this.caches.get(module);
-							const cached = node;
-
-							cache.set(hash, cached);
-
-							let ready = false;
-
-							const timeout = setTimeout(() => {
-								clear();
-							}, node.loaded.maxage * 1000);
-
-							const clear = () => {
-								if (cache.get(hash) === cached) {
-									cache.delete(hash);
-								}
-
-								unsubscribe();
-								clearTimeout(timeout);
-							};
-
-							const unsubscribe = this.stores.session.subscribe(() => {
-								if (ready) clear();
-							});
-
-							ready = true;
-						}
 					}
 				} else {
 					node = previous;
@@ -493,6 +457,31 @@ export class Renderer {
 
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
 				result.props.page = page;
+			}
+
+			const leaf = branch[branch.length - 1];
+			const maxage = leaf.loaded && leaf.loaded.maxage;
+			if (maxage) {
+				let ready = false;
+
+				const clear = () => {
+					if (this.cache.get(hash) === result) {
+						this.cache.delete(hash);
+					}
+
+					unsubscribe();
+					clearTimeout(timeout);
+				};
+
+				const timeout = setTimeout(clear, maxage * 1000);
+
+				const unsubscribe = this.stores.session.subscribe(() => {
+					if (ready) clear();
+				});
+
+				ready = true;
+
+				this.cache.set(hash, result);
 			}
 
 			return result;
