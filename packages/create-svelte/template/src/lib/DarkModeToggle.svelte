@@ -1,0 +1,57 @@
+<script>
+    import { afterUpdate } from 'svelte';
+	import { isDarkModeStore } from '../stores.js';
+
+    let isDarkMode = false;
+
+    afterUpdate(() => {
+        window.document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+    });
+
+    $: {
+        isDarkModeStore.set(isDarkMode)
+    } 
+
+    const toggleMode = () => {
+        isDarkMode = !isDarkMode;
+    }
+
+</script>
+
+<button on:click={toggleMode} aria-label="Toggle theme mode between light and dark">
+	{#if isDarkMode }
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 0H0V24H24V0Z" fill="white" fill-opacity="0.01"/>
+            <path d="M12 18.5C15.5898 18.5 18.5 15.5898 18.5 12C18.5 8.41015 15.5898 5.5 12 5.5C8.41015 5.5 5.5 8.41015 5.5 12C5.5 15.5898 8.41015 18.5 12 18.5Z" stroke="white" stroke-opacity="0.6" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M12 3C12.6904 3 13.25 2.44036 13.25 1.75C13.25 1.05964 12.6904 0.5 12 0.5C11.3097 0.5 10.75 1.05964 10.75 1.75C10.75 2.44036 11.3097 3 12 3Z" fill="white" fill-opacity="0.6"/>
+            <path d="M19.25 6C19.9404 6 20.5 5.44035 20.5 4.75C20.5 4.05964 19.9404 3.5 19.25 3.5C18.5597 3.5 18 4.05964 18 4.75C18 5.44035 18.5597 6 19.25 6Z" fill="white" fill-opacity="0.6"/>
+            <path d="M22.25 13.25C22.9404 13.25 23.5 12.6904 23.5 12C23.5 11.3097 22.9404 10.75 22.25 10.75C21.5597 10.75 21 11.3097 21 12C21 12.6904 21.5597 13.25 22.25 13.25Z" fill="white" fill-opacity="0.6"/>
+            <path d="M19.25 20.5C19.9404 20.5 20.5 19.9404 20.5 19.25C20.5 18.5597 19.9404 18 19.25 18C18.5597 18 18 18.5597 18 19.25C18 19.9404 18.5597 20.5 19.25 20.5Z" fill="white" fill-opacity="0.6"/>
+            <path d="M12 23.5C12.6904 23.5 13.25 22.9404 13.25 22.25C13.25 21.5597 12.6904 21 12 21C11.3097 21 10.75 21.5597 10.75 22.25C10.75 22.9404 11.3097 23.5 12 23.5Z" fill="white" fill-opacity="0.6"/>
+            <path d="M4.75 20.5C5.44035 20.5 6 19.9404 6 19.25C6 18.5597 5.44035 18 4.75 18C4.05964 18 3.5 18.5597 3.5 19.25C3.5 19.9404 4.05964 20.5 4.75 20.5Z" fill="white" fill-opacity="0.6"/>
+            <path d="M1.75 13.25C2.44036 13.25 3 12.6904 3 12C3 11.3097 2.44036 10.75 1.75 10.75C1.05964 10.75 0.5 11.3097 0.5 12C0.5 12.6904 1.05964 13.25 1.75 13.25Z" fill="white" fill-opacity="0.6"/>
+            <path d="M4.75 6C5.44035 6 6 5.44035 6 4.75C6 4.05964 5.44035 3.5 4.75 3.5C4.05964 3.5 3.5 4.05964 3.5 4.75C3.5 5.44035 4.05964 6 4.75 6Z" fill="white" fill-opacity="0.6"/>
+        </svg>
+	{:else}
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.0264 1.20543C10.2914 1.91848 8.27275 4.4053 8.27275 7.36365C8.27275 10.8782 11.1218 13.7273 14.6363 13.7273C17.5947 13.7273 20.0815 11.7086 20.7945 8.97365C20.9292 9.628 21 10.3058 21 11C21 16.5229 16.5229 21 11 21C5.47715 21 1 16.5229 1 11C1 5.47715 5.47715 1 11 1C11.6942 1 12.372 1.07075 13.0264 1.20543Z" stroke="#676778" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+	{/if}
+</button>
+
+<style>
+    button {
+        background-color: transparent;
+        border: 0;
+        position: absolute;
+        top: 16px;
+        right: 10px;
+    }
+
+    @media (min-width: 480px) {
+        button {
+            top: 24px;
+            right: 32px;
+        }
+    }
+</style>

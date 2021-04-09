@@ -9,23 +9,78 @@ import {
 } from './utils';
 
 /**
+ * Get the file modifications required by file in order to add support to TypeScript
+ *
+ * @param {string} template
+ */
+const get_modifications_by_template = (template) => {
+	if (!template) return [];
+
+	const modifications = {
+		common: [
+			{
+				file: 'src/routes/index.svelte',
+				changes: [['<script>', '<script lang="ts">']]
+			},
+			{
+				file: 'src/routes/$layout.svelte',
+				changes: [['<script>', '<script lang="ts">']]
+			}
+		],
+		skeleton: [],
+		default: [
+			{
+				file: 'src/lib/Counter.svelte',
+				changes: [
+					['<script>', '<script lang="ts">'],
+					[
+						'let action = {};',
+						"let action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
+					],
+					[
+						'const counterTransition = (_, { duration }) => {',
+						'const counterTransition = (_, { duration }: { duration: number}) => {'
+					]
+				]
+			},
+			{
+				file: 'src/lib/DarkModeToggle.svelte',
+				changes: [['<script>', '<script lang="ts">']]
+			},
+			{
+				file: 'src/lib/HeaderNavigation.svelte',
+				changes: [['<script>', '<script lang="ts">']]
+			}
+		]
+	};
+
+	return [
+		...modifications.common,
+		...(template === 'default' ? modifications.default : modifications.skeleton)
+	];
+};
+
+/**
  * Add TypeScript if user wants it.
  *
  * @param {string} cwd
  * @param {boolean} yes
  */
-export default async function add_typescript(cwd, yes) {
+export default async function add_typescript(cwd, yes, project_template) {
 	if (yes) {
 		update_package_json_dev_deps(cwd, {
 			typescript: '^4.0.0',
 			tslib: '^2.0.0',
 			'svelte-preprocess': '^4.0.0'
 		});
-		update_component(cwd, 'src/lib/Counter.svelte', [
-			['<script>', '<script lang="ts">'],
-			['const increment = () => {', 'const increment = (): void => {']
-		]);
-		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
+
+		const modification_list = get_modifications_by_template(project_template);
+		modification_list.forEach((modification) => {
+			console.log(`file: ${modification.file} | Type: ${modification.type}`);
+			console.log(modification.changes);
+			update_component(cwd, modification.file, modification.changes);
+		});
+
 		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
 

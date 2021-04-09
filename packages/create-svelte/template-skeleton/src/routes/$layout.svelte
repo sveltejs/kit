@@ -1,9 +1,6 @@
 <script>
 	import '../app.css';
-	import HeaderNavigation from '../lib/HeaderNavigation.svelte';
 </script>
-
-<HeaderNavigation />
 
 <main>
 	<slot/>

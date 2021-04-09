@@ -44,7 +44,18 @@ async function main() {
 		mkdirp(target);
 	}
 
-	const cwd = path.join(__dirname, 'template');
+	const { value: project_template } = await prompts({
+		type: 'select',
+		name: 'value',
+		message: 'Which app Svelte template do you want to use?',
+		choices: [
+			{ title: 'Default App (Counter + Route)', value: 'default' },
+			{ title: 'Skeleton App', value: 'skeleton' }
+		]
+	});
+
+	const project_template_dir = project_template === 'default' ? 'template' : 'template-skeleton';
+	const cwd = path.join(__dirname, project_template_dir);
 	const gitignore = parser.compile(gitignore_contents);
 
 	const files = glob('**/*', { cwd }).filter(gitignore.accepts);
@@ -74,7 +85,7 @@ async function main() {
 
 	console.log(bold(green('✔ Copied project files')));
 
-	await prompt_modifications(target);
+	await prompt_modifications(target, project_template);
 
 	console.log(
 		'\nWant to add other parts to your code base? ' +
@@ -102,14 +113,14 @@ async function main() {
  *
  * @param {string} target
  */
-async function prompt_modifications(target) {
+async function prompt_modifications(target, project_template) {
 	const ts_response = await prompts({
 		type: 'confirm',
 		name: 'value',
 		message: 'Use TypeScript in components?',
 		initial: false
 	});
-	await add_typescript(target, ts_response.value);
+	await add_typescript(target, ts_response.value, project_template);
 
 	const css_response = await prompts({
 		type: 'select',
@@ -121,7 +132,7 @@ async function prompt_modifications(target) {
 			{ title: 'SCSS', value: 'scss' }
 		]
 	});
-	await add_css(target, css_response.value);
+	await add_css(target, css_response.value, project_template);
 
 	const eslint_response = await prompts({
 		type: 'confirm',
