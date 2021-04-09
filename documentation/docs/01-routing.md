@@ -89,7 +89,7 @@ export async function get({ params }) {
 
 > Returning nothing is equivalent to an explicit 404 response.
 
-Because this module only runs on the server (or when you build your site, if [prerendering](#prerendering)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
+Because this module only runs on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
 
 The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response.
 
