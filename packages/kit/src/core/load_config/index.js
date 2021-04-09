@@ -1,6 +1,7 @@
 import options from './options.js';
 import * as url from 'url';
 import path from 'path';
+import fs from 'fs';
 import { resolve_entry } from '../utils.js';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
@@ -81,7 +82,10 @@ function remove_trailing_slash(str) {
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file = path.join(cwd, 'svelte.config.cjs');
+	const config_file_esm = path.join(cwd, 'svelte.config.js');
+	const config_file = fs.existsSync(config_file_esm)
+		? config_file_esm
+		: path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
 	const validated = validate_config(config.default);
 
