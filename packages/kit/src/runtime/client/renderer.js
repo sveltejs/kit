@@ -152,36 +152,14 @@ export class Renderer {
 		// abort if user navigated during update
 		if (token !== this.token) return;
 
-		if (navigation_result.reload) {
-			location.reload();
-		} else if (navigation_result.redirect) {
+		if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
-				// TODO this is a lil hacky. investigate why we can't
-				// just use this._load_error(...)
-				const layout = await this.fallback[0];
-				const error = await this.fallback[1];
-
-				const props = {
+				navigation_result = await this._load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
-					components: [layout.default, error.default]
-				};
-
-				this.root.$set(props);
-
-				navigation_result = {
-					state: {
-						page: null,
-						query: null,
-						session_changed: false,
-						nodes: [
-							{ module: layout, uses: null },
-							{ module: error, uses: null }
-						],
-						contexts: []
-					},
-					props
-				};
+					path: info.path,
+					query: info.query
+				});
 			} else {
 				if (this.router) {
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
@@ -194,6 +172,10 @@ export class Renderer {
 
 				return;
 			}
+		}
+
+		if (navigation_result.reload) {
+			location.reload();
 		} else if (this.started) {
 			this.current = navigation_result.state;
 
