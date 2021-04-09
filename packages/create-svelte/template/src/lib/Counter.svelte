@@ -47,11 +47,15 @@
 
 <div class="counterControls">
 	<button class:disabled={count === 0} on:click={() => action.operation = 'REMOVE'} aria-label="Decrease the counter by one">
-		<img src="decrease-icon.svg" alt="Decrease the counter by one" />
+		<svg width="16" height="2" viewBox="0 0 16 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M1.25 1H15.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+		</svg>			
 	</button>
 	<div>{count}</div>
 	<button on:click={() => action.operation = 'ADD'}  aria-label="Increase the counter by one">
-		<img src="increase-icon.svg" alt="Increase the counter by one" />
+		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+			<path fill-rule="evenodd" d="M9,0 L9,8 L16,8 L16,9 L9,9 L9,17 L8,17 L8,9 L0,9 L0,8 L8,8 L8,0 L9,0 Z" transform="translate(3 3)"/>
+		</svg>
 	</button>
 </div>
 
