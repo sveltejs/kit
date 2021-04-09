@@ -7,12 +7,12 @@ import {
 } from './utils';
 
 /**
- * Get the CSS modifications required by file in order to add support to less/scss/css
+ * Get the file modifications required in order to add support to CSS/LESS/SCSS
  *
  * @param {string} template
- * @param {'css' | 'scss' | 'less'} which
+ * @param {string} which
  */
-const get_modifications_by_template = (template, which) => {
+const get_css_modifications_by_template = (template, which) => {
 	if (!template || !which) return [];
 
 	const modifications = {
@@ -26,6 +26,7 @@ const get_modifications_by_template = (template, which) => {
 				changes: [['<style>', `<style lang="${which}">`]]
 			}
 		],
+		skeleton: [],
 		default: [
 			{
 				file: 'src/lib/Counter.svelte',
@@ -46,7 +47,10 @@ const get_modifications_by_template = (template, which) => {
 		]
 	};
 
-	return [...modifications.common, ...(template === 'default' ? modifications.default : [])];
+	return [
+		...modifications.common,
+		...(template === 'default' ? modifications.default : modifications.skeleton)
+	];
 };
 
 /**
@@ -56,8 +60,6 @@ const get_modifications_by_template = (template, which) => {
  * @param {'css' | 'scss' | 'less'} which
  */
 export default async function add_css(cwd, which, project_template) {
-	const modification_list = get_modifications_by_template(project_template, which);
-
 	if (which === 'css') {
 		copy_from_template_additions(cwd, ['src', 'app.css']);
 		console.log('You can add support for CSS preprocessors like SCSS/Less/PostCSS later.');
@@ -67,9 +69,12 @@ export default async function add_css(cwd, which, project_template) {
 			'svelte-preprocess': '^4.0.0'
 		});
 		copy_from_template_additions(cwd, ['src', 'app.less']);
+
+		const modification_list = get_css_modifications_by_template(project_template, which);
 		modification_list.forEach((modification) => {
 			update_component(cwd, modification.file, modification.changes);
 		});
+
 		add_svelte_preprocess_to_config(cwd);
 		console.log(
 			bold(
@@ -85,9 +90,12 @@ export default async function add_css(cwd, which, project_template) {
 			'svelte-preprocess': '^4.0.0'
 		});
 		copy_from_template_additions(cwd, ['src', 'app.scss']);
+
+		const modification_list = get_css_modifications_by_template(project_template, which);
 		modification_list.forEach((modification) => {
 			update_component(cwd, modification.file, modification.changes);
 		});
+
 		add_svelte_preprocess_to_config(cwd);
 		console.log(
 			bold(

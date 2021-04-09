@@ -1,6 +1,6 @@
 <script>
-	import DarkModeToggle from '../lib/DarkModeToggle.svelte';
 	import { page } from '$app/stores';
+	import DarkModeToggle from '../lib/DarkModeToggle.svelte';
 	let currentPage = '';
 	
 	page.subscribe((value) => {

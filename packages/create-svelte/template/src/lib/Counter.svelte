@@ -1,18 +1,16 @@
 <script>
 	import { backIn } from 'svelte/easing';
-	let action = {};
+	let action = { operation: undefined };
 	let count = 0;
-	$: isDeniedOperation = action.operation === 'REMOVE' && count === 0
+	$: isDeniedOperation = !action.operation || (action.operation === 'REMOVE' && count === 0)
 
 	const updateCountValue = () => {
-		if(!action.operation) return count = 0;
 		if(isDeniedOperation) return;
 		
 		count += action.operation === 'ADD' ? 1 : -1; 
 	}
 	
 	const counterTransition = (_, { duration }) => {
-
 		return {
 			duration,
 			delay: 300,
@@ -20,7 +18,7 @@
 				if(t === 1 && !isDeniedOperation) updateCountValue()
 			},
 			css: t => {
-				if(!action.operation || isDeniedOperation) return '';
+				if(isDeniedOperation) return '';
 
 				const easedDistance = backIn(t) * 74;
 				
@@ -35,7 +33,7 @@
 
 <div class="counter-container">
 	{#key action}
-		<div id="scroll" in:counterTransition="{{duration: 500}}">
+		<div in:counterTransition="{{duration: 500}}">
 			<h1>{count + 1}</h1>
 			<h1>{count}</h1>
 			<h1>{count - 1}</h1>

@@ -9,11 +9,11 @@ import {
 } from './utils';
 
 /**
- * Get the file modifications required by file in order to add support to TypeScript
+ * Get the file modifications required in order to add support to TypeScript
  *
  * @param {string} template
  */
-const get_modifications_by_template = (template) => {
+const get_ts_modifications_by_template = (template) => {
 	if (!template) return [];
 
 	const modifications = {
@@ -34,7 +34,7 @@ const get_modifications_by_template = (template) => {
 				changes: [
 					['<script>', '<script lang="ts">'],
 					[
-						'let action = {};',
+						'let action = { operation: undefined };',
 						"let action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
 					],
 					[
@@ -74,7 +74,7 @@ export default async function add_typescript(cwd, yes, project_template) {
 			'svelte-preprocess': '^4.0.0'
 		});
 
-		const modification_list = get_modifications_by_template(project_template);
+		const modification_list = get_ts_modifications_by_template(project_template);
 		modification_list.forEach((modification) => {
 			update_component(cwd, modification.file, modification.changes);
 		});
