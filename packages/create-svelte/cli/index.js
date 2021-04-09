@@ -2,12 +2,11 @@
 import { mkdirp } from '@sveltejs/kit/filesystem';
 import fs from 'fs';
 import parser from 'gitignore-parser';
-import { bold, cyan, gray, green, red } from 'kleur/colors';
+import { bold, cyan, gray, green, red, underline } from 'kleur/colors';
 import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync.js';
 import gitignore_contents from '../template/.gitignore';
-import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
 // import versions from './versions';
 import { version } from '../package.json';
@@ -76,10 +75,9 @@ async function main() {
 
 	await prompt_modifications(target);
 
+    console.log(`\n✧ Want to add other parts to your code base or add support for ${bold(cyan('CSS preprocessors'))}?`);
 	console.log(
-		'\nWant to add other parts to your code base? ' +
-			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
-			'to add particular functionality to Svelte projects\n'
+        `\nVisit ${bold(cyan('https://github.com/svelte-add/svelte-adders'))} and unleash the possibilities with a community project of commands to add particular functionalities to Svelte projects.\n`
 	);
 
 	console.log('\nNext steps:');
@@ -110,18 +108,6 @@ async function prompt_modifications(target) {
 		initial: false
 	});
 	await add_typescript(target, ts_response.value);
-
-	const css_response = await prompts({
-		type: 'select',
-		name: 'value',
-		message: 'What do you want to use for writing Styles in Svelte components?',
-		choices: [
-			{ title: 'CSS', value: 'css' },
-			{ title: 'Less', value: 'less' },
-			{ title: 'SCSS', value: 'scss' }
-		]
-	});
-	await add_css(target, css_response.value);
 
 	const eslint_response = await prompts({
 		type: 'confirm',

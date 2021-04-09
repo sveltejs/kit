@@ -1,39 +1,40 @@
 <script>
 	import { backIn } from 'svelte/easing';
-	let action = { operation: undefined };
+	const action = { operation: undefined };
 	let count = 0;
-	$: isDeniedOperation = !action.operation || (action.operation === 'REMOVE' && count === 0)
+	$: isDeniedOperation = !action.operation || (action.operation === 'REMOVE' && count === 0);
 
 	const updateCountValue = () => {
-		if(isDeniedOperation) return;
-		
-		count += action.operation === 'ADD' ? 1 : -1; 
-	}
-	
+		if (isDeniedOperation) return;
+
+		count += action.operation === 'ADD' ? 1 : -1;
+	};
+
 	const counterTransition = (_, { duration }) => {
 		return {
 			duration,
 			delay: 300,
 			tick: (t) => {
-				if(t === 1 && !isDeniedOperation) updateCountValue()
+				if (t === 1 && !isDeniedOperation) updateCountValue();
 			},
-			css: t => {
-				if(isDeniedOperation) return '';
+			css: (t) => {
+				if (isDeniedOperation) return '';
 
 				const easedDistance = backIn(t) * 74;
-				
+
 				return `
-					transform: translateY(${action.operation === 'REMOVE' ? `-${easedDistance}px` : `${easedDistance}px`});
-				`
+					transform: translateY(${
+						action.operation === 'REMOVE' ? `-${easedDistance}px` : `${easedDistance}px`
+					});
+				`;
 			}
 		};
-	}
+	};
 </script>
-
 
 <div class="counter-container">
 	{#key action}
-		<div in:counterTransition="{{duration: 500}}">
+		<div in:counterTransition={{ duration: 500 }}>
 			<h1>{count + 1}</h1>
 			<h1>{count}</h1>
 			<h1>{count - 1}</h1>
@@ -44,15 +45,23 @@
 <p>Counts so far</p>
 
 <div class="counterControls">
-	<button class:disabled={count === 0} on:click={() => action.operation = 'REMOVE'} aria-label="Decrease the counter by one">
+	<button
+		class:disabled={count === 0}
+		on:click={() => (action.operation = 'REMOVE')}
+		aria-label="Decrease the counter by one"
+	>
 		<svg width="16" height="2" viewBox="0 0 16 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-			<path d="M1.25 1H15.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-		</svg>			
+			<path d="M1.25 1H15.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+		</svg>
 	</button>
 	<div>{count}</div>
-	<button on:click={() => action.operation = 'ADD'}  aria-label="Increase the counter by one">
+	<button on:click={() => (action.operation = 'ADD')} aria-label="Increase the counter by one">
 		<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-			<path fill-rule="evenodd" d="M9,0 L9,8 L16,8 L16,9 L9,9 L9,17 L8,17 L8,9 L0,9 L0,8 L8,8 L8,0 L9,0 Z" transform="translate(3 3)"/>
+			<path
+				fill-rule="evenodd"
+				d="M9,0 L9,8 L16,8 L16,9 L9,9 L9,17 L8,17 L8,9 L0,9 L0,8 L8,8 L8,0 L9,0 Z"
+				transform="translate(3 3)"
+			/>
 		</svg>
 	</button>
 </div>
@@ -65,7 +74,7 @@
 	.counterControls button.disabled {
 		opacity: 0.3;
 	}
-	
+
 	.counterControls button {
 		width: 36px;
 		margin: 0 6px;
@@ -106,7 +115,7 @@
 		font-weight: 700;
 		letter-spacing: 0.1em;
 	}
-	
+
 	.counter-container {
 		width: 100%;
 		height: 90px;
