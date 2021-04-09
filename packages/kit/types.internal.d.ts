@@ -108,7 +108,7 @@ export type LoadOutput = {
 	status?: number;
 	error?: Error;
 	redirect?: string;
-	props?: Record<string, any>;
+	props?: Record<string, any> | Promise<Record<string, any>>;
 	context?: Record<string, any>;
 	maxage?: number;
 };

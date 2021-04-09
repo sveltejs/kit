@@ -68,15 +68,17 @@ export class Renderer {
 
 		this.started = false;
 
+		this.session_id = 1;
+
 		/** @type {import('./types').NavigationState} */
 		this.current = {
 			page: null,
 			query: null,
-			session_changed: false,
-			nodes: [],
-			contexts: []
+			session_id: null,
+			branch: []
 		};
 
+		/** @type {Map<CSRComponent, Map<string, import('./types').BranchNode>>} */
 		this.caches = new Map();
 
 		this.loading = {
@@ -99,7 +101,7 @@ export class Renderer {
 			this.$session = value;
 
 			if (!ready) return;
-			this.current.session_changed = true;
+			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
 			this.update(info, []);
@@ -191,7 +193,7 @@ export class Renderer {
 		this.loading.promise = null;
 		this.loading.id = null;
 
-		const leaf_node = navigation_result.state.nodes[navigation_result.state.nodes.length - 1];
+		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node.module.router === false) {
 			this.router.disable();
 		} else {
@@ -291,9 +293,8 @@ export class Renderer {
 			state: {
 				page,
 				query,
-				session_changed: false,
-				nodes: [],
-				contexts: []
+				session_id: this.session_id,
+				branch: []
 			},
 			props: {
 				/** @type {CSRComponent[]} */
@@ -307,28 +308,19 @@ export class Renderer {
 				return !this.current.page || this.current.page.params[key] !== page.params[key];
 			}),
 			query: query !== this.current.query,
-			session: this.current.session_changed,
+			session: this.session_id !== this.current.session_id,
 			context: false
 		};
 
 		try {
-			const props_promises = [];
-
 			/** @type {Record<string, any>} */
-			let context;
+			let context = {};
 
 			for (let i = 0; i < nodes.length; i += 1) {
-				const previous = this.current.nodes[i];
-				const previous_context = this.current.contexts[i];
+				const previous = this.current.branch[i];
 
 				const module = await nodes[i];
-				result.props.components[i] = module.default;
-
-				if (module.preload) {
-					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
-					);
-				}
+				if (!module) continue;
 
 				const changed_since_last_render =
 					!previous ||
@@ -339,21 +331,20 @@ export class Renderer {
 					(changed.session && previous.uses.session) ||
 					(changed.context && previous.uses.context);
 
+				/** @type {import('./types').BranchNode} */
+				let node;
+
 				if (changed_since_last_render) {
 					const hash = page.path + query;
+
+					const is_leaf = i === nodes.length - 1 && !error;
 
 					// see if we have some cached data
 					const cache = this.caches.get(module);
 					const cached = cache && cache.get(hash);
 
-					/** @type {import('./types').PageNode} */
-					let node;
-
-					/** @type {import('types.internal').LoadOutput} */
-					let loaded;
-
-					if (cached && (!changed.context || !cached.node.uses.context)) {
-						({ node, loaded } = cached);
+					if (cached && (!changed.context || !cached.uses.context)) {
+						node = cached;
 					} else {
 						node = {
 							module,
@@ -363,7 +354,9 @@ export class Renderer {
 								query: false,
 								session: false,
 								context: false
-							}
+							},
+							loaded: null,
+							context: null
 						};
 
 						/** @type {Record<string, string>} */
@@ -411,53 +404,47 @@ export class Renderer {
 								/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
 							}
 
-							loaded = await module.load.call(null, load_input);
+							const loaded = await module.load.call(null, load_input);
 
 							// if the page component returns nothing from load, fall through
-							const is_leaf = i === nodes.length - 1 && !error;
 							if (!loaded && is_leaf) return;
+
+							node.loaded = normalize(loaded);
 						}
 					}
 
-					if (loaded) {
-						loaded = normalize(loaded);
-
-						if (loaded.error) {
+					if (node.loaded) {
+						if (node.loaded.error) {
 							if (error) {
 								// error while rendering error page, oops
 								throw error;
 							}
 
 							return await this._load_error({
-								status: loaded.status || 500,
-								error: loaded.error,
+								status: node.loaded.status || 500,
+								error: node.loaded.error,
 								path: page.path,
 								query: page.query
 							});
 						}
 
-						if (loaded.redirect) {
+						if (node.loaded.redirect) {
 							return {
-								redirect: loaded.redirect
+								redirect: node.loaded.redirect
 							};
 						}
 
-						if (loaded.context) {
+						if (node.loaded.context) {
 							changed.context = true;
-
-							context = {
-								...context,
-								...loaded.context
-							};
 						}
 
-						if (loaded.maxage) {
+						if (is_leaf && node.loaded.maxage) {
 							if (!this.caches.has(module)) {
 								this.caches.set(module, new Map());
 							}
 
 							const cache = this.caches.get(module);
-							const cached = { node, loaded };
+							const cached = node;
 
 							cache.set(hash, cached);
 
@@ -465,7 +452,7 @@ export class Renderer {
 
 							const timeout = setTimeout(() => {
 								clear();
-							}, loaded.maxage * 1000);
+							}, node.loaded.maxage * 1000);
 
 							const clear = () => {
 								if (cache.get(hash) === cached) {
@@ -482,25 +469,27 @@ export class Renderer {
 
 							ready = true;
 						}
-
-						props_promises[i] = loaded.props;
 					}
-
-					result.state.nodes[i] = node;
-					result.state.contexts[i] = context;
 				} else {
-					result.state.nodes[i] = previous;
-					result.state.contexts[i] = context = previous_context;
+					node = previous;
+				}
+
+				result.state.branch.push(node);
+
+				if (node && node.loaded && node.loaded.context) {
+					context = {
+						...context,
+						...node.loaded.context
+					};
 				}
 			}
 
-			// we allow returned `props` to be a Promise so that
-			// layout/page loads can happen in parallel
-			(await Promise.all(props_promises)).forEach((p, i) => {
-				if (p) {
-					result.props[`props_${i}`] = p;
-				}
-			});
+			const branch = result.state.branch.filter(Boolean);
+
+			for (let i = 0; i < branch.length; i += 1) {
+				result.props.components[i] = branch[i].module.default;
+				if (branch[i].loaded) result.props[`props_${i}`] = await branch[i].loaded.props;
+			}
 
 			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
 				result.props.page = page;
