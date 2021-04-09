@@ -5,7 +5,7 @@
 <img src="svelte-welcome-light.png" alt="Svelte welcome text" />
 <section>
 	<h1>To my brand new<br/>Svelte project</h1>
-	<h2>Here’s where you’ll edit your content.<br/>Have a look at <strong>src/index.svelte</strong></h2>
+	<h2>Here’s where you’ll edit your content.<br/>Have a look at <strong>src/routes/index.svelte</strong></h2>
 </section>
 
 <style>
