@@ -76,8 +76,6 @@ export default async function add_typescript(cwd, yes, project_template) {
 
 		const modification_list = get_modifications_by_template(project_template);
 		modification_list.forEach((modification) => {
-			console.log(`file: ${modification.file} | Type: ${modification.type}`);
-			console.log(modification.changes);
 			update_component(cwd, modification.file, modification.changes);
 		});
 
