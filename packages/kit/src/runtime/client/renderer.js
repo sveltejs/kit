@@ -110,10 +110,23 @@ export class Renderer {
 	}
 
 	/**
-	 * @param {import('./types').NavigationCandidate} selected
+	 * @param {{
+	 *   status: number;
+	 *   error: Error;
+	 *   nodes: Array<Promise<CSRComponent>>;
+	 *   page: import('types.internal').Page;
+	 * }} selected
 	 */
 	async start(selected) {
-		const result = await this._load(selected);
+		const result = selected.error
+			? // TODO tidy this up
+			  await this._load_error({
+					status: selected.status,
+					error: selected.error,
+					path: selected.page.path,
+					query: selected.page.query
+			  })
+			: await this._load(selected);
 
 		if (result.redirect) {
 			// this is a real edge case — `load` would need to return
@@ -194,7 +207,7 @@ export class Renderer {
 		this.loading.id = null;
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		if (leaf_node.module.router === false) {
+		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
 		} else {
 			this.router.enable();
@@ -250,7 +263,7 @@ export class Renderer {
 				query: info.query
 			};
 
-			const result = await this._load({ status: 200, error: null, nodes, page });
+			const result = await this._load({ nodes, page });
 			if (result) return result;
 		}
 
@@ -282,10 +295,157 @@ export class Renderer {
 	}
 
 	/**
+	 *
+	 * @param {{
+	 *   page: import('types.internal').Page;
+	 *   branch: import('./types').BranchNode[]
+	 * }} opts
+	 */
+	async _rename_me({ page, branch }) {
+		const filtered = branch.filter(Boolean);
+
+		/** @type {import('./types').NavigationResult} */
+		const result = {
+			state: {
+				page,
+				branch,
+				session_id: this.session_id
+			},
+			props: {
+				/** @type {CSRComponent[]} */
+				components: filtered.map((node) => node.module.default)
+			}
+		};
+
+		for (let i = 0; i < filtered.length; i += 1) {
+			if (filtered[i].loaded) result.props[`props_${i}`] = await filtered[i].loaded.props;
+		}
+
+		if (
+			!this.current.page ||
+			page.path !== this.current.page.path ||
+			page.query.toString() !== this.current.page.query.toString()
+		) {
+			result.props.page = page;
+		}
+
+		const leaf = filtered[filtered.length - 1];
+		const maxage = leaf.loaded && leaf.loaded.maxage;
+
+		if (maxage) {
+			const hash = page.path + page.query.toString();
+			let ready = false;
+
+			const clear = () => {
+				if (this.cache.get(hash) === result) {
+					this.cache.delete(hash);
+				}
+
+				unsubscribe();
+				clearTimeout(timeout);
+			};
+
+			const timeout = setTimeout(clear, maxage * 1000);
+
+			const unsubscribe = this.stores.session.subscribe(() => {
+				if (ready) clear();
+			});
+
+			ready = true;
+
+			this.cache.set(hash, result);
+		}
+
+		return result;
+	}
+
+	/**
+	 *
+	 * @param {{
+	 *   status?: number;
+	 *   error?: Error;
+	 *   module: CSRComponent;
+	 *   page: import('types.internal').Page;
+	 *   context: Record<string, any>;
+	 * }} options
+	 * @returns
+	 */
+	async _load_node({ status, error, module, page, context }) {
+		/** @type {import('./types').BranchNode} */
+		const node = {
+			module,
+			uses: {
+				params: new Set(),
+				path: false,
+				query: false,
+				session: false,
+				context: false
+			},
+			loaded: null,
+			context: null
+		};
+
+		/** @type {Record<string, string>} */
+		const params = {};
+		for (const key in page.params) {
+			Object.defineProperty(params, key, {
+				get() {
+					node.uses.params.add(key);
+					return page.params[key];
+				},
+				enumerable: true
+			});
+		}
+
+		const session = this.$session;
+
+		if (module.load) {
+			/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+			const load_input = {
+				page: {
+					host: page.host,
+					params,
+					get path() {
+						node.uses.path = true;
+						return page.path;
+					},
+					get query() {
+						node.uses.query = true;
+						return page.query;
+					}
+				},
+				get session() {
+					node.uses.session = true;
+					return session;
+				},
+				get context() {
+					node.uses.context = true;
+					return { ...context };
+				},
+				fetch: this.started ? fetch : initial_fetch
+			};
+
+			if (error) {
+				/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
+				/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
+			}
+
+			const loaded = await module.load.call(null, load_input);
+
+			// if the page component returns nothing from load, fall through
+			if (!loaded) return;
+
+			node.loaded = normalize(loaded);
+		}
+
+		return node;
+	}
+
+	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _load({ status, error, nodes, page }) {
+	async _load({ nodes, page }) {
 		const query = page.query.toString();
 
 		const hash = page.path + query;
@@ -294,35 +454,33 @@ export class Renderer {
 			return this.cache.get(hash);
 		}
 
-		/** @type {import('./types').NavigationResult} */
-		const result = {
-			state: {
-				page,
-				query,
-				session_id: this.session_id,
-				branch: []
-			},
-			props: {
-				/** @type {CSRComponent[]} */
-				components: []
-			}
+		const changed = this.current.page && {
+			path: page.path !== this.current.page.path,
+			params: Object.keys(page.params).filter(
+				(key) => this.current.page.params[key] !== page.params[key]
+			),
+			query: query !== this.current.page.query.toString(),
+			session: this.session_id !== this.current.session_id
 		};
 
-		const changed = {
-			path: !this.current.page || page.path !== this.current.page.path,
-			params: Object.keys(page.params).filter((key) => {
-				return !this.current.page || this.current.page.params[key] !== page.params[key];
-			}),
-			query: query !== this.current.query,
-			session: this.session_id !== this.current.session_id,
-			context: false
-		};
+		/** @type {import('./types').BranchNode[]} */
+		const branch = [];
 
-		try {
-			/** @type {Record<string, any>} */
-			let context = {};
+		/** @type {Record<string, any>} */
+		let context = {};
+		let context_changed = false;
 
-			for (let i = 0; i < nodes.length; i += 1) {
+		/** @type {number} */
+		let status = 200;
+
+		/** @type {Error} */
+		let error = null;
+
+		for (let i = 0; i < nodes.length; i += 1) {
+			/** @type {import('./types').BranchNode} */
+			let node;
+
+			try {
 				const previous = this.current.branch[i];
 
 				const module = await nodes[i];
@@ -335,93 +493,21 @@ export class Renderer {
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
-					(changed.context && previous.uses.context);
-
-				/** @type {import('./types').BranchNode} */
-				let node;
+					(context_changed && previous.uses.context);
 
 				if (changed_since_last_render) {
-					const is_leaf = i === nodes.length - 1 && !error;
-
-					node = {
+					node = await this._load_node({
 						module,
-						uses: {
-							params: new Set(),
-							path: false,
-							query: false,
-							session: false,
-							context: false
-						},
-						loaded: null,
-						context: null
-					};
+						page,
+						context
+					});
 
-					/** @type {Record<string, string>} */
-					const params = {};
-					for (const key in page.params) {
-						Object.defineProperty(params, key, {
-							get() {
-								node.uses.params.add(key);
-								return page.params[key];
-							},
-							enumerable: true
-						});
-					}
+					const is_leaf = i === nodes.length - 1;
 
-					const session = this.$session;
-
-					if (module.load) {
-						/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
-						const load_input = {
-							page: {
-								host: page.host,
-								params,
-								get path() {
-									node.uses.path = true;
-									return page.path;
-								},
-								get query() {
-									node.uses.query = true;
-									return page.query;
-								}
-							},
-							get session() {
-								node.uses.session = true;
-								return session;
-							},
-							get context() {
-								node.uses.context = true;
-								return { ...context };
-							},
-							fetch: this.started ? fetch : initial_fetch
-						};
-
-						if (error) {
-							/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
-							/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
-						}
-
-						const loaded = await module.load.call(null, load_input);
-
-						// if the page component returns nothing from load, fall through
-						if (!loaded && is_leaf) return;
-
-						node.loaded = normalize(loaded);
-					}
-
-					if (node.loaded) {
+					if (node && node.loaded) {
 						if (node.loaded.error) {
-							if (error) {
-								// error while rendering error page, oops
-								throw error;
-							}
-
-							return await this._load_error({
-								status: node.loaded.status || 500,
-								error: node.loaded.error,
-								path: page.path,
-								query: page.query
-							});
+							status = node.loaded.status;
+							error = node.loaded.error;
 						}
 
 						if (node.loaded.redirect) {
@@ -431,72 +517,41 @@ export class Renderer {
 						}
 
 						if (node.loaded.context) {
-							changed.context = true;
+							context_changed = true;
 						}
+					} else if (is_leaf && module.load) {
+						// if the leaf node has a `load` function
+						// that returns nothing, fall through
+						return;
 					}
 				} else {
 					node = previous;
 				}
-
-				result.state.branch.push(node);
-
-				if (node && node.loaded && node.loaded.context) {
-					context = {
-						...context,
-						...node.loaded.context
-					};
-				}
+			} catch (e) {
+				status = 500;
+				error = e;
 			}
 
-			const branch = result.state.branch.filter(Boolean);
-
-			for (let i = 0; i < branch.length; i += 1) {
-				result.props.components[i] = branch[i].module.default;
-				if (branch[i].loaded) result.props[`props_${i}`] = await branch[i].loaded.props;
-			}
-
-			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
-				result.props.page = page;
-			}
-
-			const leaf = branch[branch.length - 1];
-			const maxage = leaf.loaded && leaf.loaded.maxage;
-			if (maxage) {
-				let ready = false;
-
-				const clear = () => {
-					if (this.cache.get(hash) === result) {
-						this.cache.delete(hash);
-					}
-
-					unsubscribe();
-					clearTimeout(timeout);
-				};
-
-				const timeout = setTimeout(clear, maxage * 1000);
-
-				const unsubscribe = this.stores.session.subscribe(() => {
-					if (ready) clear();
-				});
-
-				ready = true;
-
-				this.cache.set(hash, result);
-			}
-
-			return result;
-		} catch (e) {
 			if (error) {
-				throw error;
+				return await this._load_error({
+					status,
+					error,
+					path: page.path,
+					query: page.query
+				});
 			}
 
-			return await this._load_error({
-				status: 500,
-				error: e,
-				path: page.path,
-				query: page.query
-			});
+			branch.push(node);
+
+			if (node && node.loaded && node.loaded.context) {
+				context = {
+					...context,
+					...node.loaded.context
+				};
+			}
 		}
+
+		return await this._rename_me({ page, branch });
 	}
 
 	/**
@@ -508,16 +563,30 @@ export class Renderer {
 	 * }} opts
 	 */
 	async _load_error({ status, error, path, query }) {
-		return await this._load({
-			status,
-			error,
-			nodes: this.fallback,
-			page: {
-				host: this.host,
-				path,
-				query,
-				params: {}
-			}
+		const page = {
+			host: this.host,
+			path,
+			query,
+			params: {}
+		};
+
+		const node = await this._load_node({
+			module: await this.fallback[0],
+			page,
+			context: {}
 		});
+
+		const branch = [
+			node,
+			await this._load_node({
+				status,
+				error,
+				module: await this.fallback[1],
+				page,
+				context: node && node.loaded && node.loaded.context
+			})
+		];
+
+		return await this._rename_me({ page, branch });
 	}
 }

@@ -14,8 +14,6 @@ import { set_paths } from '../paths.js';
  *   },
  *   target: Node;
  *   session: any;
- *   error: Error;
- *   status: number;
  *   host: string;
  *   route: boolean;
  *   spa: boolean;

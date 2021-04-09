@@ -8,8 +8,6 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
-	status: number;
-	error: Error;
 	nodes: Array<Promise<CSRComponent>>;
 	page: Page;
 };
@@ -36,7 +34,6 @@ export type BranchNode = {
 
 export type NavigationState = {
 	page: Page;
-	query: string;
-	session_id: number;
 	branch: BranchNode[];
+	session_id: number;
 };
