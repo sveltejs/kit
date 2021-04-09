@@ -15,7 +15,7 @@
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "node scripts/update-versions && rollup -c",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern template/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"lint": "eslint --ignore-path .gitignore --ignore-pattern template/ \"**/*.{ts,js,svelte}\" --ignore-pattern template-skeleton/ \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
