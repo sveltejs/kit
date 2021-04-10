@@ -2,12 +2,13 @@
 import { mkdirp } from '@sveltejs/kit/filesystem';
 import fs from 'fs';
 import parser from 'gitignore-parser';
-import { bold, cyan, gray, green, red, underline } from 'kleur/colors';
+import { bold, cyan, gray, green, red } from 'kleur/colors';
 import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync.js';
 import gitignore_contents from '../template/.gitignore';
 import add_typescript from './modifications/add_typescript';
+import add_skeleton_template from './modifications/add_skeleton_template';
 // import versions from './versions';
 import { version } from '../package.json';
 import add_prettier from './modifications/add_prettier';
@@ -101,13 +102,25 @@ async function main() {
  * @param {string} target
  */
 async function prompt_modifications(target) {
+    const template_response = await prompts({
+		type: 'select',
+		name: 'value',
+		message: 'Which app Svelte template do you want to use?',
+		choices: [
+			{ title: 'Default App (Counter + Route)', value: 'default' },
+			{ title: 'Skeleton App', value: 'skeleton' }
+		]
+	});
+    const is_skeleton_template = template_response.value === 'skeleton';
+    await add_skeleton_template(target, is_skeleton_template);
+
 	const ts_response = await prompts({
 		type: 'confirm',
 		name: 'value',
 		message: 'Use TypeScript in components?',
 		initial: false
 	});
-	await add_typescript(target, ts_response.value);
+	await add_typescript(target, ts_response.value, is_skeleton_template);
 
 	const eslint_response = await prompts({
 		type: 'confirm',
