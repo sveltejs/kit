@@ -235,11 +235,6 @@ export class Router {
 			query: info.query
 		});
 
-		// remove trailing slashes
-		if (location.pathname.endsWith('/') && location.pathname !== '/') {
-			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
-		}
-
 		await this.renderer.update(info, chain);
 
 		document.body.focus();

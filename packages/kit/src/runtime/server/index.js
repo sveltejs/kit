@@ -12,17 +12,6 @@ function md5(body) {
  * @param {import('../../../types.internal').SSRRenderOptions} options
  */
 export async function ssr(incoming, options) {
-	if (incoming.path.endsWith('/') && incoming.path !== '/') {
-		const q = incoming.query.toString();
-
-		return {
-			status: 301,
-			headers: {
-				location: incoming.path.slice(0, -1) + (q ? `?${q}` : '')
-			}
-		};
-	}
-
 	const context = (await options.hooks.getContext(incoming)) || {};
 
 	try {
