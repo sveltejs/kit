@@ -26,7 +26,7 @@
 	}
 
 	button:hover {
-		border: 3px solid #ff3e00;
+		border-width: 3px;
 	}
 
 	button:active {
