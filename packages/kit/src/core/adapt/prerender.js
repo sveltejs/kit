@@ -225,13 +225,16 @@ export async function prerender({ cwd, out, log, config, force }) {
 					}
 
 					parts[parts.length - 1] = parts[parts.length - 1].replace(extensions_regex, '');
-					if (parts[parts.length - 1] === 'index') parts.pop();
+					const hasIndex = parts[parts.length - 1] === 'index';
+					if (hasIndex) parts.pop();
 
 					if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
 						return null;
 					}
 
-					return `/${parts.join('/')}`;
+					let path = `/${parts.join('/')}`;
+					if (hasIndex && !path.endsWith('/')) path = `${path}/`;
+					return path;
 				})
 				.filter(Boolean);
 

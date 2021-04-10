@@ -4,8 +4,8 @@
 
 <nav>
 	<a href="/" sveltekit:prefetch class:active={path === '/'}>home</a>
-	<a href="/about" sveltekit:prefetch class:active={path === '/about'}>about</a>
-	<a href="/blog" sveltekit:prefetch class:active={path === '/blog'}>blog</a>
+	<a href="/about/" sveltekit:prefetch class:active={path === '/about/'}>about</a>
+	<a href="/blog/" sveltekit:prefetch class:active={path === '/blog/'}>blog</a>
 </nav>
 
 <style>
