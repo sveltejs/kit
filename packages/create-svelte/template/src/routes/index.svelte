@@ -1,22 +1,27 @@
-<svelte:head>
-	<title>Home</title>
-</svelte:head>
-
 <script>
 	import Counter from '$lib/Counter.svelte';
 	import { isDarkModeStore } from '../stores.js';
 
 	let isDarkMode = true;
 
-	isDarkModeStore.subscribe(value => isDarkMode = value)
+	isDarkModeStore.subscribe((value) => (isDarkMode = value));
 </script>
 
+<svelte:head>
+	<title>Home</title>
+</svelte:head>
 
-<img src={isDarkMode ? "svelte-welcome.png" : "svelte-welcome-light.png"} alt="Svelte welcome text" />
+<img
+	src={isDarkMode ? 'svelte-welcome.png' : 'svelte-welcome-light.png'}
+	alt="Svelte welcome text"
+/>
 <section>
-	<h1>To my brand new<br/>Svelte project</h1>
-	<h2>Here’s where you’ll edit your content.<br/>Have a look at <strong>src/routes/index.svelte</strong></h2>
-	
+	<h1>To my brand new<br />Svelte project</h1>
+	<h2>
+		Here’s where you’ll edit your content.<br />Have a look at
+		<strong>src/routes/index.svelte</strong>
+	</h2>
+
 	<Counter />
 </section>
 
