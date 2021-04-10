@@ -48,7 +48,7 @@ async function handleEvent(event) {
 			path: request_url.pathname,
 			query: request_url.searchParams,
 			body: request.body ? await readRequestBody(request) : null,
-			headers: request.headers,
+			headers: Object.fromEntries(request.headers),
 			method: request.method
 		});
 
