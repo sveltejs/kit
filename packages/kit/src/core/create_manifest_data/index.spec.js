@@ -52,7 +52,7 @@ test('creates routes', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/about\/?$/,
+			pattern: /^\/about$/,
 			params: [],
 			parts: [layout, about]
 		},
@@ -66,7 +66,7 @@ test('creates routes', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/blog\/?$/,
+			pattern: /^\/blog\/$/,
 			params: [],
 			parts: [layout, blog]
 		},
@@ -80,7 +80,7 @@ test('creates routes', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/blog\/([^/]+?)\/?$/,
+			pattern: /^\/blog\/([^/]+?)$/,
 			params: ['slug'],
 			parts: [layout, blog_$slug]
 		}
@@ -108,7 +108,7 @@ test('creates routes with layout', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/foo\/?$/,
+			pattern: /^\/foo\/$/,
 			params: [],
 			parts: [layout, foo_$layout, foo]
 		}
@@ -136,7 +136,7 @@ test('encodes invalid characters', () => {
 		routes.map((p) => p.pattern),
 		[
 			// /^\/%22\/?$/,
-			/^\/%23\/?$/
+			/^\/%23$/
 			// /^\/%3F\/?$/
 		]
 	);
@@ -229,7 +229,7 @@ test('ignores things that look like lockfiles', () => {
 			type: 'endpoint',
 			file: 'samples/lockfiles/foo.js',
 			params: [],
-			pattern: /^\/foo\/?$/
+			pattern: /^\/foo\/$/
 		}
 	]);
 });
@@ -259,7 +259,7 @@ test('works with custom extensions', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/about\/?$/,
+			pattern: /^\/about$/,
 			params: [],
 			parts: [layout, about]
 		},
@@ -273,7 +273,7 @@ test('works with custom extensions', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/blog\/?$/,
+			pattern: /^\/blog\/$/,
 			params: [],
 			parts: [layout, blog]
 		},
@@ -287,7 +287,7 @@ test('works with custom extensions', () => {
 
 		{
 			type: 'page',
-			pattern: /^\/blog\/([^/]+?)\/?$/,
+			pattern: /^\/blog\/([^/]+?)$/,
 			params: ['slug'],
 			parts: [layout, blog_$slug]
 		}
