@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('handles static asset imports', '/asset-import', async ({ base, page, js }) => {
+	test('handles static asset imports', '/asset-import/', async ({ base, page, js }) => {
 		const sources = await page.evaluate(() =>
 			[...document.querySelectorAll('img')].map((img) => img.src)
 		);

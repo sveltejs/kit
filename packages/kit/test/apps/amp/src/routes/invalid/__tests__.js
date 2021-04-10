@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('prints validation errors', '/invalid', async ({ page }) => {
+	test('prints validation errors', '/invalid/', async ({ page }) => {
 		const body = await page.innerHTML('body');
 		if (is_dev) {
 			assert.equal(await page.textContent('h1'), 'AMP validation failed');

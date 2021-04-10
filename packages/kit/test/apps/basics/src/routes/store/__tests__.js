@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
-	test('page store functions as expected', '/store', async ({ page, clicknav, js }) => {
+	test('page store functions as expected', '/store/', async ({ page, clicknav, js }) => {
 		assert.equal(await page.textContent('h1'), 'Test');
 		assert.equal(await page.textContent('h2'), 'Calls: 1');
 

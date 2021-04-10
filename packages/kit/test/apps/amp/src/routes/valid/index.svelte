@@ -1,6 +1,6 @@
 <script context="module">
 	export async function load({ fetch }) {
-		const res = await fetch('/valid.json');
+		const res = await fetch('/valid.json/');
 		return {
 			props: await res.json()
 		};

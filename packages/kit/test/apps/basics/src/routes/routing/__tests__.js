@@ -3,54 +3,54 @@ import * as assert from 'uvu/assert';
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	test(
-		'redirects from /routing/ to /routing',
-		'/routing/slashes',
+		'does not redirects from /routing/ to /routing',
+		'/routing/slashes/',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/"]');
-			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(await page.url(), `${base}/routing/`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/');
-				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(await page.url(), `${base}/routing/`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
 	);
 
 	test(
-		'redirects from /routing/? to /routing',
-		'/routing/slashes',
+		'does not redirects from /routing/? to /routing',
+		'/routing/slashes/',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/?"]');
-			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(await page.url(), `${base}/routing/?`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
-				await page.goto(`${base}/routing/slashes`);
+				await page.goto(`${base}/routing/slashes/`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/?');
-				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(await page.url(), `${base}/routing/?`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
 	);
 
 	test(
-		'redirects from /routing/?foo=bar to /routing?foo=bar',
-		'/routing/slashes',
+		'does not redirects from /routing/?foo=bar to /routing?foo=bar',
+		'/routing/slashes/',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/?foo=bar"]');
-			assert.equal(await page.url(), `${base}/routing?foo=bar`);
+			assert.equal(await page.url(), `${base}/routing/?foo=bar`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/?foo=bar');
-				assert.equal(await page.url(), `${base}/routing?foo=bar`);
+				assert.equal(await page.url(), `${base}/routing/?foo=bar`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
@@ -60,7 +60,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'a');
 	});
 
-	test('serves static route from dir/index.html file', '/routing/b', async ({ page }) => {
+	test('serves static route from dir/index.html file', '/routing/b/', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'b');
 	});
 
@@ -70,7 +70,7 @@ export default function (test) {
 		async ({ base, page }) => {
 			assert.equal(await page.textContent('h1'), 'foo');
 
-			await page.goto(`${base}/routing/client/bar`);
+			await page.goto(`${base}/routing/client/bar/`);
 			assert.equal(await page.textContent('h1'), 'bar');
 
 			await page.goto(`${base}/routing/client/bar/b`);
@@ -84,7 +84,7 @@ export default function (test) {
 
 	test(
 		'navigates to a new page without reloading',
-		'/routing',
+		'/routing/',
 		async ({ app, capture_requests, page, clicknav, js }) => {
 			if (js) {
 				await app.prefetchRoutes(['/routing/a']).catch((e) => {
@@ -108,25 +108,25 @@ export default function (test) {
 
 	test('navigates programmatically', '/routing/a', async ({ page, app, js }) => {
 		if (js) {
-			await app.goto('/routing/b');
+			await app.goto('/routing/b/');
 			assert.equal(await page.textContent('h1'), 'b');
 		}
 	});
 
 	test('prefetches programmatically', '/routing/a', async ({ base, capture_requests, app, js }) => {
 		if (js) {
-			const requests1 = await capture_requests(() => app.prefetch('/routing/prefetched'));
+			const requests1 = await capture_requests(() => app.prefetch('/routing/prefetched/'));
 			assert.equal(requests1.length, 2, requests1.join(','));
 			assert.equal(requests1[1], `${base}/routing/prefetched.json`);
 
-			const requests2 = await capture_requests(() => app.goto('/routing/prefetched'));
+			const requests2 = await capture_requests(() => app.goto('/routing/prefetched/'));
 			assert.equal(requests2, []);
 		}
 	});
 
 	test(
 		'does not attempt client-side navigation to server routes',
-		'/routing',
+		'/routing/',
 		async ({ page, clicknav }) => {
 			await clicknav('[href="/routing/ambiguous/ok.json"]');
 			assert.equal(await page.textContent('body'), 'ok');
@@ -137,14 +137,14 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'reserved words are okay as routes');
 	});
 
-	test('resets the active element after navigation', '/routing', async ({ page, clicknav }) => {
+	test('resets the active element after navigation', '/routing/', async ({ page, clicknav }) => {
 		await clicknav('[href="/routing/a"]');
 		await page.waitForFunction(() => document.activeElement.nodeName == 'BODY');
 	});
 
 	test(
 		'navigates between routes with empty parts',
-		'/routing/dirs/foo',
+		'/routing/dirs/foo/',
 		async ({ page, clicknav }) => {
 			assert.equal(await page.textContent('h1'), 'foo');
 			await clicknav('[href="bar"]');
@@ -174,7 +174,7 @@ export default function (test) {
 		}
 	);
 
-	test('back button returns to initial route', '/routing', async ({ page, clicknav }) => {
+	test('back button returns to initial route', '/routing/', async ({ page, clicknav }) => {
 		await clicknav('[href="/routing/a"]');
 
 		await page.goBack();

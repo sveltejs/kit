@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('loads', '/load', async ({ page }) => {
+	test('loads', '/load/', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
@@ -81,12 +81,12 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test('fetch accepts a Request object', '/load', async ({ page, clicknav }) => {
+	test('fetch accepts a Request object', '/load/', async ({ page, clicknav }) => {
 		await clicknav('[href="/load/fetch-request"]');
 		assert.equal(await page.textContent('h1'), 'the answer is 42');
 	});
 
-	test('handles large responses', '/load', async ({ base, page }) => {
+	test('handles large responses', '/load/', async ({ base, page }) => {
 		const port = await ports.find(4000);
 
 		const chunk_size = 50000;
@@ -136,7 +136,7 @@ export default function (test, is_dev) {
 
 	test(
 		'makes credentialed fetches to endpoints by default',
-		'/load',
+		'/load/',
 		async ({ page, clicknav }) => {
 			await clicknav('[href="/load/fetch-credentialed"]');
 			assert.equal(await page.textContent('h1'), 'Hello SvelteKit!');

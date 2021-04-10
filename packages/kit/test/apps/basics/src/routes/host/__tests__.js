@@ -7,7 +7,7 @@ export default function (test) {
 			'x-forwarded-host': 'forwarded.com'
 		});
 
-		await page.goto(`${base}/host`);
+		await page.goto(`${base}/host/`);
 		assert.equal(await page.textContent('h1'), 'forwarded.com');
 
 		// reset

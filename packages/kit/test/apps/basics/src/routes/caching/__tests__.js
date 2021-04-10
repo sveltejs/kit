@@ -3,7 +3,7 @@ import * as assert from 'uvu/assert';
 /** @type {import('../../../../../types').TestMaker} */
 export default function (test) {
 	test('caches pages', async ({ fetch }) => {
-		const { headers } = await fetch('/caching');
+		const { headers } = await fetch('/caching/');
 
 		assert.equal(headers.get('cache-control'), 'public, max-age=30');
 	});
