@@ -156,7 +156,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						? stack.slice(0, -1).concat(item.file)
 						: stack.concat(item.file);
 
-				const pattern = get_pattern(segments, true);
+				const pattern = get_pattern(segments, item.is_index);
 
 				routes.push({
 					type: 'page',
@@ -319,7 +319,7 @@ function get_pattern(segments, add_trailing_slash) {
 		})
 		.join('');
 
-	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
+	const trailing = add_trailing_slash && segments.length ? '\\/$' : '$';
 
 	return new RegExp(`^${path || '\\/'}${trailing}`);
 }
