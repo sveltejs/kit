@@ -260,7 +260,7 @@ class Watcher extends EventEmitter {
 							hooks: {
 								getContext: hooks.getContext || (() => ({})),
 								getSession: hooks.getSession || (() => ({})),
-								handle: hooks.handle || ((request, render) => render(request))
+								handle: hooks.handle || (({ request, render }) => render(request))
 							},
 							only_render_prerenderable_pages: false,
 							// get_component_path: (id) => `/${id}?import`,
