@@ -1,4 +1,5 @@
-import { CSRComponent, CSRRoute, Page } from '../../../types.internal';
+import { Page } from '../../../types';
+import { CSRComponent, CSRRoute } from '../../../types.internal';
 
 export type NavigationInfo = {
 	id: string;

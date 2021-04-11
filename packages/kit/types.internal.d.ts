@@ -5,6 +5,7 @@ import {
 	Handle,
 	Incoming,
 	Load,
+	Page,
 	RequestHandler,
 	Response
 } from './types';
@@ -84,13 +85,6 @@ export type App = {
 // 'set-cookie' is a `string[]` (or at least `string | string[]`)
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
-
-export type Page = {
-	host: string;
-	path: string;
-	params: Record<string, string>;
-	query: URLSearchParams;
-};
 
 export type LoadInput = {
 	page: Page;
