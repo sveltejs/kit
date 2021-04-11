@@ -14,7 +14,7 @@ const s = JSON.stringify;
  *   status: number;
  *   error: Error,
  *   branch: import('./types').Loaded[];
- *   page: import('types.internal').Page
+ *   page: import('types').Page
  * }} opts
  */
 export async function render_response({

@@ -1,3 +1,4 @@
+import './types.ambient';
 import { Headers, ErrorLoadInput, LoadInput, LoadOutput, Logger } from './types.internal';
 import { UserConfig as ViteConfig } from 'vite';
 
@@ -90,7 +91,7 @@ export type Response = {
 };
 
 export type RequestHandler<Context = any, Body = unknown> = (
-	request?: Request<Context, Body>
+	request: Request<Context, Body>
 ) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
@@ -107,3 +108,10 @@ export type Handle<Context = any> = (
 	request: Request<Context>,
 	render: (request: Request<Context>) => Response | Promise<Response>
 ) => Response | Promise<Response>;
+
+export type Page = {
+	host: string;
+	path: string;
+	params: Record<string, string>;
+	query: URLSearchParams;
+};

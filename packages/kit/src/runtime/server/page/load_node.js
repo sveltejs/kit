@@ -11,7 +11,7 @@ const s = JSON.stringify;
  *   request: import('types').Request;
  *   options: import('types.internal').SSRRenderOptions;
  *   route: import('types.internal').SSRPage;
- *   page: import('types.internal').Page;
+ *   page: import('types').Page;
  *   node: import('types.internal').SSRNode;
  *   $session: any;
  *   context: Record<string, any>;
