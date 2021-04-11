@@ -59,6 +59,7 @@ export async function load_node({
 			 * @param {RequestInfo} resource
 			 * @param {RequestInit} opts
 			 */
+			// @ts-ignore mismatch between client fetch and node-fetch
 			fetch: async (resource, opts = {}) => {
 				/** @type {string} */
 				let url;

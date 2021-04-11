@@ -7,7 +7,7 @@ import {
 	Load,
 	Page,
 	RequestHandler,
-	Response
+	Response as SSRResponse
 } from './types';
 import { UserConfig as ViteConfig } from 'vite';
 import { Response as NodeFetchResponse } from 'node-fetch';
@@ -77,7 +77,7 @@ export type App = {
 		};
 		prerendering: boolean;
 	}) => void;
-	render: (incoming: Incoming, options: SSRRenderOptions) => Response;
+	render: (incoming: Incoming, options: SSRRenderOptions) => SSRResponse;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -88,7 +88,7 @@ export type Headers = Record<string, string>;
 
 export type LoadInput = {
 	page: Page;
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<NodeFetchResponse>;
+	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: any;
 	context: Record<string, any>;
 };
@@ -200,7 +200,7 @@ export type SSRRenderOptions = {
 	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
-	dependencies?: Map<string, Response>;
+	dependencies?: Map<string, SSRResponse>;
 	only_render_prerenderable_pages?: boolean;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;

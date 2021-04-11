@@ -113,7 +113,7 @@ export class Renderer {
 	 *   status: number;
 	 *   error: Error;
 	 *   nodes: Array<Promise<CSRComponent>>;
-	 *   page: import('types.internal').Page;
+	 *   page: import('types').Page;
 	 * }} selected
 	 */
 	async start({ status, error, nodes, page }) {
@@ -337,7 +337,7 @@ export class Renderer {
 	/**
 	 *
 	 * @param {{
-	 *   page: import('types.internal').Page;
+	 *   page: import('types').Page;
 	 *   branch: import('./types').BranchNode[]
 	 * }} opts
 	 */
@@ -405,7 +405,7 @@ export class Renderer {
 	 *   status?: number;
 	 *   error?: Error;
 	 *   module: CSRComponent;
-	 *   page: import('types.internal').Page;
+	 *   page: import('types').Page;
 	 *   context: Record<string, any>;
 	 * }} options
 	 * @returns
@@ -503,7 +503,7 @@ export class Renderer {
 			session: this.session_id !== this.current.session_id
 		};
 
-		/** @type {import('types.internal').Page} */
+		/** @type {import('types').Page} */
 		const page = { host: this.host, path, query, params };
 
 		/** @type {import('./types').BranchNode[]} */
