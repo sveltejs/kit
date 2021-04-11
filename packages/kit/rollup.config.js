@@ -18,6 +18,7 @@ export default [
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
 			'app/env': 'src/runtime/app/env.js',
+			'app/a11y': 'src/runtime/app/a11y.js',
 			paths: 'src/runtime/paths.js',
 			env: 'src/runtime/env.js'
 		},

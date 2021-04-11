@@ -169,6 +169,9 @@ function generate_app(manifest_data, base) {
 			let navigated = false;
 			let title = null;
 
+			$: navigationAnnouncer = stores.navigationAnnouncer;
+			$: announceNavigation = $navigationAnnouncer.length > 0 ? $navigationAnnouncer[$navigationAnnouncer.length - 1] : (title) => 'Navigated to ' + title;
+
 			onMount(() => {
 				const unsubscribe = stores.page.subscribe(() => {
 					if (mounted) {
@@ -187,7 +190,7 @@ function generate_app(manifest_data, base) {
 		{#if mounted}
 			<div id="svelte-announcer" aria-live="assertive" aria-atomic="true">
 				{#if navigated}
-					Navigated to {title}
+					{announceNavigation(title)}
 				{/if}
 			</div>
 		{/if}

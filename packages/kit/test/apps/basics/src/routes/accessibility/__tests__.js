@@ -33,9 +33,65 @@ export default function (test) {
 			assert.equal(await page.innerHTML('[aria-live]'), '');
 
 			await clicknav('[href="/accessibility/b"]');
-			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b'); // TODO i18n
+			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b');
 		} else {
 			assert.ok(!has_live_region);
 		}
 	});
+
+	test(
+		'announces client-side navigation (custom override)',
+		'/accessibility/a',
+		async ({ page, clicknav, js }) => {
+			await clicknav('[href="/accessibility/c"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Seitennavigation zu c');
+			}
+		}
+	);
+
+	test(
+		'announces client-side navigation (custom override in $layout)',
+		'/accessibility/a',
+		async ({ page, clicknav, js }) => {
+			await clicknav('[href="/accessibility/d/d_a"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Subnav to d_a');
+			}
+		}
+	);
+
+	test(
+		'announces client-side navigation (custom overrides)',
+		'/accessibility/a',
+		async ({ page, clicknav, js }) => {
+			await clicknav('[href="/accessibility/d/d_b"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Subnavigation zu d_b');
+			}
+		}
+	);
+
+	test(
+		'announces client-side navigation (custom overrides on varying routes)',
+		'/accessibility/a',
+		async ({ page, clicknav, js }) => {
+			await clicknav('[href="/accessibility/d/d_b"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Subnavigation zu d_b');
+			}
+			await clicknav('[href="/accessibility/d/d_a"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Subnav to d_a');
+			}
+			await clicknav('[href="/accessibility/b"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b');
+			}
+			await clicknav('[href="/accessibility/c"]');
+			if (js) {
+				assert.equal(await page.innerHTML('[aria-live]'), 'Seitennavigation zu c');
+			}
+		}
+	);
 }

@@ -70,7 +70,8 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				navigationAnnouncer: writable([])
 			},
 			page,
 			components: branch.map(({ node }) => node.module.default)

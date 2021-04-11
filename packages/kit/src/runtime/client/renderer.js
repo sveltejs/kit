@@ -87,7 +87,8 @@ export class Renderer {
 		this.stores = {
 			page: page_store({}),
 			navigating: writable(null),
-			session: writable(session)
+			session: writable(session),
+			navigationAnnouncer: writable([])
 		};
 
 		this.$session = null;

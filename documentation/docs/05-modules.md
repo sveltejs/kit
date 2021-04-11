@@ -52,6 +52,14 @@ The stores themselves attach to the correct context at the point of subscription
 - `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
+### $app/a11y
+
+```js
+import { setNavigationAnnouncer } from '$app/a11y';
+```
+
+- `setNavigationAnnouncer(announcer)` — Set a navigation announcer for route changes. The parameter is a function that gets the `document.title` and should return a string. The innermost announcer takes precedence. This means you can for example set a generic announcer in your root `$layout`, and for specific subroutes, set a specific different announcer. If no announcer is set, a default announcer will emit `Navigated to ${title}` after each navigation.
+
 ### $lib
 
 This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`]. It allows you to access common components and utility modules without `../../../../` nonsense.
