@@ -274,7 +274,6 @@ export class Renderer {
 
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
-			const [pattern, a, b, params] = route;
 
 			if (route.length === 1) {
 				return { reload: true };
@@ -285,7 +284,7 @@ export class Renderer {
 			let j = i + 1;
 			while (j < info.routes.length) {
 				const next = info.routes[j];
-				if (next[0].toString() === pattern.toString()) {
+				if (next[0].toString() === route[0].toString()) {
 					if (next.length !== 1) next[1].forEach((loader) => loader());
 					j += 1;
 				} else {
@@ -293,15 +292,7 @@ export class Renderer {
 				}
 			}
 
-			const nodes = a.map((loader) => loader());
-			const page = {
-				host: this.host,
-				path: info.path,
-				params: params ? params(route[0].exec(info.path)) : {},
-				query: info.query
-			};
-
-			const result = await this._load({ nodes, page });
+			const result = await this._load({ route, path: info.path, query: info.query });
 			if (result) return result;
 		}
 
@@ -483,23 +474,25 @@ export class Renderer {
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _load({ nodes, page }) {
-		const query = page.query.toString();
-
-		const hash = page.path + query;
+	async _load({ route, path, query }) {
+		const hash = `${path}?${query}`;
 
 		if (this.cache.has(hash)) {
 			return this.cache.get(hash);
 		}
 
+		const [pattern, a, b, get_params] = route;
+		const params = get_params ? get_params(pattern.exec(path)) : {};
+
 		const changed = this.current.page && {
-			path: page.path !== this.current.page.path,
-			params: Object.keys(page.params).filter(
-				(key) => this.current.page.params[key] !== page.params[key]
-			),
-			query: query !== this.current.page.query.toString(),
+			path: path !== this.current.page.path,
+			params: Object.keys(params).filter((key) => this.current.page.params[key] !== params[key]),
+			query: query.toString() !== this.current.page.query.toString(),
 			session: this.session_id !== this.current.session_id
 		};
+
+		/** @type {import('types.internal').Page} */
+		const page = { host: this.host, path, query, params };
 
 		/** @type {import('./types').BranchNode[]} */
 		const branch = [];
@@ -514,14 +507,14 @@ export class Renderer {
 		/** @type {Error} */
 		let error = null;
 
-		for (let i = 0; i < nodes.length; i += 1) {
+		for (let i = 0; i < a.length; i += 1) {
 			/** @type {import('./types').BranchNode} */
 			let node;
 
 			try {
 				const previous = this.current.branch[i];
 
-				const module = await nodes[i];
+				const module = await a[i]();
 				if (!module) continue;
 
 				const changed_since_last_render =
@@ -540,7 +533,7 @@ export class Renderer {
 						context
 					});
 
-					const is_leaf = i === nodes.length - 1;
+					const is_leaf = i === a.length - 1;
 
 					if (node && node.loaded) {
 						if (node.loaded.error) {
@@ -574,8 +567,8 @@ export class Renderer {
 				return await this._load_error({
 					status,
 					error,
-					path: page.path,
-					query: page.query
+					path,
+					query
 				});
 			}
 

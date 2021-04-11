@@ -8,8 +8,9 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
-	nodes: Array<Promise<CSRComponent>>;
-	page: Page;
+	route: CSRRoute;
+	path: string;
+	query: URLSearchParams;
 };
 
 export type NavigationResult = {
