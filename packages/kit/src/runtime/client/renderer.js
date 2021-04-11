@@ -362,7 +362,7 @@ export class Renderer {
 		const maxage = leaf.loaded && leaf.loaded.maxage;
 
 		if (maxage) {
-			const hash = page.path + page.query.toString();
+			const hash = `${page.path}?${page.query}`;
 			let ready = false;
 
 			const clear = () => {
