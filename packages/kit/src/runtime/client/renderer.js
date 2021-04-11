@@ -116,16 +116,55 @@ export class Renderer {
 	 *   page: import('types.internal').Page;
 	 * }} selected
 	 */
-	async start(selected) {
-		const result = selected.error
-			? // TODO tidy this up
-			  await this._load_error({
-					status: selected.status,
-					error: selected.error,
-					path: selected.page.path,
-					query: selected.page.query
-			  })
-			: await this._load(selected);
+	async start({ status, error, nodes, page }) {
+		/** @type {import('./types').BranchNode[]} */
+		const branch = [];
+
+		/** @type {Record<string, any>} */
+		let context = {};
+
+		/** @type {import('./types').NavigationResult} */
+		let result;
+
+		try {
+			for (let i = 0; i < nodes.length; i += 1) {
+				const is_leaf = i === nodes.length - 1;
+
+				const node = await this._load_node({
+					module: await nodes[i],
+					page,
+					context,
+					status: is_leaf && status,
+					error: is_leaf && error
+				});
+
+				branch.push(node);
+
+				if (node && node.loaded) {
+					if (node.loaded.error) {
+						if (error) throw node.loaded.error;
+						({ status, error } = node.loaded);
+					}
+					if (node.loaded.context) {
+						context = {
+							...context,
+							...node.loaded.context
+						};
+					}
+				}
+			}
+
+			result = await this._rename_me({ page, branch });
+		} catch (e) {
+			if (error) throw e;
+
+			status = 500;
+			error = e;
+		}
+
+		if (error) {
+			result = await this._load_error({ status, error, path: page.path, query: page.query });
+		}
 
 		if (result.redirect) {
 			// this is a real edge case — `load` would need to return
