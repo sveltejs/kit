@@ -126,6 +126,12 @@ export class Renderer {
 		/** @type {import('./types').NavigationResult} */
 		let result;
 
+		/** @type {number} */
+		let new_status;
+
+		/** @type {Error} new_error */
+		let new_error;
+
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
@@ -143,9 +149,9 @@ export class Renderer {
 				if (node && node.loaded) {
 					if (node.loaded.error) {
 						if (error) throw node.loaded.error;
-						({ status, error } = node.loaded);
-					}
-					if (node.loaded.context) {
+						new_status = node.loaded.status;
+						new_error = node.loaded.error;
+					} else if (node.loaded.context) {
 						context = {
 							...context,
 							...node.loaded.context
@@ -158,12 +164,17 @@ export class Renderer {
 		} catch (e) {
 			if (error) throw e;
 
-			status = 500;
-			error = e;
+			new_status = 500;
+			new_error = e;
 		}
 
-		if (error) {
-			result = await this._load_error({ status, error, path: page.path, query: page.query });
+		if (new_error) {
+			result = await this._load_error({
+				status: new_status,
+				error: new_error,
+				path: page.path,
+				query: page.query
+			});
 		}
 
 		if (result.redirect) {
@@ -411,7 +422,7 @@ export class Renderer {
 				context: false
 			},
 			loaded: null,
-			context: null
+			context
 		};
 
 		/** @type {Record<string, string>} */
@@ -465,6 +476,7 @@ export class Renderer {
 			if (!loaded) return;
 
 			node.loaded = normalize(loaded);
+			if (node.loaded.context) node.context = node.loaded.context;
 		}
 
 		return node;
@@ -507,15 +519,18 @@ export class Renderer {
 		/** @type {Error} */
 		let error = null;
 
-		for (let i = 0; i < a.length; i += 1) {
+		// preload modules
+		a.forEach((loader) => loader());
+
+		load: for (let i = 0; i < a.length; i += 1) {
 			/** @type {import('./types').BranchNode} */
 			let node;
 
 			try {
-				const previous = this.current.branch[i];
+				if (!a[i]) continue;
 
 				const module = await a[i]();
-				if (!module) continue;
+				const previous = this.current.branch[i];
 
 				const changed_since_last_render =
 					!previous ||
@@ -564,21 +579,53 @@ export class Renderer {
 			}
 
 			if (error) {
+				while (i--) {
+					if (b[i]) {
+						let error_loaded;
+
+						/** @type {import('./types').BranchNode} */
+						let node_loaded;
+						let j = i;
+						while (!(node_loaded = branch[j])) {
+							j -= 1;
+						}
+
+						try {
+							error_loaded = await this._load_node({
+								status,
+								error,
+								module: await b[i](),
+								page,
+								context: node_loaded.context
+							});
+
+							if (error_loaded.loaded.error) {
+								continue;
+							}
+
+							branch.push(error_loaded);
+							break load;
+						} catch (e) {
+							continue;
+						}
+					}
+				}
+
 				return await this._load_error({
 					status,
 					error,
 					path,
 					query
 				});
-			}
+			} else {
+				if (node && node.loaded && node.loaded.context) {
+					context = {
+						...context,
+						...node.loaded.context
+					};
+				}
 
-			branch.push(node);
-
-			if (node && node.loaded && node.loaded.context) {
-				context = {
-					...context,
-					...node.loaded.context
-				};
+				branch.push(node);
 			}
 		}
 
