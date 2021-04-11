@@ -73,7 +73,6 @@ export class Renderer {
 		/** @type {import('./types').NavigationState} */
 		this.current = {
 			page: null,
-			query: null,
 			session_id: null,
 			branch: []
 		};
