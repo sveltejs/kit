@@ -14,7 +14,7 @@
 	button {
 		font-family: inherit;
 		font-size: inherit;
-		padding: 1em 2em;
+		padding: 1em 4em;
 		color: #ff3e00;
 		background-color: rgba(255, 62, 0, 0.1);
 		border-radius: 2em;
