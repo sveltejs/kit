@@ -73,7 +73,7 @@ export function getSession({ context }) {
 
 ### handle
 
-This function runs on every request, and determines the response. It receives the `request` and `render`, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, and determines the response. It receives the `request` object and `render` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 If unimplemented, defaults to `({ request, render }) => render(request)`.
 
