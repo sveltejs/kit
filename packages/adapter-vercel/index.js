@@ -1,13 +1,18 @@
 const { writeFileSync, mkdirSync, renameSync } = require('fs');
 const { resolve, join } = require('path');
 
-module.exports = function () {
+/**
+ * @param {{
+ *   out?: string;
+ * }} options
+ */
+module.exports = function ({ out = '.vercel_build_output' } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(utils) {
-			const vercel_output_directory = resolve('.vercel_build_output');
+			const vercel_output_directory = resolve(out);
 			const config_directory = join(vercel_output_directory, 'config');
 			const static_directory = join(vercel_output_directory, 'static');
 			const lambda_directory = join(vercel_output_directory, 'functions', 'node', 'render');

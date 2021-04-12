@@ -14,7 +14,13 @@ const vercel = require('@sveltejs/adapter-vercel');
 module.exports = {
 	kit: {
 		...
-		adapter: vercel()
+		adapter: vercel()	// outputs to `.vercel_build_output`
 	}
 };
+```
+
+You can set a custom build output directory by passing an option to the adapter:
+
+```js
+vercel({ out: 'my-output-directory' });
 ```
