@@ -1,4 +1,4 @@
-const { writeFileSync, mkdirSync, renameSync } = require('fs');
+const { renameSync } = require('fs');
 const { resolve, join } = require('path');
 
 module.exports = function () {
