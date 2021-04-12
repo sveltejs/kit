@@ -76,15 +76,12 @@ async function main() {
 
 	await prompt_modifications(target);
 
-	console.log(
-		`\n✧ Want to add other parts to your code base or add support for ${bold(
-			cyan('CSS preprocessors')
-		)}?`
-	);
+	console.log('\n✧ Want to add other parts to your codebase?');
+
 	console.log(
 		`\nVisit ${bold(
-			cyan('https://github.com/svelte-add/svelte-adders')
-		)} and unleash the possibilities with a community project of commands to add particular functionalities to Svelte projects.\n`
+			cyan('https://github.com/sveltejs/integrations')
+		)} and see all the add-on possibilities to your Svelte project.\n`
 	);
 
 	console.log('\nNext steps:');
