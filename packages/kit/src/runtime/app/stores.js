@@ -13,37 +13,31 @@ export function stores() {
 	return getStores();
 }
 
-/** @typedef {import('svelte/store').Readable<{
- *   host: string;
- *   path: string;
- *   query: URLSearchParams;
- *   params: Record<string, string>
- * }>} PageStore */
-
+/**
+ * @type {import('$app/stores').getStores}
+ */
 export const getStores = () => {
 	const stores = getContext('__svelte__');
 
 	return {
-		/** @type {PageStore} */
 		page: {
 			subscribe: stores.page.subscribe
 		},
-		/** @type {import('svelte/store').Readable<boolean>} */
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
+		// @ts-ignore - deprecated, not part of type definitions, but still callable
 		get preloading() {
 			console.error('stores.preloading is deprecated; use stores.navigating instead');
 			return {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		/** @type {import('svelte/store').Writable<any>} */
 		session: stores.session
 	};
 };
 
-/** @type {PageStore} */
+/** @type {typeof import('$app/stores').page} */
 export const page = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
@@ -52,7 +46,7 @@ export const page = {
 	}
 };
 
-/** @type {import('svelte/store').Readable<boolean>} */
+/** @type {typeof import('$app/stores').navigating} */
 export const navigating = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
@@ -70,7 +64,7 @@ const error = (verb) => {
 	);
 };
 
-/** @type {import('svelte/store').Writable<any>} */
+/** @type {typeof import('$app/stores').session} */
 export const session = {
 	subscribe(fn) {
 		const store = getStores().session;

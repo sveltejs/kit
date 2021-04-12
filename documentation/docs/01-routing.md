@@ -8,9 +8,13 @@ At the heart of SvelteKit is a _filesystem-based router_. This means that the st
 
 There are two types of route — **pages** and **endpoints**.
 
+Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default pages are rendered on both the client and server though this behavior is configurable.
+
+Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default though may also return data in other formats.
+
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). When a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel.
+Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
 
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
@@ -89,9 +93,7 @@ export async function get({ params }) {
 
 > Returning nothing is equivalent to an explicit 404 response.
 
-Because this module only runs on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)), you can freely access things like databases. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
-
-The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response.
+The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 

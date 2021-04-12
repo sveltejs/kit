@@ -25,6 +25,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	button:focus,
 	button:hover {
 		border: 3px solid #ff3e00;
 	}
