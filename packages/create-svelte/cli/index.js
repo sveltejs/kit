@@ -7,7 +7,6 @@ import path from 'path';
 import prompts from 'prompts/lib/index';
 import glob from 'tiny-glob/sync.js';
 import gitignore_contents from '../template/.gitignore';
-import add_css from './modifications/add_css';
 import add_typescript from './modifications/add_typescript';
 // import versions from './versions';
 import { version } from '../package.json';
@@ -110,18 +109,6 @@ async function prompt_modifications(target) {
 		initial: false
 	});
 	await add_typescript(target, ts_response.value);
-
-	const css_response = await prompts({
-		type: 'select',
-		name: 'value',
-		message: 'What do you want to use for writing Styles in Svelte components?',
-		choices: [
-			{ title: 'CSS', value: 'css' },
-			{ title: 'Less', value: 'less' },
-			{ title: 'SCSS', value: 'scss' }
-		]
-	});
-	await add_css(target, css_response.value);
 
 	const eslint_response = await prompts({
 		type: 'confirm',
