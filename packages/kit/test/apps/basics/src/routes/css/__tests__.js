@@ -15,4 +15,11 @@ export default function (test) {
 			'rgb(128, 0, 128)'
 		);
 	});
+
+	test('applies local styles', '/css', async ({ page }) => {
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('.also-styled')).color),
+			'rgb(0, 0, 255)'
+		);
+	});
 }
