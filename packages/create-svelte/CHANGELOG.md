@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.47
+
+### Patch Changes
+
+- 59a1e06: Add button:focus CSS styles to index page of default app
+- 39b6967: Add ambient type definitions for \$app imports
+- dfbe62b: Add title tag to index page of default app
+
 ## 2.0.0-next.46
 
 ### Patch Changes

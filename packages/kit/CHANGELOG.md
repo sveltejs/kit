@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.72
+
+### Patch Changes
+
+- 1d5228c: Make --open option work with --https
+- 39b6967: Add ambient type definitions for \$app imports
+- 1d5228c: Make --open option work on WSL
+- bb2d97d: Fix argument type for RequestHandler
+
 ## 1.0.0-next.71
 
 ### Patch Changes
