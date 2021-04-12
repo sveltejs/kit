@@ -104,7 +104,7 @@ An object containing zero or more of the following `string` values:
 
 ### prerender
 
-See [Prerendering](#prerendering). An object containing zero or more of the following:
+See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
 
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
