@@ -76,9 +76,15 @@ async function main() {
 
 	await prompt_modifications(target);
 
-    console.log(`\n✧ Want to add other parts to your code base or add support for ${bold(cyan('CSS preprocessors'))}?`);
 	console.log(
-        `\nVisit ${bold(cyan('https://github.com/svelte-add/svelte-adders'))} and unleash the possibilities with a community project of commands to add particular functionalities to Svelte projects.\n`
+		`\n✧ Want to add other parts to your code base or add support for ${bold(
+			cyan('CSS preprocessors')
+		)}?`
+	);
+	console.log(
+		`\nVisit ${bold(
+			cyan('https://github.com/svelte-add/svelte-adders')
+		)} and unleash the possibilities with a community project of commands to add particular functionalities to Svelte projects.\n`
 	);
 
 	console.log('\nNext steps:');
@@ -102,7 +108,7 @@ async function main() {
  * @param {string} target
  */
 async function prompt_modifications(target) {
-    const template_response = await prompts({
+	const template_response = await prompts({
 		type: 'select',
 		name: 'value',
 		message: 'Which app Svelte template do you want to use?',
@@ -111,8 +117,8 @@ async function prompt_modifications(target) {
 			{ title: 'Skeleton App', value: 'skeleton' }
 		]
 	});
-    const is_skeleton_template = template_response.value === 'skeleton';
-    await add_skeleton_template(target, is_skeleton_template);
+	const is_skeleton_template = template_response.value === 'skeleton';
+	await add_skeleton_template(target, is_skeleton_template);
 
 	const ts_response = await prompts({
 		type: 'confirm',

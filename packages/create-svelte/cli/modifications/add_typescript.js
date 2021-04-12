@@ -23,24 +23,26 @@ export default async function add_typescript(cwd, yes, is_skeleton_template) {
 			'svelte-preprocess': '^4.0.0'
 		});
 
-        update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
-        update_component(cwd, 'src/routes/$layout.svelte', [['<script>', '<script lang="ts">']]);
+		update_component(cwd, 'src/routes/index.svelte', [['<script>', '<script lang="ts">']]);
+		update_component(cwd, 'src/routes/$layout.svelte', [['<script>', '<script lang="ts">']]);
 
-        if (!is_skeleton_template) {
-            update_component(cwd, 'src/lib/DarkModeToggle.svelte', [['<script>', '<script lang="ts">']]);
-            update_component(cwd, 'src/lib/HeaderNavigation.svelte', [['<script>', '<script lang="ts">']]);
-            update_component(cwd, 'src/lib/Counter.svelte', [
-                ['<script>', '<script lang="ts">'],
-                [
-                    'const action = { operation: undefined };',
-                    "const action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
-                ],
-                [
-                    'const counterTransition = (_, { duration }) => {',
-                    'const counterTransition = (_, { duration }: { duration: number }) => {'
-                ] 
-            ]);
-        }
+		if (!is_skeleton_template) {
+			update_component(cwd, 'src/lib/DarkModeToggle.svelte', [['<script>', '<script lang="ts">']]);
+			update_component(cwd, 'src/lib/HeaderNavigation.svelte', [
+				['<script>', '<script lang="ts">']
+			]);
+			update_component(cwd, 'src/lib/Counter.svelte', [
+				['<script>', '<script lang="ts">'],
+				[
+					'const action = { operation: undefined };',
+					"const action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
+				],
+				[
+					'const counterTransition = (_, { duration }) => {',
+					'const counterTransition = (_, { duration }: { duration: number }) => {'
+				]
+			]);
+		}
 
 		add_svelte_preprocess_to_config(cwd);
 		add_tsconfig(cwd);
