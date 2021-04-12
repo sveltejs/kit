@@ -8,8 +8,6 @@ At the heart of SvelteKit is a _filesystem-based router_. This means that the st
 
 There are two types of route — **pages** and **endpoints**.
 
-### Pages vs. Endpoints
-
 Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default pages are rendered on both the client and server though this behavior is configurable.
 
 Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default though may also return data in other formats.
