@@ -1,7 +1,7 @@
 <script>
 	import { setNavigationAnnouncer } from '$app/a11y';
 
-	setNavigationAnnouncer(title => 'Seitennavigation zu '+ title);	
+	setNavigationAnnouncer(title => 'Seitennavigation zu ' + title);	
 </script>
 
 <svelte:head>
