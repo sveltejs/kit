@@ -102,10 +102,13 @@ export type GetSession<Context = any, Session = any> = {
 	({ context }: { context: Context }): Session | Promise<Session>;
 };
 
-export type Handle<Context = any> = (
-	request: Request<Context>,
-	render: (request: Request<Context>) => Response | Promise<Response>
-) => Response | Promise<Response>;
+export type Handle<Context = any> = ({
+	request,
+	render
+}: {
+	request: Request<Context>;
+	render: (request: Request<Context>) => Response | Promise<Response>;
+}) => Response | Promise<Response>;
 
 export type Page = {
 	host: string;

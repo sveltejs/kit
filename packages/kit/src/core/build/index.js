@@ -299,13 +299,11 @@ async function build_server(
 				]
 			};
 
-			const get_hooks = hooks => ({
-				getContext: hooks.getContext || (() => ({})),
-				getSession: hooks.getSession || (() => ({})),
-				handle: hooks.handle || ((request, render) => render(request))
-			});
-
-			const hooks = get_hooks(user_hooks);
+			const hooks = {
+				getContext: user_hooks.getContext || (() => ({})),
+				getSession: user_hooks.getSession || (() => ({})),
+				handle: user_hooks.handle || (({ request, render }) => render(request))
+			};
 
 			const module_lookup = {
 				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
