@@ -160,7 +160,7 @@ export class Renderer {
 				}
 			}
 
-			result = await this._rename_me({ page, branch });
+			result = await this._get_navigation_result_from_branch({ page, branch });
 		} catch (e) {
 			if (error) throw e;
 
@@ -274,6 +274,25 @@ export class Renderer {
 		return this.loading.promise;
 	}
 
+	/** @param {import('./types').NavigationResult} result */
+	_init(result) {
+		this.current = result.state;
+
+		const style = document.querySelector('style[data-svelte]');
+		if (style) style.remove();
+
+		this.root = new this.Root({
+			target: this.target,
+			props: {
+				stores: this.stores,
+				...result.props
+			},
+			hydrate: true
+		});
+
+		this.started = true;
+	}
+
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @returns {Promise<import('./types').NavigationResult>}
@@ -315,25 +334,6 @@ export class Renderer {
 		});
 	}
 
-	/** @param {import('./types').NavigationResult} result */
-	_init(result) {
-		this.current = result.state;
-
-		const style = document.querySelector('style[data-svelte]');
-		if (style) style.remove();
-
-		this.root = new this.Root({
-			target: this.target,
-			props: {
-				stores: this.stores,
-				...result.props
-			},
-			hydrate: true
-		});
-
-		this.started = true;
-	}
-
 	/**
 	 *
 	 * @param {{
@@ -341,7 +341,7 @@ export class Renderer {
 	 *   branch: import('./types').BranchNode[]
 	 * }} opts
 	 */
-	async _rename_me({ page, branch }) {
+	async _get_navigation_result_from_branch({ page, branch }) {
 		const filtered = branch.filter(Boolean);
 
 		/** @type {import('./types').NavigationResult} */
@@ -352,7 +352,6 @@ export class Renderer {
 				session_id: this.session_id
 			},
 			props: {
-				/** @type {CSRComponent[]} */
 				components: filtered.map((node) => node.module.default)
 			}
 		};
@@ -629,7 +628,7 @@ export class Renderer {
 			}
 		}
 
-		return await this._rename_me({ page, branch });
+		return await this._get_navigation_result_from_branch({ page, branch });
 	}
 
 	/**
@@ -665,6 +664,6 @@ export class Renderer {
 			})
 		];
 
-		return await this._rename_me({ page, branch });
+		return await this._get_navigation_result_from_branch({ page, branch });
 	}
 }
