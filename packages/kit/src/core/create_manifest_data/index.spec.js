@@ -47,14 +47,16 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [layout, index]
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [layout, about]
+			a: [layout, about],
+			b: [error]
 		},
 
 		{
@@ -68,7 +70,8 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [layout, blog]
+			a: [layout, blog],
+			b: [error]
 		},
 
 		{
@@ -82,7 +85,8 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [layout, blog_$slug]
+			a: [layout, blog_$slug],
+			b: [error]
 		}
 	]);
 });
@@ -103,14 +107,16 @@ test('creates routes with layout', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [layout, index]
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
-			parts: [layout, foo_$layout, foo]
+			a: [layout, foo_$layout, foo],
+			b: [error]
 		}
 	]);
 });
@@ -146,7 +152,7 @@ test('sorts routes correctly', () => {
 	const { routes } = create('samples/sorting');
 
 	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.parts : p.file)),
+		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
 		[
 			[layout, 'samples/sorting/index.svelte'],
 			[layout, 'samples/sorting/about.svelte'],
@@ -254,14 +260,16 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [layout, index]
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [layout, about]
+			a: [layout, about],
+			b: [error]
 		},
 
 		{
@@ -275,7 +283,8 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [layout, blog]
+			a: [layout, blog],
+			b: [error]
 		},
 
 		{
@@ -289,7 +298,8 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [layout, blog_$slug]
+			a: [layout, blog_$slug],
+			b: [error]
 		}
 	]);
 });
@@ -307,6 +317,31 @@ test('lists static assets', () => {
 			file: 'foo.txt',
 			size: 9,
 			type: 'text/plain'
+		}
+	]);
+});
+
+test('includes nested error components', () => {
+	const { routes } = create('samples/nested-errors');
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			pattern: /^\/foo\/bar\/baz\/?$/,
+			params: [],
+			a: [
+				layout,
+				'samples/nested-errors/foo/$layout.svelte',
+				undefined,
+				'samples/nested-errors/foo/bar/baz/$layout.svelte',
+				'samples/nested-errors/foo/bar/baz/index.svelte'
+			],
+			b: [
+				error,
+				undefined,
+				'samples/nested-errors/foo/bar/$error.svelte',
+				'samples/nested-errors/foo/bar/baz/$error.svelte'
+			]
 		}
 	]);
 });

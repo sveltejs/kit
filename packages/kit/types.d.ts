@@ -1,5 +1,5 @@
 import './types.ambient';
-import { Headers, LoadInput, LoadOutput, Logger } from './types.internal';
+import { Headers, ErrorLoadInput, LoadInput, LoadOutput, Logger } from './types.internal';
 import { UserConfig as ViteConfig } from 'vite';
 
 export type Config = {
@@ -95,6 +95,8 @@ export type RequestHandler<Context = any, Body = unknown> = (
 ) => Response | Promise<Response>;
 
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
+
+export type ErrorLoad = (input: ErrorLoadInput) => LoadOutput | Promise<LoadOutput>;
 
 export type GetContext<Context = any> = (incoming: Incoming) => Context;
 

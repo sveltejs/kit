@@ -263,14 +263,12 @@ class Watcher extends EventEmitter {
 								handle: hooks.handle || (({ request, render }) => render(request))
 							},
 							only_render_prerenderable_pages: false,
-							// get_component_path: (id) => `/${id}?import`,
 							get_stack: (error) => {
 								this.vite.ssrFixStacktrace(error);
 								return error.stack;
 							},
 							get_static_file: (file) =>
 								fs.readFileSync(path.join(this.config.kit.files.assets, file)),
-							// get_amp_css: (url) => '', // TODO: implement this
 							ssr: this.config.kit.ssr,
 							router: this.config.kit.router,
 							hydrate: this.config.kit.hydrate
@@ -316,7 +314,8 @@ class Watcher extends EventEmitter {
 						type: 'page',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						parts: route.parts
+						a: route.a,
+						b: route.b
 					};
 				}
 

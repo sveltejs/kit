@@ -65,8 +65,6 @@ export async function render_response({
 
 		/** @type {Record<string, any>} */
 		const props = {
-			status,
-			error,
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
