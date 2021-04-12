@@ -41,7 +41,7 @@
 
 	@media (min-width: 480px) {
 		section {
-			margin-top: -8rem;
+			margin-top: -6rem;
 		}
 	}
 </style>

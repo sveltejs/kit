@@ -32,13 +32,13 @@ export default async function add_typescript(cwd, yes, is_skeleton_template) {
             update_component(cwd, 'src/lib/Counter.svelte', [
                 ['<script>', '<script lang="ts">'],
                 [
-                    'let action = { operation: undefined };',
-                    "let action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
+                    'const action = { operation: undefined };',
+                    "const action: { operation?: 'ADD' | 'REMOVE' } = { operation: undefined };"
                 ],
                 [
                     'const counterTransition = (_, { duration }) => {',
-                    'const counterTransition = (_, { duration }: { duration: number}) => {'
-                ]
+                    'const counterTransition = (_, { duration }: { duration: number }) => {'
+                ] 
             ]);
         }
 
