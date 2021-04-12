@@ -50,8 +50,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} layout_stack
-	 * @param {string[]} error_stack
+	 * @param {string[]} layout_stack // accumulated $layout.svelte components
+	 * @param {string[]} error_stack // accumulated $error.svelte components
 	 */
 	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
