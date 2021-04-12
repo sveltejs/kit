@@ -1,4 +1,5 @@
 ---
+'create-svelte': patch
 '@sveltejs/kit': patch
 ---
 
