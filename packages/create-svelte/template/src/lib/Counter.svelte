@@ -44,7 +44,7 @@
 
 <p>Counts so far</p>
 
-<div class="counterControls">
+<div class="counter-controls">
 	<button
 		class:disabled={count === 0}
 		on:click={() => (action.operation = 'REMOVE')}
@@ -67,15 +67,15 @@
 </div>
 
 <style>
-	.counterControls {
+	.counter-controls {
 		display: flex;
 	}
 
-	.counterControls button.disabled {
+	.counter-controls button.disabled {
 		opacity: 0.3;
 	}
 
-	.counterControls button {
+	.counter-controls button {
 		width: 36px;
 		margin: 0 6px;
 		display: flex;
@@ -89,16 +89,16 @@
 		transition: background-color 0.2s linear;
 	}
 
-	.counterControls button:hover {
+	.counter-controls button:hover {
 		background-color: var(--secondary-color);
 	}
 
-	.counterControls button svg path {
+	.counter-controls button svg path {
 		stroke: var(--text-color);
 		fill: var(--text-color);
 	}
 
-	.counterControls div {
+	.counter-controls div {
 		min-width: 32px;
 		padding: 8px 16px;
 		border-radius: 4px;

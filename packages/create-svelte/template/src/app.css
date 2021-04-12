@@ -11,7 +11,7 @@
 	--background-without-opacity: rgba(255, 255, 255, 0.7);
 }
 
-[data-theme='dark'] {
+:root[data-theme='dark'] {
 	--primary-color: #1f272e;
 	--secondary-color: #2e3a44;
 	--tertiary-color: #393d45;
