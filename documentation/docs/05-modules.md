@@ -58,7 +58,7 @@ The stores themselves attach to the correct context at the point of subscription
 import { setNavigationAnnouncer } from '$app/a11y';
 ```
 
-- `setNavigationAnnouncer(announcer)` — Set a navigation announcer for route changes. The parameter is a function that gets the `document.title` and should return a string. The innermost announcer takes precedence. This means you can for example set a generic announcer in your root `$layout`, and for specific subroutes, set a specific different announcer. If no announcer is set, a default announcer will emit `Navigated to ${title}` after each navigation.
+- `setNavigationAnnouncer(announcer)` — Set a navigation announcer for route changes. The parameter is a function that receives the `document.title` and should return a `string`. The innermost announcer takes precedence. This means you can for example set a generic announcer in your root `$layout`, and for specific subroutes, set a specific different announcer. If no announcer is set, a default announcer will emit `Navigated to ${title}` after each navigation.
 
 ### $lib
 
