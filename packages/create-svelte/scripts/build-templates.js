@@ -68,9 +68,17 @@ async function generate_templates() {
 					contents
 				});
 			} else if (file.name.endsWith('.svelte')) {
+				// we jump through some hoops, rather than just using svelte.preprocess,
+				// so that the output preserves the original formatting to the extent
+				// possible (e.g. preserving double line breaks). Sucrase is the best
+				// tool for the job because it just removes the types; Prettier then
+				// tidies up the end result
 				const contents = file.contents.replace(
 					/<script([^>]+)>([\s\S]+)<\/script>/g,
 					(m, attrs, typescript) => {
+						// Sucrase assumes 'unused' imports (which _are_ used, but only
+						// in the markup) are type imports, and strips them. This step
+						// prevents it from drawing that conclusion
 						const imports = [];
 						const import_pattern = /import (.+?) from/g;
 						let import_match;
