@@ -92,9 +92,11 @@ async function generate_templates() {
 
 						const suffix = `\n${imports.join(',')}`;
 
-						const transformed = sucrase.transform(typescript + suffix, {
-							transforms: ['typescript']
-						}).code.slice(0, -suffix.length);
+						const transformed = sucrase
+							.transform(typescript + suffix, {
+								transforms: ['typescript']
+							})
+							.code.slice(0, -suffix.length);
 
 						const contents = prettier
 							.format(transformed, {
