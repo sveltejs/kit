@@ -43,7 +43,7 @@
 		"assets",
 		"dist",
 		"types.d.ts",
-		"types.ambient.d.ts",
+		"types.ambient-modules.d.ts",
 		"types.internal.d.ts",
 		"svelte-kit.js"
 	],
