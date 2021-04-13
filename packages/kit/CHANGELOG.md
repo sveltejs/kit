@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.73
+
+### Patch Changes
+
+- 1007f67: Allow non-root \$error.svelte components
+- ca108a6: Change `handle` hook from positional arguments to named arguments
+
 ## 1.0.0-next.72
 
 ### Patch Changes

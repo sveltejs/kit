@@ -1,5 +1,5 @@
+import { CSRComponent, CSRRoute, LoadOutput } from '../../../types.internal';
 import { Page } from '../../../types';
-import { CSRComponent, CSRRoute } from '../../../types.internal';
 
 export type NavigationInfo = {
 	id: string;
@@ -9,10 +9,9 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
-	status: number;
-	error: Error;
-	nodes: Array<Promise<CSRComponent>>;
-	page: Page;
+	route: CSRRoute;
+	path: string;
+	query: URLSearchParams;
 };
 
 export type NavigationResult = {
@@ -22,16 +21,9 @@ export type NavigationResult = {
 	props?: Record<string, any>;
 };
 
-export type NavigationState = {
-	page: Page;
-	query: string;
-	session_changed: boolean;
-	nodes: PageNode[];
-	contexts: Array<Record<string, any[]>>;
-};
-
-type PageNode = {
+export type BranchNode = {
 	module: CSRComponent;
+	loaded: LoadOutput;
 	uses: {
 		params: Set<string>;
 		path: boolean;
@@ -39,4 +31,11 @@ type PageNode = {
 		session: boolean;
 		context: boolean;
 	};
+	context: Record<string, any>;
+};
+
+export type NavigationState = {
+	page: Page;
+	branch: BranchNode[];
+	session_id: number;
 };

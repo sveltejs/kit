@@ -21,25 +21,33 @@ export async function respond_with_error({ request, options, $session, status, e
 		params: {}
 	};
 
+	const loaded = await load_node({
+		request,
+		options,
+		route: null,
+		page,
+		node: default_layout,
+		$session,
+		context: {},
+		is_leaf: false,
+		is_error: false
+	});
+
 	const branch = [
+		loaded,
 		await load_node({
 			request,
 			options,
 			route: null,
 			page,
-			node: default_layout,
-			$session,
-			context: {},
-			is_leaf: false
-		}),
-		{
 			node: default_error,
-			loaded: {
-				maxage: 0
-			},
-			fetched: null,
-			uses_credentials: null
-		}
+			$session,
+			context: loaded.context,
+			is_leaf: false,
+			is_error: true,
+			status,
+			error
+		})
 	];
 
 	try {

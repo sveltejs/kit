@@ -7,7 +7,7 @@ import {
 	Load,
 	Page,
 	RequestHandler,
-	Response
+	Response as SSRResponse
 } from './types';
 import { UserConfig as ViteConfig } from 'vite';
 import { Response as NodeFetchResponse } from 'node-fetch';
@@ -77,7 +77,7 @@ export type App = {
 		};
 		prerendering: boolean;
 	}) => void;
-	render: (incoming: Incoming, options: SSRRenderOptions) => Response;
+	render: (incoming: Incoming, options: SSRRenderOptions) => SSRResponse;
 };
 
 // TODO we want to differentiate between request headers, which
@@ -88,16 +88,21 @@ export type Headers = Record<string, string>;
 
 export type LoadInput = {
 	page: Page;
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<NodeFetchResponse>;
+	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: any;
 	context: Record<string, any>;
+};
+
+export type ErrorLoadInput = LoadInput & {
+	status: number;
+	error: Error;
 };
 
 export type LoadOutput = {
 	status?: number;
 	error?: Error;
 	redirect?: string;
-	props?: Record<string, any>;
+	props?: Record<string, any> | Promise<Record<string, any>>;
 	context?: Record<string, any>;
 	maxage?: number;
 };
@@ -137,7 +142,12 @@ export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
-	parts: PageId[];
+	// plan a is to render 1 or more layout components followed
+	// by a leaf component. if one of them fails in `load`, we
+	// backtrack until we find the nearest error component —
+	// plan b — and render that instead
+	a: PageId[];
+	b: PageId[];
 };
 
 export type SSREndpoint = {
@@ -151,7 +161,7 @@ export type SSREndpoint = {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], GetParams?];
+export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
 export type CSREndpoint = [RegExp];
 
@@ -194,7 +204,7 @@ export type SSRRenderOptions = {
 	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
-	dependencies?: Map<string, Response>;
+	dependencies?: Map<string, SSRResponse>;
 	only_render_prerenderable_pages?: boolean;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;
@@ -215,7 +225,8 @@ export type PageData = {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
-	parts: any[]; // TODO
+	a: string[];
+	b: string[];
 };
 
 export type EndpointData = {

@@ -2,6 +2,8 @@ import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
 
+/** @typedef {import('./types.js').Loaded} Loaded */
+
 /**
  * @param {{
  *   request: import('types').Request;
@@ -25,7 +27,7 @@ export async function respond({ request, options, $session, route }) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.parts.map((id) => options.load_component(id)));
+		nodes = await Promise.all(route.a.map((id) => id && options.load_component(id)));
 	} catch (error) {
 		return await respond_with_error({
 			request,
@@ -54,70 +56,114 @@ export async function respond({ request, options, $session, route }) {
 		};
 	}
 
-	/** @type {import('./types.js').Loaded[]} */
+	/** @type {Loaded[]} */
 	let branch;
 
-	if (page_config.ssr) {
+	/** @type {number} */
+	let status = 200;
+
+	/** @type {Error} */
+	let error;
+
+	ssr: if (page_config.ssr) {
 		let context = {};
 		branch = [];
 
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
-			/** @type {import('./types.js').Loaded} */
+			/** @type {Loaded} */
 			let loaded;
 
-			try {
-				loaded = await load_node({
-					request,
-					options,
-					route,
-					page,
-					node,
-					$session,
-					context,
-					is_leaf: i === nodes.length - 1
-				});
+			if (node) {
+				try {
+					loaded = await load_node({
+						request,
+						options,
+						route,
+						page,
+						node,
+						$session,
+						context,
+						is_leaf: i === nodes.length - 1,
+						is_error: false
+					});
 
-				if (!loaded) return;
+					if (!loaded) return;
 
-				if (loaded.loaded.redirect) {
-					return {
-						status: loaded.loaded.status,
-						headers: {
-							location: loaded.loaded.redirect
-						}
-					};
+					if (loaded.loaded.redirect) {
+						return {
+							status: loaded.loaded.status,
+							headers: {
+								location: loaded.loaded.redirect
+							}
+						};
+					}
+
+					if (loaded.loaded.error) {
+						({ status, error } = loaded.loaded);
+					}
+				} catch (e) {
+					status = 500;
+					error = e;
 				}
-			} catch (e) {
-				// TODO
-				loaded = {
-					node: null,
-					loaded: {
-						status: 500,
-						error: e
-					},
-					fetched: null,
-					uses_credentials: null
-				};
-			}
 
-			if (loaded.loaded.error) {
-				// TODO backtrack until we find an $error.svelte component
-				// that we can use as the leaf node
-				// for now just return regular error page
-				return await respond_with_error({
-					request,
-					options,
-					$session,
-					status: loaded.loaded.status,
-					error: loaded.loaded.error
-				});
+				if (error) {
+					while (i--) {
+						if (route.b[i]) {
+							const error_node = await options.load_component(route.b[i]);
+							let error_loaded;
+
+							/** @type {Loaded} */
+							let node_loaded;
+							let j = i;
+							while (!(node_loaded = branch[j])) {
+								j -= 1;
+							}
+
+							try {
+								error_loaded = await load_node({
+									request,
+									options,
+									route,
+									page,
+									node: error_node,
+									$session,
+									context: node_loaded.context,
+									is_leaf: false,
+									is_error: true,
+									status,
+									error
+								});
+
+								if (error_loaded.loaded.error) {
+									continue;
+								}
+
+								branch = branch.slice(0, j + 1).concat(error_loaded);
+								break ssr;
+							} catch (e) {
+								continue;
+							}
+						}
+					}
+
+					// TODO backtrack until we find an $error.svelte component
+					// that we can use as the leaf node
+					// for now just return regular error page
+					return await respond_with_error({
+						request,
+						options,
+						$session,
+						status,
+						error
+					});
+				}
 			}
 
 			branch.push(loaded);
 
-			if (loaded.loaded.context) {
+			if (loaded && loaded.loaded.context) {
 				// TODO come up with better names for stuff
 				context = {
 					...context,
@@ -133,9 +179,9 @@ export async function respond({ request, options, $session, route }) {
 			options,
 			$session,
 			page_config,
-			status: 200,
-			error: null,
-			branch,
+			status,
+			error,
+			branch: branch && branch.filter(Boolean),
 			page
 		});
 	} catch (error) {
