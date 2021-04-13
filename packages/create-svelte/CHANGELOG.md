@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.48
+
+### Patch Changes
+
+- 4c45784: Add ambient types to published files
+
 ## 2.0.0-next.47
 
 ### Patch Changes
