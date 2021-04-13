@@ -6,22 +6,17 @@ import {
 } from './utils';
 
 /**
- * Add ESLint if user wants it.
- *
  * @param {string} cwd
- * @param {boolean} yes
- * @param {boolean} use_typescript
+ * @param {import('../types').Options} options
  */
-export default async function add_eslint(cwd, yes, use_typescript) {
-	if (!yes) {
-		return;
-	}
+export default async function add_eslint(cwd, options) {
+	if (!options.eslint) return;
 
 	upsert_package_json_scripts(cwd, {
 		lint: 'eslint --ignore-path .gitignore .'
 	});
 
-	if (use_typescript) {
+	if (options.typescript) {
 		update_package_json_dev_deps(cwd, {
 			'@typescript-eslint/eslint-plugin': '^4.19.0',
 			'@typescript-eslint/parser': '^4.19.0',

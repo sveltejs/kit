@@ -8,16 +8,11 @@ import {
 } from './utils';
 
 /**
- * Add TypeScript if user wants it.
- *
  * @param {string} cwd
- * @param {boolean} yes
- * @param {boolean} usesEslint
+ * @param {import('../types').Options} options
  */
-export default async function add_prettier(cwd, yes, usesEslint) {
-	if (!yes) {
-		return;
-	}
+export default async function add_prettier(cwd, options) {
+	if (!options.prettier) return;
 
 	update_package_json_dev_deps(cwd, {
 		prettier: '~2.2.1',
@@ -26,7 +21,7 @@ export default async function add_prettier(cwd, yes, usesEslint) {
 	copy_from_template_additions(cwd, ['.prettierrc']);
 	copy_from_template_additions(cwd, ['.prettierignore']);
 
-	if (usesEslint) {
+	if (options.eslint) {
 		update_package_json_dev_deps(cwd, {
 			'eslint-config-prettier': '^8.1.0'
 		});

@@ -1,17 +1,14 @@
 //eslint-disable-next-line import/no-unresolved
-import { mkdirp } from '@sveltejs/kit/filesystem';
 import fs from 'fs';
-import parser from 'gitignore-parser';
-import { bold, cyan, gray, green, red } from 'kleur/colors';
 import path from 'path';
+import { mkdirp } from '@sveltejs/kit/filesystem';
+import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts/lib/index';
-import glob from 'tiny-glob/sync.js';
-import gitignore_contents from '../template/.gitignore';
 import add_typescript from './modifications/add_typescript';
-// import versions from './versions';
-import { version } from '../package.json';
 import add_prettier from './modifications/add_prettier';
 import add_eslint from './modifications/add_eslint';
+import { fileURLToPath } from 'url';
+import { version } from '../package.json';
 
 const disclaimer = `
 Welcome to the SvelteKit setup wizard!
@@ -20,14 +17,16 @@ SvelteKit is in public beta now. There are definitely bugs and some feature migh
 If you encounter an issue, have a look at https://github.com/sveltejs/kit/issues and open a new one, if it is not already tracked.
 `;
 
+const modifiers = [add_typescript, add_eslint, add_prettier];
+
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(red(disclaimer));
 
-	const target = process.argv[2] || '.';
+	const cwd = process.argv[2] || '.';
 
-	if (fs.existsSync(target)) {
-		if (fs.readdirSync(target).length > 0) {
+	if (fs.existsSync(cwd)) {
+		if (fs.readdirSync(cwd).length > 0) {
 			const response = await prompts({
 				type: 'confirm',
 				name: 'value',
@@ -40,40 +39,39 @@ async function main() {
 			}
 		}
 	} else {
-		mkdirp(target);
+		mkdirp(cwd);
 	}
 
-	const cwd = path.join(__dirname, 'template');
-	const gitignore = parser.compile(gitignore_contents);
-
-	const files = glob('**/*', { cwd }).filter(gitignore.accepts);
-
-	files.forEach((file) => {
-		const src = path.join(cwd, file);
-		const dest = path.join(target, file);
-
-		if (fs.statSync(src).isDirectory()) {
-			mkdirp(dest);
-		} else {
-			fs.copyFileSync(src, dest);
+	const options = /** @type {import('./types').Options} */ (await prompts([
+		{
+			type: 'confirm',
+			name: 'typescript',
+			message: 'Use TypeScript?',
+			initial: false
+		},
+		{
+			type: 'confirm',
+			name: 'eslint',
+			message: 'Add ESLint for code linting?',
+			initial: false
+		},
+		{
+			type: 'confirm',
+			name: 'prettier',
+			message: 'Add Prettier for code formatting?',
+			initial: false
 		}
-	});
+	]));
 
-	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
+	const name = path.basename(path.resolve(cwd));
 
-	const name = path.basename(path.resolve(target));
-
-	const pkg_file = path.join(target, 'package.json');
-	const pkg_json = fs
-		.readFileSync(pkg_file, 'utf-8')
-		.replace('~TODO~', name)
-		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "next"`); // TODO ^${versions[name]}
-
-	fs.writeFileSync(pkg_file, pkg_json);
+	instantiate(`default-${options.typescript ? 'ts' : 'js'}`, name, cwd);
 
 	console.log(bold(green('✔ Copied project files')));
 
-	await prompt_modifications(target);
+	for (const modifier of modifiers) {
+		await modifier(cwd, options);
+	}
 
 	console.log(
 		'\nWant to add other parts to your code base? ' +
@@ -84,7 +82,7 @@ async function main() {
 	console.log('\nNext steps:');
 	let i = 1;
 
-	const relative = path.relative(process.cwd(), target);
+	const relative = path.relative(process.cwd(), cwd);
 	if (relative !== '') {
 		console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 	}
@@ -97,34 +95,27 @@ async function main() {
 }
 
 /**
- * Go through the prompts to let the user setup his project.
- *
- * @param {string} target
+ * @param {string} id
+ * @param {string} name
+ * @param {string} cwd
  */
-async function prompt_modifications(target) {
-	const ts_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Use TypeScript in components?',
-		initial: false
-	});
-	await add_typescript(target, ts_response.value);
+function instantiate(id, name, cwd) {
+	const template = fileURLToPath(new URL(`./dist/${id}.json`, import.meta.url).href);
+	const files = /** @type {Array<{ name: string, contents: string, encoding: 'base64' | 'utf8'}>} */ (JSON.parse(
+		fs.readFileSync(template, 'utf-8')
+	));
 
-	const eslint_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Add ESLint for code linting?',
-		initial: false
-	});
-	await add_eslint(target, eslint_response.value, ts_response.value);
+	files.forEach((file) => {
+		const dest = path.join(cwd, file.name);
+		mkdirp(path.dirname(dest));
 
-	const prettier_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Add Prettier for code formatting?',
-		initial: false
+		fs.writeFileSync(
+			dest,
+			file.encoding === 'base64'
+				? Buffer.from(file.contents, 'base64')
+				: file.contents.replace(/~TODO~/g, name)
+		);
 	});
-	await add_prettier(target, prettier_response.value, eslint_response.value);
 }
 
 main();

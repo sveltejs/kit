@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Updates package.json with given devDependencies
@@ -15,22 +16,6 @@ export function update_package_json_dev_deps(cwd, newDevDeps) {
 		});
 		return pkg;
 	});
-}
-
-/**
- * Updates a Svelte component, doing all given replacements.
- *
- * @param {string} cwd
- * @param {string} filepath
- * @param {[string, string][]} replacements
- */
-export function update_component(cwd, filepath, replacements) {
-	const file = join(cwd, filepath);
-
-	let code = fs.readFileSync(file, 'utf-8');
-	replacements.forEach((replacement) => (code = code.replace(replacement[0], replacement[1])));
-
-	fs.writeFileSync(file, code);
 }
 
 /**
@@ -67,7 +52,10 @@ export function add_svelte_preprocess_to_config(cwd) {
 export function copy_from_template_additions(cwd, path) {
 	const from = Array.isArray(path) ? path : path.from;
 	const to = Array.isArray(path) ? path : path.to;
-	fs.copyFileSync(join(__dirname, 'template-additions', ...from), join(cwd, ...to));
+
+	const common = fileURLToPath(new URL('./common', import.meta.url).href);
+	console.log({ common, cwd });
+	fs.copyFileSync(join(common, ...from), join(cwd, ...to));
 }
 
 /**
