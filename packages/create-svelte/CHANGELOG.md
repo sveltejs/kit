@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.49
+
+### Patch Changes
+
+- 3c41d07: Fix preprocess option in template
+- 9bb747f: Remove CSS option and simplify
+
 ## 2.0.0-next.48
 
 ### Patch Changes
