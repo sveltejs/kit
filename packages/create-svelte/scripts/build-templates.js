@@ -5,11 +5,11 @@ import prettier from 'prettier';
 import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 
-async function main() {
+async function generate_templates() {
 	const templates = fs.readdirSync('templates');
 
 	try {
-		fs.mkdirSync('dist');
+		fs.mkdirSync('dist/templates', { recursive: true });
 	} catch {
 		// ignore
 	}
@@ -112,9 +112,43 @@ async function main() {
 			}
 		}
 
-		fs.writeFileSync(`dist/${name}-ts.json`, JSON.stringify(ts, null, '\t'));
-		fs.writeFileSync(`dist/${name}-js.json`, JSON.stringify(js, null, '\t'));
+		fs.writeFileSync(`dist/templates/${name}-ts.json`, JSON.stringify(ts, null, '\t'));
+		fs.writeFileSync(`dist/templates/${name}-js.json`, JSON.stringify(js, null, '\t'));
 	}
+}
+
+async function generate_common() {
+	const cwd = path.resolve('shared');
+
+	const files = glob('**/*', { cwd, filesOnly: true, dot: true })
+		.map((file) => {
+			const [conditions, ...rest] = file.split('/');
+
+			const include = [];
+			const exclude = [];
+
+			const pattern = /([+-])([a-z]+)/g;
+			let match;
+			while ((match = pattern.exec(conditions))) {
+				const set = match[1] === '+' ? include : exclude;
+				set.push(match[2]);
+			}
+
+			return {
+				name: rest.join('/'),
+				include,
+				exclude,
+				contents: fs.readFileSync(path.join(cwd, file), 'utf8')
+			};
+		})
+		.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
+
+	fs.writeFileSync('dist/shared.json', JSON.stringify({ files }, null, '\t'));
+}
+
+async function main() {
+	await generate_templates();
+	await generate_common();
 }
 
 main();

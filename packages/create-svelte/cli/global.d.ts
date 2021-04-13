@@ -1,8 +1,4 @@
-declare module 'gitignore-parser';
-
 declare module 'prompts/lib/index';
-
-declare module 'tiny-glob/sync';
 
 declare module '*.json';
 

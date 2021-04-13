@@ -14,3 +14,12 @@ export type Template = {
 		encoding: 'base64' | 'utf8';
 	}>;
 };
+
+export type Common = {
+	files: Array<{
+		name: string;
+		include: Array<'eslint' | 'prettier' | 'typescript'>;
+		exclude: Array<'eslint' | 'prettier' | 'typescript'>;
+		contents: string;
+	}>;
+};

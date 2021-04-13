@@ -23,7 +23,6 @@
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
-		"common",
 		"dist",
 		"bin.js"
 	],
