@@ -1,4 +1,5 @@
 export type Options = {
+	template: 'default' | 'skeleton';
 	typescript: boolean;
 	prettier: boolean;
 	eslint: boolean;

@@ -38,6 +38,15 @@ async function main() {
 
 	const options = /** @type {import('./types').Options} */ (await prompts([
 		{
+			type: 'select',
+			name: 'template',
+			message: 'Which app Svelte template?',
+			choices: [
+				{ title: 'Default App (Counter + Route)', value: 'default' },
+				{ title: 'Skeleton App', value: 'skeleton' }
+			]
+		},
+		{
 			type: 'confirm',
 			name: 'typescript',
 			message: 'Use TypeScript?',
@@ -59,7 +68,7 @@ async function main() {
 
 	const name = path.basename(path.resolve(cwd));
 
-	write_template_files(`default-${options.typescript ? 'ts' : 'js'}`, name, cwd);
+	write_template_files(`${options.template}-${options.typescript ? 'ts' : 'js'}`, name, cwd);
 	write_common_files(cwd, options);
 
 	console.log(bold(green('✔ Copied project files')));
