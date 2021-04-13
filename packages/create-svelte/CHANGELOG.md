@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.50
+
+### Patch Changes
+
+- 3802c64: Fix build so that the package can be automatically published
+
 ## 2.0.0-next.49
 
 ### Patch Changes
