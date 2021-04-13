@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import parser from 'gitignore-parser';
 import prettier from 'prettier';
-import Sucrase from 'sucrase';
+import sucrase from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 
 async function generate_templates() {
@@ -52,7 +52,7 @@ async function generate_templates() {
 			if (file.name.endsWith('.d.ts')) continue;
 
 			if (file.name.endsWith('.ts')) {
-				const transformed = Sucrase.transform(file.contents, {
+				const transformed = sucrase.transform(file.contents, {
 					transforms: ['typescript']
 				});
 
@@ -92,7 +92,7 @@ async function generate_templates() {
 
 						const suffix = `\n${imports.join(',')}`;
 
-						const transformed = Sucrase.transform(typescript + suffix, {
+						const transformed = sucrase.transform(typescript + suffix, {
 							transforms: ['typescript']
 						}).code.slice(0, -suffix.length);
 
