@@ -4,7 +4,6 @@
 	"bin": "./bin.js",
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.4",
