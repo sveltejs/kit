@@ -1,4 +1,4 @@
-import './types.ambient';
+import './types.ambient-modules';
 import { Headers, LoadInput, LoadOutput, Logger } from './types.internal';
 import { UserConfig as ViteConfig } from 'vite';
 
