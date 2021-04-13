@@ -151,21 +151,25 @@ importers:
   packages/create-svelte:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.41.1
-      '@sveltejs/adapter-node': link:../adapter-node
       '@sveltejs/kit': link:../kit
       gitignore-parser: 0.0.2
       kleur: 4.1.4
+      prettier: 2.2.1
+      prettier-plugin-svelte: 2.2.0_prettier@2.2.1
       prompts: 2.4.0
       rollup: 2.41.1
+      sucrase: 3.18.1
       tiny-glob: 0.2.8
     specifiers:
       '@rollup/plugin-json': ^4.1.0
-      '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
       gitignore-parser: ^0.0.2
       kleur: ^4.1.4
+      prettier: ^2.2.1
+      prettier-plugin-svelte: ^2.2.0
       prompts: ^2.4.0
       rollup: ^2.41.1
+      sucrase: ^3.18.1
       tiny-glob: ^0.2.8
   packages/kit:
     dependencies:
@@ -939,6 +943,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==
+  /any-promise/1.3.0:
+    dev: true
+    resolution:
+      integrity: sha1-q8av7tzqUugJzcA3au0845Y10X8=
   /argparse/1.0.10:
     dependencies:
       sprintf-js: 1.0.3
@@ -989,10 +997,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-Z7tMw1ytTXt5jqMcOP+OQteU1VuNK9Y02uuJtKQ1Sv69jXQKKg5cibLwGJow8yzZP+eAc18EmLGPal0bp36rvQ==
-  /balanced-match/1.0.0:
+  /balanced-match/1.0.2:
     dev: true
     resolution:
-      integrity: sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
+      integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
   /better-path-resolve/1.0.0:
     dependencies:
       is-windows: 1.0.2
@@ -1017,7 +1025,7 @@ packages:
       integrity: sha512-TNPjfTr432qx7yOjQyaXm3dSR0MH9vXp7eT1BFSl/C51g+EFnOR9hTg1IreahGBmDNCehscshe45f+C1TBZbLw==
   /brace-expansion/1.1.11:
     dependencies:
-      balanced-match: 1.0.0
+      balanced-match: 1.0.2
       concat-map: 0.0.1
     dev: true
     resolution:
@@ -1211,6 +1219,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-VlfT9F3V0v+jr4yxPc5gg9s62/fIVWsd2Bk2iD435um1NlGMYdVCq+MjcXnhYq2icNOizHr1kK+5TI6H0Hy0ag==
+  /commander/4.1.1:
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
   /commander/6.2.1:
     dev: true
     engines:
@@ -2606,6 +2620,14 @@ packages:
   /ms/2.1.2:
     resolution:
       integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+  /mz/2.7.0:
+    dependencies:
+      any-promise: 1.3.0
+      object-assign: 4.1.1
+      thenify-all: 1.6.0
+    dev: true
+    resolution:
+      integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==
   /nanoid/3.1.22:
     dev: true
     engines:
@@ -2643,6 +2665,12 @@ packages:
       node: '>= 6.0.0'
     resolution:
       integrity: sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
+  /node-modules-regexp/1.0.0:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-jZ2+KJZKSsVxLpExZCEHxx6Q7EA=
   /normalize-package-data/2.5.0:
     dependencies:
       hosted-git-info: 2.8.8
@@ -2660,6 +2688,12 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-NakjLfo11wZ7TLLd8jV7GHFTbF8=
+  /object-assign/4.1.1:
+    dev: true
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
   /object-inspect/1.9.0:
     dev: true
     resolution:
@@ -2903,6 +2937,14 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-uB80kBFb/tfd68bVleG9T5GGsGPjJrLAUpR5PZIrhBnIaRTQRjqdJSsIKkOP6OAIFbj7GOrcudc5pNjZ+geV2g==
+  /pirates/4.0.1:
+    dependencies:
+      node-modules-regexp: 1.0.0
+    dev: true
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-WuNqLTbMI3tmfef2TKxlQmAiLHKtFhlsCZnPIpuv2Ow0RDVO8lfy1Opf4NUzlMXLjPl+Men7AuVdX6TA+s+uGA==
   /pkg-dir/2.0.0:
     dependencies:
       find-up: 2.1.0
@@ -2987,6 +3029,15 @@ packages:
       node: '>= 0.8.0'
     resolution:
       integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==
+  /prettier-plugin-svelte/2.2.0_prettier@2.2.1:
+    dependencies:
+      prettier: 2.2.1
+    dev: true
+    peerDependencies:
+      prettier: ^1.16.4 || ^2.0.0
+      svelte: ^3.2.0
+    resolution:
+      integrity: sha512-Xdmqgr71tAuMqqzNCK52/v94g/Yv7V7lz+nmbO9NEA+9ol15VV3uUHOfydMNOo3SWvFaVlBcp947ebEaMWqVfQ==
   /prettier/1.19.1:
     dev: true
     engines:
@@ -3483,6 +3534,20 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
+  /sucrase/3.18.1:
+    dependencies:
+      commander: 4.1.1
+      glob: 7.1.6
+      lines-and-columns: 1.1.6
+      mz: 2.7.0
+      pirates: 4.0.1
+      ts-interface-checker: 0.1.13
+    dev: true
+    engines:
+      node: '>=8'
+    hasBin: true
+    resolution:
+      integrity: sha512-TRyO38wwOPhLLlM8QLOG3TgMj0FKk+arlTrS9pRAanF8cAcHvgRPKIYWGO25mPSp/Rj87zMMTjFfkqIZGI6ZdA==
   /supports-color/5.5.0:
     dependencies:
       has-flag: 3.0.0
@@ -3551,6 +3616,20 @@ packages:
     dev: true
     resolution:
       integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=
+  /thenify-all/1.6.0:
+    dependencies:
+      thenify: 3.3.1
+    dev: true
+    engines:
+      node: '>=0.8'
+    resolution:
+      integrity: sha1-GhkY1ALY/D+Y+/I02wvMjMEOlyY=
+  /thenify/3.3.1:
+    dependencies:
+      any-promise: 1.3.0
+    dev: true
+    resolution:
+      integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==
   /tiny-glob/0.2.8:
     dependencies:
       globalyzer: 0.1.0
@@ -3604,6 +3683,10 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-rLLXbhTObLy2MBVjLC+jTnoIKw99n0GuJs9ov10J870vDw5qhTurPzsDrudNtBf5w/CZ9ctZy2p2IMmhGcel2w==
+  /ts-interface-checker/0.1.13:
+    dev: true
+    resolution:
+      integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==
   /tsconfig-paths/3.9.0:
     dependencies:
       '@types/json5': 0.0.29

@@ -1,18 +1,11 @@
 //eslint-disable-next-line import/no-unresolved
-import { mkdirp } from '@sveltejs/kit/filesystem';
 import fs from 'fs';
-import parser from 'gitignore-parser';
-import { bold, cyan, gray, green, red } from 'kleur/colors';
 import path from 'path';
+import { mkdirp } from '@sveltejs/kit/filesystem'; // eslint-disable-line
+import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts/lib/index';
-import glob from 'tiny-glob/sync.js';
-import gitignore_contents from '../template/.gitignore';
-import add_css from './modifications/add_css';
-import add_typescript from './modifications/add_typescript';
-// import versions from './versions';
+import { fileURLToPath } from 'url';
 import { version } from '../package.json';
-import add_prettier from './modifications/add_prettier';
-import add_eslint from './modifications/add_eslint';
 
 const disclaimer = `
 Welcome to the SvelteKit setup wizard!
@@ -25,10 +18,10 @@ async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(red(disclaimer));
 
-	const target = process.argv[2] || '.';
+	const cwd = process.argv[2] || '.';
 
-	if (fs.existsSync(target)) {
-		if (fs.readdirSync(target).length > 0) {
+	if (fs.existsSync(cwd)) {
+		if (fs.readdirSync(cwd).length > 0) {
 			const response = await prompts({
 				type: 'confirm',
 				name: 'value',
@@ -41,40 +34,70 @@ async function main() {
 			}
 		}
 	} else {
-		mkdirp(target);
+		mkdirp(cwd);
 	}
 
-	const cwd = path.join(__dirname, 'template');
-	const gitignore = parser.compile(gitignore_contents);
-
-	const files = glob('**/*', { cwd }).filter(gitignore.accepts);
-
-	files.forEach((file) => {
-		const src = path.join(cwd, file);
-		const dest = path.join(target, file);
-
-		if (fs.statSync(src).isDirectory()) {
-			mkdirp(dest);
-		} else {
-			fs.copyFileSync(src, dest);
+	const options = /** @type {import('./types').Options} */ (await prompts([
+		{
+			type: 'confirm',
+			name: 'typescript',
+			message: 'Use TypeScript?',
+			initial: false
+		},
+		{
+			type: 'confirm',
+			name: 'eslint',
+			message: 'Add ESLint for code linting?',
+			initial: false
+		},
+		{
+			type: 'confirm',
+			name: 'prettier',
+			message: 'Add Prettier for code formatting?',
+			initial: false
 		}
-	});
+	]));
 
-	fs.writeFileSync(path.join(target, '.gitignore'), gitignore_contents);
+	const name = path.basename(path.resolve(cwd));
 
-	const name = path.basename(path.resolve(target));
-
-	const pkg_file = path.join(target, 'package.json');
-	const pkg_json = fs
-		.readFileSync(pkg_file, 'utf-8')
-		.replace('~TODO~', name)
-		.replace(/"(.+)": "workspace:.+"/g, (_m, name) => `"${name}": "next"`); // TODO ^${versions[name]}
-
-	fs.writeFileSync(pkg_file, pkg_json);
+	write_template_files(`default-${options.typescript ? 'ts' : 'js'}`, name, cwd);
+	write_common_files(cwd, options);
 
 	console.log(bold(green('✔ Copied project files')));
 
-	await prompt_modifications(target);
+	if (options.typescript) {
+		console.log(
+			bold(
+				green(
+					'✔ Added TypeScript support. ' +
+						'To use it inside Svelte components, add lang="ts" to the attributes of a script tag.'
+				)
+			)
+		);
+	}
+
+	if (options.eslint) {
+		console.log(
+			bold(
+				green(
+					'✔ Added ESLint.\n' +
+						'Readme for ESLint and Svelte: https://github.com/sveltejs/eslint-plugin-svelte3'
+				)
+			)
+		);
+	}
+
+	if (options.prettier) {
+		console.log(
+			bold(
+				green(
+					'✔ Added Prettier.\n' +
+						'General formatting options: https://prettier.io/docs/en/options.html\n' +
+						'Svelte-specific formatting options: https://github.com/sveltejs/prettier-plugin-svelte#options'
+				)
+			)
+		);
+	}
 
 	console.log(
 		'\nWant to add other parts to your code base? ' +
@@ -85,7 +108,7 @@ async function main() {
 	console.log('\nNext steps:');
 	let i = 1;
 
-	const relative = path.relative(process.cwd(), target);
+	const relative = path.relative(process.cwd(), cwd);
 	if (relative !== '') {
 		console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 	}
@@ -98,46 +121,102 @@ async function main() {
 }
 
 /**
- * Go through the prompts to let the user setup his project.
- *
- * @param {string} target
+ * @param {string} id
+ * @param {string} name
+ * @param {string} cwd
  */
-async function prompt_modifications(target) {
-	const ts_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Use TypeScript in components?',
-		initial: false
-	});
-	await add_typescript(target, ts_response.value);
+function write_template_files(id, name, cwd) {
+	const template = fileURLToPath(new URL(`./dist/templates/${id}.json`, import.meta.url).href);
+	const { files } = /** @type {import('./types').Template} */ (JSON.parse(
+		fs.readFileSync(template, 'utf-8')
+	));
 
-	const css_response = await prompts({
-		type: 'select',
-		name: 'value',
-		message: 'What do you want to use for writing Styles in Svelte components?',
-		choices: [
-			{ title: 'CSS', value: 'css' },
-			{ title: 'Less', value: 'less' },
-			{ title: 'SCSS', value: 'scss' }
-		]
-	});
-	await add_css(target, css_response.value);
+	files.forEach((file) => {
+		const dest = path.join(cwd, file.name);
+		mkdirp(path.dirname(dest));
 
-	const eslint_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Add ESLint for code linting?',
-		initial: false
+		fs.writeFileSync(
+			dest,
+			file.encoding === 'base64'
+				? Buffer.from(file.contents, 'base64')
+				: file.contents.replace(/~TODO~/g, name)
+		);
 	});
-	await add_eslint(target, eslint_response.value, ts_response.value);
+}
 
-	const prettier_response = await prompts({
-		type: 'confirm',
-		name: 'value',
-		message: 'Add Prettier for code formatting?',
-		initial: false
+/**
+ *
+ * @param {string} cwd
+ * @param {import('./types').Options} options
+ */
+function write_common_files(cwd, options) {
+	const shared = fileURLToPath(new URL('./dist/shared.json', import.meta.url).href);
+	const { files } = /** @type {import('./types').Common} */ (JSON.parse(
+		fs.readFileSync(shared, 'utf-8')
+	));
+
+	const pkg_file = path.join(cwd, 'package.json');
+	const pkg = /** @type {any} */ (JSON.parse(fs.readFileSync(pkg_file, 'utf-8')));
+
+	files.forEach((file) => {
+		const include = file.include.every((condition) => options[condition]);
+		const exclude = file.exclude.some((condition) => options[condition]);
+
+		if (exclude || !include) return;
+
+		if (file.name === 'package.json') {
+			const new_pkg = JSON.parse(file.contents);
+			merge(pkg, new_pkg);
+		} else {
+			const dest = path.join(cwd, file.name);
+			mkdirp(path.dirname(dest));
+			fs.writeFileSync(dest, file.contents);
+		}
 	});
-	await add_prettier(target, prettier_response.value, eslint_response.value);
+
+	pkg.dependencies = sort_keys(pkg.dependencies);
+	pkg.devDependencies = sort_keys(pkg.devDependencies);
+
+	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
+}
+
+/**
+ * @param {any} target
+ * @param {any} source
+ */
+function merge(target, source) {
+	for (const key in source) {
+		if (key in target) {
+			const target_value = target[key];
+			const source_value = source[key];
+
+			if (
+				typeof source_value !== typeof target_value ||
+				Array.isArray(source_value) !== Array.isArray(target_value)
+			) {
+				throw new Error('Mismatched values');
+			}
+
+			merge(target_value, source_value);
+		} else {
+			target[key] = source[key];
+		}
+	}
+}
+
+/** @param {Record<string, any>} obj */
+function sort_keys(obj) {
+	if (!obj) return;
+
+	/** @type {Record<string, any>} */
+	const sorted = {};
+	Object.keys(obj)
+		.sort()
+		.forEach((key) => {
+			sorted[key] = obj[key];
+		});
+
+	return sorted;
 }
 
 main();
