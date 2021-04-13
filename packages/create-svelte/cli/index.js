@@ -1,7 +1,7 @@
 //eslint-disable-next-line import/no-unresolved
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@sveltejs/kit/filesystem';
+import { mkdirp } from '@sveltejs/kit/filesystem'; // eslint-disable-line
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts/lib/index';
 import { fileURLToPath } from 'url';
