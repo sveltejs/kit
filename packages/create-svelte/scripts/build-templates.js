@@ -16,35 +16,39 @@ async function main() {
 
 	for (const name of templates) {
 		const cwd = path.resolve('templates', name);
+
 		const gitignore_file = path.join(cwd, '.gitignore');
+		if (!fs.existsSync(gitignore_file)) throw new Error('Template must have a .gitignore file');
+		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8') + '\n/.meta.json');
 
-		if (!fs.existsSync(gitignore_file)) {
-			throw new Error('Template must have a .gitignore file');
-		}
+		const meta_file = path.join(cwd, '.meta.json');
+		if (!fs.existsSync(meta_file)) throw new Error('Template must have a .meta.json file');
+		const meta = JSON.parse(fs.readFileSync(meta_file, 'utf-8'));
 
-		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8'));
+		const ts = {
+			meta,
+			files: glob('**/*', { cwd, filesOnly: true })
+				.filter(gitignore.accepts)
+				.map((name) => {
+					const encoding = /\.(ico|png|jpe?g)$/.test(name) ? 'base64' : 'utf8';
+					let contents = fs.readFileSync(path.join(cwd, name), encoding);
 
-		const ts = glob('**/*', { cwd, filesOnly: true })
-			.filter(gitignore.accepts)
-			.map((name) => {
-				const encoding = /\.(ico|png|jpe?g)$/.test(name) ? 'base64' : 'utf8';
-				let contents = fs.readFileSync(path.join(cwd, name), encoding);
+					if (name === 'package.json') {
+						// TODO package-specific versions
+						contents = contents.replace(/workspace:\*/g, 'next');
+					}
 
-				if (name === 'package.json') {
-					// TODO package-specific versions
-					contents = contents.replace(/workspace:\*/g, 'next');
-				}
+					return {
+						name,
+						contents,
+						encoding
+					};
+				})
+		};
 
-				return {
-					name,
-					contents,
-					encoding
-				};
-			});
+		const js = { meta, files: [] };
 
-		const js = [];
-
-		for (const file of ts) {
+		for (const file of ts.files) {
 			if (file.name.endsWith('.d.ts')) continue;
 
 			if (file.name.endsWith('.ts')) {
@@ -59,7 +63,7 @@ async function main() {
 					trailingComma: 'none'
 				});
 
-				js.push({
+				js.files.push({
 					name: file.name.replace(/\.ts$/, '.js'),
 					contents
 				});
@@ -99,12 +103,12 @@ async function main() {
 					}
 				);
 
-				js.push({
+				js.files.push({
 					name: file.name,
 					contents
 				});
 			} else {
-				js.push(file);
+				js.files.push(file);
 			}
 		}
 

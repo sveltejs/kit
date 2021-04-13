@@ -101,7 +101,7 @@ async function main() {
  */
 function instantiate(id, name, cwd) {
 	const template = fileURLToPath(new URL(`./dist/${id}.json`, import.meta.url).href);
-	const files = /** @type {Array<{ name: string, contents: string, encoding: 'base64' | 'utf8'}>} */ (JSON.parse(
+	const { files } = /** @type {import('./types').Template} */ (JSON.parse(
 		fs.readFileSync(template, 'utf-8')
 	));
 

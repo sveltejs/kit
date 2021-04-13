@@ -54,7 +54,6 @@ export function copy_from_template_additions(cwd, path) {
 	const to = Array.isArray(path) ? path : path.to;
 
 	const common = fileURLToPath(new URL('./common', import.meta.url).href);
-	console.log({ common, cwd });
 	fs.copyFileSync(join(common, ...from), join(cwd, ...to));
 }
 
