@@ -1,7 +1,6 @@
 //eslint-disable-next-line import/no-unresolved
 import fs from 'fs';
 import path from 'path';
-import { mkdirp } from '@sveltejs/kit/filesystem'; // eslint-disable-line
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts/lib/index';
 import { fileURLToPath } from 'url';
@@ -217,6 +216,16 @@ function sort_keys(obj) {
 		});
 
 	return sorted;
+}
+
+/** @param {string} dir */
+function mkdirp(dir) {
+	try {
+		fs.mkdirSync(dir, { recursive: true });
+	} catch (e) {
+		if (e.code === 'EEXIST') return;
+		throw e;
+	}
 }
 
 main();
