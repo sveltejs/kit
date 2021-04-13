@@ -20,9 +20,10 @@ module.exports = {
     }
   }
 };
-``
+```
 
 In `tsconfig.json` (for TypeScript users) or `jsconfig.json` (for JavaScript users) to make VS Code aware of the alias:
+
 ```
 {
   "compilerOptions": {
