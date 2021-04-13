@@ -8,7 +8,7 @@ import {
 	Page,
 	RequestHandler,
 	Response as SSRResponse
-} from './types';
+} from '.';
 import { UserConfig as ViteConfig } from 'vite';
 import { Response as NodeFetchResponse } from 'node-fetch';
 
