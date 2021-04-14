@@ -10,7 +10,7 @@ Please see [sveltejs/integrations](https://github.com/sveltejs/integrations#svel
 
 SvelteKit provides [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) by default. For many of these tools you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) docs for full details.
 
-Also see [the examples](faq#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
+Also see [the examples above](faq#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
 
 ### How do I setup a database?
 
