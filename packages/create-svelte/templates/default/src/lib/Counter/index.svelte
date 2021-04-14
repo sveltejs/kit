@@ -43,6 +43,10 @@
 		margin: 1rem 0;
 	}
 
+	:global([data-theme="dark"]) .counter {
+		border-color: rgba(255,255,255,0.1);
+	}
+
 	.counter button.disabled {
 		opacity: 0.3;
 	}
