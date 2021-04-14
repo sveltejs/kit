@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import DarkModeToggle from '../lib/DarkModeToggle.svelte';
+	import DarkModeToggle from '../DarkModeToggle.svelte';
 </script>
 
 <nav>
