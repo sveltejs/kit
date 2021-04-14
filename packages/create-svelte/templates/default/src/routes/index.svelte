@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Counter from '$lib/Counter.svelte';
+	import Counter from '$lib/Counter/index.svelte';
 	import { isDarkModeStore } from '../stores';
 
 	let isDarkMode = true;
