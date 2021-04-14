@@ -11,16 +11,6 @@
 	--background-without-opacity: rgba(255, 255, 255, 0.7);
 }
 
-:root[data-theme='dark'] {
-	--primary-color: #1f272e;
-	--secondary-color: #2e3a44;
-	--tertiary-color: #393d45;
-	--heading-color: #ffffff;
-	--text-color: #ffffff;
-	--secondary-text-color: #676778;
-	--background-without-opacity: rgba(255, 255, 255, 0.2);
-}
-
 body {
 	min-height: 100vh;
 	margin: 0;

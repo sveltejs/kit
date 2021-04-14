@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
-	import ThemeToggler from './ThemeToggler.svelte';
 </script>
 
 <header>
@@ -26,7 +25,7 @@
 	</nav>
 
 	<div class="corner">
-		<ThemeToggler />
+		<!-- TODO put something else here? github link? -->
 	</div>
 </header>
 
@@ -61,10 +60,6 @@
 		--background: rgba(255,255,255,0.7);
 	}
 
-	:global([data-theme="dark"]) nav {
-		--background: rgba(255,255,255,0.2);
-	}
-
 	svg {
 		width: 2em;
 		height: 3em;
@@ -86,10 +81,6 @@
 		list-style: none;
 		background: var(--background);
 		background-size: contain;
-	}
-
-	html[data-theme='dark'] ul {
-		background-image: url('/menu-background.svg');
 	}
 
 	li {
