@@ -159,6 +159,7 @@ importers:
       prompts: 2.4.0
       rollup: 2.41.1
       sucrase: 3.18.1
+      svelte-preprocess: 4.7.0
       tiny-glob: 0.2.8
     specifiers:
       '@rollup/plugin-json': ^4.1.0
@@ -170,7 +171,32 @@ importers:
       prompts: ^2.4.0
       rollup: ^2.41.1
       sucrase: ^3.18.1
+      svelte-preprocess: ^4.7.0
       tiny-glob: ^0.2.8
+  packages/create-svelte/templates/default:
+    devDependencies:
+      '@sveltejs/adapter-node': link:../../../adapter-node
+      '@sveltejs/kit': link:../../../kit
+      svelte: 3.35.0
+      svelte-preprocess: 4.7.0_svelte@3.35.0
+      vite: 2.1.0
+    specifiers:
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.29.0
+      svelte-preprocess: ^4.7.0
+      vite: ^2.1.0
+  packages/create-svelte/templates/skeleton:
+    devDependencies:
+      '@sveltejs/adapter-node': link:../../../adapter-node
+      '@sveltejs/kit': link:../../../kit
+      svelte: 3.35.0
+      vite: 2.1.0
+    specifiers:
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.29.0
+      vite: ^2.1.0
   packages/kit:
     dependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.5_93fef3a16c1b45ac67b14a795df10192
@@ -703,13 +729,16 @@ packages:
       integrity: sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==
   /@types/node/14.14.37:
     dev: true
-    optional: true
     resolution:
       integrity: sha512-XYmBiy+ohOR4Lh5jE379fV2IU+6Jn4g5qASinhitfyO71b/sCo6MKsMLF5tc7Zf2CE8hViVQyYSobJNke8OvUw==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
       integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==
+  /@types/pug/2.0.4:
+    dev: true
+    resolution:
+      integrity: sha1-h3L80EGOPNLMFxVV1zAHQVBR9LI=
   /@types/resolve/1.17.1:
     dependencies:
       '@types/node': 14.14.35
@@ -729,6 +758,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-qVHZ70gLk2tCAqRanVOBVKM8og7eBhnWx1cdHMj8J3t4QF+PzIS9+pzZWZEx9ghsO1DDeGOTgyq5aQd5Bt/2dw==
+  /@types/sass/1.16.0:
+    dependencies:
+      '@types/node': 14.14.37
+    dev: true
+    resolution:
+      integrity: sha512-2XZovu4NwcqmtZtsBR5XYLw18T8cBCnU2USFHTnYLLHz9fkhnoEMoDsqShJIOFsFhn5aJHjweiUUdTrDGujegA==
   /@types/semver/6.2.2:
     dev: true
     resolution:
@@ -3571,6 +3606,103 @@ packages:
       svelte: '>=3.19.0'
     resolution:
       integrity: sha512-gagW62pLQ2lULmvNA3pIZu9pBCYOaGu3rQikUOv6Nokz5VxUgT9/mQLfMxj9phDEKHCg/lgr3i6PkqZDbO9P2Q==
+  /svelte-preprocess/4.7.0:
+    dependencies:
+      '@types/pug': 2.0.4
+      '@types/sass': 1.16.0
+      detect-indent: 6.0.0
+      strip-indent: 3.0.0
+    dev: true
+    engines:
+      node: '>= 9.11.2'
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3
+      node-sass: '*'
+      postcss: ^7 || ^8
+      postcss-load-config: ^2.1.0 || ^3.0.0
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: ^0.54.7
+      sugarss: ^2.0.0
+      svelte: ^3.23.0
+      typescript: ^3.9.5 || ^4.0.0
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      node-sass:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-iNrY4YGqi0LD2e6oT9YbdSzOKntxk8gmzfqso1z/lUJOZh4o6fyIqkirmiZ8/dDJFqtIE1spVgDFWgkfhLEYlw==
+  /svelte-preprocess/4.7.0_svelte@3.35.0:
+    dependencies:
+      '@types/pug': 2.0.4
+      '@types/sass': 1.16.0
+      detect-indent: 6.0.0
+      strip-indent: 3.0.0
+      svelte: 3.35.0
+    dev: true
+    engines:
+      node: '>= 9.11.2'
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3
+      node-sass: '*'
+      postcss: ^7 || ^8
+      postcss-load-config: ^2.1.0 || ^3.0.0
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: ^0.54.7
+      sugarss: ^2.0.0
+      svelte: ^3.23.0
+      typescript: ^3.9.5 || ^4.0.0
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      node-sass:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+    requiresBuild: true
+    resolution:
+      integrity: sha512-iNrY4YGqi0LD2e6oT9YbdSzOKntxk8gmzfqso1z/lUJOZh4o6fyIqkirmiZ8/dDJFqtIE1spVgDFWgkfhLEYlw==
   /svelte/3.35.0:
     dev: true
     engines:
