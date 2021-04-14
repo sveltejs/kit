@@ -22,7 +22,7 @@ SvelteKit does not come bundled with[Sass](https://sass-lang.com/), [Less](http:
 - For Less: `npm install -D less`
 - For Stylus: `npm install -D stylus`
 
-Then add a `lang` attrigute to your style tags for the language you're using: `<style lang="scss">`
+Then add a `lang` attribute to your style tags for the language you're using: `<style lang="scss">`
 
 If you want to import a Less/Sass file, you should do so in your `<script>` tag:
 
