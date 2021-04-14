@@ -35,6 +35,7 @@ By default, `npm run build` will generate a Node app that you can run with `node
 
 - [@sveltejs/adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node)
 - [@sveltejs/adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)
+- [@sveltejs/adapter-cloudflare-workers](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers)
 - [@sveltejs/adapter-netlify](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify)
 - [@sveltejs/adapter-vercel](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel)
 - ...more soon

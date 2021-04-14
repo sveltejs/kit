@@ -125,29 +125,31 @@ async function generate_templates() {
 	}
 }
 
-async function generate_common() {
+async function generate_shared() {
 	const cwd = path.resolve('shared');
 
 	const files = glob('**/*', { cwd, filesOnly: true, dot: true })
 		.map((file) => {
-			const [conditions, ...rest] = file.split('/');
-
+			const contents = fs.readFileSync(path.join(cwd, file), 'utf8');
 			const include = [];
 			const exclude = [];
 
-			const pattern = /([+-])([a-z]+)/g;
-			let match;
-			while ((match = pattern.exec(conditions))) {
-				const set = match[1] === '+' ? include : exclude;
-				set.push(match[2]);
+			let name = file;
+
+			if (file.startsWith('+') || file.startsWith('-')) {
+				const [conditions, ...rest] = file.split('/');
+
+				const pattern = /([+-])([a-z]+)/g;
+				let match;
+				while ((match = pattern.exec(conditions))) {
+					const set = match[1] === '+' ? include : exclude;
+					set.push(match[2]);
+				}
+
+				name = rest.join('/');
 			}
 
-			return {
-				name: rest.join('/'),
-				include,
-				exclude,
-				contents: fs.readFileSync(path.join(cwd, file), 'utf8')
-			};
+			return { name, include, exclude, contents };
 		})
 		.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
 
@@ -156,7 +158,7 @@ async function generate_common() {
 
 async function main() {
 	await generate_templates();
-	await generate_common();
+	await generate_shared();
 }
 
 main();
