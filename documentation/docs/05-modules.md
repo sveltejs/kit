@@ -56,7 +56,7 @@ The stores themselves attach to the correct context at the point of subscription
 
 `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`
 
-If you want to access the `query` parameter values, you cannot use direct property accessors. For example, with the URL `/page?foo=bar`, doing `$page.params.foo` will not get you the value `bar` as you would expect. Instead you must use accessor methods:
+If you want to access the `query` parameter values, you cannot use direct property accessors. For example, with the URL `/page?foo=bar`, doing `$page.params.foo` will not get you the value `"bar"` as you would expect. Instead you must use accessor methods:
 
 - `.get('value')` — gets a single value
 - `.getAll('value')` — gets an array of values
