@@ -64,7 +64,6 @@
 
 	path {
 		fill: black;
-		/* transition: opacity 0.6s; */
 	}
 
 	.dark {
