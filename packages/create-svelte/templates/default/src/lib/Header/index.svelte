@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
-	import DarkModeToggle from '../DarkModeToggle.svelte';
+	import DarkModeToggle from './DarkModeToggle.svelte';
 </script>
 
 <header>

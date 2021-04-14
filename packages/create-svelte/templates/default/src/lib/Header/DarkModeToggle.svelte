@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { afterUpdate } from 'svelte';
-	import { isDarkModeStore } from '../stores';
+	import { isDarkModeStore } from '../../stores';
 
 	let isDarkMode = false;
 
@@ -27,17 +27,9 @@
 
 <style>
 	button {
+		width: 100%;
+		height: 100%;
 		background-color: transparent;
 		border: 0;
-		position: absolute;
-		top: 16px;
-		right: 10px;
-	}
-
-	@media (min-width: 480px) {
-		button {
-			top: 24px;
-			right: 32px;
-		}
 	}
 </style>
