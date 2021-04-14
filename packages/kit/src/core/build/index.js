@@ -300,11 +300,15 @@ async function build_server(
 				]
 			};
 
-			const hooks = {
-				getContext: user_hooks.getContext || (() => ({})),
-				getSession: user_hooks.getSession || (() => ({})),
-				handle: user_hooks.handle || (({ request, render }) => render(request))
-			};
+			// this looks redundant, but the indirection allows us to access
+			// named imports without triggering Rollup's missing import detection
+			const get_hooks = hooks => ({
+				getContext: hooks.getContext || (() => ({})),
+				getSession: hooks.getSession || (() => ({})),
+				handle: hooks.handle || (({ request, render }) => render(request))
+			});
+
+			const hooks = get_hooks(user_hooks);
 
 			const module_lookup = {
 				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}

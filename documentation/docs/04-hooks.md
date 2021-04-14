@@ -95,10 +95,10 @@ type Response = {
 	body?: any;
 };
 
-type Handle<Context = any> = (
+type Handle<Context = any> = ({
 	request: Request<Context>,
 	render: (request: Request<Context>) => Promise<Response>
-) => Response | Promise<Response>;
+}) => Response | Promise<Response>;
 ```
 
 ```js
