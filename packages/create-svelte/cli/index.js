@@ -40,7 +40,7 @@ async function main() {
 		{
 			type: 'select',
 			name: 'template',
-			message: 'Which app Svelte template?',
+			message: 'Which Svelte app template?',
 			choices: [
 				{ title: 'Default App (Counter + Route)', value: 'default' },
 				{ title: 'Skeleton App', value: 'skeleton' }
