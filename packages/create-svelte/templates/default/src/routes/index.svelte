@@ -15,6 +15,7 @@
 <section>
 	<h1>
 		<img
+			class="welcome"
 			src={isDarkMode ? 'svelte-welcome.png' : 'svelte-welcome-light.png'}
 			alt="Welcome"
 		/>
@@ -22,24 +23,35 @@
 	</h1>
 
 	<h2>
-		Here’s where you’ll edit your content.<br />Have a look at
-		<strong>src/routes/index.svelte</strong>
+		try editing <strong>src/routes/index.svelte</strong>
 	</h2>
 
 	<Counter />
 </section>
 
 <style>
-	img {
-		width: 100%;
-		max-width: 1024px;
-		display: block;
-	}
-
 	section {
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+	}
+
+	h1 {
+		font-size: calc(8px + 3.5vw);
+		margin: 0 0 1rem 0;
+	}
+
+	.welcome {
+		width: 100%;
+		max-width: 1024px;
+		display: block;
+		margin-bottom: -10%;
+	}
+
+	@media (min-width: 1024px) {
+		h1 {
+			font-size: 43.84px;
+		}
 	}
 </style>
