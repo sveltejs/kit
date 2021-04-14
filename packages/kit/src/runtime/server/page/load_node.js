@@ -9,10 +9,10 @@ const s = JSON.stringify;
  *
  * @param {{
  *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
- *   route: import('types.internal').SSRPage;
+ *   options: import('types/internal').SSRRenderOptions;
+ *   route: import('types/internal').SSRPage;
  *   page: import('types').Page;
- *   node: import('types.internal').SSRNode;
+ *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   context: Record<string, any>;
  *   is_leaf: boolean;
@@ -48,7 +48,7 @@ export async function load_node({
 	let loaded;
 
 	if (module.load) {
-		/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+		/** @type {import('types/internal').LoadInput | import('types/internal').ErrorLoadInput} */
 		const load_input = {
 			page,
 			get session() {
@@ -131,7 +131,7 @@ export async function load_node({
 					}
 
 					if (!response) {
-						const headers = /** @type {import('types.internal').Headers} */ ({ ...opts.headers });
+						const headers = /** @type {import('types/internal').Headers} */ ({ ...opts.headers });
 
 						// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 						if (opts.credentials !== 'omit') {
@@ -179,7 +179,7 @@ export async function load_node({
 							async function text() {
 								const body = await response.text();
 
-								/** @type {import('types.internal').Headers} */
+								/** @type {import('types/internal').Headers} */
 								const headers = {};
 								response.headers.forEach((value, key) => {
 									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
@@ -224,8 +224,8 @@ export async function load_node({
 		};
 
 		if (is_error) {
-			/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
-			/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
+			/** @type {import('types/internal').ErrorLoadInput} */ (load_input).status = status;
+			/** @type {import('types/internal').ErrorLoadInput} */ (load_input).error = error;
 		}
 
 		loaded = await module.load.call(null, load_input);

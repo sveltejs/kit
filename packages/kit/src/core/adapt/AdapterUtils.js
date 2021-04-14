@@ -8,7 +8,7 @@ export default class AdapterUtils {
 	/** @param {{
 	 *   cwd: string;
 	 *   config: any; // TODO
-	 *   log: import('../../../types.internal').Logger
+	 *   log: import('types/internal').Logger
 	 * }} opts */
 	constructor({ cwd, config, log }) {
 		this.#cwd = cwd;

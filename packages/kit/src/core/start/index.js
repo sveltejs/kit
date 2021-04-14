@@ -16,7 +16,7 @@ const mutable = (dir) =>
  * @param {{
  *   port: number;
  *   host: string;
- *   config: import('types.internal').ValidatedConfig;
+ *   config: import('types/internal').ValidatedConfig;
  *   https?: boolean;
  *   cwd?: string;
  * }} opts
@@ -24,7 +24,7 @@ const mutable = (dir) =>
 export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
 	const app_file = resolve(cwd, '.svelte/output/server/app.js');
 
-	/** @type {import('types.internal').App} */
+	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
@@ -47,7 +47,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 						host: /** @type {string} */ (config.kit.host ||
 							req.headers[config.kit.hostHeader || 'host']),
 						method: req.method,
-						headers: /** @type {import('types.internal').Headers} */ (req.headers),
+						headers: /** @type {import('types/internal').Headers} */ (req.headers),
 						path: parsed.pathname,
 						body: await get_body(req),
 						query: new URLSearchParams(parsed.query || '')

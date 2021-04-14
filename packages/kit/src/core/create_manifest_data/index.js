@@ -21,11 +21,11 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('types.internal').ValidatedConfig;
+ *   config: import('types/internal').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('types.internal').ManifestData}
+ * @returns {import('types/internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -40,7 +40,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('types.internal').RouteData[]} */
+	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
@@ -345,7 +345,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('types.internal').Asset[]} files
+ * @param {import('types/internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

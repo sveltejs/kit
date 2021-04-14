@@ -7,9 +7,9 @@ import { respond_with_error } from './respond_with_error.js';
 /**
  * @param {{
  *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
+ *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
- *   route: import('types.internal').SSRPage;
+ *   route: import('types/internal').SSRPage;
  * }} opts
  * @returns {Promise<import('types').Response>}
  */

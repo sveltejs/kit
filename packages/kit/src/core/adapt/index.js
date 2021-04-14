@@ -3,7 +3,7 @@ import { logger } from '../utils.js';
 import AdapterUtils from './AdapterUtils.js';
 
 /**
- * @param {import('../../../types.internal').ValidatedConfig} config
+ * @param {import('types/internal').ValidatedConfig} config
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
 export async function adapt(config, { cwd = process.cwd(), verbose }) {

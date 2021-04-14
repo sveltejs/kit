@@ -3,8 +3,8 @@ import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {import('types').Request} request
- * @param {import('types.internal').SSRPage} route
- * @param {import('types.internal').SSRRenderOptions} options
+ * @param {import('types/internal').SSRPage} route
+ * @param {import('types/internal').SSRRenderOptions} options
  * @returns {Promise<import('types').Response>}
  */
 export default async function render_page(request, route, options) {

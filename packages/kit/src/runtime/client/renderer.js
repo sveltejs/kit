@@ -46,7 +46,7 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
-/** @typedef {import('types.internal').CSRComponent} CSRComponent */
+/** @typedef {import('types/internal').CSRComponent} CSRComponent */
 
 export class Renderer {
 	/** @param {{
@@ -439,7 +439,7 @@ export class Renderer {
 		const session = this.$session;
 
 		if (module.load) {
-			/** @type {import('types.internal').LoadInput | import('types.internal').ErrorLoadInput} */
+			/** @type {import('types/internal').LoadInput | import('types/internal').ErrorLoadInput} */
 			const load_input = {
 				page: {
 					host: page.host,
@@ -465,8 +465,8 @@ export class Renderer {
 			};
 
 			if (error) {
-				/** @type {import('types.internal').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types.internal').ErrorLoadInput} */ (load_input).error = error;
+				/** @type {import('types/internal').ErrorLoadInput} */ (load_input).status = status;
+				/** @type {import('types/internal').ErrorLoadInput} */ (load_input).error = error;
 			}
 
 			const loaded = await module.load.call(null, load_input);

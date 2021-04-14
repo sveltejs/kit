@@ -8,7 +8,7 @@ const s = JSON.stringify;
 /**
  * @param {{
  *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
+ *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
@@ -163,7 +163,7 @@ export async function render_response({
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('types.internal').Headers} */
+	/** @type {import('types/internal').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};

@@ -1,6 +1,6 @@
 /**
  * @param {import('types').Request} request
- * @param {import('types.internal').SSREndpoint} route
+ * @param {import('types/internal').SSREndpoint} route
  * @returns {Promise<import('types').Response>}
  */
 export default async function render_route(request, route) {

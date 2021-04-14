@@ -17,7 +17,7 @@ const s = (value) => JSON.stringify(value);
  * }>} ClientManifest */
 
 /**
- * @param {import('../../../types.internal').ValidatedConfig} config
+ * @param {import('types/internal').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
  *   runtime?: string;
@@ -64,8 +64,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/internal').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -164,8 +164,8 @@ async function build_client({
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/internal').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -428,8 +428,8 @@ async function build_server(
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/internal').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;

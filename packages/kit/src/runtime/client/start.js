@@ -20,7 +20,7 @@ import { set_paths } from '../paths.js';
  *   hydrate: {
  *     status: number;
  *     error: Error;
- *     nodes: Array<Promise<import('types.internal').CSRComponent>>;
+ *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
  *     page: import('types').Page;
  *   };
  * }} opts */

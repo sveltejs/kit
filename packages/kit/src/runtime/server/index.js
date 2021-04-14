@@ -8,8 +8,8 @@ function md5(body) {
 }
 
 /**
- * @param {import('../../../types').Incoming} incoming
- * @param {import('../../../types.internal').SSRRenderOptions} options
+ * @param {import('types').Incoming} incoming
+ * @param {import('types/internal').SSRRenderOptions} options
  */
 export async function ssr(incoming, options) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
