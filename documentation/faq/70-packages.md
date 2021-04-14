@@ -2,7 +2,7 @@
 question: How do I fix the error I'm getting trying to include a package?
 ---
 
-If youre seeing errors like:
+If you're seeing errors like:
 
 * `[vite] Error when evaluating SSR module /node_modules/....`
 * `ReferenceError: require is not defined`
@@ -13,7 +13,7 @@ The most common solutions:
 
 1. Try moving the package between `dependencies` and `devDependencies`
 2. Try to `include` or `exclude` it in `optimizeDeps`
-3. Try to find an ESM build of the package, if available. If not available, you should also consider asking the library author to distribute an ESM version of their package or even converting the source for the package entirely to ESM.
+3. If not ESM package is available, you should also consider asking the library author to distribute an ESM version of their package or even converting the source for the package entirely to ESM.
 
 Packages which use `exports` instead of `module.exports` are currently failing due to a [known Vite issue](https://github.com/vitejs/vite/issues/2579). 
 
