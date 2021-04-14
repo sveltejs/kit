@@ -1,18 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import DarkModeToggle from '../lib/DarkModeToggle.svelte';
-	let currentPage = '';
-
-	page.subscribe((value: { path: string }) => {
-		currentPage = value.path;
-	});
 </script>
 
 <nav>
 	<ul>
-		<li class:isActive={currentPage === '/'}><a href=".">Home</a></li>
-		<li class:isActive={currentPage === '/about'}><a href="about">About</a></li>
-		<li class:isActive={currentPage === '/blog'}><a href="blog">Blog</a></li>
+		<li class:active={$page.path === '/'}><a href=".">Home</a></li>
+		<li class:active={$page.path === '/about'}><a href="about">About</a></li>
+		<li class:active={$page.path === '/blog'}><a href="blog">Blog</a></li>
 	</ul>
 	<DarkModeToggle />
 </nav>
@@ -57,7 +52,7 @@
 		color: var(--accent-color);
 	}
 
-	nav ul li.isActive::before {
+	nav ul li.active::before {
 		content: '';
 		width: 12px;
 		height: 10px;
