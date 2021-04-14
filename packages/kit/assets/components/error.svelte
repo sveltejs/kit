@@ -1,5 +1,5 @@
 <script context="module">
-	export async function load({ error, status }) {
+	export function load({ error, status }) {
 		return {
 			props: { error, status }
 		};
