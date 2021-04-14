@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { spring } from 'svelte/motion';
-	import plus from './plus.svg';
-	import minus from './minus.svg';
 
 	let count = 0;
 
@@ -17,7 +15,9 @@
 
 <div class="counter">
 	<button on:click={() => (count -= 1)} aria-label="Decrease the counter by one">
-		<img src={minus} alt="Minus icon">
+		<svg role="img" aria-label="Minus" viewBox="0 0 1 1">
+			<path d="M0,0.5 L1,0.5"></path>
+		</svg>
 	</button>
 
 	<div class="counter-viewport">
@@ -28,7 +28,10 @@
 	</div>
 
 	<button on:click={() => (count += 1)} aria-label="Increase the counter by one">
-		<img src={plus} alt="Plus icon">
+		<!-- <img src={plus} alt="Plus icon"> -->
+		<svg role="img" aria-label="Plus" viewBox="0 0 1 1">
+			<path d="M0,0.5 L1,0.5 M0.5,0 L0.5,1"></path>
+		</svg>
 	</button>
 </div>
 
@@ -58,6 +61,17 @@
 
 	.counter button:hover {
 		background-color: var(--secondary-color);
+	}
+
+	svg {
+		width: 25%;
+		height: 25%;
+	}
+
+	path {
+		vector-effect: non-scaling-stroke;
+		stroke-width: 2px;
+		stroke: var(--text-color);
 	}
 
 	.counter-viewport {
