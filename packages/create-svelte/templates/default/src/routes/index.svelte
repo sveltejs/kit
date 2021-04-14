@@ -11,12 +11,16 @@
 	<title>Home</title>
 </svelte:head>
 
-<img
-	src={isDarkMode ? 'svelte-welcome.png' : 'svelte-welcome-light.png'}
-	alt="Svelte welcome text"
-/>
+
 <section>
-	<h1>To my brand new<br />Svelte project</h1>
+	<h1>
+		<img
+			src={isDarkMode ? 'svelte-welcome.png' : 'svelte-welcome-light.png'}
+			alt="Welcome"
+		/>
+		to your brand new<br />Svelte project
+	</h1>
+
 	<h2>
 		Here’s where you’ll edit your content.<br />Have a look at
 		<strong>src/routes/index.svelte</strong>
@@ -29,20 +33,13 @@
 	img {
 		width: 100%;
 		max-width: 1024px;
+		display: block;
 	}
 
 	section {
-		margin-top: -2rem;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
-		transition: margin-top 0.3s linear;
-	}
-
-	@media (min-width: 768px) {
-		section {
-			margin-top: -8rem;
-		}
 	}
 </style>
