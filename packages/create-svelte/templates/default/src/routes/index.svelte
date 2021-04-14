@@ -9,11 +9,16 @@
 
 <section>
 	<h1>
-		<img
-			class="welcome"
-			src="svelte-welcome.png"
-			alt="Welcome"
-		/>
+		<picture>
+			<source srcset="svelte-welcome-compressed.webp" type="image/webp">
+			<img
+				class="welcome"
+				width="2048"
+				height="495"
+				src="svelte-welcome-compressed.png"
+				alt="Welcome"
+			/>
+		</picture>
 		to your brand new<br />Svelte project
 	</h1>
 
@@ -39,6 +44,7 @@
 
 	.welcome {
 		width: 100%;
+		height: auto;
 		max-width: 1024px;
 		display: block;
 		margin-bottom: -10%;
