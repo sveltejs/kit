@@ -48,9 +48,31 @@ Because of that, the stores are not free-floating objects: they must be accessed
 
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate.
 
-- `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
-- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`
-- `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
+#### `navigating`
+
+`navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
+
+#### `page`
+
+`page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`
+
+If you want to access the `query` parameter values, you cannot use direct property accessors (e.g.for the URL `/page?foo=bar`, doing `$page.params.foo` will not get you the value `bar` as you would expect), instead you must use accessors:
+
+- `.get('value')` — gets a single value
+- `.getAll('value')` — gets an array of values
+- `.has('value')` — returns a boolean if they value exists
+
+For example, given the page `/path?sucess=true&email=hello@example.com&favTech=Svelte&favTech=SvelteKit`, you can access the query params like so:
+
+```js
+$page.query.has('success')    // true
+$page.query.get('email')      // "hello@example.com"
+$page.query.getAll('favTech') // [ "Svelte", "SvelteKit" ]
+```
+
+#### `session`
+
+`session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib
 
