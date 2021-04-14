@@ -10,7 +10,6 @@
 </main>
 
 <footer>
-	<img src="svelte-logo.png" alt="Svelte Logo" />
 	<p>Visit <a href="https://svelte.dev">svelte.dev</a> to learn more on how to build Svelte apps</p>
 </footer>
 

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import logo from './svelte-logo.svg';
 	import DarkModeToggle from '../DarkModeToggle.svelte';
 </script>
 
 <header>
 	<div class="corner">
-		<!-- logo goes here -->
+		<a href="https://kit.svelte.dev">
+			<img src={logo} alt="SvelteKit" />
+		</a>
 	</div>
 
 	<nav>
@@ -36,6 +39,20 @@
 	.corner {
 		width: 3em;
 		height: 3em;
+	}
+
+	.corner a {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.corner img {
+		width: 2em;
+		height: 2em;
+		object-fit: contain;
 	}
 
 	nav {
@@ -92,7 +109,7 @@
 		border-top: var(--size) solid var(--accent-color);
 	}
 
-	a {
+	nav a {
 		display: flex;
 		height: 100%;
 		align-items: center;
