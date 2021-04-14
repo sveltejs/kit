@@ -12,6 +12,7 @@
 		"prompts": "^2.4.0",
 		"rollup": "^2.41.1",
 		"sucrase": "^3.18.1",
+		"svelte-preprocess": "^4.7.0",
 		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
