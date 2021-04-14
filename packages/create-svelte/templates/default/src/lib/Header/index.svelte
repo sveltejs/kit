@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
-	import DarkModeToggle from './DarkModeToggle.svelte';
+	import ThemeToggler from './ThemeToggler.svelte';
 </script>
 
 <header>
@@ -26,7 +26,7 @@
 	</nav>
 
 	<div class="corner">
-		<DarkModeToggle />
+		<ThemeToggler />
 	</div>
 </header>
 

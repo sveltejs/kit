@@ -1,10 +1,5 @@
 <script lang="ts">
 	import Counter from '$lib/Counter/index.svelte';
-	import { isDarkModeStore } from '../stores';
-
-	let isDarkMode = true;
-
-	isDarkModeStore.subscribe((value) => (isDarkMode = value));
 </script>
 
 <svelte:head>
@@ -16,7 +11,7 @@
 	<h1>
 		<img
 			class="welcome"
-			src={isDarkMode ? 'svelte-welcome.png' : 'svelte-welcome-light.png'}
+			src="svelte-welcome.png"
 			alt="Welcome"
 		/>
 		to your brand new<br />Svelte project

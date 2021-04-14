@@ -4,6 +4,21 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<script>
+			try {
+				if (!('theme' in localStorage)) {
+					localStorage.theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+						? 'dark'
+						: 'light';
+				}
+
+				document.querySelector('html').dataset.theme = localStorage.theme;
+			} catch (e) {
+				console.error(e);
+			}
+		</script>
+
 		%svelte.head%
 	</head>
 	<body>
