@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parse, pathToFileURL, URLSearchParams } from 'url';
+import { parse, pathToFileURL } from 'url';
 import sirv from 'sirv';
 import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
