@@ -1,4 +1,4 @@
-import { LoadOutput, SSRNode } from '../../../../types.internal';
+import { LoadOutput, SSRNode } from '../../../../types/internal';
 
 export type Loaded = {
 	node: SSRNode;
