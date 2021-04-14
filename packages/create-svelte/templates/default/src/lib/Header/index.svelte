@@ -3,42 +3,100 @@
 	import DarkModeToggle from '../DarkModeToggle.svelte';
 </script>
 
-<nav>
-	<ul>
-		<li class:active={$page.path === '/'}><a href=".">Home</a></li>
-		<li class:active={$page.path === '/about'}><a href="about">About</a></li>
-		<li class:active={$page.path === '/blog'}><a href="blog">Blog</a></li>
-	</ul>
-	<DarkModeToggle />
-</nav>
+<header>
+	<div class="corner">
+		<!-- logo goes here -->
+	</div>
+
+	<nav>
+		<svg viewBox="0 0 2 3" aria-hidden="true">
+			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z"/>
+		</svg>
+		<ul>
+			<li class:active={$page.path === '/'}><a href=".">Home</a></li>
+			<li class:active={$page.path === '/about'}><a href="about">About</a></li>
+			<li class:active={$page.path === '/blog'}><a href="blog">Blog</a></li>
+		</ul>
+		<svg viewBox="0 0 2 3" aria-hidden="true">
+			<path d="M0,0 L0,3 C0.5,3 0.5,3 1,2 L2,0 Z"/>
+		</svg>
+	</nav>
+
+	<div class="corner">
+		<DarkModeToggle />
+	</div>
+</header>
 
 <style>
+	header {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.corner {
+		width: 3em;
+		height: 3em;
+	}
+
 	nav {
 		display: flex;
 		justify-content: center;
+		--background: rgba(255,255,255,0.7);
 	}
 
-	nav ul {
+	:global([data-theme="dark"]) nav {
+		--background: rgba(255,255,255,0.2);
+	}
+
+	svg {
+		width: 2em;
+		height: 3em;
+		display: block;
+	}
+
+	path {
+		fill: var(--background);
+	}
+
+	ul {
+		position: relative;
+		padding: 0;
 		margin: 0;
-		padding: 20px 30px;
+		height: 3em;
 		display: flex;
 		justify-content: center;
 		align-items: center;
 		list-style: none;
-		background: url('/menu-background-light.svg') center top no-repeat;
+		background: var(--background);
 		background-size: contain;
 	}
 
-	html[data-theme='dark'] nav ul {
+	html[data-theme='dark'] ul {
 		background-image: url('/menu-background.svg');
 	}
 
-	nav ul li {
+	li {
 		position: relative;
+		height: 100%;
 	}
 
-	nav ul li a {
-		margin: 10px 16px;
+	li.active::before {
+		--size: 6px;
+		content: '';
+		width: 0;
+		height: 0;
+		position: absolute;
+		top: 0;
+		left: calc(50% - var(--size));
+		border: var(--size) solid transparent;
+		border-top: var(--size) solid var(--accent-color);
+	}
+
+	a {
+		display: flex;
+		height: 100%;
+		align-items: center;
+		padding: 0 1em;
 		color: var(--heading-color);
 		font-weight: 700;
 		font-size: 0.8rem;
@@ -48,21 +106,7 @@
 		transition: color 0.2s linear;
 	}
 
-	nav ul li a:hover {
+	a:hover {
 		color: var(--accent-color);
-	}
-
-	nav ul li.active::before {
-		content: '';
-		width: 12px;
-		height: 10px;
-		position: absolute;
-		top: -28px;
-		margin-left: auto;
-		margin-right: auto;
-		left: 0;
-		right: 0;
-		background-color: var(--accent-color);
-		transform: rotate(45deg);
 	}
 </style>
