@@ -2,6 +2,19 @@
 question: How do I fix the error I'm getting trying to include a package?
 ---
 
-Most of these issues come from Vite trying to deal with non-ESM libraries. You may find helpful examples in [the Vite issue tracker](https://github.com/vitejs/vite/issues). The most common solutions would be to try moving the package between `dependencies` and `devDependencies` or trying to `include` or `exclude` it in `optimizeDeps`. Packages which use `exports` instead of `module.exports` are currently failing due to a [known Vite issue](https://github.com/vitejs/vite/issues/2579). You should also consider asking the library author to distribute an ESM version of their package or even converting the source for the package entirely to ESM.
+If youre seeing errors like:
+
+* `[vite] Error when evaluating SSR module /node_modules/....`
+* `ReferenceError: require is not defined`
+
+Most likely they are coming from Vite trying to deal with non-ESM libraries. You may find helpful examples in [the Vite issue tracker](https://github.com/vitejs/vite/issues). 
+
+The most common solutions:
+
+1. Try moving the package between `dependencies` and `devDependencies`
+2. Try to `include` or `exclude` it in `optimizeDeps`
+3. Try to find an ESM build of the package, if available. If not available, you should also consider asking the library author to distribute an ESM version of their package or even converting the source for the package entirely to ESM.
+
+Packages which use `exports` instead of `module.exports` are currently failing due to a [known Vite issue](https://github.com/vitejs/vite/issues/2579). 
 
 You should also add any Svelte components to `ssr.noExternal`. [We hope to do this automatically in the future](https://github.com/sveltejs/kit/issues/904) by detecting the `svelte` field in a package's `package.json`.
