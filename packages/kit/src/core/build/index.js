@@ -252,9 +252,10 @@ async function build_server(
 			import { set_prerendering } from './runtime/env.js';
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
-			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
+			const template = ({ head, body, lang }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
 				.replace('%svelte.head%', '" + head + "')
-				.replace('%svelte.body%', '" + body + "')};
+				.replace('%svelte.body%', '" + body + "')
+				.replace('%svelte.lang%', '" + lang + "')};
 
 			set_paths(${s(config.kit.paths)});
 
@@ -348,6 +349,7 @@ async function build_server(
 					hooks,
 					dev: false,
 					amp: ${config.kit.amp},
+					i18n: ${s(config.kit.i18n)},
 					dependencies,
 					only_render_prerenderable_pages,
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],

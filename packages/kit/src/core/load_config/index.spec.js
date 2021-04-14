@@ -21,7 +21,8 @@ test('fills in defaults', () => {
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
-				template: 'src/app.html'
+				template: 'src/app.html',
+				translations: 'src/translations'
 			},
 			host: null,
 			hostHeader: null,
@@ -103,7 +104,8 @@ test('fills in partial blanks', () => {
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
 				setup: 'src/setup',
-				template: 'src/app.html'
+				template: 'src/app.html',
+				translations: 'src/translations'
 			},
 			host: null,
 			hostHeader: null,

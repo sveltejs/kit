@@ -2,6 +2,20 @@ import './types.ambient-modules';
 import { Headers, ErrorLoadInput, LoadInput, LoadOutput, Logger } from './types.internal';
 import { UserConfig as ViteConfig } from 'vite';
 
+export interface I18nLocale {
+	code: string;
+	iso: string;
+	prefix?: string;
+}
+
+export interface I18nConfig {
+	defaultLocale: string;
+	fallbackLocale: string;
+	locales: I18nLocale[];
+	prefixDefault: boolean;
+	prefixRoutes: boolean;
+}
+
 export type Config = {
 	compilerOptions?: any;
 	extensions?: string[];
@@ -16,10 +30,12 @@ export type Config = {
 			routes?: string;
 			serviceWorker?: string;
 			template?: string;
+			translations?: string;
 		};
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
+		i18n?: I18nConfig;
 		paths?: {
 			base?: string;
 			assets?: string;
@@ -114,4 +130,16 @@ export type Page = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
+};
+
+export type Translations = {
+	[key: string]: string | Translations;
+};
+
+export type I18n = {
+	defaultLocale?: string;
+	locale?: I18nLocale;
+	locales: I18nLocale[];
+	localizedPaths: { [locale: string]: string };
+	translations: Translations;
 };

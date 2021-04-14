@@ -165,10 +165,11 @@ class Watcher extends EventEmitter {
 						},
 						{
 							paths: this.config.kit.paths,
-							template: ({ head, body }) => {
+							template: ({ head, body, lang }) => {
 								let rendered = template
 									.replace('%svelte.head%', () => head)
-									.replace('%svelte.body%', () => body);
+									.replace('%svelte.body%', () => body)
+									.replace('%svelte.lang%', () => lang);
 
 								if (this.config.kit.amp) {
 									const result = validator.validateString(rendered);
@@ -256,6 +257,7 @@ class Watcher extends EventEmitter {
 							entry: '/.svelte/dev/runtime/internal/start.js',
 							dev: true,
 							amp: this.config.kit.amp,
+							i18n: this.config.kit.i18n,
 							root,
 							hooks: {
 								getContext: hooks.getContext || (() => ({})),

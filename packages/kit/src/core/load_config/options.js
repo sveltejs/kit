@@ -68,7 +68,8 @@ const options = {
 					serviceWorker: expect_string('src/service-worker'),
 					// TODO remove this, eventually
 					setup: expect_string('src/setup'),
-					template: expect_string('src/app.html')
+					template: expect_string('src/app.html'),
+					translations: expect_string('src/translations')
 				}
 			},
 
@@ -77,6 +78,49 @@ const options = {
 			hostHeader: expect_string(null),
 
 			hydrate: expect_boolean(true),
+
+			i18n: {
+				type: 'leaf',
+				default: undefined,
+				validate: (option, keypath) => {
+					if (typeof option !== 'object' || !option.defaultLocale || !option.locales) {
+						throw new Error(
+							`${keypath} should be and object with "defaultLocale" and "locales" properties`
+						);
+					}
+
+					if (
+						!Array.isArray(option.locales) ||
+						!option['locales'].every((locale) => typeof locale === 'object')
+					) {
+						throw new Error(`${keypath} must be an array of locale objects`);
+					}
+
+					const locales = option['locales'].map((locale) => {
+						if (!locale.code || !locale.iso) {
+							throw new Error(`Each member of ${keypath} must be have a "code" and "iso" property`);
+						}
+
+						if (typeof locale.code !== 'string') {
+							throw new Error(`Property "code" in member of ${keypath} must be a string`);
+						}
+
+						if (typeof locale.iso !== 'string') {
+							throw new Error(`Property "iso" in member of ${keypath} must be a string`);
+						}
+
+						return {
+							...locale,
+							prefix: locale.prefix === undefined ? locale.code : locale.prefix
+						};
+					});
+
+					return {
+						...option,
+						locales
+					};
+				}
+			},
 
 			paths: {
 				type: 'branch',

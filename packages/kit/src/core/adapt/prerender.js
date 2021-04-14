@@ -1,5 +1,12 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import {
+	dirname,
+	join,
+	resolve as resolve_path,
+	sep as path_separator,
+	extname,
+	basename
+} from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '../filesystem/index.js';
@@ -42,6 +49,49 @@ function get_srcset_urls(attrs) {
 		}
 	}
 	return results;
+}
+
+/**
+ * @param {string} dir
+ */
+function find_translations(dir) {
+	const localesDir = resolve_path(dir);
+	const files = existsSync(localesDir)
+		? readdirSync(localesDir)
+				.map((basename) => join(localesDir, basename))
+				.filter((file) => extname(file) === '.json')
+		: [];
+
+	if (files.length === 0) return undefined;
+
+	/** @type {import('types').Translations} */
+	const init = {};
+
+	return files.reduce((translations, file) => {
+		const locale = basename(file).slice(0, -5);
+		translations[locale] = JSON.parse(readFileSync(resolve_path(file), 'utf-8'));
+		return translations;
+	}, init);
+}
+
+/**
+ * @param {string[]} parts
+ * @param {import('types').I18nLocale} locale
+ * @param {import('types').Translations} translations
+ * @returns {string[]}
+ */
+function get_translated_parts(parts, locale, translations) {
+	return parts.map((part) => {
+		const localeTranslations = translations[locale.code];
+		if (typeof localeTranslations !== 'object') return part;
+
+		const tr = localeTranslations['_routes'];
+		if (tr && typeof tr !== 'string' && tr[part]) {
+			const translation = tr[part];
+			if (typeof translation === 'string') return translation;
+		}
+		return part;
+	});
 }
 
 const OK = 2;
@@ -212,11 +262,14 @@ export async function prerender({ cwd, out, log, config, force }) {
 
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
+			const translations = find_translations(config.kit.files.translations);
+			const includeRedirect = !config.kit.i18n?.locales.find((l) => !l.prefix);
+
 			// remove the prefix '.' from the extensions array
 			const extensions = config.extensions.map((extension) => extension.slice(1));
 			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
 			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.kit.files.routes })
-				.map((file) => {
+				.flatMap((file) => {
 					// support both windows and unix glob results
 					const parts = file.split(path_separator);
 
@@ -231,7 +284,18 @@ export async function prerender({ cwd, out, log, config, force }) {
 						return null;
 					}
 
-					return `/${parts.join('/')}`;
+					if (config.kit.i18n?.locales.length > 0) {
+						const paths = config.kit.i18n.locales.map(
+							(locale) =>
+								`/${[
+									...(locale.prefix ? [locale.prefix] : []),
+									...get_translated_parts(parts, locale, translations)
+								].join('/')}`
+						);
+						if (includeRedirect) paths.push(`/${parts.join('/')}`);
+						return paths;
+					}
+					return [`/${parts.join('/')}`];
 				})
 				.filter(Boolean);
 

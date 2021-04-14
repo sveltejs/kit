@@ -7,7 +7,8 @@ import {
 	Load,
 	Page,
 	RequestHandler,
-	Response as SSRResponse
+	Response as SSRResponse,
+	I18nConfig
 } from './types';
 import { UserConfig as ViteConfig } from 'vite';
 
@@ -43,10 +44,12 @@ export type ValidatedConfig = {
 			serviceWorker: string;
 			setup: string;
 			template: string;
+			translations: string;
 		};
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;
+		i18n?: I18nConfig;
 		paths: {
 			base: string;
 			assets: string;
@@ -194,7 +197,7 @@ export type SSRRenderOptions = {
 		assets: string;
 	};
 	local?: boolean;
-	template?: ({ head, body }: { head: string; body: string }) => string;
+	template?: ({ head, body, lang }: { head: string; body: string; lang: string }) => string;
 	manifest?: SSRManifest;
 	load_component?: (id: PageId) => Promise<SSRNode>;
 	target?: string;
@@ -203,6 +206,7 @@ export type SSRRenderOptions = {
 	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
+	i18n?: I18nConfig;
 	dependencies?: Map<string, SSRResponse>;
 	only_render_prerenderable_pages?: boolean;
 	get_stack?: (error: Error) => string;
@@ -243,4 +247,5 @@ export type ManifestData = {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+	i18n?: I18nConfig;
 };

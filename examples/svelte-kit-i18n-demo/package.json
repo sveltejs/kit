@@ -1,0 +1,21 @@
+{
+	"name": "svelte-kit-demo",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "svelte-kit dev",
+		"build": "svelte-kit build",
+		"start": "svelte-kit start",
+		"build:vercel": "ADAPTER=@sveltejs/adapter-vercel OPTIONS={} npm run build",
+		"build:cloudflare-workers": "ADAPTER=@sveltejs/adapter-cloudflare-workers OPTIONS={} npm run build"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/adapter-vercel": "workspace:*",
+		"@sveltejs/adapter-cloudflare-workers": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "^3.35.0"
+	}
+}

@@ -56,17 +56,22 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
+	import { Page, I18n } from '@sveltejs/kit';
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores(): {
+		i18n: Readable<I18n>;
 		navigating: Readable<{ from: string; to: string } | null>;
 		page: Readable<Page>;
 		session: Writable<any>;
 	};
+	/**
+	 * A readable store with the current locale and a list of available locales.
+	 */
+	export const i18n: Readable<I18n>;
 	/**
 	 * A readable store whose value reflects the object passed to load functions.
 	 */
@@ -103,4 +108,19 @@ declare module '$service-worker' {
 	 * This is only available to service workers.
 	 */
 	export const timestamp: number;
+}
+
+declare module '$app/translations' {
+	import { Readable } from 'svelte/store';
+	import { Translations } from '@sveltejs/kit';
+
+	/**
+	 * A readable store with the current locale's translations.
+	 */
+	export const t: Readable<Translations>;
+
+	/**
+	 * A readable store with a function to localize paths
+	 */
+	export const l: Readable<(path: string) => string>;
 }

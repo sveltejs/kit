@@ -92,6 +92,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
+	validated.kit.files.translations = path.resolve(cwd, validated.kit.files.translations);
 
 	// TODO remove this, eventually
 	if (resolve_entry(validated.kit.files.setup)) {

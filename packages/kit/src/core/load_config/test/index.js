@@ -28,7 +28,8 @@ test('load default config', async () => {
 				routes: join(cwd, 'src/routes'),
 				serviceWorker: join(cwd, 'src/service-worker'),
 				setup: join(cwd, 'src/setup'),
-				template: join(cwd, 'src/app.html')
+				template: join(cwd, 'src/app.html'),
+				translations: join(cwd, 'src/translations')
 			},
 			host: null,
 			hostHeader: null,

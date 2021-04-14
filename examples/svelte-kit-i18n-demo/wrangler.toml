@@ -1,0 +1,10 @@
+name = "svelte-kit-demo"
+type = "webpack"
+account_id = "f60df21486a4f0e5dbd85493882f1d53"
+workers_dev = true
+route = ""
+zone_id = ""
+
+[site]
+bucket = "./build"
+entry-point = "./workers-site"

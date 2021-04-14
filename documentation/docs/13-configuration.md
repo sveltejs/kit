@@ -23,7 +23,8 @@ module.exports = {
 			lib: 'src/lib',
 			routes: 'src/routes',
 			serviceWorker: 'src/service-worker',
-			template: 'src/app.html'
+			template: 'src/app.html',
+			translations: 'src/translations'
 		},
 		host: null,
 		hostHeader: null,

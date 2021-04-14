@@ -172,10 +172,16 @@ export async function render_response({
 		headers['cache-control'] = `${is_private ? 'private' : 'public'}, max-age=${maxage}`;
 	}
 
+	const firstSegment = page.path.split('/')[1];
+	const locale =
+		options.i18n?.locales.find(({ code }) => code === firstSegment) ||
+		options.i18n?.locales.find(({ code }) => code === options.i18n.defaultLocale);
+	const lang = locale?.iso || 'en';
+
 	return {
 		status,
 		headers,
-		body: options.template({ head, body })
+		body: options.template({ head, body, lang })
 	};
 }
 

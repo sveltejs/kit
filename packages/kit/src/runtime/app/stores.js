@@ -23,6 +23,9 @@ export const getStores = () => {
 		page: {
 			subscribe: stores.page.subscribe
 		},
+		i18n: {
+			subscribe: stores.i18n.subscribe
+		},
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
@@ -46,7 +49,16 @@ export const page = {
 	}
 };
 
-/** @type {typeof import('$app/stores').navigating} */
+/** @type {typeof import('$app/stores').i18n} */
+export const i18n = {
+	/** @param {(value: any) => void} fn */
+	subscribe(fn) {
+		const store = getStores().i18n;
+		return store.subscribe(fn);
+	}
+};
+
+/** @type {import('svelte/store').Readable<boolean>} */
 export const navigating = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {

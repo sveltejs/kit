@@ -302,6 +302,8 @@ export class Renderer {
 			return this.loading.promise;
 		}
 
+		console.log(info.routes);
+
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
