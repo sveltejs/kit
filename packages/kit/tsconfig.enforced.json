@@ -8,6 +8,7 @@
 		"module": "es2020",
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
+		"types": ["./types"],
 		"paths": {
 			"types/*": ["./types/*"]
 		}
