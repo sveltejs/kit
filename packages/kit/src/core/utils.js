@@ -69,3 +69,8 @@ export function resolve_entry(entry) {
 
 	return null;
 }
+
+/** @param {string} str */
+export function posixify(str) {
+	return str.replace(/\\/g, '/');
+}

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, posixify, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
@@ -69,7 +69,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	return {
 		client,
 		server,
-		static: options.manifest.assets.map((asset) => asset.file),
+		static: options.manifest.assets.map((asset) => posixify(asset.file)),
 		entries: options.manifest.routes
 			.map((route) => route.type === 'page' && route.path)
 			.filter(Boolean)
