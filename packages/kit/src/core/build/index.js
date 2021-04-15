@@ -63,8 +63,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		await build_service_worker(options, client_manifest);
 	}
 
-	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true });
-	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true });
+	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
 
 	return {
 		client,
