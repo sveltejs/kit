@@ -86,6 +86,8 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		}
 	});
 
+	console.log('files', files);
+
 	/** @param {string} path */
 	async function visit(path) {
 		if (seen.has(path)) return;
