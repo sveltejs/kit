@@ -52,9 +52,10 @@ const REDIRECT = 3;
  *   out: string;
  *   log: import('../../../types.internal').Logger;
  *   config: import('../../../types.internal').ValidatedConfig;
+ *   build_data: import('../../../types.internal').BuildData;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
-export async function prerender({ cwd, out, log, config, force }) {
+export async function prerender({ cwd, out, log, config, build_data, force }) {
 	const dir = resolve_path(cwd, '.svelte/output');
 
 	const seen = new Set();
@@ -162,8 +163,9 @@ export async function prerender({ cwd, out, log, config, force }) {
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
 
+				const hrefs = [];
+
 				while ((match = pattern.exec(cleaned))) {
-					let hrefs = [];
 					const element = match[1];
 					const attrs = match[2];
 
@@ -175,36 +177,36 @@ export async function prerender({ cwd, out, log, config, force }) {
 						}
 						hrefs.push(...get_srcset_urls(attrs));
 					}
+				}
 
-					hrefs = hrefs.filter(Boolean);
+				for (const href of hrefs) {
+					if (!href) continue;
 
-					for (const href of hrefs) {
-						const resolved = resolve(path, href);
+					const resolved = resolve(path, href);
 
-						if (resolved[0] !== '/') continue;
-						if (seen_files.has(resolved)) continue;
+					if (resolved[0] !== '/') continue;
+					if (seen_files.has(resolved)) continue;
 
-						const parsed = parse(resolved);
+					const parsed = parse(resolved);
 
-						const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
+					const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
 
-						const file_exists =
-							(file.startsWith(`${config.kit.appDir}/`) && existsSync(`${dir}/client/${file}`)) ||
-							existsSync(`${out}/${file}`) ||
-							existsSync(`${config.kit.files.assets}/${file}`) ||
-							existsSync(`${config.kit.files.assets}/${file}/index.html`);
+					const file_exists =
+						(file.startsWith(`${config.kit.appDir}/`) && existsSync(`${dir}/client/${file}`)) ||
+						existsSync(`${out}/${file}`) ||
+						existsSync(`${config.kit.files.assets}/${file}`) ||
+						existsSync(`${config.kit.files.assets}/${file}/index.html`);
 
-						if (file_exists) {
-							seen_files.add(resolved);
-							continue;
-						}
-
-						if (parsed.query) {
-							// TODO warn that query strings have no effect on statically-exported pages
-						}
-
-						await visit(parsed.pathname.replace(config.kit.paths.base, ''));
+					if (file_exists) {
+						seen_files.add(resolved);
+						continue;
 					}
+
+					if (parsed.query) {
+						// TODO warn that query strings have no effect on statically-exported pages
+					}
+
+					await visit(parsed.pathname.replace(config.kit.paths.base, ''));
 				}
 			}
 		}

@@ -244,3 +244,5 @@ export type ManifestData = {
 	components: string[];
 	routes: RouteData[];
 };
+
+export type BuildData = {};
