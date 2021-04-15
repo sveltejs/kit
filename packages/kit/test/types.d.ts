@@ -8,6 +8,7 @@ export type TestContext = {
 	base: string;
 	page: Page;
 	clicknav: (selector: string) => Promise<void>;
+	back: () => Promise<void>;
 	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
 	capture_requests: (fn: () => void) => Promise<string[]>;
 	js: boolean;
