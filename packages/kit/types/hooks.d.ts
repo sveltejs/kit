@@ -1,5 +1,5 @@
-import { BaseBody } from './helper';
-import { ServerRequest } from './server';
+import { BaseBody, Headers } from './helper';
+import { ServerRequest, ServerResponse } from './server';
 
 export type Incoming = {
 	method: string;
@@ -18,5 +18,5 @@ export type GetSession<Context = any, Session = any> = {
 
 export type Handle<Context = any> = (input: {
 	request: ServerRequest<Context>;
-	render: (request: ServerRequest<Context>) => Response | Promise<Response>;
-}) => Response | Promise<Response>;
+	render: (request: ServerRequest<Context>) => ServerResponse | Promise<ServerResponse>;
+}) => ServerResponse | Promise<ServerResponse>;

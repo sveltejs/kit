@@ -11,12 +11,12 @@ export type ServerRequest<Context = any, Body = unknown> = {
 	context: Context;
 };
 
-export type RequestHandler<Context = any, Body = unknown> = (
-	request: ServerRequest<Context, Body>
-) => Response | Promise<Response>;
-
 export type ServerResponse = {
 	status?: number;
 	headers?: Headers;
 	body?: any;
 };
+
+export type RequestHandler<Context = any, Body = unknown> = (
+	request: ServerRequest<Context, Body>
+) => ServerResponse | Promise<ServerResponse>;
