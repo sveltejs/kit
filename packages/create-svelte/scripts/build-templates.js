@@ -74,7 +74,7 @@ async function generate_templates() {
 				// tool for the job because it just removes the types; Prettier then
 				// tidies up the end result
 				const contents = file.contents.replace(
-					/<script([^>]+)>([\s\S]+)<\/script>/g,
+					/<script([^>]+)>([\s\S]+?)<\/script>/g,
 					(m, attrs, typescript) => {
 						// Sucrase assumes 'unused' imports (which _are_ used, but only
 						// in the markup) are type imports, and strips them. This step
