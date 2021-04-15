@@ -6,7 +6,7 @@ import { copy_assets, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
-import glob from 'tiny-glob/sync';
+import glob from 'tiny-glob/sync.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);

@@ -84,7 +84,7 @@ suite('prerender', async () => {
 	};
 
 	/** @type {import('types.internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: [] };
+	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
 
 	const utils = get_utils({ cwd, config, build_data, log });
 
