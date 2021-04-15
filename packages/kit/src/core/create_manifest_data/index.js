@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { posixify } from '../utils';
+import { posixify } from '../utils.js';
 
 /** @typedef {{
  *   content: string;
