@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, posixify, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
+import glob from 'tiny-glob/sync.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -17,16 +18,19 @@ const s = (value) => JSON.stringify(value);
  * }>} ClientManifest */
 
 /**
- * @param {import('../../../types.internal').ValidatedConfig} config
+ * @param {import('types.internal').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
  *   runtime?: string;
  * }} [opts]
+ * @returns {Promise<import('types.internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
 
 	rimraf(build_dir);
+
+	const output_dir = path.resolve(cwd, '.svelte/output');
 
 	const options = {
 		cwd,
@@ -41,7 +45,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			output: build_dir,
 			cwd
 		}),
-		output_dir: path.resolve(cwd, '.svelte/output'),
+		output_dir,
 		client_entry_file: '.svelte/build/runtime/internal/start.js',
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
@@ -58,14 +62,26 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 		await build_service_worker(options, client_manifest);
 	}
+
+	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
+
+	return {
+		client,
+		server,
+		static: options.manifest.assets.map((asset) => posixify(asset.file)),
+		entries: options.manifest.routes
+			.map((route) => route.type === 'page' && route.path)
+			.filter(Boolean)
+	};
 }
 
 /**
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types.internal').ValidatedConfig
+ *   manifest: import('types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -164,8 +180,8 @@ async function build_client({
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types.internal').ValidatedConfig
+ *   manifest: import('types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -428,8 +444,8 @@ async function build_server(
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types.internal').ValidatedConfig
+ *   manifest: import('types.internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
