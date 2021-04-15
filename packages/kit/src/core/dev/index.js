@@ -230,8 +230,14 @@ class Watcher extends EventEmitter {
 								const styles = new Set();
 
 								for (const dep of deps) {
+									const parsed = parse(dep.url);
+									const query = new URLSearchParams(parsed.query);
+
 									// TODO what about .scss files, etc?
-									if (dep.file.endsWith('.css')) {
+									if (
+										dep.file.endsWith('.css') ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
 										try {
 											const mod = await this.vite.ssrLoadModule(dep.url);
 											css.add(dep.url);
