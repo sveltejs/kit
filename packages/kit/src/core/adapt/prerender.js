@@ -55,6 +55,8 @@ function get_srcset_urls(attrs) {
  * @param {string} dir
  */
 function find_translations(dir) {
+	if (!dir) return undefined;
+
 	const localesDir = resolve_path(dir);
 	const files = existsSync(localesDir)
 		? readdirSync(localesDir)

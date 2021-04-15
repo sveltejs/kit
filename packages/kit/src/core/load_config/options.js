@@ -81,7 +81,7 @@ const options = {
 
 			i18n: {
 				type: 'leaf',
-				default: undefined,
+				default: null,
 				validate: (option, keypath) => {
 					if (typeof option !== 'object' || !option.defaultLocale || !option.locales) {
 						throw new Error(

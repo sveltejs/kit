@@ -5,5 +5,5 @@
 	"home": "start",
 	"about": "über",
 	"blog": "blog",
-	"welcome": "Welcome $1, you have $2 new messages from $1."
+	"welcome": "$1, willkommen! Du hast {{PLURAL:$2|eine neue Nachricht|$2 neue Nachrichten|12=ein Dutzend neue Nachrichten}} von $1"
 }

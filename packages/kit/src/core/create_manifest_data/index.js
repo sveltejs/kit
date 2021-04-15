@@ -89,12 +89,49 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		/** @param {string} value */
 		function processValue(value) {
 			const params = [
-				...new Set([...value.matchAll(/(?<!\$)\$(\d+)/g)].map((match) => parseInt(match[1])))
+				...new Set([...value.matchAll(/(^|[^$])\$(\d+)/g)].map((match) => parseInt(match[2])))
 			].sort((a, b) => a - b);
+
 			if (params.length > 0) {
-				return `(${params.map((p) => `$${p}`).join(', ')}) => "${value}"${params
-					.map((p) => `.replace(/(?<!\\$)\\$${p}(?!\\d])/g, $${p})`)
-					.join('')}`;
+				const inputParams = `(${params.map((p) => `$${p}`).join(', ')})`;
+
+				/** @type {Record<number, {param: string, options: string[]}>} */
+				const plurals = {};
+				let pluralIndex = Math.max(...params) + 1;
+
+				const pluralValue = value.replace(/{{PLURAL:(\$\d+)\|([^}]+)}}/g, (g1, g2, g3) => {
+					plurals[pluralIndex] = {
+						param: g2,
+						options: g3.split('|').map(
+							/**
+							 * @param {string} c
+							 * @param {number} index
+							 */
+							(c, index) => {
+								if (index === 0) return `1: "${c}"`;
+								if (index === 1) return `_: "${c}"`;
+								const [count, text] = c.split('=');
+								return `${count}: "${text}"`;
+							}
+						)
+					};
+					params.push(pluralIndex);
+					return `$${pluralIndex++}`;
+				});
+
+				const pluralVars = Object.entries(plurals)
+					.map(
+						([index, { param, options }]) =>
+							`const v${index} = { ${options.join(
+								', '
+							)} }; const $${index} = v${index}[${param}] || v${index}._; `
+					)
+					.join('');
+
+				return `${inputParams} => { ${pluralVars}return "${pluralValue}"${params
+					.sort((a, b) => b - a)
+					.map((p) => `.replace(/(^|[^$])\\$${p}(?!\\d])/g, \`$1\${$${p}}\`)`)
+					.join('')} }`;
 			}
 
 			return `"${value}"`;
@@ -353,7 +390,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${output}/components/error.svelte`));
-	const locale_redirect = create_redirect_component();
+	const locale_redirect = config.kit.i18n && create_redirect_component();
 
 	const translations =
 		(config.kit.i18n &&

@@ -27,6 +27,7 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			paths: {
 				base: '',
 				assets: '/.'
@@ -110,6 +111,7 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			paths: {
 				base: '',
 				assets: '/.'

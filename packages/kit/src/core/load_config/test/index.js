@@ -34,6 +34,7 @@ test('load default config', async () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
 			router: true,
