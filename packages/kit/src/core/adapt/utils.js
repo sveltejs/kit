@@ -16,6 +16,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 		log,
 		rimraf,
 		mkdirp,
+		copy,
 
 		/** @param {string} dest */
 		copy_client_files(dest) {
@@ -32,15 +33,6 @@ export function get_utils({ cwd, config, build_data, log }) {
 			copy(config.kit.files.assets, dest);
 		},
 
-		/**
-		 * @param {string} from
-		 * @param {string} to
-		 * @param {(basename: string) => boolean} filter
-		 */
-		copy(from, to, filter = () => true) {
-			copy(from, to, filter);
-		},
-
 		/** @param {{ force: boolean, dest: string }} opts */
 		async prerender({ force = false, dest }) {
 			if (config.kit.prerender.enabled) {
@@ -49,7 +41,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 					force,
 					cwd,
 					config,
-					build_data: {},
+					build_data,
 					log: this.log
 				});
 			}
