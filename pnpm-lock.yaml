@@ -190,10 +190,13 @@ importers:
 
   packages/create-svelte/templates/default:
     specifiers:
+      '@fontsource/fira-mono': ^4.2.2
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.29.0
       vite: ^2.1.0
+    dependencies:
+      '@fontsource/fira-mono': 4.2.2
     devDependencies:
       '@sveltejs/adapter-node': link:../../../adapter-node
       '@sveltejs/kit': link:../../../kit
@@ -500,6 +503,10 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@fontsource/fira-mono/4.2.2:
+    resolution: {integrity: sha512-t2WRThg+eLkQNQCtPG2sCCq40lz3xeb7nsL7P8l4+wfSRbdLQXAY5IebMftI2YEZR4MRRhdgrg0p5fi/2yXypA==}
+    dev: false
 
   /@istanbuljs/schema/0.1.3:
     resolution: {integrity: sha512-ZXRY4jNvVgSVQ8DL3LTcakaAtXwTVUxE81hslsyD2AtoXW/wVob10HkOJ1X/pAlcI7D+2YoZKg5do8G/w6RYgA==}
