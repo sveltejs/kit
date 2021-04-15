@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
+import { posixify } from '../utils.js';
 
 /** @typedef {{
  *   content: string;
@@ -175,10 +176,15 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				b.splice(i + 1);
 
+				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+					? `/${segments.map((segment) => segment[0].content).join('/')}`
+					: null;
+
 				routes.push({
 					type: 'page',
 					pattern,
 					params,
+					path,
 					a,
 					b
 				});
@@ -225,11 +231,6 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }
 
 /** @param {string} path */

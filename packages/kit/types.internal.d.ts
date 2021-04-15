@@ -224,6 +224,7 @@ export type PageData = {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
+	path: string;
 	a: string[];
 	b: string[];
 };
@@ -243,4 +244,11 @@ export type ManifestData = {
 	error: string;
 	components: string[];
 	routes: RouteData[];
+};
+
+export type BuildData = {
+	client: string[];
+	server: string[];
+	static: string[];
+	entries: string[];
 };
