@@ -3,6 +3,7 @@
 	import { l } from '$app/translations';
 
 	$: path = $page.path;
+	console.log($i18n);
 </script>
 
 <nav>

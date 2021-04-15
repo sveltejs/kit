@@ -1,5 +1,6 @@
 {
 	"home": "home",
 	"about": "about",
-	"blog": "blog"
+	"blog": "blog",
+	"welcome": "Welcome $1, you have $2 new messages from $1."
 }

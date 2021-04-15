@@ -82,6 +82,38 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	const toTranslations = (value) => (isTranslations(value) ? value : {});
 
 	/**
+	 * @param {Translations} translations
+	 * @returns {string}
+	 */
+	function compile_translations(translations) {
+		/** @param {string} value */
+		function processValue(value) {
+			const params = [
+				...new Set([...value.matchAll(/(?<!\$)\$(\d+)/g)].map((match) => parseInt(match[1])))
+			].sort((a, b) => a - b);
+			if (params.length > 0) {
+				return `(${params.map((p) => `$${p}`).join(', ')}) => "${value}"${params
+					.map((p) => `.replace(/(?<!\\$)\\$${p}(?!\\d])/g, $${p})`)
+					.join('')}`;
+			}
+
+			return `"${value}"`;
+		}
+
+		return `{\n\t\t\t${Object.entries(translations)
+			.map(
+				([key, value]) =>
+					`"${key}": ${
+						typeof value === 'object'
+							? compile_translations(value).replace(/\n/gm, '\n\t')
+							: processValue(value)
+					}`
+			)
+			.join(',\n\t\t\t')}
+		}`.trim();
+	}
+
+	/**
 	 * @param {import('types').I18nLocale} locale
 	 * @param {Translations} translations
 	 */
@@ -115,7 +147,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			i18n.update((i18n) => ({
 				...i18n, 
 				locale: ${JSON.stringify(locale)},
-				translations: ${JSON.stringify(translations)}
+				translations: ${compile_translations(translations).replace(/\n/gm, '\n\t\t')}
 			}));
 		</script>
 
