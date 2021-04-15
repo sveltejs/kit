@@ -1,4 +1,8 @@
-import nodeFetch from 'node-fetch';
+import nodeFetch, {
+	Response as NodeResponse,
+	Request as NodeRequest,
+	Headers as NodeHeaders
+} from 'node-fetch';
 import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
@@ -6,13 +10,13 @@ import { ssr } from '../index.js';
 // only use node-fetch when native unavailable
 if (typeof fetch !== 'function') {
 	// @ts-ignore mismatch between native fetch and node-fetch
-	globalThis.fetch = nodeFetch.bind({});
+	globalThis.fetch = nodeFetch;
 	// @ts-ignore
-	globalThis.Response = nodeFetch.Response;
+	globalThis.Response = NodeResponse;
 	// @ts-ignore
-	globalThis.Request = nodeFetch.Request;
+	globalThis.Request = NodeRequest;
 	// @ts-ignore
-	globalThis.Headers = nodeFetch.Headers;
+	globalThis.Headers = NodeHeaders;
 }
 
 const s = JSON.stringify;
