@@ -21,7 +21,7 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('types/internal').ValidatedConfig;
+ *   config: import('types/config').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts

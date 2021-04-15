@@ -51,7 +51,7 @@ const REDIRECT = 3;
  *   cwd: string;
  *   out: string;
  *   log: import('types/internal').Logger;
- *   config: import('types/internal').ValidatedConfig;
+ *   config: import('types/config').ValidatedConfig;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, force }) {
@@ -84,7 +84,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types').Response>} */
+		/** @type {Map<string, import('types/server').ServerResponse>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(

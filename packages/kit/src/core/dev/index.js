@@ -14,7 +14,7 @@ import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 
-/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/internal').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
@@ -156,7 +156,7 @@ class Watcher extends EventEmitter {
 
 					const rendered = await ssr(
 						{
-							headers: /** @type {import('types/internal').Headers} */ (req.headers),
+							headers: /** @type {import('types/helper').Headers} */ (req.headers),
 							method: req.method,
 							host,
 							path: parsed.pathname,

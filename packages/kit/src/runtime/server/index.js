@@ -8,7 +8,7 @@ function md5(body) {
 }
 
 /**
- * @param {import('types').Incoming} incoming
+ * @param {import('types/hooks').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
  */
 export async function ssr(incoming, options) {

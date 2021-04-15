@@ -107,11 +107,11 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types').Config} config
- * @returns {import('types/internal').ValidatedConfig}
+ * @param {import('types/config').Config} config
+ * @returns {import('types/config').ValidatedConfig}
  */
 export function validate_config(config) {
-	/** @type {import('types/internal').ValidatedConfig} */
+	/** @type {import('types/config').ValidatedConfig} */
 	const validated = validate(options, config, 'config');
 
 	// resolve paths

@@ -6,12 +6,12 @@ import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {{
- *   request: import('types').Request;
+ *   request: import('types/server').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  * }} opts
- * @returns {Promise<import('types').Response>}
+ * @returns {Promise<import('types/server').ServerResponse>}
  */
 export async function respond({ request, options, $session, route }) {
 	const match = route.pattern.exec(request.path);

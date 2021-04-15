@@ -21,7 +21,7 @@ import { set_paths } from '../paths.js';
  *     status: number;
  *     error: Error;
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
- *     page: import('types').Page;
+ *     page: import('types/client').Page;
  *   };
  * }} opts */
 export async function start({ paths, target, session, host, route, spa, hydrate }) {

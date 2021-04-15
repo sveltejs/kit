@@ -113,7 +113,7 @@ export class Renderer {
 	 *   status: number;
 	 *   error: Error;
 	 *   nodes: Array<Promise<CSRComponent>>;
-	 *   page: import('types').Page;
+	 *   page: import('types/client').Page;
 	 * }} selected
 	 */
 	async start({ status, error, nodes, page }) {
@@ -337,7 +337,7 @@ export class Renderer {
 	/**
 	 *
 	 * @param {{
-	 *   page: import('types').Page;
+	 *   page: import('types/client').Page;
 	 *   branch: import('./types').BranchNode[]
 	 * }} opts
 	 */
@@ -404,7 +404,7 @@ export class Renderer {
 	 *   status?: number;
 	 *   error?: Error;
 	 *   module: CSRComponent;
-	 *   page: import('types').Page;
+	 *   page: import('types/client').Page;
 	 *   context: Record<string, any>;
 	 * }} options
 	 * @returns
@@ -439,7 +439,7 @@ export class Renderer {
 		const session = this.$session;
 
 		if (module.load) {
-			/** @type {import('types/internal').LoadInput | import('types/internal').ErrorLoadInput} */
+			/** @type {import('types/client').LoadInput | import('types/client').ErrorLoadInput} */
 			const load_input = {
 				page: {
 					host: page.host,
@@ -465,8 +465,8 @@ export class Renderer {
 			};
 
 			if (error) {
-				/** @type {import('types/internal').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types/internal').ErrorLoadInput} */ (load_input).error = error;
+				/** @type {import('types/client').ErrorLoadInput} */ (load_input).status = status;
+				/** @type {import('types/client').ErrorLoadInput} */ (load_input).error = error;
 			}
 
 			const loaded = await module.load.call(null, load_input);
@@ -502,7 +502,7 @@ export class Renderer {
 			session: this.session_id !== this.current.session_id
 		};
 
-		/** @type {import('types').Page} */
+		/** @type {import('types/client').Page} */
 		const page = { host: this.host, path, query, params };
 
 		/** @type {import('./types').BranchNode[]} */
