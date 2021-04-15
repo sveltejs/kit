@@ -10,7 +10,7 @@
 </main>
 
 <footer>
-	<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn how to use SvelteKit</p>
+	<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
 </footer>
 
 <style>
@@ -35,12 +35,6 @@
 
 	footer a {
 		font-weight: bold;
-		color: var(--text-color);
-		text-decoration: none;
-	}
-
-	footer a:hover {
-		text-decoration: underline;
 	}
 
 	@media (min-width: 480px) {
