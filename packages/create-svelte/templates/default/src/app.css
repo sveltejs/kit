@@ -49,8 +49,15 @@ h1,
 h2,
 p {
 	font-weight: 400;
-	text-align: center;
 	color: var(--heading-color);
+}
+
+p {
+	line-height: 1.35;
+}
+
+a {
+	color: var(--accent-color);
 }
 
 h1 {
@@ -64,6 +71,6 @@ h2 {
 
 @media (min-width: 480px) {
 	h1 {
-		font-size: 3rem;
+		font-size: 2rem;
 	}
 }

@@ -18,7 +18,7 @@
 				alt="Welcome"
 			/>
 		</picture>
-		to your brand new<br />Svelte project
+		to your new<br />SvelteKit app
 	</h1>
 
 	<h2>
@@ -34,11 +34,13 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		flex: 1;
 	}
 
 	h1 {
 		font-size: calc(8px + 3.5vw);
 		margin: 0 0 1rem 0;
+		text-align: center;
 	}
 
 	.welcome {
@@ -46,7 +48,6 @@
 		height: auto;
 		max-width: 1024px;
 		display: block;
-		margin-bottom: -10%;
 	}
 
 	@media (min-width: 1024px) {

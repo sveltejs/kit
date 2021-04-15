@@ -10,7 +10,7 @@
 </main>
 
 <footer>
-	<p>Visit <a href="https://svelte.dev">svelte.dev</a> to learn more on how to build Svelte apps</p>
+	<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn how to use SvelteKit</p>
 </footer>
 
 <style>
@@ -18,8 +18,10 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
-		align-items: center;
+		padding: 1rem;
+		width: 100%;
+		max-width: 1024px;
+		margin: 0 auto;
 	}
 
 	footer {
