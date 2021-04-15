@@ -175,10 +175,15 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				b.splice(i + 1);
 
+				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+					? `/${segments.map((segment) => segment[0].content).join('/')}`
+					: null;
+
 				routes.push({
 					type: 'page',
 					pattern,
 					params,
+					path,
 					a,
 					b
 				});

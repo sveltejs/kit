@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
+import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
-import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '../filesystem/index.js';
 
 /** @param {string} html */
@@ -214,30 +213,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
-			// remove the prefix '.' from the extensions array
-			const extensions = config.extensions.map((extension) => extension.slice(1));
-			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
-			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.kit.files.routes })
-				.map((file) => {
-					// support both windows and unix glob results
-					const parts = file.split(path_separator);
-
-					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
-						return null;
-					}
-
-					parts[parts.length - 1] = parts[parts.length - 1].replace(extensions_regex, '');
-					if (parts[parts.length - 1] === 'index') parts.pop();
-
-					if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
-						return null;
-					}
-
-					return `/${parts.join('/')}`;
-				})
-				.filter(Boolean);
-
-			for (const entry of entries) {
+			for (const entry of build_data.entries) {
 				await visit(entry);
 			}
 		} else {

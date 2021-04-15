@@ -60,7 +60,12 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		await build_service_worker(options, client_manifest);
 	}
 
-	return {};
+	return {
+		static: options.manifest.assets.map((asset) => asset.file),
+		entries: options.manifest.routes
+			.map((route) => route.type === 'page' && route.path)
+			.filter(Boolean)
+	};
 }
 
 /**
