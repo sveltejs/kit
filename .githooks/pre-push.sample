@@ -1,0 +1,3 @@
+#!/bin/sh
+pnpm lint
+pnpm check
