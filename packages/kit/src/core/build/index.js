@@ -6,6 +6,7 @@ import { copy_assets, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
+import glob from 'tiny-glob/sync';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -29,6 +30,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 	rimraf(build_dir);
 
+	const output_dir = path.resolve(cwd, '.svelte/output');
+
 	const options = {
 		cwd,
 		config,
@@ -42,7 +45,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			output: build_dir,
 			cwd
 		}),
-		output_dir: path.resolve(cwd, '.svelte/output'),
+		output_dir,
 		client_entry_file: '.svelte/build/runtime/internal/start.js',
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
@@ -60,7 +63,12 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		await build_service_worker(options, client_manifest);
 	}
 
+	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true });
+	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true });
+
 	return {
+		client,
+		server,
 		static: options.manifest.assets.map((asset) => asset.file),
 		entries: options.manifest.routes
 			.map((route) => route.type === 'page' && route.path)

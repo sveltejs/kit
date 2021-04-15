@@ -58,7 +58,6 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 	const dir = resolve_path(cwd, '.svelte/output');
 
 	const seen = new Set();
-	const seen_files = new Set();
 
 	const server_root = resolve_path(dir);
 
@@ -78,6 +77,14 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		: (status, path) => {
 				throw new Error(`${status} ${path}`);
 		  };
+
+	const files = new Set([...build_data.static, ...build_data.client]);
+
+	build_data.static.forEach((file) => {
+		if (file.endsWith('/index.html')) {
+			files.add(file.slice(0, -11));
+		}
+	});
 
 	/** @param {string} path */
 	async function visit(path) {
@@ -184,22 +191,11 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 					const resolved = resolve(path, href);
 
 					if (resolved[0] !== '/') continue;
-					if (seen_files.has(resolved)) continue;
 
 					const parsed = parse(resolved);
 
 					const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
-
-					const file_exists =
-						(file.startsWith(`${config.kit.appDir}/`) && existsSync(`${dir}/client/${file}`)) ||
-						existsSync(`${out}/${file}`) ||
-						existsSync(`${config.kit.files.assets}/${file}`) ||
-						existsSync(`${config.kit.files.assets}/${file}/index.html`);
-
-					if (file_exists) {
-						seen_files.add(resolved);
-						continue;
-					}
+					if (files.has(file)) continue;
 
 					if (parsed.query) {
 						// TODO warn that query strings have no effect on statically-exported pages

@@ -247,6 +247,8 @@ export type ManifestData = {
 };
 
 export type BuildData = {
+	client: string[];
+	server: string[];
 	static: string[];
 	entries: string[];
 };
