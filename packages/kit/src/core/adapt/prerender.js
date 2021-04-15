@@ -189,7 +189,6 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 					if (!href) continue;
 
 					const resolved = resolve(path, href);
-
 					if (resolved[0] !== '/') continue;
 
 					const parsed = parse(resolved);
