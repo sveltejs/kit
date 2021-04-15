@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parse, URLSearchParams } from 'url';
+import { parse } from 'url';
 import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
 import amp_validator from 'amphtml-validator';

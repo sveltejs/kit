@@ -61,17 +61,17 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 	values: () => Iterator<string>;
 }
 
+type BaseBody = string | Buffer | ReadOnlyFormData;
+type ParameterizedBody<Body = unknown> = BaseBody & Body;
+
 export type Incoming = {
 	method: string;
 	host: string;
 	headers: Headers;
 	path: string;
 	query: URLSearchParams;
-	body: string | Buffer | ReadOnlyFormData;
+	body: BaseBody;
 };
-
-type BaseBody = string | Buffer | ReadOnlyFormData;
-type ParameterizedBody<Body = unknown> = BaseBody & Body;
 
 export type Request<Context = any, Body = unknown> = {
 	method: string;
@@ -104,10 +104,7 @@ export type GetSession<Context = any, Session = any> = {
 	({ context }: { context: Context }): Session | Promise<Session>;
 };
 
-export type Handle<Context = any> = ({
-	request,
-	render
-}: {
+export type Handle<Context = any> = (input: {
 	request: Request<Context>;
 	render: (request: Request<Context>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;

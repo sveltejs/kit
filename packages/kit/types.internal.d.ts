@@ -10,7 +10,6 @@ import {
 	Response as SSRResponse
 } from './types';
 import { UserConfig as ViteConfig } from 'vite';
-import { Response as NodeFetchResponse } from 'node-fetch';
 
 declare global {
 	interface ImportMeta {

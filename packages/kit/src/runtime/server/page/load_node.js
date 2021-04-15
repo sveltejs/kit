@@ -1,5 +1,5 @@
 import fetch, { Response } from 'node-fetch';
-import { parse, resolve, URLSearchParams } from 'url';
+import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
 

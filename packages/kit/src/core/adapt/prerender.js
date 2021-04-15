@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
-import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
+import { parse, pathToFileURL, resolve } from 'url';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp } from '../filesystem/index.js';
 
