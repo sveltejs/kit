@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
