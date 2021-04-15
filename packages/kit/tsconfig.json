@@ -9,7 +9,6 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"types": ["./types"],
 			"types/*": ["./types/*"]
 		}
 	},
