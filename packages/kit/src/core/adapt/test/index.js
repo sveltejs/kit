@@ -38,7 +38,10 @@ suite('copy files', () => {
 		}
 	};
 
-	const utils = get_utils({ cwd, config, build_data: {}, log });
+	/** @type {import('types.internal').BuildData} */
+	const build_data = { client: [], server: [], static: [], entries: [] };
+
+	const utils = get_utils({ cwd, config, build_data, log });
 
 	const dest = join(__dirname, 'output');
 
@@ -80,7 +83,10 @@ suite('prerender', async () => {
 		}
 	};
 
-	const utils = get_utils({ cwd, config, build_data: {}, log });
+	/** @type {import('types.internal').BuildData} */
+	const build_data = { client: [], server: [], static: [], entries: [] };
+
+	const utils = get_utils({ cwd, config, build_data, log });
 
 	const dest = join(__dirname, 'output');
 
