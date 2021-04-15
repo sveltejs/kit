@@ -1,7 +1,19 @@
-import fetch, { Response } from 'node-fetch';
+import nodeFetch from 'node-fetch';
 import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
+
+// only use node-fetch when native unavailable
+if (typeof fetch !== 'function') {
+	// @ts-ignore mismatch between native fetch and node-fetch
+	globalThis.fetch = nodeFetch.bind({});
+	// @ts-ignore
+	globalThis.Response = nodeFetch.Response;
+	// @ts-ignore
+	globalThis.Request = nodeFetch.Request;
+	// @ts-ignore
+	globalThis.Headers = nodeFetch.Headers;
+}
 
 const s = JSON.stringify;
 
@@ -98,6 +110,7 @@ export async function load_node({
 					// external fetch
 					response = await fetch(
 						parsed.href,
+						// @ts-ignore mismatch between native fetch and node-fetch
 						/** @type {import('node-fetch').RequestInit} */ (opts)
 					);
 				} else {
@@ -125,6 +138,7 @@ export async function load_node({
 							// TODO we need to know what protocol to use
 							response = await fetch(
 								`http://${page.host}/${asset.file}`,
+								// @ts-ignore mismatch between native fetch and node-fetch
 								/** @type {import('node-fetch').RequestInit} */ (opts)
 							);
 						}
