@@ -83,6 +83,22 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.35.0
 
+  examples/svelte-kit-i18n-demo:
+    specifiers:
+      '@sveltejs/adapter-cloudflare-workers': workspace:*
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/adapter-static': workspace:*
+      '@sveltejs/adapter-vercel': workspace:*
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.35.0
+    devDependencies:
+      '@sveltejs/adapter-cloudflare-workers': link:../../packages/adapter-cloudflare-workers
+      '@sveltejs/adapter-node': link:../../packages/adapter-node
+      '@sveltejs/adapter-static': link:../../packages/adapter-static
+      '@sveltejs/adapter-vercel': link:../../packages/adapter-vercel
+      '@sveltejs/kit': link:../../packages/kit
+      svelte: 3.35.0
+
   packages/adapter-begin:
     specifiers:
       '@architect/parser': ^3.0.1
