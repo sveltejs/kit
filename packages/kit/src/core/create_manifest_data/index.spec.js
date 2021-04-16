@@ -47,6 +47,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
+			path: '/',
 			a: [layout, index],
 			b: [error]
 		},
@@ -55,6 +56,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
+			path: '/about',
 			a: [layout, about],
 			b: [error]
 		},
@@ -70,6 +72,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
+			path: '/blog',
 			a: [layout, blog],
 			b: [error]
 		},
@@ -85,6 +88,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
+			path: null,
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -107,6 +111,7 @@ test('creates routes with layout', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
+			path: '/',
 			a: [layout, index],
 			b: [error]
 		},
@@ -115,6 +120,7 @@ test('creates routes with layout', () => {
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
+			path: '/foo',
 			a: [layout, foo_$layout, foo],
 			b: [error]
 		}
@@ -260,6 +266,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
+			path: '/',
 			a: [layout, index],
 			b: [error]
 		},
@@ -268,6 +275,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
+			path: '/about',
 			a: [layout, about],
 			b: [error]
 		},
@@ -283,6 +291,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
+			path: '/blog',
 			a: [layout, blog],
 			b: [error]
 		},
@@ -298,6 +307,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
+			path: null,
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -329,6 +339,7 @@ test('includes nested error components', () => {
 			type: 'page',
 			pattern: /^\/foo\/bar\/baz\/?$/,
 			params: [],
+			path: '/foo/bar/baz',
 			a: [
 				layout,
 				'samples/nested-errors/foo/$layout.svelte',

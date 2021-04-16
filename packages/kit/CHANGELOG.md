@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 1.0.0-next.76
+
+### Patch Changes
+
+- f870909: Pin vite-plugin-svelte version
+- de2466f: Fix stale prerendering bug
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- 0c02dc0: Use global URLSearchParams instead of import from node url
+- 8021d6b: Fix default error page
+- 11ec751: Fix build warnings about missing exports in hooks file
+
 ## 1.0.0-next.74
 
 ### Patch Changes

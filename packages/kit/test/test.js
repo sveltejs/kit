@@ -131,6 +131,7 @@ function duplicate(test_fn, config) {
 				...context,
 				page: context.pages.nojs,
 				clicknav: (selector) => context.pages.nojs.click(selector),
+				back: () => context.pages.nojs.goBack(),
 				response,
 				js: false
 			});
@@ -161,6 +162,21 @@ function duplicate(test_fn, config) {
 						});
 
 						await context.pages.js.click(selector);
+						await context.pages.js.evaluate(() => window.navigated);
+					},
+					back: async () => {
+						await context.pages.js.evaluate(() => {
+							window.navigated = new Promise((fulfil, reject) => {
+								addEventListener('sveltekit:navigation-end', function handler() {
+									fulfil();
+									removeEventListener('sveltekit:navigation-end', handler);
+								});
+
+								setTimeout(() => reject(new Error('Timed out')), 2000);
+							});
+						});
+
+						await context.pages.js.goBack();
 						await context.pages.js.evaluate(() => window.navigated);
 					},
 					js: true,

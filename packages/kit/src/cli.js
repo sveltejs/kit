@@ -114,13 +114,13 @@ prog
 
 		try {
 			const { build } = await import('./core/build/index.js');
-			await build(config);
+			const build_data = await build(config);
 
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
 			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, { verbose });
+				await adapt(config, build_data, { verbose });
 			} else {
 				console.log(colors.bold().yellow('\nNo adapter specified'));
 
