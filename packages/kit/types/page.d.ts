@@ -12,7 +12,7 @@ export type ErrorLoadInput = LoadInput & {
 
 export type LoadOutput = {
 	status?: number;
-	error?: Error;
+	error?: Error | string;
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	context?: Record<string, any>;
