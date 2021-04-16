@@ -1,4 +1,4 @@
-import { LoadOutput } from '../../../../types/client';
+import { LoadOutput } from '../../../../types/page';
 import { SSRNode } from '../../../../types/internal';
 
 export type Loaded = {

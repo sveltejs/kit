@@ -1,6 +1,6 @@
 /**
- * @param {import('types/client').LoadOutput} loaded
- * @returns {import('types/client').LoadOutput}
+ * @param {import('types/page').LoadOutput} loaded
+ * @returns {import('types/page').LoadOutput}
  */
 export function normalize(loaded) {
 	// TODO should this behaviour be dev-only?

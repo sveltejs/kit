@@ -11,7 +11,7 @@ const s = JSON.stringify;
  *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   route: import('types/internal').SSRPage;
- *   page: import('types/client').Page;
+ *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   context: Record<string, any>;
@@ -48,7 +48,7 @@ export async function load_node({
 	let loaded;
 
 	if (module.load) {
-		/** @type {import('types/client').LoadInput | import('types/client').ErrorLoadInput} */
+		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
 			page,
 			get session() {
@@ -224,8 +224,8 @@ export async function load_node({
 		};
 
 		if (is_error) {
-			/** @type {import('types/client').ErrorLoadInput} */ (load_input).status = status;
-			/** @type {import('types/client').ErrorLoadInput} */ (load_input).error = error;
+			/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
+			/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
 		}
 
 		loaded = await module.load.call(null, load_input);

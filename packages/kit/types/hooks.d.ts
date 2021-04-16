@@ -1,5 +1,5 @@
 import { BaseBody, Headers } from './helper';
-import { ServerRequest, ServerResponse } from './server';
+import { ServerRequest, ServerResponse } from './endpoint';
 
 export type Incoming = {
 	method: string;

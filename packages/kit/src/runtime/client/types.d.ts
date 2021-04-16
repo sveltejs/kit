@@ -1,4 +1,4 @@
-import { Page, LoadOutput } from '../../../types/client';
+import { Page, LoadOutput } from '../../../types/page';
 import { CSRComponent, CSRRoute } from '../../../types/internal';
 
 export type NavigationInfo = {
