@@ -19,7 +19,7 @@ function find_anchor(node) {
 export class Router {
 	/** @param {{
 	 *    base: string;
-	 *    routes: import('types.internal').CSRRoute[];
+	 *    routes: import('types/internal').CSRRoute[];
 	 * }} opts */
 	constructor({ base, routes }) {
 		this.base = base;

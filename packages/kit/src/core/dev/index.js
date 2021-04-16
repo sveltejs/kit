@@ -14,8 +14,8 @@ import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 
-/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('../../../types.internal').ValidatedConfig }} Options */
-/** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
+/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
+/** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
 export function dev(opts) {
@@ -135,7 +135,7 @@ class Watcher extends EventEmitter {
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
-					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.vite
+					const hooks = /** @type {import('types/internal').Hooks} */ (await this.vite
 						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						.catch(() => ({})));
 
@@ -156,7 +156,7 @@ class Watcher extends EventEmitter {
 
 					const rendered = await ssr(
 						{
-							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
+							headers: /** @type {import('types/helper').Headers} */ (req.headers),
 							method: req.method,
 							host,
 							path: parsed.pathname,
@@ -303,7 +303,7 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		/** @type {import('../../../types.internal').SSRManifest} */
+		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: manifest_data.layout,

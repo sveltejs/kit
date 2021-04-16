@@ -1,15 +1,6 @@
-import {
-	Adapter,
-	GetContext,
-	GetSession,
-	Handle,
-	Incoming,
-	Load,
-	Page,
-	RequestHandler,
-	Response as SSRResponse
-} from './types';
-import { UserConfig as ViteConfig } from 'vite';
+import { Load } from './page';
+import { Incoming, GetContext, GetSession, Handle } from './hooks';
+import { RequestHandler, ServerResponse } from './endpoint';
 
 declare global {
 	interface ImportMeta {
@@ -28,43 +19,6 @@ export type Logger = {
 	info: (msg: string) => void;
 };
 
-export type ValidatedConfig = {
-	compilerOptions: any;
-	extensions: string[];
-	kit: {
-		adapter: Adapter;
-		amp: boolean;
-		appDir: string;
-		files: {
-			assets: string;
-			hooks: string;
-			lib: string;
-			routes: string;
-			serviceWorker: string;
-			setup: string;
-			template: string;
-		};
-		host: string;
-		hostHeader: string;
-		hydrate: boolean;
-		paths: {
-			base: string;
-			assets: string;
-		};
-		prerender: {
-			crawl: boolean;
-			enabled: boolean;
-			force: boolean;
-			pages: string[];
-		};
-		router: boolean;
-		ssr: boolean;
-		target: string;
-		vite: () => ViteConfig;
-	};
-	preprocess: any;
-};
-
 export type App = {
 	init: ({
 		paths,
@@ -76,34 +30,7 @@ export type App = {
 		};
 		prerendering: boolean;
 	}) => void;
-	render: (incoming: Incoming, options: SSRRenderOptions) => SSRResponse;
-};
-
-// TODO we want to differentiate between request headers, which
-// always follow this type, and response headers, in which
-// 'set-cookie' is a `string[]` (or at least `string | string[]`)
-// but this can't happen until TypeScript 4.3
-export type Headers = Record<string, string>;
-
-export type LoadInput = {
-	page: Page;
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
-	session: any;
-	context: Record<string, any>;
-};
-
-export type ErrorLoadInput = LoadInput & {
-	status: number;
-	error: Error;
-};
-
-export type LoadOutput = {
-	status?: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	context?: Record<string, any>;
-	maxage?: number;
+	render: (incoming: Incoming, options: SSRRenderOptions) => ServerResponse;
 };
 
 export type SSRComponent = {
@@ -203,7 +130,7 @@ export type SSRRenderOptions = {
 	hooks?: Hooks;
 	dev?: boolean;
 	amp?: boolean;
-	dependencies?: Map<string, SSRResponse>;
+	dependencies?: Map<string, ServerResponse>;
 	only_render_prerenderable_pages?: boolean;
 	get_stack?: (error: Error) => string;
 	get_static_file?: (file: string) => Buffer;

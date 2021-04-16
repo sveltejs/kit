@@ -42,9 +42,7 @@
 	"files": [
 		"assets",
 		"dist",
-		"types.d.ts",
-		"types.ambient-modules.d.ts",
-		"types.internal.d.ts",
+		"types",
 		"svelte-kit.js"
 	],
 	"scripts": {
@@ -72,9 +70,9 @@
 			"import": "./dist/filesystem.js",
 			"require": "./dist/filesystem.cjs"
 		},
-		"./types.d.ts": "./types.d.ts"
+		"./types": "./types/index.d.ts"
 	},
-	"types": "types.d.ts",
+	"types": "types/index.d.ts",
 	"engines": {
 		"node": ">= 12.17.0"
 	}

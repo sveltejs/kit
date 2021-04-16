@@ -7,14 +7,14 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
+ *   request: import('types/endpoint').ServerRequest;
+ *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error: Error,
  *   branch: import('./types').Loaded[];
- *   page: import('types').Page
+ *   page: import('types/page').Page
  * }} opts
  */
 export async function render_response({
@@ -163,7 +163,7 @@ export async function render_response({
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('types.internal').Headers} */
+	/** @type {import('types/helper').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};
