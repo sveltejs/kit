@@ -94,8 +94,6 @@ class Watcher extends EventEmitter {
 			plugins: [
 				...(user_config.plugins || []),
 				svelte({
-					// TODO remove this once vite-plugin-svelte caching bugs are fixed
-					disableTransformCache: true,
 					extensions: this.config.extensions
 				})
 			],
