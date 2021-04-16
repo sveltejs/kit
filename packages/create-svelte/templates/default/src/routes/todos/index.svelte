@@ -47,11 +47,11 @@
 </script>
 
 <svelte:head>
-	<title>TODOs</title>
+	<title>Todos</title>
 </svelte:head>
 
 <div class="todos">
-	<h1>TODOs</h1>
+	<h1>Todos</h1>
 
 	<form class="new" action="/todos.json" method="post" use:enhance={{
 		result: async (res, form) => {
@@ -61,7 +61,7 @@
 			form.reset();
 		}
 	}}>
-		<input name="text" placeholder="what is to be done?">
+		<input name="text" placeholder="+ add a todo">
 	</form>
 
 	{#each todos as todo (todo.id)}
@@ -118,9 +118,6 @@
 		box-sizing: border-box;
 		background: rgba(255,255,255,0.05);
 		border: none;
-		border-bottom: 2px solid rgba(0,0,0,0.2);
-		/* border-radius: 8px; */
-		/* filter: drop-shadow(2px 4px 6px rgba(255,0,0,0.7)); */
 	}
 	.todo {
 		display: grid;
