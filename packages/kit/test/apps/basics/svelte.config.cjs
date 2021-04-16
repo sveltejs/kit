@@ -9,7 +9,7 @@ module.exports = {
 			optimizeDeps: {
 				// for CI, we need to explicitly prebundle deps, since
 				// the reload confuses Playwright
-				include: ['marked']
+				include: ['cookie', 'marked']
 			}
 		}
 	}
