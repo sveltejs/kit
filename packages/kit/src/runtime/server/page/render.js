@@ -7,7 +7,7 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types/server').ServerRequest;
+ *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };

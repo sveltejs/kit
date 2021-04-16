@@ -91,7 +91,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types/server').ServerResponse>} */
+		/** @type {Map<string, import('types/endpoint').ServerResponse>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(

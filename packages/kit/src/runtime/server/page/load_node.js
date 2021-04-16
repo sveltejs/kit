@@ -8,7 +8,7 @@ const s = JSON.stringify;
 /**
  *
  * @param {{
- *   request: import('types/server').ServerRequest;
+ *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   route: import('types/internal').SSRPage;
  *   page: import('types/client').Page;

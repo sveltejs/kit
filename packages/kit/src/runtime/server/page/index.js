@@ -2,10 +2,10 @@ import { respond } from './respond.js';
 import { respond_with_error } from './respond_with_error.js';
 
 /**
- * @param {import('types/server').ServerRequest} request
+ * @param {import('types/endpoint').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/internal').SSRRenderOptions} options
- * @returns {Promise<import('types/server').ServerResponse>}
+ * @returns {Promise<import('types/endpoint').ServerResponse>}
  */
 export default async function render_page(request, route, options) {
 	if (options.initiator === route) {
