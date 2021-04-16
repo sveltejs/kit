@@ -12,16 +12,19 @@
 
 <section>
 	<h1>
-		<picture>
-			<source srcset="svelte-welcome-compressed.webp" type="image/webp">
-			<img
-				class="welcome"
-				width="2048"
-				height="495"
-				src="svelte-welcome-compressed.png"
-				alt="Welcome"
-			/>
-		</picture>
+		<div class="welcome">
+			<picture>
+				<source srcset="svelte-welcome-compressed.webp" type="image/webp">
+				<img
+					class="welcome"
+					width="2048"
+					height="495"
+					src="svelte-welcome-compressed.png"
+					alt="Welcome"
+				/>
+			</picture>
+		</div>
+
 		to your new<br />SvelteKit app
 	</h1>
 
@@ -42,21 +45,21 @@
 	}
 
 	h1 {
-		font-size: calc(8px + 3.5vw);
-		margin: 0 0 1rem 0;
-		text-align: center;
+		width: 100%;
 	}
 
 	.welcome {
+		position: relative;
 		width: 100%;
-		height: auto;
-		max-width: 1024px;
-		display: block;
+		height: 0;
+		padding: 0 0 calc(100% * 495 / 2048) 0;
 	}
 
-	@media (min-width: 1024px) {
-		h1 {
-			font-size: 43.84px;
-		}
+	.welcome img {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		display: block;
 	}
 </style>
