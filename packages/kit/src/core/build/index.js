@@ -258,6 +258,13 @@ async function build_server(
 		};
 	});
 
+	/** @type {Set<string>} */
+	const entry_js = new Set();
+	/** @type {Set<string>} */
+	const entry_css = new Set();
+
+	find_deps(client_entry_file, entry_js, entry_css);
+
 	// prettier-ignore
 	fs.writeFileSync(
 		app_file,
@@ -360,6 +367,8 @@ async function build_server(
 					load_component,
 					target: ${s(config.kit.target)},
 					entry: ${s(prefix + client_manifest[client_entry_file].file)},
+					css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
+					js: ${s(Array.from(entry_js).map(dep => prefix + dep))},
 					root,
 					hooks,
 					dev: false,

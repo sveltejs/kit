@@ -126,6 +126,8 @@ export type SSRRenderOptions = {
 	load_component?: (id: PageId) => Promise<SSRNode>;
 	target?: string;
 	entry?: string;
+	css?: string[];
+	js?: string[];
 	root?: SSRComponent['default'];
 	hooks?: Hooks;
 	dev?: boolean;
