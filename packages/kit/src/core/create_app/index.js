@@ -166,7 +166,7 @@ function generate_app(manifest_data, base) {
 				const unsubscribe = stores.page.subscribe(() => {
 					if (mounted) {
 						navigated = true;
-						title = document.title;
+						title = document.title || 'untitled page';
 					}
 				});
 

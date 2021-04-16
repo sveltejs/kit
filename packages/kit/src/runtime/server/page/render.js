@@ -26,8 +26,8 @@ export async function render_response({
 	branch,
 	page
 }) {
-	const css = new Set();
-	const js = new Set();
+	const css = new Set(options.css);
+	const js = new Set(options.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, json: string }>} */
