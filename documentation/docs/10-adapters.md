@@ -33,9 +33,10 @@ module.exports = {
 
 A variety of official adapters exist for serverless platforms...
 
-- [`adapter-begin`](https://github.com/sveltejs/kit/tree/master/packages/adapter-begin) — for [begin.com](https://begin.com)
-- [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [netlify.com](https://netlify.com)
-- [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [vercel.com](https://vercel.com)
+- [`adapter-begin`](https://github.com/sveltejs/kit/tree/master/packages/adapter-begin) — for [Begin](https://begin.com)
+- [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers) — for [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [Netlify](https://netlify.com)
+- [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [Vercel](https://vercel.com)
 
 ...and others:
 
