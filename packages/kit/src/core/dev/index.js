@@ -224,7 +224,6 @@ class Watcher extends EventEmitter {
 								const deps = new Set();
 								find_deps(node, deps);
 
-								const css = new Set();
 								const styles = new Set();
 
 								for (const dep of deps) {
@@ -238,7 +237,6 @@ class Watcher extends EventEmitter {
 									) {
 										try {
 											const mod = await this.vite.ssrLoadModule(dep.url);
-											css.add(dep.url);
 											styles.add(mod.default);
 										} catch {
 											// this can happen with dynamically imported modules, I think
@@ -251,7 +249,7 @@ class Watcher extends EventEmitter {
 								return {
 									module,
 									entry: `/${id}?import`,
-									css: Array.from(css),
+									css: [],
 									js: [],
 									styles: Array.from(styles)
 								};
