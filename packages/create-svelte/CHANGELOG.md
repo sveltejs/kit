@@ -1,5 +1,38 @@
 # create-svelte
 
+## 2.0.0-next.51
+
+### Patch Changes
+
+- 4cffc14: add global.d.ts to js version
+
+## 2.0.0-next.50
+
+### Patch Changes
+
+- 3802c64: Fix build so that the package can be automatically published
+
+## 2.0.0-next.49
+
+### Patch Changes
+
+- 3c41d07: Fix preprocess option in template
+- 9bb747f: Remove CSS option and simplify
+
+## 2.0.0-next.48
+
+### Patch Changes
+
+- 4c45784: Add ambient types to published files
+
+## 2.0.0-next.47
+
+### Patch Changes
+
+- 59a1e06: Add button:focus CSS styles to index page of default app
+- 39b6967: Add ambient type definitions for \$app imports
+- dfbe62b: Add title tag to index page of default app
+
 ## 2.0.0-next.46
 
 ### Patch Changes

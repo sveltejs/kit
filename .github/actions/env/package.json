@@ -1,0 +1,17 @@
+{
+	"name": "set-env-action",
+	"version": "1.0.0",
+	"description": "Action to set environment",
+	"main": "action/main.js",
+	"scripts": {
+		"build": "rollup -c"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sveltejs/kit.git"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@actions/core": "^1.2.6"
+	}
+}

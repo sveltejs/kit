@@ -2,10 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, posixify, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
+import glob from 'tiny-glob/sync.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -17,16 +18,19 @@ const s = (value) => JSON.stringify(value);
  * }>} ClientManifest */
 
 /**
- * @param {import('../../../types.internal').ValidatedConfig} config
+ * @param {import('types/config').ValidatedConfig} config
  * @param {{
  *   cwd?: string;
  *   runtime?: string;
  * }} [opts]
+ * @returns {Promise<import('types/internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
 	const build_dir = path.resolve(cwd, '.svelte/build');
 
 	rimraf(build_dir);
+
+	const output_dir = path.resolve(cwd, '.svelte/output');
 
 	const options = {
 		cwd,
@@ -41,7 +45,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			output: build_dir,
 			cwd
 		}),
-		output_dir: path.resolve(cwd, '.svelte/output'),
+		output_dir,
 		client_entry_file: '.svelte/build/runtime/internal/start.js',
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
@@ -58,14 +62,26 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 		await build_service_worker(options, client_manifest);
 	}
+
+	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
+
+	return {
+		client,
+		server,
+		static: options.manifest.assets.map((asset) => posixify(asset.file)),
+		entries: options.manifest.routes
+			.map((route) => route.type === 'page' && route.path)
+			.filter(Boolean)
+	};
 }
 
 /**
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/config').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -101,10 +117,15 @@ async function build_client({
 		start: path.resolve(cwd, client_entry_file)
 	};
 
+	// This step is optional — Vite/Rollup will create the necessary chunks
+	// for everything regardless — but it means that entry chunks reflect
+	// their location in the source code, which is helpful for debugging
 	manifest.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
-		input[path.join('pages', relative)] = resolved;
+
+		const name = relative.startsWith('..') ? path.basename(file) : path.join('pages', relative);
+		input[name] = resolved;
 	});
 
 	/** @type {any} */
@@ -150,7 +171,7 @@ async function build_client({
 
 	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
-	fs.unlinkSync(client_manifest_file);
+	fs.renameSync(client_manifest_file, `${output_dir}/manifest.json`); // inspectable but not shipped
 
 	return client_manifest;
 }
@@ -159,8 +180,8 @@ async function build_client({
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/config').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -188,27 +209,7 @@ async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const component_indexes = new Map();
-	manifest.components.forEach((c, i) => {
-		component_indexes.set(c, i);
-	});
-
-	/** @param {string} c */
-	const stringify_component = (c) => `() => import(${s(`${app_relative(c)}`)})`;
-
-	const entry = `${config.kit.paths.assets}/${config.kit.appDir}/${client_manifest[client_entry_file].file}`;
-
-	/** @type {Set<string>} */
-	const common_js_deps = new Set();
-
-	/** @type {Set<string>} */
-	const common_css_deps = new Set();
-
-	/** @type {Map<string, Set<string>>} */
-	const js_deps_by_file = new Map();
-
-	/** @type {Map<string, Set<string>>} */
-	const css_deps_by_file = new Map();
+	const prefix = `${config.kit.paths.assets}/${config.kit.appDir}/`;
 
 	/**
 	 * @param {string} file
@@ -218,6 +219,7 @@ async function build_server(
 	function find_deps(file, js_deps, css_deps) {
 		const chunk = client_manifest[file];
 
+		if (js_deps.has(chunk.file)) return;
 		js_deps.add(chunk.file);
 
 		if (chunk.css) {
@@ -229,37 +231,39 @@ async function build_server(
 		}
 	}
 
-	find_deps(client_entry_file, common_js_deps, common_css_deps);
+	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
+	const metadata_lookup = {};
 
-	// TODO ideally we wouldn't embed the css_lookup, but this is the easiest
-	// way to be able to inline CSS into AMP documents. if we come up with
-	// something better, we could use it for non-AMP documents too, as
-	// critical CSS below a certain threshold _should_ be inlined
-
-	/** @type {Record<string, string>} */
-	const amp_css_lookup = {};
-
-	/** @type {Record<string, string>} */
-	const client_component_lookup = {};
-
-	[client_entry_file, ...manifest.components].forEach((file) => {
-		client_component_lookup[file] = client_manifest[file].file;
-
+	manifest.components.forEach((file) => {
 		const js_deps = new Set();
 		const css_deps = new Set();
 
-		js_deps_by_file.set(file, js_deps);
-		css_deps_by_file.set(file, css_deps);
-
 		find_deps(file, js_deps, css_deps);
 
-		css_deps.forEach((file) => {
-			const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
-			const contents = fs.readFileSync(resolved, 'utf-8');
+		const js = Array.from(js_deps).map((url) => prefix + url);
+		const css = Array.from(css_deps).map((url) => prefix + url);
 
-			amp_css_lookup[file] = contents;
-		});
+		const styles = config.kit.amp
+			? Array.from(css_deps).map((url) => {
+					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
+					return fs.readFileSync(resolved, 'utf-8');
+			  })
+			: null;
+
+		metadata_lookup[file] = {
+			entry: prefix + client_manifest[file].file,
+			css,
+			js,
+			styles
+		};
 	});
+
+	/** @type {Set<string>} */
+	const entry_js = new Set();
+	/** @type {Set<string>} */
+	const entry_css = new Set();
+
+	find_deps(client_entry_file, entry_js, entry_css);
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -286,46 +290,22 @@ async function build_server(
 			const d = decodeURIComponent;
 			const empty = () => ({});
 
-			const components = [
-				${manifest.components.map((c) => stringify_component(c)).join(',\n\t\t\t\t')}
-			];
-
-			${config.kit.amp ? `
-			const amp_css_lookup = ${s(amp_css_lookup)};` : ''}
-
-			const client_component_lookup = ${s(client_component_lookup)};
-
 			const manifest = {
 				assets: ${s(manifest.assets)},
-				layout: ${stringify_component(manifest.layout)},
-				error: ${stringify_component(manifest.error)},
+				layout: ${s(manifest.layout)},
+				error: ${s(manifest.error)},
 				routes: [
 					${manifest.routes
 				.map((route) => {
 					if (route.type === 'page') {
 						const params = get_params(route.params);
-						const parts = route.parts.map(id => `{ id: ${s(id)}, load: components[${component_indexes.get(id)}] }`);
-
-						const js_deps = new Set(common_js_deps);
-						const css_deps = new Set(common_css_deps);
-
-						for (const file of route.parts) {
-							js_deps_by_file.get(file).forEach(asset => {
-								js_deps.add(asset);
-							});
-
-							css_deps_by_file.get(file).forEach(asset => {
-								css_deps.add(asset);
-							});
-						}
 
 						return `{
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
-									parts: [${parts.join(', ')}],
-									css: [${Array.from(css_deps).map(s).join(', ')}],
-									js: [${Array.from(js_deps).map(s).join(', ')}]
+									a: [${route.a.map(file => file && s(file)).join(', ')}],
+									b: [${route.b.map(file => file && s(file)).join(', ')}]
 								}`;
 					} else {
 						const params = get_params(route.params);
@@ -343,17 +323,36 @@ async function build_server(
 				]
 			};
 
+			// this looks redundant, but the indirection allows us to access
+			// named imports without triggering Rollup's missing import detection
 			const get_hooks = hooks => ({
 				getContext: hooks.getContext || (() => ({})),
 				getSession: hooks.getSession || (() => ({})),
-				handle: hooks.handle || ((request, render) => render(request))
+				handle: hooks.handle || (({ request, render }) => render(request))
 			});
 
 			const hooks = get_hooks(user_hooks);
 
+			const module_lookup = {
+				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
+			};
+
+			const metadata_lookup = ${s(metadata_lookup)};
+
+			async function load_component(file) {
+				if (!module_lookup[file]) {
+					console.log({ file });
+				}
+				return {
+					module: await module_lookup[file](),
+					...metadata_lookup[file]
+				};
+			}
+
 			export function render(request, {
 				paths = ${s(config.kit.paths)},
 				local = false,
+				dependencies,
 				only_render_prerenderable_pages = false,
 				get_static_file
 			} = {}) {
@@ -365,18 +364,20 @@ async function build_server(
 					local,
 					template,
 					manifest,
+					load_component,
 					target: ${s(config.kit.target)},
-					entry: ${s(entry)},
+					entry: ${s(prefix + client_manifest[client_entry_file].file)},
+					css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
+					js: ${s(Array.from(entry_js).map(dep => prefix + dep))},
 					root,
 					hooks,
 					dev: false,
 					amp: ${config.kit.amp},
+					dependencies,
 					only_render_prerenderable_pages,
-					app_dir: ${s(config.kit.appDir)},
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + client_component_lookup[id],
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => error.stack,
 					get_static_file,
-					get_amp_css: dep => amp_css_lookup[dep],
 					ssr: ${s(config.kit.ssr)},
 					router: ${s(config.kit.router)},
 					hydrate: ${s(config.kit.hydrate)}
@@ -452,8 +453,8 @@ async function build_server(
  * @param {{
  *   cwd: string;
  *   base: string;
- *   config: import('../../../types.internal').ValidatedConfig
- *   manifest: import('../../../types.internal').ManifestData
+ *   config: import('types/config').ValidatedConfig
+ *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;

@@ -9,8 +9,7 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"types": ["./types"],
-			"types.internal": ["./types.internal"]
+			"types/*": ["./types/*"]
 		}
 	},
 	"include": ["src/**/*", "test/**/*"]

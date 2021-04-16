@@ -1,7 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { dirname, join, resolve as resolve_path, sep as path_separator } from 'path';
-import { parse, pathToFileURL, resolve, URLSearchParams } from 'url';
-import glob from 'tiny-glob/sync.js';
+import { readFileSync, writeFileSync } from 'fs';
+import { dirname, join, resolve as resolve_path } from 'path';
+import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
 
 /** @param {string} html */
@@ -50,19 +49,19 @@ const REDIRECT = 3;
 /** @param {{
  *   cwd: string;
  *   out: string;
- *   log: import('../../../types.internal').Logger;
- *   config: import('../../../types.internal').ValidatedConfig;
+ *   log: import('types/internal').Logger;
+ *   config: import('types/config').ValidatedConfig;
+ *   build_data: import('types/internal').BuildData;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
-export async function prerender({ cwd, out, log, config, force }) {
+export async function prerender({ cwd, out, log, config, build_data, force }) {
 	const dir = resolve_path(cwd, '.svelte/output');
 
 	const seen = new Set();
-	const seen_files = new Set();
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('../../../types.internal').App} */
+	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
@@ -79,10 +78,21 @@ export async function prerender({ cwd, out, log, config, force }) {
 				throw new Error(`${status} ${path}`);
 		  };
 
+	const files = new Set([...build_data.static, ...build_data.client]);
+
+	build_data.static.forEach((file) => {
+		if (file.endsWith('/index.html')) {
+			files.add(file.slice(0, -11));
+		}
+	});
+
 	/** @param {string} path */
 	async function visit(path) {
 		if (seen.has(path)) return;
 		seen.add(path);
+
+		/** @type {Map<string, import('types/endpoint').ServerResponse>} */
+		const dependencies = new Map();
 
 		const rendered = await app.render(
 			{
@@ -95,6 +105,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 			},
 			{
 				local: true,
+				dependencies,
 				only_render_prerenderable_pages: !force,
 				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
 			}
@@ -123,39 +134,34 @@ export async function prerender({ cwd, out, log, config, force }) {
 				return;
 			}
 
-			if (response_type === OK) {
+			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
-			} else {
+			} else if (response_type !== OK) {
 				error(rendered.status, path);
 			}
 
-			const { dependencies } = rendered;
+			dependencies.forEach((result, path) => {
+				const response_type = Math.floor(result.status / 100);
 
-			if (dependencies) {
-				for (const path in dependencies) {
-					const result = dependencies[path];
-					const response_type = Math.floor(result.status / 100);
+				const is_html = result.headers['content-type'] === 'text/html';
 
-					const is_html = result.headers['content-type'] === 'text/html';
-
-					const parts = path.split('/');
-					if (is_html && parts[parts.length - 1] !== 'index.html') {
-						parts.push('index.html');
-					}
-
-					const file = `${out}${parts.join('/')}`;
-					mkdirp(dirname(file));
-
-					writeFileSync(file, result.body);
-
-					if (response_type === OK) {
-						log.info(`${result.status} ${path}`);
-					} else {
-						error(result.status, path);
-					}
+				const parts = path.split('/');
+				if (is_html && parts[parts.length - 1] !== 'index.html') {
+					parts.push('index.html');
 				}
-			}
+
+				const file = `${out}${parts.join('/')}`;
+				mkdirp(dirname(file));
+
+				writeFileSync(file, result.body);
+
+				if (response_type === OK) {
+					log.info(`${result.status} ${path}`);
+				} else {
+					error(result.status, path);
+				}
+			});
 
 			if (is_html && config.kit.prerender.crawl) {
 				const cleaned = clean_html(rendered.body);
@@ -163,8 +169,9 @@ export async function prerender({ cwd, out, log, config, force }) {
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
 
+				const hrefs = [];
+
 				while ((match = pattern.exec(cleaned))) {
-					let hrefs = [];
 					const element = match[1];
 					const attrs = match[2];
 
@@ -176,36 +183,24 @@ export async function prerender({ cwd, out, log, config, force }) {
 						}
 						hrefs.push(...get_srcset_urls(attrs));
 					}
+				}
 
-					hrefs = hrefs.filter(Boolean);
+				for (const href of hrefs) {
+					if (!href) continue;
 
-					for (const href of hrefs) {
-						const resolved = resolve(path, href);
+					const resolved = resolve(path, href);
+					if (resolved[0] !== '/') continue;
 
-						if (resolved[0] !== '/') continue;
-						if (seen_files.has(resolved)) continue;
+					const parsed = parse(resolved);
 
-						const parsed = parse(resolved);
+					const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
+					if (files.has(file)) continue;
 
-						const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
-
-						const file_exists =
-							(file.startsWith(`${config.kit.appDir}/`) && existsSync(`${dir}/client/${file}`)) ||
-							existsSync(`${out}/${file}`) ||
-							existsSync(`${config.kit.files.assets}/${file}`) ||
-							existsSync(`${config.kit.files.assets}/${file}/index.html`);
-
-						if (file_exists) {
-							seen_files.add(resolved);
-							continue;
-						}
-
-						if (parsed.query) {
-							// TODO warn that query strings have no effect on statically-exported pages
-						}
-
-						await visit(parsed.pathname.replace(config.kit.paths.base, ''));
+					if (parsed.query) {
+						// TODO warn that query strings have no effect on statically-exported pages
 					}
+
+					await visit(parsed.pathname.replace(config.kit.paths.base, ''));
 				}
 			}
 		}
@@ -213,30 +208,7 @@ export async function prerender({ cwd, out, log, config, force }) {
 
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
-			// remove the prefix '.' from the extensions array
-			const extensions = config.extensions.map((extension) => extension.slice(1));
-			const extensions_regex = new RegExp(`\\.(${extensions.join('|')})$`);
-			const entries = glob(`**/*.{${extensions.join(',')}}`, { cwd: config.kit.files.routes })
-				.map((file) => {
-					// support both windows and unix glob results
-					const parts = file.split(path_separator);
-
-					if (parts.some((part) => part[0] === '_' || /\[/.test(part))) {
-						return null;
-					}
-
-					parts[parts.length - 1] = parts[parts.length - 1].replace(extensions_regex, '');
-					if (parts[parts.length - 1] === 'index') parts.pop();
-
-					if (parts[parts.length - 1] === '$layout' || parts[parts.length - 1] == '$error') {
-						return null;
-					}
-
-					return `/${parts.join('/')}`;
-				})
-				.filter(Boolean);
-
-			for (const entry of entries) {
+			for (const entry of build_data.entries) {
 				await visit(entry);
 			}
 		} else {

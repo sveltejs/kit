@@ -1,12 +1,12 @@
 /**
- * @param {import('types').Request} request
- * @param {import('types.internal').SSREndpoint} route
- * @returns {Promise<import('types.internal').ResponseWithDependencies>}
+ * @param {import('types/endpoint').ServerRequest} request
+ * @param {import('types/internal').SSREndpoint} route
+ * @returns {Promise<import('types/endpoint').ServerResponse>}
  */
 export default async function render_route(request, route) {
 	const mod = await route.load();
 
-	/** @type {import('types').RequestHandler} */
+	/** @type {import('types/endpoint').RequestHandler} */
 	const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 	if (handler) {

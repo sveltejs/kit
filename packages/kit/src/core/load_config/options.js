@@ -37,7 +37,7 @@ const options = {
 		children: {
 			adapter: {
 				type: 'leaf',
-				default: [null],
+				default: null,
 				validate: (option, keypath) => {
 					if (typeof option !== 'object' || !option.adapt) {
 						let message = `${keypath} should be an object with an "adapt" method`;

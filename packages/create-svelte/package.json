@@ -1,27 +1,30 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.46",
-	"bin": "./bin",
+	"version": "2.0.0-next.51",
+	"bin": "./bin.js",
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.4",
+		"prettier": "^2.2.1",
+		"prettier-plugin-svelte": "^2.2.0",
 		"prompts": "^2.4.0",
 		"rollup": "^2.41.1",
+		"sucrase": "^3.18.1",
 		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
 		"dev": "rollup -cw",
-		"build": "node scripts/update-versions && rollup -c",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern template/ \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"build": "node scripts/build-templates && rollup -c",
+		"lint": "eslint --ignore-path .gitignore \"cli/*.js\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
-		"template",
-		"template-additions"
-	]
+		"dist",
+		"bin.js"
+	],
+	"type": "module"
 }

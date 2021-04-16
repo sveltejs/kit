@@ -6,7 +6,7 @@ async function readRequestBody(request) {
 	const { headers } = request;
 	const contentType = headers.get('content-type') || '';
 	if (contentType.includes('application/json')) {
-		return JSON.stringify(await request.json());
+		return await request.json();
 	} else if (contentType.includes('application/text')) {
 		return await request.text();
 	} else if (contentType.includes('text/html')) {
@@ -48,7 +48,7 @@ async function handleEvent(event) {
 			path: request_url.pathname,
 			query: request_url.searchParams,
 			body: request.body ? await readRequestBody(request) : null,
-			headers: request.headers,
+			headers: Object.fromEntries(request.headers),
 			method: request.method
 		});
 

@@ -16,6 +16,7 @@ const create = (dir, extensions = ['.svelte']) => {
 		config: {
 			extensions,
 			kit: {
+				// @ts-ignore
 				files: {
 					assets: path.resolve(cwd, 'static'),
 					routes: path.resolve(cwd, dir)
@@ -23,9 +24,13 @@ const create = (dir, extensions = ['.svelte']) => {
 				appDir: '_app'
 			}
 		},
-		cwd
+		cwd,
+		output: cwd
 	});
 };
+
+const layout = 'components/layout.svelte';
+const error = 'components/error.svelte';
 
 test('creates routes', () => {
 	const { components, routes } = create('samples/basic');
@@ -35,21 +40,25 @@ test('creates routes', () => {
 	const blog = 'samples/basic/blog/index.svelte';
 	const blog_$slug = 'samples/basic/blog/[slug].svelte';
 
-	assert.equal(components, [index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [index]
+			path: '/',
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [about]
+			path: '/about',
+			a: [layout, about],
+			b: [error]
 		},
 
 		{
@@ -63,7 +72,9 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [blog]
+			path: '/blog',
+			a: [layout, blog],
+			b: [error]
 		},
 
 		{
@@ -77,7 +88,9 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [blog_$slug]
+			path: null,
+			a: [layout, blog_$slug],
+			b: [error]
 		}
 	]);
 });
@@ -91,21 +104,25 @@ test('creates routes with layout', () => {
 	const foo = 'samples/basic-layout/foo/index.svelte';
 
 	assert.equal(layout, $layout);
-	assert.equal(components, [index, foo_$layout, foo]);
+	assert.equal(components, [layout, error, index, foo_$layout, foo]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [index]
+			path: '/',
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
-			parts: [foo_$layout, foo]
+			path: '/foo',
+			a: [layout, foo_$layout, foo],
+			b: [error]
 		}
 	]);
 });
@@ -120,6 +137,8 @@ test('encodes invalid characters', () => {
 	// const question_mark = 'samples/encoding/?.svelte';
 
 	assert.equal(components, [
+		layout,
+		error,
 		// quote,
 		hash
 		// question_mark
@@ -139,24 +158,24 @@ test('sorts routes correctly', () => {
 	const { routes } = create('samples/sorting');
 
 	assert.equal(
-		routes.map((p) => (p.type === 'page' ? p.parts : p.file)),
+		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
 		[
-			['samples/sorting/index.svelte'],
-			['samples/sorting/about.svelte'],
-			['samples/sorting/post/index.svelte'],
-			['samples/sorting/post/bar.svelte'],
-			['samples/sorting/post/foo.svelte'],
+			[layout, 'samples/sorting/index.svelte'],
+			[layout, 'samples/sorting/about.svelte'],
+			[layout, 'samples/sorting/post/index.svelte'],
+			[layout, 'samples/sorting/post/bar.svelte'],
+			[layout, 'samples/sorting/post/foo.svelte'],
 			'samples/sorting/post/f[zz].ts',
-			['samples/sorting/post/f[xx].svelte'],
-			['samples/sorting/post/f[yy].svelte'],
-			['samples/sorting/post/[id].svelte'],
+			[layout, 'samples/sorting/post/f[xx].svelte'],
+			[layout, 'samples/sorting/post/f[yy].svelte'],
+			[layout, 'samples/sorting/post/[id].svelte'],
 			'samples/sorting/[endpoint].js',
-			['samples/sorting/[wildcard].svelte'],
-			['samples/sorting/[...rest]/deep/[...deep_rest]/xyz.svelte'],
-			['samples/sorting/[...rest]/deep/[...deep_rest]/index.svelte'],
-			['samples/sorting/[...rest]/deep/index.svelte'],
-			['samples/sorting/[...rest]/abc.svelte'],
-			['samples/sorting/[...rest]/index.svelte']
+			[layout, 'samples/sorting/[wildcard].svelte'],
+			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/xyz.svelte'],
+			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/index.svelte'],
+			[layout, 'samples/sorting/[...rest]/deep/index.svelte'],
+			[layout, 'samples/sorting/[...rest]/abc.svelte'],
+			[layout, 'samples/sorting/[...rest]/index.svelte']
 		]
 	);
 });
@@ -240,21 +259,25 @@ test('works with custom extensions', () => {
 	const blog = 'samples/custom-extension/blog/index.svelte';
 	const blog_$slug = 'samples/custom-extension/blog/[slug].beebop';
 
-	assert.equal(components, [index, about, blog, blog_$slug]);
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
 
 	assert.equal(routes, [
 		{
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
-			parts: [index]
+			path: '/',
+			a: [layout, index],
+			b: [error]
 		},
 
 		{
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
-			parts: [about]
+			path: '/about',
+			a: [layout, about],
+			b: [error]
 		},
 
 		{
@@ -268,7 +291,9 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
-			parts: [blog]
+			path: '/blog',
+			a: [layout, blog],
+			b: [error]
 		},
 
 		{
@@ -282,7 +307,9 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			parts: [blog_$slug]
+			path: null,
+			a: [layout, blog_$slug],
+			b: [error]
 		}
 	]);
 });
@@ -300,6 +327,32 @@ test('lists static assets', () => {
 			file: 'foo.txt',
 			size: 9,
 			type: 'text/plain'
+		}
+	]);
+});
+
+test('includes nested error components', () => {
+	const { routes } = create('samples/nested-errors');
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			pattern: /^\/foo\/bar\/baz\/?$/,
+			params: [],
+			path: '/foo/bar/baz',
+			a: [
+				layout,
+				'samples/nested-errors/foo/$layout.svelte',
+				undefined,
+				'samples/nested-errors/foo/bar/baz/$layout.svelte',
+				'samples/nested-errors/foo/bar/baz/index.svelte'
+			],
+			b: [
+				error,
+				undefined,
+				'samples/nested-errors/foo/bar/$error.svelte',
+				'samples/nested-errors/foo/bar/baz/$error.svelte'
+			]
 		}
 	]);
 });

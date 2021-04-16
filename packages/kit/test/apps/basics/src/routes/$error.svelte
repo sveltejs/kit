@@ -1,5 +1,16 @@
+<script context="module">
+	/** @type {import('../../../../../types').ErrorLoad} */
+	export function load({ status, error }) {
+		return {
+			props: { status, error }
+		};
+	}
+</script>
+
 <script>
+	/** @type {number} */
 	export let status;
+	/** @type {Error} */
 	export let error;
 </script>
 

@@ -25,27 +25,27 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-begin',
 
-		async adapt(builder) {
-			builder.log.minor('Parsing app.arc file');
+		async adapt(utils) {
+			utils.log.minor('Parsing app.arc file');
 			const { static: static_mount_point } = parse_arc('app.arc');
 
 			const lambda_directory = resolve(join('src', 'http', 'get-index'));
 			const static_directory = resolve(static_mount_point);
 			const server_directory = resolve(join('src', 'shared'));
 
-			builder.log.minor('Writing client application...');
-			builder.copy_static_files(static_directory);
-			builder.copy_client_files(static_directory);
+			utils.log.minor('Writing client application...');
+			utils.copy_static_files(static_directory);
+			utils.copy_client_files(static_directory);
 
-			builder.log.minor('Building lambda...');
+			utils.log.minor('Building lambda...');
 			const local_lambda_dir = join(__dirname, 'files');
-			builder.copy(local_lambda_dir, lambda_directory);
+			utils.copy(local_lambda_dir, lambda_directory);
 
-			builder.log.minor('Writing server application...');
-			builder.copy_server_files(server_directory);
+			utils.log.minor('Writing server application...');
+			utils.copy_server_files(server_directory);
 
-			builder.log.minor('Prerendering static pages...');
-			await builder.prerender({
+			utils.log.minor('Prerendering static pages...');
+			await utils.prerender({
 				dest: static_directory
 			});
 		}

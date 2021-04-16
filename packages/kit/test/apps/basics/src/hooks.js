@@ -16,7 +16,7 @@ export function getSession({ context }) {
 }
 
 /** @type {import('../../../../types').Handle} */
-export async function handle(request, render) {
+export async function handle({ request, render }) {
 	const response = await render(request);
 
 	if (response) {

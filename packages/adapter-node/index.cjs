@@ -11,19 +11,19 @@ module.exports = function ({ out = 'build' } = {}) {
 	const adapter = {
 		name: '@sveltejs/adapter-node',
 
-		async adapt(builder) {
-			builder.log.minor('Copying assets');
+		async adapt(utils) {
+			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
-			builder.copy_client_files(static_directory);
-			builder.copy_static_files(static_directory);
+			utils.copy_client_files(static_directory);
+			utils.copy_static_files(static_directory);
 
-			builder.log.minor('Copying server');
-			builder.copy_server_files(out);
+			utils.log.minor('Copying server');
+			utils.copy_server_files(out);
 
 			copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
 
-			builder.log.minor('Prerendering static pages');
-			await builder.prerender({
+			utils.log.minor('Prerendering static pages');
+			await utils.prerender({
 				dest: `${out}/prerendered`
 			});
 		}

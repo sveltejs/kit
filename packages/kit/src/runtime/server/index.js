@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import render_page from './page.js';
+import render_page from './page/index.js';
 import render_endpoint from './endpoint.js';
 
 /** @param {string} body */
@@ -8,8 +8,8 @@ function md5(body) {
 }
 
 /**
- * @param {import('../../../types').Incoming} incoming
- * @param {import('../../../types.internal').SSRRenderOptions} options
+ * @param {import('types/hooks').Incoming} incoming
+ * @param {import('types/internal').SSRRenderOptions} options
  */
 export async function ssr(incoming, options) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
@@ -26,13 +26,13 @@ export async function ssr(incoming, options) {
 	const context = (await options.hooks.getContext(incoming)) || {};
 
 	try {
-		return await options.hooks.handle(
-			{
+		return await options.hooks.handle({
+			request: {
 				...incoming,
 				params: null,
 				context
 			},
-			async (request) => {
+			render: async (request) => {
 				for (const route of options.manifest.routes) {
 					if (!route.pattern.test(request.path)) continue;
 
@@ -65,7 +65,7 @@ export async function ssr(incoming, options) {
 
 				return await render_page(request, null, options);
 			}
-		);
+		});
 	} catch (e) {
 		if (e && e.stack) {
 			e.stack = await options.get_stack(e);

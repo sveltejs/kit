@@ -1,14 +1,15 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.69",
+	"version": "1.0.0-next.77",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.5",
+		"@sveltejs/vite-plugin-svelte": "1.0.0-next.5",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4"
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^2.4.1",
+		"@sveltejs/kit": "workspace:*",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.33",
@@ -41,8 +42,7 @@
 	"files": [
 		"assets",
 		"dist",
-		"types.d.ts",
-		"types.internal.d.ts",
+		"types",
 		"svelte-kit.js"
 	],
 	"scripts": {
@@ -70,9 +70,9 @@
 			"import": "./dist/filesystem.js",
 			"require": "./dist/filesystem.cjs"
 		},
-		"./types.d.ts": "./types.d.ts"
+		"./types": "./types/index.d.ts"
 	},
-	"types": "types.d.ts",
+	"types": "types/index.d.ts",
 	"engines": {
 		"node": ">= 12.17.0"
 	}

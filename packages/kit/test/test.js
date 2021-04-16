@@ -2,7 +2,7 @@ import fs from 'fs';
 import glob from 'tiny-glob/sync.js';
 import ports from 'port-authority';
 import fetch from 'node-fetch';
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-chromium';
 import { dev } from '../src/core/dev/index.js';
 import { build } from '../src/core/build/index.js';
 import { start } from '../src/core/start/index.js';
@@ -18,6 +18,9 @@ async function setup({ port }) {
 		js: await browser.newContext({ javaScriptEnabled: true }),
 		nojs: await browser.newContext({ javaScriptEnabled: false })
 	};
+
+	contexts.js.setDefaultTimeout(5000);
+	contexts.nojs.setDefaultTimeout(5000);
 
 	const cookie = {
 		name: 'name',
@@ -115,6 +118,8 @@ function duplicate(test_fn, config) {
 			start = null;
 		}
 
+		if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+
 		test_fn(`${name} [no js]`, async (context) => {
 			let response;
 
@@ -126,6 +131,7 @@ function duplicate(test_fn, config) {
 				...context,
 				page: context.pages.nojs,
 				clicknav: (selector) => context.pages.nojs.click(selector),
+				back: () => context.pages.nojs.goBack(),
 				response,
 				js: false
 			});
@@ -156,6 +162,21 @@ function duplicate(test_fn, config) {
 						});
 
 						await context.pages.js.click(selector);
+						await context.pages.js.evaluate(() => window.navigated);
+					},
+					back: async () => {
+						await context.pages.js.evaluate(() => {
+							window.navigated = new Promise((fulfil, reject) => {
+								addEventListener('sveltekit:navigation-end', function handler() {
+									fulfil();
+									removeEventListener('sveltekit:navigation-end', handler);
+								});
+
+								setTimeout(() => reject(new Error('Timed out')), 2000);
+							});
+						});
+
+						await context.pages.js.goBack();
 						await context.pages.js.evaluate(() => window.navigated);
 					},
 					js: true,

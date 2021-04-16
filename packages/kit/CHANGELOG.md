@@ -1,5 +1,61 @@
 # @sveltejs/kit
 
+## 1.0.0-next.77
+
+### Patch Changes
+
+- fee388a: Include CSS for entry point/generated component
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- f870909: Pin vite-plugin-svelte version
+- de2466f: Fix stale prerendering bug
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- 0c02dc0: Use global URLSearchParams instead of import from node url
+- 8021d6b: Fix default error page
+- 11ec751: Fix build warnings about missing exports in hooks file
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- 4c45784: Add ambient types to published files
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- 1007f67: Allow non-root \$error.svelte components
+- ca108a6: Change `handle` hook from positional arguments to named arguments
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- 1d5228c: Make --open option work with --https
+- 39b6967: Add ambient type definitions for \$app imports
+- 1d5228c: Make --open option work on WSL
+- bb2d97d: Fix argument type for RequestHandler
+
+## 1.0.0-next.71
+
+### Patch Changes
+
+- 108c26c: Always return a response from render function in handle
+
+## 1.0.0-next.70
+
+### Patch Changes
+
+- 6d9f7b1: Only include CSS on an SSR'd page
+- 6ecfa2c: Remove duplicate <style> element
+
 ## 1.0.0-next.69
 
 ### Patch Changes

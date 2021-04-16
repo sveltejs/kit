@@ -7,6 +7,7 @@ on:
   pull_request:
 env:
   CI: true
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 jobs:
   Lint:
@@ -30,7 +31,6 @@ jobs:
       - run: pnpm check
   Tests:
     runs-on: ${{ matrix.os }}
-    needs: Lint
     timeout-minutes: 6
     strategy:
       matrix:
@@ -47,26 +47,31 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Get windows pnpm cache path
-        if: runner.os == 'windows'
-        run: echo "cache_path=D:\.pnpm-store\v3" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Get non-windows pnpm cache path
-        if: runner.os != 'windows'
-        run: echo "cache_path=~/.pnpm-store/v3" >> $GITHUB_ENV
+      - name: Get paths for OS
+        uses: ./.github/actions/env
+        id: paths
       - name: Cache ~/.pnpm-store
+        id: cache
         uses: actions/cache@main
         with:
-          path: ${{ env.cache_path }}
+          path: ${{ steps.paths.outputs.pnpm_cache_path }}
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}
+      - name: Cache browsers
+        id: browser_cache
+        uses: actions/cache@main
+        with:
+          path: ${{ steps.paths.outputs.browser_cache_path }}
+          key: pw-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
       - run: pnpm build --filter ./packages
       - run: pnpm test
   Examples:
     runs-on: ${{ matrix.os }}
-    needs: Tests
     timeout-minutes: 6
     strategy:
       matrix:
@@ -83,16 +88,13 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Get windows pnpm cache path
-        if: runner.os == 'windows'
-        run: echo "cache_path=D:\.pnpm-store\v3" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Get non-windows pnpm cache path
-        if: runner.os != 'windows'
-        run: echo "cache_path=~/.pnpm-store/v3" >> $GITHUB_ENV
+      - name: Get paths for OS
+        uses: ./.github/actions/env
+        id: paths
       - name: Cache ~/.pnpm-store
         uses: actions/cache@main
         with:
-          path: ${{ env.cache_path }}
+          path: ${{ steps.paths.outputs.pnpm_cache_path }}
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}

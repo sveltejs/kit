@@ -5,8 +5,8 @@ import json from '@rollup/plugin-json';
 export default {
 	input: 'cli/index.js',
 	output: {
-		file: 'bin',
-		format: 'cjs',
+		file: 'bin.js',
+		format: 'esm',
 		banner: '#!/usr/bin/env node',
 		interop: false
 	},
