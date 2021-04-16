@@ -12,6 +12,8 @@
 	--heading-color: rgba(0, 0, 0, 0.7);
 	--text-color: #444444;
 	--background-without-opacity: rgba(255, 255, 255, 0.7);
+	--column-width: 42rem;
+	--column-margin-top: 4rem;
 }
 
 body {
@@ -70,7 +72,7 @@ a:hover {
 
 h1 {
 	font-size: 2rem;
-	margin-bottom: 0;
+	margin-bottom: 0 0 1em 0;
 }
 
 h2 {
@@ -85,6 +87,12 @@ pre {
 	box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.05);
 	padding: 0.5em;
 	overflow-x: auto;
+}
+
+input,
+button {
+	font-size: inherit;
+	font-family: inherit;
 }
 
 @media (min-width: 480px) {

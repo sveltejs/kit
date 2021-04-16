@@ -193,6 +193,8 @@ importers:
       '@fontsource/fira-mono': ^4.2.2
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
+      dotenv: ^8.2.0
       svelte: ^3.29.0
       vite: ^2.1.0
     dependencies:
@@ -200,6 +202,8 @@ importers:
     devDependencies:
       '@sveltejs/adapter-node': link:../../../adapter-node
       '@sveltejs/kit': link:../../../kit
+      cookie: 0.4.1
+      dotenv: 8.2.0
       svelte: 3.37.0
       vite: 2.1.5
 
@@ -1409,6 +1413,11 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
+    dev: true
+
+  /dotenv/8.2.0:
+    resolution: {integrity: sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==}
+    engines: {node: '>=8'}
     dev: true
 
   /emoji-regex/8.0.0:
