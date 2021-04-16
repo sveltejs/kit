@@ -49,9 +49,9 @@ const REDIRECT = 3;
 /** @param {{
  *   cwd: string;
  *   out: string;
- *   log: import('../../../types.internal').Logger;
- *   config: import('../../../types.internal').ValidatedConfig;
- *   build_data: import('../../../types.internal').BuildData;
+ *   log: import('types/internal').Logger;
+ *   config: import('types/config').ValidatedConfig;
+ *   build_data: import('types/internal').BuildData;
  *   force: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, build_data, force }) {
@@ -61,7 +61,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('../../../types.internal').App} */
+	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
@@ -91,7 +91,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types').Response>} */
+		/** @type {Map<string, import('types/endpoint').ServerResponse>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(

@@ -12,7 +12,7 @@ const __dirname = join(__filename, '..');
 /** @param {string} _msg */
 const logger = (_msg) => {};
 
-/** @type {import('types.internal').Logger} */
+/** @type {import('types/internal').Logger} */
 const log = Object.assign(logger, {
 	info: logger,
 	minor: logger,
@@ -26,7 +26,7 @@ const suite = uvu.suite('adapter utils');
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
 
-	/** @type {import('types.internal').ValidatedConfig} */
+	/** @type {import('types/config').ValidatedConfig} */
 	const config = {
 		kit: {
 			// @ts-ignore
@@ -38,7 +38,7 @@ suite('copy files', () => {
 		}
 	};
 
-	/** @type {import('types.internal').BuildData} */
+	/** @type {import('types/internal').BuildData} */
 	const build_data = { client: [], server: [], static: [], entries: [] };
 
 	const utils = get_utils({ cwd, config, build_data, log });
@@ -65,7 +65,7 @@ suite('prerender', async () => {
 	const cwd = join(__dirname, 'fixtures/prerender');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 
-	/** @type {import('types.internal').ValidatedConfig} */
+	/** @type {import('types/config').ValidatedConfig} */
 	const config = {
 		extensions: ['.svelte'],
 		kit: {
@@ -83,7 +83,7 @@ suite('prerender', async () => {
 		}
 	};
 
-	/** @type {import('types.internal').BuildData} */
+	/** @type {import('types/internal').BuildData} */
 	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
 
 	const utils = get_utils({ cwd, config, build_data, log });

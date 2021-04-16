@@ -14,8 +14,8 @@ import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 
-/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('../../../types.internal').ValidatedConfig }} Options */
-/** @typedef {import('../../../types.internal').SSRComponent} SSRComponent */
+/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
+/** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
 export function dev(opts) {
@@ -94,8 +94,6 @@ class Watcher extends EventEmitter {
 			plugins: [
 				...(user_config.plugins || []),
 				svelte({
-					// TODO remove this once vite-plugin-svelte caching bugs are fixed
-					disableTransformCache: true,
 					extensions: this.config.extensions
 				})
 			],
@@ -135,7 +133,7 @@ class Watcher extends EventEmitter {
 					// handle dynamic requests - i.e. pages and endpoints
 					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
 
-					const hooks = /** @type {import('../../../types.internal').Hooks} */ (await this.vite
+					const hooks = /** @type {import('types/internal').Hooks} */ (await this.vite
 						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						.catch(() => ({})));
 
@@ -156,7 +154,7 @@ class Watcher extends EventEmitter {
 
 					const rendered = await ssr(
 						{
-							headers: /** @type {import('../../../types.internal').Headers} */ (req.headers),
+							headers: /** @type {import('types/helper').Headers} */ (req.headers),
 							method: req.method,
 							host,
 							path: parsed.pathname,
@@ -226,15 +224,19 @@ class Watcher extends EventEmitter {
 								const deps = new Set();
 								find_deps(node, deps);
 
-								const css = new Set();
 								const styles = new Set();
 
 								for (const dep of deps) {
+									const parsed = parse(dep.url);
+									const query = new URLSearchParams(parsed.query);
+
 									// TODO what about .scss files, etc?
-									if (dep.file.endsWith('.css')) {
+									if (
+										dep.file.endsWith('.css') ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
 										try {
 											const mod = await this.vite.ssrLoadModule(dep.url);
-											css.add(dep.url);
 											styles.add(mod.default);
 										} catch {
 											// this can happen with dynamically imported modules, I think
@@ -247,13 +249,15 @@ class Watcher extends EventEmitter {
 								return {
 									module,
 									entry: `/${id}?import`,
-									css: Array.from(css),
+									css: [],
 									js: [],
 									styles: Array.from(styles)
 								};
 							},
 							target: this.config.kit.target,
 							entry: '/.svelte/dev/runtime/internal/start.js',
+							css: [],
+							js: [],
 							dev: true,
 							amp: this.config.kit.amp,
 							root,
@@ -303,7 +307,7 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		/** @type {import('../../../types.internal').SSRManifest} */
+		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
 			assets: manifest_data.assets,
 			layout: manifest_data.layout,

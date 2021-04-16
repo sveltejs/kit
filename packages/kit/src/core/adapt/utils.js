@@ -5,11 +5,11 @@ import { prerender } from './prerender.js';
  *
  * @param {{
  *   cwd: string;
- *   config: import('types.internal').ValidatedConfig;
- *   build_data: import('types.internal').BuildData;
- *   log: import('types.internal').Logger;
+ *   config: import('types/config').ValidatedConfig;
+ *   build_data: import('types/internal').BuildData;
+ *   log: import('types/internal').Logger;
  * }} opts
- * @returns {import('types').AdapterUtils}
+ * @returns {import('types/config').AdapterUtils}
  */
 export function get_utils({ cwd, config, build_data, log }) {
 	return {

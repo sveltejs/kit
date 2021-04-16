@@ -19,7 +19,7 @@ export function write_if_changed(file, code) {
 
 const s = JSON.stringify;
 
-/** @typedef {import('../../../types.internal').ManifestData} ManifestData */
+/** @typedef {import('types/internal').ManifestData} ManifestData */
 
 /**
  * @param {{
@@ -166,7 +166,7 @@ function generate_app(manifest_data, base) {
 				const unsubscribe = stores.page.subscribe(() => {
 					if (mounted) {
 						navigated = true;
-						title = document.title;
+						title = document.title || 'untitled page';
 					}
 				});
 

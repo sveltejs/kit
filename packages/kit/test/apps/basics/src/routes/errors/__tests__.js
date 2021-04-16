@@ -57,6 +57,11 @@ export default function (test, is_dev) {
 			await page.textContent('#message'),
 			'This is your custom error page saying: "Crashing now"'
 		);
+
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('h1')).color),
+			'rgb(255, 0, 0)'
+		);
 	});
 
 	test('client-side module context errors', '/errors/module-scope-client', async ({ page, js }) => {

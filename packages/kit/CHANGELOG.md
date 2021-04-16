@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.77
+
+### Patch Changes
+
+- fee388a: Include CSS for entry point/generated component
+
 ## 1.0.0-next.76
 
 ### Patch Changes

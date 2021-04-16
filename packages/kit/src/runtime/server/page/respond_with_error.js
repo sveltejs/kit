@@ -3,8 +3,8 @@ import { load_node } from './load_node.js';
 
 /**
  * @param {{
- *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
+ *   request: import('types/endpoint').ServerRequest;
+ *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   status: number;
  *   error: Error;

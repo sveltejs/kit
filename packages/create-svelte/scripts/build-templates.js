@@ -49,7 +49,9 @@ async function generate_templates() {
 		const js = { meta, files: [] };
 
 		for (const file of ts.files) {
-			if (file.name.endsWith('.d.ts')) continue;
+			// The global.d.ts file makes TS/JS aware of some ambient modules, which are
+			// also needed for JS projects if people turn on "checkJs" in their jsonfig
+			if (file.name.endsWith('.d.ts') && !file.name.endsWith('global.d.ts')) continue;
 
 			if (file.name.endsWith('.ts')) {
 				const transformed = transform(file.contents, {

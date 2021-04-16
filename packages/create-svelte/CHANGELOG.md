@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.51
+
+### Patch Changes
+
+- 4cffc14: add global.d.ts to js version
+
 ## 2.0.0-next.50
 
 ### Patch Changes

@@ -1,4 +1,5 @@
-import { LoadOutput, SSRNode } from '../../../../types.internal';
+import { LoadOutput } from '../../../../types/page';
+import { SSRNode } from '../../../../types/internal';
 
 export type Loaded = {
 	node: SSRNode;
