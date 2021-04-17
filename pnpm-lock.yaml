@@ -164,7 +164,6 @@ importers:
 
   packages/create-svelte:
     specifiers:
-      '@rollup/plugin-json': ^4.1.0
       '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.2.3
@@ -173,21 +172,19 @@ importers:
       prettier: ^2.2.1
       prettier-plugin-svelte: ^2.2.0
       prompts: ^2.4.0
-      rollup: ^2.41.1
       sucrase: ^3.18.1
       svelte-preprocess: ^4.7.0
       tiny-glob: ^0.2.8
+    dependencies:
+      kleur: 4.1.4
+      prompts: 2.4.1
     devDependencies:
-      '@rollup/plugin-json': 4.1.0_rollup@2.45.2
       '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.2.3
       gitignore-parser: 0.0.2
-      kleur: 4.1.4
       prettier: 2.2.1
       prettier-plugin-svelte: 2.2.0_prettier@2.2.1
-      prompts: 2.4.1
-      rollup: 2.45.2
       sucrase: 3.18.1
       svelte-preprocess: 4.7.0
       tiny-glob: 0.2.8
@@ -2269,12 +2266,10 @@ packages:
   /kleur/3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
-    dev: true
 
   /kleur/4.1.4:
     resolution: {integrity: sha512-8QADVssbrFjivHWQU7KkMgptGTl6WAcSdlbBPY4uNF+mWr6DGcKrvY2w4FQJoXch7+fKMjj0dRrL75vk3k23OA==}
     engines: {node: '>=6'}
-    dev: true
 
   /levn/0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -2887,7 +2882,7 @@ packages:
     dependencies:
       kleur: 3.0.3
       sisteransi: 1.0.5
-    dev: true
+    dev: false
 
   /proper-lockfile/4.1.2:
     resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
@@ -3141,7 +3136,6 @@ packages:
 
   /sisteransi/1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
-    dev: true
 
   /slash/3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
