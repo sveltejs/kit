@@ -38,6 +38,10 @@ export async function render_response({
 	let is_private = false;
 	let maxage;
 
+	if (error) {
+		error.stack = options.get_stack(error);
+	}
+
 	if (branch) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));

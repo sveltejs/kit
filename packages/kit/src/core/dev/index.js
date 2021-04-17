@@ -167,6 +167,10 @@ class Watcher extends EventEmitter {
 								css: [],
 								js: []
 							},
+							get_stack: (error) => {
+								this.vite.ssrFixStacktrace(error);
+								return error.stack;
+							},
 							handle_error: (error) => {
 								this.vite.ssrFixStacktrace(error);
 								console.error(colors.bold().red(error.message));

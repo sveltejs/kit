@@ -133,6 +133,7 @@ export type SSRRenderOptions = {
 		css: string[];
 		js: string[];
 	};
+	get_stack: (error: Error) => string;
 	handle_error: (error: Error) => void;
 	hooks: Hooks;
 	hydrate: boolean;
