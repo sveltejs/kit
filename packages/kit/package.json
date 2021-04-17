@@ -66,10 +66,6 @@
 		"./http": {
 			"import": "./dist/http.js"
 		},
-		"./filesystem": {
-			"import": "./dist/filesystem.js",
-			"require": "./dist/filesystem.cjs"
-		},
 		"./types": "./types/index.d.ts"
 	},
 	"types": "types/index.d.ts",
