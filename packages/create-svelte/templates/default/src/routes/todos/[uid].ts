@@ -1,6 +1,6 @@
 export const patch = async (request) => {
 	const res = await fetch(
-		`http://localhost:8787/todos/${request.context.userid}/${request.params.id}`,
+		`http://localhost:8787/todos/${request.context.userid}/${request.params.uid}`,
 		{
 			method: 'PATCH',
 			body: JSON.stringify({
@@ -29,7 +29,7 @@ export const patch = async (request) => {
 
 export const del = async (request) => {
 	const res = await fetch(
-		`http://localhost:8787/todos/${request.context.userid}/${request.params.id}`,
+		`http://localhost:8787/todos/${request.context.userid}/${request.params.uid}`,
 		{
 			method: 'DELETE'
 		}
