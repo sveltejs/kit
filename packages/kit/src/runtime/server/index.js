@@ -68,11 +68,7 @@ export async function ssr(incoming, options, state = {}) {
 			}
 		});
 	} catch (e) {
-		if (e && e.stack) {
-			e.stack = await options.get_stack(e);
-		}
-
-		console.error((e && e.stack) || e);
+		options.handle_error(e);
 
 		return {
 			status: 500,

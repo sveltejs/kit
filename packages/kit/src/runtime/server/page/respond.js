@@ -30,6 +30,8 @@ export async function respond({ request, options, state, $session, route }) {
 	try {
 		nodes = await Promise.all(route.a.map((id) => id && options.load_component(id)));
 	} catch (error) {
+		options.handle_error(error);
+
 		return await respond_with_error({
 			request,
 			options,
@@ -107,6 +109,8 @@ export async function respond({ request, options, state, $session, route }) {
 						({ status, error } = loaded.loaded);
 					}
 				} catch (e) {
+					options.handle_error(e);
+
 					status = 500;
 					error = e;
 				}
@@ -147,6 +151,8 @@ export async function respond({ request, options, state, $session, route }) {
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
 							} catch (e) {
+								options.handle_error(e);
+
 								continue;
 							}
 						}
@@ -190,6 +196,8 @@ export async function respond({ request, options, state, $session, route }) {
 			page
 		});
 	} catch (error) {
+		options.handle_error(error);
+
 		return await respond_with_error({
 			request,
 			options,

@@ -297,7 +297,10 @@ async function build_server(
 					},
 					fetched: undefined,
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
-					get_stack: error => error.stack,
+					handle_error: error => {
+						console.error(error.stack);
+						error.stack = error.message; // for security
+					},
 					hooks: get_hooks(user_hooks),
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,

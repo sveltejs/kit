@@ -70,13 +70,13 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	/** @type {(status: number, path: string, parent: string) => void} */
+	/** @type {(status: number, path: string, parent: string, verb: string) => void} */
 	const error = config.kit.prerender.force
-		? (status, path, parent) => {
-				log.error(`${status} ${path} (linked from ${parent})`);
+		? (status, path, parent, verb) => {
+				log.error(`${status} ${path} (${verb} from ${parent})`);
 		  }
-		: (status, path, parent) => {
-				throw new Error(`${status} ${path} (linked from ${parent})`);
+		: (status, path, parent, verb) => {
+				throw new Error(`${status} ${path} (${verb} from ${parent})`);
 		  };
 
 	const files = new Set([...build_data.static, ...build_data.client]);
@@ -143,15 +143,15 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else if (response_type !== OK) {
-				error(rendered.status, path, parent);
+				error(rendered.status, path, parent, 'linked');
 			}
 
-			dependencies.forEach((result, path) => {
+			dependencies.forEach((result, dependency_path) => {
 				const response_type = Math.floor(result.status / 100);
 
 				const is_html = result.headers['content-type'] === 'text/html';
 
-				const parts = path.split('/');
+				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
 					parts.push('index.html');
 				}
@@ -162,9 +162,9 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				writeFileSync(file, result.body);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${path}`);
+					log.info(`${result.status} ${dependency_path}`);
 				} else {
-					error(result.status, path, parent);
+					error(result.status, dependency_path, path, 'fetched');
 				}
 			});
 

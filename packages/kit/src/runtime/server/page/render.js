@@ -52,15 +52,6 @@ export async function render_response({
 			maxage = loaded.maxage;
 		});
 
-		if (error) {
-			if (options.dev) {
-				error.stack = await options.get_stack(error);
-			} else {
-				// remove error.stack in production
-				error.stack = String(error);
-			}
-		}
-
 		const session = writable($session);
 
 		/** @type {Record<string, any>} */

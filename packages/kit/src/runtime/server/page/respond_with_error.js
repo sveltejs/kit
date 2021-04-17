@@ -69,10 +69,12 @@ export async function respond_with_error({ request, options, state, $session, st
 			page
 		});
 	} catch (error) {
+		options.handle_error(error);
+
 		return {
 			status: 500,
 			headers: {},
-			body: options.dev ? error.stack : error.message
+			body: error.stack
 		};
 	}
 }
