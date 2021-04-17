@@ -13,6 +13,16 @@ import { get_body } from '../http/index.js';
 import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
+import fetch, { Response, Request, Headers } from 'node-fetch';
+
+// provide server-side fetch
+// @ts-ignore
+globalThis.fetch = fetch;
+// @ts-ignore
+globalThis.Response = Response;
+// @ts-ignore
+globalThis.Request = Request;
+globalThis.Headers = Headers;
 
 /** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */

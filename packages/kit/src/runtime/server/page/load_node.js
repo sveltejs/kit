@@ -1,4 +1,3 @@
-import fetch, { Response } from 'node-fetch';
 import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
@@ -59,7 +58,6 @@ export async function load_node({
 			 * @param {RequestInfo} resource
 			 * @param {RequestInit} opts
 			 */
-			// @ts-ignore mismatch between client fetch and node-fetch
 			fetch: async (resource, opts = {}) => {
 				/** @type {string} */
 				let url;
@@ -96,10 +94,7 @@ export async function load_node({
 
 				if (parsed.protocol) {
 					// external fetch
-					response = await fetch(
-						parsed.href,
-						/** @type {import('node-fetch').RequestInit} */ (opts)
-					);
+					response = await fetch(parsed.href, /** @type {RequestInit} */ (opts));
 				} else {
 					// otherwise we're dealing with an internal fetch
 					const resolved = resolve(request.path, parsed.pathname);
@@ -125,7 +120,7 @@ export async function load_node({
 							// TODO we need to know what protocol to use
 							response = await fetch(
 								`http://${page.host}/${asset.file}`,
-								/** @type {import('node-fetch').RequestInit} */ (opts)
+								/** @type {RequestInit} */ (opts)
 							);
 						}
 					}
