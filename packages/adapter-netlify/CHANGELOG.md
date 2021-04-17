@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+
 ## 1.0.0-next.4
 
 ### Patch Changes
