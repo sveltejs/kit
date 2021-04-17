@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- 8e61e84: Include missing entrypoint
+
 ## 1.0.0-next.13
 
 ### Patch Changes
