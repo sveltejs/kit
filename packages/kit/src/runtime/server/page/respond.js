@@ -46,7 +46,7 @@ export async function respond({ request, options, $session, route }) {
 		hydrate: 'hydrate' in leaf ? leaf.hydrate : options.hydrate
 	};
 
-	if (options.only_render_prerenderable_pages && !leaf.prerender) {
+	if (!leaf.prerender && options.prerender && !options.prerender.force) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
 		return {

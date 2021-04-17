@@ -66,16 +66,17 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 
 	app.init({
 		paths: config.kit.paths,
-		prerendering: true
+		prerendering: true,
+		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	/** @type {(status: number, path: string) => void} */
+	/** @type {(status: number, path: string, parent: string) => void} */
 	const error = config.kit.prerender.force
-		? (status, path) => {
-				log.error(`${status} ${path}`);
+		? (status, path, parent) => {
+				log.error(`${status} ${path} (linked from ${parent})`);
 		  }
-		: (status, path) => {
-				throw new Error(`${status} ${path}`);
+		: (status, path, parent) => {
+				throw new Error(`${status} ${path} (linked from ${parent})`);
 		  };
 
 	const files = new Set([...build_data.static, ...build_data.client]);
@@ -86,8 +87,11 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		}
 	});
 
-	/** @param {string} path */
-	async function visit(path) {
+	/**
+	 * @param {string} path
+	 * @param {string} parent
+	 */
+	async function visit(path, parent) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
@@ -104,10 +108,11 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				query: new URLSearchParams()
 			},
 			{
-				local: true,
-				dependencies,
-				only_render_prerenderable_pages: !force,
-				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
+				prerender: {
+					force,
+					dependencies,
+					error: null
+				}
 			}
 		);
 
@@ -138,7 +143,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else if (response_type !== OK) {
-				error(rendered.status, path);
+				error(rendered.status, path, parent);
 			}
 
 			dependencies.forEach((result, path) => {
@@ -159,7 +164,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				if (response_type === OK) {
 					log.info(`${result.status} ${path}`);
 				} else {
-					error(result.status, path);
+					error(result.status, path, parent);
 				}
 			});
 
@@ -200,7 +205,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(parsed.pathname.replace(config.kit.paths.base, ''));
+					await visit(parsed.pathname.replace(config.kit.paths.base, ''), path);
 				}
 			}
 		}
@@ -209,10 +214,10 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
 			for (const entry of build_data.entries) {
-				await visit(entry);
+				await visit(entry, null);
 			}
 		} else {
-			await visit(entry);
+			await visit(entry, null);
 		}
 	}
 }

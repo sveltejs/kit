@@ -279,12 +279,16 @@ async function build_server(
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			set_paths(${s(config.kit.paths)});
+			let paths = ${s(config.kit.paths)};
+			set_paths(paths);
+
+			let read = null;
 
 			// allow paths to be overridden in svelte-kit start
-			export function init({ paths, prerendering }) {
-				set_paths(paths);
-				set_prerendering(prerendering);
+			export function init(options) {
+				set_paths(paths = options.paths);
+				set_prerendering(options.prerendering);
+				read = options.read;
 			}
 
 			const d = decodeURIComponent;
@@ -350,37 +354,35 @@ async function build_server(
 			}
 
 			export function render(request, {
-				paths = ${s(config.kit.paths)},
-				local = false,
-				dependencies,
-				only_render_prerenderable_pages = false,
-				get_static_file
+				prerender
 			} = {}) {
 				return ssr({
 					...request,
 					host: ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`}
 				}, {
-					paths,
-					local,
-					template,
-					manifest,
-					load_component,
-					target: ${s(config.kit.target)},
-					entry: ${s(prefix + client_manifest[client_entry_file].file)},
-					css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-					js: ${s(Array.from(entry_js).map(dep => prefix + dep))},
-					root,
-					hooks,
-					dev: false,
 					amp: ${config.kit.amp},
-					dependencies,
-					only_render_prerenderable_pages,
+					dev: false,
+					entry: {
+						file: ${s(prefix + client_manifest[client_entry_file].file)},
+						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
+						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+					},
+					fetched: undefined,
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => error.stack,
-					get_static_file,
-					ssr: ${s(config.kit.ssr)},
+					hooks,
+					hydrate: ${s(config.kit.hydrate)},
+					initiator: undefined,
+					load_component,
+					manifest,
+					paths,
+					prerender,
+					read,
+					root,
 					router: ${s(config.kit.router)},
-					hydrate: ${s(config.kit.hydrate)}
+					ssr: ${s(config.kit.ssr)},
+					target: ${s(config.kit.target)},
+					template
 				});
 			}
 		`
