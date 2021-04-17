@@ -9,6 +9,8 @@
 	// (i.e. we came here from elsewhere in the app), use it
 	export const router = browser;
 
+	// since there's no dynamic data here, we can prerender
+	// it so that it gets served as a static asset in prod
 	export const prerender = true;
 </script>
 
@@ -32,7 +34,7 @@
 <style>
 	.content {
 		width: 100%;
-		max-width: 42rem;
-		margin: 4rem auto 0 auto;
+		max-width: var(--column-width);
+		margin: var(--column-margin-top) auto 0 auto;
 	}
 </style>
