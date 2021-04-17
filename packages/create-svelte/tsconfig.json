@@ -9,5 +9,5 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["cli/**/*", "scripts/**/*", "utils.js"]
+	"include": ["scripts/**/*", "bin.js", "utils.js"]
 }

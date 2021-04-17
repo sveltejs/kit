@@ -1,11 +1,10 @@
-//eslint-disable-next-line import/no-unresolved
+#!/usr/bin/env node
 import fs from 'fs';
 import path from 'path';
-import { bold, cyan, gray, green, red } from 'kleur/colors';
-import prompts from 'prompts/lib/index';
 import { fileURLToPath } from 'url';
-import { mkdirp, copy } from '../utils.js';
-import { version } from '../package.json';
+import { bold, cyan, gray, green, red } from 'kleur/colors';
+import prompts from 'prompts';
+import { mkdirp, copy } from './utils.js';
 
 const disclaimer = `
 Welcome to the SvelteKit setup wizard!
@@ -13,6 +12,8 @@ Welcome to the SvelteKit setup wizard!
 SvelteKit is in public beta now. There are definitely bugs and some feature might not work yet.
 If you encounter an issue, have a look at https://github.com/sveltejs/kit/issues and open a new one, if it is not already tracked.
 `;
+
+const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url)));
 
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
