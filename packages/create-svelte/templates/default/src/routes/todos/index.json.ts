@@ -1,18 +1,26 @@
-import * as db from '$lib/db';
+import type { RequestHandler } from '@sveltejs/kit';
 
-export const get = async (request) =>
-	db.read({
-		userid: request.context.userid
-	});
+export const get: RequestHandler = async (request) => {
+	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`);
 
-export const post = async (request) => {
-	const { status, body } = await db.create({
-		text: request.body.get('text'),
-		userid: request.context.userid
-	});
+	if (res.ok) {
+		return {
+			status: res.status,
+			body: await res.json()
+		};
+	}
+
+	return {
+		status: res.status,
+		body: res.ok ? await res.json() : await res.text()
+	};
+};
+
+export const post: RequestHandler = async (request) => {
+	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`);
 
 	// redirect successful <form> submissions back to /todos
-	if (status === 201 && request.headers.accept !== 'application/json') {
+	if (res.ok && request.headers.accept !== 'application/json') {
 		return {
 			status: 303,
 			headers: {
@@ -22,5 +30,8 @@ export const post = async (request) => {
 		};
 	}
 
-	return { status, body };
+	return {
+		status: res.status,
+		body: res.ok ? await res.json() : await res.text()
+	};
 };
