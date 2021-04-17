@@ -279,20 +279,13 @@ async function build_server(
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			let paths = ${s(config.kit.paths)};
-			set_paths(paths);
-
 			let options = null;
 
 			// allow paths to be overridden in svelte-kit start
+			// and in prerendering
 			export function init(settings) {
-				if ('paths' in settings) {
-					set_paths(paths = settings.paths);
-				}
-
-				if ('prerendering' in settings) {
-					set_prerendering(settings.prerendering);
-				}
+				set_paths(settings.paths);
+				set_prerendering(settings.prerendering || false);
 
 				options = {
 					amp: ${config.kit.amp},
@@ -319,6 +312,8 @@ async function build_server(
 					template
 				};
 			}
+
+			init({ paths: ${s(config.kit.paths)} });
 
 			const d = decodeURIComponent;
 			const empty = () => ({});
