@@ -5,6 +5,7 @@ import { EventEmitter } from 'events';
 import CheapWatch from 'cheap-watch';
 import amp_validator from 'amphtml-validator';
 import vite from 'vite';
+import colors from 'kleur';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
@@ -130,9 +131,6 @@ class Watcher extends EventEmitter {
 
 					if (req.url === '/favicon.ico') return;
 
-					// handle dynamic requests - i.e. pages and endpoints
-					const template = fs.readFileSync(this.config.kit.files.template, 'utf-8');
-
 					const hooks = /** @type {import('types/internal').Hooks} */ (await this.vite
 						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						.catch(() => ({})));
@@ -162,9 +160,77 @@ class Watcher extends EventEmitter {
 							body
 						},
 						{
+							amp: this.config.kit.amp,
+							dev: true,
+							entry: {
+								file: '/.svelte/dev/runtime/internal/start.js',
+								css: [],
+								js: []
+							},
+							get_stack: (error) => {
+								this.vite.ssrFixStacktrace(error);
+								return error.stack;
+							},
+							handle_error: (error) => {
+								this.vite.ssrFixStacktrace(error);
+								console.error(colors.bold().red(error.message));
+								console.error(colors.gray(error.stack));
+							},
+							hooks: {
+								getContext: hooks.getContext || (() => ({})),
+								getSession: hooks.getSession || (() => ({})),
+								handle: hooks.handle || (({ request, render }) => render(request))
+							},
+							hydrate: this.config.kit.hydrate,
 							paths: this.config.kit.paths,
+							load_component: async (id) => {
+								const url = path.resolve(this.cwd, id);
+
+								const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
+								const node = await this.vite.moduleGraph.getModuleByUrl(url);
+
+								const deps = new Set();
+								find_deps(node, deps);
+
+								const styles = new Set();
+
+								for (const dep of deps) {
+									const parsed = parse(dep.url);
+									const query = new URLSearchParams(parsed.query);
+
+									// TODO what about .scss files, etc?
+									if (
+										dep.file.endsWith('.css') ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
+										try {
+											const mod = await this.vite.ssrLoadModule(dep.url);
+											styles.add(mod.default);
+										} catch {
+											// this can happen with dynamically imported modules, I think
+											// because the Vite module graph doesn't distinguish between
+											// static and dynamic imports? TODO investigate, submit fix
+										}
+									}
+								}
+
+								return {
+									module,
+									entry: `/${id}?import`,
+									css: [],
+									js: [],
+									styles: Array.from(styles)
+								};
+							},
+							manifest: this.manifest,
+							read: (file) => fs.readFileSync(path.join(this.config.kit.files.assets, file)),
+							root,
+							router: this.config.kit.router,
+							ssr: this.config.kit.ssr,
+							target: this.config.kit.target,
 							template: ({ head, body }) => {
-								let rendered = template
+								let rendered = fs
+									.readFileSync(this.config.kit.files.template, 'utf8')
 									.replace('%svelte.head%', () => head)
 									.replace('%svelte.body%', () => body);
 
@@ -213,69 +279,7 @@ class Watcher extends EventEmitter {
 								}
 
 								return rendered;
-							},
-							manifest: this.manifest,
-							load_component: async (id) => {
-								const url = path.resolve(this.cwd, id);
-
-								const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
-								const node = await this.vite.moduleGraph.getModuleByUrl(url);
-
-								const deps = new Set();
-								find_deps(node, deps);
-
-								const styles = new Set();
-
-								for (const dep of deps) {
-									const parsed = parse(dep.url);
-									const query = new URLSearchParams(parsed.query);
-
-									// TODO what about .scss files, etc?
-									if (
-										dep.file.endsWith('.css') ||
-										(query.has('svelte') && query.get('type') === 'style')
-									) {
-										try {
-											const mod = await this.vite.ssrLoadModule(dep.url);
-											styles.add(mod.default);
-										} catch {
-											// this can happen with dynamically imported modules, I think
-											// because the Vite module graph doesn't distinguish between
-											// static and dynamic imports? TODO investigate, submit fix
-										}
-									}
-								}
-
-								return {
-									module,
-									entry: `/${id}?import`,
-									css: [],
-									js: [],
-									styles: Array.from(styles)
-								};
-							},
-							target: this.config.kit.target,
-							entry: '/.svelte/dev/runtime/internal/start.js',
-							css: [],
-							js: [],
-							dev: true,
-							amp: this.config.kit.amp,
-							root,
-							hooks: {
-								getContext: hooks.getContext || (() => ({})),
-								getSession: hooks.getSession || (() => ({})),
-								handle: hooks.handle || (({ request, render }) => render(request))
-							},
-							only_render_prerenderable_pages: false,
-							get_stack: (error) => {
-								this.vite.ssrFixStacktrace(error);
-								return error.stack;
-							},
-							get_static_file: (file) =>
-								fs.readFileSync(path.join(this.config.kit.files.assets, file)),
-							ssr: this.config.kit.ssr,
-							router: this.config.kit.router,
-							hydrate: this.config.kit.hydrate
+							}
 						}
 					);
 

@@ -26,8 +26,8 @@ export async function render_response({
 	branch,
 	page
 }) {
-	const css = new Set(options.css);
-	const js = new Set(options.js);
+	const css = new Set(options.entry.css);
+	const js = new Set(options.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, json: string }>} */
@@ -37,6 +37,10 @@ export async function render_response({
 
 	let is_private = false;
 	let maxage;
+
+	if (error) {
+		error.stack = options.get_stack(error);
+	}
 
 	if (branch) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
@@ -51,15 +55,6 @@ export async function render_response({
 
 			maxage = loaded.maxage;
 		});
-
-		if (error) {
-			if (options.dev) {
-				error.stack = await options.get_stack(error);
-			} else {
-				// remove error.stack in production
-				error.stack = String(error);
-			}
-		}
 
 		const session = writable($session);
 
@@ -116,7 +111,7 @@ export async function render_response({
 	} else if (page_config.router || page_config.hydrate) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.entry)};
+			import { start } from ${s(options.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},

@@ -8,6 +8,7 @@ import { build } from '../src/core/build/index.js';
 import { start } from '../src/core/start/index.js';
 import { load_config } from '../src/core/load_config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { format } from 'util';
 
 async function setup({ port }) {
 	const base = `http://localhost:${port}`;
@@ -107,6 +108,28 @@ async function setup({ port }) {
 		},
 
 		reset: () => browser && browser.close()
+	};
+}
+
+function patch_console() {
+	const { error } = console;
+
+	let buffered = '';
+
+	/** @param {any[]} args */
+	console.error = (...args) => {
+		buffered += format(...args) + '\n';
+	};
+
+	return {
+		errors: () => {
+			const errors = buffered;
+			buffered = '';
+			return errors;
+		},
+		unpatch: () => {
+			console.error = error;
+		}
 	};
 }
 
@@ -221,6 +244,14 @@ async function main() {
 			await context.reset();
 		});
 
+		suite.before.each((context) => {
+			Object.assign(context, patch_console());
+		});
+
+		suite.after.each((context) => {
+			context.unpatch();
+		});
+
 		const test = duplicate(suite, config);
 		test.skip = duplicate(suite.skip, config);
 		test.only = duplicate(suite.only, config);
@@ -262,6 +293,14 @@ async function main() {
 		suite.after(async (context) => {
 			context.server.close();
 			await context.reset();
+		});
+
+		suite.before.each((context) => {
+			Object.assign(context, patch_console());
+		});
+
+		suite.after.each((context) => {
+			context.unpatch();
 		});
 
 		const test = duplicate(suite, config);
