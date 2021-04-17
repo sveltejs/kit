@@ -368,9 +368,6 @@ async function build_server(
 			const metadata_lookup = ${s(metadata_lookup)};
 
 			async function load_component(file) {
-				if (!module_lookup[file]) {
-					console.log({ file });
-				}
 				return {
 					module: await module_lookup[file](),
 					...metadata_lookup[file]

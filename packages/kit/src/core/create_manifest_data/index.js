@@ -140,9 +140,15 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
+				const layout_reset = find_layout('$layout.reset', item.file);
 				const layout = find_layout('$layout', item.file);
 				const error = find_layout('$error', item.file);
 
+				if (layout_reset && layout) {
+					throw new Error(`Cannot have $layout next to $layout.reset: ${layout_reset}`);
+				}
+
+				if (layout_reset) components.push(layout_reset);
 				if (layout) components.push(layout);
 				if (error) components.push(error);
 
@@ -150,8 +156,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					path.join(dir, item.basename),
 					segments,
 					params,
-					layout_stack.concat(layout),
-					error_stack.concat(error)
+					layout_reset ? [layout_reset] : layout_stack.concat(layout),
+					layout_reset ? [error] : error_stack.concat(error)
 				);
 			} else if (item.is_page) {
 				components.push(item.file);

@@ -12,7 +12,7 @@ To create a layout component that applies to every page, make a file called `src
 <slot></slot>
 ```
 
-...but we can add whatever markup, styles and behaviour we want. For example, let's add a nav bar:
+...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
 <!-- src/routes/$layout.svelte -->
@@ -61,6 +61,12 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 <slot></slot>
 ```
+
+### Resets
+
+To reset the layout stack, create a `$layout.reset.svelte` file instead of a `$layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/$layout.reset.svelte`.
+
+Layout resets are otherwise identical to normal layout components.
 
 ### Error pages
 
