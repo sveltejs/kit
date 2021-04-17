@@ -6,6 +6,14 @@ import sirv from 'sirv';
 import { URL, fileURLToPath } from 'url';
 // eslint-disable-next-line import/no-unresolved
 import { get_body } from '@sveltejs/kit/http';
+import fetch, { Response, Request, Headers } from 'node-fetch';
+
+// provide server-side fetch
+globalThis.fetch = fetch;
+globalThis.Response = Response;
+globalThis.Request = Request;
+globalThis.Headers = Headers;
+
 // App is a dynamic file built from the application layer.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

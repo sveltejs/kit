@@ -2,6 +2,13 @@
 
 import { URLSearchParams } from 'url';
 import { render } from './app.mjs'; // eslint-disable-line import/no-unresolved
+import fetch, { Response, Request, Headers } from 'node-fetch';
+
+// provide server-side fetch
+globalThis.fetch = fetch;
+globalThis.Response = Response;
+globalThis.Request = Request;
+globalThis.Headers = Headers;
 
 export async function handler(event) {
 	const {
