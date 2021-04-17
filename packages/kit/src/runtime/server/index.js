@@ -10,8 +10,9 @@ function md5(body) {
 /**
  * @param {import('types/hooks').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
+ * @param {import('types/internal').SSRRenderState} [state]
  */
-export async function ssr(incoming, options) {
+export async function ssr(incoming, options, state = {}) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
 		const q = incoming.query.toString();
 
@@ -39,7 +40,7 @@ export async function ssr(incoming, options) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route)
-							: await render_page(request, route, options);
+							: await render_page(request, route, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -63,7 +64,7 @@ export async function ssr(incoming, options) {
 					}
 				}
 
-				return await render_page(request, null, options);
+				return await render_page(request, null, options, state);
 			}
 		});
 	} catch (e) {

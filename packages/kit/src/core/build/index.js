@@ -282,13 +282,42 @@ async function build_server(
 			let paths = ${s(config.kit.paths)};
 			set_paths(paths);
 
-			let read = null;
+			let options = null;
 
 			// allow paths to be overridden in svelte-kit start
-			export function init(options) {
-				set_paths(paths = options.paths);
-				set_prerendering(options.prerendering);
-				read = options.read;
+			export function init(settings) {
+				if ('paths' in settings) {
+					set_paths(paths = settings.paths);
+				}
+
+				if ('prerendering' in settings) {
+					set_prerendering(settings.prerendering);
+				}
+
+				options = {
+					amp: ${config.kit.amp},
+					dev: false,
+					entry: {
+						file: ${s(prefix + client_manifest[client_entry_file].file)},
+						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
+						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+					},
+					fetched: undefined,
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
+					get_stack: error => error.stack,
+					hooks,
+					hydrate: ${s(config.kit.hydrate)},
+					initiator: undefined,
+					load_component,
+					manifest,
+					paths: settings.paths,
+					read: settings.read,
+					root,
+					router: ${s(config.kit.router)},
+					ssr: ${s(config.kit.ssr)},
+					target: ${s(config.kit.target)},
+					template
+				};
 			}
 
 			const d = decodeURIComponent;
@@ -356,34 +385,8 @@ async function build_server(
 			export function render(request, {
 				prerender
 			} = {}) {
-				return ssr({
-					...request,
-					host: ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`}
-				}, {
-					amp: ${config.kit.amp},
-					dev: false,
-					entry: {
-						file: ${s(prefix + client_manifest[client_entry_file].file)},
-						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
-					},
-					fetched: undefined,
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
-					get_stack: error => error.stack,
-					hooks,
-					hydrate: ${s(config.kit.hydrate)},
-					initiator: undefined,
-					load_component,
-					manifest,
-					paths,
-					prerender,
-					read,
-					root,
-					router: ${s(config.kit.router)},
-					ssr: ${s(config.kit.ssr)},
-					target: ${s(config.kit.target)},
-					template
-				});
+				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
+				return ssr({ ...request, host }, options, { prerender });
 			}
 		`
 			.replace(/^\t{3}/gm, '')

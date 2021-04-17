@@ -10,6 +10,7 @@ const s = JSON.stringify;
  * @param {{
  *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
+ *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage;
  *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
@@ -25,6 +26,7 @@ const s = JSON.stringify;
 export async function load_node({
 	request,
 	options,
+	state,
 	route,
 	page,
 	node,
@@ -153,16 +155,16 @@ export async function load_node({
 								body: /** @type {any} */ (opts.body),
 								query: new URLSearchParams(parsed.query || '')
 							},
+							options,
 							{
-								...options,
 								fetched: url,
 								initiator: route
 							}
 						);
 
 						if (rendered) {
-							if (options.prerender) {
-								options.prerender.dependencies.set(resolved, rendered);
+							if (state.prerender) {
+								state.prerender.dependencies.set(resolved, rendered);
 							}
 
 							response = new Response(rendered.body, {

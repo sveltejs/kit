@@ -166,7 +166,6 @@ class Watcher extends EventEmitter {
 								css: [],
 								js: []
 							},
-							fetched: undefined,
 							get_stack: (error) => {
 								this.vite.ssrFixStacktrace(error);
 								return error.stack;
@@ -177,7 +176,6 @@ class Watcher extends EventEmitter {
 								handle: hooks.handle || (({ request, render }) => render(request))
 							},
 							hydrate: this.config.kit.hydrate,
-							initiator: undefined,
 							paths: this.config.kit.paths,
 							load_component: async (id) => {
 								const url = path.resolve(this.cwd, id);
@@ -219,7 +217,6 @@ class Watcher extends EventEmitter {
 								};
 							},
 							manifest: this.manifest,
-							prerender: null,
 							read: (file) => fs.readFileSync(path.join(this.config.kit.files.assets, file)),
 							root,
 							router: this.config.kit.router,

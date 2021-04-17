@@ -8,12 +8,13 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {{
  *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
+ *   state: import('types/internal').SSRRenderState;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  * }} opts
  * @returns {Promise<import('types/endpoint').ServerResponse>}
  */
-export async function respond({ request, options, $session, route }) {
+export async function respond({ request, options, state, $session, route }) {
 	const match = route.pattern.exec(request.path);
 	const params = route.params(match);
 
@@ -32,6 +33,7 @@ export async function respond({ request, options, $session, route }) {
 		return await respond_with_error({
 			request,
 			options,
+			state,
 			$session,
 			status: 500,
 			error
@@ -46,7 +48,7 @@ export async function respond({ request, options, $session, route }) {
 		hydrate: 'hydrate' in leaf ? leaf.hydrate : options.hydrate
 	};
 
-	if (!leaf.prerender && options.prerender && !options.prerender.force) {
+	if (!leaf.prerender && state.prerender && !state.prerender.force) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
 		return {
@@ -80,6 +82,7 @@ export async function respond({ request, options, $session, route }) {
 					loaded = await load_node({
 						request,
 						options,
+						state,
 						route,
 						page,
 						node,
@@ -125,6 +128,7 @@ export async function respond({ request, options, $session, route }) {
 								error_loaded = await load_node({
 									request,
 									options,
+									state,
 									route,
 									page,
 									node: error_node,
@@ -154,6 +158,7 @@ export async function respond({ request, options, $session, route }) {
 					return await respond_with_error({
 						request,
 						options,
+						state,
 						$session,
 						status,
 						error
@@ -188,6 +193,7 @@ export async function respond({ request, options, $session, route }) {
 		return await respond_with_error({
 			request,
 			options,
+			state,
 			$session,
 			status: 500,
 			error

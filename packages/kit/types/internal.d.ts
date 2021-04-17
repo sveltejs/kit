@@ -125,7 +125,6 @@ export type SSRNode = {
 	styles: string[];
 };
 
-// TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
 	amp: boolean;
 	dev: boolean;
@@ -134,21 +133,14 @@ export type SSRRenderOptions = {
 		css: string[];
 		js: string[];
 	};
-	fetched: string;
 	get_stack: (error: Error) => string;
 	hooks: Hooks;
 	hydrate: boolean;
-	initiator: SSRPage;
 	load_component: (id: PageId) => Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;
 		assets: string;
-	};
-	prerender: {
-		force: boolean;
-		dependencies: Map<string, ServerResponse>;
-		error: Error;
 	};
 	read: (file: string) => Buffer;
 	root: SSRComponent['default'];
@@ -156,6 +148,16 @@ export type SSRRenderOptions = {
 	ssr: boolean;
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
+};
+
+export type SSRRenderState = {
+	fetched?: string;
+	initiator?: SSRPage;
+	prerender?: {
+		force: boolean;
+		dependencies: Map<string, ServerResponse>;
+		error: Error;
+	};
 };
 
 export type Asset = {
