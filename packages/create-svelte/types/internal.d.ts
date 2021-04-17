@@ -5,15 +5,9 @@ export type Options = {
 	eslint: boolean;
 };
 
-export type Template = {
-	meta: {
-		description: string;
-	};
-	files: Array<{
-		name: string;
-		contents: string;
-		encoding: 'base64' | 'utf8';
-	}>;
+export type File = {
+	name: string;
+	contents: string;
 };
 
 export type Common = {

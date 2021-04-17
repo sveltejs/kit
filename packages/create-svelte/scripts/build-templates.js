@@ -4,18 +4,18 @@ import parser from 'gitignore-parser';
 import prettier from 'prettier';
 import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
+import { mkdirp, rimraf } from '../utils.js';
 
-async function generate_templates() {
+/** @param {Set<string>} shared */
+async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
 
-	try {
-		fs.mkdirSync('dist/templates', { recursive: true });
-	} catch {
-		// ignore
-	}
+	for (const template of templates) {
+		const dir = `dist/templates/${template}`;
+		const assets = `${dir}/assets`;
+		mkdirp(assets);
 
-	for (const name of templates) {
-		const cwd = path.resolve('templates', name);
+		const cwd = path.resolve('templates', template);
 
 		const gitignore_file = path.join(cwd, '.gitignore');
 		if (!fs.existsSync(gitignore_file)) throw new Error('Template must have a .gitignore file');
@@ -23,35 +23,44 @@ async function generate_templates() {
 
 		const meta_file = path.join(cwd, '.meta.json');
 		if (!fs.existsSync(meta_file)) throw new Error('Template must have a .meta.json file');
-		const meta = JSON.parse(fs.readFileSync(meta_file, 'utf-8'));
 
-		const ts = {
-			meta,
-			files: glob('**/*', { cwd, filesOnly: true })
-				.filter(gitignore.accepts)
-				.map((name) => {
-					const encoding = /\.(ico|png|jpe?g)$/.test(name) ? 'base64' : 'utf8';
-					let contents = fs.readFileSync(path.join(cwd, name), encoding);
+		/** @type {import('../types/internal.js').File[]} */
+		const ts = [];
 
-					if (name === 'package.json') {
-						// TODO package-specific versions
-						contents = contents.replace(/workspace:\*/g, 'next');
-					}
+		glob('**/*', { cwd, filesOnly: true }).forEach((name) => {
+			if (name === '.meta.json' || shared.has(name)) return;
+			if (!gitignore.accepts(name)) return;
 
-					return {
+			if (/\.(js|ts|svelte|svelte\.md)$/.test(name) || name === 'package.json') {
+				let contents = fs.readFileSync(path.join(cwd, name), 'utf8');
+
+				if (name === 'package.json') {
+					// TODO package-specific versions
+					contents = contents.replace(/workspace:\*/g, 'next');
+					fs.writeFileSync(`${dir}/package.json`, contents);
+				} else {
+					ts.push({
 						name,
-						contents,
-						encoding
-					};
-				})
-		};
+						contents
+					});
+				}
+			} else {
+				const dest = path.join(assets, name);
+				mkdirp(path.dirname(dest));
+				fs.copyFileSync(path.join(cwd, name), dest);
+			}
+		});
 
-		const js = { meta, files: [] };
+		/** @type {import('../types/internal.js').File[]} */
+		const js = [];
 
-		for (const file of ts.files) {
+		for (const file of ts) {
 			// The global.d.ts file makes TS/JS aware of some ambient modules, which are
 			// also needed for JS projects if people turn on "checkJs" in their jsonfig
-			if (file.name.endsWith('.d.ts') && !file.name.endsWith('global.d.ts')) continue;
+			if (file.name.endsWith('.d.ts')) {
+				if (file.name.endsWith('global.d.ts')) js.push(file);
+				continue;
+			}
 
 			if (file.name.endsWith('.ts')) {
 				const transformed = transform(file.contents, {
@@ -65,7 +74,7 @@ async function generate_templates() {
 					trailingComma: 'none'
 				});
 
-				js.files.push({
+				js.push({
 					name: file.name.replace(/\.ts$/, '.js'),
 					contents
 				});
@@ -113,27 +122,35 @@ async function generate_templates() {
 					}
 				);
 
-				js.files.push({
+				js.push({
 					name: file.name,
 					contents
 				});
 			} else {
-				js.files.push(file);
+				js.push(file);
 			}
 		}
 
-		fs.writeFileSync(`dist/templates/${name}-ts.json`, JSON.stringify(ts, null, '\t'));
-		fs.writeFileSync(`dist/templates/${name}-js.json`, JSON.stringify(js, null, '\t'));
+		fs.copyFileSync(meta_file, `${dir}/meta.json`);
+		fs.writeFileSync(`${dir}/files.ts.json`, JSON.stringify(ts, null, '\t'));
+		fs.writeFileSync(`${dir}/files.js.json`, JSON.stringify(js, null, '\t'));
 	}
 }
 
 async function generate_shared() {
 	const cwd = path.resolve('shared');
 
+	/** @type {Set<string>} */
+	const shared = new Set();
+
 	const files = glob('**/*', { cwd, filesOnly: true, dot: true })
 		.map((file) => {
 			const contents = fs.readFileSync(path.join(cwd, file), 'utf8');
+
+			/** @type {string[]} */
 			const include = [];
+
+			/** @type {string[]} */
 			const exclude = [];
 
 			let name = file;
@@ -151,16 +168,24 @@ async function generate_shared() {
 				name = rest.join('/');
 			}
 
+			shared.add(name);
+
 			return { name, include, exclude, contents };
 		})
 		.sort((a, b) => a.include.length + a.exclude.length - (b.include.length + b.exclude.length));
 
 	fs.writeFileSync('dist/shared.json', JSON.stringify({ files }, null, '\t'));
+
+	shared.delete('package.json');
+	return shared;
 }
 
 async function main() {
-	await generate_templates();
-	await generate_shared();
+	rimraf('dist');
+	mkdirp('dist');
+
+	const shared = await generate_shared();
+	await generate_templates(shared);
 }
 
 main();

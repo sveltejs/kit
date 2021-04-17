@@ -166,6 +166,8 @@ importers:
     specifiers:
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/kit': workspace:*
+      '@types/gitignore-parser': ^0.0.0
+      '@types/prettier': ^2.2.3
       gitignore-parser: ^0.0.2
       kleur: ^4.1.4
       prettier: ^2.2.1
@@ -178,6 +180,8 @@ importers:
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.45.2
       '@sveltejs/kit': link:../kit
+      '@types/gitignore-parser': 0.0.0
+      '@types/prettier': 2.2.3
       gitignore-parser: 0.0.2
       kleur: 4.1.4
       prettier: 2.2.1
@@ -670,6 +674,10 @@ packages:
     resolution: {integrity: sha512-c5ciR06jK8u9BstrmJyO97m+klJrrhCf9u3rLu3DEAJBirxRqSCvDQoYKmxuYwQI5SZChAWu+tq9oVlGRuzPAg==}
     dev: true
 
+  /@types/gitignore-parser/0.0.0:
+    resolution: {integrity: sha512-qxOKILdhl4e639fWdkMySS4tBkRYHkrU2ZNScsMu84EPicliFRr+gAXCLPrs7kTFWdDpgAIlxtUr+YCRtVjsKw==}
+    dev: true
+
   /@types/glob/7.1.3:
     resolution: {integrity: sha512-SEYeGAIQIQX8NN6LDKprLjbrd5dARM5EXsd8GI/A5l0apYI1fGMWgPHSe4ZKL4eozlAyI+doUE9XbYS4xCkQ1w==}
     dependencies:
@@ -719,6 +727,10 @@ packages:
 
   /@types/normalize-package-data/2.4.0:
     resolution: {integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==}
+    dev: true
+
+  /@types/prettier/2.2.3:
+    resolution: {integrity: sha512-PijRCG/K3s3w1We6ynUKdxEc5AcuuH3NBmMDP8uvKVp6X43UY7NQlTzczakXP3DJR0F4dfNQIGjU2cUeRYs2AA==}
     dev: true
 
   /@types/pug/2.0.4:

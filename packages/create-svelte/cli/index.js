@@ -4,6 +4,7 @@ import path from 'path';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts/lib/index';
 import { fileURLToPath } from 'url';
+import { mkdirp, copy } from '../utils.js';
 import { version } from '../package.json';
 
 const disclaimer = `
@@ -36,15 +37,20 @@ async function main() {
 		mkdirp(cwd);
 	}
 
-	const options = /** @type {import('./types').Options} */ (await prompts([
+	const options = /** @type {import('../types/internal').Options} */ (await prompts([
 		{
 			type: 'select',
 			name: 'template',
 			message: 'Which Svelte app template?',
-			choices: [
-				{ title: 'Default App (Counter + Route)', value: 'default' },
-				{ title: 'Skeleton App', value: 'skeleton' }
-			]
+			choices: fs.readdirSync(dist('templates')).map((dir) => {
+				const meta_file = dist(`templates/${dir}/meta.json`);
+				const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+
+				return {
+					title: meta.description,
+					value: dir
+				};
+			})
 		},
 		{
 			type: 'confirm',
@@ -68,7 +74,7 @@ async function main() {
 
 	const name = path.basename(path.resolve(cwd));
 
-	write_template_files(`${options.template}-${options.typescript ? 'ts' : 'js'}`, name, cwd);
+	write_template_files(options.template, options.typescript, name, cwd);
 	write_common_files(cwd, options);
 
 	console.log(bold(green('✔ Copied project files')));
@@ -129,37 +135,37 @@ async function main() {
 }
 
 /**
- * @param {string} id
+ * @param {string} template
+ * @param {string} typescript
  * @param {string} name
  * @param {string} cwd
  */
-function write_template_files(id, name, cwd) {
-	const template = fileURLToPath(new URL(`./dist/templates/${id}.json`, import.meta.url).href);
-	const { files } = /** @type {import('./types').Template} */ (JSON.parse(
-		fs.readFileSync(template, 'utf-8')
+function write_template_files(template, typescript, name, cwd) {
+	const dir = dist(`templates/${template}`);
+	copy(`${dir}/assets`, cwd);
+	copy(`${dir}/package.json`, `${cwd}/package.json`);
+
+	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;
+	const files = /** @type {import('../types/internal').File[]} */ (JSON.parse(
+		fs.readFileSync(manifest, 'utf-8')
 	));
 
 	files.forEach((file) => {
 		const dest = path.join(cwd, file.name);
 		mkdirp(path.dirname(dest));
 
-		fs.writeFileSync(
-			dest,
-			file.encoding === 'base64'
-				? Buffer.from(file.contents, 'base64')
-				: file.contents.replace(/~TODO~/g, name)
-		);
+		fs.writeFileSync(dest, file.contents.replace(/~TODO~/g, name));
 	});
 }
 
 /**
  *
  * @param {string} cwd
- * @param {import('./types').Options} options
+ * @param {import('../types/internal').Options} options
  */
 function write_common_files(cwd, options) {
-	const shared = fileURLToPath(new URL('./dist/shared.json', import.meta.url).href);
-	const { files } = /** @type {import('./types').Common} */ (JSON.parse(
+	const shared = dist('shared.json');
+	const { files } = /** @type {import('../types/internal').Common} */ (JSON.parse(
 		fs.readFileSync(shared, 'utf-8')
 	));
 
@@ -227,14 +233,9 @@ function sort_keys(obj) {
 	return sorted;
 }
 
-/** @param {string} dir */
-function mkdirp(dir) {
-	try {
-		fs.mkdirSync(dir, { recursive: true });
-	} catch (e) {
-		if (e.code === 'EEXIST') return;
-		throw e;
-	}
+/** @param {string} path */
+function dist(path) {
+	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
 }
 
 main();

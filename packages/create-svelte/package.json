@@ -5,6 +5,8 @@
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
+		"@types/gitignore-parser": "^0.0.0",
+		"@types/prettier": "^2.2.3",
 		"gitignore-parser": "^0.0.2",
 		"kleur": "^4.1.4",
 		"prettier": "^2.2.1",
