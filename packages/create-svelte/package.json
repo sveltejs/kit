@@ -26,7 +26,8 @@
 	},
 	"files": [
 		"dist",
-		"bin.js"
+		"bin.js",
+		"utils.js"
 	],
 	"type": "module"
 }
