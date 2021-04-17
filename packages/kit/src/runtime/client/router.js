@@ -72,7 +72,7 @@ export class Router {
 		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(/** @type {Node} */ (event.target));
-			if (a && a.hasAttribute('sveltekit:prefetch')) {
+			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
 				this.prefetch(new URL(/** @type {string} */ (a.href)));
 			}
 		};
