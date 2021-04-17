@@ -22,15 +22,26 @@ export type Logger = {
 export type App = {
 	init: ({
 		paths,
-		prerendering
+		prerendering,
+		read
 	}: {
 		paths: {
 			base: string;
 			assets: string;
 		};
 		prerendering: boolean;
+		read: (file: string) => Buffer;
 	}) => void;
-	render: (incoming: Incoming, options: SSRRenderOptions) => ServerResponse;
+	render: (
+		incoming: Incoming,
+		options?: {
+			prerender: {
+				force: boolean;
+				dependencies: Map<string, ServerResponse>;
+				error: Error;
+			};
+		}
+	) => ServerResponse;
 };
 
 export type SSRComponent = {
@@ -114,33 +125,40 @@ export type SSRNode = {
 	styles: string[];
 };
 
-// TODO separate out runtime options from the ones fixed in dev/build
 export type SSRRenderOptions = {
-	paths?: {
+	amp: boolean;
+	dev: boolean;
+	entry: {
+		file: string;
+		css: string[];
+		js: string[];
+	};
+	get_stack: (error: Error) => string;
+	handle_error: (error: Error) => void;
+	hooks: Hooks;
+	hydrate: boolean;
+	load_component: (id: PageId) => Promise<SSRNode>;
+	manifest: SSRManifest;
+	paths: {
 		base: string;
 		assets: string;
 	};
-	local?: boolean;
-	template?: ({ head, body }: { head: string; body: string }) => string;
-	manifest?: SSRManifest;
-	load_component?: (id: PageId) => Promise<SSRNode>;
-	target?: string;
-	entry?: string;
-	css?: string[];
-	js?: string[];
-	root?: SSRComponent['default'];
-	hooks?: Hooks;
-	dev?: boolean;
-	amp?: boolean;
-	dependencies?: Map<string, ServerResponse>;
-	only_render_prerenderable_pages?: boolean;
-	get_stack?: (error: Error) => string;
-	get_static_file?: (file: string) => Buffer;
+	read: (file: string) => Buffer;
+	root: SSRComponent['default'];
+	router: boolean;
+	ssr: boolean;
+	target: string;
+	template: ({ head, body }: { head: string; body: string }) => string;
+};
+
+export type SSRRenderState = {
 	fetched?: string;
 	initiator?: SSRPage;
-	ssr?: boolean;
-	router?: boolean;
-	hydrate?: boolean;
+	prerender?: {
+		force: boolean;
+		dependencies: Map<string, ServerResponse>;
+		error: Error;
+	};
 };
 
 export type Asset = {

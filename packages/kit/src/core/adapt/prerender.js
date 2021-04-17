@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
+import '../node-fetch-global.js';
 
 /** @param {string} html */
 function clean_html(html) {
@@ -66,16 +67,17 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 
 	app.init({
 		paths: config.kit.paths,
-		prerendering: true
+		prerendering: true,
+		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	/** @type {(status: number, path: string) => void} */
+	/** @type {(status: number, path: string, parent: string, verb: string) => void} */
 	const error = config.kit.prerender.force
-		? (status, path) => {
-				log.error(`${status} ${path}`);
+		? (status, path, parent, verb) => {
+				log.error(`${status} ${path} (${verb} from ${parent})`);
 		  }
-		: (status, path) => {
-				throw new Error(`${status} ${path}`);
+		: (status, path, parent, verb) => {
+				throw new Error(`${status} ${path} (${verb} from ${parent})`);
 		  };
 
 	const files = new Set([...build_data.static, ...build_data.client]);
@@ -86,8 +88,11 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		}
 	});
 
-	/** @param {string} path */
-	async function visit(path) {
+	/**
+	 * @param {string} path
+	 * @param {string} parent
+	 */
+	async function visit(path, parent) {
 		if (seen.has(path)) return;
 		seen.add(path);
 
@@ -104,10 +109,11 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				query: new URLSearchParams()
 			},
 			{
-				local: true,
-				dependencies,
-				only_render_prerenderable_pages: !force,
-				get_static_file: (file) => readFileSync(join(config.kit.files.assets, file))
+				prerender: {
+					force,
+					dependencies,
+					error: null
+				}
 			}
 		);
 
@@ -138,15 +144,15 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body); // TODO minify where possible?
 			} else if (response_type !== OK) {
-				error(rendered.status, path);
+				error(rendered.status, path, parent, 'linked');
 			}
 
-			dependencies.forEach((result, path) => {
+			dependencies.forEach((result, dependency_path) => {
 				const response_type = Math.floor(result.status / 100);
 
 				const is_html = result.headers['content-type'] === 'text/html';
 
-				const parts = path.split('/');
+				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
 					parts.push('index.html');
 				}
@@ -157,9 +163,9 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				writeFileSync(file, result.body);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${path}`);
+					log.info(`${result.status} ${dependency_path}`);
 				} else {
-					error(result.status, path);
+					error(result.status, dependency_path, path, 'fetched');
 				}
 			});
 
@@ -200,7 +206,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(parsed.pathname.replace(config.kit.paths.base, ''));
+					await visit(parsed.pathname.replace(config.kit.paths.base, ''), path);
 				}
 			}
 		}
@@ -209,10 +215,10 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 	for (const entry of config.kit.prerender.pages) {
 		if (entry === '*') {
 			for (const entry of build_data.entries) {
-				await visit(entry);
+				await visit(entry, null);
 			}
 		} else {
-			await visit(entry);
+			await visit(entry, null);
 		}
 	}
 }

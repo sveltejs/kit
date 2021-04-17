@@ -5,10 +5,11 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types/endpoint').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/internal').SSRRenderOptions} options
+ * @param {import('types/internal').SSRRenderState} state
  * @returns {Promise<import('types/endpoint').ServerResponse>}
  */
-export default async function render_page(request, route, options) {
-	if (options.initiator === route) {
+export default async function render_page(request, route, options, state) {
+	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
 			status: 404,
@@ -23,6 +24,7 @@ export default async function render_page(request, route, options) {
 		const response = await respond({
 			request,
 			options,
+			state,
 			$session,
 			route
 		});
@@ -31,7 +33,7 @@ export default async function render_page(request, route, options) {
 			return response;
 		}
 
-		if (options.fetched) {
+		if (state.fetched) {
 			// we came here because of a bad request in a `load` function.
 			// rather than render the error page — which could lead to an
 			// infinite loop, if the `load` belonged to the root layout,
@@ -39,13 +41,14 @@ export default async function render_page(request, route, options) {
 			return {
 				status: 500,
 				headers: {},
-				body: `Bad request in load function: failed to fetch ${options.fetched}`
+				body: `Bad request in load function: failed to fetch ${state.fetched}`
 			};
 		}
 	} else {
 		return await respond_with_error({
 			request,
 			options,
+			state,
 			$session,
 			status: 404,
 			error: new Error(`Not found: ${request.path}`)

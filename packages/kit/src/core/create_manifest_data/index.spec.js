@@ -357,4 +357,42 @@ test('includes nested error components', () => {
 	]);
 });
 
+test('resets layout', () => {
+	const { routes } = create('samples/layout-reset');
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			pattern: /^\/$/,
+			params: [],
+			path: '/',
+			a: [layout, 'samples/layout-reset/index.svelte'],
+			b: [error]
+		},
+		{
+			type: 'page',
+			pattern: /^\/foo\/?$/,
+			params: [],
+			path: '/foo',
+			a: [
+				layout,
+				'samples/layout-reset/foo/$layout.svelte',
+				'samples/layout-reset/foo/index.svelte'
+			],
+			b: [error]
+		},
+		{
+			type: 'page',
+			pattern: /^\/foo\/bar\/?$/,
+			params: [],
+			path: '/foo/bar',
+			a: [
+				'samples/layout-reset/foo/bar/$layout.reset.svelte',
+				'samples/layout-reset/foo/bar/index.svelte'
+			],
+			b: ['samples/layout-reset/foo/bar/$error.svelte']
+		}
+	]);
+});
+
 test.run();

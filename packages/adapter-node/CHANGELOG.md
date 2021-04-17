@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- 8e61e84: Include missing entrypoint
+
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+
 ## 1.0.0-next.12
 
 ### Patch Changes

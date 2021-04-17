@@ -56,11 +56,9 @@ importers:
       '@sveltejs/kit': workspace:*
       cookie: ^0.4.1
       marked: ^2.0.1
-      node-fetch: ^2.6.1
       svelte: ^3.35.0
     dependencies:
       cookie: 0.4.1
-      node-fetch: 2.6.1
     devDependencies:
       '@sveltejs/adapter-node': link:../../packages/adapter-node
       '@sveltejs/kit': link:../../packages/kit
@@ -2502,6 +2500,7 @@ packages:
   /node-fetch/2.6.1:
     resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
     engines: {node: 4.x || >=6.0.0}
+    dev: true
 
   /node-fetch/3.0.0-beta.9:
     resolution: {integrity: sha512-RdbZCEynH2tH46+tj0ua9caUHVWrd/RHnRfvly2EVdqGmI3ndS1Vn/xjm5KuGejDt2RNDQsVRLPNd2QPwcewVg==}

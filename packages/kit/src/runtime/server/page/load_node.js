@@ -1,4 +1,3 @@
-import fetch, { Response } from 'node-fetch';
 import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
@@ -10,6 +9,7 @@ const s = JSON.stringify;
  * @param {{
  *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
+ *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage;
  *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
@@ -25,6 +25,7 @@ const s = JSON.stringify;
 export async function load_node({
 	request,
 	options,
+	state,
 	route,
 	page,
 	node,
@@ -59,7 +60,6 @@ export async function load_node({
 			 * @param {RequestInfo} resource
 			 * @param {RequestInit} opts
 			 */
-			// @ts-ignore mismatch between client fetch and node-fetch
 			fetch: async (resource, opts = {}) => {
 				/** @type {string} */
 				let url;
@@ -83,7 +83,7 @@ export async function load_node({
 					};
 				}
 
-				if (options.local && url.startsWith(options.paths.assets)) {
+				if (options.read && url.startsWith(options.paths.assets)) {
 					// when running `start`, or prerendering, `assets` should be
 					// config.kit.paths.assets, but we should still be able to fetch
 					// assets directly from `static`
@@ -96,10 +96,7 @@ export async function load_node({
 
 				if (parsed.protocol) {
 					// external fetch
-					response = await fetch(
-						parsed.href,
-						/** @type {import('node-fetch').RequestInit} */ (opts)
-					);
+					response = await fetch(parsed.href, /** @type {RequestInit} */ (opts));
 				} else {
 					// otherwise we're dealing with an internal fetch
 					const resolved = resolve(request.path, parsed.pathname);
@@ -114,9 +111,9 @@ export async function load_node({
 
 					if (asset) {
 						// we don't have a running server while prerendering because jumping between
-						// processes would be inefficient so we have get_static_file instead
-						if (options.get_static_file) {
-							response = new Response(options.get_static_file(asset.file), {
+						// processes would be inefficient so we have options.read instead
+						if (options.read) {
+							response = new Response(options.read(asset.file), {
 								headers: {
 									'content-type': asset.type
 								}
@@ -125,7 +122,7 @@ export async function load_node({
 							// TODO we need to know what protocol to use
 							response = await fetch(
 								`http://${page.host}/${asset.file}`,
-								/** @type {import('node-fetch').RequestInit} */ (opts)
+								/** @type {RequestInit} */ (opts)
 							);
 						}
 					}
@@ -153,16 +150,16 @@ export async function load_node({
 								body: /** @type {any} */ (opts.body),
 								query: new URLSearchParams(parsed.query || '')
 							},
+							options,
 							{
-								...options,
 								fetched: url,
 								initiator: route
 							}
 						);
 
 						if (rendered) {
-							if (options.dependencies) {
-								options.dependencies.set(resolved, rendered);
+							if (state.prerender) {
+								state.prerender.dependencies.set(resolved, rendered);
 							}
 
 							response = new Response(rendered.body, {

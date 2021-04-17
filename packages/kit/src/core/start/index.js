@@ -4,6 +4,7 @@ import sirv from 'sirv';
 import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
+import '../node-fetch-global.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -37,30 +38,29 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		immutable: true
 	});
 
+	app.init({
+		paths: {
+			base: '',
+			assets: '/.'
+		},
+		prerendering: false,
+		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
+	});
+
 	return get_server(port, host, use_https, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {
 			static_handler(req, res, async () => {
-				const rendered = await app.render(
-					{
-						host: /** @type {string} */ (config.kit.host ||
-							req.headers[config.kit.hostHeader || 'host']),
-						method: req.method,
-						headers: /** @type {import('types/helper').Headers} */ (req.headers),
-						path: parsed.pathname,
-						body: await get_body(req),
-						query: new URLSearchParams(parsed.query || '')
-					},
-					{
-						paths: {
-							base: '',
-							assets: '/.'
-						},
-						get_stack: (error) => error.stack, // TODO should this return a sourcemapped stacktrace?
-						get_static_file: (file) => fs.readFileSync(join(config.kit.files.assets, file))
-					}
-				);
+				const rendered = await app.render({
+					host: /** @type {string} */ (config.kit.host ||
+						req.headers[config.kit.hostHeader || 'host']),
+					method: req.method,
+					headers: /** @type {import('types/helper').Headers} */ (req.headers),
+					path: parsed.pathname,
+					body: await get_body(req),
+					query: new URLSearchParams(parsed.query || '')
+				});
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);

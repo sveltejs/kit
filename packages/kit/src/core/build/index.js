@@ -279,12 +279,42 @@ async function build_server(
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			set_paths(${s(config.kit.paths)});
+			let options = null;
 
 			// allow paths to be overridden in svelte-kit start
-			export function init({ paths, prerendering }) {
-				set_paths(paths);
-				set_prerendering(prerendering);
+			// and in prerendering
+			export function init(settings) {
+				set_paths(settings.paths);
+				set_prerendering(settings.prerendering || false);
+
+				options = {
+					amp: ${config.kit.amp},
+					dev: false,
+					entry: {
+						file: ${s(prefix + client_manifest[client_entry_file].file)},
+						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
+						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+					},
+					fetched: undefined,
+					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
+					get_stack: error => String(error), // for security
+					handle_error: error => {
+						console.error(error.stack);
+						error.stack = options.get_stack(error);
+					},
+					hooks: get_hooks(user_hooks),
+					hydrate: ${s(config.kit.hydrate)},
+					initiator: undefined,
+					load_component,
+					manifest,
+					paths: settings.paths,
+					read: settings.read,
+					root,
+					router: ${s(config.kit.router)},
+					ssr: ${s(config.kit.ssr)},
+					target: ${s(config.kit.target)},
+					template
+				};
 			}
 
 			const d = decodeURIComponent;
@@ -331,8 +361,6 @@ async function build_server(
 				handle: hooks.handle || (({ request, render }) => render(request))
 			});
 
-			const hooks = get_hooks(user_hooks);
-
 			const module_lookup = {
 				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
 			};
@@ -340,48 +368,19 @@ async function build_server(
 			const metadata_lookup = ${s(metadata_lookup)};
 
 			async function load_component(file) {
-				if (!module_lookup[file]) {
-					console.log({ file });
-				}
 				return {
 					module: await module_lookup[file](),
 					...metadata_lookup[file]
 				};
 			}
 
+			init({ paths: ${s(config.kit.paths)} });
+
 			export function render(request, {
-				paths = ${s(config.kit.paths)},
-				local = false,
-				dependencies,
-				only_render_prerenderable_pages = false,
-				get_static_file
+				prerender
 			} = {}) {
-				return ssr({
-					...request,
-					host: ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`}
-				}, {
-					paths,
-					local,
-					template,
-					manifest,
-					load_component,
-					target: ${s(config.kit.target)},
-					entry: ${s(prefix + client_manifest[client_entry_file].file)},
-					css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-					js: ${s(Array.from(entry_js).map(dep => prefix + dep))},
-					root,
-					hooks,
-					dev: false,
-					amp: ${config.kit.amp},
-					dependencies,
-					only_render_prerenderable_pages,
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
-					get_stack: error => error.stack,
-					get_static_file,
-					ssr: ${s(config.kit.ssr)},
-					router: ${s(config.kit.router)},
-					hydrate: ${s(config.kit.hydrate)}
-				});
+				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
+				return ssr({ ...request, host }, options, { prerender });
 			}
 		`
 			.replace(/^\t{3}/gm, '')
