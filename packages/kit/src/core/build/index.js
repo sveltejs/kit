@@ -298,7 +298,7 @@ async function build_server(
 					fetched: undefined,
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => error.stack,
-					hooks,
+					hooks: get_hooks(user_hooks),
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
 					load_component,
@@ -312,8 +312,6 @@ async function build_server(
 					template
 				};
 			}
-
-			init({ paths: ${s(config.kit.paths)} });
 
 			const d = decodeURIComponent;
 			const empty = () => ({});
@@ -359,8 +357,6 @@ async function build_server(
 				handle: hooks.handle || (({ request, render }) => render(request))
 			});
 
-			const hooks = get_hooks(user_hooks);
-
 			const module_lookup = {
 				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
 			};
@@ -376,6 +372,8 @@ async function build_server(
 					...metadata_lookup[file]
 				};
 			}
+
+			init({ paths: ${s(config.kit.paths)} });
 
 			export function render(request, {
 				prerender
