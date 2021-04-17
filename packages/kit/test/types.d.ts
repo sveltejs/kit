@@ -11,6 +11,7 @@ export type TestContext = {
 	back: () => Promise<void>;
 	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
 	capture_requests: (fn: () => void) => Promise<string[]>;
+	errors: () => string;
 	js: boolean;
 
 	// these are assumed to have been put in the global scope by the layout

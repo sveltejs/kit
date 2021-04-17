@@ -188,21 +188,11 @@ export default function (test, is_dev) {
 		assert.match(await res.text(), /PUT is not implemented/);
 	});
 
-	test('error in endpoint', null, async ({ base, page }) => {
-		let console_error = '';
-		const { error: original_error } = console;
-
-		/** @param {string} text */
-		console.error = (text) => {
-			console_error += `${text}\n`;
-		};
-
+	test('error in endpoint', null, async ({ base, page, errors }) => {
 		const res = await page.goto(`${base}/errors/endpoint`);
 
-		console.error = original_error;
-
 		// should include stack trace
-		const lines = console_error.split('\n');
+		const lines = errors().split('\n');
 		assert.ok(lines[0].includes('nope'), 'Logs error message');
 		if (is_dev) {
 			assert.ok(lines[2].includes('endpoint.json'), 'Logs error stack in dev');
