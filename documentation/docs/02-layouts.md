@@ -62,6 +62,10 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+### Resets
+
+To reset the layout stack, create a `$layout.reset.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/$layout.reset.svelte`.
+
 ### Error pages
 
 If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `$error.svelte` components alongside your layout and page components.
