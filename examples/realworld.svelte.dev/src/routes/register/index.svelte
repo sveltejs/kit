@@ -3,6 +3,7 @@
 		if (session.user) {
 			return { redirect: '/', status: 302 };
 		}
+		return {};
 	}
 </script>
 
