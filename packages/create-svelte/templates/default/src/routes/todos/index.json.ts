@@ -1,6 +1,10 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const get: RequestHandler = async (request) => {
+	if (!request.context.userid) {
+		return { body: [] };
+	}
+
 	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`);
 
 	if (res.ok) {
@@ -17,7 +21,19 @@ export const get: RequestHandler = async (request) => {
 };
 
 export const post: RequestHandler = async (request) => {
-	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`);
+	if (!request.context.userid) {
+		return { status: 401 };
+	}
+
+	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json'
+		},
+		body: JSON.stringify({
+			text: request.body.get('text')
+		})
+	});
 
 	// redirect successful <form> submissions back to /todos
 	if (res.ok && request.headers.accept !== 'application/json') {

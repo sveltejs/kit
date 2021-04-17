@@ -1,4 +1,8 @@
 export const patch = async (request) => {
+	if (!request.context.userid) {
+		return { status: 401 };
+	}
+
 	const res = await fetch(
 		`http://localhost:8787/todos/${request.context.userid}/${request.params.uid}`,
 		{
@@ -28,6 +32,10 @@ export const patch = async (request) => {
 };
 
 export const del = async (request) => {
+	if (!request.context.userid) {
+		return { status: 401 };
+	}
+
 	const res = await fetch(
 		`http://localhost:8787/todos/${request.context.userid}/${request.params.uid}`,
 		{
