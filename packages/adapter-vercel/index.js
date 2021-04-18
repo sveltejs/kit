@@ -8,20 +8,28 @@ module.exports = function () {
 
 		async adapt(utils) {
 			const vercel_output_directory = resolve('.vercel_build_output');
+			utils.rimraf(vercel_output_directory);
+
 			const config_directory = join(vercel_output_directory, 'config');
 			const static_directory = join(vercel_output_directory, 'static');
 			const lambda_directory = join(vercel_output_directory, 'functions', 'node', 'render');
-			const server_directory = join(lambda_directory, 'server');
+
+			utils.copy(join(__dirname, 'src/entry.js'), '.svelte/vercel/entry.js');
+
+			const esbuild = (await import('esbuild')).default;
+
+			await esbuild.build({
+				entryPoints: ['.svelte/vercel/entry.js'],
+				outfile: join(lambda_directory, 'index.js'),
+				bundle: true,
+				platform: 'node'
+			});
+
+			writeFileSync(join(lambda_directory, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
 			utils.log.minor('Writing client application...');
 			utils.copy_static_files(static_directory);
 			utils.copy_client_files(static_directory);
-
-			utils.log.minor('Building lambda...');
-			utils.copy_server_files(server_directory);
-			renameSync(join(server_directory, 'app.js'), join(server_directory, 'app.mjs'));
-
-			utils.copy(join(__dirname, 'files'), lambda_directory);
 
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
@@ -29,11 +37,7 @@ module.exports = function () {
 			});
 
 			utils.log.minor('Writing routes...');
-			try {
-				mkdirSync(config_directory);
-			} catch {
-				// directory already exists
-			}
+			utils.mkdirp(config_directory);
 			writeFileSync(
 				join(config_directory, 'routes.json'),
 				JSON.stringify([

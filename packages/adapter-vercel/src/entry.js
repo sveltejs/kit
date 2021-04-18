@@ -12,7 +12,7 @@ globalThis.Headers = Headers;
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
 
-	const { render } = await import('./server/app.mjs');
+	const { render } = await import('../output/server/app.js');
 
 	const rendered = await render({
 		method: req.method,
