@@ -1,5 +1,15 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 1237eb3: Fix dependencies
+- 1237eb3: Pass rawBody from netlify adapter
+- Updated dependencies [1237eb3]
+- Updated dependencies [1237eb3]
+  - @sveltejs/kit@1.0.0-next.81
+
 ## 1.0.0-next.7
 
 ### Patch Changes

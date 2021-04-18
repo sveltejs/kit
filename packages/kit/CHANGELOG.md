@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.81
+
+### Patch Changes
+
+- 1237eb3: Expose rawBody on request, and expect rawBody from adapters
+- 1237eb3: Expose getRawBody from kit/http
+
 ## 1.0.0-next.80
 
 ### Patch Changes
