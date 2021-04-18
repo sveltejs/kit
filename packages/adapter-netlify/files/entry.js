@@ -4,14 +4,7 @@ import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolve
 import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 export async function handler(event) {
-	const {
-		path,
-		httpMethod,
-		headers,
-		queryStringParameters
-		// body, // TODO pass this to renderer
-		// isBase64Encoded // TODO is this useful?
-	} = event;
+	const { path, httpMethod, headers, queryStringParameters, body, isBase64Encoded } = event;
 
 	const query = new URLSearchParams();
 	for (const k in queryStringParameters) {
@@ -25,7 +18,8 @@ export async function handler(event) {
 		method: httpMethod,
 		headers,
 		path,
-		query
+		query,
+		rawBody: isBase64Encoded ? new TextEncoder('base64').encode(body).buffer : body
 	});
 
 	if (rendered) {
