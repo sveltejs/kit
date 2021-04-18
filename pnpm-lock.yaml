@@ -176,19 +176,25 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.2.2
       '@lukeed/uuid': ^2.0.0
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-vercel': next
+      '@sveltejs/kit': next
       cookie: ^0.4.1
       dotenv: ^8.2.0
       svelte: ^3.29.0
+      svelte-preprocess: ^4.7.0
+      typescript: ^4.2.4
       vite: ^2.1.0
     dependencies:
       '@fontsource/fira-mono': 4.2.2
     devDependencies:
       '@lukeed/uuid': 2.0.0
+      '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': link:../../../kit
       cookie: 0.4.1
       dotenv: 8.2.0
       svelte: 3.35.0
+      svelte-preprocess: 4.7.0_svelte@3.35.0+typescript@4.2.4
+      typescript: 4.2.4
       vite: 2.1.0
 
   packages/create-svelte/templates/skeleton:
@@ -751,6 +757,11 @@ packages:
   /@types/node/14.14.37:
     resolution: {integrity: sha512-XYmBiy+ohOR4Lh5jE379fV2IU+6Jn4g5qASinhitfyO71b/sCo6MKsMLF5tc7Zf2CE8hViVQyYSobJNke8OvUw==}
     dev: true
+    optional: true
+
+  /@types/node/14.14.41:
+    resolution: {integrity: sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==}
+    dev: true
 
   /@types/normalize-package-data/2.4.0:
     resolution: {integrity: sha512-f5j5b/Gf71L+dbqxIpQ4Z2WlmI/mPJ0fOkGGmFgtb6sAu97EPczzbS3/tJKxmcYDj55OX6ssqwDAWOHIYDRDGA==}
@@ -786,7 +797,7 @@ packages:
   /@types/sass/1.16.0:
     resolution: {integrity: sha512-2XZovu4NwcqmtZtsBR5XYLw18T8cBCnU2USFHTnYLLHz9fkhnoEMoDsqShJIOFsFhn5aJHjweiUUdTrDGujegA==}
     dependencies:
-      '@types/node': 14.14.37
+      '@types/node': 14.14.41
     dev: true
 
   /@types/semver/6.2.2:
@@ -3459,6 +3470,55 @@ packages:
       strip-indent: 3.0.0
     dev: true
 
+  /svelte-preprocess/4.7.0_svelte@3.35.0+typescript@4.2.4:
+    resolution: {integrity: sha512-iNrY4YGqi0LD2e6oT9YbdSzOKntxk8gmzfqso1z/lUJOZh4o6fyIqkirmiZ8/dDJFqtIE1spVgDFWgkfhLEYlw==}
+    engines: {node: '>= 9.11.2'}
+    requiresBuild: true
+    peerDependencies:
+      '@babel/core': ^7.10.2
+      coffeescript: ^2.5.1
+      less: ^3.11.3
+      node-sass: '*'
+      postcss: ^7 || ^8
+      postcss-load-config: ^2.1.0 || ^3.0.0
+      pug: ^3.0.0
+      sass: ^1.26.8
+      stylus: ^0.54.7
+      sugarss: ^2.0.0
+      svelte: ^3.23.0
+      typescript: ^3.9.5 || ^4.0.0
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      coffeescript:
+        optional: true
+      less:
+        optional: true
+      node-sass:
+        optional: true
+      postcss:
+        optional: true
+      postcss-load-config:
+        optional: true
+      pug:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
+      '@types/pug': 2.0.4
+      '@types/sass': 1.16.0
+      detect-indent: 6.0.0
+      strip-indent: 3.0.0
+      svelte: 3.35.0
+      typescript: 4.2.4
+    dev: true
+
   /svelte/3.35.0:
     resolution: {integrity: sha512-gknlZkR2sXheu/X+B7dDImwANVvK1R0QGQLd8CNIfxxGPeXBmePnxfzb6fWwTQRsYQG7lYkZXvpXJvxvpsoB7g==}
     engines: {node: '>= 8'}
@@ -3628,6 +3688,12 @@ packages:
 
   /typescript/4.2.3:
     resolution: {integrity: sha512-qOcYwxaByStAWrBf4x0fibwZvMRG+r4cQoTjbPtUlrWjBHbmCAww1i448U0GJ+3cNNEtebDteo/cHOR3xJ4wEw==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.2.4:
+    resolution: {integrity: sha512-V+evlYHZnQkaz8TRBuxTA92yZBPotr5H+WhQ7bD3hZUndx5tGOa1fuCgeSjxAzM1RiN5IzvadIXTVefuuwZCRg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
