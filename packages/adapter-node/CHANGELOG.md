@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 7a4b351: Use install-fetch helper
+
 ## 1.0.0-next.14
 
 ### Patch Changes

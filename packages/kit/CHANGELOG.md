@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.80
+
+### Patch Changes
+
+- 7a4b351: Expose install-fetch subpackage for adapters to use
+
 ## 1.0.0-next.79
 
 ### Patch Changes
