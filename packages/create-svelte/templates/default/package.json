@@ -8,7 +8,6 @@
 	},
 	"devDependencies": {
 		"@lukeed/uuid": "^2.0.0",
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"cookie": "^0.4.1",
 		"dotenv": "^8.2.0",
