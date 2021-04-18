@@ -8,12 +8,10 @@
 	},
 	"devDependencies": {
 		"@lukeed/uuid": "^2.0.0",
-		"@sveltejs/adapter-vercel": "next",
-		"@sveltejs/kit": "next",
+		"@sveltejs/kit": "workspace:*",
 		"cookie": "^0.4.1",
 		"dotenv": "^8.2.0",
 		"svelte": "^3.29.0",
-		"svelte-preprocess": "^4.7.0",
 		"vite": "^2.1.0"
 	},
 	"type": "module",

@@ -6,7 +6,7 @@ import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp, rimraf } from '../utils.js';
 
-const ignored = new Set(['.meta.json', 'package.deploy.json']);
+const ignored = new Set(['.meta.json', 'package.json']);
 
 /** @param {Set<string>} shared */
 async function generate_templates(shared) {
@@ -33,10 +33,13 @@ async function generate_templates(shared) {
 			if (ignored.has(name) || shared.has(name)) return;
 			if (!gitignore.accepts(name)) return;
 
-			if (/\.(js|ts|svelte|svelte\.md)$/.test(name) || name === 'package.json') {
+			// the package.template.json thing is a bit annoying — basically we want
+			// to be able to develop and deploy the app from here, but have a different
+			// package.json in newly created projects (based on package.template.json)
+			if (/\.(js|ts|svelte|svelte\.md)$/.test(name) || name === 'package.template.json') {
 				let contents = fs.readFileSync(path.join(cwd, name), 'utf8');
 
-				if (name === 'package.json') {
+				if (name === 'package.template.json') {
 					// TODO package-specific versions
 					contents = contents.replace(/workspace:\*/g, 'next');
 					fs.writeFileSync(`${dir}/package.json`, contents);
