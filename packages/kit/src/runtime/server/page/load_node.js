@@ -149,6 +149,7 @@ export async function load_node({
 								path: resolved,
 								// TODO per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
 								// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object
+								// @ts-ignore
 								rawBody: opts.body,
 								query: new URLSearchParams(parsed.query || '')
 							},
