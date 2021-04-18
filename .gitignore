@@ -10,3 +10,4 @@ yarn.lock
 .vercel_build_output
 .netlify
 .svelte
+.cloudflare
