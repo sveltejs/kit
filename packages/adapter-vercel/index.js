@@ -1,5 +1,6 @@
 const { writeFileSync } = require('fs');
-const { resolve, join } = require('path');
+const { join } = require('path');
+const esbuild = require('esbuild');
 
 module.exports = function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -7,49 +8,39 @@ module.exports = function () {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(utils) {
-			const vercel_output_directory = resolve('.vercel_build_output');
-			utils.rimraf(vercel_output_directory);
+			const dir = '.vercel_build_output';
+			utils.rimraf(dir);
 
-			const config_directory = join(vercel_output_directory, 'config');
-			const static_directory = join(vercel_output_directory, 'static');
-			const lambda_directory = join(vercel_output_directory, 'functions', 'node', 'render');
+			const files = join(__dirname, 'files');
 
-			utils.copy(join(__dirname, 'src/entry.js'), '.svelte/vercel/entry.js');
+			const dirs = {
+				static: join(dir, 'static'),
+				lambda: join(dir, 'functions/node/render')
+			};
 
-			const esbuild = (await import('esbuild')).default;
+			utils.log.minor('Generating serverless function...');
+			utils.copy(join(files, 'entry.js'), '.svelte/vercel/entry.js');
 
 			await esbuild.build({
 				entryPoints: ['.svelte/vercel/entry.js'],
-				outfile: join(lambda_directory, 'index.js'),
+				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				platform: 'node'
 			});
 
-			writeFileSync(join(lambda_directory, 'package.json'), JSON.stringify({ type: 'commonjs' }));
-
-			utils.log.minor('Writing client application...');
-			utils.copy_static_files(static_directory);
-			utils.copy_client_files(static_directory);
+			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
-				dest: static_directory
+				dest: dirs.static
 			});
 
+			utils.log.minor('Copying assets...');
+			utils.copy_static_files(dirs.static);
+			utils.copy_client_files(dirs.static);
+
 			utils.log.minor('Writing routes...');
-			utils.mkdirp(config_directory);
-			writeFileSync(
-				join(config_directory, 'routes.json'),
-				JSON.stringify([
-					{
-						handle: 'filesystem'
-					},
-					{
-						src: '/.*',
-						dest: '.vercel/functions/render'
-					}
-				])
-			);
+			utils.copy(join(files, 'routes.json'), join(dir, 'config/routes.json'));
 		}
 	};
 
