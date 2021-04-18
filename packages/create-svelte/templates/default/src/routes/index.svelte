@@ -15,13 +15,7 @@
 		<div class="welcome">
 			<picture>
 				<source srcset="svelte-welcome.webp" type="image/webp">
-				<img
-					class="welcome"
-					width="2048"
-					height="495"
-					src="svelte-welcome.png"
-					alt="Welcome"
-				/>
+				<img src="svelte-welcome.png" alt="Welcome"/>
 			</picture>
 		</div>
 

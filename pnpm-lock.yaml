@@ -197,18 +197,6 @@ importers:
       typescript: 4.2.4
       vite: 2.1.0
 
-  packages/create-svelte/templates/skeleton:
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.29.0
-      vite: ^2.1.0
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../adapter-node
-      '@sveltejs/kit': link:../../../kit
-      svelte: 3.35.0
-      vite: 2.1.0
-
   packages/kit:
     specifiers:
       '@rollup/plugin-replace': ^2.4.1
