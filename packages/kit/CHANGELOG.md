@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.79
+
+### Patch Changes
+
+- d3abd97: Fix Windows build output containing backward slashes
+
 ## 1.0.0-next.78
 
 ### Patch Changes
