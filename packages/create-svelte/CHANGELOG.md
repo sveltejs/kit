@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.52
+
+### Patch Changes
+
+- f342372: Adding new Hello World templates (default with enhanced style and skeleton) to create-svelte
+
 ## 2.0.0-next.51
 
 ### Patch Changes
