@@ -10,7 +10,7 @@ import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { ssr } from '../../runtime/server/index.js';
-import { get_raw_body } from '../http/index.js';
+import { getRawBody } from '../http/index.js';
 import { copy_assets } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
@@ -146,7 +146,7 @@ class Watcher extends EventEmitter {
 						return;
 					}
 
-					const rawBody = await get_raw_body(req);
+					const rawBody = await getRawBody(req);
 
 					const host = /** @type {string} */ (this.config.kit.host ||
 						req.headers[this.config.kit.hostHeader || 'host']);

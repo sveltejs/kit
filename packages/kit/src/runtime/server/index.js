@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page/index.js';
 import render_endpoint from './endpoint.js';
-import { parse_body } from '../../core/http/index.js';
+import { parse_body } from './parse_body/index.js';
 
 /** @param {string} body */
 function md5(body) {
