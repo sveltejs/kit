@@ -1,5 +1,6 @@
 const { existsSync, readFileSync, copyFileSync, writeFileSync, renameSync } = require('fs');
-const { resolve } = require('path');
+const { join } = require('path');
+const esbuild = require('esbuild');
 const toml = require('toml');
 
 module.exports = function () {
@@ -8,58 +9,64 @@ module.exports = function () {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt(utils) {
-			let netlify_config;
+			const { publish, functions } = validate_config().build;
 
-			if (existsSync('netlify.toml')) {
-				try {
-					netlify_config = toml.parse(readFileSync('netlify.toml', 'utf-8'));
-				} catch (err) {
-					err.message = `Error parsing netlify.toml: ${err.message}`;
-					throw err;
-				}
-			} else {
-				// TODO offer to create one?
-				throw new Error(
-					'Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
-				);
-			}
+			utils.rimraf(publish);
+			utils.rimraf(functions);
 
-			if (
-				!netlify_config.build ||
-				!netlify_config.build.publish ||
-				!netlify_config.build.functions
-			) {
-				throw new Error(
-					'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
-				);
-			}
+			const files = join(__dirname, 'files');
 
-			const publish = resolve(netlify_config.build.publish);
-			const functions = resolve(netlify_config.build.functions);
+			utils.log.minor('Generating serverless function...');
+			utils.copy(join(files, 'entry.js'), '.svelte/netlify/entry.js');
 
-			utils.copy_static_files(publish);
-			utils.copy_client_files(publish);
-			utils.copy_server_files(`${functions}/render`);
+			await esbuild.build({
+				entryPoints: ['.svelte/netlify/entry.js'],
+				outfile: join(functions, 'index.js'),
+				bundle: true,
+				platform: 'node'
+			});
 
-			// rename app to .mjs
-			renameSync(`${functions}/render/app.js`, `${functions}/render/app.mjs`);
+			writeFileSync(join(functions, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
-			// copy the renderer
-			copyFileSync(resolve(__dirname, 'files/render.js'), `${functions}/render/handler.mjs`);
-
-			// copy the entry point
-			copyFileSync(resolve(__dirname, 'files/index.cjs'), `${functions}/render/index.js`);
-
-			// create _redirects
-			writeFileSync(`${publish}/_redirects`, '/* /.netlify/functions/render 200');
-
-			// prerender
 			utils.log.info('Prerendering static pages...');
 			await utils.prerender({
 				dest: publish
 			});
+
+			utils.log.minor('Copying assets...');
+			utils.copy_static_files(publish);
+			utils.copy_client_files(publish);
+
+			utils.log.minor('Writing redirects...');
+			utils.copy(`${files}/_redirects`, `${publish}/_redirects`);
 		}
 	};
 
 	return adapter;
 };
+
+function validate_config() {
+	if (existsSync('netlify.toml')) {
+		let netlify_config;
+
+		try {
+			netlify_config = toml.parse(readFileSync('netlify.toml', 'utf-8'));
+		} catch (err) {
+			err.message = `Error parsing netlify.toml: ${err.message}`;
+			throw err;
+		}
+
+		if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
+			throw new Error(
+				'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+			);
+		}
+
+		return netlify_config;
+	}
+
+	// TODO offer to create one?
+	throw new Error(
+		'Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+	);
+}

@@ -8,6 +8,7 @@
 	},
 	"devDependencies": {
 		"@lukeed/uuid": "^2.0.0",
+		"@sveltejs/adapter-netlify": "next",
 		"@sveltejs/adapter-vercel": "next",
 		"@sveltejs/kit": "next",
 		"cookie": "^0.4.1",

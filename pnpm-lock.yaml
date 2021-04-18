@@ -137,14 +137,10 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.11.12
-      rollup: ^2.41.1
-      sirv: ^1.0.11
       typescript: ^4.2.3
     devDependencies:
       '@sveltejs/kit': link:../kit
       esbuild: 0.11.12
-      rollup: 2.41.1
-      sirv: 1.0.11
       typescript: 4.2.3
 
   packages/create-svelte:
@@ -178,6 +174,7 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.2.2
       '@lukeed/uuid': ^2.0.0
+      '@sveltejs/adapter-netlify': next
       '@sveltejs/adapter-vercel': next
       '@sveltejs/kit': next
       cookie: ^0.4.1
@@ -190,6 +187,7 @@ importers:
       '@fontsource/fira-mono': 4.2.2
     devDependencies:
       '@lukeed/uuid': 2.0.0
+      '@sveltejs/adapter-netlify': link:../../../adapter-netlify
       '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': 1.0.0-next.79_svelte@3.35.0+vite@2.1.0
       cookie: 0.4.1

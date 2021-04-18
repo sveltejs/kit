@@ -1,14 +1,7 @@
-'use strict';
+import '@sveltejs/kit/install-fetch';
 
-import { URLSearchParams } from 'url';
-import { render } from './app.mjs'; // eslint-disable-line import/no-unresolved
-import fetch, { Response, Request, Headers } from 'node-fetch';
-
-// provide server-side fetch
-globalThis.fetch = fetch;
-globalThis.Response = Response;
-globalThis.Request = Request;
-globalThis.Headers = Headers;
+// TODO hardcoding the relative location makes this brittle
+import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 export async function handler(event) {
 	const {
