@@ -1,18 +1,11 @@
-import { URL } from 'url';
-// eslint-disable-next-line import/no-unresolved
 import { get_body } from '@sveltejs/kit/http';
-import fetch, { Response, Request, Headers } from 'node-fetch';
+import '@sveltejs/kit/install-fetch';
 
-// provide server-side fetch
-globalThis.fetch = fetch;
-globalThis.Response = Response;
-globalThis.Request = Request;
-globalThis.Headers = Headers;
+// TODO hardcoding the relative location makes this brittle
+import { render } from '../output/server/app.js';
 
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
-
-	const { render } = await import('../output/server/app.js');
 
 	const rendered = await render({
 		method: req.method,
