@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import render_page from './page/index.js';
 import render_endpoint from './endpoint.js';
+import { parse_body } from './parse_body/index.js';
 
 /** @param {string} body */
 function md5(body) {
@@ -24,12 +25,17 @@ export async function ssr(incoming, options, state = {}) {
 		};
 	}
 
-	const context = (await options.hooks.getContext(incoming)) || {};
+	const incoming_with_body = {
+		...incoming,
+		body: parse_body(incoming)
+	};
+
+	const context = (await options.hooks.getContext(incoming_with_body)) || {};
 
 	try {
 		return await options.hooks.handle({
 			request: {
-				...incoming,
+				...incoming_with_body,
 				params: null,
 				context
 			},

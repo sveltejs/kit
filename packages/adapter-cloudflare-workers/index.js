@@ -1,8 +1,8 @@
 'use strict';
 
-const { exec } = require('child_process');
 const fs = require('fs');
-const path = require('path');
+const { execSync } = require('child_process');
+const esbuild = require('esbuild');
 const toml = require('toml');
 
 module.exports = function () {
@@ -10,59 +10,86 @@ module.exports = function () {
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
 		async adapt(utils) {
-			let wrangler_config;
+			const { site } = validate_config(utils);
 
-			if (fs.existsSync('wrangler.toml')) {
-				try {
-					wrangler_config = toml.parse(fs.readFileSync('wrangler.toml', 'utf-8'));
-				} catch (err) {
-					err.message = `Error parsing wrangler.toml: ${err.message}`;
-					throw err;
-				}
-			} else {
-				// TODO offer to create one?
-				throw new Error(
-					'Missing a wrangler.toml file. Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
-				);
-			}
+			const bucket = site.bucket;
+			const entrypoint = site['entry-point'] || 'workers-site';
 
-			if (!wrangler_config.site || !wrangler_config.site.bucket) {
-				throw new Error(
-					'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
-				);
-			}
+			utils.rimraf(bucket);
+			utils.rimraf(entrypoint);
 
-			const bucket = path.resolve(wrangler_config.site.bucket);
-			const entrypoint = path.resolve(wrangler_config.site['entry-point'] ?? 'workers-site');
+			utils.log.info('Installing worker dependencies...');
+			utils.copy(`${__dirname}/files/_package.json`, '.svelte/cloudflare-workers/package.json');
 
-			utils.copy_static_files(bucket);
-			utils.copy_client_files(bucket);
-			utils.copy_server_files(entrypoint);
+			// TODO would be cool if we could make this step unnecessary somehow
+			const stdout = execSync('npm install', { cwd: '.svelte/cloudflare-workers' });
+			utils.log.info(stdout.toString());
 
-			// copy the renderer
-			utils.copy(path.resolve(__dirname, 'files/render.js'), `${entrypoint}/index.js`);
-			utils.copy(path.resolve(__dirname, 'files/_package.json'), `${entrypoint}/package.json`);
+			utils.log.minor('Generating worker...');
+			utils.copy(`${__dirname}/files/entry.js`, '.svelte/cloudflare-workers/entry.js');
+
+			await esbuild.build({
+				entryPoints: ['.svelte/cloudflare-workers/entry.js'],
+				outfile: `${entrypoint}/index.js`,
+				bundle: true,
+				platform: 'node'
+			});
 
 			utils.log.info('Prerendering static pages...');
 			await utils.prerender({
 				dest: bucket
 			});
 
-			utils.log.info('Installing Worker Dependencies...');
-			exec(
-				'npm install',
-				{
-					cwd: entrypoint
-				},
-				(error, stdout, stderr) => {
-					utils.log.info(stderr);
-					if (error) {
-						utils.log.error(error);
-					}
-				}
-			);
+			utils.log.minor('Copying assets...');
+			utils.copy_static_files(bucket);
+			utils.copy_client_files(bucket);
 		}
 	};
 
 	return adapter;
 };
+
+function validate_config(utils) {
+	if (fs.existsSync('wrangler.toml')) {
+		let wrangler_config;
+
+		try {
+			wrangler_config = toml.parse(fs.readFileSync('wrangler.toml', 'utf-8'));
+		} catch (err) {
+			err.message = `Error parsing wrangler.toml: ${err.message}`;
+			throw err;
+		}
+
+		if (!wrangler_config.site || !wrangler_config.site.bucket) {
+			throw new Error(
+				'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
+			);
+		}
+
+		return wrangler_config;
+	}
+
+	utils.log.error(
+		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
+	);
+
+	utils.log(
+		`
+		Sample wrangler.toml:
+
+		name = "<your-site-name>"
+		type = "javascript"
+		account_id = "<your-account-id>"
+		workers_dev = true
+		route = ""
+		zone_id = ""
+
+		[site]
+		bucket = "./.cloudflare/assets"
+		entry-point = "./.cloudflare/worker"`
+			.replace(/^\t+/gm, '')
+			.trim()
+	);
+
+	throw new Error('Missing a wrangler.toml file');
+}

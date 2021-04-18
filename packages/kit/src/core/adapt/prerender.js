@@ -105,7 +105,7 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 				method: 'GET',
 				headers: {},
 				path,
-				body: null,
+				rawBody: null,
 				query: new URLSearchParams()
 			},
 			{

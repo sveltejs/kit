@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { parse, pathToFileURL } from 'url';
 import sirv from 'sirv';
-import { get_body } from '../http/index.js';
+import { getRawBody } from '../http/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
@@ -58,7 +58,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
 					path: parsed.pathname,
-					body: await get_body(req),
+					rawBody: await getRawBody(req),
 					query: new URLSearchParams(parsed.query || '')
 				});
 

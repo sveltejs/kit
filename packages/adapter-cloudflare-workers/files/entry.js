@@ -1,33 +1,17 @@
-import { render } from './app.js'; // eslint-disable-line import/no-unresolved
+// TODO hardcoding the relative location makes this brittle
+import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
 
-// From https://developers.cloudflare.com/workers/examples/read-post
-async function readRequestBody(request) {
-	const { headers } = request;
-	const contentType = headers.get('content-type') || '';
-	if (contentType.includes('application/json')) {
-		return await request.json();
-	} else if (contentType.includes('application/text')) {
-		return await request.text();
-	} else if (contentType.includes('text/html')) {
-		return await request.text();
-	} else if (contentType.includes('form')) {
-		return await request.formData();
-	} else {
-		const myBlob = await request.blob();
-		const objectURL = URL.createObjectURL(myBlob);
-		return objectURL;
-	}
-}
-
 addEventListener('fetch', (event) => {
-	event.respondWith(handleEvent(event));
+	event.respondWith(handle(event));
 });
 
-async function handleEvent(event) {
-	//try static files first
+async function handle(event) {
+	// try static files first
 	if (event.request.method == 'GET') {
 		try {
+			// TODO rather than attempting to get an asset,
+			// use the asset manifest to see if it exists
 			return await getAssetFromKV(event);
 		} catch (e) {
 			if (!(e instanceof NotFoundError)) {
@@ -38,7 +22,7 @@ async function handleEvent(event) {
 		}
 	}
 
-	//fall back to an app route
+	// fall back to an app route
 	const request = event.request;
 	const request_url = new URL(request.url);
 
@@ -47,17 +31,16 @@ async function handleEvent(event) {
 			host: request_url.host,
 			path: request_url.pathname,
 			query: request_url.searchParams,
-			body: request.body ? await readRequestBody(request) : null,
+			rawBody: request.body ? await read(request) : null,
 			headers: Object.fromEntries(request.headers),
 			method: request.method
 		});
 
 		if (rendered) {
-			const response = new Response(rendered.body, {
+			return new Response(rendered.body, {
 				status: rendered.status,
 				headers: rendered.headers
 			});
-			return response;
 		}
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
@@ -67,4 +50,13 @@ async function handleEvent(event) {
 		status: 404,
 		statusText: 'Not Found'
 	});
+}
+
+function read(request) {
+	const type = request.headers.get('content-type') || '';
+	if (type.includes('application/octet-stream')) {
+		return request.arrayBuffer();
+	}
+
+	return request.text();
 }

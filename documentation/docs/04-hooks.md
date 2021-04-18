@@ -85,7 +85,8 @@ type Request<Context = any> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	body: string | Buffer | ReadOnlyFormData;
+	rawBody: string | ArrayBuffer;
+	body: string | ArrayBuffer | ReadOnlyFormData | any;
 	context: Context;
 };
 

@@ -147,7 +147,10 @@ export async function load_node({
 								method: opts.method || 'GET',
 								headers,
 								path: resolved,
-								body: /** @type {any} */ (opts.body),
+								// TODO per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
+								// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object
+								// @ts-ignore
+								rawBody: opts.body,
 								query: new URLSearchParams(parsed.query || '')
 							},
 							options,
