@@ -64,10 +64,7 @@ async function generate_templates(shared) {
 			// also needed for JS projects if people turn on "checkJs" in their jsonfig
 			if (file.name.endsWith('.d.ts')) {
 				if (file.name.endsWith('global.d.ts')) js.push(file);
-				continue;
-			}
-
-			if (file.name.endsWith('.ts')) {
+			} else if (file.name.endsWith('.ts')) {
 				const transformed = transform(file.contents, {
 					transforms: ['typescript']
 				});
@@ -161,7 +158,7 @@ async function generate_shared() {
 			let name = file;
 
 			if (file.startsWith('+') || file.startsWith('-')) {
-				const [conditions, ...rest] = file.split('/');
+				const [conditions, ...rest] = file.split(path.sep);
 
 				const pattern = /([+-])([a-z]+)/g;
 				let match;
