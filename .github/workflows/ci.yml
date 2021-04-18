@@ -100,4 +100,4 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -r build
+      - run: pnpm build && pnpm build --filter="svelte-kit-demo" --filter="hn.svelte.dev"
