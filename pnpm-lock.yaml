@@ -254,18 +254,6 @@ importers:
       uvu: 0.5.1
       vite: 2.1.0
 
-  packages/kit/test/apps/basics:
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.29.0
-      vite: ^2.1.0
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../../adapter-node
-      '@sveltejs/kit': link:../../..
-      svelte: 3.37.0
-      vite: 2.1.5
-
 packages:
 
   /@actions/core/1.2.6:
@@ -1525,12 +1513,6 @@ packages:
 
   /esbuild/0.9.2:
     resolution: {integrity: sha512-xE3oOILjnmN8PSjkG3lT9NBbd1DbxNqolJ5qNyrLhDWsFef3yTp/KTQz1C/x7BYFKbtrr9foYtKA6KA1zuNAUQ==}
-    hasBin: true
-    requiresBuild: true
-    dev: true
-
-  /esbuild/0.9.7:
-    resolution: {integrity: sha512-VtUf6aQ89VTmMLKrWHYG50uByMF4JQlVysb8dmg6cOgW8JnFCipmz7p+HNBl+RR3LLCuBxFGVauAe2wfnF9bLg==}
     hasBin: true
     requiresBuild: true
     dev: true
@@ -2908,15 +2890,6 @@ packages:
     resolution: {integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==}
     dev: true
 
-  /postcss/8.2.10:
-    resolution: {integrity: sha512-b/h7CPV7QEdrqIxtAf2j31U5ef05uBDuvoXv6L51Q4rcS1jdlXAVKJv+atCFdUXYl9dyTHGyoMzIepwowRJjFw==}
-    engines: {node: ^10 || ^12 || >=14}
-    dependencies:
-      colorette: 1.2.2
-      nanoid: 3.1.22
-      source-map: 0.6.1
-    dev: true
-
   /postcss/8.2.8:
     resolution: {integrity: sha512-1F0Xb2T21xET7oQV9eKuctbM9S7BC0fetoHCc4H13z0PT6haiRLP4T0ZY4XWh7iLP0usgqykT6p9B2RtOf4FPw==}
     engines: {node: ^10 || ^12 || >=14}
@@ -3148,14 +3121,6 @@ packages:
 
   /rollup/2.42.3:
     resolution: {integrity: sha512-JjaT9WaUS5vmjy6xUrnPOskjkQg2cN4WSACNCwbOvBz8VDmbiKVdmTFUoMPRqTud0tsex8Xy9/boLbDW9HKD1w==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
-  /rollup/2.45.2:
-    resolution: {integrity: sha512-kRRU7wXzFHUzBIv0GfoFFIN3m9oteY4uAsKllIpQDId5cfnkWF2J130l+27dzDju0E6MScKiV0ZM5Bw8m4blYQ==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
@@ -3545,11 +3510,6 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte/3.37.0:
-    resolution: {integrity: sha512-TRF30F4W4+d+Jr2KzUUL1j8Mrpns/WM/WacxYlo5MMb2E5Qy2Pk1Guj6GylxsW9OnKQl1tnF8q3hG/hQ3h6VUA==}
-    engines: {node: '>= 8'}
-    dev: true
-
   /table/6.0.7:
     resolution: {integrity: sha512-rxZevLGTUzWna/qBLObOe16kB2RTnnbhciwgPbMMlazz1yZGVEgnZK762xyVdVznhqxrfCeBMmMkgOOaPwjH7g==}
     engines: {node: '>=10.0.0'}
@@ -3790,19 +3750,6 @@ packages:
       postcss: 8.2.8
       resolve: 1.20.0
       rollup: 2.41.1
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
-  /vite/2.1.5:
-    resolution: {integrity: sha512-tYU5iaYeUgQYvK/CNNz3tiJ8vYqPWfCE9IQ7K0iuzYovWw7lzty7KRYGWwV3CQPh0NKxWjOczAqiJsCL0Xb+Og==}
-    engines: {node: '>=12.0.0'}
-    hasBin: true
-    dependencies:
-      esbuild: 0.9.7
-      postcss: 8.2.10
-      resolve: 1.20.0
-      rollup: 2.45.2
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
