@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.54
+
+### Patch Changes
+
+- a84cb88: Fix global.d.ts rename, Windows build issue, missing adapter-node
+
 ## 2.0.0-next.53
 
 ### Patch Changes
