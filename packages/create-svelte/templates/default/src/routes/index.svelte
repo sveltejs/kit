@@ -14,12 +14,12 @@
 	<h1>
 		<div class="welcome">
 			<picture>
-				<source srcset="svelte-welcome-compressed.webp" type="image/webp">
+				<source srcset="svelte-welcome.webp" type="image/webp">
 				<img
 					class="welcome"
 					width="2048"
 					height="495"
-					src="svelte-welcome-compressed.png"
+					src="svelte-welcome.png"
 					alt="Welcome"
 				/>
 			</picture>
