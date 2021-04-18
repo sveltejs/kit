@@ -179,19 +179,17 @@ importers:
       '@sveltejs/adapter-vercel': next
       '@sveltejs/kit': next
       cookie: ^0.4.1
-      dotenv: ^8.2.0
       svelte: ^3.29.0
       svelte-preprocess: ^4.7.0
       typescript: ^4.2.4
       vite: ^2.1.0
     dependencies:
       '@fontsource/fira-mono': 4.2.2
-    devDependencies:
       '@lukeed/uuid': 2.0.0
+      cookie: 0.4.1
+    devDependencies:
       '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': link:../../../kit
-      cookie: 0.4.1
-      dotenv: 8.2.0
       svelte: 3.35.0
       svelte-preprocess: 4.7.0_svelte@3.35.0+typescript@4.2.4
       typescript: 4.2.4
@@ -500,14 +498,14 @@ packages:
   /@lukeed/csprng/1.0.0:
     resolution: {integrity: sha512-ruuGHsnabmObBdeMg3vKdGRmh06Oog3eFpf/Tk6X0kDSJDpJTDCj2dqdp1+0VjzIUgHlFF9GBm7uFqfYhhdX9g==}
     engines: {node: '>=8'}
-    dev: true
+    dev: false
 
   /@lukeed/uuid/2.0.0:
     resolution: {integrity: sha512-dUz8OmYvlY5A9wXaroHIMSPASpSYRLCqbPvxGSyHguhtTQIy24lC+EGxQlwv71AhRCO55WOtgwhzQLpw27JaJQ==}
     engines: {node: '>=8'}
     dependencies:
       '@lukeed/csprng': 1.0.0
-    dev: true
+    dev: false
 
   /@manypkg/find-root/1.1.0:
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -1302,7 +1300,6 @@ packages:
   /cookie/0.4.1:
     resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
     engines: {node: '>= 0.6'}
-    dev: true
 
   /cross-spawn/5.1.0:
     resolution: {integrity: sha1-6L0O/uWPz/b4+UUQoKVUu/ojVEk=}
@@ -1452,11 +1449,6 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
-    dev: true
-
-  /dotenv/8.2.0:
-    resolution: {integrity: sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==}
-    engines: {node: '>=8'}
     dev: true
 
   /emoji-regex/8.0.0:
