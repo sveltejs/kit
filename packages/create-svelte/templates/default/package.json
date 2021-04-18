@@ -7,6 +7,7 @@
 		"start": "svelte-kit start"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-netlify": "next",
 		"@sveltejs/adapter-vercel": "next",
 		"@sveltejs/kit": "next",
 		"svelte": "^3.29.0",
@@ -16,8 +17,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@lukeed/uuid": "^2.0.0",
 		"@fontsource/fira-mono": "^4.2.2",
+		"@lukeed/uuid": "^2.0.0",
 		"cookie": "^0.4.1"
 	}
 }

@@ -6,8 +6,6 @@ import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp, rimraf } from '../utils.js';
 
-const ignored = new Set(['.meta.json', 'package.json']);
-
 /** @param {Set<string>} shared */
 async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
@@ -21,7 +19,11 @@ async function generate_templates(shared) {
 
 		const gitignore_file = path.join(cwd, '.gitignore');
 		if (!fs.existsSync(gitignore_file)) throw new Error('Template must have a .gitignore file');
-		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8') + '\n/.meta.json');
+		const gitignore = parser.compile(fs.readFileSync(gitignore_file, 'utf-8'));
+
+		const ignore_file = path.join(cwd, '.ignore');
+		if (!fs.existsSync(ignore_file)) throw new Error('Template must have a .ignore file');
+		const ignore = parser.compile(fs.readFileSync(ignore_file, 'utf-8'));
 
 		const meta_file = path.join(cwd, '.meta.json');
 		if (!fs.existsSync(meta_file)) throw new Error('Template must have a .meta.json file');
@@ -30,8 +32,11 @@ async function generate_templates(shared) {
 		const ts = [];
 
 		glob('**/*', { cwd, filesOnly: true, dot: true }).forEach((name) => {
-			if (ignored.has(name) || shared.has(name)) return;
-			if (!gitignore.accepts(name)) return;
+			// ignore files that are written conditionally
+			if (shared.has(name)) return;
+
+			// ignore contents of .gitignore or .ignore
+			if (!gitignore.accepts(name) || !ignore.accepts(name) || name === '.ignore') return;
 
 			// the package.template.json thing is a bit annoying — basically we want
 			// to be able to develop and deploy the app from here, but have a different

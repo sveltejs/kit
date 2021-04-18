@@ -176,6 +176,7 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.2.2
       '@lukeed/uuid': ^2.0.0
+      '@sveltejs/adapter-netlify': next
       '@sveltejs/adapter-vercel': next
       '@sveltejs/kit': next
       cookie: ^0.4.1
@@ -188,6 +189,7 @@ importers:
       '@lukeed/uuid': 2.0.0
       cookie: 0.4.1
     devDependencies:
+      '@sveltejs/adapter-netlify': link:../../../adapter-netlify
       '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': link:../../../kit
       svelte: 3.35.0
