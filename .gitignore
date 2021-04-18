@@ -7,3 +7,5 @@ yarn.lock
 /examples/**/build
 /packages/create-svelte/template/CHANGELOG.md
 .env
+.vercel_build_output
+.svelte

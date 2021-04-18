@@ -26,7 +26,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build --filter ./packages
+      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm lint
       - run: pnpm check
   Tests:
@@ -68,7 +68,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
-      - run: pnpm build --filter ./packages
+      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm test
   Examples:
     runs-on: ${{ matrix.os }}
@@ -100,4 +100,4 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm -r build
+      - run: pnpm build && pnpm build --filter="svelte-kit-demo" --filter="hn.svelte.dev"
