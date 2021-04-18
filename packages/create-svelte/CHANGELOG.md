@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.53
+
+### Patch Changes
+
+- 27c2e1d: Fix CSS on demo app hero image
+- bbeb58f: Include dotfiles when creating new project
+- 6a8e73f: Remove large image from create-svelte
+
 ## 2.0.0-next.52
 
 ### Patch Changes
