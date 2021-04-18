@@ -7,16 +7,10 @@
 		"start": "svelte-kit start"
 	},
 	"devDependencies": {
-		"@lukeed/uuid": "^2.0.0",
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"cookie": "^0.4.1",
-		"dotenv": "^8.2.0",
 		"svelte": "^3.29.0",
 		"vite": "^2.1.0"
 	},
-	"type": "module",
-	"dependencies": {
-		"@fontsource/fira-mono": "^4.2.2"
-	}
+	"type": "module"
 }

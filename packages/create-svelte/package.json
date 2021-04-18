@@ -2,29 +2,32 @@
 	"name": "create-svelte",
 	"version": "2.0.0-next.51",
 	"bin": "./bin.js",
-	"devDependencies": {
-		"@rollup/plugin-json": "^4.1.0",
-		"@sveltejs/kit": "workspace:*",
-		"gitignore-parser": "^0.0.2",
+	"dependencies": {
 		"kleur": "^4.1.4",
+		"prompts": "^2.4.0"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"@types/gitignore-parser": "^0.0.0",
+		"@types/prettier": "^2.2.3",
+		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.2.1",
 		"prettier-plugin-svelte": "^2.2.0",
-		"prompts": "^2.4.0",
-		"rollup": "^2.41.1",
 		"sucrase": "^3.18.1",
+		"svelte-preprocess": "^4.7.0",
 		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "node scripts/build-templates && rollup -c",
-		"lint": "eslint --ignore-path .gitignore \"cli/*.js\" && npm run check-format",
+		"build": "node scripts/build-templates",
+		"lint": "eslint --ignore-path .gitignore \"./*.js\" && npm run check-format",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
 		"dist",
-		"bin.js"
+		"bin.js",
+		"utils.js"
 	],
 	"type": "module"
 }
