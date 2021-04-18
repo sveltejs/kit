@@ -32,8 +32,10 @@ module.exports = function () {
 				entryPoints: ['.svelte/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
-				platform: 'node'
+				platform: 'node' // TODO would be great if we could generate ESM and use type = "javascript"
 			});
+
+			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
 
 			utils.log.info('Prerendering static pages...');
 			await utils.prerender({
