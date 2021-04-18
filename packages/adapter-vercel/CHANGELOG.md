@@ -1,5 +1,15 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 1237eb3: Fix dependencies
+- 1237eb3: Use getRawBody in adapter-vercel
+- Updated dependencies [1237eb3]
+- Updated dependencies [1237eb3]
+  - @sveltejs/kit@1.0.0-next.81
+
 ## 1.0.0-next.12
 
 ### Patch Changes

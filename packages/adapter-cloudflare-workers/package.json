@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "0.0.2-next.1",
+	"version": "0.0.2-next.2",
 	"main": "index.js",
 	"files": [
 		"files"
