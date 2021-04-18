@@ -1,0 +1,9 @@
+[
+	{
+		"handle": "filesystem"
+	},
+	{
+		"src": "/.*",
+		"dest": ".vercel/functions/render"
+	}
+]

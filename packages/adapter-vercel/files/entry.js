@@ -1,18 +1,11 @@
-import { URL } from 'url';
-// eslint-disable-next-line import/no-unresolved
-import { get_body } from '@sveltejs/kit/http';
-import fetch, { Response, Request, Headers } from 'node-fetch';
+import { get_body } from '@sveltejs/kit/http'; // eslint-disable-line import/no-unresolved
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
-// provide server-side fetch
-globalThis.fetch = fetch;
-globalThis.Response = Response;
-globalThis.Request = Request;
-globalThis.Headers = Headers;
+// TODO hardcoding the relative location makes this brittle
+import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
-
-	const { render } = await import('./server/app.mjs');
 
 	const rendered = await render({
 		method: req.method,

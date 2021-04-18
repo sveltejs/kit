@@ -136,13 +136,11 @@ importers:
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
-      rollup: ^2.41.1
-      sirv: ^1.0.11
+      esbuild: ^0.11.12
       typescript: ^4.2.3
     devDependencies:
       '@sveltejs/kit': link:../kit
-      rollup: 2.41.1
-      sirv: 1.0.11
+      esbuild: 0.11.12
       typescript: 4.2.3
 
   packages/create-svelte:
@@ -1505,6 +1503,12 @@ packages:
       is-callable: 1.2.3
       is-date-object: 1.0.2
       is-symbol: 1.0.3
+    dev: true
+
+  /esbuild/0.11.12:
+    resolution: {integrity: sha512-c8cso/1RwVj+fbDvLtUgSG4ZJQ0y9Zdrl6Ot/GAjyy4pdMCHaFnDMts5gqFnWRPLajWtEnI+3hlET4R9fVoZng==}
+    hasBin: true
+    requiresBuild: true
     dev: true
 
   /esbuild/0.9.2:

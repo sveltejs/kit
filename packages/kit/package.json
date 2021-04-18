@@ -67,6 +67,9 @@
 		"./http": {
 			"import": "./dist/http.js"
 		},
+		"./install-fetch": {
+			"import": "./dist/install-fetch.js"
+		},
 		"./types": "./types/index.d.ts"
 	},
 	"types": "types/index.d.ts",

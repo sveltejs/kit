@@ -1,18 +1,11 @@
-import compression from 'compression';
 import fs from 'fs';
-import polka from 'polka';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import compression from 'compression';
+import polka from 'polka';
 import sirv from 'sirv';
-import { URL, fileURLToPath } from 'url';
-// eslint-disable-next-line import/no-unresolved
-import { get_body } from '@sveltejs/kit/http';
-import fetch, { Response, Request, Headers } from 'node-fetch';
-
-// provide server-side fetch
-globalThis.fetch = fetch;
-globalThis.Response = Response;
-globalThis.Request = Request;
-globalThis.Headers = Headers;
+import { get_body } from '@sveltejs/kit/http'; // eslint-disable-line import/no-unresolved
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
 // App is a dynamic file built from the application layer.
 

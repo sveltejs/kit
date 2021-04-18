@@ -1,5 +1,6 @@
-const { writeFileSync, mkdirSync, renameSync } = require('fs');
-const { resolve, join } = require('path');
+const { writeFileSync } = require('fs');
+const { join } = require('path');
+const esbuild = require('esbuild');
 
 module.exports = function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -7,45 +8,44 @@ module.exports = function () {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(utils) {
-			const vercel_output_directory = resolve('.vercel_build_output');
-			const config_directory = join(vercel_output_directory, 'config');
-			const static_directory = join(vercel_output_directory, 'static');
-			const lambda_directory = join(vercel_output_directory, 'functions', 'node', 'render');
-			const server_directory = join(lambda_directory, 'server');
+			const dir = '.vercel_build_output';
+			utils.rimraf(dir);
 
-			utils.log.minor('Writing client application...');
-			utils.copy_static_files(static_directory);
-			utils.copy_client_files(static_directory);
+			const files = join(__dirname, 'files');
 
-			utils.log.minor('Building lambda...');
-			utils.copy_server_files(server_directory);
-			renameSync(join(server_directory, 'app.js'), join(server_directory, 'app.mjs'));
+			const dirs = {
+				static: join(dir, 'static'),
+				lambda: join(dir, 'functions/node/render')
+			};
 
-			utils.copy(join(__dirname, 'files'), lambda_directory);
+			// TODO ideally we'd have something like utils.tmpdir('vercel')
+			// rather than hardcoding '.svelte/vercel/entry.js', and the
+			// relative import from that file to output/server/app.js
+			// would be controlled. at the moment we're exposing
+			// implementation details that could change
+			utils.log.minor('Generating serverless function...');
+			utils.copy(join(files, 'entry.js'), '.svelte/vercel/entry.js');
+
+			await esbuild.build({
+				entryPoints: ['.svelte/vercel/entry.js'],
+				outfile: join(dirs.lambda, 'index.js'),
+				bundle: true,
+				platform: 'node'
+			});
+
+			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
-				dest: static_directory
+				dest: dirs.static
 			});
 
+			utils.log.minor('Copying assets...');
+			utils.copy_static_files(dirs.static);
+			utils.copy_client_files(dirs.static);
+
 			utils.log.minor('Writing routes...');
-			try {
-				mkdirSync(config_directory);
-			} catch {
-				// directory already exists
-			}
-			writeFileSync(
-				join(config_directory, 'routes.json'),
-				JSON.stringify([
-					{
-						handle: 'filesystem'
-					},
-					{
-						src: '/.*',
-						dest: '.vercel/functions/render'
-					}
-				])
-			);
+			utils.copy(join(files, 'routes.json'), join(dir, 'config/routes.json'));
 		}
 	};
 

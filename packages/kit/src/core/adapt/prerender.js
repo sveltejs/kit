@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
-import '../node-fetch-global.js';
+import '../../install-fetch.js';
 
 /** @param {string} html */
 function clean_html(html) {
