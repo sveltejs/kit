@@ -7,7 +7,8 @@ export type Incoming = {
 	headers: Headers;
 	path: string;
 	query: URLSearchParams;
-	body: BaseBody;
+	rawBody: string | ArrayBuffer;
+	body?: BaseBody;
 };
 
 export type GetContext<Context = any> = (incoming: Incoming) => Context;
