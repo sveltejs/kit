@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.55
+
+### Patch Changes
+
+- daf6913: Fix bootstrapping command on about page
+
 ## 2.0.0-next.54
 
 ### Patch Changes
