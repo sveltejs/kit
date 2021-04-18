@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
-	import type { Load } from '@sveltejs/kit';
 	import { enhance } from '$lib/form';
+	import type { Load } from '@sveltejs/kit';
 
 	// see https://kit.svelte.dev/docs#loading
 	export const load: Load = async ({ fetch }) => {
@@ -10,9 +10,7 @@
 			const todos = await res.json();
 
 			return {
-				props: {
-					todos
-				}
+				props: { todos }
 			};
 		}
 
@@ -29,19 +27,19 @@
 	import { flip } from 'svelte/animate';
 
 	type Todo = {
-		id: string;
-		created: Date;
+		uid: string;
+		created_at: Date;
 		text: string;
 		done: boolean;
 	};
 
 	export let todos: Todo[];
 
-	async function patch(res, form) {
+	async function patch(res: Response) {
 		const todo = await res.json();
 
 		todos = todos.map(t => {
-			if (t.id === todo.id) return todo;
+			if (t.uid === todo.uid) return todo;
 			return t;
 		});
 	}
@@ -62,12 +60,12 @@
 			form.reset();
 		}
 	}}>
-		<input name="text" placeholder="+ add a todo">
+		<input name="text" placeholder="+ tap to add a todo">
 	</form>
 
-	{#each todos as todo (todo.id)}
+	{#each todos as todo (todo.uid)}
 		<div class="todo" class:done={todo.done} transition:scale|local={{start:0.7}} animate:flip={{duration:200}}>
-			<form action="/todos/{todo.id}?_method=patch" method="post" use:enhance={{
+			<form action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				pending: (data) => {
 					const done = !!data.get('done');
 
@@ -82,16 +80,16 @@
 				<button class="toggle" aria-label="Mark todo as {todo.done ? 'not done' : 'done'}"/>
 			</form>
 
-			<form class="text" action="/todos/{todo.id}?_method=patch" method="post" use:enhance={{
+			<form class="text" action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				result: patch
 			}}>
 				<input type="text" name="text" value={todo.text}>
 				<button class="save" aria-label="Save todo"/>
 			</form>
 
-			<form action="/todos/{todo.id}?_method=delete" method="post" use:enhance={{
+			<form action="/todos/{todo.uid}.json?_method=delete" method="post" use:enhance={{
 				result: () => {
-					todos = todos.filter(t => t.id !== todo.id);
+					todos = todos.filter(t => t.uid !== todo.uid);
 				}
 			}}>
 				<button class="delete" aria-label="Delete todo"/>
@@ -112,14 +110,26 @@
 		margin: 0 0 0.5rem 0;
 	}
 
+	input {
+		border: 1px solid transparent;
+	}
+
+	input:focus-visible {
+		box-shadow: inset 1px 1px 6px rgba(0,0,0,0.1);
+		border: 1px solid #ff3e00 !important;
+		outline: none;
+	}
+
 	.new input {
 		font-size: 28px;
 		width: 100%;
-		padding: 0.5em 0.3em 0.3em 0.3em;
+		padding: 0.5em 1em 0.3em 1em;
 		box-sizing: border-box;
 		background: rgba(255,255,255,0.05);
-		border: none;
+		border-radius: 8px;
+		text-align: center;
 	}
+
 	.todo {
 		display: grid;
 		grid-template-columns: 2rem 1fr 2rem;
@@ -150,8 +160,8 @@
 
 	.todo input {
 		flex: 1;
-		border: none;
-		padding: 0.5em 2em 0.5em 0.5em;
+		padding: 0.5em 2em 0.5em 0.8em;
+		border-radius: 3px;
 	}
 
 	.todo button {

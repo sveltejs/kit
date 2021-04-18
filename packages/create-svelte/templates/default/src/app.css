@@ -97,6 +97,10 @@ button {
 	font-family: inherit;
 }
 
+button:focus:not(:focus-visible) {
+	outline: none;
+}
+
 @media (min-width: 720px) {
 	h1 {
 		font-size: 2.4rem;

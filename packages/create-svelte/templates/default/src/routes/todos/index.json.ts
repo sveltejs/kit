@@ -1,53 +1,35 @@
+import { api } from './_api';
 import type { RequestHandler } from '@sveltejs/kit';
 
+// GET /todos.json
 export const get: RequestHandler = async (request) => {
 	if (!request.context.userid) {
+		// the user has never visited the site before
+		// and so doesn't yet have a userid, which is
+		// set in `handle`, in src/hooks.js
 		return { body: [] };
 	}
 
-	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`);
+	const response = await api(request, `todos/${request.context.userid}`);
 
-	if (res.ok) {
-		return {
-			status: res.status,
-			body: await res.json()
-		};
+	if (response.status === 404) {
+		// the user has visited before, but hasn't yet
+		// created a todo list. start with an empty array
+		return { body: [] };
 	}
 
-	return {
-		status: res.status,
-		body: res.ok ? await res.json() : await res.text()
-	};
+	return response;
 };
 
+// POST /todos.json
 export const post: RequestHandler = async (request) => {
-	if (!request.context.userid) {
-		return { status: 401 };
-	}
-
-	const res = await fetch(`http://localhost:8787/todos/${request.context.userid}`, {
-		method: 'POST',
-		headers: {
-			'content-type': 'application/json'
-		},
-		body: JSON.stringify({
-			text: request.body.get('text')
-		})
+	const response = await api(request, `todos/${request.context.userid}`, {
+		// because index.svelte posts a FormData object,
+		// request.body is _also_ a (readonly) FormData
+		// object, which allows us to get form data
+		// with the `body.get(key)` method
+		text: request.body.get('text')
 	});
 
-	// redirect successful <form> submissions back to /todos
-	if (res.ok && request.headers.accept !== 'application/json') {
-		return {
-			status: 303,
-			headers: {
-				location: '/todos'
-			},
-			body: '' // TODO https://github.com/sveltejs/kit/issues/1047
-		};
-	}
-
-	return {
-		status: res.status,
-		body: res.ok ? await res.json() : await res.text()
-	};
+	return response;
 };

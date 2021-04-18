@@ -36,8 +36,10 @@ export function enhance(
 
 			if (res.ok) {
 				result(res, form);
-			} else {
+			} else if (error) {
 				error(res, null, form);
+			} else {
+				console.error(await res.text());
 			}
 		} catch (e) {
 			if (error) {
