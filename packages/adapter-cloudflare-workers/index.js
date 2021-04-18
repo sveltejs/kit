@@ -19,7 +19,7 @@ module.exports = function () {
 			utils.rimraf(entrypoint);
 
 			utils.log.info('Installing worker dependencies...');
-			utils.copy(`${__dirname}/files/_package.json`, `.svelte/cloudflare-workers/package.json`);
+			utils.copy(`${__dirname}/files/_package.json`, '.svelte/cloudflare-workers/package.json');
 
 			// TODO would be cool if we could make this step unnecessary somehow
 			const stdout = execSync('npm install', { cwd: '.svelte/cloudflare-workers' });
