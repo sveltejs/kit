@@ -1,4 +1,3 @@
-import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
 
@@ -90,16 +89,16 @@ export async function load_node({
 					url = url.replace(options.paths.assets, '');
 				}
 
-				const parsed = parse(url);
+				const parsed = new URL(url, 'sveltekit://origin');
 
 				let response;
 
-				if (parsed.protocol) {
+				if (parsed.protocol !== 'sveltekit:') {
 					// external fetch
 					response = await fetch(parsed.href, /** @type {RequestInit} */ (opts));
 				} else {
 					// otherwise we're dealing with an internal fetch
-					const resolved = resolve(request.path, parsed.pathname);
+					const resolved = new URL(request.path, parsed).pathname;
 
 					// handle fetch requests for static assets. e.g. prebaked data, etc.
 					// we need to support everything the browser's fetch supports
@@ -151,7 +150,7 @@ export async function load_node({
 								// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object
 								// @ts-ignore
 								rawBody: opts.body,
-								query: new URLSearchParams(parsed.query || '')
+								query: parsed.searchParams
 							},
 							options,
 							{
