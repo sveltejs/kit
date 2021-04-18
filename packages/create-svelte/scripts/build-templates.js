@@ -6,6 +6,8 @@ import { transform } from 'sucrase';
 import glob from 'tiny-glob/sync.js';
 import { mkdirp, rimraf } from '../utils.js';
 
+const ignored = new Set(['.meta.json', 'package.deploy.json']);
+
 /** @param {Set<string>} shared */
 async function generate_templates(shared) {
 	const templates = fs.readdirSync('templates');
@@ -28,7 +30,7 @@ async function generate_templates(shared) {
 		const ts = [];
 
 		glob('**/*', { cwd, filesOnly: true, dot: true }).forEach((name) => {
-			if (name === '.meta.json' || shared.has(name)) return;
+			if (ignored.has(name) || shared.has(name)) return;
 			if (!gitignore.accepts(name)) return;
 
 			if (/\.(js|ts|svelte|svelte\.md)$/.test(name) || name === 'package.json') {
