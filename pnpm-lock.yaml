@@ -50,21 +50,6 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.35.0
 
-  examples/realworld.svelte.dev:
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      cookie: ^0.4.1
-      marked: ^2.0.1
-      svelte: ^3.35.0
-    dependencies:
-      cookie: 0.4.1
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/kit': link:../../packages/kit
-      marked: 2.0.1
-      svelte: 3.35.0
-
   examples/svelte-kit-demo:
     specifiers:
       '@sveltejs/adapter-cloudflare-workers': workspace:*
@@ -1249,6 +1234,7 @@ packages:
   /cookie/0.4.1:
     resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
     engines: {node: '>= 0.6'}
+    dev: true
 
   /cross-spawn/5.1.0:
     resolution: {integrity: sha1-6L0O/uWPz/b4+UUQoKVUu/ojVEk=}
@@ -2387,12 +2373,6 @@ packages:
   /map-obj/4.2.0:
     resolution: {integrity: sha512-NAq0fCmZYGz9UFEQyndp7sisrow4GroyGeKluyKC/chuITZsPyOyC1UJZPJlVFImhXdROIP5xqouRLThT3BbpQ==}
     engines: {node: '>=8'}
-    dev: true
-
-  /marked/2.0.1:
-    resolution: {integrity: sha512-5+/fKgMv2hARmMW7DOpykr2iLhl0NgjyELk5yn92iE7z8Se1IS9n3UsFm86hFXIkvMBmVxki8+ckcpjBeyo/hw==}
-    engines: {node: '>= 8.16.2'}
-    hasBin: true
     dev: true
 
   /meow/6.1.1:
