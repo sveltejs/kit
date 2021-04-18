@@ -23,7 +23,7 @@ pnpm i
 ...then build SvelteKit and the other packages:
 
 ```bash
-pnpm -r build
+pnpm build
 ```
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
