@@ -185,6 +185,7 @@ importers:
       devalue: ^2.0.1
       eslint: ^7.21.0
       kleur: ^4.1.4
+      marked: ^2.0.3
       node-fetch: ^3.0.0-beta.9
       port-authority: ^1.1.2
       rimraf: ^3.0.2
@@ -214,6 +215,7 @@ importers:
       devalue: 2.0.1
       eslint: 7.21.0
       kleur: 4.1.4
+      marked: 2.0.3
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
       rimraf: 3.0.2
@@ -2373,6 +2375,12 @@ packages:
   /map-obj/4.2.0:
     resolution: {integrity: sha512-NAq0fCmZYGz9UFEQyndp7sisrow4GroyGeKluyKC/chuITZsPyOyC1UJZPJlVFImhXdROIP5xqouRLThT3BbpQ==}
     engines: {node: '>=8'}
+    dev: true
+
+  /marked/2.0.3:
+    resolution: {integrity: sha512-5otztIIcJfPc2qGTN8cVtOJEjNJZ0jwa46INMagrYfk0EvqtRuEHLsEe0LrFS0/q+ZRKT0+kXK7P2T1AN5lWRA==}
+    engines: {node: '>= 8.16.2'}
+    hasBin: true
     dev: true
 
   /meow/6.1.1:

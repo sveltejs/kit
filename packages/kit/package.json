@@ -20,6 +20,7 @@
 		"devalue": "^2.0.1",
 		"eslint": "^7.21.0",
 		"kleur": "^4.1.4",
+		"marked": "^2.0.3",
 		"node-fetch": "^3.0.0-beta.9",
 		"port-authority": "^1.1.2",
 		"rimraf": "^3.0.2",
