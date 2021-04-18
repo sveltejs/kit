@@ -27,7 +27,7 @@ async function generate_templates(shared) {
 		/** @type {import('../types/internal.js').File[]} */
 		const ts = [];
 
-		glob('**/*', { cwd, filesOnly: true }).forEach((name) => {
+		glob('**/*', { cwd, filesOnly: true, dot: true }).forEach((name) => {
 			if (name === '.meta.json' || shared.has(name)) return;
 			if (!gitignore.accepts(name)) return;
 
