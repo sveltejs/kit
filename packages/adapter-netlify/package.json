@@ -11,10 +11,11 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"esbuild": "^0.11.12",
 		"toml": "^3.0.0"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
 		"typescript": "^4.2.3"
 	}
 }
