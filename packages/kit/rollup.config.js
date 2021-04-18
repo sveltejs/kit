@@ -42,7 +42,8 @@ export default [
 		input: {
 			cli: 'src/cli.js',
 			ssr: 'src/runtime/server/index.js',
-			http: 'src/core/http/index.js'
+			http: 'src/core/http/index.js',
+			'install-fetch': 'src/install-fetch.js'
 		},
 		output: {
 			dir: 'dist',

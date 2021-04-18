@@ -4,7 +4,7 @@ import sirv from 'sirv';
 import { get_body } from '../http/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
-import '../node-fetch-global.js';
+import '../../install-fetch.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
