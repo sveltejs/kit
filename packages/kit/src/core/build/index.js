@@ -124,7 +124,9 @@ async function build_client({
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
 
-		const name = relative.startsWith('..') ? path.basename(file) : path.join('pages', relative);
+		const name = relative.startsWith('..')
+			? path.basename(file)
+			: posixify(path.join('pages', relative));
 		input[name] = resolved;
 	});
 
