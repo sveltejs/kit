@@ -98,7 +98,7 @@ export async function load_node({
 					response = await fetch(parsed.href, /** @type {RequestInit} */ (opts));
 				} else {
 					// otherwise we're dealing with an internal fetch
-					const resolved = new URL(request.path, parsed).pathname;
+					const resolved = new URL(parsed.pathname, `sveltekit://origin${request.path}`).pathname;
 
 					// handle fetch requests for static assets. e.g. prebaked data, etc.
 					// we need to support everything the browser's fetch supports

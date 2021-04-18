@@ -1,7 +1,6 @@
 import render_page from './page/index.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
-import { hash } from '../../core/utils.js';
 
 /**
  * @param {import('types/hooks').Incoming} incoming
@@ -77,4 +76,12 @@ export async function ssr(incoming, options, state = {}) {
 			body: options.dev ? e.stack : e.message
 		};
 	}
+}
+
+/** @param {string} str */
+export function hash(str) {
+	let hash = 5381,
+		i = str.length;
+	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);
+	return (hash >>> 0).toString(36);
 }

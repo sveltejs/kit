@@ -74,11 +74,3 @@ export function resolve_entry(entry) {
 export function posixify(str) {
 	return str.replace(/\\/g, '/');
 }
-
-/** @param {string} str */
-export function hash(str) {
-	let hash = 5381,
-		i = str.length;
-	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);
-	return (hash >>> 0).toString(36);
-}
