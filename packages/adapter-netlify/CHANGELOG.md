@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- 7a4b351: Bundle serverless functions with esbuild
+
 ## 1.0.0-next.5
 
 ### Patch Changes
