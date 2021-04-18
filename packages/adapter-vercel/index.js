@@ -18,6 +18,11 @@ module.exports = function () {
 				lambda: join(dir, 'functions/node/render')
 			};
 
+			// TODO ideally we'd have something like utils.tmpdir('vercel')
+			// rather than hardcoding '.svelte/vercel/entry.js', and the
+			// relative import from that file to output/server/app.js
+			// would be controlled. at the moment we're exposing
+			// implementation details that could change
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte/vercel/entry.js');
 
