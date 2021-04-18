@@ -21,7 +21,7 @@ module.exports = function () {
 
 			await esbuild.build({
 				entryPoints: ['.svelte/netlify/entry.js'],
-				outfile: join(functions, 'index.js'),
+				outfile: join(functions, 'render/index.js'),
 				bundle: true,
 				platform: 'node'
 			});
