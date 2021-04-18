@@ -68,7 +68,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
-      - run: pnpm build --filter ./packages
+      - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm test
   Examples:
     runs-on: ${{ matrix.os }}
