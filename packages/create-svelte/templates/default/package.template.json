@@ -7,6 +7,7 @@
 		"start": "svelte-kit start"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.29.0",
 		"vite": "^2.1.0"
