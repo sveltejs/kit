@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- 0db2cf7: Fix serverless function
+
 ## 1.0.0-next.6
 
 ### Patch Changes
