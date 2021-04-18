@@ -1,4 +1,4 @@
-const { existsSync, readFileSync, copyFileSync, writeFileSync, renameSync } = require('fs');
+const { existsSync, readFileSync, writeFileSync } = require('fs');
 const { join } = require('path');
 const esbuild = require('esbuild');
 const toml = require('toml');

@@ -498,6 +498,7 @@ packages:
   /@lukeed/csprng/1.0.0:
     resolution: {integrity: sha512-ruuGHsnabmObBdeMg3vKdGRmh06Oog3eFpf/Tk6X0kDSJDpJTDCj2dqdp1+0VjzIUgHlFF9GBm7uFqfYhhdX9g==}
     engines: {node: '>=8'}
+    dev: false
 
   /@lukeed/uuid/2.0.0:
     resolution: {integrity: sha512-dUz8OmYvlY5A9wXaroHIMSPASpSYRLCqbPvxGSyHguhtTQIy24lC+EGxQlwv71AhRCO55WOtgwhzQLpw27JaJQ==}

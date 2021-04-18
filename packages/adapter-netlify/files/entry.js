@@ -1,4 +1,4 @@
-import '@sveltejs/kit/install-fetch';
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
 // TODO hardcoding the relative location makes this brittle
 import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
