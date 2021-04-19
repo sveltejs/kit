@@ -1,0 +1,15 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1,
+    "workspacePrefix": "/home/mrhumble/Documents/kit"
+  },
+  "1 error pnpm": {
+    "code": "ERR_PNPM_NO_SCRIPT",
+    "err": {
+      "name": "Error",
+      "message": "Missing script: dev",
+      "code": "ERR_PNPM_NO_SCRIPT",
+      "stack": "Error: Missing script: dev\n    at Object.handler (/home/mrhumble/.nvm/versions/node/v15.14.0/lib/node_modules/pnpm/dist/pnpm.cjs:119502:13)\n    at async Timeout._onTimeout (/home/mrhumble/.nvm/versions/node/v15.14.0/lib/node_modules/pnpm/dist/pnpm.cjs:123432:22)"
+    }
+  }
+}

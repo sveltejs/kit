@@ -25,7 +25,6 @@ export default async function render_route(request, route) {
 				};
 			}
 
-			
 			let { status = 200, body, headers = {} } = response;
 
 			headers = lowercase_keys(headers);
