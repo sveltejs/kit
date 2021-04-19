@@ -24,10 +24,25 @@ export type TestContext = {
 	reset: () => Promise<void>;
 };
 
-export type TestFunction = {
-	(name: string, start: string, callback: (context: TestContext) => void): void;
-	only: (name: string, start: string, callback: (context: TestContext) => void) => void;
-	skip: (name: string, start: string, callback: (context: TestContext) => void) => void;
+type TestOptions = {
+	js?: boolean;
+	nojs?: boolean;
+	dev?: boolean;
+	build?: boolean;
 };
+
+interface TestFunctionBase {
+	(
+		name: string,
+		start: string,
+		callback: (context: TestContext) => void,
+		options?: TestOptions
+	): void;
+}
+
+export interface TestFunction extends TestFunctionBase {
+	only: TestFunctionBase;
+	skip: TestFunctionBase;
+}
 
 export type TestMaker = (test: TestFunction, is_dev: boolean) => void;

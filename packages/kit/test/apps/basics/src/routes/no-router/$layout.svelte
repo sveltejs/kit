@@ -6,7 +6,7 @@
 	clicks: {n}
 </button>
 
-<a href="/routing/disabled/a">a</a>
-<a href="/routing/disabled/b">b</a>
+<a href="/no-router/a">a</a>
+<a href="/no-router/b">b</a>
 
 <slot></slot>

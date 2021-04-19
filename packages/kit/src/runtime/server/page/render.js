@@ -90,6 +90,9 @@ export async function render_response({
 		rendered = { head: '', html: '', css: '' };
 	}
 
+	const include_js = page_config.router || page_config.hydrate;
+	if (!include_js) js.clear();
+
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? styles.size > 0
@@ -108,7 +111,7 @@ export async function render_response({
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
-	} else if (page_config.router || page_config.hydrate) {
+	} else if (include_js) {
 		// prettier-ignore
 		init = `<script type="module">
 			import { start } from ${s(options.entry.file)};
