@@ -2,7 +2,7 @@
 title: SSR and JavaScript
 ---
 
-By default, SvelteKit will server-render pages on demand, then **hydrate** the rendered HTML in the client with an interactive Svelte app while initialising a **router** that takes over subsequent navigations.
+By default, SvelteKit will render any component first on the server side and send it to the client as HTML. It will then run the component again on the client side to allow it to update based on dynamic data in a process called **hydration**. This means you need to ensure that components can run both on the client and server side. SvelteKit will then initialise a [**router**](#routing) that takes over subsequent navigations.
 
 You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
 

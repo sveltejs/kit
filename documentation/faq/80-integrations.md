@@ -8,9 +8,41 @@ Please see [sveltejs/integrations](https://github.com/sveltejs/integrations#svel
 
 ### How do I use Babel, CoffeeScript, Less, PostCSS / SugarSS, Pug, scss/sass, Stylus, TypeScript, `global` styles, or replace?
 
-SvelteKit provides [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) by default. For many of these tools you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) docs for full details.
+SvelteKit provides [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) by default supporting these libraries and pieces of functionality. For many of these tools you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) docs for full details.
 
 Also see [the examples above](faq#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
+
+### How do I use a client-side only library that depends on `document` or `window`?
+
+Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. [This currently occurs even when SSR is disabled](https://github.com/sveltejs/kit/issues/754).
+
+If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
+
+```js
+import { browser } from '$app/env';
+
+if (browser) {
+	// client-only code here
+}
+```
+
+You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+
+```html
+<script>
+	import { onMount } from 'svelte';
+	import { browser } from '$app/env';
+
+	let awkward;
+
+	onMount(async () => {
+		if (browser) {
+			const module = await import('some-browser-only-library');
+			awkward = module.default;
+		}
+	});
+</script>
+```
 
 ### How do I setup a database?
 
