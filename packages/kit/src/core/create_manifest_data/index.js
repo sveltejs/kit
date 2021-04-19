@@ -327,7 +327,7 @@ function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
 			return segment[0].spread
-				? '\\/?(.*)'
+				? '(?:\\/(.*))?'
 				: '\\/' +
 						segment
 							.map((part) => {
