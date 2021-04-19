@@ -4,8 +4,7 @@ title: Troubleshooting
 
 ### FAQ
 
-Please see the [FAQ](/faq) for solutions to common issues as well as other helpful tips and tricks.
-
+Please see the [FAQ](/faq) for solutions to common issues and helpful tips and tricks.
 
 ### Support
 
