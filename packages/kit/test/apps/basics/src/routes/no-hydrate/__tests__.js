@@ -20,4 +20,19 @@ export default function (test, is_dev) {
 			);
 		}
 	});
+
+	test(
+		'does not include modulepreload links if JS is completely disabled',
+		'/no-hydrate/no-js',
+		async ({ page }) => {
+			assert.equal(await page.textContent('h1'), 'look ma no javascript');
+			assert.equal(
+				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length),
+				0
+			);
+		},
+		{
+			js: false
+		}
+	);
 }

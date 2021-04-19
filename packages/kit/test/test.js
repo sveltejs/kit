@@ -133,34 +133,42 @@ function patch_console() {
 	};
 }
 
-function duplicate(test_fn, config) {
-	return (name, start, callback) => {
+function duplicate(test_fn, config, is_build) {
+	return (name, start, callback, { js = true, nojs = true, dev = true, build = true } = {}) => {
 		if (!callback) {
 			// TODO move everything over to new signature
 			callback = start;
 			start = null;
 		}
 
+		if (is_build) {
+			if (!build) return;
+		} else {
+			if (!dev) return;
+		}
+
 		if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
 
-		test_fn(`${name} [no js]`, async (context) => {
-			let response;
+		if (nojs) {
+			test_fn(`${name} [no js]`, async (context) => {
+				let response;
 
-			if (start) {
-				response = await context.pages.nojs.goto(context.base + start);
-			}
+				if (start) {
+					response = await context.pages.nojs.goto(context.base + start);
+				}
 
-			await callback({
-				...context,
-				page: context.pages.nojs,
-				clicknav: (selector) => context.pages.nojs.click(selector),
-				back: () => context.pages.nojs.goBack(),
-				response,
-				js: false
+				await callback({
+					...context,
+					page: context.pages.nojs,
+					clicknav: (selector) => context.pages.nojs.click(selector),
+					back: () => context.pages.nojs.goBack(),
+					response,
+					js: false
+				});
 			});
-		});
+		}
 
-		if (!config.kit.amp) {
+		if (js && !config.kit.amp) {
 			test_fn(`${name} [js]`, async (context) => {
 				let response;
 
@@ -252,9 +260,9 @@ async function main() {
 			context.unpatch();
 		});
 
-		const test = duplicate(suite, config);
-		test.skip = duplicate(suite.skip, config);
-		test.only = duplicate(suite.only, config);
+		const test = duplicate(suite, config, false);
+		test.skip = duplicate(suite.skip, config, false);
+		test.only = duplicate(suite.only, config, false);
 
 		tests.forEach((mod) => {
 			mod.default(test, true);
@@ -303,9 +311,9 @@ async function main() {
 			context.unpatch();
 		});
 
-		const test = duplicate(suite, config);
-		test.skip = duplicate(suite.skip, config);
-		test.only = duplicate(suite.only, config);
+		const test = duplicate(suite, config, true);
+		test.skip = duplicate(suite.skip, config, true);
+		test.only = duplicate(suite.only, config, true);
 
 		tests.forEach((mod) => {
 			mod.default(test, false);
