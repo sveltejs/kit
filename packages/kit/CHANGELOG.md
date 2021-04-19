@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.84
+
+### Patch Changes
+
+- 5c2665f: Prevent ...rest parameters from swallowing earlier characters
+- 4e1c4ea: Omit modulepreload links from pages with no JS
+- 5d864a6: Fix RequestHandler return type
+- e1313d0: Make response.body optional
+
 ## 1.0.0-next.83
 
 ### Patch Changes
