@@ -16,16 +16,16 @@ export default async function render_route(request, route) {
 		const response = await handler({ ...request, params });
 
 		if (response) {
-			if (typeof response !== 'object' || (response.status >= 300 && response.status < 400)) {
+			if (typeof response !== 'object') {
 				return {
 					status: 500,
-					body: `Invalid response from route ${request.path}; ${
-						response.body == null ? 'body is missing' : `expected an object, got ${typeof response}`
-					}`,
+					body: `Invalid response from route ${request.path}; 
+						 expected an object, got ${typeof response}`,
 					headers: {}
 				};
 			}
 
+			
 			let { status = 200, body, headers = {} } = response;
 
 			headers = lowercase_keys(headers);
