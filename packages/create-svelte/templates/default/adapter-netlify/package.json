@@ -1,0 +1,21 @@
+{
+	"name": "@sveltejs/adapter-netlify",
+	"version": "1.0.0-next.8",
+	"main": "index.js",
+	"files": [
+		"files"
+	],
+	"scripts": {
+		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+	},
+	"dependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"esbuild": "^0.11.12",
+		"toml": "^3.0.0"
+	},
+	"devDependencies": {
+		"typescript": "^4.2.3"
+	}
+}
