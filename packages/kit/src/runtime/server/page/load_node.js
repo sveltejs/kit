@@ -185,9 +185,9 @@ export async function load_node({
 
 								/** @type {import('types/helper').Headers} */
 								const headers = {};
-								response.headers.forEach((value, key) => {
+								for (const [key, value] of response.headers) {
 									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
-								});
+								}
 
 								// prettier-ignore
 								fetched.push({
@@ -210,7 +210,7 @@ export async function load_node({
 
 							// TODO arrayBuffer?
 
-							return Reflect.get(response, key, receiver);
+							return Reflect.get(response, key, response);
 						}
 					});
 

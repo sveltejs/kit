@@ -193,7 +193,7 @@ importers:
       '@lukeed/uuid': 2.0.0
       cookie: 0.4.1
     devDependencies:
-      '@sveltejs/adapter-cloudflare-workers': 0.0.2-next.3
+      '@sveltejs/adapter-cloudflare-workers': link:../../../adapter-cloudflare-workers
       '@sveltejs/adapter-netlify': link:../../../adapter-netlify
       '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': link:../../../kit
@@ -655,13 +655,6 @@ packages:
       picomatch: 2.2.3
       rollup: 2.41.1
     dev: false
-
-  /@sveltejs/adapter-cloudflare-workers/0.0.2-next.3:
-    resolution: {integrity: sha512-eBHQk0CDrRgnTLaFS028BELCz5xmL9o7NuQJ0WDVGk96ldkzqWJIi6MloOYQM0bwVah53zxlcsRckBXJbBdhMg==}
-    dependencies:
-      esbuild: 0.11.12
-      toml: 3.0.0
-    dev: true
 
   /@sveltejs/vite-plugin-svelte/1.0.0-next.7_93fef3a16c1b45ac67b14a795df10192:
     resolution: {integrity: sha512-ENvKYY36jrvFP7h1G87k5uOoEh5UM1m8n40J2duqV/R3wHnxfW81SCR1aXo+5CVU8Prm3/jtS4TWs8CUTqO1fw==}
@@ -1523,6 +1516,7 @@ packages:
     resolution: {integrity: sha512-c8cso/1RwVj+fbDvLtUgSG4ZJQ0y9Zdrl6Ot/GAjyy4pdMCHaFnDMts5gqFnWRPLajWtEnI+3hlET4R9fVoZng==}
     hasBin: true
     requiresBuild: true
+    dev: false
 
   /esbuild/0.9.2:
     resolution: {integrity: sha512-xE3oOILjnmN8PSjkG3lT9NBbd1DbxNqolJ5qNyrLhDWsFef3yTp/KTQz1C/x7BYFKbtrr9foYtKA6KA1zuNAUQ==}
@@ -3605,6 +3599,7 @@ packages:
 
   /toml/3.0.0:
     resolution: {integrity: sha512-y/mWCZinnvxjTKYhJ+pYxwD0mRLVvOtdS2Awbgxln6iEnt4rk0yBxeSBHkGJcPucRiG0e55mwWp+g/05rsrd6w==}
+    dev: false
 
   /totalist/1.1.0:
     resolution: {integrity: sha512-gduQwd1rOdDMGxFG1gEvhV88Oirdo2p+KjoYFU7k2g+i7n6AFFbDQ5kMPUsW0pNbfQsB/cwXvT1i4Bue0s9g5g==}
