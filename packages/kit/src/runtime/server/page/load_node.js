@@ -1,6 +1,6 @@
-import { parse, resolve } from 'url';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
+import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
 
@@ -90,16 +90,20 @@ export async function load_node({
 					url = url.replace(options.paths.assets, '');
 				}
 
-				const parsed = parse(url);
+				if (url.startsWith('//')) {
+					throw new Error(`Cannot request protocol-relative URL (${url}) in server-side fetch`);
+				}
 
 				let response;
 
-				if (parsed.protocol) {
+				if (/^[a-zA-Z]+:/.test(url)) {
 					// external fetch
-					response = await fetch(parsed.href, /** @type {RequestInit} */ (opts));
+					response = await fetch(url, /** @type {RequestInit} */ (opts));
 				} else {
+					const [path, search] = url.split('?');
+
 					// otherwise we're dealing with an internal fetch
-					const resolved = resolve(request.path, parsed.pathname);
+					const resolved = resolve(request.path, path);
 
 					// handle fetch requests for static assets. e.g. prebaked data, etc.
 					// we need to support everything the browser's fetch supports
@@ -151,7 +155,7 @@ export async function load_node({
 								// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object
 								// @ts-ignore
 								rawBody: opts.body,
-								query: new URLSearchParams(parsed.query || '')
+								query: new URLSearchParams(search)
 							},
 							options,
 							{

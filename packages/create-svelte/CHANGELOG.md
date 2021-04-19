@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.56
+
+### Patch Changes
+
+- cdf4d5b: Show git init instructions when creating new project
+- 112d194: Uppercase method in template
+
 ## 2.0.0-next.55
 
 ### Patch Changes

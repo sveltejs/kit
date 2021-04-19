@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 0.0.2-next.3
+
+### Patch Changes
+
+- b372d61: Generate required package.json
+
 ## 0.0.2-next.2
 
 ### Patch Changes

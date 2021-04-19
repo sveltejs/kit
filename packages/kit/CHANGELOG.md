@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.82
+
+### Patch Changes
+
+- 4af45e1: Remove usage of node built-ins from runtime
+
 ## 1.0.0-next.81
 
 ### Patch Changes

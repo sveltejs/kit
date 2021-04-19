@@ -14,12 +14,19 @@ export async function handler(event) {
 		});
 	}
 
+	const rawBody =
+		headers['content-type'] === 'application/octet-stream'
+			? new TextEncoder('base64').encode(body).buffer
+			: isBase64Encoded
+			? Buffer.from(body, 'base64').toString()
+			: body;
+
 	const rendered = await render({
 		method: httpMethod,
 		headers,
 		path,
 		query,
-		rawBody: isBase64Encoded ? new TextEncoder('base64').encode(body).buffer : body
+		rawBody
 	});
 
 	if (rendered) {

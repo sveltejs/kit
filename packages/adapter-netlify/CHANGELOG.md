@@ -1,5 +1,13 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- d3cb858: Convert body to string, unless type is octet-stream
+- Updated dependencies [4af45e1]
+  - @sveltejs/kit@1.0.0-next.82
+
 ## 1.0.0-next.8
 
 ### Patch Changes
