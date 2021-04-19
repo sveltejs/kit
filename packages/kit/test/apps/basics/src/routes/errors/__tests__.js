@@ -174,7 +174,7 @@ export default function (test, is_dev) {
 		const res = await fetch('/errors/invalid-route-response');
 
 		assert.equal(res.status, 500);
-		assert.match(await res.text(), /body is missing/);
+		assert.match(await res.text(), /expected an object/);
 	});
 
 	// TODO before we implemented route fallthroughs, and there was a 1:1

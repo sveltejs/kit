@@ -9,7 +9,7 @@ export type TestContext = {
 	page: Page;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
-	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
+	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<Response>;
 	capture_requests: (fn: () => void) => Promise<string[]>;
 	errors: () => string;
 	js: boolean;
