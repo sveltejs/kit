@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- a4a1075: Work around apparent Cloudflare Workers platform bugs
+
 ## 1.0.0-next.82
 
 ### Patch Changes
