@@ -8,7 +8,7 @@ Please see [sveltejs/integrations](https://github.com/sveltejs/integrations#svel
 
 ### How do I use Babel, CoffeeScript, Less, PostCSS / SugarSS, Pug, scss/sass, Stylus, TypeScript, `global` styles, or replace?
 
-SvelteKit provides [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) by default supporting these libraries and pieces of functionality. For many of these tools you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [https://github.com/sveltejs/svelte-preprocess](svelte-preprocess) docs for full details.
+SvelteKit provides [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) by default supporting these libraries and pieces of functionality. For many of these tools you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the svelte-preprocess docs for full details.
 
 Also see [the examples above](faq#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
 
