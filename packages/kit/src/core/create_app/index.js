@@ -79,7 +79,7 @@ function generate_client_manifest(manifest_data, base) {
 							route.params
 								.map((param, i) => {
 									return param.startsWith('...')
-										? `${param.slice(3)}: d(m[${i + 1}])`
+										? `${param.slice(3)}: d(m[${i + 1}] || '')`
 										: `${param}: d(m[${i + 1}])`;
 								})
 								.join(', ') +
