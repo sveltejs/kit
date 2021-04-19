@@ -3,10 +3,8 @@
  * @param {string} path
  */
 export function resolve(base, path) {
-	if (path[0] === '/') return path;
-
-	const baseparts = base.slice(1).split('/');
-	const pathparts = path.split('/');
+	const baseparts = path[0] === '/' ? [] : base.slice(1).split('/');
+	const pathparts = path[0] === '/' ? path.slice(1).split('/') : path.split('/');
 
 	baseparts.pop();
 
