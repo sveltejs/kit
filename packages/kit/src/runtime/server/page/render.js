@@ -7,14 +7,14 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types').Request;
- *   options: import('types.internal').SSRRenderOptions;
+ *   request: import('types/endpoint').ServerRequest;
+ *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error: Error,
  *   branch: import('./types').Loaded[];
- *   page: import('types').Page
+ *   page: import('types/page').Page
  * }} opts
  */
 export async function render_response({
@@ -26,8 +26,8 @@ export async function render_response({
 	branch,
 	page
 }) {
-	const css = new Set();
-	const js = new Set();
+	const css = new Set(options.entry.css);
+	const js = new Set(options.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, json: string }>} */
@@ -37,6 +37,10 @@ export async function render_response({
 
 	let is_private = false;
 	let maxage;
+
+	if (error) {
+		error.stack = options.get_stack(error);
+	}
 
 	if (branch) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
@@ -51,15 +55,6 @@ export async function render_response({
 
 			maxage = loaded.maxage;
 		});
-
-		if (error) {
-			if (options.dev) {
-				error.stack = await options.get_stack(error);
-			} else {
-				// remove error.stack in production
-				error.stack = String(error);
-			}
-		}
 
 		const session = writable($session);
 
@@ -116,7 +111,7 @@ export async function render_response({
 	} else if (page_config.router || page_config.hydrate) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.entry)};
+			import { start } from ${s(options.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
@@ -163,7 +158,7 @@ export async function render_response({
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
-	/** @type {import('types.internal').Headers} */
+	/** @type {import('types/helper').Headers} */
 	const headers = {
 		'content-type': 'text/html'
 	};

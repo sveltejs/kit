@@ -1,11 +1,12 @@
-import compression from 'compression';
 import fs from 'fs';
-import polka from 'polka';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import compression from 'compression';
+import polka from 'polka';
 import sirv from 'sirv';
-import { URL, fileURLToPath } from 'url';
-// eslint-disable-next-line import/no-unresolved
-import { get_body } from '@sveltejs/kit/http';
+import { getRawBody } from '@sveltejs/kit/http'; // eslint-disable-line import/no-unresolved
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
+
 // App is a dynamic file built from the application layer.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -43,7 +44,7 @@ export function createServer({ render }) {
 				method: req.method,
 				headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 				path: parsed.pathname,
-				body: await get_body(req),
+				rawBody: await getRawBody(req),
 				query: parsed.searchParams
 			});
 

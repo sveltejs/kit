@@ -28,7 +28,7 @@ function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
-	/** @type {import('../../types.internal').Logger} */
+	/** @type {import('types/internal').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
 	log.success = (msg) => log(colors.green(`✔ ${msg}`));
@@ -68,4 +68,9 @@ export function resolve_entry(entry) {
 	}
 
 	return null;
+}
+
+/** @param {string} str */
+export function posixify(str) {
+	return str.replace(/\\/g, '/');
 }

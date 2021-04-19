@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
+import { posixify } from '../utils.js';
 import { mkdirp } from '../filesystem/index.js';
 
 /** @typedef {{
@@ -20,15 +21,15 @@ import { mkdirp } from '../filesystem/index.js';
  *   route_suffix: string
  * }} Item */
 
-/** @typedef {import('types').Translations} Translations */
+/** @typedef {import('types/i18n').Translations} Translations */
 
 /**
  * @param {{
- *   config: import('types.internal').ValidatedConfig;
+ *   config: import('types/config').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('types.internal').ManifestData}
+ * @returns {import('types/internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -151,7 +152,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	}
 
 	/**
-	 * @param {import('types').I18nLocale} locale
+	 * @param {import('types/i18n').I18nLocale} locale
 	 * @param {Translations} translations
 	 */
 	function create_locale_component(locale, translations) {
@@ -338,7 +339,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	/**
 	 * @param {Part[][]} segments
-	 * @param {import('types').I18nLocale} locale
+	 * @param {import('types/i18n').I18nLocale} locale
 	 * @returns {Part[][]}
 	 */
 	function get_prefixed_segments(segments, locale) {
@@ -350,7 +351,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	/**
 	 * @param {Part[][]} segments
-	 * @param {import('types').I18nLocale} locale
+	 * @param {import('types/i18n').I18nLocale} locale
 	 * @param {Translations[]} translations
 	 * @returns {Part[][]}
 	 */
@@ -385,7 +386,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {{[locale: string]: string}} */
 	const locale_components = {};
 
-	/** @type {import('types.internal').RouteData[]} */
+	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
@@ -512,10 +513,16 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
+				const layout_reset = find_layout('$layout.reset', item.file);
 				const layout = find_layout('$layout', item.file);
 				const error = find_layout('$error', item.file);
 				const translations = find_translations('$translations', item.file);
 
+				if (layout_reset && layout) {
+					throw new Error(`Cannot have $layout next to $layout.reset: ${layout_reset}`);
+				}
+
+				if (layout_reset) components.push(layout_reset);
 				if (layout) components.push(layout);
 				if (error) components.push(error);
 
@@ -523,8 +530,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					path.join(dir, item.basename),
 					segments,
 					params,
-					layout_stack.concat(layout),
-					error_stack.concat(error),
+					layout_reset ? [layout_reset] : layout_stack.concat(layout),
+					layout_reset ? [error] : error_stack.concat(error),
 					translations ? translations_stack.concat(translations) : translations_stack
 				);
 			} else if (item.is_page) {
@@ -581,10 +588,15 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 					b.splice(i + 1);
 
+					const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+						? `/${segments.map((segment) => segment[0].content).join('/')}`
+						: null;
+
 					routes.push({
 						type: 'page',
 						pattern,
 						params,
+						path,
 						a,
 						b
 					});
@@ -633,11 +645,6 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }
 
 /** @param {string} path */
@@ -753,7 +760,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('types.internal').Asset[]} files
+ * @param {import('types/internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

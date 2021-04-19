@@ -1,5 +1,44 @@
 # create-svelte
 
+## 2.0.0-next.56
+
+### Patch Changes
+
+- cdf4d5b: Show git init instructions when creating new project
+- 112d194: Uppercase method in template
+
+## 2.0.0-next.55
+
+### Patch Changes
+
+- daf6913: Fix bootstrapping command on about page
+
+## 2.0.0-next.54
+
+### Patch Changes
+
+- a84cb88: Fix global.d.ts rename, Windows build issue, missing adapter-node
+
+## 2.0.0-next.53
+
+### Patch Changes
+
+- 27c2e1d: Fix CSS on demo app hero image
+- bbeb58f: Include dotfiles when creating new project
+- 6a8e73f: Remove large image from create-svelte
+
+## 2.0.0-next.52
+
+### Patch Changes
+
+- f342372: Adding new Hello World templates (default with enhanced style and skeleton) to create-svelte
+
+## 2.0.0-next.51
+
+### Patch Changes
+
+- 4cffc14: add global.d.ts to js version
+
 ## 2.0.0-next.50
 
 ### Patch Changes

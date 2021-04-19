@@ -10,6 +10,8 @@
 	this text is blue
 </div>
 
+<a href="/css/other">other</a>
+
 <style>
 	.also-styled {
 		color: blue;

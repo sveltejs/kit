@@ -53,7 +53,8 @@ type Request<Context = any> = {
 	path: string;
 	params: Record<string, string | string[]>;
 	query: URLSearchParams;
-	body: string | Buffer | ReadOnlyFormData;
+	rawBody: string | ArrayBuffer;
+	body: string | ArrayBuffer | ReadOnlyFormData | any;
 	context: Context; // see getContext, below
 };
 
@@ -93,7 +94,16 @@ export async function get({ params }) {
 
 > Returning nothing is equivalent to an explicit 404 response.
 
-The job of this function is to return a `{status, headers, body}` object representing the response. If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#$lib).)
+The job of this function is to return a `{status, headers, body}` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
+
+- `2xx` — successful response (default is `200`)
+- `3xx` — redirection (should be accompanied by a `location` header)
+- `4xx` — client error
+- `5xx` — server error
+
+> For successful responses, SvelteKit will generate 304s automatically
+
+If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-lib).)
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 

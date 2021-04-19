@@ -142,4 +142,11 @@ export default function (test, is_dev) {
 			assert.equal(await page.textContent('h1'), 'Hello SvelteKit!');
 		}
 	);
+
+	test('exposes rawBody to endpoints', '/load', async ({ page, clicknav }) => {
+		await clicknav('[href="/load/raw-body"]');
+
+		assert.equal(await page.innerHTML('.parsed'), '{"oddly":{"formatted":"json"}}');
+		assert.equal(await page.innerHTML('.raw'), '{ "oddly" : { "formatted" : "json" } }');
+	});
 }

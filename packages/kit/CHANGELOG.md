@@ -1,5 +1,59 @@
 # @sveltejs/kit
 
+## 1.0.0-next.83
+
+### Patch Changes
+
+- a4a1075: Work around apparent Cloudflare Workers platform bugs
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- 4af45e1: Remove usage of node built-ins from runtime
+
+## 1.0.0-next.81
+
+### Patch Changes
+
+- 1237eb3: Expose rawBody on request, and expect rawBody from adapters
+- 1237eb3: Expose getRawBody from kit/http
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- 7a4b351: Expose install-fetch subpackage for adapters to use
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- d3abd97: Fix Windows build output containing backward slashes
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+- 61d7fa0: Better error logging
+- 041b706: Implement layout resets
+- 148819a: Use latest vite-plugin-svelte
+- 9d54eed: Make sveltekit:prefetch a noop if <a> has no href
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- fee388a: Include CSS for entry point/generated component
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- f870909: Pin vite-plugin-svelte version
+- de2466f: Fix stale prerendering bug
+
 ## 1.0.0-next.75
 
 ### Patch Changes

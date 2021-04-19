@@ -1,17 +1,13 @@
-import { createHash } from 'crypto';
 import render_page from './page/index.js';
 import render_endpoint from './endpoint.js';
-
-/** @param {string} body */
-function md5(body) {
-	return createHash('md5').update(body).digest('hex');
-}
+import { parse_body } from './parse_body/index.js';
 
 /**
- * @param {import('../../../types').Incoming} incoming
- * @param {import('../../../types.internal').SSRRenderOptions} options
+ * @param {import('types/hooks').Incoming} incoming
+ * @param {import('types/internal').SSRRenderOptions} options
+ * @param {import('types/internal').SSRRenderState} [state]
  */
-export async function ssr(incoming, options) {
+export async function ssr(incoming, options, state = {}) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
 		const q = incoming.query.toString();
 
@@ -23,12 +19,17 @@ export async function ssr(incoming, options) {
 		};
 	}
 
-	const context = (await options.hooks.getContext(incoming)) || {};
+	const incoming_with_body = {
+		...incoming,
+		body: parse_body(incoming)
+	};
+
+	const context = (await options.hooks.getContext(incoming_with_body)) || {};
 
 	try {
 		return await options.hooks.handle({
 			request: {
-				...incoming,
+				...incoming_with_body,
 				params: null,
 				context
 			},
@@ -39,13 +40,13 @@ export async function ssr(incoming, options) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route)
-							: await render_page(request, route, options);
+							: await render_page(request, route, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses
 						if (response.status === 200) {
 							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-								const etag = `"${md5(response.body)}"`;
+								const etag = `"${hash(response.body)}"`;
 
 								if (request.headers['if-none-match'] === etag) {
 									return {
@@ -63,15 +64,11 @@ export async function ssr(incoming, options) {
 					}
 				}
 
-				return await render_page(request, null, options);
+				return await render_page(request, null, options, state);
 			}
 		});
 	} catch (e) {
-		if (e && e.stack) {
-			e.stack = await options.get_stack(e);
-		}
-
-		console.error((e && e.stack) || e);
+		options.handle_error(e);
 
 		return {
 			status: 500,
@@ -79,4 +76,12 @@ export async function ssr(incoming, options) {
 			body: options.dev ? e.stack : e.message
 		};
 	}
+}
+
+/** @param {string} str */
+export function hash(str) {
+	let hash = 5381,
+		i = str.length;
+	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);
+	return (hash >>> 0).toString(36);
 }

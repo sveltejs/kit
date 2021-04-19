@@ -1,18 +1,19 @@
 import colors from 'kleur';
 import { logger } from '../utils.js';
-import AdapterUtils from './AdapterUtils.js';
+import { get_utils } from './utils.js';
 
 /**
- * @param {import('../../../types.internal').ValidatedConfig} config
+ * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types/internal').BuildData} build_data
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
-export async function adapt(config, { cwd = process.cwd(), verbose }) {
+export async function adapt(config, build_data, { cwd = process.cwd(), verbose }) {
 	const { name, adapt } = config.kit.adapter;
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
 
 	const log = logger({ verbose });
-	const utils = new AdapterUtils({ cwd, config, log });
+	const utils = get_utils({ cwd, config, build_data, log });
 	await adapt(utils);
 
 	log.success('done');
