@@ -19,4 +19,4 @@ export type ServerResponse = {
 
 export type RequestHandler<Context = any, Body = unknown> = (
 	request: ServerRequest<Context, Body>
-) => ServerResponse | Promise<ServerResponse>;
+) => undefined | ServerResponse | Promise<ServerResponse>;
