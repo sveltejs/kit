@@ -1,7 +1,7 @@
 export function get() {
 	return {
 		body: {
-			type: 'hydrate'
+			type: 'no-hydrate'
 		}
 	};
 }

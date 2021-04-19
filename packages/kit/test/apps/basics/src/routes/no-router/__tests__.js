@@ -1,24 +1,24 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../../types').TestMaker} */
+/** @type {import('../../../../../types').TestMaker} */
 export default function (test, is_dev) {
-	test('disables router if router=false', '/routing/disabled/a', async ({ page, clicknav, js }) => {
+	test('disables router if router=false', '/no-router/a', async ({ page, clicknav, js }) => {
 		if (js) {
 			await page.click('button');
 			await page.waitForTimeout(50);
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 
-			await Promise.all([page.click('[href="/routing/disabled/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
 			assert.equal(await page.textContent('button'), 'clicks: 0');
 
 			await page.click('button');
 			await page.waitForTimeout(50);
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 
-			await clicknav('[href="/routing/disabled/a"]');
+			await clicknav('[href="/no-router/a"]');
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 
-			await Promise.all([page.click('[href="/routing/disabled/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
 			assert.equal(await page.textContent('button'), 'clicks: 0');
 		}
 	});
