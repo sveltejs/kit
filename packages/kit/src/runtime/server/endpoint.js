@@ -16,7 +16,7 @@ export default async function render_route(request, route) {
 		const response = await handler({ ...request, params });
 
 		if (response) {
-			if (typeof response !== 'object' || response.body == null) {
+			if (typeof response !== 'object' || (response.status >= 300 && response.status < 400)) {
 				return {
 					status: 500,
 					body: `Invalid response from route ${request.path}; ${
