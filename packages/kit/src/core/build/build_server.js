@@ -116,16 +116,18 @@ export async function build_server(
 				set_paths(settings.paths);
 				set_prerendering(settings.prerendering || false);
 
+				const prefix = (settings.paths.assets === '/.' ? '' : settings.paths.assets) + '/${config.kit.appDir}/';
+
 				options = {
 					amp: ${config.kit.amp},
 					dev: false,
 					entry: {
-						file: ${s(prefix + client_manifest[client_entry_file].file)},
-						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+						file: prefix + '${client_manifest[client_entry_file].file}',
+						css: [${Array.from(entry_css).map(dep => `prefix + '${dep}'`).join(', ')}],
+						js: [${Array.from(entry_js).map(dep => `prefix + '${dep}'`).join(', ')}]
 					},
 					fetched: undefined,
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
+					get_component_path: id => prefix + entry_lookup[id],
 					get_stack: error => String(error), // for security
 					handle_error: error => {
 						console.error(error.stack);

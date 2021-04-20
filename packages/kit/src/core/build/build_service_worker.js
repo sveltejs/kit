@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import vite from 'vite';
-import { s } from '../../utils';
+import { s } from '../../utils.js';
 
 /**
  * @param {{
