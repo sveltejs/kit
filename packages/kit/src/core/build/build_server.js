@@ -38,8 +38,6 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const prefix = `${config.kit.paths.assets}/${config.kit.appDir}/`;
-
 	/**
 	 * @param {string} file
 	 * @param {Set<string>} js_deps
@@ -69,8 +67,8 @@ export async function build_server(
 
 		find_deps(file, js_deps, css_deps);
 
-		const js = Array.from(js_deps).map((url) => prefix + url);
-		const css = Array.from(css_deps).map((url) => prefix + url);
+		const js = Array.from(js_deps);
+		const css = Array.from(css_deps);
 
 		const styles = config.kit.amp
 			? Array.from(css_deps).map((url) => {
@@ -80,7 +78,7 @@ export async function build_server(
 			: null;
 
 		metadata_lookup[file] = {
-			entry: prefix + client_manifest[file].file,
+			entry: client_manifest[file].file,
 			css,
 			js,
 			styles
@@ -136,7 +134,16 @@ export async function build_server(
 					hooks: get_hooks(user_hooks),
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
-					load_component,
+					load_component: async (file) => {
+						const { entry, css, js, styles } = metadata_lookup[file];
+						return {
+							module: await module_lookup[file](),
+							entry: prefix + entry,
+							css: css.map(dep => prefix + dep),
+							js: js.map(dep => prefix + dep),
+							styles
+						};
+					},
 					manifest,
 					paths: settings.paths,
 					read: settings.read,
@@ -197,13 +204,6 @@ export async function build_server(
 			};
 
 			const metadata_lookup = ${s(metadata_lookup)};
-
-			async function load_component(file) {
-				return {
-					module: await module_lookup[file](),
-					...metadata_lookup[file]
-				};
-			}
 
 			init({ paths: ${s(config.kit.paths)} });
 
