@@ -43,7 +43,7 @@ export default async function render_route(request, route) {
 }
 
 /** @param {Record<string, string>} obj */
-function lowercase_keys(obj) {
+export function lowercase_keys(obj) {
 	/** @type {Record<string, string>} */
 	const clone = {};
 
