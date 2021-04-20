@@ -1,11 +1,11 @@
 <script>
-	export let path;
+	import { page } from '$app/stores';
 </script>
 
 <nav>
-	<a href="/" sveltekit:prefetch class:active={path === '/'}>home</a>
-	<a href="/about" sveltekit:prefetch class:active={path === '/about'}>about</a>
-	<a href="/blog" sveltekit:prefetch class:active={path === '/blog'}>blog</a>
+	<a href="/" sveltekit:prefetch class:active={$page.path === '/'}>home</a>
+	<a href="/about" sveltekit:prefetch class:active={$page.path === '/about'}>about</a>
+	<a href="/blog" sveltekit:prefetch class:active={$page.path === '/blog'}>blog</a>
 </nav>
 
 <style>
@@ -24,18 +24,18 @@
 	a {
 		display: block;
 		float: left;
-		color: rgba(0,0,0,0.4);
+		color: rgba(0, 0, 0, 0.4);
 		margin: 0 1em 0 0;
 		text-decoration: none;
 	}
 
 	a + a::before {
 		content: '•';
-		color: rgba(0,0,0,0.4);
+		color: rgba(0, 0, 0, 0.4);
 		margin: 0 1em 0 0;
 	}
 
 	.active {
-		color: rgba(0,0,0,0.9);
+		color: rgba(0, 0, 0, 0.9);
 	}
 </style>
