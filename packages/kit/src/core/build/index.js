@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
@@ -438,11 +438,7 @@ async function build_server(
 		// @ts-ignore
 		ssr: {
 			...user_config.ssr,
-			noExternal: [
-				'svelte',
-				'@sveltejs/kit',
-				...((user_config.ssr && user_config.ssr.noExternal) || [])
-			]
+			noExternal: get_no_external(cwd, user_config.ssr && user_config.ssr.noExternal)
 		},
 		optimizeDeps: {
 			entries: []
