@@ -104,5 +104,5 @@ function find_svelte_packages(cwd) {
  * @param {string[]} [user_specified_deps]
  */
 export function get_no_external(cwd, user_specified_deps = []) {
-	return ['svelte', '@sveltejs/kit', ...user_specified_deps, ...find_svelte_packages(cwd)];
+	return [...user_specified_deps, ...find_svelte_packages(cwd)];
 }

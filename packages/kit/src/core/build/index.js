@@ -438,6 +438,8 @@ async function build_server(
 		// @ts-ignore
 		ssr: {
 			...user_config.ssr,
+			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
+			// but I'm honestly not sure. roll with this for now and see if it's ok
 			noExternal: get_no_external(cwd, user_config.ssr && user_config.ssr.noExternal)
 		},
 		optimizeDeps: {
