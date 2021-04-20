@@ -9,8 +9,8 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
-			"test": ["./types"],
-			"test/*": ["./types/*"],
+			"test": ["./test/types"],
+			"types/*": ["./types/*"],
 			"@sveltejs/kit": ["../types"]
 		}
 	},

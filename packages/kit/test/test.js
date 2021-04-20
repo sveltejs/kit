@@ -325,7 +325,7 @@ async function main() {
 	for (const app of apps) {
 		const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 		const tests = await Promise.all(
-			glob('**/__tests__.js', { cwd }).map((file) => import(pathToFileURL(`${cwd}/${file}`)))
+			glob('**/__tests__.js', { cwd }).map((file) => import(pathToFileURL(`${cwd}/${file}`).href))
 		);
 
 		const config = await load_config({ cwd });

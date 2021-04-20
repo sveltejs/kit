@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('../../../../../../types').Load} */
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
 		const res = await fetch('/load/fetch-credentialed.json');
 

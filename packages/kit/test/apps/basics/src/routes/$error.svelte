@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import('../../../../../types').ErrorLoad} */
+	/** @type {import('@sveltejs/kit').ErrorLoad} */
 	export function load({ status, error }) {
 		return {
 			props: { status, error }

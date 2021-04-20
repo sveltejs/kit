@@ -1,4 +1,4 @@
-/** @type {import('../../../../../../types').RequestHandler} */
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export function post(request) {
 	return {
 		body: {
