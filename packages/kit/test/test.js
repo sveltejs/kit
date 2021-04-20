@@ -173,7 +173,7 @@ function duplicate(test_fn, config, is_build) {
 					...context,
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
-					back: () => context.pages.nojs.goBack(),
+					back: () => context.pages.nojs.goBack().then(() => void 0),
 					response,
 					js: false
 				});
@@ -254,13 +254,14 @@ async function main() {
 		// @ts-ignore
 		globalThis.UVU_INDEX = count - 1;
 
+		/** @type {import('uvu').Test<import('./types').TestContext>} */
 		const suite = uvu.suite(name);
 
 		suite.before(async (context) => {
 			const port = await ports.find(3000);
 
 			try {
-				context.watcher = await dev({ cwd, port, config });
+				context.watcher = await dev({ cwd, port, config, host: undefined, https: false });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
 				console.log(e.stack);
@@ -283,7 +284,9 @@ async function main() {
 
 		/** @type {import('test').TestFunction} */
 		const test = Object.assign(duplicate(suite, config, false), {
+			// @ts-ignore
 			skip: duplicate(suite.skip, config, false),
+			// @ts-ignore
 			only: duplicate(suite.only, config, false)
 		});
 
@@ -304,9 +307,12 @@ async function main() {
 		const name = `build:${app}`;
 
 		// manually replicate uvu global state
+		// @ts-ignore
 		const count = globalThis.UVU_QUEUE.push([name]);
+		// @ts-ignore
 		globalThis.UVU_INDEX = count - 1;
 
+		/** @type {import('uvu').Test<import('./types').TestContext>} */
 		const suite = uvu.suite(name);
 
 		suite.before(async (context) => {
@@ -318,7 +324,7 @@ async function main() {
 					runtime: '../../../../../src/runtime/server/index.js'
 				});
 
-				context.server = await start({ port, config, cwd });
+				context.server = await start({ port, config, cwd, host: undefined, https: false });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
 				// the try-catch is necessary pending https://github.com/lukeed/uvu/issues/80
@@ -342,7 +348,9 @@ async function main() {
 
 		/** @type {import('test').TestFunction} */
 		const test = Object.assign(duplicate(suite, config, true), {
+			// @ts-ignore
 			skip: duplicate(suite.skip, config, true),
+			// @ts-ignore
 			only: duplicate(suite.only, config, true)
 		});
 

@@ -14,7 +14,7 @@ export type TestContext = {
 	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
-	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<Response>;
+	fetch: import('node-fetch');
 	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
 	errors: () => string;
 	js: boolean;
@@ -26,7 +26,10 @@ export type TestContext = {
 		prefetchRoutes: (urls?: string[]) => Promise<void>;
 	};
 
+	watcher: any; // watcher type is not exposed
+	server: import('http').Server;
 	reset: () => Promise<void>;
+	unpatch: () => void;
 };
 
 type TestOptions = {
