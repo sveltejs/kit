@@ -97,6 +97,10 @@ button {
 	font-family: inherit;
 }
 
+button:not(:disabled) {
+	cursor: pointer;
+}
+
 button:focus:not(:focus-visible) {
 	outline: none;
 }
