@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- 59f9277: fix body parsing
+
 ## 1.0.0-next.13
 
 ### Patch Changes
