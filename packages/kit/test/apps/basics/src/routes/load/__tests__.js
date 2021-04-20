@@ -2,7 +2,7 @@ import http from 'http';
 import * as ports from 'port-authority';
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('loads', '/load', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');

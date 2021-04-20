@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test('endpoints can shadow pages', '/routing/shadow', async ({ page, clicknav }) => {
 		const random = String(Math.random());

@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('does not SSR page with ssr=false', '/no-ssr', async ({ page, js }) => {
 		if (js) {

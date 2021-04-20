@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test('escapes inline data', '/xss', async ({ page, js }) => {
 		assert.equal(
@@ -9,6 +9,7 @@ export default function (test) {
 		);
 
 		if (!js) {
+			// @ts-ignore
 			assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
 		}
 	});

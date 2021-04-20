@@ -1,4 +1,5 @@
-import { Page, Response } from 'playwright-chromium';
+import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
+import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
 // seems like that's no longer an issue? in which case we don't need
@@ -7,10 +8,15 @@ import { Page, Response } from 'playwright-chromium';
 export type TestContext = {
 	base: string;
 	page: Page;
+	pages: {
+		js: Page;
+		nojs: Page;
+	};
+	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
-	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<Response>;
-	capture_requests: (fn: () => void) => Promise<string[]>;
+	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<NodeFetchResponse>;
+	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
 	errors: () => string;
 	js: boolean;
 
@@ -21,7 +27,10 @@ export type TestContext = {
 		prefetchRoutes: (urls?: string[]) => Promise<void>;
 	};
 
+	watcher: any; // watcher type is not exposed
+	server: import('http').Server;
 	reset: () => Promise<void>;
+	unpatch: () => void;
 };
 
 type TestOptions = {
@@ -31,7 +40,7 @@ type TestOptions = {
 	build?: boolean;
 };
 
-interface TestFunctionBase {
+export interface TestFunctionBase {
 	(
 		name: string,
 		start: string,

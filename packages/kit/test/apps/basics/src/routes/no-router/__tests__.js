@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('disables router if router=false', '/no-router/a', async ({ page, clicknav, js }) => {
 		if (js) {

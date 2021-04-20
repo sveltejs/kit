@@ -1,7 +1,7 @@
 <script context="module">
 	export const hydrate = false;
 
-	/** @type {import('../../../../../../types').Load} */
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
 		const res = await fetch('/no-hydrate.json');
 

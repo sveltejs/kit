@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test('navigates to ...rest', '/routing/rest/abc/xyz', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'abc/xyz');

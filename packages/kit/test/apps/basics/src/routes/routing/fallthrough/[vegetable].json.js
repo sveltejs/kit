@@ -1,6 +1,6 @@
 const vegetables = new Set(['asparagus', 'broccoli', 'carrot', 'daikon', 'endive']);
 
-/** @type {import("../../../../../../../types").RequestHandler} */
+/** @type {import("@sveltejs/kit").RequestHandler} */
 export function get({ params }) {
 	if (vegetables.has(params.vegetable)) {
 		return {
