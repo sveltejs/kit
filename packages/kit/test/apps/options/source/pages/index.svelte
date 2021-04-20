@@ -4,3 +4,5 @@
 
 <h2>We're on index.svelte</h2>
 <Message/>
+
+<a href="/css">/css</a>
