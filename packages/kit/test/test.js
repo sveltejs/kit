@@ -10,7 +10,10 @@ import { load_config } from '../src/core/load_config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { format } from 'util';
 
-/** @param {{ port: number }} opts */
+/**
+ * @param {{ port: number }} opts
+ * @returns {Promise<Partial<import('./types').TestContext>>}
+ */
 async function setup({ port }) {
 	const base = `http://localhost:${port}`;
 
@@ -54,7 +57,7 @@ async function setup({ port }) {
 		`
 	});
 
-	/** @param {() => Promise<any>} operations */
+	/** @param {() => Promise<void>} operations */
 	const capture_requests = async (operations) => {
 		/** @type {string[]} */
 		const requests = [];
@@ -236,6 +239,12 @@ async function main() {
 		? [process.env.APP]
 		: fs.readdirSync(new URL('apps', import.meta.url));
 
+	/**
+	 * @param {string} app
+	 * @param {string} cwd
+	 * @param {import('types/config').ValidatedConfig} config
+	 * @param {any[]} tests
+	 */
 	async function test_dev(app, cwd, config, tests) {
 		const name = `dev:${app}`;
 
@@ -285,6 +294,12 @@ async function main() {
 		suite.run();
 	}
 
+	/**
+	 * @param {string} app
+	 * @param {string} cwd
+	 * @param {import('types/config').ValidatedConfig} config
+	 * @param {any[]} tests
+	 */
 	async function test_build(app, cwd, config, tests) {
 		const name = `build:${app}`;
 

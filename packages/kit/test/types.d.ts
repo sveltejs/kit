@@ -7,11 +7,15 @@ import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
 export type TestContext = {
 	base: string;
 	page: Page;
+	pages: {
+		js: Page;
+		nojs: Page;
+	};
 	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
 	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<Response>;
-	capture_requests: (fn: () => void) => Promise<string[]>;
+	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
 	errors: () => string;
 	js: boolean;
 

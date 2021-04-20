@@ -14,5 +14,5 @@
 			"@sveltejs/kit": ["../types"]
 		}
 	},
-	"include": ["src/**/*", "test/**/*", "types/**/*"]
+	"include": ["src/**/*", "test/**/*", "types/**/*", "test/types.d.ts", "test/ambient.d.ts"]
 }
