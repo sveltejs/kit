@@ -20,4 +20,4 @@ export type ServerResponse = {
 
 export type RequestHandler<Context = any, Body = unknown> = (
 	request: ServerRequest<Context, Body>
-) => undefined | ServerResponse | Promise<ServerResponse>;
+) => void | ServerResponse | Promise<ServerResponse>;
