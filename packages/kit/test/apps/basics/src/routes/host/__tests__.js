@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
 export default function (test) {
-	test('can access host through page store', async ({ base, page }) => {
+	test('can access host through page store', null, async ({ base, page }) => {
 		page.setExtraHTTPHeaders({
 			'x-forwarded-host': 'forwarded.com'
 		});

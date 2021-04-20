@@ -1,5 +1,6 @@
 import * as assert from 'uvu/assert';
 
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test('works with arbitrary extensions', '/', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'Great success!');

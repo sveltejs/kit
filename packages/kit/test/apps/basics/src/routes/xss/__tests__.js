@@ -9,6 +9,7 @@ export default function (test) {
 		);
 
 		if (!js) {
+			// @ts-ignore
 			assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
 		}
 	});

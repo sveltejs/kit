@@ -7,6 +7,7 @@ export type ServerRequest<Context = any, Body = unknown> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
+	rawBody: string | ArrayBuffer;
 	body: ParameterizedBody<Body>;
 	context: Context;
 };

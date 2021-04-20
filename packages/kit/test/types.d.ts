@@ -1,4 +1,5 @@
 import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
+import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
 // seems like that's no longer an issue? in which case we don't need
@@ -14,7 +15,7 @@ export type TestContext = {
 	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
-	fetch: import('node-fetch');
+	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<NodeFetchResponse>;
 	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
 	errors: () => string;
 	js: boolean;
