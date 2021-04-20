@@ -12,7 +12,7 @@ export default async (req, res) => {
 		headers: req.headers,
 		path: pathname,
 		query: searchParams,
-		body: await getRawBody(req)
+		rawBody: await getRawBody(req)
 	});
 
 	if (rendered) {
