@@ -32,7 +32,7 @@ type TestOptions = {
 	build?: boolean;
 };
 
-interface TestFunctionBase {
+export interface TestFunctionBase {
 	(
 		name: string,
 		start: string,

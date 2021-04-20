@@ -10,6 +10,7 @@ import { load_config } from '../src/core/load_config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { format } from 'util';
 
+/** @param {{ port: number }} opts */
 async function setup({ port }) {
 	const base = `http://localhost:${port}`;
 
@@ -53,8 +54,12 @@ async function setup({ port }) {
 		`
 	});
 
+	/** @param {() => Promise<any>} operations */
 	const capture_requests = async (operations) => {
+		/** @type {string[]} */
 		const requests = [];
+
+		/** @param {import('playwright-chromium').Request} request */
 		const on_request = (request) => requests.push(request.url());
 		pages.js.on('request', on_request);
 
@@ -83,6 +88,10 @@ async function setup({ port }) {
 	return {
 		base,
 		pages,
+		/**
+		 * @param {import('node-fetch').RequestInfo} url
+		 * @param {import('node-fetch').RequestInit} opts
+		 */
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,
 
@@ -133,14 +142,14 @@ function patch_console() {
 	};
 }
 
+/**
+ * @param {import('uvu').Test<import('test').TestContext>} test_fn
+ * @param {import('types/config').ValidatedConfig} config
+ * @param {boolean} is_build
+ * @returns {import('test').TestFunctionBase}
+ */
 function duplicate(test_fn, config, is_build) {
 	return (name, start, callback, { js = true, nojs = true, dev = true, build = true } = {}) => {
-		if (!callback) {
-			// TODO move everything over to new signature
-			callback = start;
-			start = null;
-		}
-
 		if (is_build) {
 			if (!build) return;
 		} else {
@@ -219,6 +228,7 @@ function duplicate(test_fn, config, is_build) {
 }
 
 async function main() {
+	// @ts-ignore
 	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
@@ -230,7 +240,9 @@ async function main() {
 		const name = `dev:${app}`;
 
 		// manually replicate uvu global state
+		// @ts-ignore
 		const count = globalThis.UVU_QUEUE.push([name]);
+		// @ts-ignore
 		globalThis.UVU_INDEX = count - 1;
 
 		const suite = uvu.suite(name);
@@ -260,9 +272,11 @@ async function main() {
 			context.unpatch();
 		});
 
-		const test = duplicate(suite, config, false);
-		test.skip = duplicate(suite.skip, config, false);
-		test.only = duplicate(suite.only, config, false);
+		/** @type {import('test').TestFunction} */
+		const test = Object.assign(duplicate(suite, config, false), {
+			skip: duplicate(suite.skip, config, false),
+			only: duplicate(suite.only, config, false)
+		});
 
 		tests.forEach((mod) => {
 			mod.default(test, true);
@@ -311,9 +325,11 @@ async function main() {
 			context.unpatch();
 		});
 
-		const test = duplicate(suite, config, true);
-		test.skip = duplicate(suite.skip, config, true);
-		test.only = duplicate(suite.only, config, true);
+		/** @type {import('test').TestFunction} */
+		const test = Object.assign(duplicate(suite, config, true), {
+			skip: duplicate(suite.skip, config, true),
+			only: duplicate(suite.only, config, true)
+		});
 
 		tests.forEach((mod) => {
 			mod.default(test, false);
