@@ -1,4 +1,4 @@
-import { Page, Response } from 'playwright-chromium';
+import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
 // seems like that's no longer an issue? in which case we don't need
@@ -7,6 +7,7 @@ import { Page, Response } from 'playwright-chromium';
 export type TestContext = {
 	base: string;
 	page: Page;
+	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
 	back: () => Promise<void>;
 	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<Response>;
