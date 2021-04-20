@@ -1,8 +1,7 @@
+import { s } from '../../../utils.js';
 import { normalize } from '../../load.js';
 import { ssr } from '../index.js';
 import { resolve } from './resolve.js';
-
-const s = JSON.stringify;
 
 /**
  *

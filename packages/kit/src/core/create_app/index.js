@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { s } from '../../utils.js';
 import { mkdirp } from '../filesystem/index.js';
 
 /** @type {Map<string, string>} */
@@ -16,8 +17,6 @@ export function write_if_changed(file, code) {
 		fs.writeFileSync(file, code);
 	}
 }
-
-const s = JSON.stringify;
 
 /** @typedef {import('types/internal').ManifestData} ManifestData */
 
