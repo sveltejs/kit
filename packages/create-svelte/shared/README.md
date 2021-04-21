@@ -36,4 +36,3 @@ npm run build
 ```
 
 > Alternatively, you can preview the built app with `npm preview`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production. Instead, [specify an appropriate adapter](#adapters) and deploy its output to the production environment.
-
