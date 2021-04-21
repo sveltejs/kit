@@ -7,7 +7,7 @@
 		{
 			"files": ["*.svelte"],
 			"options": {
-				"svelteSortOrder": "scripts-markup-styles",
+				"svelteSortOrder": "scripts-markup-styles-options",
 				"svelteBracketNewLine": true
 			}
 		}
