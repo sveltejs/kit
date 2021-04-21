@@ -3,6 +3,13 @@
 	"singleQuote": true,
 	"trailingComma": "none",
 	"printWidth": 100,
-	"svelteSortOrder": "scripts-markup-styles",
-	"svelteBracketNewLine": true
+	"overrides": [
+		{
+			"files": ["*.svelte"],
+			"options": {
+				"svelteSortOrder": "scripts-markup-styles",
+				"svelteBracketNewLine": true
+			}
+		}
+	]
 }
