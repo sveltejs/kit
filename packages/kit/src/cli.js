@@ -108,7 +108,12 @@ prog
 	.command('build')
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
-	.action(async ({ verbose }) => {
+	.option('-P, --preview', 'Serve the app after building', false)
+	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
+	.option('-o, --open', 'Open a browser tab', false)
+	.action(async ({ verbose, preview, port, host, https, open }) => {
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
 
@@ -118,41 +123,27 @@ prog
 
 			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
 
-			if (config.kit.adapter) {
-				const { adapt } = await import('./core/adapt/index.js');
-				await adapt(config, build_data, { verbose });
+			if (preview) {
+				await check_port(port);
+
+				const { start } = await import('./core/start/index.js');
+
+				await start({ port, host, config, https });
+
+				welcome({ port, host, https, open });
 			} else {
-				console.log(colors.bold().yellow('\nNo adapter specified'));
+				if (config.kit.adapter) {
+					const { adapt } = await import('./core/adapt/index.js');
+					await adapt(config, build_data, { verbose });
+				} else {
+					console.log(colors.bold().yellow('\nNo adapter specified'));
 
-				// prettier-ignore
-				console.log(
-					`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
-				);
+					// prettier-ignore
+					console.log(
+						`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
+					);
+				}
 			}
-		} catch (error) {
-			handle_error(error);
-		}
-	});
-
-prog
-	.command('start')
-	.describe('Serve an already-built app')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
-		process.env.NODE_ENV = 'production';
-		const config = await get_config();
-
-		const { start } = await import('./core/start/index.js');
-
-		try {
-			await start({ port, host, config, https });
-
-			welcome({ port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
