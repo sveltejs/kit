@@ -95,7 +95,7 @@ declare module '$service-worker' {
 	 * or whatever directory is specified by `config.kit.files.assets`.
 	 * This is only available to service workers.
 	 */
-	export const assets: string[];
+	export const files: string[];
 	/**
 	 * The result of calling `Date.now()` at build time.
 	 * It's useful for generating unique cache names inside your service worker,
