@@ -121,8 +121,6 @@ prog
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
 
-			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
-
 			if (preview) {
 				await check_port(port);
 

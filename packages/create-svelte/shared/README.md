@@ -35,4 +35,5 @@ Before creating a production version of your app, install an [adapter](https://k
 npm run build
 ```
 
-> You can preview the built app with `npm start`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production.
+> Alternatively, you can preview the built app with `npm preview`, regardless of whether you installed an adapter. This should _not_ be used to serve your app in production. Instead, [specify an appropriate adapter](#adapters) and deploy its output to the production environment.
+

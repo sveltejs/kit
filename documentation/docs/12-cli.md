@@ -4,7 +4,7 @@ title: Command Line Interface
 
 SvelteKit includes a command line interface for building and running your app.
 
-In the default project template `svelte-kit dev`, `svelte-kit build` and `svelte-kit start` are aliased as `npm run dev`, `npm run build` and `npm start` respectively. You can also invoke the CLI with [npx](https://www.npmjs.com/package/npx):
+In the default project template `svelte-kit dev`, `svelte-kit build` and `svelte-kit build --preview` are aliased as `npm run dev`, `npm run build` and `npm preview` respectively. You can also invoke the CLI with [npx](https://www.npmjs.com/package/npx):
 
 ```bash
 npx svelte-kit dev
@@ -25,13 +25,13 @@ Builds a production version of your app, and runs your adapter if you have one s
 
 - `--verbose` — log more detail
 
-### svelte-kit start
+It also has a preview mode for testing the production build locally (irrespective of any adapter that has been applied). It accepts the following options (with the same meaning as in `svelte-kit dev`):
 
-After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit start`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an adapter.
-
-Like `svelte-kit dev`, it accepts the following options:
+- `-P`/`--preview` — serve the app after building
 
 - `-p`/`--port`
 - `-o`/`--open`
 - `-h`/`--host` (note the security caveat [above](#command-line-interface-svelte-kit-dev))
 - `-H`/`--https`
+
+> Preview mode should _not_ be used to serve your app in production. Instead, [specify an appropriate adapter](#adapters) and deploy its output to the production environment.

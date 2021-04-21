@@ -12,6 +12,5 @@ pnpm dev
 ...then open [localhost:3000](http://localhost:3000). To build and start in prod mode:
 
 ```bash
-pnpm build
-pnpm start
+pnpm preview
 ```
