@@ -38,7 +38,7 @@ async function generate_templates(shared) {
 			// ignore contents of .gitignore or .ignore
 			if (!gitignore.accepts(name) || !ignore.accepts(name) || name === '.ignore') return;
 
-			// the package.template.json thing is a bit annoying — basically we want
+			// the package.template.json thing is a bit annoying — basically we want
 			// to be able to develop and deploy the app from here, but have a different
 			// package.json in newly created projects (based on package.template.json)
 			if (/\.(js|ts|svelte|svelte\.md)$/.test(name) || name === 'package.template.json') {
@@ -55,7 +55,7 @@ async function generate_templates(shared) {
 					});
 				}
 			} else {
-				const dest = path.join(assets, name);
+				const dest = path.join(assets, name).replace('.gitignore', 'gitignore'); // npm does wacky stuff to gitignores
 				mkdirp(path.dirname(dest));
 				fs.copyFileSync(path.join(cwd, name), dest);
 			}

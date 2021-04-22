@@ -10,6 +10,7 @@
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.2.3",
+		"@types/prompts": "^2.0.10",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.2.1",
 		"prettier-plugin-svelte": "^2.2.0",
