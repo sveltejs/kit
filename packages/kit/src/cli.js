@@ -159,13 +159,15 @@ prog
 	});
 
 // TODO remove this after a few versions
-prog
-	.command('start')
-	.action(async () => {
-		console.log(colors.bold().red(
-			'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
-		));
-	});
+prog.command('start').action(async () => {
+	console.log(
+		colors
+			.bold()
+			.red(
+				'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
+			)
+	);
+});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
