@@ -2,8 +2,10 @@
 	"name": "@sveltejs/adapter-cloudflare-workers",
 	"version": "0.0.2-next.3",
 	"main": "index.js",
+	"types": "index.d.ts",
 	"files": [
-		"files"
+		"files",
+		"index.d.ts"
 	],
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
