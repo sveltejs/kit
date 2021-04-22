@@ -6,8 +6,8 @@ Most of these issues come from Vite trying to deal with non-ESM libraries. You m
 
 There are a number of known Vite issues, which cause errors in the following circumstances:
 
-- [CommonJS packages](https://github.com/vitejs/vite/issues/2579).
-- [ESM library that imports a CJS library](https://github.com/vitejs/vite/issues/3024)
+- [CommonJS packages in `noExternal`](https://github.com/vitejs/vite/issues/2579)
+- [Svelte component that imports a CJS library](https://github.com/vitejs/vite/issues/3024)
 - [some UMD libraries](https://github.com/vitejs/vite/issues/2679)
 
 Vite 2 is a relatively new library and over time we expect it to become easier to use non-ESM libraries with Vite. However, you might also consider asking the library author to distribute an ESM version of their package or even converting the source for the package entirely to ESM. ESM is now the standard way to write JavaScript libraries and while there are a lot of legacy packages out there the ecosystem will become much easier to work with as more libraries convert to ESM.
