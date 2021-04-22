@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.58
+
+### Patch Changes
+
+- 2bf4338: Add .gitignore files to new projects
+
 ## 2.0.0-next.57
 
 ### Patch Changes
