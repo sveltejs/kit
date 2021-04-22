@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
-		"start": "svelte-kit start"
+		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-netlify": "workspace:*",

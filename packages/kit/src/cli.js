@@ -135,7 +135,7 @@ prog
 	});
 
 prog
-	.command('start')
+	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')

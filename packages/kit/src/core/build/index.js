@@ -283,7 +283,7 @@ async function build_server(
 
 			let options = null;
 
-			// allow paths to be overridden in svelte-kit start
+			// allow paths to be overridden in svelte-kit preview
 			// and in prerendering
 			export function init(settings) {
 				set_paths(settings.paths);
