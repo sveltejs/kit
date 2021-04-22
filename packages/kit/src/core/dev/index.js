@@ -9,7 +9,7 @@ import colors from 'kleur';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
-import { ssr } from '../../runtime/server/index.js';
+import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../http/index.js';
 import { copy_assets, get_no_external } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
@@ -155,7 +155,7 @@ class Watcher extends EventEmitter {
 					const host = /** @type {string} */ (this.config.kit.host ||
 						req.headers[this.config.kit.hostHeader || 'host']);
 
-					const rendered = await ssr(
+					const rendered = await respond(
 						{
 							headers: /** @type {import('types/helper').Headers} */ (req.headers),
 							method: req.method,

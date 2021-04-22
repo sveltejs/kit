@@ -7,7 +7,7 @@ import { parse_body } from './parse_body/index.js';
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
  */
-export async function ssr(incoming, options, state = {}) {
+export async function respond(incoming, options, state = {}) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
 		const q = incoming.query.toString();
 
@@ -79,7 +79,7 @@ export async function ssr(incoming, options, state = {}) {
 }
 
 /** @param {string} str */
-export function hash(str) {
+function hash(str) {
 	let hash = 5381,
 		i = str.length;
 	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);
