@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.57
+
+### Patch Changes
+
+- 4645ad5: Remove obsolete vite.ssr config from template
+- 872d734: Hide out-of-view counter from assistive tech
+
 ## 2.0.0-next.56
 
 ### Patch Changes
