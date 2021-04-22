@@ -160,6 +160,21 @@ prog
 
 // For the benefit of early-adopters. Can later be removed
 prog
+	.command('start')
+	.describe('Serve an already-built app')
+	.option('-p, --port', 'Port', 3000)
+	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
+	.option('-o, --open', 'Open a browser tab', false)
+	.action(async () => {
+		console.log('"svelte-kit preview" will now start your production build locally');
+		console.log(
+			'Use an appropriate adapter for the production environment instead of using preview'
+		);
+	});
+
+// For the benefit of early-adopters. Can later be removed
+prog
 	.command('adapt')
 	.describe('Customise your production build for different platforms')
 	.option('--verbose', 'Log more stuff', false)
