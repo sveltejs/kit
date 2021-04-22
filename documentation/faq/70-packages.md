@@ -6,7 +6,7 @@ Most of these issues come from Vite trying to deal with non-ESM libraries. You m
 
 There are a number of known Vite issues, which cause errors in the following circumstances:
 
-- [packages which use `exports` instead of `module.exports`](https://github.com/vitejs/vite/issues/2579).
+- [CommonJS packages](https://github.com/vitejs/vite/issues/2579).
 - [ESM library that imports a CJS library](https://github.com/vitejs/vite/issues/3024)
 - [some UMD libraries](https://github.com/vitejs/vite/issues/2679)
 
