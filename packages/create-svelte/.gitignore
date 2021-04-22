@@ -5,3 +5,7 @@
 
 /templates/*/.svelte
 /templates/*/build
+/templates/*/.cloudflare
+/templates/*/.vercel_build_output
+/templates/*/.netlify
+/templates/*/dist
