@@ -153,6 +153,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.2.3
+      '@types/prompts': ^2.0.10
       gitignore-parser: ^0.0.2
       kleur: ^4.1.4
       prettier: ^2.2.1
@@ -168,6 +169,7 @@ importers:
       '@sveltejs/kit': link:../kit
       '@types/gitignore-parser': 0.0.0
       '@types/prettier': 2.2.3
+      '@types/prompts': 2.0.10
       gitignore-parser: 0.0.2
       prettier: 2.2.1
       prettier-plugin-svelte: 2.2.0_prettier@2.2.1
@@ -768,6 +770,12 @@ packages:
 
   /@types/prettier/2.2.3:
     resolution: {integrity: sha512-PijRCG/K3s3w1We6ynUKdxEc5AcuuH3NBmMDP8uvKVp6X43UY7NQlTzczakXP3DJR0F4dfNQIGjU2cUeRYs2AA==}
+    dev: true
+
+  /@types/prompts/2.0.10:
+    resolution: {integrity: sha512-W3PEl3l4vmxdgfY6LUG7ysh+mLJOTOFYmSpiLe6MCo1OdEm8b5s6ZJfuTQgEpYNwcMiiaRzJespPS5Py2tqLlQ==}
+    dependencies:
+      '@types/node': 14.14.41
     dev: true
 
   /@types/pug/2.0.4:

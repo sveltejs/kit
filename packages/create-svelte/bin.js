@@ -38,7 +38,7 @@ async function main() {
 		mkdirp(cwd);
 	}
 
-	const options = /** @type {import('../types/internal').Options} */ (await prompts([
+	const options = /** @type {import('./types/internal').Options} */ (await prompts([
 		{
 			type: 'select',
 			name: 'template',
@@ -145,11 +145,11 @@ async function main() {
  */
 function write_template_files(template, typescript, name, cwd) {
 	const dir = dist(`templates/${template}`);
-	copy(`${dir}/assets`, cwd);
+	copy(`${dir}/assets`, cwd, (name) => name.replace('gitignore', '.gitignore'));
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
 	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;
-	const files = /** @type {import('../types/internal').File[]} */ (JSON.parse(
+	const files = /** @type {import('./types/internal').File[]} */ (JSON.parse(
 		fs.readFileSync(manifest, 'utf-8')
 	));
 
@@ -164,11 +164,11 @@ function write_template_files(template, typescript, name, cwd) {
 /**
  *
  * @param {string} cwd
- * @param {import('../types/internal').Options} options
+ * @param {import('./types/internal').Options} options
  */
 function write_common_files(cwd, options) {
 	const shared = dist('shared.json');
-	const { files } = /** @type {import('../types/internal').Common} */ (JSON.parse(
+	const { files } = /** @type {import('./types/internal').Common} */ (JSON.parse(
 		fs.readFileSync(shared, 'utf-8')
 	));
 
