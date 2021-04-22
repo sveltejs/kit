@@ -13,5 +13,5 @@ pnpm dev
 
 ```bash
 pnpm build
-pnpm start
+pnpm preview
 ```

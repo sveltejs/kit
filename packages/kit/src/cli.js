@@ -135,7 +135,7 @@ prog
 	});
 
 prog
-	.command('start')
+	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
@@ -158,13 +158,13 @@ prog
 		}
 	});
 
-// For the benefit of early-adopters. Can later be removed
+// TODO remove this after a few versions
 prog
-	.command('adapt')
-	.describe('Customise your production build for different platforms')
-	.option('--verbose', 'Log more stuff', false)
+	.command('start')
 	.action(async () => {
-		console.log('"svelte-kit build" will now run the adapter');
+		console.log(colors.bold().red(
+			'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
+		));
 	});
 
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });

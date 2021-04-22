@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
-		"start": "svelte-kit start",
+		"preview": "svelte-kit preview",
 		"build:vercel": "ADAPTER=@sveltejs/adapter-vercel OPTIONS={} npm run build",
 		"build:cloudflare-workers": "ADAPTER=@sveltejs/adapter-cloudflare-workers OPTIONS={} npm run build"
 	},
