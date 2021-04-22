@@ -13,7 +13,7 @@ SvelteKit is in public beta now. There are definitely bugs and some feature migh
 If you encounter an issue, have a look at https://github.com/sveltejs/kit/issues and open a new one, if it is not already tracked.
 `;
 
-const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url)));
+const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
@@ -139,7 +139,7 @@ async function main() {
 
 /**
  * @param {string} template
- * @param {string} typescript
+ * @param {boolean} typescript
  * @param {string} name
  * @param {string} cwd
  */
