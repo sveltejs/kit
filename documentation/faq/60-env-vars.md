@@ -6,7 +6,7 @@ Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment varia
 
 For example, you can create a `.env` file in your project root folder with a `VITE_*` variable:
 
-```env
+```sh
 VITE_MESSAGE="World"
 ```
 
