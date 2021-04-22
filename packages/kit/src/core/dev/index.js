@@ -11,7 +11,7 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { ssr } from '../../runtime/server/index.js';
 import { getRawBody } from '../http/index.js';
-import { copy_assets } from '../utils.js';
+import { copy_assets, get_no_external } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
@@ -107,6 +107,10 @@ class Watcher extends EventEmitter {
 			optimizeDeps: {
 				...user_config.optimizeDeps,
 				entries: []
+			},
+			ssr: {
+				...user_config.ssr,
+				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
 			}
 		});
 

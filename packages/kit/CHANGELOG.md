@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.85
+
+### Patch Changes
+
+- 4645ad5: Force Vite to bundle Svelte component libraries in SSR
+- abf0248: Fix \$service-worker types
+
 ## 1.0.0-next.84
 
 ### Patch Changes
