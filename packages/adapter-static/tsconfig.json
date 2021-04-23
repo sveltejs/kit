@@ -10,5 +10,5 @@
 		"allowSyntheticDefaultImports": true,
 		"skipLibCheck": true
 	},
-	"include": ["index.cjs", "test"]
+	"include": ["index.cjs", "test/*.js"]
 }
