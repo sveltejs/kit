@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 4131467: Prerender fallback page for SPAs
+
 ## 1.0.0-next.4
 
 ### Patch Changes
