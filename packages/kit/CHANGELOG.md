@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.86
+
+### Patch Changes
+
+- 2130087: Support multiple rel values on anchor tag
+- ba732ff: Report errors in hooks.js
+- a2f3f4b: Rename `start` to `preview` in the CLI and package scripts
+
 ## 1.0.0-next.85
 
 ### Patch Changes

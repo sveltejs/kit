@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.59
+
+### Patch Changes
+
+- a2f3f4b: Rename `start` to `preview` in the CLI and package scripts
+
 ## 2.0.0-next.58
 
 ### Patch Changes
