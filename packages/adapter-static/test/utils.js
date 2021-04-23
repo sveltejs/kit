@@ -36,7 +36,9 @@ export function run(app, callback) {
 
 			context.cwd = cwd;
 			context.port = await ports.find(4000);
-			const handler = sirv(`${cwd}/build`);
+			const handler = sirv(`${cwd}/build`, {
+				single: '200.html'
+			});
 			context.server = await create_server(context.port, handler);
 
 			context.base = `http://localhost:${context.port}`;
