@@ -29,13 +29,11 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const cli_path = fileURLToPath(new URL('../../kit/svelte-kit.js', import.meta.url));
-
-			console.log(cli_path, fs.existsSync(cli_path));
+			const cli_path = fileURLToPath(new URL('../../kit/src/cli.js', import.meta.url));
 
 			rimraf(`${cwd}/build`);
 
-			await spawn(`${cli_path} build`, {
+			await spawn(`${process.execPath} ${cli_path} build`, {
 				cwd,
 				stdio: 'inherit'
 			});
