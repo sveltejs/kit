@@ -116,7 +116,9 @@ prog
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
 
-			console.log(`\nRun ${colors.bold().cyan('npm start')} to try your app locally.`);
+			console.log(
+				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
+			);
 
 			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
