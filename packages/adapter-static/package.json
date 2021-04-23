@@ -6,7 +6,7 @@
 		"check": "tsc",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"test": "npx rimraf test/apps/*/build && uvu test test.js"
+		"test": "npx --yes rimraf test/apps/*/build && uvu test test.js"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
