@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.87
+
+### Patch Changes
+
+- 4131467: Prerender fallback page for SPAs
+
 ## 1.0.0-next.86
 
 ### Patch Changes
