@@ -31,6 +31,8 @@ export function run(app, callback) {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 			const cli_path = fileURLToPath(new URL('../../kit/svelte-kit.js', import.meta.url));
 
+			console.log(cli_path, fs.existsSync(cli_path));
+
 			rimraf(`${cwd}/build`);
 
 			await spawn(`${cli_path} build`, {
