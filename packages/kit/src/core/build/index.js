@@ -271,7 +271,7 @@ async function build_server(
 	fs.writeFileSync(
 		app_file,
 		`
-			import { ssr } from '${runtime}';
+			import { respond } from '${runtime}';
 			import root from './generated/root.svelte';
 			import { set_paths } from './runtime/paths.js';
 			import { set_prerendering } from './runtime/env.js';
@@ -382,7 +382,7 @@ async function build_server(
 				prerender
 			} = {}) {
 				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
-				return ssr({ ...request, host }, options, { prerender });
+				return respond({ ...request, host }, options, { prerender });
 			}
 		`
 			.replace(/^\t{3}/gm, '')

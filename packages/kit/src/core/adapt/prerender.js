@@ -53,9 +53,10 @@ const REDIRECT = 3;
  *   log: import('types/internal').Logger;
  *   config: import('types/config').ValidatedConfig;
  *   build_data: import('types/internal').BuildData;
- *   force: boolean; // disregard `export const prerender = true`
+ *   fallback: string;
+ *   all: boolean; // disregard `export const prerender = true`
  * }} opts */
-export async function prerender({ cwd, out, log, config, build_data, force }) {
+export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	const dir = resolve_path(cwd, '.svelte/output');
 
 	const seen = new Set();
@@ -110,9 +111,9 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 			},
 			{
 				prerender: {
-					force,
-					dependencies,
-					error: null
+					fallback: null,
+					all,
+					dependencies
 				}
 			}
 		);
@@ -220,5 +221,29 @@ export async function prerender({ cwd, out, log, config, build_data, force }) {
 		} else {
 			await visit(entry, null);
 		}
+	}
+
+	if (fallback) {
+		const rendered = await app.render(
+			{
+				host: config.kit.host,
+				method: 'GET',
+				headers: {},
+				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
+				rawBody: null,
+				query: new URLSearchParams()
+			},
+			{
+				prerender: {
+					fallback,
+					all: false,
+					dependencies: null
+				}
+			}
+		);
+
+		const file = join(out, fallback);
+		mkdirp(dirname(file));
+		writeFileSync(file, rendered.body);
 	}
 }

@@ -50,7 +50,7 @@ export async function respond({ request, options, state, $session, route }) {
 		hydrate: 'hydrate' in leaf ? leaf.hydrate : options.hydrate
 	};
 
-	if (!leaf.prerender && state.prerender && !state.prerender.force) {
+	if (!leaf.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
 		return {
@@ -186,7 +186,6 @@ export async function respond({ request, options, state, $session, route }) {
 
 	try {
 		return await render_response({
-			request,
 			options,
 			$session,
 			page_config,

@@ -33,16 +33,17 @@ export function get_utils({ cwd, config, build_data, log }) {
 			copy(config.kit.files.assets, dest);
 		},
 
-		/** @param {{ force: boolean, dest: string }} opts */
-		async prerender({ force = false, dest }) {
+		/** @param {{ all: boolean, dest: string, fallback: string }} opts */
+		async prerender({ all = false, dest, fallback }) {
 			if (config.kit.prerender.enabled) {
 				await prerender({
 					out: dest,
-					force,
+					all,
 					cwd,
 					config,
 					build_data,
-					log: this.log
+					fallback,
+					log
 				});
 			}
 		}

@@ -1,5 +1,5 @@
 import { normalize } from '../../load.js';
-import { ssr } from '../index.js';
+import { respond } from '../index.js';
 import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
@@ -145,7 +145,7 @@ export async function load_node({
 							}
 						}
 
-						const rendered = await ssr(
+						const rendered = await respond(
 							{
 								host: request.host,
 								method: opts.method || 'GET',

@@ -55,7 +55,6 @@ export async function respond_with_error({ request, options, state, $session, st
 
 	try {
 		return await render_response({
-			request,
 			options,
 			$session,
 			page_config: {
