@@ -1,4 +1,4 @@
-module.exports = function ({ pages = 'build', assets = 'build' } = {}) {
+module.exports = function ({ pages = 'build', assets = 'build', fallback = null } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-static',
@@ -8,7 +8,8 @@ module.exports = function ({ pages = 'build', assets = 'build' } = {}) {
 			utils.copy_client_files(assets);
 
 			await utils.prerender({
-				force: true,
+				fallback,
+				all: !fallback,
 				dest: pages
 			});
 		}
