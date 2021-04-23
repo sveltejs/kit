@@ -1,4 +1,5 @@
 import render_page from './page/index.js';
+import { render_response } from './page/render.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
 
@@ -34,6 +35,18 @@ export async function respond(incoming, options, state = {}) {
 				context
 			},
 			render: async (request) => {
+				if (state.prerender && state.prerender.fallback) {
+					return await render_response({
+						options,
+						$session: await options.hooks.getSession({ context }),
+						page_config: { ssr: false, router: true, hydrate: true },
+						status: 200,
+						error: null,
+						branch: [],
+						page: null
+					});
+				}
+
 				for (const route of options.manifest.routes) {
 					if (!route.pattern.test(request.path)) continue;
 

@@ -92,7 +92,7 @@ suite('prerender', async () => {
 
 	rimraf.sync(dest);
 	await utils.prerender({
-		force: true,
+		all: true,
 		dest
 	});
 

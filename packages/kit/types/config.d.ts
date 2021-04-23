@@ -9,7 +9,15 @@ export type AdapterUtils = {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
-	prerender: ({ force, dest }: { force?: boolean; dest: string }) => Promise<void>;
+	prerender: ({
+		all,
+		dest,
+		fallback
+	}: {
+		all?: boolean;
+		dest: string;
+		fallback?: string;
+	}) => Promise<void>;
 };
 
 export type Adapter = {

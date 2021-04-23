@@ -36,9 +36,9 @@ export type App = {
 		incoming: Incoming,
 		options?: {
 			prerender: {
-				force: boolean;
+				fallback: string;
+				all: boolean;
 				dependencies: Map<string, ServerResponse>;
-				error: Error;
 			};
 		}
 	) => ServerResponse;
@@ -155,10 +155,12 @@ export type SSRRenderState = {
 	fetched?: string;
 	initiator?: SSRPage;
 	prerender?: {
-		force: boolean;
+		fallback: string;
+		all: boolean;
 		dependencies: Map<string, ServerResponse>;
 		error: Error;
 	};
+	fallback?: string;
 };
 
 export type Asset = {
