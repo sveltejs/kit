@@ -1,4 +1,4 @@
-module.exports = function ({ pages = 'build', assets = 'build', fallback = null } = {}) {
+module.exports = function ({ pages = 'build', assets = pages, fallback = null } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-static',
