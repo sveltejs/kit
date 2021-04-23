@@ -10,21 +10,21 @@ In `svelte.config.cjs` add [`vite.resolve.alias`](https://vitejs.dev/config/#res
 // svelte.config.cjs
 const path = require('path');
 module.exports = {
-  kit: {
-    vite: {
-      resolve: {
-        alias: {
-          '$utils': path.resolve('./src/utils')
-        }
-      }
-    }
-  }
+	kit: {
+		vite: {
+			resolve: {
+				alias: {
+					$utils: path.resolve('./src/utils')
+				}
+			}
+		}
+	}
 };
 ```
 
 In `tsconfig.json` (for TypeScript users) or `jsconfig.json` (for JavaScript users) to make VS Code aware of the alias:
 
-```json
+```js
 {
   "compilerOptions": {
     "paths": {
