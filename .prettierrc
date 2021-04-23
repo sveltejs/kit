@@ -5,9 +5,10 @@
 	"printWidth": 100,
 	"overrides": [
 		{
-			"files": ["*.svelte"],
+			"files": [
+				"*.svelte"
+			],
 			"options": {
-				"svelteSortOrder": "scripts-markup-styles-options",
 				"svelteBracketNewLine": true
 			}
 		}
