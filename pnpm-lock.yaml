@@ -116,10 +116,16 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
-      typescript: ^4.2.3
+      playwright-chromium: ^1.10.0
+      port-authority: ^1.1.2
+      sirv: ^1.0.11
+      typescript: ^4.2.4
     devDependencies:
       '@sveltejs/kit': link:../kit
-      typescript: 4.2.3
+      playwright-chromium: 1.10.0
+      port-authority: 1.1.2
+      sirv: 1.0.11
+      typescript: 4.2.4
 
   packages/adapter-vercel:
     specifiers:
@@ -544,10 +550,6 @@ packages:
       fastq: 1.11.0
     dev: true
 
-  /@polka/url/1.0.0-next.11:
-    resolution: {integrity: sha512-3NsZsJIA/22P3QUyrEDNA2D133H4j224twJrdipXN38dpnIOzAbUDtOwkcJ5pXmn75w7LSQDjA4tO9dm1XlqlA==}
-    dev: true
-
   /@polka/url/1.0.0-next.12:
     resolution: {integrity: sha512-6RglhutqrGFMO1MNUXp95RBuYIuc8wTnMAV5MUhLmjTOy78ncwOw7RgeQ/HeymkKXRhZd0s2DNrM1rL7unk3MQ==}
     dev: true
@@ -741,11 +743,6 @@ packages:
     resolution: {integrity: sha512-Lt+wj8NVPx0zUmUwumiVXapmaLUcAk3yPuHCFVXras9k5VT9TdhJqKqGVUQCD60OTMCl0qxJ57OiTL0Mic3Iag==}
     dev: true
 
-  /@types/node/14.14.37:
-    resolution: {integrity: sha512-XYmBiy+ohOR4Lh5jE379fV2IU+6Jn4g5qASinhitfyO71b/sCo6MKsMLF5tc7Zf2CE8hViVQyYSobJNke8OvUw==}
-    dev: true
-    optional: true
-
   /@types/node/14.14.41:
     resolution: {integrity: sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==}
     dev: true
@@ -800,7 +797,7 @@ packages:
   /@types/yauzl/2.9.1:
     resolution: {integrity: sha512-A1b8SU4D10uoPjwb0lnHmmu8wZhR9d+9o2PKBQT2jU5YPTKsxac6M2qGAdY7VcL+dHHhARVUDmeg0rOrcd9EjA==}
     dependencies:
-      '@types/node': 14.14.37
+      '@types/node': 14.14.41
     dev: true
     optional: true
 
@@ -2879,7 +2876,7 @@ packages:
       proxy-from-env: 1.1.0
       rimraf: 3.0.2
       stack-utils: 2.0.3
-      ws: 7.4.4
+      ws: 7.4.5
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -3228,7 +3225,7 @@ packages:
     resolution: {integrity: sha512-SR36i3/LSWja7AJNRBz4fF/Xjpn7lQFI30tZ434dIy+bitLYSP+ZEenHg36i23V2SGEz+kqjksg0uOGZ5LPiqg==}
     engines: {node: '>= 10'}
     dependencies:
-      '@polka/url': 1.0.0-next.11
+      '@polka/url': 1.0.0-next.12
       mime: 2.5.2
       totalist: 1.1.0
     dev: true
@@ -3863,8 +3860,8 @@ packages:
     resolution: {integrity: sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=}
     dev: true
 
-  /ws/7.4.4:
-    resolution: {integrity: sha512-Qm8k8ojNQIMx7S+Zp8u/uHOx7Qazv3Yv4q68MiWWWOJhiwG5W3x7iqmRtJo8xxrciZUY4vRxUTJCKuRnF28ZZw==}
+  /ws/7.4.5:
+    resolution: {integrity: sha512-xzyu3hFvomRfXKH8vOFMU3OguG6oOvhXMo3xsGy3xWExqaM2dxBbVxuD99O7m3ZUFMvvscsZDqxfgMaRr/Nr1g==}
     engines: {node: '>=8.3.0'}
     peerDependencies:
       bufferutil: ^4.0.1
