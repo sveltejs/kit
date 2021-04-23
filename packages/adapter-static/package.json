@@ -17,9 +17,7 @@
 	},
 	"type": "module",
 	"main": "index.cjs",
-	"module": "index.js",
 	"exports": {
-		"import": "./index.js",
 		"require": "./index.cjs"
 	}
 }
