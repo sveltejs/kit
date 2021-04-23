@@ -1,4 +1,5 @@
 import child_process from 'child_process';
+import fs from 'fs';
 import http from 'http';
 import { fileURLToPath } from 'url';
 import * as ports from 'port-authority';
@@ -28,6 +29,8 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
+
+			rimraf(`${cwd}/build`);
 
 			await spawn('npm run build', {
 				cwd,
@@ -90,4 +93,9 @@ function create_server(port, handler) {
 			fulfil(server);
 		});
 	});
+}
+
+/** @param {string} path */
+function rimraf(path) {
+	(fs.rmSync || fs.rmdirSync)(path, { recursive: true, force: true });
 }

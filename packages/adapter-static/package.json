@@ -6,7 +6,7 @@
 		"check": "tsc",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
-		"test": "rm -rf test/apps/*/build && uvu test test.js"
+		"test": "uvu test test.js"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
