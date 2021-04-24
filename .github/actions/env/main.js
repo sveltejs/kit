@@ -1,9 +1,10 @@
 import core from '@actions/core';
-import { platform } from 'os';
+import { homedir, platform } from 'os';
+import { join } from 'path';
 
 const WINDOWS_CACHE_PATH = 'D:\\.pnpm-store\\v3';
 const NIX_CACHE_PATH = '~/.pnpm-store/v3';
-const WINDOWS_BROWSER_PATH = '%LOCALAPPDATA%\\ms-playwright';
+const WINDOWS_BROWSER_PATH = join(homedir(), 'AppData', 'Local', 'ms-playwright');
 const LINUX_BROWSER_PATH = '~/.cache/ms-playwright';
 const MACOS_BROWSER_PATH = '~/Library/Caches/ms-playwright';
 
