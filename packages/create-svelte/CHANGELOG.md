@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.60
+
+### Patch Changes
+
+- 1b816b2: Update version of eslint-plugin-svelte3
+- 6f2b4a6: Update welcome message
+- 6f2b4a6: No adapter by default
+
 ## 2.0.0-next.59
 
 ### Patch Changes

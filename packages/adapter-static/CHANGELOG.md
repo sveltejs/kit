@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- 6f2b4a6: Remove references to npm start
+
 ## 1.0.0-next.5
 
 ### Patch Changes
