@@ -196,10 +196,14 @@ export class Router {
 				// TODO shouldn't need to pass the hash here
 				history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 				return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
+			} else {
+				// Tried to goto unknown path. Redirect to root page
+				location.href = this.base + '/';
 			}
+		} else {
+			location.href = href;
 		}
 
-		location.href = href;
 		return new Promise(() => {
 			/* never resolves */
 		});
