@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@main
         with:
           path: ${{ steps.paths.outputs.browser_cache_path }}
-          key: asdfafd-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
         env:
