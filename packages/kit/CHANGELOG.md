@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.88
+
+### Patch Changes
+
+- 6f2b4a6: Remove references to npm start
+
 ## 1.0.0-next.87
 
 ### Patch Changes
