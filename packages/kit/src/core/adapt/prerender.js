@@ -75,10 +75,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	/** @type {(status: number, path: string, parent: string, verb: string) => void} */
 	const error = config.kit.prerender.force
 		? (status, path, parent, verb) => {
-				log.error(`${status} ${path} (${verb} from ${parent})`);
+				log.error(`${status} ${path}${parent ? ` (${verb} from ${parent})` : ''}`);
 		  }
 		: (status, path, parent, verb) => {
-				throw new Error(`${status} ${path} (${verb} from ${parent})`);
+				throw new Error(`${status} ${path}${parent ? ` (${verb} from ${parent})` : ''}`);
 		  };
 
 	const files = new Set([...build_data.static, ...build_data.client]);
