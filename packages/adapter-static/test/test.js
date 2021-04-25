@@ -31,8 +31,8 @@ run('spa', (test) => {
 		assert.equal(await page.textContent('h1'), 'This page was not prerendered');
 	});
 
-	test('renders index page when JS runs for missing page', async ({ base, page }) => {
+	test('renders error page for missing page', async ({ base, page }) => {
 		await page.goto(`${base}/nosuchpage`);
-		assert.equal(await page.textContent('h1'), 'This page was not prerendered');
+		assert.equal(await page.textContent('h1'), 'Error 404');
 	});
 });

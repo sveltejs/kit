@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Redirect to base on unknown initial path. Fixes #1190.
+Show error page on unknown initial path. Fixes #1190.

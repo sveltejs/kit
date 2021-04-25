@@ -174,12 +174,10 @@ export class Router {
 
 		const routes = this.routes.filter(([pattern]) => pattern.test(path));
 
-		if (routes.length > 0) {
-			const query = new URLSearchParams(url.search);
-			const id = `${path}?${query}`;
+		const query = new URLSearchParams(url.search);
+		const id = `${path}?${query}`;
 
-			return { id, routes, path, query };
-		}
+		return { id, routes, path, query };
 	}
 
 	/**
@@ -196,14 +194,10 @@ export class Router {
 				// TODO shouldn't need to pass the hash here
 				history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 				return this._navigate(info, noscroll ? scroll_state() : null, chain, url.hash);
-			} else {
-				// Tried to goto unknown path. Redirect to root page
-				location.href = this.base + '/';
 			}
-		} else {
-			location.href = href;
 		}
 
+		location.href = href;
 		return new Promise(() => {
 			/* never resolves */
 		});
