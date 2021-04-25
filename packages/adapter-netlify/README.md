@@ -4,6 +4,28 @@ Adapter for Svelte apps that creates a Netlify app, using a function for dynamic
 
 This is very experimental; the adapter API isn't at all fleshed out, and things will definitely change.
 
+## Installation
+
+> ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
+
+```bash
+npm i -D @sveltejs/adapter-netlify@next
+```
+
+You can then configure it inside of `svelte.config.cjs`:
+
+```js
+const adapter = require('@sveltejs/adapter-netlify');
+module.exports = {
+	kit: {
+		adapter: adapter(),
+		target: '#svelte'
+	}
+};
+```
+
+The Netlify adapter currently does not take any options.
+
 ## Configuration
 
 This adapter expects to find a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. It will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
