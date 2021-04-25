@@ -19,7 +19,13 @@ const adapter = require('@sveltejs/adapter-netlify');
 module.exports = {
 	kit: {
 		adapter: adapter(), // currently the adapter does not take any options
-		target: '#svelte'
+		target: '#svelte',
+		prerender: { // recommend prerendering roots for Netlify, see https://kit.svelte.dev/docs#ssr-and-javascript-prerender
+			crawl: true,
+			enabled: true,
+			force: true,
+			pages: ['*'],
+		},
 	}
 };
 ```
