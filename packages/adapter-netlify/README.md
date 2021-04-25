@@ -22,8 +22,9 @@ module.exports = {
 		target: '#svelte'
 	}
 };
+```
 
-This adapter expects to find a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. It will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
+Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
 
 ```toml
 [build]
