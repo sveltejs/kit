@@ -40,3 +40,7 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 ```
 
 It's recommended that you add the `build` and `functions` folders (or whichever other folders you specify) to your `.gitignore`.
+
+## Extra Resources
+
+Guide for SvelteKit + Netlify Forms users: https://dev.to/swyx/how-to-use-sveltekit-with-netlify-forms-5gmj
