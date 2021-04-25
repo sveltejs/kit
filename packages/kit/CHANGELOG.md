@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.89
+
+### Patch Changes
+
+- 927e63c: update the error message of prerender to optionally include the parent variable
+
 ## 1.0.0-next.88
 
 ### Patch Changes
