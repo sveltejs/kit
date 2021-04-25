@@ -18,15 +18,10 @@ You can then configure it inside of `svelte.config.cjs`:
 const adapter = require('@sveltejs/adapter-netlify');
 module.exports = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter(), // currently the adapter does not take any options
 		target: '#svelte'
 	}
 };
-```
-
-The Netlify adapter currently does not take any options.
-
-## Configuration
 
 This adapter expects to find a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. It will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
 
