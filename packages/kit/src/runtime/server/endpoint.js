@@ -19,7 +19,7 @@ export default async function render_route(request, route) {
 			if (typeof response !== 'object') {
 				return {
 					status: 500,
-					body: `Invalid response from route ${request.path}; 
+					body: `Invalid response from route ${request.path};
 						 expected an object, got ${typeof response}`,
 					headers: {}
 				};
@@ -29,10 +29,7 @@ export default async function render_route(request, route) {
 
 			headers = lowercase_keys(headers);
 
-			if (
-				(typeof body === 'object' && !('content-type' in headers)) ||
-				headers['content-type'] === 'application/json'
-			) {
+			if (typeof body === 'object' && !('content-type' in headers)) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				body = JSON.stringify(body);
 			}
