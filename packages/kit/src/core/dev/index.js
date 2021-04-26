@@ -212,9 +212,9 @@ class Watcher extends EventEmitter {
 										}
 									}
 								}
+
 								let entry = `/${id}`;
 								if (!entry.endsWith('.svelte')) {
-									// TODO utility method?
 									entry += '?import';
 								}
 								return {
