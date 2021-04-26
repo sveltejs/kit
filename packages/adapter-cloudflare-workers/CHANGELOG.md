@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 0.0.2-next.4
+
+### Patch Changes
+
+- 2e72a94: Add type declarations
+
 ## 0.0.2-next.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.91
+
+### Patch Changes
+
+- 82955ec: fix: adapt to svelte ids without ?import in vite 2.2.3
+
 ## 1.0.0-next.90
 
 ### Patch Changes
