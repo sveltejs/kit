@@ -10,12 +10,6 @@ module.exports = {
 		adapter: node(),
 
 		// hydrate the <div id="svelte"> element in src/app.html
-		target: '#svelte',
-
-		vite: {
-			ssr: {
-				noExternal: Object.keys(pkg.dependencies || {})
-			}
-		}
+		target: '#svelte'
 	}
 };
