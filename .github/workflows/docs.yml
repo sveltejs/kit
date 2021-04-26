@@ -6,7 +6,7 @@ on:
       - master
     paths:
       - documentation/**
-      - packages/*/ README>md
+      - packages/*/README.md
 
 jobs:
   release:
