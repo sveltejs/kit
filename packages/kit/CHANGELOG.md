@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.91
+
+### Patch Changes
+
+- 82955ec: fix: adapt to svelte ids without ?import in vite 2.2.3
+
+## 1.0.0-next.90
+
+### Patch Changes
+
+- ac60208: Exit process after adapting
+
+## 1.0.0-next.89
+
+### Patch Changes
+
+- 927e63c: update the error message of prerender to optionally include the parent variable
+
+## 1.0.0-next.88
+
+### Patch Changes
+
+- 6f2b4a6: Remove references to npm start
+
 ## 1.0.0-next.87
 
 ### Patch Changes

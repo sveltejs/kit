@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### getContext
 
-This function runs on every incoming request. It generates the `context` object that is available to [endpoint handlers](#routing-endpoints) as `request.context`, and used to derive the [`session`](#hooks-getsession) object available in the browser.
+This function runs on every incoming request. It generates the `context` object that is available to [endpoint handlers](#routing-endpoints) as `request.context` and that is used to derive the [`session`](#hooks-getsession) object available in the browser.
 
 If unimplemented, context is `{}`.
 
@@ -43,7 +43,7 @@ export async function getContext({ headers }) {
 
 ### getSession
 
-This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is safe to expose to the browser. It runs whenever SvelteKit renders a page.
+This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is safe to expose to the browser. It runs whenever SvelteKit server-renders a page.
 
 If unimplemented, session is `{}`.
 

@@ -7,10 +7,9 @@
 		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.34.0",
-		"vite": "^2.1.0"
+		"vite": "^2.2.3"
 	},
 	"type": "module"
 }

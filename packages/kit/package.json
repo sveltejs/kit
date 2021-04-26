@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.87",
+	"version": "1.0.0-next.91",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.7",
@@ -32,11 +32,11 @@
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.3",
 		"uvu": "^0.5.1",
-		"vite": "^2.1.0"
+		"vite": "^2.2.3"
 	},
 	"peerDependencies": {
 		"svelte": "^3.32.1",
-		"vite": "^2.1.0"
+		"vite": "^2.2.3"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"

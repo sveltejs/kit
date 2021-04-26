@@ -4,9 +4,27 @@ Adapter for Svelte apps that creates a Netlify app, using a function for dynamic
 
 This is very experimental; the adapter API isn't at all fleshed out, and things will definitely change.
 
-## Configuration
+## Installation
 
-This adapter expects to find a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. It will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
+> ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
+
+```bash
+npm i -D @sveltejs/adapter-netlify@next
+```
+
+You can then configure it inside of `svelte.config.cjs`:
+
+```js
+const adapter = require('@sveltejs/adapter-netlify');
+module.exports = {
+	kit: {
+		adapter: adapter(), // currently the adapter does not take any options
+		target: '#svelte'
+	}
+};
+```
+
+Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
 
 ```toml
 [build]
@@ -16,3 +34,7 @@ This adapter expects to find a [netlify.toml](https://docs.netlify.com/configure
 ```
 
 It's recommended that you add the `build` and `functions` folders (or whichever other folders you specify) to your `.gitignore`.
+
+## Extra Resources
+
+Guide for SvelteKit + Netlify Forms users: https://dev.to/swyx/how-to-use-sveltekit-with-netlify-forms-5gmj

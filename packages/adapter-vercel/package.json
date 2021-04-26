@@ -1,9 +1,11 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.14",
+	"version": "1.0.0-next.15",
 	"main": "index.js",
+	"types": "index.d.ts",
 	"files": [
-		"files"
+		"files",
+		"index.d.ts"
 	],
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",

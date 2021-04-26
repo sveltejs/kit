@@ -10,7 +10,7 @@ Please see [sveltejs/integrations](https://github.com/sveltejs/integrations#svel
 
 Adding [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) to your [`svelte.config.cjs`](#configuration) is the first step. For many of the tools listed above, you only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the svelte-preprocess docs for full details.
 
-Also see [the examples above](/faq#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
+Also see [the examples above](#how-do-i-use-x-with-sveltekit-how-do-i-setup-library-x) of setting up these and similar libraries.
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
@@ -31,22 +31,19 @@ You can also run code in `onMount` if you'd like to run it after the component h
 ```html
 <script>
 	import { onMount } from 'svelte';
-	import { browser } from '$app/env';
 
 	let awkward;
 
 	onMount(async () => {
-		if (browser) {
-			const module = await import('some-browser-only-library');
-			awkward = module.default;
-		}
+		const module = await import('some-browser-only-library');
+		awkward = module.default;
 	});
 </script>
 ```
 
 ### How do I setup a database?
 
-Put the code to query your database in [endpoints](../docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
 ### How do I use Axios?
 

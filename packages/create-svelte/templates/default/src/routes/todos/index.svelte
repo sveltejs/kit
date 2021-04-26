@@ -67,12 +67,7 @@
 		<div class="todo" class:done={todo.done} transition:scale|local={{start:0.7}} animate:flip={{duration:200}}>
 			<form action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				pending: (data) => {
-					const done = !!data.get('done');
-
-					todos = todos.map(t => {
-						if (t === todo) return { ...t, done };
-						return t;
-					});
+					todo.done = !!data.get('done');
 				},
 				result: patch
 			}}>
