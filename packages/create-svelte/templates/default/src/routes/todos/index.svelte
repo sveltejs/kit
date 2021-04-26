@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+	import { tick } from 'svelte';
 	import { enhance } from '$lib/form';
 	import type { Load } from '@sveltejs/kit';
 
@@ -44,7 +45,21 @@
 		});
 	}
 
-	let heading;
+	let addInput;
+	let todoInputs = [];
+	async function manageFocus(i) {
+		await tick();
+		console.log(todoInputs);
+		const nextInput = todoInputs[i + 1];
+		const previousInput = todoInputs[i - 1];
+		if (nextInput) {
+			nextInput.focus();
+		} else if (previousInput) {
+			previousInput.focus();
+		} else {
+			addInput.focus();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -52,7 +67,7 @@
 </svelte:head>
 
 <div class="todos">
-	<h1 tabindex="-1" bind:this={heading}>Todos</h1>
+	<h1>Todos</h1>
 
 	<form class="new" action="/todos.json" method="post" use:enhance={{
 		result: async (res, form) => {
@@ -62,10 +77,10 @@
 			form.reset();
 		}
 	}}>
-		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo">
+		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" bind:this={addInput}>
 	</form>
 
-	{#each todos as todo (todo.uid)}
+	{#each todos as todo, i (todo.uid)}
 		<div class="todo" class:done={todo.done} transition:scale|local={{start:0.7}} animate:flip={{duration:200}}>
 			<form action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				pending: (data) => {
@@ -80,14 +95,14 @@
 			<form class="text" action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				result: patch
 			}}>
-				<input aria-label="Edit todo" type="text" name="text" value={todo.text}>
+				<input aria-label="Edit todo" type="text" name="text" value={todo.text} bind:this={todoInputs[i]}>
 				<button class="save" aria-label="Save todo"/>
 			</form>
 
 			<form action="/todos/{todo.uid}.json?_method=delete" method="post" use:enhance={{
-				result: () => {
+				result: async () => {
+					await manageFocus(i);
 					todos = todos.filter(t => t.uid !== todo.uid);
-					heading.focus();
 				}
 			}}>
 				<button class="delete" aria-label="Delete todo"/>
@@ -204,9 +219,5 @@
 	.save:focus {
 		transition: opacity 0.2s;
 		opacity: 1;
-	}
-
-	[tabindex="-1"] {
-		outline: none;
 	}
 </style>
