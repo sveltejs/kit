@@ -3,18 +3,12 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 // GET /todos.json
 export const get: RequestHandler = async (request) => {
-	if (!request.context.userid) {
-		// the user has never visited the site before
-		// and so doesn't yet have a userid, which is
-		// set in `handle`, in src/hooks.js
-		return { body: [] };
-	}
-
+	// request.context.userid comes from src/hooks.js
 	const response = await api(request, `todos/${request.context.userid}`);
 
 	if (response.status === 404) {
-		// the user has visited before, but hasn't yet
-		// created a todo list. start with an empty array
+		// user hasn't created a todo list.
+		// start with an empty array
 		return { body: [] };
 	}
 

@@ -63,7 +63,7 @@ jobs:
         uses: actions/cache@main
         with:
           path: ${{ steps.paths.outputs.browser_cache_path }}
-          key: pw-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
         env:
@@ -100,4 +100,4 @@ jobs:
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build && pnpm build --filter="svelte-kit-demo" --filter="hn.svelte.dev"
+      - run: pnpm build && pnpm build --filter="hn.svelte.dev"

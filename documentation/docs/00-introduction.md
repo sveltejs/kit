@@ -6,14 +6,14 @@ title: Introduction
 
 > SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
 >
-> See the [migration guides](migrating) for help upgrading from Sapper.
+> See the [migration guides](/migrating) for help upgrading from Sapper.
 
 ### What is SvelteKit?
 
 SvelteKit is a framework for building extremely high-performance web apps. You're looking at one right now! There are two basic concepts:
 
-* Each page of your app is a [Svelte](https://svelte.dev) component
-* You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
+- Each page of your app is a [Svelte](https://svelte.dev) component
+- You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
 
 Building an app with all the modern best practices — code-splitting, offline support, server-rendered views with client-side hydration — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 

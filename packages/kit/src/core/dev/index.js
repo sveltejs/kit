@@ -9,9 +9,9 @@ import colors from 'kleur';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
-import { ssr } from '../../runtime/server/index.js';
+import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../http/index.js';
-import { copy_assets, get_no_external } from '../utils.js';
+import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
@@ -136,26 +136,20 @@ class Watcher extends EventEmitter {
 
 					if (req.url === '/favicon.ico') return;
 
-					const hooks = /** @type {import('types/internal').Hooks} */ (await this.vite
-						.ssrLoadModule(`/${this.config.kit.files.hooks}`)
-						.catch(() => ({})));
+					/** @type {import('types/internal').Hooks} */
+					const hooks = resolve_entry(this.config.kit.files.hooks)
+						? await this.vite.ssrLoadModule(`/${this.config.kit.files.hooks}`)
+						: {};
 
-					let root;
-
-					try {
-						root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`)).default;
-					} catch (e) {
-						res.statusCode = 500;
-						res.end(e.stack);
-						return;
-					}
+					const root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`))
+						.default;
 
 					const rawBody = await getRawBody(req);
 
 					const host = /** @type {string} */ (this.config.kit.host ||
 						req.headers[this.config.kit.hostHeader || 'host']);
 
-					const rendered = await ssr(
+					const rendered = await respond(
 						{
 							headers: /** @type {import('types/helper').Headers} */ (req.headers),
 							method: req.method,
@@ -297,6 +291,7 @@ class Watcher extends EventEmitter {
 					}
 				} catch (e) {
 					this.vite.ssrFixStacktrace(e);
+					res.statusCode = 500;
 					res.end(e.stack);
 				}
 			});

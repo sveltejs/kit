@@ -1,4 +1,5 @@
 import render_page from './page/index.js';
+import { render_response } from './page/render.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
 
@@ -7,7 +8,7 @@ import { parse_body } from './parse_body/index.js';
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
  */
-export async function ssr(incoming, options, state = {}) {
+export async function respond(incoming, options, state = {}) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
 		const q = incoming.query.toString();
 
@@ -34,6 +35,18 @@ export async function ssr(incoming, options, state = {}) {
 				context
 			},
 			render: async (request) => {
+				if (state.prerender && state.prerender.fallback) {
+					return await render_response({
+						options,
+						$session: await options.hooks.getSession({ context }),
+						page_config: { ssr: false, router: true, hydrate: true },
+						status: 200,
+						error: null,
+						branch: [],
+						page: null
+					});
+				}
+
 				for (const route of options.manifest.routes) {
 					if (!route.pattern.test(request.path)) continue;
 
@@ -79,7 +92,7 @@ export async function ssr(incoming, options, state = {}) {
 }
 
 /** @param {string} str */
-export function hash(str) {
+function hash(str) {
 	let hash = 5381,
 		i = str.length;
 	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);

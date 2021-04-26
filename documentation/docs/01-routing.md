@@ -8,9 +8,9 @@ At the heart of SvelteKit is a _filesystem-based router_. This means that the st
 
 There are two types of route — **pages** and **endpoints**.
 
-Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default pages are rendered on both the client and server though this behavior is configurable.
+Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
 
-Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default though may also return data in other formats.
+Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
 
 ### Pages
 
@@ -43,7 +43,7 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```ts
 type Request<Context = any> = {
@@ -94,7 +94,7 @@ export async function get({ params }) {
 
 > Returning nothing is equivalent to an explicit 404 response.
 
-The job of this function is to return a `{status, headers, body}` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
+The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
 - `2xx` — successful response (default is `200`)
 - `3xx` — redirection (should be accompanied by a `location` header)

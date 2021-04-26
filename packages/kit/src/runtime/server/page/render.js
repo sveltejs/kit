@@ -7,7 +7,6 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types/endpoint').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
@@ -121,7 +120,7 @@ export async function render_response({
 				session: ${try_serialize($session, (error) => {
 					throw new Error(`Failed to serialize session data: ${error.message}`);
 				})},
-				host: ${page.host ? s(page.host) : 'location.host'},
+				host: ${page && page.host ? s(page.host) : 'location.host'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				hydrate: ${page_config.ssr && page_config.hydrate? `{

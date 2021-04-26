@@ -6,18 +6,20 @@ import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts';
 import { mkdirp, copy } from './utils.js';
 
+// prettier-ignore
 const disclaimer = `
-Welcome to the SvelteKit setup wizard!
+${bold(cyan('Welcome to SvelteKit!'))}
 
-SvelteKit is in public beta now. There are definitely bugs and some feature might not work yet.
-If you encounter an issue, have a look at https://github.com/sveltejs/kit/issues and open a new one, if it is not already tracked.
+${bold(red('This is beta software; expect bugs and missing features.'))}
+
+If you encounter a problem, open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
 `;
 
-const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url)));
+const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
 
 async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
-	console.log(red(disclaimer));
+	console.log(disclaimer);
 
 	const cwd = process.argv[2] || '.';
 
@@ -130,7 +132,7 @@ async function main() {
 
 	// prettier-ignore
 	console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional step)`);
-	console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, or yarn)`);
+	console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
 	console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
@@ -139,7 +141,7 @@ async function main() {
 
 /**
  * @param {string} template
- * @param {string} typescript
+ * @param {boolean} typescript
  * @param {string} name
  * @param {string} cwd
  */
