@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts';
 import { mkdirp, copy } from './utils.js';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 // prettier-ignore
 const disclaimer = `
@@ -21,18 +23,20 @@ async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(disclaimer);
 
+	const { argv } = yargs(hideBin(process.argv));
 	const cwd = process.argv[2] || '.';
+	prompts.override(argv);
 
 	if (fs.existsSync(cwd)) {
 		if (fs.readdirSync(cwd).length > 0) {
 			const response = await prompts({
 				type: 'confirm',
-				name: 'value',
+				name: 'overwrite',
 				message: 'Directory not empty. Continue?',
 				initial: false
 			});
 
-			if (!response.value) {
+			if (!response.overwrite) {
 				process.exit(1);
 			}
 		}

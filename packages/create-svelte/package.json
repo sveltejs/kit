@@ -4,13 +4,15 @@
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
-		"prompts": "^2.4.0"
+		"prompts": "^2.4.0",
+		"yargs": "^16.2.0"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.2.3",
 		"@types/prompts": "^2.0.10",
+		"@types/yargs": "^16.0.1",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.2.1",
 		"prettier-plugin-svelte": "^2.2.0",
