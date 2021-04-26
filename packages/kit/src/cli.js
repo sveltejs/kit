@@ -123,14 +123,17 @@ prog
 			if (config.kit.adapter) {
 				const { adapt } = await import('./core/adapt/index.js');
 				await adapt(config, build_data, { verbose });
-			} else {
-				console.log(colors.bold().yellow('\nNo adapter specified'));
 
-				// prettier-ignore
-				console.log(
-					`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
-				);
+				// this is necessary to close any open db connections, etc
+				process.exit(0);
 			}
+
+			console.log(colors.bold().yellow('\nNo adapter specified'));
+
+			// prettier-ignore
+			console.log(
+				`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
+			);
 		} catch (error) {
 			handle_error(error);
 		}
