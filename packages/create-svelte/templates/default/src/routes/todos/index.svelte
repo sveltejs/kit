@@ -49,7 +49,6 @@
 	let todoInputs = [];
 	async function manageFocus(i) {
 		await tick();
-		console.log(todoInputs);
 		const nextInput = todoInputs[i + 1];
 		const previousInput = todoInputs[i - 1];
 		if (nextInput) {
