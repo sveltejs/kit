@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.90
+
+### Patch Changes
+
+- ac60208: Exit process after adapting
+
 ## 1.0.0-next.89
 
 ### Patch Changes
