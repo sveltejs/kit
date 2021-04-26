@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- 2e72a94: Add type declarations
+
 ## 1.0.0-next.6
 
 ### Patch Changes
