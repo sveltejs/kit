@@ -16,4 +16,10 @@ Then you can access this variable in any of your components:
 <h1>Hello, {import.meta.env.VITE_MESSAGE}</h1>
 ```
 
+You can also use [Vite's `define` option](https://vitejs.dev/config/#define):
+
+```
+define: { 'process.env.FOO': 'process.env.FOO' }
+```
+
 Please see [the Vite documentation](https://vitejs.dev/guide/env-and-mode.html#env-files) for more info about environment variables.
