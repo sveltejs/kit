@@ -43,7 +43,9 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. All endpoints have access to `fetch` globally without needing to import an external dependency.
+
+For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```ts
 type Request<Context = any> = {
@@ -80,11 +82,16 @@ export async function get({ params }) {
 	// is called [slug].json.js
 	const { slug } = params;
 
+	// global fetch without imports
+	const response = await fetch('/my-api');
+	const apiData = await response.json();
+
 	const article = await db.get(slug);
 
 	if (article) {
 		return {
 			body: {
+				apiData,
 				article
 			}
 		};
