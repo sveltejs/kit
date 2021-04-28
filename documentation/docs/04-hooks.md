@@ -43,7 +43,7 @@ export async function getContext({ headers }) {
 
 ### getSession
 
-This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is safe to expose to the browser. It runs whenever SvelteKit server-renders a page.
+This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is [accessible on the client](#modules-$app-stores). It runs whenever SvelteKit server-renders a page.
 
 If unimplemented, session is `{}`.
 
