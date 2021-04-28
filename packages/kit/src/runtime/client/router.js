@@ -180,7 +180,6 @@ export class Router {
 		if (this.enabled) {
 			const url = new URL(href, get_base_uri(document));
 
-			// TODO shouldn't need to pass the hash here
 			history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
 			return this._navigate(url, noscroll ? scroll_state() : null, chain, url.hash);
 		}
