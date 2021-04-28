@@ -72,6 +72,8 @@ const options = {
 				}
 			},
 
+			floc: expect_boolean(false),
+
 			host: expect_string(null),
 
 			hostHeader: expect_string(null),

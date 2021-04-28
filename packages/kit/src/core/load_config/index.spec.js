@@ -23,6 +23,7 @@ test('fills in defaults', () => {
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},
+			floc: false,
 			host: null,
 			hostHeader: null,
 			hydrate: true,
@@ -105,6 +106,7 @@ test('fills in partial blanks', () => {
 				setup: 'src/setup',
 				template: 'src/app.html'
 			},
+			floc: false,
 			host: null,
 			hostHeader: null,
 			hydrate: true,
