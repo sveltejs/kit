@@ -37,7 +37,9 @@ export default async function render_route(request, route) {
 				body = JSON.stringify(body);
 			}
 
-			return (body ? { status, body, headers } : { status, headers});
+			// (body ? { status, body, headers } : { status, headers})
+
+			return { status, body, headers };
 		}
 	}
 }
