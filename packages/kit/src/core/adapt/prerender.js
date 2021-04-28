@@ -143,7 +143,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
-				writeFileSync(file, rendered.body); // TODO minify where possible?
+				writeFileSync(file, rendered.body);
 			} else if (response_type !== OK) {
 				error(rendered.status, path, parent, 'linked');
 			}
