@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.92
+
+### Patch Changes
+
+- 354e384: Allow FormData to be passed as RequestHandler type Body argument
+- b1bfe83: Show error page on unknown initial path. Fixes #1190.
+
 ## 1.0.0-next.91
 
 ### Patch Changes
