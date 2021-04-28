@@ -15,7 +15,7 @@ export async function respond(incoming, options, state = {}) {
 		return {
 			status: 301,
 			headers: {
-				location: encodeURI(incoming.path.slice(0, -1)) + (q ? `?${q}` : ''))
+				location: encodeURI((incoming.path.slice(0, -1)) + (q ? `?${q}` : ''))
 			}
 		};
 	}
