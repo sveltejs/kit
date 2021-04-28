@@ -174,12 +174,10 @@ export class Router {
 
 		const routes = this.routes.filter(([pattern]) => pattern.test(path));
 
-		if (routes.length > 0) {
-			const query = new URLSearchParams(url.search);
-			const id = `${path}?${query}`;
+		const query = new URLSearchParams(url.search);
+		const id = `${path}?${query}`;
 
-			return { id, routes, path, query };
-		}
+		return { id, routes, path, query };
 	}
 
 	/**
