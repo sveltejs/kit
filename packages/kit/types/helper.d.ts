@@ -8,7 +8,9 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 }
 
 export type BaseBody = string | Buffer | ReadOnlyFormData;
-export type ParameterizedBody<Body = unknown> = BaseBody & Body;
+export type ParameterizedBody<Body = unknown> = Body extends FormData
+	? ReadOnlyFormData
+	: BaseBody & Body;
 
 // TODO we want to differentiate between request headers, which
 // always follow this type, and response headers, in which
