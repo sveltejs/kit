@@ -92,7 +92,7 @@ export async function get({ params }) {
 }
 ```
 
-> Returning nothing is equivalent to an explicit 404 response.
+> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs.
 
 The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
@@ -101,9 +101,11 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-> For successful responses, SvelteKit will generate 304s automatically
+> For successful responses, SvelteKit will generate 304s automatically.
 
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-lib).)
+
+> Returning nothing is equivalent to an explicit 404 response.
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
