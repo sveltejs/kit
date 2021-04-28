@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('redirect', '/redirect', async ({ base, page, clicknav }) => {
 		await clicknav('[href="/redirect/a"]');
@@ -9,7 +9,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'c');
 	});
 
-	test('prevents redirect loops', '/redirect', async ({ base, page, clicknav, js }) => {
+	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
 		await page.click('[href="/redirect/loopy/a"]');
 
 		if (js) {

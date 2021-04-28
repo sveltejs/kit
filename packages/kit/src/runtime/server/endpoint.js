@@ -1,12 +1,12 @@
 /**
- * @param {import('types').Request} request
- * @param {import('types.internal').SSREndpoint} route
- * @returns {Promise<import('types').Response>}
+ * @param {import('types/endpoint').ServerRequest} request
+ * @param {import('types/internal').SSREndpoint} route
+ * @returns {Promise<import('types/endpoint').ServerResponse>}
  */
 export default async function render_route(request, route) {
 	const mod = await route.load();
 
-	/** @type {import('types').RequestHandler} */
+	/** @type {import('types/endpoint').RequestHandler} */
 	const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 	if (handler) {
@@ -16,12 +16,11 @@ export default async function render_route(request, route) {
 		const response = await handler({ ...request, params });
 
 		if (response) {
-			if (typeof response !== 'object' || response.body == null) {
+			if (typeof response !== 'object') {
 				return {
 					status: 500,
-					body: `Invalid response from route ${request.path}; ${
-						response.body == null ? 'body is missing' : `expected an object, got ${typeof response}`
-					}`,
+					body: `Invalid response from route ${request.path}; 
+						 expected an object, got ${typeof response}`,
 					headers: {}
 				};
 			}

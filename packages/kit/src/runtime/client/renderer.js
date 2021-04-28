@@ -46,7 +46,7 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
-/** @typedef {import('types.internal').CSRComponent} CSRComponent */
+/** @typedef {import('types/internal').CSRComponent} CSRComponent */
 
 export class Renderer {
 	/** @param {{
@@ -68,16 +68,17 @@ export class Renderer {
 
 		this.started = false;
 
+		this.session_id = 1;
+
 		/** @type {import('./types').NavigationState} */
 		this.current = {
 			page: null,
-			query: null,
-			session_changed: false,
-			nodes: [],
-			contexts: []
+			session_id: null,
+			branch: []
 		};
 
-		this.caches = new Map();
+		/** @type {Map<string, import('./types').NavigationResult>} */
+		this.cache = new Map();
 
 		this.loading = {
 			id: null,
@@ -99,7 +100,7 @@ export class Renderer {
 			this.$session = value;
 
 			if (!ready) return;
-			this.current.session_changed = true;
+			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
 			this.update(info, []);
@@ -108,10 +109,73 @@ export class Renderer {
 	}
 
 	/**
-	 * @param {import('./types').NavigationCandidate} selected
+	 * @param {{
+	 *   status: number;
+	 *   error: Error;
+	 *   nodes: Array<Promise<CSRComponent>>;
+	 *   page: import('types/page').Page;
+	 * }} selected
 	 */
-	async start(selected) {
-		const result = await this._load(selected);
+	async start({ status, error, nodes, page }) {
+		/** @type {import('./types').BranchNode[]} */
+		const branch = [];
+
+		/** @type {Record<string, any>} */
+		let context = {};
+
+		/** @type {import('./types').NavigationResult} */
+		let result;
+
+		/** @type {number} */
+		let new_status;
+
+		/** @type {Error} new_error */
+		let new_error;
+
+		try {
+			for (let i = 0; i < nodes.length; i += 1) {
+				const is_leaf = i === nodes.length - 1;
+
+				const node = await this._load_node({
+					module: await nodes[i],
+					page,
+					context,
+					status: is_leaf && status,
+					error: is_leaf && error
+				});
+
+				branch.push(node);
+
+				if (node && node.loaded) {
+					if (node.loaded.error) {
+						if (error) throw node.loaded.error;
+						new_status = node.loaded.status;
+						new_error = node.loaded.error;
+					} else if (node.loaded.context) {
+						context = {
+							...context,
+							...node.loaded.context
+						};
+					}
+				}
+			}
+
+			result = await this._get_navigation_result_from_branch({ page, branch });
+		} catch (e) {
+			if (error) throw e;
+
+			new_status = 500;
+			new_error = e;
+		}
+
+		if (new_error) {
+			result = await this._load_error({
+				status: new_status,
+				error: new_error,
+				path: page.path,
+				query: page.query
+			});
+		}
 
 		if (result.redirect) {
 			// this is a real edge case — `load` would need to return
@@ -152,36 +216,14 @@ export class Renderer {
 		// abort if user navigated during update
 		if (token !== this.token) return;
 
-		if (navigation_result.reload) {
-			location.reload();
-		} else if (navigation_result.redirect) {
+		if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
-				// TODO this is a lil hacky. investigate why we can't
-				// just use this._load_error(...)
-				const layout = await this.fallback[0];
-				const error = await this.fallback[1];
-
-				const props = {
+				navigation_result = await this._load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
-					components: [layout.default, error.default]
-				};
-
-				this.root.$set(props);
-
-				navigation_result = {
-					state: {
-						page: null,
-						query: null,
-						session_changed: false,
-						nodes: [
-							{ module: layout, uses: null },
-							{ module: error, uses: null }
-						],
-						contexts: []
-					},
-					props
-				};
+					path: info.path,
+					query: info.query
+				});
 			} else {
 				if (this.router) {
 					this.router.goto(navigation_result.redirect, { replaceState: true }, [
@@ -194,6 +236,10 @@ export class Renderer {
 
 				return;
 			}
+		}
+
+		if (navigation_result.reload) {
+			location.reload();
 		} else if (this.started) {
 			this.current = navigation_result.state;
 
@@ -209,8 +255,8 @@ export class Renderer {
 		this.loading.promise = null;
 		this.loading.id = null;
 
-		const leaf_node = navigation_result.state.nodes[navigation_result.state.nodes.length - 1];
-		if (leaf_node.module.router === false) {
+		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
+		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
 		} else {
 			this.router.enable();
@@ -226,56 +272,6 @@ export class Renderer {
 		this.loading.id = info.id;
 
 		return this.loading.promise;
-	}
-
-	/**
-	 * @param {import('./types').NavigationInfo} info
-	 * @returns {Promise<import('./types').NavigationResult>}
-	 */
-	async _get_navigation_result(info) {
-		if (this.loading.id === info.id) {
-			return this.loading.promise;
-		}
-
-		for (let i = 0; i < info.routes.length; i += 1) {
-			const route = info.routes[i];
-			const [pattern, parts, params] = route;
-
-			if (route.length === 1) {
-				return { reload: true };
-			}
-
-			// load code for subsequent routes immediately, if they are as
-			// likely to match the current path/query as the current one
-			let j = i + 1;
-			while (j < info.routes.length) {
-				const next = info.routes[j];
-				if (next[0].toString() === pattern.toString()) {
-					if (next.length !== 1) next[1].forEach((loader) => loader());
-					j += 1;
-				} else {
-					break;
-				}
-			}
-
-			const nodes = parts.map((loader) => loader());
-			const page = {
-				host: this.host,
-				path: info.path,
-				params: params ? params(route[0].exec(info.path)) : {},
-				query: info.query
-			};
-
-			const result = await this._load({ status: 200, error: null, nodes, page });
-			if (result) return result;
-		}
-
-		return await this._load_error({
-			status: 404,
-			error: new Error(`Not found: ${info.path}`),
-			path: info.path,
-			query: info.query
-		});
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -298,59 +294,242 @@ export class Renderer {
 	}
 
 	/**
-	 * @param {import('./types').NavigationCandidate} selected
+	 * @param {import('./types').NavigationInfo} info
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _load({ status, error, nodes, page }) {
-		const query = page.query.toString();
+	async _get_navigation_result(info) {
+		if (this.loading.id === info.id) {
+			return this.loading.promise;
+		}
+
+		for (let i = 0; i < info.routes.length; i += 1) {
+			const route = info.routes[i];
+
+			if (route.length === 1) {
+				return { reload: true };
+			}
+
+			// load code for subsequent routes immediately, if they are as
+			// likely to match the current path/query as the current one
+			let j = i + 1;
+			while (j < info.routes.length) {
+				const next = info.routes[j];
+				if (next[0].toString() === route[0].toString()) {
+					if (next.length !== 1) next[1].forEach((loader) => loader());
+					j += 1;
+				} else {
+					break;
+				}
+			}
+
+			const result = await this._load({ route, path: info.path, query: info.query });
+			if (result) return result;
+		}
+
+		return await this._load_error({
+			status: 404,
+			error: new Error(`Not found: ${info.path}`),
+			path: info.path,
+			query: info.query
+		});
+	}
+
+	/**
+	 *
+	 * @param {{
+	 *   page: import('types/page').Page;
+	 *   branch: import('./types').BranchNode[]
+	 * }} opts
+	 */
+	async _get_navigation_result_from_branch({ page, branch }) {
+		const filtered = branch.filter(Boolean);
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
 			state: {
 				page,
-				query,
-				session_changed: false,
-				nodes: [],
-				contexts: []
+				branch,
+				session_id: this.session_id
 			},
 			props: {
-				status,
-				error,
-
-				/** @type {CSRComponent[]} */
-				components: []
+				components: filtered.map((node) => node.module.default)
 			}
 		};
 
-		const changed = {
-			path: !this.current.page || page.path !== this.current.page.path,
-			params: Object.keys(page.params).filter((key) => {
-				return !this.current.page || this.current.page.params[key] !== page.params[key];
-			}),
-			query: query !== this.current.query,
-			session: this.current.session_changed,
-			context: false
+		for (let i = 0; i < filtered.length; i += 1) {
+			if (filtered[i].loaded) result.props[`props_${i}`] = await filtered[i].loaded.props;
+		}
+
+		if (
+			!this.current.page ||
+			page.path !== this.current.page.path ||
+			page.query.toString() !== this.current.page.query.toString()
+		) {
+			result.props.page = page;
+		}
+
+		const leaf = filtered[filtered.length - 1];
+		const maxage = leaf.loaded && leaf.loaded.maxage;
+
+		if (maxage) {
+			const hash = `${page.path}?${page.query}`;
+			let ready = false;
+
+			const clear = () => {
+				if (this.cache.get(hash) === result) {
+					this.cache.delete(hash);
+				}
+
+				unsubscribe();
+				clearTimeout(timeout);
+			};
+
+			const timeout = setTimeout(clear, maxage * 1000);
+
+			const unsubscribe = this.stores.session.subscribe(() => {
+				if (ready) clear();
+			});
+
+			ready = true;
+
+			this.cache.set(hash, result);
+		}
+
+		return result;
+	}
+
+	/**
+	 *
+	 * @param {{
+	 *   status?: number;
+	 *   error?: Error;
+	 *   module: CSRComponent;
+	 *   page: import('types/page').Page;
+	 *   context: Record<string, any>;
+	 * }} options
+	 * @returns
+	 */
+	async _load_node({ status, error, module, page, context }) {
+		/** @type {import('./types').BranchNode} */
+		const node = {
+			module,
+			uses: {
+				params: new Set(),
+				path: false,
+				query: false,
+				session: false,
+				context: false
+			},
+			loaded: null,
+			context
 		};
 
-		try {
-			const component_promises = nodes; // TODO redundant
-			const props_promises = [];
+		/** @type {Record<string, string>} */
+		const params = {};
+		for (const key in page.params) {
+			Object.defineProperty(params, key, {
+				get() {
+					node.uses.params.add(key);
+					return page.params[key];
+				},
+				enumerable: true
+			});
+		}
 
-			/** @type {Record<string, any>} */
-			let context;
+		const session = this.$session;
 
-			for (let i = 0; i < component_promises.length; i += 1) {
-				const previous = this.current.nodes[i];
-				const previous_context = this.current.contexts[i];
+		if (module.load) {
+			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
+			const load_input = {
+				page: {
+					host: page.host,
+					params,
+					get path() {
+						node.uses.path = true;
+						return page.path;
+					},
+					get query() {
+						node.uses.query = true;
+						return page.query;
+					}
+				},
+				get session() {
+					node.uses.session = true;
+					return session;
+				},
+				get context() {
+					node.uses.context = true;
+					return { ...context };
+				},
+				fetch: this.started ? fetch : initial_fetch
+			};
 
-				const module = await component_promises[i];
-				result.props.components[i] = module.default;
+			if (error) {
+				/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
+				/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
+			}
 
-				if (module.preload) {
-					throw new Error(
-						'preload has been deprecated in favour of load. Please consult the documentation: https://kit.svelte.dev/docs#loading'
-					);
-				}
+			const loaded = await module.load.call(null, load_input);
+
+			// if the page component returns nothing from load, fall through
+			if (!loaded) return;
+
+			node.loaded = normalize(loaded);
+			if (node.loaded.context) node.context = node.loaded.context;
+		}
+
+		return node;
+	}
+
+	/**
+	 * @param {import('./types').NavigationCandidate} selected
+	 * @returns {Promise<import('./types').NavigationResult>}
+	 */
+	async _load({ route, path, query }) {
+		const hash = `${path}?${query}`;
+
+		if (this.cache.has(hash)) {
+			return this.cache.get(hash);
+		}
+
+		const [pattern, a, b, get_params] = route;
+		const params = get_params ? get_params(pattern.exec(path)) : {};
+
+		const changed = this.current.page && {
+			path: path !== this.current.page.path,
+			params: Object.keys(params).filter((key) => this.current.page.params[key] !== params[key]),
+			query: query.toString() !== this.current.page.query.toString(),
+			session: this.session_id !== this.current.session_id
+		};
+
+		/** @type {import('types/page').Page} */
+		const page = { host: this.host, path, query, params };
+
+		/** @type {import('./types').BranchNode[]} */
+		const branch = [];
+
+		/** @type {Record<string, any>} */
+		let context = {};
+		let context_changed = false;
+
+		/** @type {number} */
+		let status = 200;
+
+		/** @type {Error} */
+		let error = null;
+
+		// preload modules
+		a.forEach((loader) => loader());
+
+		load: for (let i = 0; i < a.length; i += 1) {
+			/** @type {import('./types').BranchNode} */
+			let node;
+
+			try {
+				if (!a[i]) continue;
+
+				const module = await a[i]();
+				const previous = this.current.branch[i];
 
 				const changed_since_last_render =
 					!previous ||
@@ -359,179 +538,97 @@ export class Renderer {
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
-					(changed.context && previous.uses.context);
+					(context_changed && previous.uses.context);
 
 				if (changed_since_last_render) {
-					const hash = page.path + query;
+					node = await this._load_node({
+						module,
+						page,
+						context
+					});
 
-					// see if we have some cached data
-					const cache = this.caches.get(module);
-					const cached = cache && cache.get(hash);
+					const is_leaf = i === a.length - 1;
 
-					/** @type {import('./types').PageNode} */
-					let node;
-
-					/** @type {import('types.internal').LoadOutput} */
-					let loaded;
-
-					if (cached && (!changed.context || !cached.node.uses.context)) {
-						({ node, loaded } = cached);
-					} else {
-						node = {
-							module,
-							uses: {
-								params: new Set(),
-								path: false,
-								query: false,
-								session: false,
-								context: false
-							}
-						};
-
-						const params = {};
-						for (const key in page.params) {
-							Object.defineProperty(params, key, {
-								get() {
-									node.uses.params.add(key);
-									return page.params[key];
-								},
-								enumerable: true
-							});
+					if (node && node.loaded) {
+						if (node.loaded.error) {
+							status = node.loaded.status;
+							error = node.loaded.error;
 						}
 
-						const session = this.$session;
-
-						if (module.load) {
-							loaded = await module.load.call(null, {
-								page: {
-									host: page.host,
-									params,
-									get path() {
-										node.uses.path = true;
-										return page.path;
-									},
-									get query() {
-										node.uses.query = true;
-										return page.query;
-									}
-								},
-								get session() {
-									node.uses.session = true;
-									return session;
-								},
-								get context() {
-									node.uses.context = true;
-									return { ...context };
-								},
-								fetch: this.started ? fetch : initial_fetch
-							});
-
-							// if the page component returns nothing from load, fall through
-							const is_leaf = i === component_promises.length - 1 && !error;
-							if (!loaded && is_leaf) return;
-						}
-					}
-
-					if (loaded) {
-						loaded = normalize(loaded);
-
-						if (loaded.error) {
-							if (error) {
-								// error while rendering error page, oops
-								throw error;
-							}
-
-							return await this._load_error({
-								status: loaded.status || 500,
-								error: loaded.error,
-								path: page.path,
-								query: page.query
-							});
-						}
-
-						if (loaded.redirect) {
+						if (node.loaded.redirect) {
 							return {
-								redirect: loaded.redirect
+								redirect: node.loaded.redirect
 							};
 						}
 
-						if (loaded.context) {
-							changed.context = true;
+						if (node.loaded.context) {
+							context_changed = true;
+						}
+					} else if (is_leaf && module.load) {
+						// if the leaf node has a `load` function
+						// that returns nothing, fall through
+						return;
+					}
+				} else {
+					node = previous;
+				}
+			} catch (e) {
+				status = 500;
+				error = e;
+			}
 
-							context = {
-								...context,
-								...loaded.context
-							};
+			if (error) {
+				while (i--) {
+					if (b[i]) {
+						let error_loaded;
+
+						/** @type {import('./types').BranchNode} */
+						let node_loaded;
+						let j = i;
+						while (!(node_loaded = branch[j])) {
+							j -= 1;
 						}
 
-						if (loaded.maxage) {
-							if (!this.caches.has(module)) {
-								this.caches.set(module, new Map());
-							}
-
-							const cache = this.caches.get(module);
-							const cached = { node, loaded };
-
-							cache.set(hash, cached);
-
-							let ready = false;
-
-							const timeout = setTimeout(() => {
-								clear();
-							}, loaded.maxage * 1000);
-
-							const clear = () => {
-								if (cache.get(hash) === cached) {
-									cache.delete(hash);
-								}
-
-								unsubscribe();
-								clearTimeout(timeout);
-							};
-
-							const unsubscribe = this.stores.session.subscribe(() => {
-								if (ready) clear();
+						try {
+							error_loaded = await this._load_node({
+								status,
+								error,
+								module: await b[i](),
+								page,
+								context: node_loaded.context
 							});
 
-							ready = true;
+							if (error_loaded.loaded.error) {
+								continue;
+							}
+
+							branch.push(error_loaded);
+							break load;
+						} catch (e) {
+							continue;
 						}
-
-						props_promises[i] = loaded.props;
 					}
-
-					result.state.nodes[i] = node;
-					result.state.contexts[i] = context;
-				} else {
-					result.state.nodes[i] = previous;
-					result.state.contexts[i] = context = previous_context;
 				}
-			}
 
-			// we allow returned `props` to be a Promise so that
-			// layout/page loads can happen in parallel
-			(await Promise.all(props_promises)).forEach((p, i) => {
-				if (p) {
-					result.props[`props_${i}`] = p;
+				return await this._load_error({
+					status,
+					error,
+					path,
+					query
+				});
+			} else {
+				if (node && node.loaded && node.loaded.context) {
+					context = {
+						...context,
+						...node.loaded.context
+					};
 				}
-			});
 
-			if (!this.current.page || page.path !== this.current.page.path || changed.query) {
-				result.props.page = page;
+				branch.push(node);
 			}
-
-			return result;
-		} catch (e) {
-			if (error) {
-				throw error;
-			}
-
-			return await this._load_error({
-				status: 500,
-				error: e,
-				path: page.path,
-				query: page.query
-			});
 		}
+
+		return await this._get_navigation_result_from_branch({ page, branch });
 	}
 
 	/**
@@ -543,16 +640,30 @@ export class Renderer {
 	 * }} opts
 	 */
 	async _load_error({ status, error, path, query }) {
-		return await this._load({
-			status,
-			error,
-			nodes: this.fallback,
-			page: {
-				host: this.host,
-				path,
-				query,
-				params: {}
-			}
+		const page = {
+			host: this.host,
+			path,
+			query,
+			params: {}
+		};
+
+		const node = await this._load_node({
+			module: await this.fallback[0],
+			page,
+			context: {}
 		});
+
+		const branch = [
+			node,
+			await this._load_node({
+				status,
+				error,
+				module: await this.fallback[1],
+				page,
+				context: node && node.loaded && node.loaded.context
+			})
+		];
+
+		return await this._get_navigation_result_from_branch({ page, branch });
 	}
 }

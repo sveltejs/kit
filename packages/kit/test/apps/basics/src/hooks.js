@@ -1,6 +1,6 @@
 import cookie from 'cookie';
 
-/** @type {import('../../../../types').GetContext} */
+/** @type {import('@sveltejs/kit').GetContext} */
 export function getContext(request) {
 	const cookies = cookie.parse(request.headers.cookie || '');
 
@@ -10,13 +10,13 @@ export function getContext(request) {
 	};
 }
 
-/** @type {import('../../../../types').GetSession} */
+/** @type {import('@sveltejs/kit').GetSession} */
 export function getSession({ context }) {
 	return context;
 }
 
-/** @type {import('../../../../types').Handle} */
-export async function handle(request, render) {
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ request, render }) {
 	const response = await render(request);
 
 	if (response) {

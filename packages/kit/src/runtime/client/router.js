@@ -19,7 +19,7 @@ function find_anchor(node) {
 export class Router {
 	/** @param {{
 	 *    base: string;
-	 *    routes: import('types.internal').CSRRoute[];
+	 *    routes: import('types/internal').CSRRoute[];
 	 * }} opts */
 	constructor({ base, routes }) {
 		this.base = base;
@@ -72,7 +72,7 @@ export class Router {
 		/** @param {MouseEvent} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(/** @type {Node} */ (event.target));
-			if (a && a.hasAttribute('sveltekit:prefetch')) {
+			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
 				this.prefetch(new URL(/** @type {string} */ (a.href)));
 			}
 		};
@@ -118,8 +118,12 @@ export class Router {
 
 			// Ignore if tag has
 			// 1. 'download' attribute
-			// 2. rel='external' attribute
-			if (a.hasAttribute('download') || a.getAttribute('rel') === 'external') return;
+			// 2. 'rel' attribute includes external
+			const rel = a.getAttribute('rel')?.split(/\s+/);
+
+			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
+				return;
+			}
 
 			// Ignore if <a> has a target
 			if (svg ? /** @type {SVGAElement} */ (a).target.baseVal : a.target) return;

@@ -23,12 +23,18 @@ pnpm i
 ...then build SvelteKit and the other packages:
 
 ```bash
-pnpm -r build
+pnpm build
 ```
 
 You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
 
 Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
+
+To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
+
+```bash
+git config core.hookspath .githooks
+```
 
 ### Changelogs
 

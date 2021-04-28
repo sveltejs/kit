@@ -2,7 +2,7 @@ import http from 'http';
 import * as ports from 'port-authority';
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('loads', '/load', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
@@ -142,4 +142,11 @@ export default function (test, is_dev) {
 			assert.equal(await page.textContent('h1'), 'Hello SvelteKit!');
 		}
 	);
+
+	test('exposes rawBody to endpoints', '/load', async ({ page, clicknav }) => {
+		await clicknav('[href="/load/raw-body"]');
+
+		assert.equal(await page.innerHTML('.parsed'), '{"oddly":{"formatted":"json"}}');
+		assert.equal(await page.innerHTML('.raw'), '{ "oddly" : { "formatted" : "json" } }');
+	});
 }

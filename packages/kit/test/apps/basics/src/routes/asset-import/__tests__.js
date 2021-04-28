@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	test('handles static asset imports', '/asset-import', async ({ base, page, js }) => {
 		const sources = await page.evaluate(() =>

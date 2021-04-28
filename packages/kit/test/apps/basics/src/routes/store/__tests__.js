@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test('page store functions as expected', '/store', async ({ page, clicknav, js }) => {
 		assert.equal(await page.textContent('h1'), 'Test');
@@ -10,6 +10,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Result');
 		assert.equal(await page.textContent('h2'), js ? 'Calls: 1' : 'Calls: 0');
 
+		// @ts-expect-error
 		const oops = await page.evaluate(() => window.oops);
 		assert.ok(!oops, oops);
 	});

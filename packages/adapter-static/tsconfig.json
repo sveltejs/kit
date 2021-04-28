@@ -7,7 +7,8 @@
 		"target": "es2020",
 		"module": "es2020",
 		"moduleResolution": "node",
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true
 	},
-	"include": ["./index.js", "src"]
+	"include": ["index.cjs", "test/*.js"]
 }

@@ -14,12 +14,15 @@ import { set_paths } from '../paths.js';
  *   },
  *   target: Node;
  *   session: any;
- *   error: Error;
- *   status: number;
  *   host: string;
  *   route: boolean;
  *   spa: boolean;
- *   hydrate: import('./types').NavigationCandidate;
+ *   hydrate: {
+ *     status: number;
+ *     error: Error;
+ *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
+ *     page: import('types/page').Page;
+ *   };
  * }} opts */
 export async function start({ paths, target, session, host, route, spa, hydrate }) {
 	const router =

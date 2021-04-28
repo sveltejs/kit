@@ -1,4 +1,5 @@
-import { Page, Response } from 'playwright-chromium';
+import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
+import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
 // seems like that's no longer an issue? in which case we don't need
@@ -7,9 +8,16 @@ import { Page, Response } from 'playwright-chromium';
 export type TestContext = {
 	base: string;
 	page: Page;
+	pages: {
+		js: Page;
+		nojs: Page;
+	};
+	response: PlaywrightResponse;
 	clicknav: (selector: string) => Promise<void>;
-	fetch: (url: RequestInfo, opts: RequestInit) => Promise<Response>;
-	capture_requests: (fn: () => void) => Promise<string[]>;
+	back: () => Promise<void>;
+	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<NodeFetchResponse>;
+	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
+	errors: () => string;
 	js: boolean;
 
 	// these are assumed to have been put in the global scope by the layout
@@ -19,13 +27,31 @@ export type TestContext = {
 		prefetchRoutes: (urls?: string[]) => Promise<void>;
 	};
 
+	watcher: any; // watcher type is not exposed
+	server: import('http').Server;
 	reset: () => Promise<void>;
+	unpatch: () => void;
 };
 
-export type TestFunction = {
-	(name: string, start: string, callback: (context: TestContext) => void): void;
-	only: (name: string, start: string, callback: (context: TestContext) => void) => void;
-	skip: (name: string, start: string, callback: (context: TestContext) => void) => void;
+type TestOptions = {
+	js?: boolean;
+	nojs?: boolean;
+	dev?: boolean;
+	build?: boolean;
 };
+
+export interface TestFunctionBase {
+	(
+		name: string,
+		start: string,
+		callback: (context: TestContext) => void,
+		options?: TestOptions
+	): void;
+}
+
+export interface TestFunction extends TestFunctionBase {
+	only: TestFunctionBase;
+	skip: TestFunctionBase;
+}
 
 export type TestMaker = (test: TestFunction, is_dev: boolean) => void;

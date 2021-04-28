@@ -1,5 +1,143 @@
 # @sveltejs/kit
 
+## 1.0.0-next.91
+
+### Patch Changes
+
+- 82955ec: fix: adapt to svelte ids without ?import in vite 2.2.3
+
+## 1.0.0-next.90
+
+### Patch Changes
+
+- ac60208: Exit process after adapting
+
+## 1.0.0-next.89
+
+### Patch Changes
+
+- 927e63c: update the error message of prerender to optionally include the parent variable
+
+## 1.0.0-next.88
+
+### Patch Changes
+
+- 6f2b4a6: Remove references to npm start
+
+## 1.0.0-next.87
+
+### Patch Changes
+
+- 4131467: Prerender fallback page for SPAs
+
+## 1.0.0-next.86
+
+### Patch Changes
+
+- 2130087: Support multiple rel values on anchor tag
+- ba732ff: Report errors in hooks.js
+- a2f3f4b: Rename `start` to `preview` in the CLI and package scripts
+
+## 1.0.0-next.85
+
+### Patch Changes
+
+- 4645ad5: Force Vite to bundle Svelte component libraries in SSR
+- abf0248: Fix \$service-worker types
+
+## 1.0.0-next.84
+
+### Patch Changes
+
+- 5c2665f: Prevent ...rest parameters from swallowing earlier characters
+- 4e1c4ea: Omit modulepreload links from pages with no JS
+- 5d864a6: Fix RequestHandler return type
+- e1313d0: Make response.body optional
+
+## 1.0.0-next.83
+
+### Patch Changes
+
+- a4a1075: Work around apparent Cloudflare Workers platform bugs
+
+## 1.0.0-next.82
+
+### Patch Changes
+
+- 4af45e1: Remove usage of node built-ins from runtime
+
+## 1.0.0-next.81
+
+### Patch Changes
+
+- 1237eb3: Expose rawBody on request, and expect rawBody from adapters
+- 1237eb3: Expose getRawBody from kit/http
+
+## 1.0.0-next.80
+
+### Patch Changes
+
+- 7a4b351: Expose install-fetch subpackage for adapters to use
+
+## 1.0.0-next.79
+
+### Patch Changes
+
+- d3abd97: Fix Windows build output containing backward slashes
+
+## 1.0.0-next.78
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+- 61d7fa0: Better error logging
+- 041b706: Implement layout resets
+- 148819a: Use latest vite-plugin-svelte
+- 9d54eed: Make sveltekit:prefetch a noop if <a> has no href
+
+## 1.0.0-next.77
+
+### Patch Changes
+
+- fee388a: Include CSS for entry point/generated component
+
+## 1.0.0-next.76
+
+### Patch Changes
+
+- f870909: Pin vite-plugin-svelte version
+- de2466f: Fix stale prerendering bug
+
+## 1.0.0-next.75
+
+### Patch Changes
+
+- 0c02dc0: Use global URLSearchParams instead of import from node url
+- 8021d6b: Fix default error page
+- 11ec751: Fix build warnings about missing exports in hooks file
+
+## 1.0.0-next.74
+
+### Patch Changes
+
+- 4c45784: Add ambient types to published files
+
+## 1.0.0-next.73
+
+### Patch Changes
+
+- 1007f67: Allow non-root \$error.svelte components
+- ca108a6: Change `handle` hook from positional arguments to named arguments
+
+## 1.0.0-next.72
+
+### Patch Changes
+
+- 1d5228c: Make --open option work with --https
+- 39b6967: Add ambient type definitions for \$app imports
+- 1d5228c: Make --open option work on WSL
+- bb2d97d: Fix argument type for RequestHandler
+
 ## 1.0.0-next.71
 
 ### Patch Changes

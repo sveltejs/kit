@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### getContext
 
-This function runs on every incoming request. It generates the `context` object that is available to [endpoint handlers](#routing-endpoints) as `request.context`, and used to derive the [`session`](#hooks-getsession) object available in the browser.
+This function runs on every incoming request. It generates the `context` object that is available to [endpoint handlers](#routing-endpoints) as `request.context` and that is used to derive the [`session`](#hooks-getsession) object available in the browser.
 
 If unimplemented, context is `{}`.
 
@@ -43,7 +43,7 @@ export async function getContext({ headers }) {
 
 ### getSession
 
-This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is safe to expose to the browser. It runs whenever SvelteKit renders a page.
+This function takes the [`context`](#hooks-getcontext) object and returns a `session` object that is safe to expose to the browser. It runs whenever SvelteKit server-renders a page.
 
 If unimplemented, session is `{}`.
 
@@ -73,9 +73,9 @@ export function getSession({ context }) {
 
 ### handle
 
-This function runs on every request, and determines the response. The second argument, `render`, calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, and determines the response. It receives the `request` object and `render` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
-If unimplemented, defaults to `(request, render) => render(request)`.
+If unimplemented, defaults to `({ request, render }) => render(request)`.
 
 ```ts
 type Request<Context = any> = {
@@ -85,7 +85,8 @@ type Request<Context = any> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	body: string | Buffer | ReadOnlyFormData;
+	rawBody: string | ArrayBuffer;
+	body: string | ArrayBuffer | ReadOnlyFormData | any;
 	context: Context;
 };
 
@@ -95,15 +96,15 @@ type Response = {
 	body?: any;
 };
 
-type Handle<Context = any> = (
+type Handle<Context = any> = ({
 	request: Request<Context>,
 	render: (request: Request<Context>) => Promise<Response>
-) => Response | Promise<Response>;
+}) => Response | Promise<Response>;
 ```
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
-export async function handle(request, render) {
+export async function handle({ request, render }) {
 	const response = await render(request);
 
 	return {

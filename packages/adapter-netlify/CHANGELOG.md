@@ -1,5 +1,49 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- 2e72a94: Add type declarations
+- Updated dependencies [82955ec]
+  - @sveltejs/kit@1.0.0-next.91
+
+## 1.0.0-next.9
+
+### Patch Changes
+
+- d3cb858: Convert body to string, unless type is octet-stream
+- Updated dependencies [4af45e1]
+  - @sveltejs/kit@1.0.0-next.82
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- 1237eb3: Fix dependencies
+- 1237eb3: Pass rawBody from netlify adapter
+- Updated dependencies [1237eb3]
+- Updated dependencies [1237eb3]
+  - @sveltejs/kit@1.0.0-next.81
+
+## 1.0.0-next.7
+
+### Patch Changes
+
+- 0db2cf7: Fix serverless function
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- 7a4b351: Bundle serverless functions with esbuild
+
+## 1.0.0-next.5
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+
 ## 1.0.0-next.4
 
 ### Patch Changes

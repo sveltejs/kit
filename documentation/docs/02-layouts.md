@@ -12,7 +12,7 @@ To create a layout component that applies to every page, make a file called `src
 <slot></slot>
 ```
 
-...but we can add whatever markup, styles and behaviour we want. For example, let's add a nav bar:
+...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
 <!-- src/routes/$layout.svelte -->
@@ -62,17 +62,38 @@ We can create a layout that only applies to pages below `/settings` (while inher
 <slot></slot>
 ```
 
+### Resets
+
+To reset the layout stack, create a `$layout.reset.svelte` file instead of a `$layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/$layout.reset.svelte`.
+
+Layout resets are otherwise identical to normal layout components.
 
 ### Error pages
 
-If your page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating a file called `src/routes/$error.svelte`, which is a component that receives an `error` prop alongside a `status` code:
+If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `$error.svelte` components alongside your layout and page components.
+
+For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/$error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/$error.svelte` in the parent layout, or `src/routes/$error.svelte` in the root layout.
+
+> SvelteKit provides a default error page in case you don't supply `src/routes/$error.svelte`, but it's recommend that you bring your own.
+
+If an error component has a [`load`](#loading) function, it will be called with `error` and `status` properties:
 
 ```html
-<script>
-	export let status;
-	export let error;
+<script context="module">
+	export function load({ error, status }) {
+		return {
+			props: {
+				title: `${status}: ${error.message}`
+			}
+		};
+	}
 </script>
 
-<h1>{status}</h1>
-<p>{error.message}</p>
+<script>
+	export let title;
+</script>
+
+<h1>{title}</h1>
 ```
+
+> Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.

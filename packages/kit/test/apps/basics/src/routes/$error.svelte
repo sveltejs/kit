@@ -1,5 +1,16 @@
+<script context="module">
+	/** @type {import('@sveltejs/kit').ErrorLoad} */
+	export function load({ status, error }) {
+		return {
+			props: { status, error }
+		};
+	}
+</script>
+
 <script>
+	/** @type {number} */
 	export let status;
+	/** @type {Error} */
 	export let error;
 </script>
 
@@ -23,6 +34,7 @@
 		font-size: 2.8em;
 		font-weight: 700;
 		margin: 0 0 0.5em 0;
+		color: red;
 	}
 
 	p {

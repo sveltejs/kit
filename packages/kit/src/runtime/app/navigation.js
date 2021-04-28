@@ -15,22 +15,22 @@ export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
 
 /**
- * @param {string} href
- * @param {{
- *   noscroll?: boolean;
- *   replaceState?: boolean;
- * }} [opts]
+ * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
 	return router.goto(href, opts, []);
 }
 
-/** @param {string} href */
+/**
+ * @type {import('$app/navigation').prefetch}
+ */
 function prefetch_(href) {
 	return router.prefetch(new URL(href, get_base_uri(document)));
 }
 
-/** @param {string[]} [pathnames] */
+/**
+ * @type {import('$app/navigation').prefetchRoutes}
+ */
 async function prefetchRoutes_(pathnames) {
 	const matching = pathnames
 		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))

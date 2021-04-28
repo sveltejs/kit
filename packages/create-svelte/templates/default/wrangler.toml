@@ -1,0 +1,13 @@
+name = "svelte-kit-demo"
+type = "webpack"
+account_id = "32a8245cd45a24083dd0acae1d482048"
+workers_dev = true
+route = ""
+zone_id = ""
+
+[site]
+bucket = "./.cloudflare/assets"
+entry-point = "./.cloudflare/worker"
+
+[build]
+upload = { format = "service-worker" }

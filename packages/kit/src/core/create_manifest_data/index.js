@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
+import { posixify } from '../utils.js';
 
 /** @typedef {{
  *   content: string;
@@ -21,11 +22,11 @@ import mime from 'mime';
 
 /**
  * @param {{
- *   config: import('types.internal').ValidatedConfig;
+ *   config: import('types/config').ValidatedConfig;
  *   output: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('types.internal').ManifestData}
+ * @returns {import('types/internal').ManifestData}
  */
 export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
 	/**
@@ -40,7 +41,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('types.internal').RouteData[]} */
+	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
@@ -50,9 +51,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} stack
+	 * @param {string[]} layout_stack // accumulated $layout.svelte components
+	 * @param {string[]} error_stack // accumulated $error.svelte components
 	 */
-	function walk(dir, parent_segments, parent_params, stack) {
+	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
@@ -138,31 +140,59 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const component = find_layout('$layout', item.file);
+				const layout_reset = find_layout('$layout.reset', item.file);
+				const layout = find_layout('$layout', item.file);
+				const error = find_layout('$error', item.file);
 
-				if (component) components.push(component);
+				if (layout_reset && layout) {
+					throw new Error(`Cannot have $layout next to $layout.reset: ${layout_reset}`);
+				}
+
+				if (layout_reset) components.push(layout_reset);
+				if (layout) components.push(layout);
+				if (error) components.push(error);
 
 				walk(
 					path.join(dir, item.basename),
 					segments,
 					params,
-					component ? stack.concat(component) : stack
+					layout_reset ? [layout_reset] : layout_stack.concat(layout),
+					layout_reset ? [error] : error_stack.concat(error)
 				);
 			} else if (item.is_page) {
 				components.push(item.file);
 
-				const parts =
-					item.is_index && stack[stack.length - 1] === null
-						? stack.slice(0, -1).concat(item.file)
-						: stack.concat(item.file);
+				const a = layout_stack.concat(item.file);
+				const b = error_stack;
 
 				const pattern = get_pattern(segments, true);
+
+				let i = a.length;
+				while (i--) {
+					if (!b[i] && !a[i]) {
+						b.splice(i, 1);
+						a.splice(i, 1);
+					}
+				}
+
+				i = b.length;
+				while (i--) {
+					if (b[i]) break;
+				}
+
+				b.splice(i + 1);
+
+				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+					? `/${segments.map((segment) => segment[0].content).join('/')}`
+					: null;
 
 				routes.push({
 					type: 'page',
 					pattern,
 					params,
-					parts
+					path,
+					a,
+					b
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
@@ -184,7 +214,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [layout]);
+	walk(config.kit.files.routes, [], [], [layout], [error]);
 
 	const assets_dir = config.kit.files.assets;
 
@@ -207,11 +237,6 @@ function count_occurrences(needle, haystack) {
 		if (haystack[i] === needle) count += 1;
 	}
 	return count;
-}
-
-/** @param {string} str */
-function posixify(str) {
-	return str.replace(/\\/g, '/');
 }
 
 /** @param {string} path */
@@ -302,7 +327,7 @@ function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
 			return segment[0].spread
-				? '\\/?(.*)'
+				? '(?:\\/(.*))?'
 				: '\\/' +
 						segment
 							.map((part) => {
@@ -327,7 +352,7 @@ function get_pattern(segments, add_trailing_slash) {
 /**
  * @param {string} dir
  * @param {string} path
- * @param {import('types.internal').Asset[]} files
+ * @param {import('types/internal').Asset[]} files
  */
 function list_files(dir, path, files = []) {
 	fs.readdirSync(dir).forEach((file) => {

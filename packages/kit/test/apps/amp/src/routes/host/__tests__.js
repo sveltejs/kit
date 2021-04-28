@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	// this test lives in the AMP app because `basics` has `hostHeader`
 	// configured, and `options` has `host` configured

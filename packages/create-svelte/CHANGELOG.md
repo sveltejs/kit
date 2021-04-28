@@ -1,5 +1,104 @@
 # create-svelte
 
+## 2.0.0-next.61
+
+### Patch Changes
+
+- 82955ec: fix: adapt to svelte ids without ?import in vite 2.2.3
+
+## 2.0.0-next.60
+
+### Patch Changes
+
+- 1b816b2: Update version of eslint-plugin-svelte3
+- 6f2b4a6: Update welcome message
+- 6f2b4a6: No adapter by default
+
+## 2.0.0-next.59
+
+### Patch Changes
+
+- a2f3f4b: Rename `start` to `preview` in the CLI and package scripts
+
+## 2.0.0-next.58
+
+### Patch Changes
+
+- 2bf4338: Add .gitignore files to new projects
+
+## 2.0.0-next.57
+
+### Patch Changes
+
+- 4645ad5: Remove obsolete vite.ssr config from template
+- 872d734: Hide out-of-view counter from assistive tech
+
+## 2.0.0-next.56
+
+### Patch Changes
+
+- cdf4d5b: Show git init instructions when creating new project
+- 112d194: Uppercase method in template
+
+## 2.0.0-next.55
+
+### Patch Changes
+
+- daf6913: Fix bootstrapping command on about page
+
+## 2.0.0-next.54
+
+### Patch Changes
+
+- a84cb88: Fix global.d.ts rename, Windows build issue, missing adapter-node
+
+## 2.0.0-next.53
+
+### Patch Changes
+
+- 27c2e1d: Fix CSS on demo app hero image
+- bbeb58f: Include dotfiles when creating new project
+- 6a8e73f: Remove large image from create-svelte
+
+## 2.0.0-next.52
+
+### Patch Changes
+
+- f342372: Adding new Hello World templates (default with enhanced style and skeleton) to create-svelte
+
+## 2.0.0-next.51
+
+### Patch Changes
+
+- 4cffc14: add global.d.ts to js version
+
+## 2.0.0-next.50
+
+### Patch Changes
+
+- 3802c64: Fix build so that the package can be automatically published
+
+## 2.0.0-next.49
+
+### Patch Changes
+
+- 3c41d07: Fix preprocess option in template
+- 9bb747f: Remove CSS option and simplify
+
+## 2.0.0-next.48
+
+### Patch Changes
+
+- 4c45784: Add ambient types to published files
+
+## 2.0.0-next.47
+
+### Patch Changes
+
+- 59a1e06: Add button:focus CSS styles to index page of default app
+- 39b6967: Add ambient type definitions for \$app imports
+- dfbe62b: Add title tag to index page of default app
+
 ## 2.0.0-next.46
 
 ### Patch Changes

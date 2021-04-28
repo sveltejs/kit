@@ -1,5 +1,41 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 2e72a94: Add type declarations
+- Updated dependencies [82955ec]
+  - @sveltejs/kit@1.0.0-next.91
+
+## 1.0.0-next.14
+
+### Patch Changes
+
+- 59f9277: fix body parsing
+
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 1237eb3: Fix dependencies
+- 1237eb3: Use getRawBody in adapter-vercel
+- Updated dependencies [1237eb3]
+- Updated dependencies [1237eb3]
+  - @sveltejs/kit@1.0.0-next.81
+
+## 1.0.0-next.12
+
+### Patch Changes
+
+- 7a4b351: Bundle serverless functions with esbuild
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- 6e27880: Move server-side fetch to adapters instead of build step
+
 ## 1.0.0-next.10
 
 ### Patch Changes

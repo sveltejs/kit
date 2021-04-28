@@ -2,7 +2,7 @@
 title: package.json
 ---
 
-### type : "module"
+### type: "module"
 
 Add `"type": "module"` to your `package.json`
 
@@ -16,9 +16,9 @@ Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit`,
 
 ### scripts
 
-Any scripts that reference the `sapper` binary should be updated:
+Any scripts that reference `sapper` should be updated:
 
-* `sapper build` or `sapper export` should become [`svelte-kit build`](/docs#command-line-interface-svelte-kit-build)
-* `sapper dev` should become [`svelte-kit dev`](/docs#command-line-interface-svelte-kit-dev)
-
-Additionally, [`svelte-kit start`](/docs#command-line-interface-svelte-kit-start) replaces any command that invokes your Sapper-built server.
+- `sapper build` should become [`svelte-kit build`](/docs#command-line-interface-svelte-kit-build) using the Node [adapter](/docs#adapters)
+- `sapper export` should become [`svelte-kit build`](/docs#command-line-interface-svelte-kit-build) using the static [adapter](/docs#adapters)
+- `sapper dev` should become [`svelte-kit dev`](/docs#command-line-interface-svelte-kit-dev)
+- `node __sapper__/build` should become `node build`

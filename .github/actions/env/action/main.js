@@ -405,7 +405,7 @@ var core$1 = /*@__PURE__*/getDefaultExportFromCjs(core);
 
 const WINDOWS_CACHE_PATH = 'D:\\.pnpm-store\\v3';
 const NIX_CACHE_PATH = '~/.pnpm-store/v3';
-const WINDOWS_BROWSER_PATH = '%USERPROFILE%\\AppData\\Local\\ms-playwright';
+const WINDOWS_BROWSER_PATH = require$$1.join(require$$0.homedir(), 'AppData', 'Local', 'ms-playwright');
 const LINUX_BROWSER_PATH = '~/.cache/ms-playwright';
 const MACOS_BROWSER_PATH = '~/Library/Caches/ms-playwright';
 

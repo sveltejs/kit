@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test, is_dev) {
 	if (is_dev) {
 		// TODO unskip this test
@@ -56,6 +56,11 @@ export default function (test, is_dev) {
 		assert.equal(
 			await page.textContent('#message'),
 			'This is your custom error page saying: "Crashing now"'
+		);
+
+		assert.equal(
+			await page.evaluate(() => getComputedStyle(document.querySelector('h1')).color),
+			'rgb(255, 0, 0)'
 		);
 	});
 
@@ -169,7 +174,7 @@ export default function (test, is_dev) {
 		const res = await fetch('/errors/invalid-route-response');
 
 		assert.equal(res.status, 500);
-		assert.match(await res.text(), /body is missing/);
+		assert.match(await res.text(), /expected an object/);
 	});
 
 	// TODO before we implemented route fallthroughs, and there was a 1:1
@@ -183,25 +188,14 @@ export default function (test, is_dev) {
 		assert.match(await res.text(), /PUT is not implemented/);
 	});
 
-	test('error in endpoint', null, async ({ base, page }) => {
-		/** @type {string[]} */
-		const console_errors = [];
-		const { error: original_error } = console;
-
-		/** @param {string} text */
-		console.error = (text) => {
-			console_errors.push(text);
-		};
-
+	test('error in endpoint', null, async ({ base, page, errors }) => {
 		const res = await page.goto(`${base}/errors/endpoint`);
 
-		console.error = original_error;
-
 		// should include stack trace
-		const lines = (console_errors[0] || '').split('\n');
-		assert.equal(lines[0], 'Error: nope');
+		const lines = errors().split('\n');
+		assert.ok(lines[0].includes('nope'), 'Logs error message');
 		if (is_dev) {
-			assert.ok(lines[1].includes('endpoint.json'));
+			assert.ok(lines[2].includes('endpoint.json'), 'Logs error stack in dev');
 		}
 
 		assert.equal(res.status(), 500);

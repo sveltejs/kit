@@ -3,5 +3,10 @@
 	"extends": "@sveltejs",
 	"parserOptions": {
 		"sourceType": "module"
+	},
+	"globals": {
+		"goto": true,
+		"prefetch": true,
+		"prefetchRoutes": true
 	}
 }

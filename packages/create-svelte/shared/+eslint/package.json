@@ -1,0 +1,6 @@
+{
+	"devDependencies": {
+		"eslint": "^7.22.0",
+		"eslint-plugin-svelte3": "^3.2.0"
+	}
+}

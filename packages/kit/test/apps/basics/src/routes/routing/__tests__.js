@@ -1,6 +1,6 @@
 import * as assert from 'uvu/assert';
 
-/** @type {import('../../../../../types').TestMaker} */
+/** @type {import('test').TestMaker} */
 export default function (test) {
 	test(
 		'redirects from /routing/ to /routing',
@@ -174,10 +174,10 @@ export default function (test) {
 		}
 	);
 
-	test('back button returns to initial route', '/routing', async ({ page, clicknav }) => {
+	test('back button returns to initial route', '/routing', async ({ page, clicknav, back }) => {
 		await clicknav('[href="/routing/a"]');
 
-		await page.goBack();
+		await back();
 		assert.equal(await page.textContent('h1'), 'Great success!');
 	});
 

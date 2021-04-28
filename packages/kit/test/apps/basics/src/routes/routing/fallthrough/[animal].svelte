@@ -1,5 +1,5 @@
 <script context="module">
-	/** @type {import("../../../../../../../types").Load} */
+	/** @type {import("@sveltejs/kit").Load} */
 	export async function load({ page, fetch }) {
 		const res = await fetch(`/routing/fallthrough/${page.params.animal}.json`);
 

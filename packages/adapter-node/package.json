@@ -1,10 +1,12 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.12",
-	"main": "./index.cjs",
+	"version": "1.0.0-next.17",
+	"main": "index.cjs",
 	"type": "module",
+	"types": "index.d.ts",
 	"files": [
-		"files"
+		"files",
+		"index.d.ts"
 	],
 	"scripts": {
 		"dev": "rollup -cw",
