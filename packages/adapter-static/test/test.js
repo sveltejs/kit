@@ -33,6 +33,6 @@ run('spa', (test) => {
 
 	test('renders error page for missing page', async ({ base, page }) => {
 		await page.goto(`${base}/nosuchpage`);
-		assert.equal(await page.textContent('h1'), 'Error 404');
+		assert.equal(await page.textContent('h1'), '404');
 	});
 });
