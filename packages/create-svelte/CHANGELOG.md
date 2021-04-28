@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.62
+
+### Patch Changes
+
+- c44f231: Improve a11y on to-do list in template
+
 ## 2.0.0-next.61
 
 ### Patch Changes
