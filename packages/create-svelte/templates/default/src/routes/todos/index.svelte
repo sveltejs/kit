@@ -63,7 +63,7 @@
 		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo">
 	</form>
 
-	{#each todos as todo, i (todo.uid)}
+	{#each todos as todo (todo.uid)}
 		<div class="todo" class:done={todo.done} transition:scale|local={{start:0.7}} animate:flip={{duration:200}}>
 			<form action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				pending: (data) => {
@@ -83,7 +83,7 @@
 			</form>
 
 			<form action="/todos/{todo.uid}.json?_method=delete" method="post" use:enhance={{
-				result: async () => {
+				result: () => {
 					todos = todos.filter(t => t.uid !== todo.uid);
 				}
 			}}>
