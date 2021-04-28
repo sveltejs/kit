@@ -1,5 +1,4 @@
 <script context="module" lang="ts">
-	import { tick } from 'svelte';
 	import { enhance } from '$lib/form';
 	import type { Load } from '@sveltejs/kit';
 
@@ -44,21 +43,6 @@
 			return t;
 		});
 	}
-
-	let addInput;
-	let todoInputs = [];
-	async function manageFocus(i) {
-		await tick();
-		const nextInput = todoInputs[i + 1];
-		const previousInput = todoInputs[i - 1];
-		if (nextInput) {
-			nextInput.focus();
-		} else if (previousInput) {
-			previousInput.focus();
-		} else {
-			addInput.focus();
-		}
-	}
 </script>
 
 <svelte:head>
@@ -76,7 +60,7 @@
 			form.reset();
 		}
 	}}>
-		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo" bind:this={addInput}>
+		<input name="text" aria-label="Add todo" placeholder="+ tap to add a todo">
 	</form>
 
 	{#each todos as todo, i (todo.uid)}
@@ -94,13 +78,12 @@
 			<form class="text" action="/todos/{todo.uid}.json?_method=patch" method="post" use:enhance={{
 				result: patch
 			}}>
-				<input aria-label="Edit todo" type="text" name="text" value={todo.text} bind:this={todoInputs[i]}>
+				<input aria-label="Edit todo" type="text" name="text" value={todo.text}>
 				<button class="save" aria-label="Save todo"/>
 			</form>
 
 			<form action="/todos/{todo.uid}.json?_method=delete" method="post" use:enhance={{
 				result: async () => {
-					await manageFocus(i);
 					todos = todos.filter(t => t.uid !== todo.uid);
 				}
 			}}>
