@@ -76,6 +76,18 @@ importers:
     devDependencies:
       '@sveltejs/kit': link:../kit
 
+  packages/adapter-deno:
+    specifiers:
+      '@rollup/plugin-json': ^4.1.0
+      '@sveltejs/kit': workspace:*
+      rollup: ^2.41.1
+      typescript: ^4.2.3
+    devDependencies:
+      '@rollup/plugin-json': 4.1.0_rollup@2.47.0
+      '@sveltejs/kit': link:../kit
+      rollup: 2.47.0
+      typescript: 4.2.4
+
   packages/adapter-netlify:
     specifiers:
       '@iarna/toml': ^2.2.5
