@@ -333,7 +333,8 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: encodeURI(part.content.normalize())
+									: part.content
+											.normalize()
 											.replace(/\?/g, '%3F')
 											.replace(/#/g, '%23')
 											.replace(/%5B/g, '[')
