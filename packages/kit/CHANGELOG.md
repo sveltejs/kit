@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.93
+
+### Patch Changes
+
+- 353afa1: Disable FLoC by default
+
 ## 1.0.0-next.92
 
 ### Patch Changes
