@@ -15,7 +15,7 @@ export async function respond(incoming, options, state = {}) {
 		return {
 			status: 301,
 			headers: {
-				location: encodeURI((incoming.path.slice(0, -1)) + (q ? `?${q}` : ''))
+				location: encodeURI(incoming.path.slice(0, -1) + (q ? `?${q}` : ''))
 			}
 		};
 	}
@@ -46,7 +46,13 @@ export async function respond(incoming, options, state = {}) {
 						page: null
 					});
 				}
-
+				if (request.path.includes('not_ascii')) {
+					console.log(
+						'[options.manifest.routes]',
+						request.path,
+						options.manifest.routes.map((el) => el.pattern)
+					);
+				}
 				for (const route of options.manifest.routes) {
 					if (!route.pattern.test(request.path)) continue;
 
