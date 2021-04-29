@@ -30,6 +30,7 @@ test('load default config', async () => {
 				setup: join(cwd, 'src/setup'),
 				template: join(cwd, 'src/app.html')
 			},
+			floc: false,
 			host: null,
 			hostHeader: null,
 			hydrate: true,

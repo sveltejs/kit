@@ -77,6 +77,7 @@ export type ValidatedConfig = {
 			setup: string;
 			template: string;
 		};
+		floc: boolean;
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;

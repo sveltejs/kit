@@ -298,6 +298,7 @@ async function build_server(
 						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
 					},
 					fetched: undefined,
+					floc: ${config.kit.floc},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => String(error), // for security
 					handle_error: error => {

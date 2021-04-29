@@ -166,6 +166,7 @@ class Watcher extends EventEmitter {
 								css: [],
 								js: []
 							},
+							floc: this.config.kit.floc,
 							get_stack: (error) => {
 								this.vite.ssrFixStacktrace(error);
 								return error.stack;

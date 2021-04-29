@@ -7,6 +7,7 @@ module.exports = {
 			template: 'source/template.html'
 		},
 		appDir: '_wheee',
+		floc: true,
 		target: '#content-goes-here',
 		host: 'example.com',
 		vite: {
