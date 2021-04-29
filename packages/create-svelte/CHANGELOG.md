@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.63
+
+### Patch Changes
+
+- d19f3de: bump minimum required Svelte version
+
 ## 2.0.0-next.62
 
 ### Patch Changes
