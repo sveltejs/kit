@@ -25,6 +25,7 @@ module.exports = {
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
 		},
+		floc: false,
 		host: null,
 		hostHeader: null,
 		hydrate: true,
@@ -71,6 +72,18 @@ An object containing zero or more of the following `string` values:
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
+
+### floc
+
+Google's [FLoC](https://github.com/WICG/floc) is a technology for targeted advertising that the [Electronic Frontier Foundation](https://www.eff.org/) has deemed [harmful](https://www.eff.org/deeplinks/2021/03/googles-floc-terrible-idea) to user privacy. [Browsers other than Chrome](https://www.theverge.com/2021/4/16/22387492/google-floc-ad-tech-privacy-browsers-brave-vivaldi-edge-mozilla-chrome-safari) have declined to implement it.
+
+In common with services like [GitHub Pages](https://github.blog/changelog/2021-04-27-github-pages-permissions-policy-interest-cohort-header-added-to-all-pages-sites/), SvelteKit protects your users by automatically opting out of FLoC. It adds the following header to responses unless `floc` is `true`:
+
+```
+Permissions-Policy: interest-cohort=()
+```
+
+> This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
 ### host
 

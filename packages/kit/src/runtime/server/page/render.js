@@ -169,6 +169,10 @@ export async function render_response({
 		headers['cache-control'] = `${is_private ? 'private' : 'public'}, max-age=${maxage}`;
 	}
 
+	if (!options.floc) {
+		headers['permissions-policy'] = 'interest-cohort=()';
+	}
+
 	return {
 		status,
 		headers,

@@ -658,24 +658,6 @@ packages:
       rollup: 2.41.1
     dev: false
 
-  /@sveltejs/kit/1.0.0-next.93_svelte@3.37.0+vite@2.2.3:
-    resolution: {integrity: sha512-WvmRj1Zk+SCbKYZGXCPlocOvGXRYGFOeZQC/k3C6KWAF11cM3H0i0mGzL0GmwrPmv35AjFtmH2iJ/J100ftUZw==}
-    engines: {node: '>= 12.17.0'}
-    hasBin: true
-    peerDependencies:
-      svelte: ^3.32.1
-      vite: ^2.2.3
-    dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_svelte@3.37.0+vite@2.2.3
-      cheap-watch: 1.0.3
-      sade: 1.7.4
-      svelte: 3.37.0
-      vite: 2.2.3
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-    dev: true
-
   /@sveltejs/vite-plugin-svelte/1.0.0-next.9_6c43afb327f3ef976774a1a1e8559c8a:
     resolution: {integrity: sha512-ySB/GJsZV3h3jqjq5WIiaxVFkJK6vqtG9gS7Iw6SfUH9ZiFNw5JjQF69g68j9cNep3q4yRIYiG5/pI3YIdXEuA==}
     engines: {node: '>=12.0.0'}
@@ -1238,6 +1220,7 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
+    dev: false
 
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
@@ -3297,6 +3280,7 @@ packages:
   /slash/4.0.0:
     resolution: {integrity: sha512-3dOsAHXXUkQTpOYcoAxLIorMTp4gIQr5IW3iVb7A7lFIp0VHhnynm9izx6TssdrIcVIESAlVjtnO2K8bg+Coew==}
     engines: {node: '>=12'}
+    dev: false
 
   /slice-ansi/4.0.0:
     resolution: {integrity: sha512-qMCMfhY040cVHT43K9BFygqYbUPFZKHOg7K73mtTWJRb8pyP3fzf4Ixd5SzdEJQ6MRUg/WBnOLxghZtKKurENQ==}
