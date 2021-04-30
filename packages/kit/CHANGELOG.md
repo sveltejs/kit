@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.94
+
+### Patch Changes
+
+- 72c78a4: Handle URLs that need to be decoded
+
 ## 1.0.0-next.93
 
 ### Patch Changes
