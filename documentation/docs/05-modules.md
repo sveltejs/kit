@@ -31,8 +31,8 @@ import { goto, prefetch, prefetchRoutes } from '$app/navigation';
 import { base, assets } from '$app/paths';
 ```
 
-- `base` — a root-relative (i.e. begins with a `/`) string that matches `config.kit.files.base` in your [project configuration](#configuration)
-- `assets` — a root-relative or absolute path that matches `config.kit.files.assets` (after it has been resolved against `base`)
+- `base` — a root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your [project configuration](#configuration)
+- `assets` — a root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against `base`)
 
 ### $app/stores
 
