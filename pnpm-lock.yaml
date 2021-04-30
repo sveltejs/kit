@@ -200,7 +200,7 @@ importers:
     specifiers:
       '@rollup/plugin-replace': ^2.4.1
       '@sveltejs/kit': workspace:*
-      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.8
+      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.9
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
       '@types/mime': ^2.0.3
@@ -227,7 +227,7 @@ importers:
       uvu: ^0.5.1
       vite: ^2.2.3
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.8_6c43afb327f3ef976774a1a1e8559c8a
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_6c43afb327f3ef976774a1a1e8559c8a
       cheap-watch: 1.0.3
       sade: 1.7.4
     devDependencies:
@@ -648,8 +648,8 @@ packages:
       rollup: 2.41.1
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.8_6c43afb327f3ef976774a1a1e8559c8a:
-    resolution: {integrity: sha512-aHhfHa0ma9e/H+yv5NA3ie0lRy5duwnUA5fNlGzvxlGMW7DPno+UffbMPZ/HQo3J3Oh7BdC/IDwSwvgucJHPkw==}
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_6c43afb327f3ef976774a1a1e8559c8a:
+    resolution: {integrity: sha512-ySB/GJsZV3h3jqjq5WIiaxVFkJK6vqtG9gS7Iw6SfUH9ZiFNw5JjQF69g68j9cNep3q4yRIYiG5/pI3YIdXEuA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       svelte: ^3.37.0
