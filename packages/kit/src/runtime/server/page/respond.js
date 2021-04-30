@@ -100,7 +100,7 @@ export async function respond({ request, options, state, $session, route }) {
 						return {
 							status: loaded.loaded.status,
 							headers: {
-								location: loaded.loaded.redirect
+								location: encodeURI(loaded.loaded.redirect)
 							}
 						};
 					}

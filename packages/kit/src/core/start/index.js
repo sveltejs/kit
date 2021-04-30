@@ -57,7 +57,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 						req.headers[config.kit.hostHeader || 'host']),
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
-					path: parsed.pathname,
+					path: decodeURIComponent(parsed.pathname),
 					rawBody: await getRawBody(req),
 					query: new URLSearchParams(parsed.query || '')
 				});
