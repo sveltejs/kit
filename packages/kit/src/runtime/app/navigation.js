@@ -25,10 +25,7 @@ async function goto_(href, opts) {
 /**
  * @type {import('$app/navigation').invalidate}
  */
-async function invalidate_(href) {
-	const info = router.parse(new URL(location.href));
-	return router.renderer.update({ ...info, invalidates: href });
-}
+async function invalidate_(href) {}
 
 /**
  * @type {import('$app/navigation').prefetch}

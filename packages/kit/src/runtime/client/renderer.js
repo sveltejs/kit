@@ -325,8 +325,7 @@ export class Renderer {
 			const result = await this._load({
 				route,
 				path: info.path,
-				query: info.query,
-				invalidates: info.invalidates
+				query: info.query
 			});
 			if (result) return result;
 		}
@@ -470,7 +469,6 @@ export class Renderer {
 					return { ...context };
 				},
 				fetch(resource, info) {
-					node.uses.invalidates.add(resource);
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				}
 			};
@@ -496,7 +494,7 @@ export class Renderer {
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _load({ route, path, query, invalidates }) {
+	async _load({ route, path, query }) {
 		const hash = `${path}?${query}`;
 
 		if (this.cache.has(hash)) {
@@ -549,7 +547,6 @@ export class Renderer {
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
-					(invalidates && previous.uses.invalidates.has(invalidates)) ||
 					(context_changed && previous.uses.context);
 
 				if (changed_since_last_render) {
