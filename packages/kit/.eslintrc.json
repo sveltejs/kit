@@ -6,6 +6,7 @@
 	},
 	"globals": {
 		"goto": true,
+		"invalidate": true,
 		"prefetch": true,
 		"prefetchRoutes": true
 	}

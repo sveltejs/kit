@@ -25,6 +25,11 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean }
 	): Promise<any>;
 	/**
+	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
+	 * @param href The invalidated resource
+	 */
+	export function invalidate(href: string): Promise<any>;
+	/**
 	 * Programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's load function with the appropriate options.
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `sveltekit:prefetch`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.

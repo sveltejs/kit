@@ -2,13 +2,16 @@
 	let loads = 0;
 
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page }) {
+	export async function load({ fetch }) {
+		const res = await fetch('/load/change-detection/data.json');
+		const { type } = await res.json();
+
 		loads += 1;
 
 		return {
 			maxage: 5,
 			props: {
-				x: page.params.x,
+				type,
 				loads
 			}
 		};
@@ -17,10 +20,11 @@
 
 <script>
 	/** @type {string} */
-	export let x;
+	export let type;
 
 	/** @type {number} */
 	export let loads;
 </script>
 
-<h2>x: {x}: {loads}</h2>
+<h1>{type} loads: {loads}</h1>
+<slot></slot>
