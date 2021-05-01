@@ -445,6 +445,8 @@ export class Renderer {
 		const session = this.$session;
 
 		if (module.load) {
+			const { started } = this;
+
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				page: {
@@ -469,7 +471,7 @@ export class Renderer {
 				},
 				fetch(resource, info) {
 					node.uses.invalidates.add(resource);
-					return this.started ? fetch(resource, info) : initial_fetch(resource, info);
+					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				}
 			};
 
