@@ -25,7 +25,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm lint
       - run: pnpm check
@@ -65,7 +65,7 @@ jobs:
           path: ${{ steps.paths.outputs.browser_cache_path }}
           key: chromium-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
       - run: npm install -g pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
       - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
@@ -99,5 +99,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}
       - run: npm install -g pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
       - run: pnpm build && pnpm build --filter="hn.svelte.dev"
