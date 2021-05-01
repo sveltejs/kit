@@ -32,6 +32,7 @@ module.exports = function () {
 				entryPoints: ['.svelte/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
+				target: 'es2020',
 				platform: 'node' // TODO would be great if we could generate ESM and use type = "javascript"
 			});
 
