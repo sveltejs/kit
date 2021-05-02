@@ -2,7 +2,6 @@ import options from './options.js';
 import * as url from 'url';
 import path from 'path';
 import fs from 'fs';
-import { resolve_entry } from '../utils.js';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -81,6 +80,27 @@ function remove_trailing_slash(str) {
 	return str.endsWith('/') ? str.slice(0, -1) : str;
 }
 
+/**
+ * @param {string} cwd
+ * @param {import('types/config').ValidatedConfig} validated
+ */
+function validate_template(cwd, validated) {
+	const { template } = validated.kit.files;
+	const relative = path.relative(cwd, template);
+
+	if (fs.existsSync(template)) {
+		const contents = fs.readFileSync(template, 'utf8');
+		const expected_tags = ['%svelte.head%', '%svelte.body%'];
+		expected_tags.forEach((tag) => {
+			if (contents.indexOf(tag) === -1) {
+				throw new Error(`${relative} is missing ${tag}`);
+			}
+		});
+	} else {
+		throw new Error(`${relative} does not exist`);
+	}
+}
+
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file_esm = path.join(cwd, 'svelte.config.js');
 	const config_file = fs.existsSync(config_file_esm)
@@ -97,15 +117,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	validated.kit.files.setup = path.resolve(cwd, validated.kit.files.setup);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
 
-	// TODO remove this, eventually
-	if (resolve_entry(validated.kit.files.setup)) {
-		throw new Error(
-			'config.kit.files.setup has been replaced with config.kit.files.hooks. See https://kit.svelte.dev/docs#hooks'
-		);
-	}
+	validate_template(cwd, validated);
 
 	// TODO check all the `files` exist when the config is loaded?
-	// TODO check that `target` is present in the provided template
 
 	return validated;
 }
