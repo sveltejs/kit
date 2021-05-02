@@ -1,6 +1,6 @@
 import render_page from './page/index.js';
 import { render_response } from './page/render.js';
-import render_endpoint from './endpoint.js';
+import render_endpoint, { lowercase_keys } from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
 
 /**
@@ -18,6 +18,10 @@ export async function respond(incoming, options, state = {}) {
 				location: encodeURI(incoming.path.slice(0, -1) + (q ? `?${q}` : ''))
 			}
 		};
+	}
+
+	if (!incoming.headers['user-agent']) {
+		incoming.headers = lowercase_keys(incoming.headers);
 	}
 
 	const incoming_with_body = {
