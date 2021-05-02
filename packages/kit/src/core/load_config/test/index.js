@@ -7,8 +7,11 @@ import { load_config } from '../index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-test('load default config', async () => {
-	const cwd = join(__dirname, 'fixtures');
+/**
+ * @param {string} path
+ */
+async function testLoadDefaultConfig(path) {
+	const cwd = join(__dirname, 'fixtures', path);
 
 	const config = await load_config({ cwd });
 
@@ -42,6 +45,14 @@ test('load default config', async () => {
 		},
 		preprocess: null
 	});
+}
+
+test('load default config (cjs)', async () => {
+	await testLoadDefaultConfig('default-cjs');
+});
+
+test('load default config (esm)', async () => {
+	await testLoadDefaultConfig('default-esm');
 });
 
 test.run();
