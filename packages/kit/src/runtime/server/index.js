@@ -2,6 +2,7 @@ import render_page from './page/index.js';
 import { render_response } from './page/render.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
+import { lowercase_keys } from './utils.js';
 
 /**
  * @param {import('types/hooks').Incoming} incoming
@@ -22,6 +23,7 @@ export async function respond(incoming, options, state = {}) {
 
 	const incoming_with_body = {
 		...incoming,
+		headers: lowercase_keys(incoming.headers),
 		body: parse_body(incoming)
 	};
 

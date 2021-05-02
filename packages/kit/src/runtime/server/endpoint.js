@@ -1,3 +1,5 @@
+import { lowercase_keys } from './utils.js';
+
 /**
  * @param {import('types/endpoint').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
@@ -19,7 +21,7 @@ export default async function render_route(request, route) {
 			if (typeof response !== 'object') {
 				return {
 					status: 500,
-					body: `Invalid response from route ${request.path}; 
+					body: `Invalid response from route ${request.path};
 						 expected an object, got ${typeof response}`,
 					headers: {}
 				};
@@ -40,16 +42,4 @@ export default async function render_route(request, route) {
 			return { status, body, headers };
 		}
 	}
-}
-
-/** @param {Record<string, string>} obj */
-function lowercase_keys(obj) {
-	/** @type {Record<string, string>} */
-	const clone = {};
-
-	for (const key in obj) {
-		clone[key.toLowerCase()] = obj[key];
-	}
-
-	return clone;
 }
