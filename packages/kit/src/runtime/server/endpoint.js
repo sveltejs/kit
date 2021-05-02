@@ -32,8 +32,8 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 
 			if (
-				(typeof body === 'object' && !('content-type' in headers)) ||
-				headers['content-type'] === 'application/json'
+				typeof body === 'object' &&
+				(!('content-type' in headers) || headers['content-type'] === 'application/json')
 			) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				body = JSON.stringify(body);

@@ -29,6 +29,10 @@ export default function (test, is_dev) {
 		);
 	});
 
+	test('json string is returned', '/load/relay', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), '42');
+	});
+
 	test('prefers static data over endpoint', '/load/foo', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'static file');
 	});
