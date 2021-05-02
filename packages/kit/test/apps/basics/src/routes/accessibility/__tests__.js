@@ -33,7 +33,7 @@ export default function (test) {
 			assert.equal(await page.innerHTML('[aria-live]'), '');
 
 			await clicknav('[href="/accessibility/b"]');
-			assert.equal(await page.innerHTML('[aria-live]'), 'Navigated to b'); // TODO i18n
+			assert.equal(await page.innerHTML('[aria-live]'), 'b'); // TODO i18n
 		} else {
 			assert.ok(!has_live_region);
 		}
