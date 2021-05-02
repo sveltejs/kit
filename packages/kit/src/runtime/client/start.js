@@ -25,6 +25,10 @@ import { set_paths } from '../paths.js';
  *   };
  * }} opts */
 export async function start({ paths, target, session, host, route, spa, hydrate }) {
+	if (import.meta.env.DEV && !target) {
+		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
+	}
+
 	const router =
 		route &&
 		new Router({
