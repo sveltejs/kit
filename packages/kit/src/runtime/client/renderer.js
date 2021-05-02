@@ -423,7 +423,7 @@ export class Renderer {
 				query: false,
 				session: false,
 				context: false,
-				invalidates: new Set()
+				dependencies: new Set()
 			},
 			loaded: null,
 			context
