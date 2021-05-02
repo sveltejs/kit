@@ -54,16 +54,16 @@ importers:
     specifiers:
       '@architect/parser': ^3.0.1
       '@sveltejs/kit': workspace:*
-      rollup: ^2.41.1
+      rollup: ^2.46.0
       sirv: ^1.0.11
-      typescript: ^4.2.3
+      typescript: ^4.2.4
     dependencies:
       '@architect/parser': 3.0.1
     devDependencies:
       '@sveltejs/kit': link:../kit
-      rollup: 2.41.1
+      rollup: 2.46.0
       sirv: 1.0.11
-      typescript: 4.2.3
+      typescript: 4.2.4
 
   packages/adapter-cloudflare-workers:
     specifiers:
@@ -81,36 +81,36 @@ importers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.11.12
       toml: ^3.0.0
-      typescript: ^4.2.3
+      typescript: ^4.2.4
     dependencies:
       '@sveltejs/kit': link:../kit
       esbuild: 0.11.12
       toml: 3.0.0
     devDependencies:
-      typescript: 4.2.3
+      typescript: 4.2.4
 
   packages/adapter-node:
     specifiers:
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/kit': workspace:*
-      c8: ^7.7.0
+      c8: ^7.7.2
       compression: ^1.7.4
       node-fetch: ^2.6.1
-      polka: ^1.0.0-next.13
-      rollup: ^2.41.1
+      polka: ^1.0.0-next.14
+      rollup: ^2.46.0
       sirv: ^1.0.11
-      typescript: ^4.2.3
+      typescript: ^4.2.4
       uvu: ^0.5.1
     devDependencies:
-      '@rollup/plugin-json': 4.1.0_rollup@2.41.1
+      '@rollup/plugin-json': 4.1.0_rollup@2.46.0
       '@sveltejs/kit': link:../kit
-      c8: 7.7.0
+      c8: 7.7.2
       compression: 1.7.4
       node-fetch: 2.6.1
-      polka: 1.0.0-next.13
-      rollup: 2.41.1
+      polka: 1.0.0-next.14
+      rollup: 2.46.0
       sirv: 1.0.11
-      typescript: 4.2.3
+      typescript: 4.2.4
       uvu: 0.5.1
 
   packages/adapter-static:
@@ -131,12 +131,12 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.11.12
-      typescript: ^4.2.3
+      typescript: ^4.2.4
     dependencies:
       '@sveltejs/kit': link:../kit
       esbuild: 0.11.12
     devDependencies:
-      typescript: 4.2.3
+      typescript: 4.2.4
 
   packages/create-svelte:
     specifiers:
@@ -198,62 +198,62 @@ importers:
 
   packages/kit:
     specifiers:
-      '@rollup/plugin-replace': ^2.4.1
+      '@rollup/plugin-replace': ^2.4.2
       '@sveltejs/kit': workspace:*
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.9
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
       '@types/mime': ^2.0.3
-      '@types/node': ^14.14.33
+      '@types/node': ^14.14.43
       '@types/rimraf': ^3.0.0
       '@types/sade': ^1.7.2
       amphtml-validator: ^1.0.34
       cheap-watch: ^1.0.3
       cookie: ^0.4.1
       devalue: ^2.0.1
-      eslint: ^7.21.0
+      eslint: ^7.25.0
       kleur: ^4.1.4
       marked: ^2.0.3
       node-fetch: ^3.0.0-beta.9
       port-authority: ^1.1.2
       rimraf: ^3.0.2
-      rollup: ^2.41.1
+      rollup: ^2.46.0
       sade: ^1.7.4
       selfsigned: ^1.10.8
       sirv: ^1.0.11
       svelte: ^3.35.0
       tiny-glob: ^0.2.8
-      typescript: ^4.2.3
+      typescript: ^4.2.4
       uvu: ^0.5.1
       vite: ^2.2.3
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_6c43afb327f3ef976774a1a1e8559c8a
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_e4ad80f1d293ef35cc47bfded71315ee
       cheap-watch: 1.0.3
       sade: 1.7.4
     devDependencies:
-      '@rollup/plugin-replace': 2.4.1_rollup@2.41.1
+      '@rollup/plugin-replace': 2.4.2_rollup@2.46.0
       '@sveltejs/kit': 'link:'
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.0
       '@types/mime': 2.0.3
-      '@types/node': 14.14.33
+      '@types/node': 14.14.43
       '@types/rimraf': 3.0.0
       '@types/sade': 1.7.2
       amphtml-validator: 1.0.34
       cookie: 0.4.1
       devalue: 2.0.1
-      eslint: 7.21.0
+      eslint: 7.25.0
       kleur: 4.1.4
       marked: 2.0.3
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
       rimraf: 3.0.2
-      rollup: 2.41.1
+      rollup: 2.46.0
       selfsigned: 1.10.8
       sirv: 1.0.11
       svelte: 3.35.0
       tiny-glob: 0.2.8
-      typescript: 4.2.3
+      typescript: 4.2.4
       uvu: 0.5.1
       vite: 2.2.3
 
@@ -570,15 +570,6 @@ packages:
       rollup: 2.42.3
     dev: true
 
-  /@rollup/plugin-json/4.1.0_rollup@2.41.1:
-    resolution: {integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.41.1
-      rollup: 2.41.1
-    dev: true
-
   /@rollup/plugin-json/4.1.0_rollup@2.42.3:
     resolution: {integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==}
     peerDependencies:
@@ -586,6 +577,15 @@ packages:
     dependencies:
       '@rollup/pluginutils': 3.1.0_rollup@2.42.3
       rollup: 2.42.3
+    dev: true
+
+  /@rollup/plugin-json/4.1.0_rollup@2.46.0:
+    resolution: {integrity: sha512-yfLbTdNS6amI/2OpmbiBoW12vngr5NW2jCJVZSBEz+H5KfUJZ2M7sDjk0U6GOOdCWFVScShte29o9NezJ53TPw==}
+    peerDependencies:
+      rollup: ^1.20.0 || ^2.0.0
+    dependencies:
+      '@rollup/pluginutils': 3.1.0_rollup@2.46.0
+      rollup: 2.46.0
     dev: true
 
   /@rollup/plugin-node-resolve/11.2.0_rollup@2.42.3:
@@ -603,26 +603,14 @@ packages:
       rollup: 2.42.3
     dev: true
 
-  /@rollup/plugin-replace/2.4.1_rollup@2.41.1:
-    resolution: {integrity: sha512-XwC1oK5rrtRJ0tn1ioLHS6OV5JTluJF7QE1J/q1hN3bquwjnVxjtMyY9iCnoyH9DQbf92CxajB3o98wZbP3oAQ==}
+  /@rollup/plugin-replace/2.4.2_rollup@2.46.0:
+    resolution: {integrity: sha512-IGcu+cydlUMZ5En85jxHH4qj2hta/11BHq95iHEyb2sbgiN0eCdzvUcHw5gt9pBL5lTi4JDYJ1acCoMGpTvEZg==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.41.1
+      '@rollup/pluginutils': 3.1.0_rollup@2.46.0
       magic-string: 0.25.7
-      rollup: 2.41.1
-    dev: true
-
-  /@rollup/pluginutils/3.1.0_rollup@2.41.1:
-    resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
-    engines: {node: '>= 8.0.0'}
-    peerDependencies:
-      rollup: ^1.20.0||^2.0.0
-    dependencies:
-      '@types/estree': 0.0.39
-      estree-walker: 1.0.1
-      picomatch: 2.2.2
-      rollup: 2.41.1
+      rollup: 2.46.0
     dev: true
 
   /@rollup/pluginutils/3.1.0_rollup@2.42.3:
@@ -637,7 +625,19 @@ packages:
       rollup: 2.42.3
     dev: true
 
-  /@rollup/pluginutils/4.1.0_rollup@2.41.1:
+  /@rollup/pluginutils/3.1.0_rollup@2.46.0:
+    resolution: {integrity: sha512-GksZ6pr6TpIjHm8h9lSQ8pi8BE9VeubNT0OMJ3B5uZJ8pz73NPiqOtCog/x2/QzM1ENChPKxMDhiQuRHsqc+lg==}
+    engines: {node: '>= 8.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0
+    dependencies:
+      '@types/estree': 0.0.39
+      estree-walker: 1.0.1
+      picomatch: 2.2.2
+      rollup: 2.46.0
+    dev: true
+
+  /@rollup/pluginutils/4.1.0_rollup@2.46.0:
     resolution: {integrity: sha512-TrBhfJkFxA+ER+ew2U2/fHbebhLT/l/2pRk0hfj9KusXUuRXd2v0R58AfaZK9VXDQ4TogOSEmICVrQAA3zFnHQ==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
@@ -645,17 +645,17 @@ packages:
     dependencies:
       estree-walker: 2.0.2
       picomatch: 2.2.3
-      rollup: 2.41.1
+      rollup: 2.46.0
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_6c43afb327f3ef976774a1a1e8559c8a:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_e4ad80f1d293ef35cc47bfded71315ee:
     resolution: {integrity: sha512-ySB/GJsZV3h3jqjq5WIiaxVFkJK6vqtG9gS7Iw6SfUH9ZiFNw5JjQF69g68j9cNep3q4yRIYiG5/pI3YIdXEuA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       svelte: ^3.37.0
       vite: ^2.2.3
     dependencies:
-      '@rollup/pluginutils': 4.1.0_rollup@2.41.1
+      '@rollup/pluginutils': 4.1.0_rollup@2.46.0
       chalk: 4.1.1
       debug: 4.3.2
       hash-sum: 2.0.0
@@ -697,10 +697,6 @@ packages:
     dependencies:
       '@types/minimatch': 3.0.3
       '@types/node': 14.14.33
-    dev: true
-
-  /@types/is-windows/1.0.0:
-    resolution: {integrity: sha512-tJ1rq04tGKuIJoWIH0Gyuwv4RQ3+tIu7wQrC0MV47raQ44kIzXSSFKfrxFUOWVRvesoF7mrTqigXmqoZJsXwTg==}
     dev: true
 
   /@types/istanbul-lib-coverage/2.0.3:
@@ -745,6 +741,10 @@ packages:
 
   /@types/node/14.14.41:
     resolution: {integrity: sha512-dueRKfaJL4RTtSa7bWeTK1M+VH+Gns73oCgzvYfHZywRCoPSd8EkXBL0mZ9unPTveBn+D9phZBaxuzpwjWkW0g==}
+    dev: true
+
+  /@types/node/14.14.43:
+    resolution: {integrity: sha512-3pwDJjp1PWacPTpH0LcfhgjvurQvrZFBrC6xxjaUEZ7ifUtT32jtjPxEMMblpqd2Mvx+k8haqQJLQxolyGN/cQ==}
     dev: true
 
   /@types/normalize-package-data/2.4.0:
@@ -1106,8 +1106,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /c8/7.7.0:
-    resolution: {integrity: sha512-9OoBQBa5FPs7NNcjaH52SfQpLCXsDRwJKPOeQ9K1MyYoMlnfazMx3XHp+inFPxMA5BV6VMWw1uFrV9sao1oBqA==}
+  /c8/7.7.2:
+    resolution: {integrity: sha512-8AqNnUMxB3hsgYCYso2GJjlwnaNPlrEEbYbCQb7N76V1nrOgCKXiTcE3gXU18rIj0FeduPywROrIBMC7XAKApg==}
     engines: {node: '>=10.12.0'}
     hasBin: true
     dependencies:
@@ -1115,7 +1115,6 @@ packages:
       '@istanbuljs/schema': 0.1.3
       find-up: 5.0.0
       foreground-child: 2.0.0
-      furi: 2.0.0
       istanbul-lib-coverage: 3.0.0
       istanbul-lib-report: 3.0.0
       istanbul-reports: 3.0.2
@@ -1188,7 +1187,6 @@ packages:
     dependencies:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
-    dev: false
 
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
@@ -1617,8 +1615,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /eslint/7.21.0:
-    resolution: {integrity: sha512-W2aJbXpMNofUp0ztQaF40fveSsJBjlSCSWpy//gzfTvwC+USs/nceBrKmlJOiM8r1bLwP2EuYkCqArn/6QTIgg==}
+  /eslint/7.22.0:
+    resolution: {integrity: sha512-3VawOtjSJUQiiqac8MQc+w457iGLfuNGLFn8JmF051tTKbh5/x/0vlcEj8OgDCaw7Ysa2Jn8paGshV7x2abKXg==}
     engines: {node: ^10.12.0 || >=12.0.0}
     hasBin: true
     dependencies:
@@ -1639,7 +1637,7 @@ packages:
       file-entry-cache: 6.0.1
       functional-red-black-tree: 1.0.1
       glob-parent: 5.1.2
-      globals: 12.4.0
+      globals: 13.7.0
       ignore: 4.0.6
       import-fresh: 3.3.0
       imurmurhash: 0.1.4
@@ -1653,7 +1651,7 @@ packages:
       optionator: 0.9.1
       progress: 2.0.3
       regexpp: 3.1.0
-      semver: 7.3.4
+      semver: 7.3.5
       strip-ansi: 6.0.0
       strip-json-comments: 3.1.1
       table: 6.0.7
@@ -1663,15 +1661,15 @@ packages:
       - supports-color
     dev: true
 
-  /eslint/7.22.0:
-    resolution: {integrity: sha512-3VawOtjSJUQiiqac8MQc+w457iGLfuNGLFn8JmF051tTKbh5/x/0vlcEj8OgDCaw7Ysa2Jn8paGshV7x2abKXg==}
+  /eslint/7.25.0:
+    resolution: {integrity: sha512-TVpSovpvCNpLURIScDRB6g5CYu/ZFq9GfX2hLNIV4dSBKxIWojeDODvYl3t0k0VtMxYeR8OXPCFE5+oHMlGfhw==}
     engines: {node: ^10.12.0 || >=12.0.0}
     hasBin: true
     dependencies:
       '@babel/code-frame': 7.12.11
       '@eslint/eslintrc': 0.4.0
       ajv: 6.12.6
-      chalk: 4.1.0
+      chalk: 4.1.1
       cross-spawn: 7.0.3
       debug: 4.3.1
       doctrine: 3.0.0
@@ -1942,13 +1940,6 @@ packages:
 
   /functional-red-black-tree/1.0.1:
     resolution: {integrity: sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=}
-    dev: true
-
-  /furi/2.0.0:
-    resolution: {integrity: sha512-uKuNsaU0WVaK/vmvj23wW1bicOFfyqSsAIH71bRZx8kA4Xj+YCHin7CJKJJjkIsmxYaPFLk9ljmjEyB7xF7WvQ==}
-    dependencies:
-      '@types/is-windows': 1.0.0
-      is-windows: 1.0.2
     dev: true
 
   /get-caller-file/2.0.5:
@@ -2891,8 +2882,8 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /polka/1.0.0-next.13:
-    resolution: {integrity: sha512-ISFBSJ3hHeSDOhbEUwBn0Jp8Rd9iOdXJa5LUaYyECw6lQOSkr0wJ7Shl5pRRS/u0t+uQpw9jJPypHRyX8mPpPQ==}
+  /polka/1.0.0-next.14:
+    resolution: {integrity: sha512-nRxh6lifEred8F973wMJ3YA7z8EBAf+lWFLbhIh4MnYJXmZododD8FDGj+R81xnuNNG8b4PDqNXvrB5ShKcStA==}
     engines: {node: '>=6'}
     dependencies:
       '@polka/url': 1.0.0-next.12
@@ -3124,14 +3115,6 @@ packages:
       glob: 7.1.6
     dev: true
 
-  /rollup/2.41.1:
-    resolution: {integrity: sha512-nepLFAW5W71/MWpS2Yr7r31eS7HRfYg2RXnxb6ehqN9zY42yACxKtEfb4xq8SmNfUohAzGMcyl6jkwdLOAiUbg==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: true
-
   /rollup/2.42.3:
     resolution: {integrity: sha512-JjaT9WaUS5vmjy6xUrnPOskjkQg2cN4WSACNCwbOvBz8VDmbiKVdmTFUoMPRqTud0tsex8Xy9/boLbDW9HKD1w==}
     engines: {node: '>=10.0.0'}
@@ -3142,6 +3125,14 @@ packages:
 
   /rollup/2.45.2:
     resolution: {integrity: sha512-kRRU7wXzFHUzBIv0GfoFFIN3m9oteY4uAsKllIpQDId5cfnkWF2J130l+27dzDju0E6MScKiV0ZM5Bw8m4blYQ==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /rollup/2.46.0:
+    resolution: {integrity: sha512-qPGoUBNl+Z8uNu0z7pD3WPTABWRbcOwIrO/5ccDJzmrtzn0LVf6Lj91+L5CcWhXl6iWf23FQ6m8Jkl2CmN1O7Q==}
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
@@ -3182,14 +3173,6 @@ packages:
   /semver/6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
-    dev: true
-
-  /semver/7.3.4:
-    resolution: {integrity: sha512-tCfb2WLjqFAtXn4KEdxIhalnRtoKFN7nAwj0B3ZXCbQloV2tq5eDbcTmT68JJD3nRJq24/XgxtQKFIpQdtvmVw==}
-    engines: {node: '>=10'}
-    hasBin: true
-    dependencies:
-      lru-cache: 6.0.0
     dev: true
 
   /semver/7.3.5:
