@@ -233,9 +233,17 @@ class Watcher extends EventEmitter {
 							ssr: this.config.kit.ssr,
 							target: this.config.kit.target,
 							template: ({ head, body }) => {
-								let rendered = fs
-									.readFileSync(this.config.kit.files.template, 'utf8')
-									.replace('%svelte.head%', () => head)
+								let templateSource = fs.readFileSync(this.config.kit.files.template, 'utf8');
+
+								if(this.config.kit.ssr) {
+									if(templateSource.indexOf('%svelte.head%') === -1) {
+										console.warn(`WARNING: ${this.config.kit.files.template} does not contain %svelte.head%. This is needed for SSR`)
+									}
+									if(templateSource.indexOf('%svelte.body%') === -1) {
+										console.warn(`WARNING: ${this.config.kit.files.template} does not contain %svelte.body%. This is needed for SSR`)
+									}
+								}
+								let rendered = templateSource.replace('%svelte.head%', () => head)
 									.replace('%svelte.body%', () => body);
 
 								if (this.config.kit.amp) {
