@@ -56,22 +56,28 @@ async function main() {
 			})
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'typescript',
 			message: 'Use TypeScript?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'eslint',
 			message: 'Add ESLint for code linting?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'prettier',
 			message: 'Add Prettier for code formatting?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		}
 	]));
 
@@ -87,7 +93,7 @@ async function main() {
 			bold(
 				green(
 					'✔ Added TypeScript support. ' +
-						'To use it inside Svelte components, add lang="ts" to the attributes of a script tag.'
+					'To use it inside Svelte components, add lang="ts" to the attributes of a script tag.'
 				)
 			)
 		);
@@ -98,7 +104,7 @@ async function main() {
 			bold(
 				green(
 					'✔ Added ESLint.\n' +
-						'Readme for ESLint and Svelte: https://github.com/sveltejs/eslint-plugin-svelte3'
+					'Readme for ESLint and Svelte: https://github.com/sveltejs/eslint-plugin-svelte3'
 				)
 			)
 		);
@@ -109,8 +115,8 @@ async function main() {
 			bold(
 				green(
 					'✔ Added Prettier.\n' +
-						'General formatting options: https://prettier.io/docs/en/options.html\n' +
-						'Svelte-specific formatting options: https://github.com/sveltejs/prettier-plugin-svelte#options'
+					'General formatting options: https://prettier.io/docs/en/options.html\n' +
+					'Svelte-specific formatting options: https://github.com/sveltejs/prettier-plugin-svelte#options'
 				)
 			)
 		);
@@ -118,8 +124,8 @@ async function main() {
 
 	console.log(
 		'\nWant to add other parts to your code base? ' +
-			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
-			'to add particular functionality to Svelte projects\n'
+		'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
+		'to add particular functionality to Svelte projects\n'
 	);
 
 	console.log('\nNext steps:');
