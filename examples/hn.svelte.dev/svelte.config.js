@@ -1,6 +1,6 @@
 import netlify from '@sveltejs/adapter-netlify';
 
-module.exports = {
+export default {
 	kit: {
 		adapter: netlify(),
 		target: '#svelte'
