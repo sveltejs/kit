@@ -1,12 +1,12 @@
-const { copyFileSync } = require('fs');
-const { join } = require('path');
+import { copyFileSync } from 'fs';
+import { join } from 'path';
 
 /**
  * @param {{
  *   out?: string;
  * }} options
  */
-module.exports = function ({ out = 'build' } = {}) {
+export default function ({ out = 'build' } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-node',
@@ -30,4 +30,4 @@ module.exports = function ({ out = 'build' } = {}) {
 	};
 
 	return adapter;
-};
+}

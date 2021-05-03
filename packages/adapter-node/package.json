@@ -1,8 +1,11 @@
 {
 	"name": "@sveltejs/adapter-node",
 	"version": "1.0.0-next.17",
-	"main": "index.cjs",
 	"type": "module",
+	"exports": {
+		"import": "./index.js"
+	},
+	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"files",

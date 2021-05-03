@@ -1,8 +1,8 @@
-const { writeFileSync } = require('fs');
-const { join } = require('path');
-const esbuild = require('esbuild');
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import esbuild from 'esbuild';
 
-module.exports = function () {
+export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
@@ -50,4 +50,4 @@ module.exports = function () {
 	};
 
 	return adapter;
-};
+}

@@ -1,11 +1,9 @@
-'use strict';
+import fs from 'fs';
+import { execSync } from 'child_process';
+import esbuild from 'esbuild';
+import toml from 'toml';
 
-const fs = require('fs');
-const { execSync } = require('child_process');
-const esbuild = require('esbuild');
-const toml = require('toml');
-
-module.exports = function () {
+export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -50,7 +48,7 @@ module.exports = function () {
 	};
 
 	return adapter;
-};
+}
 
 function validate_config(utils) {
 	if (fs.existsSync('wrangler.toml')) {

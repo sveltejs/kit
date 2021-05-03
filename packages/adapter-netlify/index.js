@@ -1,9 +1,9 @@
-const { existsSync, readFileSync, writeFileSync } = require('fs');
-const { join } = require('path');
-const esbuild = require('esbuild');
-const toml = require('toml');
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import esbuild from 'esbuild';
+import toml from 'toml';
 
-module.exports = function () {
+export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-netlify',
@@ -43,7 +43,7 @@ module.exports = function () {
 	};
 
 	return adapter;
-};
+}
 
 function validate_config() {
 	if (existsSync('netlify.toml')) {
