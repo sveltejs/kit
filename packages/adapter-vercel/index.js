@@ -19,15 +19,15 @@ module.exports = function () {
 			};
 
 			// TODO ideally we'd have something like utils.tmpdir('vercel')
-			// rather than hardcoding '.svelte/vercel/entry.js', and the
+			// rather than hardcoding '.svelte-kit/vercel/entry.js', and the
 			// relative import from that file to output/server/app.js
 			// would be controlled. at the moment we're exposing
 			// implementation details that could change
 			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte/vercel/entry.js');
+			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
 			await esbuild.build({
-				entryPoints: ['.svelte/vercel/entry.js'],
+				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				platform: 'node'
