@@ -1,4 +1,5 @@
-module.exports = {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		files: {
 			assets: 'public',
@@ -18,3 +19,5 @@ module.exports = {
 		}
 	}
 };
+
+export default config;
