@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.96
+
+### Patch Changes
+
+- 63eff1a: Add prerendering to \$app/env typings
+
 ## 1.0.0-next.95
 
 ### Patch Changes
