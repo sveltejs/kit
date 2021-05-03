@@ -6,7 +6,7 @@ The bulk of your app, in `src/routes`, can be left where it is, but several proj
 
 ### Configuration
 
-Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte.config.cjs`, as documented [here](/docs#configuration). Svelte preprocessor options should be moved to `config.preprocess`.
+Your `webpack.config.js` or `rollup.config.js` should be replaced with a `svelte.config.js`, as documented [here](/docs#configuration). Svelte preprocessor options should be moved to `config.preprocess`.
 
 You will need to add an [adapter](/docs#adapters). `sapper build` is roughly equivalent to [adapter-node](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) while `sapper export` is roughly equivalent to [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), though you might prefer to use an adapter designed for the platform you're deploying to.
 

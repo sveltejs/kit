@@ -2,14 +2,13 @@
 question: How do I setup a path alias?
 ---
 
-Please be aware that you will probably want the alias specified in two places.
-
-In `svelte.config.cjs` add [`vite.resolve.alias`](https://vitejs.dev/config/#resolve-alias):
+First, you need to add it to the Vite configuration. In `svelte.config.js` add [`vite.resolve.alias`](https://vitejs.dev/config/#resolve-alias):
 
 ```js
-// svelte.config.cjs
-const path = require('path');
-module.exports = {
+// svelte.config.js
+import path from 'path';
+
+export default {
 	kit: {
 		vite: {
 			resolve: {
@@ -22,7 +21,7 @@ module.exports = {
 };
 ```
 
-In `tsconfig.json` (for TypeScript users) or `jsconfig.json` (for JavaScript users) to make VS Code aware of the alias:
+Then, to make TypeScript aware of the alias, add it to `tsconfig.json` (for TypeScript users) or `jsconfig.json`:
 
 ```js
 {
