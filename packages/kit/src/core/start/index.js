@@ -5,6 +5,7 @@ import { getRawBody } from '../http/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -23,7 +24,7 @@ const mutable = (dir) =>
  * }} opts
  */
 export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
-	const app_file = resolve(cwd, '.svelte/output/server/app.js');
+	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 
 	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
@@ -33,7 +34,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		? mutable(config.kit.files.assets)
 		: (_req, _res, next) => next();
 
-	const assets_handler = sirv(resolve(cwd, '.svelte/output/client'), {
+	const assets_handler = sirv(resolve(cwd, `${SVELTE_KIT}/output/client`), {
 		maxAge: 31536000,
 		immutable: true
 	});
