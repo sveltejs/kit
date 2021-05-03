@@ -7,15 +7,17 @@ import { networkInterfaces, release } from 'os';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
-	if (existsSync('snowpack.config.js') || existsSync('snowpack.config.cjs')) {
+	if (existsSync('svelte.config.cjs')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
-			'SvelteKit now uses https://vitejs.dev. Please remove snowpack.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
+			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
 		));
-	} else if (existsSync('vite.config.js')) {
+	}
+
+	if (existsSync('vite.config.js')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
-			'Please remove vite.config.js and put Vite config in svelte.config.cjs: https://kit.svelte.dev/docs#configuration-vite'
+			'Please remove vite.config.js and put Vite config in svelte.config.js: https://kit.svelte.dev/docs#configuration-vite'
 		));
 	}
 
