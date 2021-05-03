@@ -8,7 +8,7 @@ See [the FAQ](/faq#integrations) for detailed information about integrations.
 
 Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs#hooks-handle):
 
-```
+```js
 import { minify } from 'html-minifier';
 import { prerendering } from '$app/env';
 
@@ -41,3 +41,5 @@ export async function handle({ request, render }) {
   return response;
 }
 ```
+
+Note that `prerendering` is `false` when using `svelte-kit preview` to test the production build of the site, so to verify the results of minifying, you'll need to inspect the built HTML files directly.
