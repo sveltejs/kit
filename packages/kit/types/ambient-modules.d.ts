@@ -67,7 +67,7 @@ declare module '$app/stores' {
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores(): {
-		navigating: Readable<{ from: string; to: string } | null>;
+		navigating: Readable<{ from: Page; to: Page } | null>;
 		page: Readable<Page>;
 		session: Writable<any>;
 	};
@@ -80,7 +80,7 @@ declare module '$app/stores' {
 	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<{ from: string; to: string } | null>;
+	export const navigating: Readable<{ from: Page; to: Page } | null>;
 	/**
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
