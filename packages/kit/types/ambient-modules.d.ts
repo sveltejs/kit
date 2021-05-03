@@ -11,6 +11,10 @@ declare module '$app/env' {
 	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
+	/**
+	 * `true` when prerendering, `false` otherwise.
+	 */
+	export const prerendering: boolean;
 }
 
 declare module '$app/navigation' {
