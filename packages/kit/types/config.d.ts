@@ -40,6 +40,7 @@ export type Config = {
 			serviceWorker?: string;
 			template?: string;
 		};
+		floc?: boolean;
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
