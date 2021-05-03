@@ -1,4 +1,4 @@
-const netlify = require('@sveltejs/adapter-netlify');
+import netlify from '@sveltejs/adapter-netlify';
 
 module.exports = {
 	kit: {
