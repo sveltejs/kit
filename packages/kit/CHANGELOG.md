@@ -1,5 +1,16 @@
 # @sveltejs/kit
 
+## 1.0.0-next.95
+
+### Patch Changes
+
+- 16cca89: Export AdapterUtils type for use in adapters
+- f3ef93d: Not calling JSON.stringify on endpoint's body if it's a string and the content-type header denotes json
+- 5023e98: Remove 'Navigated to' text from announcer'
+- b4d0d6c: Normalize keys of headers from server side requests
+- 08ebcb5: Add esm config support
+- 427e8e0: Validate template file on startup
+
 ## 1.0.0-next.94
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 0.0.2-next.5
+
+### Patch Changes
+
+- 9e67505: Add es2020 target to esbuild function to solve Unexpected character '#' error
+
 ## 0.0.2-next.4
 
 ### Patch Changes
