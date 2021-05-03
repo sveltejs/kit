@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.64
+
+### Patch Changes
+
+- 3fb191c: Improved install prompts, turn confirms into toggle
+
 ## 2.0.0-next.63
 
 ### Patch Changes
