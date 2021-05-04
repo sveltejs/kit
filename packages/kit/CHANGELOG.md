@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.99
+
+### Patch Changes
+
+- 051c026: Remove getContext in favour of request.locals
+
 ## 1.0.0-next.98
 
 ### Patch Changes
