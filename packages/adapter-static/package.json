@@ -4,7 +4,7 @@
 	"type": "module",
 	"main": "index.js",
 	"exports": {
-		"import": "./index.cjs"
+		"import": "./index.js"
 	},
 	"types": "index.d.ts",
 	"scripts": {
