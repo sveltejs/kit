@@ -7,10 +7,11 @@ export const handle: Handle = async ({ request, render }) => {
 	request.locals.userid = cookies.userid || uuid();
 
 	// TODO https://github.com/sveltejs/kit/issues/1046
-	const response = await render({
-		...request,
-		method: (request.query.get('_method') || request.method).toUpperCase()
-	});
+	if (request.query.has('_method')) {
+		request.method = request.query.get('_method').toUpperCase();
+	}
+
+	const response = await render(request);
 
 	if (!cookies.userid) {
 		// if this is the first time the user has visited this app,
