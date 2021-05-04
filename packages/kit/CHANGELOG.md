@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.97
+
+### Patch Changes
+
+- 694f5de: Fixes `navigating` store type
+- 0befffb: Rename .svelte to .svelte-kit
+- c6fde99: Switch to ESM in config files
+
 ## 1.0.0-next.96
 
 ### Patch Changes

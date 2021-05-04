@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 0.0.2-next.6
+
+### Patch Changes
+
+- c6fde99: Convert to ESM
+
 ## 0.0.2-next.5
 
 ### Patch Changes

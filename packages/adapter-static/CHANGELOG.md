@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- c6fde99: Convert to ESM
+
 ## 1.0.0-next.7
 
 ### Patch Changes
