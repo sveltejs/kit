@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.98
+
+### Patch Changes
+
+- d279e36: Add invalidate(url) API for re-running load functions
+
 ## 1.0.0-next.97
 
 ### Patch Changes
