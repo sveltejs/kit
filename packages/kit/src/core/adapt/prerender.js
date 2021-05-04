@@ -3,6 +3,7 @@ import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
 import '../../install-fetch.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} html */
 function clean_html(html) {
@@ -57,7 +58,7 @@ const REDIRECT = 3;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
-	const dir = resolve_path(cwd, '.svelte/output');
+	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	const seen = new Set();
 

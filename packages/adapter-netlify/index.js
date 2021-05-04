@@ -17,10 +17,10 @@ module.exports = function () {
 			const files = join(__dirname, 'files');
 
 			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte/netlify/entry.js');
+			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');
 
 			await esbuild.build({
-				entryPoints: ['.svelte/netlify/entry.js'],
+				entryPoints: ['.svelte-kit/netlify/entry.js'],
 				outfile: join(functions, 'render/index.js'),
 				bundle: true,
 				platform: 'node'

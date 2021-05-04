@@ -19,17 +19,17 @@ module.exports = function () {
 			utils.rimraf(entrypoint);
 
 			utils.log.info('Installing worker dependencies...');
-			utils.copy(`${__dirname}/files/_package.json`, '.svelte/cloudflare-workers/package.json');
+			utils.copy(`${__dirname}/files/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
 
 			// TODO would be cool if we could make this step unnecessary somehow
-			const stdout = execSync('npm install', { cwd: '.svelte/cloudflare-workers' });
+			const stdout = execSync('npm install', { cwd: '.svelte-kit/cloudflare-workers' });
 			utils.log.info(stdout.toString());
 
 			utils.log.minor('Generating worker...');
-			utils.copy(`${__dirname}/files/entry.js`, '.svelte/cloudflare-workers/entry.js');
+			utils.copy(`${__dirname}/files/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
 			await esbuild.build({
-				entryPoints: ['.svelte/cloudflare-workers/entry.js'],
+				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',

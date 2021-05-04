@@ -3,6 +3,6 @@
 /dist
 /assets/runtime
 /client/**/*.d.ts
-/test/**/.svelte
+/test/**/.svelte-kit
 /test/**/build
-!/src/api/adapt/test/fixtures/*/.svelte
+!/src/api/adapt/test/fixtures/*/.svelte-kit
