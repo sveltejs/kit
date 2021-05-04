@@ -55,7 +55,7 @@ type Request<Context = any> = {
 	query: URLSearchParams;
 	rawBody: string | ArrayBuffer;
 	body: string | ArrayBuffer | ReadOnlyFormData | any;
-	context: Context; // see getContext, below
+	locals: Record<string, any>; // see below
 };
 
 type Response = {

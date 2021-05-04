@@ -1,6 +1,6 @@
 import { Headers, ParameterizedBody } from './helper';
 
-export type ServerRequest<Context = any, Body = unknown> = {
+export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
 	method: string;
 	host: string;
 	headers: Headers;
@@ -9,7 +9,7 @@ export type ServerRequest<Context = any, Body = unknown> = {
 	query: URLSearchParams;
 	rawBody: string | ArrayBuffer;
 	body: ParameterizedBody<Body>;
-	context: Context;
+	locals: Locals;
 };
 
 export type ServerResponse = {
@@ -18,6 +18,6 @@ export type ServerResponse = {
 	body?: any;
 };
 
-export type RequestHandler<Context = any, Body = unknown> = (
-	request: ServerRequest<Context, Body>
+export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
+	request: ServerRequest<Locals, Body>
 ) => void | ServerResponse | Promise<ServerResponse>;
