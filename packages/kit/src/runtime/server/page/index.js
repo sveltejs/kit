@@ -18,7 +18,7 @@ export default async function render_page(request, route, options, state) {
 		};
 	}
 
-	const $session = await options.hooks.getSession({ context: request.context });
+	const $session = await options.hooks.getSession(request);
 
 	if (route) {
 		const response = await respond({

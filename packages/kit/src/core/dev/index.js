@@ -142,6 +142,13 @@ class Watcher extends EventEmitter {
 						? await this.vite.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						: {};
 
+					if (/** @type {any} */ (hooks).getContext) {
+						// TODO remove this for 1.0
+						throw new Error(
+							'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
+						);
+					}
+
 					const root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`))
 						.default;
 
@@ -178,7 +185,6 @@ class Watcher extends EventEmitter {
 								console.error(colors.gray(error.stack));
 							},
 							hooks: {
-								getContext: hooks.getContext || (() => ({})),
 								getSession: hooks.getSession || (() => ({})),
 								handle: hooks.handle || (({ request, render }) => render(request))
 							},
