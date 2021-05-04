@@ -2,6 +2,10 @@
 
 [Adapter](https://kit.svelte.dev/docs#adapters) for SvelteKit apps that prerenders your site as a collection of static files.
 
+## Usage
+
+Install with `npm i -D @sveltejs/adapter-static@next`, then add the adapter to your `svelte.config.js`:
+
 ```js
 // svelte.config.js
 import adapter from '@sveltejs/adapter-static';
