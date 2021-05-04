@@ -16,7 +16,7 @@ const config = {
 };
 
 if (adapter) {
-	config.kit.adapter = require(adapter)(options);
+	config.kit.adapter = (await import(adapter)).default(options);
 }
 
 export default config;
