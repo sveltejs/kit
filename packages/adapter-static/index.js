@@ -1,3 +1,10 @@
+/**
+ * @param {{
+ *   pages?: string;
+ *   assets?: string;
+ *   fallback?: string;
+ * }} [opts]
+ */
 export default function ({ pages = 'build', assets = pages, fallback = null } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
