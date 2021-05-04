@@ -1,4 +1,4 @@
 [build]
-  command = "NODE_VERSION=16 npm run build"
+  command = "npm run build"
   publish = ".netlify/build/"
   functions = ".netlify/functions/"
