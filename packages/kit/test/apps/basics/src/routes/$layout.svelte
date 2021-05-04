@@ -12,10 +12,10 @@
 </script>
 
 <script>
-	import { goto, prefetch, prefetchRoutes } from '$app/navigation';
+	import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 
 	if (typeof window !== 'undefined') {
-		Object.assign(window, { goto, prefetch, prefetchRoutes });
+		Object.assign(window, { goto, invalidate, prefetch, prefetchRoutes });
 	}
 
 	export let foo;

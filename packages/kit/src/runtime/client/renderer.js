@@ -69,6 +69,8 @@ export class Renderer {
 		this.started = false;
 
 		this.session_id = 1;
+		this.invalid = new Set();
+		this.invalidating = null;
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
@@ -103,7 +105,7 @@ export class Renderer {
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
-			this.update(info, []);
+			this.update(info, [], true);
 		});
 		ready = true;
 	}
@@ -208,13 +210,16 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
+	 * @param {boolean} no_cache
 	 */
-	async update(info, chain) {
+	async update(info, chain, no_cache) {
 		const token = (this.token = {});
-		let navigation_result = await this._get_navigation_result(info);
+		let navigation_result = await this._get_navigation_result(info, no_cache);
 
 		// abort if user navigated during update
 		if (token !== this.token) return;
+
+		this.invalid.clear();
 
 		if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.path)) {
@@ -268,10 +273,26 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	load(info) {
-		this.loading.promise = this._get_navigation_result(info);
+		this.loading.promise = this._get_navigation_result(info, false);
 		this.loading.id = info.id;
 
 		return this.loading.promise;
+	}
+
+	/** @param {string} href */
+	invalidate(href) {
+		this.invalid.add(href);
+
+		if (!this.invalidating) {
+			this.invalidating = Promise.resolve().then(async () => {
+				const info = this.router.parse(new URL(location.href));
+				await this.update(info, [], true);
+
+				this.invalidating = null;
+			});
+		}
+
+		return this.invalidating;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -295,9 +316,10 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
+	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _get_navigation_result(info) {
+	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id) {
 			return this.loading.promise;
 		}
@@ -322,7 +344,14 @@ export class Renderer {
 				}
 			}
 
-			const result = await this._load({ route, path: info.path, query: info.query });
+			const result = await this._load(
+				{
+					route,
+					path: info.path,
+					query: info.query
+				},
+				no_cache
+			);
 			if (result) return result;
 		}
 
@@ -372,12 +401,12 @@ export class Renderer {
 		const maxage = leaf.loaded && leaf.loaded.maxage;
 
 		if (maxage) {
-			const hash = `${page.path}?${page.query}`;
+			const key = `${page.path}?${page.query}`;
 			let ready = false;
 
 			const clear = () => {
-				if (this.cache.get(hash) === result) {
-					this.cache.delete(hash);
+				if (this.cache.get(key) === result) {
+					this.cache.delete(key);
 				}
 
 				unsubscribe();
@@ -392,7 +421,7 @@ export class Renderer {
 
 			ready = true;
 
-			this.cache.set(hash, result);
+			this.cache.set(key, result);
 		}
 
 		return result;
@@ -418,7 +447,8 @@ export class Renderer {
 				path: false,
 				query: false,
 				session: false,
-				context: false
+				context: false,
+				dependencies: []
 			},
 			loaded: null,
 			context
@@ -439,6 +469,8 @@ export class Renderer {
 		const session = this.$session;
 
 		if (module.load) {
+			const { started } = this;
+
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				page: {
@@ -461,7 +493,13 @@ export class Renderer {
 					node.uses.context = true;
 					return { ...context };
 				},
-				fetch: this.started ? fetch : initial_fetch
+				fetch(resource, info) {
+					const url = typeof resource === 'string' ? resource : resource.url;
+					const { href } = new URL(url, new URL(page.path, document.baseURI));
+					node.uses.dependencies.push(href);
+
+					return started ? fetch(resource, info) : initial_fetch(resource, info);
+				}
 			};
 
 			if (error) {
@@ -483,13 +521,14 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
+	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	async _load({ route, path, query }) {
-		const hash = `${path}?${query}`;
+	async _load({ route, path, query }, no_cache) {
+		const key = `${path}?${query}`;
 
-		if (this.cache.has(hash)) {
-			return this.cache.get(hash);
+		if (!no_cache && this.cache.has(key)) {
+			return this.cache.get(key);
 		}
 
 		const [pattern, a, b, get_params] = route;
@@ -538,6 +577,7 @@ export class Renderer {
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
+					previous.uses.dependencies.some((dep) => this.invalid.has(dep)) ||
 					(context_changed && previous.uses.context);
 
 				if (changed_since_last_render) {

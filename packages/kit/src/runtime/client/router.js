@@ -225,7 +225,7 @@ export class Router {
 			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
 		}
 
-		await this.renderer.update(info, chain);
+		await this.renderer.update(info, chain, false);
 
 		document.body.focus();
 

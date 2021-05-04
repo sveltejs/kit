@@ -110,6 +110,12 @@ async function setup({ port }) {
 			 * @param {string} url
 			 * @returns {Promise<void>}
 			 */
+			invalidate: (url) => pages.js.evaluate((url) => invalidate(url), url),
+
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
 			prefetch: (url) => pages.js.evaluate((url) => prefetch(url), url),
 
 			/**
