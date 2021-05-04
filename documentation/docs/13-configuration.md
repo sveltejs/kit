@@ -2,11 +2,11 @@
 title: Configuration
 ---
 
-Your project's configuration lives in a `svelte.config.cjs` file. All values are optional. The complete list of options, with defaults, is shown here:
+Your project's configuration lives in a `svelte.config.js` file. All values are optional. The complete list of options, with defaults, is shown here:
 
 ```js
 /** @type {import('@sveltejs/kit').Config} */
-module.exports = {
+const config = {
 	// options passed to svelte.compile (https://svelte.dev/docs#svelte_compile)
 	compilerOptions: null,
 
@@ -48,6 +48,8 @@ module.exports = {
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
 };
+
+export default config;
 ```
 
 ### adapter
@@ -94,8 +96,8 @@ A value that overrides the `Host` header when populating `page.host`
 If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying host is exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) header and you should specify this in your config if you need to access `page.host`:
 
 ```js
-// svelte.config.cjs
-module.exports = {
+// svelte.config.js
+export default {
 	kit: {
 		hostHeader: 'X-Forwarded-Host'
 	}

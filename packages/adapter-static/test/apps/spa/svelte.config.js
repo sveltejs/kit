@@ -1,9 +1,13 @@
+import adapter from '../../../index.js';
+
 /** @type {import('@sveltejs/kit').Config} */
-module.exports = {
+const config = {
 	kit: {
-		adapter: require('../../../index.cjs')({
+		adapter: adapter({
 			fallback: '200.html'
 		}),
 		target: '#svelte'
 	}
 };
+
+export default config;

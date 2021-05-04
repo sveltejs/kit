@@ -1,5 +1,4 @@
-const node = require('@sveltejs/adapter-node');
-const pkg = require('./package.json');
+import node from '@sveltejs/adapter-node';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -14,4 +13,4 @@ const config = {
 	}
 };
 
-module.exports = config;
+export default config;

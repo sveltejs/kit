@@ -1,5 +1,4 @@
-const sveltePreprocess = require('svelte-preprocess');
-const pkg = require('./package.json');
+import preprocess from 'svelte-preprocess';
 
 const adapter = process.env.ADAPTER;
 const options = JSON.parse(process.env.OPTIONS || '{}');
@@ -8,7 +7,7 @@ const options = JSON.parse(process.env.OPTIONS || '{}');
 const config = {
 	// Consult https://github.com/sveltejs/svelte-preprocess
 	// for more information about preprocessors
-	preprocess: sveltePreprocess(),
+	preprocess: preprocess(),
 
 	kit: {
 		// hydrate the <div id="svelte"> element in src/app.html
@@ -20,4 +19,4 @@ if (adapter) {
 	config.kit.adapter = require(adapter)(options);
 }
 
-module.exports = config;
+export default config;

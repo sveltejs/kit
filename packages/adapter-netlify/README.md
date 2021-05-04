@@ -12,11 +12,12 @@ This is very experimental; the adapter API isn't at all fleshed out, and things 
 npm i -D @sveltejs/adapter-netlify@next
 ```
 
-You can then configure it inside of `svelte.config.cjs`:
+You can then configure it inside of `svelte.config.js`:
 
 ```js
-const adapter = require('@sveltejs/adapter-netlify');
-module.exports = {
+import adapter from '@sveltejs/adapter-netlify';
+
+export default {
 	kit: {
 		adapter: adapter(), // currently the adapter does not take any options
 		target: '#svelte'

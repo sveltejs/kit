@@ -1,4 +1,5 @@
-module.exports = {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		hostHeader: 'x-forwarded-host',
 		vite: {
@@ -14,3 +15,5 @@ module.exports = {
 		}
 	}
 };
+
+export default config;

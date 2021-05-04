@@ -8,7 +8,7 @@ Please see [sveltejs/integrations](https://github.com/sveltejs/integrations#svel
 
 ### How do I use `svelte-preprocess`?
 
-`svelte-preprocess` provides support for Babel, CoffeeScript, Less, PostCSS / SugarSS, Pug, scss/sass, Stylus, TypeScript, `global` styles, and replace. Adding [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) to your [`svelte.config.cjs`](#configuration) is the first step. It is provided by the template if you're using TypeScript. JavaScript users will need to add it. For many of the tools listed above, you will then only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) docs for full details.
+`svelte-preprocess` provides support for Babel, CoffeeScript, Less, PostCSS / SugarSS, Pug, scss/sass, Stylus, TypeScript, `global` styles, and replace. Adding [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) to your [`svelte.config.js`](#configuration) is the first step. It is provided by the template if you're using TypeScript. JavaScript users will need to add it. For many of the tools listed above, you will then only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) docs for full details.
 
 Also see [sveltejs/integrations](https://github.com/sveltejs/integrations#sveltekit) for examples of setting up these and similar libraries.
 
