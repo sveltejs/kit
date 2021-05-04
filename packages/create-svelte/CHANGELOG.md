@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.66
+
+### Patch Changes
+
+- 1753987: Use request.locals
+
 ## 2.0.0-next.65
 
 ### Patch Changes
