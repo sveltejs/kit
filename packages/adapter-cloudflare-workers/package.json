@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "0.0.2-next.5",
+	"version": "0.0.2-next.6",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"

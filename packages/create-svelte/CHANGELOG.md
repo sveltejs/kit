@@ -1,5 +1,12 @@
 # create-svelte
 
+## 2.0.0-next.65
+
+### Patch Changes
+
+- 0befffb: Rename .svelte to .svelte-kit
+- c6fde99: Switch to ESM in config files
+
 ## 2.0.0-next.64
 
 ### Patch Changes
