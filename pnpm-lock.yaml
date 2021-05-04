@@ -173,10 +173,10 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.2.2
       '@lukeed/uuid': ^2.0.0
-      '@sveltejs/adapter-cloudflare-workers': workspace:next
-      '@sveltejs/adapter-netlify': workspace:next
-      '@sveltejs/adapter-vercel': workspace:next
-      '@sveltejs/kit': workspace:next
+      '@sveltejs/adapter-cloudflare-workers': workspace:*
+      '@sveltejs/adapter-netlify': workspace:*
+      '@sveltejs/adapter-vercel': workspace:*
+      '@sveltejs/kit': workspace:*
       cookie: ^0.4.1
       svelte: ^3.38.2
       svelte-preprocess: ^4.7.3
