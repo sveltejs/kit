@@ -1,5 +1,6 @@
 import { copyFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * @param {{
@@ -20,7 +21,8 @@ export default function ({ out = 'build' } = {}) {
 			utils.log.minor('Copying server');
 			utils.copy_server_files(out);
 
-			copyFileSync(`${__dirname}/files/server.js`, `${out}/index.js`);
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+			copyFileSync(`${files}/server.js`, `${out}/index.js`);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

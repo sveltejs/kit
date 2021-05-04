@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 import toml from 'toml';
 
@@ -14,7 +15,7 @@ export default function () {
 			utils.rimraf(publish);
 			utils.rimraf(functions);
 
-			const files = join(__dirname, 'files');
+			const files = fileURLToPath(new URL('./files', import.meta.url));
 
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');

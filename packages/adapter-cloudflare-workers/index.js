@@ -2,6 +2,7 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from 'toml';
+import { fileURLToPath } from 'url';
 
 export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -13,18 +14,20 @@ export default function () {
 			const bucket = site.bucket;
 			const entrypoint = site['entry-point'] || 'workers-site';
 
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+
 			utils.rimraf(bucket);
 			utils.rimraf(entrypoint);
 
 			utils.log.info('Installing worker dependencies...');
-			utils.copy(`${__dirname}/files/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
+			utils.copy(`${files}/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
 
 			// TODO would be cool if we could make this step unnecessary somehow
 			const stdout = execSync('npm install', { cwd: '.svelte-kit/cloudflare-workers' });
 			utils.log.info(stdout.toString());
 
 			utils.log.minor('Generating worker...');
-			utils.copy(`${__dirname}/files/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
+			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
 			await esbuild.build({
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],

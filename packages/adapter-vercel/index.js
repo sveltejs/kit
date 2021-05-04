@@ -1,5 +1,6 @@
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
 export default function () {
@@ -11,7 +12,7 @@ export default function () {
 			const dir = '.vercel_build_output';
 			utils.rimraf(dir);
 
-			const files = join(__dirname, 'files');
+			const files = fileURLToPath(new URL('./files', import.meta.url));
 
 			const dirs = {
 				static: join(dir, 'static'),
