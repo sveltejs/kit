@@ -1,4 +1,5 @@
 import type { Request } from '@sveltejs/kit';
+import type { Locals } from '$lib/types';
 
 /*
 	This module is used by the /todos.json and /todos/[uid].json
@@ -13,9 +14,9 @@ import type { Request } from '@sveltejs/kit';
 
 const base = 'https://api.svelte.dev';
 
-export async function api(request: Request, resource: string, data?: {}) {
+export async function api(request: Request<Locals>, resource: string, data?: {}) {
 	// user must have a cookie set
-	if (!request.context.userid) {
+	if (!request.locals.userid) {
 		return { status: 401 };
 	}
 
@@ -36,8 +37,7 @@ export async function api(request: Request, resource: string, data?: {}) {
 			status: 303,
 			headers: {
 				location: '/todos'
-			},
-			body: '' // TODO https://github.com/sveltejs/kit/issues/1047
+			}
 		};
 	}
 
