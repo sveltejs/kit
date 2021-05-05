@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.68
+
+### Patch Changes
+
+- 5ed3ed2: Fix usage of request.locals in starter project
+
 ## 2.0.0-next.67
 
 ### Patch Changes
