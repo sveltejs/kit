@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.67
+
+### Patch Changes
+
+- d15b48a: Add renamed .svelte -> .svelte-kit directory to ignore files
+
 ## 2.0.0-next.66
 
 ### Patch Changes
