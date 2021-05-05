@@ -18,7 +18,7 @@
 	},
 	"dependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"esbuild": "^0.11.12"
+		"esbuild": "^0.11.18"
 	},
 	"devDependencies": {
 		"typescript": "^4.2.4"
