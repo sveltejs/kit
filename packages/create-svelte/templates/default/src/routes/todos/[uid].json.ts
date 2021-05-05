@@ -1,7 +1,8 @@
 import { api } from './_api';
+import type { RequestHandler } from '@sveltejs/kit';
 
 // PATCH /todos/:uid.json
-export const patch = async (request) => {
+export const patch: RequestHandler<Locals, FormData> = async (request) => {
 	return api(request, `todos/${request.locals.userid}/${request.params.uid}`, {
 		text: request.body.get('text'),
 		done: request.body.has('done') ? !!request.body.get('done') : undefined
@@ -9,6 +10,6 @@ export const patch = async (request) => {
 };
 
 // DELETE /todos/:uid.json
-export const del = async (request) => {
+export const del: RequestHandler<Locals> = async (request) => {
 	return api(request, `todos/${request.locals.userid}/${request.params.uid}`);
 };
