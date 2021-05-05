@@ -21,10 +21,8 @@ export function getRawBody(req) {
 			let i = 0;
 
 			req.on('data', (chunk) => {
-				// TODO maybe there's a simpler way to copy data between buffers?
-				for (let j = 0; j < chunk.length; j += 1) {
-					data[i++] = chunk[j];
-				}
+				data.set(chunk, i);
+				i += chunk.length;
 			});
 		} else {
 			// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
@@ -37,15 +35,8 @@ export function getRawBody(req) {
 
 			req.on('data', (chunk) => {
 				const new_data = new Uint8Array(data.length + chunk.length);
-
-				for (let i = 0; i < data.length; i += 1) {
-					new_data[i] = data[i];
-				}
-
-				for (let i = 0; i < chunk.length; i += 1) {
-					new_data[i + data.length] = chunk[i];
-				}
-
+				new_data.set(data);
+				new_data.set(chunk, data.length);
 				data = new_data;
 			});
 		}
