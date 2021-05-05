@@ -36,8 +36,7 @@ export async function api(request: Request<Locals>, resource: string, data?: {})
 			status: 303,
 			headers: {
 				location: '/todos'
-			},
-			body: '' // TODO https://github.com/sveltejs/kit/issues/1047
+			}
 		};
 	}
 
