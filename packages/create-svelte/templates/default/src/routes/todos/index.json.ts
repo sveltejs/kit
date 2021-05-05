@@ -3,7 +3,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 // GET /todos.json
 export const get: RequestHandler<Locals> = async (request) => {
-	// request.context.userid comes from src/hooks.js
+	// request.locals.userid comes from src/hooks.js
 	const response = await api(request, `todos/${request.locals.userid}`);
 
 	if (response.status === 404) {
