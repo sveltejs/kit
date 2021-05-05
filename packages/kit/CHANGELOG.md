@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.100
+
+### Patch Changes
+
+- 9890492: Use TypedArray.set to copy from Uint8Array when getting raw body in core/http
+
 ## 1.0.0-next.99
 
 ### Patch Changes
