@@ -1,3 +1,7 @@
+/// <reference types="@sveltejs/kit" />
+/// <reference types="svelte" />
+/// <reference types="vite/client" />
+
 import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
 import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 
