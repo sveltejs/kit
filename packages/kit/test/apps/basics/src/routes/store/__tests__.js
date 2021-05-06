@@ -10,7 +10,6 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Result');
 		assert.equal(await page.textContent('h2'), js ? 'Calls: 1' : 'Calls: 0');
 
-		// @ts-expect-error
 		const oops = await page.evaluate(() => window.oops);
 		assert.ok(!oops, oops);
 	});

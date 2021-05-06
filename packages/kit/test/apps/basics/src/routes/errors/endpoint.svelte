@@ -1,4 +1,5 @@
 <script context="module">
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
 		const res = await fetch('/errors/endpoint.json');
 		if (res.ok) {
@@ -8,7 +9,7 @@
 		} else {
 			return {
 				status: res.status,
-				error: new Error(await res.statusText)
+				error: new Error(res.statusText)
 			};
 		}
 	}

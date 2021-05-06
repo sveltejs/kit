@@ -6,12 +6,12 @@ export default function (test) {
 		{
 			description: 'exposes query string parameters',
 			search: '?foo=1',
-			expected: { foo: '1' }
+			expected: { foo: ['1'] }
 		},
 		{
 			description: 'value-less query parameter',
 			search: '?foo',
-			expected: { foo: '' }
+			expected: { foo: [''] }
 		},
 		{
 			description: 'duplicated query parameter',
@@ -21,7 +21,7 @@ export default function (test) {
 		{
 			description: 'encoded query parameter',
 			search: '?key=%26a=b',
-			expected: { key: '&a=b' }
+			expected: { key: ['&a=b'] }
 		}
 	];
 
@@ -37,7 +37,7 @@ export default function (test) {
 	test('updates page on client-side nav', '/query/echo?foo=1', async ({ page, clicknav }) => {
 		await clicknav('[href="/query/echo?bar=2"]');
 
-		const json = JSON.stringify({ bar: '2' });
+		const json = JSON.stringify({ bar: ['2'] });
 
 		assert.equal(await page.textContent('#one'), json);
 		assert.equal(await page.textContent('#two'), json);

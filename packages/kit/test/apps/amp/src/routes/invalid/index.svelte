@@ -1,1 +1,1 @@
-<img src="potato.jpg">
+<img alt="A potato." src="potato.jpg">

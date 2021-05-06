@@ -1,4 +1,5 @@
 <script>
+	/** @type {string} */
 	let status;
 
 	function del() {

@@ -2,12 +2,6 @@ import { Load } from './page';
 import { Incoming, GetSession, Handle } from './hooks';
 import { RequestHandler, ServerResponse } from './endpoint';
 
-declare global {
-	interface ImportMeta {
-		env: Record<string, string>;
-	}
-}
-
 type PageId = string;
 
 export type Logger = {
@@ -200,4 +194,13 @@ export type BuildData = {
 	server: string[];
 	static: string[];
 	entries: string[];
+};
+
+export type NormalizedLoadOutput = {
+	status?: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	context?: Record<string, any>;
+	maxage?: number;
 };

@@ -1,4 +1,5 @@
 <script context="module">
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ session }) {
 		return {
 			props: {
@@ -10,6 +11,8 @@
 
 <script>
 	import { session } from '$app/stores';
+
+	/** @type {number} */
 	export let answer;
 </script>
 

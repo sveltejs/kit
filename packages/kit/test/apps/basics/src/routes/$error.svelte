@@ -10,6 +10,7 @@
 <script>
 	/** @type {number} */
 	export let status;
+
 	/** @type {Error} */
 	export let error;
 </script>

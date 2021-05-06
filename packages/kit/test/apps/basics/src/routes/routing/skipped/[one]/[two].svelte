@@ -1,11 +1,15 @@
 <script context="module">
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ page }) {
 		return { props: page.params };
 	}
 </script>
 
 <script>
+	/** @type {string} */
 	export let one;
+
+	/** @type {string} */
 	export let two;
 </script>
 

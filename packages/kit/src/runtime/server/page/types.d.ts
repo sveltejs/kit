@@ -1,9 +1,8 @@
-import { LoadOutput } from '../../../../types/page';
-import { SSRNode } from '../../../../types/internal';
+import { NormalizedLoadOutput, SSRNode } from '../../../../types/internal';
 
 export type Loaded = {
 	node: SSRNode;
-	loaded: LoadOutput;
+	loaded: NormalizedLoadOutput;
 	context: Record<string, any>;
 	fetched: Array<{ url: string; json: string }>;
 	uses_credentials: boolean;

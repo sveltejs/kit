@@ -1,5 +1,5 @@
-import { Page, LoadOutput } from '../../../types/page';
-import { CSRComponent, CSRRoute } from '../../../types/internal';
+import { Page } from '../../../types/page';
+import { CSRComponent, CSRRoute, NormalizedLoadOutput } from '../../../types/internal';
 
 export type NavigationInfo = {
 	id: string;
@@ -23,7 +23,7 @@ export type NavigationResult = {
 
 export type BranchNode = {
 	module: CSRComponent;
-	loaded: LoadOutput;
+	loaded: NormalizedLoadOutput;
 	uses: {
 		params: Set<string>;
 		path: boolean;

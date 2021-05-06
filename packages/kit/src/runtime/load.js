@@ -1,6 +1,6 @@
 /**
  * @param {import('types/page').LoadOutput} loaded
- * @returns {import('types/page').LoadOutput}
+ * @returns {import('types/internal').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
 	// TODO should this behaviour be dev-only?
@@ -44,5 +44,5 @@ export function normalize(loaded) {
 		}
 	}
 
-	return loaded;
+	return /** @type {import('types/internal').NormalizedLoadOutput} */ (loaded);
 }

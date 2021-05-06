@@ -10,7 +10,7 @@
 		session.set(calls);
 	});
 
-	const unsubscribe = page.subscribe(($page) => {
+	const unsubscribe = page.subscribe(() => {
 		calls++;
 		session.set(calls);
 	});
