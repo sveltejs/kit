@@ -11,6 +11,7 @@
 </script>
 
 <script>
+	/** @type {string} */
 	export let answer;
 </script>
 

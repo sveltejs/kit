@@ -18,6 +18,7 @@
 		Object.assign(window, { goto, invalidate, prefetch, prefetchRoutes });
 	}
 
+	/** @type {{ bar: string }} */
 	export let foo;
 </script>
 

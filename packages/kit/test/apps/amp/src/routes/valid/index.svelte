@@ -1,4 +1,5 @@
 <script context="module">
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
 		const res = await fetch('/valid.json');
 		return {
@@ -9,6 +10,8 @@
 
 <script>
 	import { browser, dev, amp } from '$app/env';
+
+	/** @type {number} */
 	export let answer;
 </script>
 

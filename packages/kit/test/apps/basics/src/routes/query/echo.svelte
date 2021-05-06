@@ -1,22 +1,20 @@
 <script context="module">
+	/** @typedef {Record<string, string[]>} Query */
+
+	/** @param {URLSearchParams} query */
 	function to_pojo(query) {
+		/** @type {Query}*/
 		const values = {};
 
 		query.forEach((value, key) => {
-			if (key in values) {
-				if (!Array.isArray(values[key])) {
-					values[key] = [values[key]];
-				}
-
-				values[key].push(value);
-			} else {
-				values[key] = value;
-			}
+			if (!(key in values)) values[key] = [];
+			values[key].push(value);
 		});
 
 		return values;
 	}
 
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ page }) {
 		return {
 			props: {
@@ -29,6 +27,7 @@
 <script>
 	import { page } from '$app/stores';
 
+	/** @type {Query}*/
 	export let values;
 </script>
 

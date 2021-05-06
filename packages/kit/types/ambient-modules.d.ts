@@ -113,3 +113,110 @@ declare module '$service-worker' {
 	 */
 	export const timestamp: number;
 }
+
+// asset types listed in https://github.com/vitejs/vite/blob/main/packages/vite/src/node/constants.ts
+// should be treated as strings
+declare module '*.png' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.jpg' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.jpeg' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.gif' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.svg' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.ico' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.webp' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.avif' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.mp4' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.webm' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.ogg' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.mp3' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.wav' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.flac' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.aac' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.woff' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.woff2' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.eot' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.ttf' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.otf' {
+	const value: string;
+	export = value;
+}
+
+declare module '*.wasm' {
+	const value: string;
+	export = value;
+}

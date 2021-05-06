@@ -203,6 +203,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.9
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
+      '@types/marked': ^2.0.2
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.43
       '@types/rimraf': ^3.0.0
@@ -236,6 +237,7 @@ importers:
       '@sveltejs/kit': 'link:'
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.0
+      '@types/marked': 2.0.2
       '@types/mime': 2.0.3
       '@types/node': 14.14.43
       '@types/rimraf': 3.0.0
@@ -690,6 +692,10 @@ packages:
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha1-7ihweulOEdK4J7y+UnC86n8+ce4=}
+    dev: true
+
+  /@types/marked/2.0.2:
+    resolution: {integrity: sha512-P4zanhCQKs4tiWPPBGpB7lHflgFCP9DFGNI5YtpW9MALKoy2qs9rHNWJ+z55cegD9uCfnmsKuaosq9FNvbxrOw==}
     dev: true
 
   /@types/mime/2.0.3:

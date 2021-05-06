@@ -1,6 +1,7 @@
 <script context="module">
 	import { browser } from '$app/env';
 
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load(pageContext) {
 		if (browser) {
 			window.pageContext = pageContext;
@@ -13,6 +14,7 @@
 </script>
 
 <script>
+	/** @type {string} */
 	export let foo;
 </script>
 

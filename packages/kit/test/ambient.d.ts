@@ -2,6 +2,10 @@ declare global {
 	interface Window {
 		navigated: Promise<void>;
 		started: boolean;
+
+		// used in tests
+		oops: string;
+		pageContext: any;
 	}
 
 	const goto: (

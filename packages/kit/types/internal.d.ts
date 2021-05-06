@@ -201,3 +201,12 @@ export type BuildData = {
 	static: string[];
 	entries: string[];
 };
+
+export type NormalizedLoadOutput = {
+	status?: number;
+	error?: Error;
+	redirect?: string;
+	props?: Record<string, any> | Promise<Record<string, any>>;
+	context?: Record<string, any>;
+	maxage?: number;
+};
