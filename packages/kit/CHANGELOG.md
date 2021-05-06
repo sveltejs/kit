@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.101
+
+### Patch Changes
+
+- f5e626d: Reference Vite/Svelte types inside Kit types
+
 ## 1.0.0-next.100
 
 ### Patch Changes
