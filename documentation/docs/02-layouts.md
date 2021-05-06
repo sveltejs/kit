@@ -6,7 +6,7 @@ So far, we've treated pages as entirely standalone components — upon navigatio
 
 But in many apps, there are elements that should be visible on _every_ page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use _layout_ components.
 
-To create a layout component that applies to every page, make a file called `src/routes/$layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
+To create a layout component that applies to every page, make a file called `src/routes/__layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
 
 ```html
 <slot></slot>
@@ -15,7 +15,7 @@ To create a layout component that applies to every page, make a file called `src
 ...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
-<!-- src/routes/$layout.svelte -->
+<!-- src/routes/__layout.svelte -->
 <nav>
 	<a href=".">Home</a>
 	<a href="about">About</a>
@@ -51,7 +51,7 @@ Suppose we don't just have a single `/settings` page, but instead have nested pa
 We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
 
 ```html
-<!-- src/routes/settings/$layout.svelte -->
+<!-- src/routes/settings/__layout.svelte -->
 <h1>Settings</h1>
 
 <div class="submenu">
@@ -64,17 +64,17 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 ### Resets
 
-To reset the layout stack, create a `$layout.reset.svelte` file instead of a `$layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/$layout.reset.svelte`.
+To reset the layout stack, create a `__layout.reset.svelte` file instead of a `__layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/__layout.reset.svelte`.
 
 Layout resets are otherwise identical to normal layout components.
 
 ### Error pages
 
-If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `$error.svelte` components alongside your layout and page components.
+If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layout and page components.
 
-For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/$error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/$error.svelte` in the parent layout, or `src/routes/$error.svelte` in the root layout.
+For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
 
-> SvelteKit provides a default error page in case you don't supply `src/routes/$error.svelte`, but it's recommend that you bring your own.
+> SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommend that you bring your own.
 
 If an error component has a [`load`](#loading) function, it will be called with `error` and `status` properties:
 

@@ -98,13 +98,13 @@ test('creates routes', () => {
 test('creates routes with layout', () => {
 	const { layout, components, routes } = create('samples/basic-layout');
 
-	const $layout = 'samples/basic-layout/$layout.svelte';
+	const __layout = 'samples/basic-layout/__layout.svelte';
 	const index = 'samples/basic-layout/index.svelte';
-	const foo_$layout = 'samples/basic-layout/foo/$layout.svelte';
+	const foo___layout = 'samples/basic-layout/foo/__layout.svelte';
 	const foo = 'samples/basic-layout/foo/index.svelte';
 
-	assert.equal(layout, $layout);
-	assert.equal(components, [layout, error, index, foo_$layout, foo]);
+	assert.equal(layout, __layout);
+	assert.equal(components, [layout, error, index, foo___layout, foo]);
 
 	assert.equal(routes, [
 		{
@@ -121,7 +121,7 @@ test('creates routes with layout', () => {
 			pattern: /^\/foo\/?$/,
 			params: [],
 			path: '/foo',
-			a: [layout, foo_$layout, foo],
+			a: [layout, foo___layout, foo],
 			b: [error]
 		}
 	]);
@@ -342,16 +342,16 @@ test('includes nested error components', () => {
 			path: '/foo/bar/baz',
 			a: [
 				layout,
-				'samples/nested-errors/foo/$layout.svelte',
+				'samples/nested-errors/foo/__layout.svelte',
 				undefined,
-				'samples/nested-errors/foo/bar/baz/$layout.svelte',
+				'samples/nested-errors/foo/bar/baz/__layout.svelte',
 				'samples/nested-errors/foo/bar/baz/index.svelte'
 			],
 			b: [
 				error,
 				undefined,
-				'samples/nested-errors/foo/bar/$error.svelte',
-				'samples/nested-errors/foo/bar/baz/$error.svelte'
+				'samples/nested-errors/foo/bar/__error.svelte',
+				'samples/nested-errors/foo/bar/baz/__error.svelte'
 			]
 		}
 	]);
@@ -376,7 +376,7 @@ test('resets layout', () => {
 			path: '/foo',
 			a: [
 				layout,
-				'samples/layout-reset/foo/$layout.svelte',
+				'samples/layout-reset/foo/__layout.svelte',
 				'samples/layout-reset/foo/index.svelte'
 			],
 			b: [error]
@@ -387,10 +387,10 @@ test('resets layout', () => {
 			params: [],
 			path: '/foo/bar',
 			a: [
-				'samples/layout-reset/foo/bar/$layout.reset.svelte',
+				'samples/layout-reset/foo/bar/__layout.reset.svelte',
 				'samples/layout-reset/foo/bar/index.svelte'
 			],
-			b: ['samples/layout-reset/foo/bar/$error.svelte']
+			b: ['samples/layout-reset/foo/bar/__error.svelte']
 		}
 	]);
 });

@@ -51,8 +51,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} layout_stack // accumulated $layout.svelte components
-	 * @param {string[]} error_stack // accumulated $error.svelte components
+	 * @param {string[]} layout_stack // accumulated __layout.svelte components
+	 * @param {string[]} error_stack // accumulated __error.svelte components
 	 */
 	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
@@ -66,7 +66,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const ext =
 					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
-				if (basename[0] === '$') return null; // $layout, $error
+				if (basename[0] === '$') return null; // __layout, __error
 				if (basename[0] === '_') return null; // private files
 				if (basename[0] === '.' && basename !== '.well-known') return null;
 				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
@@ -140,12 +140,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const layout_reset = find_layout('$layout.reset', item.file);
-				const layout = find_layout('$layout', item.file);
-				const error = find_layout('$error', item.file);
+				const layout_reset = find_layout('__layout.reset', item.file);
+				const layout = find_layout('__layout', item.file);
+				const error = find_layout('__error', item.file);
 
 				if (layout_reset && layout) {
-					throw new Error(`Cannot have $layout next to $layout.reset: ${layout_reset}`);
+					throw new Error(`Cannot have __layout next to __layout.reset: ${layout_reset}`);
 				}
 
 				if (layout_reset) components.push(layout_reset);
@@ -209,8 +209,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	const base = path.relative(cwd, config.kit.files.routes);
 
-	const layout = find_layout('$layout', base) || default_layout;
-	const error = find_layout('$error', base) || default_error;
+	const layout = find_layout('__layout', base) || default_layout;
+	const error = find_layout('__error', base) || default_error;
 
 	components.push(layout, error);
 
