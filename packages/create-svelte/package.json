@@ -20,11 +20,11 @@
 		"typescript": "^4.2.4"
 	},
 	"scripts": {
-		"build": "node scripts/build-templates",
+		"build": "npm run format && node scripts/build-templates",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path ../../.gitignore",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore",
+		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path ../../.gitignore --plugin prettier-plugin-svelte",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte",
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
