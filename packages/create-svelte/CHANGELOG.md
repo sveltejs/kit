@@ -1,5 +1,15 @@
 # create-svelte
 
+## 2.0.0-next.69
+
+### Patch Changes
+
+- 9cc2508: Ensure template files match Prettier settings
+- f5e626d: Reference Vite/Svelte types inside Kit types
+- 8a402a9: Exclude deploy artifacts from create-svelte package
+- e8bed05: Prompt to npm install before prompting to git init
+- 507e2c3: fix: Prettier not formatting .svelte files
+
 ## 2.0.0-next.68
 
 ### Patch Changes
