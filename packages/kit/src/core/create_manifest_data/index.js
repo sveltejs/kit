@@ -20,6 +20,8 @@ import { posixify } from '../utils.js';
  *   route_suffix: string
  * }} Item */
 
+const specials = new Set(['__layout', '__layout.reset', '__error']);
+
 /**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
@@ -66,8 +68,14 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const ext =
 					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
-				if (basename[0] === '$') return null; // __layout, __error
-				if (basename[0] === '_') return null; // private files
+				if (basename[0] === '_') {
+					if (basename[1] === '_' && !specials.has(basename.slice(0, -ext.length))) {
+						throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
+					}
+
+					return null;
+				}
+
 				if (basename[0] === '.' && basename !== '.well-known') return null;
 				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
