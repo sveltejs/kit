@@ -112,6 +112,34 @@ export default function (test, is_dev) {
 	);
 
 	test(
+		'server-side error from load() is a 4XX/5XX status code',
+		'/errors/load-error-code-server',
+		async ({ page, response }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Internal Server Error"'
+			);
+			assert.equal(response.status(), 500);
+		}
+	);
+
+	test(
+		'client-side error from load() is a 4XX/5XX status code',
+		'/errors/load-error-code-client',
+		async ({ page, js }) => {
+			if (js) {
+				assert.equal(await page.textContent('footer'), 'Custom layout');
+				assert.equal(
+					await page.textContent('#message'),
+					'This is your custom error page saying: "Internal Server Error"'
+				);
+				assert.equal(await page.innerHTML('h1'), '500', 'Should set status code');
+			}
+		}
+	);
+
+	test(
 		'server-side error from load() is an Error',
 		'/errors/load-error-server',
 		async ({ page, response }) => {
