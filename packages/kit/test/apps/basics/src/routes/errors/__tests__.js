@@ -202,7 +202,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('#message'), 'This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint.svelte:11:15';
+		const location = 'endpoint.svelte:12:15';
 		const has_stack_trace = contents.includes(location);
 
 		if (is_dev) {
