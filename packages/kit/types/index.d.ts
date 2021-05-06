@@ -1,3 +1,6 @@
+/// <reference types="svelte" />
+/// <reference types="vite/client" />
+
 import './ambient-modules';
 
 export { Adapter, AdapterUtils, Config } from './config';
