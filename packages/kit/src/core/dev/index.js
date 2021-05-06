@@ -60,7 +60,7 @@ class Watcher extends EventEmitter {
 		this.cheapwatch = new CheapWatch({
 			dir: this.config.kit.files.routes,
 			/** @type {({ path }: { path: string }) => boolean} */
-			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
+			filter: ({ path }) => path.split('/').every((part) => part[0] !== '_' || part[1] === '_')
 		});
 
 		await this.cheapwatch.init();
