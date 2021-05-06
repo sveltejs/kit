@@ -136,9 +136,9 @@ async function main() {
 		console.log(`  ${i++}: ${bold(cyan(`cd ${relative}`))}`);
 	}
 
+	console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
 	// prettier-ignore
 	console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional step)`);
-	console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
 	console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
