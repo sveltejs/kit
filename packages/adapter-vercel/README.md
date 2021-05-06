@@ -9,9 +9,9 @@ Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `packa
 Then in your `svelte.config.js`:
 
 ```js
-const vercel = require('@sveltejs/adapter-vercel');
+import vercel from '@sveltejs/adapter-vercel';
 
-module.exports = {
+export default {
 	kit: {
 		...
 		adapter: vercel()

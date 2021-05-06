@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.95",
+	"version": "1.0.0-next.100",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.9",
@@ -25,15 +25,15 @@
 		"node-fetch": "^3.0.0-beta.9",
 		"port-authority": "^1.1.2",
 		"rimraf": "^3.0.2",
-		"rollup": "^2.46.0",
-		"selfsigned": "^1.10.8",
+		"rollup": "^2.47.0",
+		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.11",
-		"svelte": "^3.35.0",
+		"svelte": "^3.38.2",
 		"svelte-check": "^1.5.2",
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.4",
 		"uvu": "^0.5.1",
-		"vite": "^2.2.3"
+		"vite": "^2.2.4"
 	},
 	"peerDependencies": {
 		"svelte": "^3.34.0",

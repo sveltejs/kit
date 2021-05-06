@@ -12,6 +12,7 @@ declare global {
 		}
 	) => Promise<void>;
 
+	const invalidate: (url: string) => Promise<void>;
 	const prefetch: (url: string) => Promise<void>;
 	const prefetchRoutes: (urls?: string[]) => Promise<void>;
 }

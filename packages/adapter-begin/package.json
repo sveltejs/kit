@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-begin",
-	"version": "1.0.0-next.6",
+	"version": "1.0.0-next.7",
 	"main": "index.cjs",
 	"types": "index.d.ts",
 	"scripts": {
@@ -20,7 +20,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"rollup": "^2.46.0",
+		"rollup": "^2.47.0",
 		"sirv": "^1.0.11",
 		"typescript": "^4.2.4"
 	},

@@ -30,6 +30,7 @@ export type BranchNode = {
 		query: boolean;
 		session: boolean;
 		context: boolean;
+		dependencies: string[];
 	};
 	context: Record<string, any>;
 };

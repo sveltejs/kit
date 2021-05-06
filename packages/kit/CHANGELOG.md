@@ -1,5 +1,37 @@
 # @sveltejs/kit
 
+## 1.0.0-next.100
+
+### Patch Changes
+
+- 9890492: Use TypedArray.set to copy from Uint8Array when getting raw body in core/http
+
+## 1.0.0-next.99
+
+### Patch Changes
+
+- 051c026: Remove getContext in favour of request.locals
+
+## 1.0.0-next.98
+
+### Patch Changes
+
+- d279e36: Add invalidate(url) API for re-running load functions
+
+## 1.0.0-next.97
+
+### Patch Changes
+
+- 694f5de: Fixes `navigating` store type
+- 0befffb: Rename .svelte to .svelte-kit
+- c6fde99: Switch to ESM in config files
+
+## 1.0.0-next.96
+
+### Patch Changes
+
+- 63eff1a: Add prerendering to \$app/env typings
+
 ## 1.0.0-next.95
 
 ### Patch Changes

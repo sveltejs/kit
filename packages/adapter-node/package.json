@@ -1,8 +1,11 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.17",
-	"main": "index.cjs",
+	"version": "1.0.0-next.18",
 	"type": "module",
+	"exports": {
+		"import": "./index.js"
+	},
+	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
 		"files",
@@ -24,7 +27,7 @@
 		"compression": "^1.7.4",
 		"node-fetch": "^2.6.1",
 		"polka": "^1.0.0-next.14",
-		"rollup": "^2.46.0",
+		"rollup": "^2.47.0",
 		"sirv": "^1.0.11",
 		"typescript": "^4.2.4",
 		"uvu": "^0.5.1"

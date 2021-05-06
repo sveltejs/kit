@@ -7,6 +7,7 @@ import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -26,11 +27,11 @@ const s = (value) => JSON.stringify(value);
  * @returns {Promise<import('types/internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
-	const build_dir = path.resolve(cwd, '.svelte/build');
+	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
 
 	rimraf(build_dir);
 
-	const output_dir = path.resolve(cwd, '.svelte/output');
+	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
 
 	const options = {
 		cwd,
@@ -46,7 +47,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			cwd
 		}),
 		output_dir,
-		client_entry_file: '.svelte/build/runtime/internal/start.js',
+		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
@@ -199,7 +200,7 @@ async function build_server(
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!fs.existsSync(hooks_file)) {
-		hooks_file = path.resolve(cwd, '.svelte/build/hooks.js');
+		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
 		fs.writeFileSync(hooks_file, '');
 	}
 
@@ -359,7 +360,6 @@ async function build_server(
 			// this looks redundant, but the indirection allows us to access
 			// named imports without triggering Rollup's missing import detection
 			const get_hooks = hooks => ({
-				getContext: hooks.getContext || (() => ({})),
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, render }) => render(request))
 			});

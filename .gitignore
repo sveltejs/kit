@@ -9,6 +9,6 @@ yarn.lock
 .env
 .vercel_build_output
 .netlify
-.svelte
+.svelte-kit
 .cloudflare
 .pnpm-debug.log

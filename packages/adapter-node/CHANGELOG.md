@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.18
+
+### Patch Changes
+
+- c6fde99: Convert to ESM
+
 ## 1.0.0-next.17
 
 ### Patch Changes

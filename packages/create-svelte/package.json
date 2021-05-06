@@ -1,21 +1,21 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.63",
+	"version": "2.0.0-next.68",
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
-		"prompts": "^2.4.0"
+		"prompts": "^2.4.1"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.2.3",
-		"@types/prompts": "^2.0.10",
+		"@types/prompts": "^2.0.11",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.2.1",
 		"prettier-plugin-svelte": "^2.2.0",
 		"sucrase": "^3.18.1",
-		"svelte-preprocess": "^4.7.0",
+		"svelte-preprocess": "^4.7.3",
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.4"
 	},

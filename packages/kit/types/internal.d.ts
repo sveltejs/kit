@@ -1,5 +1,5 @@
 import { Load } from './page';
-import { Incoming, GetContext, GetSession, Handle } from './hooks';
+import { Incoming, GetSession, Handle } from './hooks';
 import { RequestHandler, ServerResponse } from './endpoint';
 
 declare global {
@@ -112,7 +112,6 @@ export type SSRManifest = {
 };
 
 export type Hooks = {
-	getContext?: GetContext;
 	getSession?: GetSession;
 	handle?: Handle;
 };

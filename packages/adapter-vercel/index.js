@@ -1,8 +1,9 @@
-const { writeFileSync } = require('fs');
-const { join } = require('path');
-const esbuild = require('esbuild');
+import { writeFileSync } from 'fs';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import esbuild from 'esbuild';
 
-module.exports = function () {
+export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
@@ -11,7 +12,7 @@ module.exports = function () {
 			const dir = '.vercel_build_output';
 			utils.rimraf(dir);
 
-			const files = join(__dirname, 'files');
+			const files = fileURLToPath(new URL('./files', import.meta.url));
 
 			const dirs = {
 				static: join(dir, 'static'),
@@ -19,15 +20,15 @@ module.exports = function () {
 			};
 
 			// TODO ideally we'd have something like utils.tmpdir('vercel')
-			// rather than hardcoding '.svelte/vercel/entry.js', and the
+			// rather than hardcoding '.svelte-kit/vercel/entry.js', and the
 			// relative import from that file to output/server/app.js
 			// would be controlled. at the moment we're exposing
 			// implementation details that could change
 			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte/vercel/entry.js');
+			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
 			await esbuild.build({
-				entryPoints: ['.svelte/vercel/entry.js'],
+				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				platform: 'node'
@@ -50,4 +51,4 @@ module.exports = function () {
 	};
 
 	return adapter;
-};
+}

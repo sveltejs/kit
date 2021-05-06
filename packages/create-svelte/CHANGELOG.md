@@ -1,5 +1,36 @@
 # create-svelte
 
+## 2.0.0-next.68
+
+### Patch Changes
+
+- 5ed3ed2: Fix usage of request.locals in starter project
+
+## 2.0.0-next.67
+
+### Patch Changes
+
+- d15b48a: Add renamed .svelte -> .svelte-kit directory to ignore files
+
+## 2.0.0-next.66
+
+### Patch Changes
+
+- 1753987: Use request.locals
+
+## 2.0.0-next.65
+
+### Patch Changes
+
+- 0befffb: Rename .svelte to .svelte-kit
+- c6fde99: Switch to ESM in config files
+
+## 2.0.0-next.64
+
+### Patch Changes
+
+- 3fb191c: Improved install prompts, turn confirms into toggle
+
 ## 2.0.0-next.63
 
 ### Patch Changes

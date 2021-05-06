@@ -11,6 +11,7 @@ function guard(name) {
 }
 
 export const goto = import.meta.env.SSR ? guard('goto') : goto_;
+export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate_;
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
 
@@ -19,6 +20,14 @@ export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : pr
  */
 async function goto_(href, opts) {
 	return router.goto(href, opts, []);
+}
+
+/**
+ * @type {import('$app/navigation').invalidate}
+ */
+async function invalidate_(resource) {
+	const { href } = new URL(resource, location.href);
+	return router.renderer.invalidate(href);
 }
 
 /**

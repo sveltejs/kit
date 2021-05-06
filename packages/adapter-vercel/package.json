@@ -1,6 +1,10 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.15",
+	"version": "1.0.0-next.16",
+	"type": "module",
+	"exports": {
+		"import": "./index.js"
+	},
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": [
@@ -14,7 +18,7 @@
 	},
 	"dependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"esbuild": "^0.11.12"
+		"esbuild": "^0.11.18"
 	},
 	"devDependencies": {
 		"typescript": "^4.2.4"

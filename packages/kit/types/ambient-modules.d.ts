@@ -11,6 +11,10 @@ declare module '$app/env' {
 	 * `true` in development mode, `false` in production.
 	 */
 	export const dev: boolean;
+	/**
+	 * `true` when prerendering, `false` otherwise.
+	 */
+	export const prerendering: boolean;
 }
 
 declare module '$app/navigation' {
@@ -24,6 +28,11 @@ declare module '$app/navigation' {
 		href: string,
 		opts?: { replaceState?: boolean; noscroll?: boolean }
 	): Promise<any>;
+	/**
+	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
+	 * @param href The invalidated resource
+	 */
+	export function invalidate(href: string): Promise<any>;
 	/**
 	 * Programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's load function with the appropriate options.
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `sveltekit:prefetch`.
@@ -63,7 +72,7 @@ declare module '$app/stores' {
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores(): {
-		navigating: Readable<{ from: string; to: string } | null>;
+		navigating: Readable<{ from: Page; to: Page } | null>;
 		page: Readable<Page>;
 		session: Writable<any>;
 	};
@@ -76,7 +85,7 @@ declare module '$app/stores' {
 	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<{ from: string; to: string } | null>;
+	export const navigating: Readable<{ from: Page; to: Page } | null>;
 	/**
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.

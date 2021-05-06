@@ -2,11 +2,15 @@
 
 [Adapter](https://kit.svelte.dev/docs#adapters) for SvelteKit apps that prerenders your site as a collection of static files.
 
-```js
-// svelte.config.cjs
-const adapter = require('@sveltejs/adapter-static');
+## Usage
 
-module.exports = {
+Install with `npm i -D @sveltejs/adapter-static@next`, then add the adapter to your `svelte.config.js`:
+
+```js
+// svelte.config.js
+import adapter from '@sveltejs/adapter-static';
+
+export default {
 	kit: {
 		adapter: adapter({
 			// default options are shown
@@ -43,10 +47,10 @@ You can use `adapter-static` to create a single-page app or SPA by specifying a 
 The fallback page is a blank HTML page that loads your SvelteKit app and navigates to the correct route. For example [Surge](https://surge.sh/help/adding-a-200-page-for-client-side-routing), a static web host, lets you add a `200.html` file that will handle any requests that don't otherwise match. We can create that file like so:
 
 ```js
-// svelte.config.cjs
-const adapter = require('@sveltejs/adapter-static');
+// svelte.config.js
+import adapter from '@sveltejs/adapter-static';
 
-module.exports = {
+export default {
 	kit: {
 		adapter: adapter({
 			fallback: '200.html'

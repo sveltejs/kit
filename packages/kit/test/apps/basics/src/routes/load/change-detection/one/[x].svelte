@@ -1,6 +1,7 @@
 <script context="module">
 	let loads = 0;
 
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ page }) {
 		loads += 1;
 
@@ -15,8 +16,11 @@
 </script>
 
 <script>
+	/** @type {string} */
 	export let x;
+
+	/** @type {number} */
 	export let loads;
 </script>
 
-<h1>x: {x}: {loads}</h1>
+<h2>x: {x}: {loads}</h2>

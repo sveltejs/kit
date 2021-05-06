@@ -56,22 +56,28 @@ async function main() {
 			})
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'typescript',
 			message: 'Use TypeScript?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'eslint',
 			message: 'Add ESLint for code linting?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		},
 		{
-			type: 'confirm',
+			type: 'toggle',
 			name: 'prettier',
 			message: 'Add Prettier for code formatting?',
-			initial: false
+			initial: false,
+			active: 'Yes',
+			inactive: 'No'
 		}
 	]));
 

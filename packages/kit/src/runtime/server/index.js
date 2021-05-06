@@ -21,26 +21,20 @@ export async function respond(incoming, options, state = {}) {
 		};
 	}
 
-	const incoming_with_body = {
-		...incoming,
-		headers: lowercase_keys(incoming.headers),
-		body: parse_body(incoming)
-	};
-
-	const context = (await options.hooks.getContext(incoming_with_body)) || {};
-
 	try {
 		return await options.hooks.handle({
 			request: {
-				...incoming_with_body,
+				...incoming,
+				headers: lowercase_keys(incoming.headers),
+				body: parse_body(incoming),
 				params: null,
-				context
+				locals: {}
 			},
 			render: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						options,
-						$session: await options.hooks.getSession({ context }),
+						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
 						error: null,

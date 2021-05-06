@@ -67,20 +67,29 @@ export default function (test, is_dev) {
 		'load function is only called when necessary',
 		'/load/change-detection/one/a',
 		async ({ app, page, js }) => {
-			assert.equal(await page.textContent('h1'), 'x: a: 1');
+			assert.equal(await page.textContent('h1'), 'layout loads: 1');
+			assert.equal(await page.textContent('h2'), 'x: a: 1');
 
 			if (js) {
 				await app.goto('/load/change-detection/one/a?unused=whatever');
-				assert.equal(await page.textContent('h1'), 'x: a: 1');
+				assert.equal(await page.textContent('h2'), 'x: a: 1');
 
 				await app.goto('/load/change-detection/two/b');
-				assert.equal(await page.textContent('h1'), 'y: b: 1');
+				assert.equal(await page.textContent('h2'), 'y: b: 1');
 
 				await app.goto('/load/change-detection/one/a');
-				assert.equal(await page.textContent('h1'), 'x: a: 1');
+				assert.equal(await page.textContent('h2'), 'x: a: 1');
 
 				await app.goto('/load/change-detection/one/b');
-				assert.equal(await page.textContent('h1'), 'x: b: 2');
+				assert.equal(await page.textContent('h2'), 'x: b: 2');
+
+				await app.invalidate('/load/change-detection/data.json');
+				assert.equal(await page.textContent('h1'), 'layout loads: 2');
+				assert.equal(await page.textContent('h2'), 'x: b: 2');
+
+				await app.invalidate('/load/change-detection/data.json');
+				assert.equal(await page.textContent('h1'), 'layout loads: 3');
+				assert.equal(await page.textContent('h2'), 'x: b: 2');
 			}
 		}
 	);

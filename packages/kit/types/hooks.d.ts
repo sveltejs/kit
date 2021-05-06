@@ -11,13 +11,11 @@ export type Incoming = {
 	body?: BaseBody;
 };
 
-export type GetContext<Context = any> = (incoming: Incoming) => Context;
-
-export type GetSession<Context = any, Session = any> = {
-	({ context }: { context: Context }): Session | Promise<Session>;
+export type GetSession<Locals = Record<string, any>, Session = any> = {
+	(request: ServerRequest<Locals>): Session | Promise<Session>;
 };
 
-export type Handle<Context = any> = (input: {
-	request: ServerRequest<Context>;
-	render: (request: ServerRequest<Context>) => ServerResponse | Promise<ServerResponse>;
+export type Handle<Locals = Record<string, any>> = (input: {
+	request: ServerRequest<Locals>;
+	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
 }) => ServerResponse | Promise<ServerResponse>;

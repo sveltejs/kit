@@ -15,6 +15,7 @@ import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -30,7 +31,7 @@ class Watcher extends EventEmitter {
 		super();
 
 		this.cwd = cwd;
-		this.dir = path.resolve(cwd, '.svelte/dev');
+		this.dir = path.resolve(cwd, `${SVELTE_KIT}/dev`);
 
 		this.port = port;
 		this.host = host;
@@ -141,6 +142,13 @@ class Watcher extends EventEmitter {
 						? await this.vite.ssrLoadModule(`/${this.config.kit.files.hooks}`)
 						: {};
 
+					if (/** @type {any} */ (hooks).getContext) {
+						// TODO remove this for 1.0
+						throw new Error(
+							'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
+						);
+					}
+
 					const root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`))
 						.default;
 
@@ -162,7 +170,7 @@ class Watcher extends EventEmitter {
 							amp: this.config.kit.amp,
 							dev: true,
 							entry: {
-								file: '/.svelte/dev/runtime/internal/start.js',
+								file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
 								css: [],
 								js: []
 							},
@@ -177,7 +185,6 @@ class Watcher extends EventEmitter {
 								console.error(colors.gray(error.stack));
 							},
 							hooks: {
-								getContext: hooks.getContext || (() => ({})),
 								getSession: hooks.getSession || (() => ({})),
 								handle: hooks.handle || (({ request, render }) => render(request))
 							},
