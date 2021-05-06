@@ -143,13 +143,13 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
+...in which case a request for `/sveltejs/kit/tree/main/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
 
 ```js
 {
 	org: 'sveltejs',
 	repo: 'kit',
-	branch: 'master',
+	branch: 'main',
 	file: 'documentation/docs/01-routing.md'
 }
 ```
