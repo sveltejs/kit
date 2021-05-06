@@ -78,7 +78,8 @@ async function generate_templates(shared) {
 					parser: 'babel',
 					useTabs: true,
 					singleQuote: true,
-					trailingComma: 'none'
+					trailingComma: 'none',
+					printWidth: 100
 				});
 
 				js.push({
@@ -119,13 +120,13 @@ async function generate_templates(shared) {
 								parser: 'babel',
 								useTabs: true,
 								singleQuote: true,
-								trailingComma: 'none'
+								trailingComma: 'none',
+								printWidth: 100
 							})
 							.trim()
-							.split('\n')
-							.join('\n\t');
+							.replace(/^(.)/gm, '\t$1');
 
-						return `<script${attrs.replace(' lang="ts"', '')}>\n\t${contents}\n</script>`;
+						return `<script${attrs.replace(' lang="ts"', '')}>\n${contents}\n</script>`;
 					}
 				);
 
