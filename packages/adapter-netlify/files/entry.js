@@ -16,7 +16,7 @@ export async function handler(event) {
 
 	const rawBody =
 		headers['content-type'] === 'application/octet-stream'
-			? new TextEncoder('base64').encode(body).buffer
+			? new TextEncoder('base64').encode(body)
 			: isBase64Encoded
 			? Buffer.from(body, 'base64').toString()
 			: body;
