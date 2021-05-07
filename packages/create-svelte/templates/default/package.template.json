@@ -8,8 +8,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.34.0",
-		"vite": "^2.1.0"
+		"svelte": "^3.34.0"
 	},
 	"type": "module",
 	"dependencies": {

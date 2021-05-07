@@ -190,4 +190,14 @@ export default function (test) {
 		await clicknav('[href="/routing/fallthrough/potato"]');
 		assert.equal(await page.textContent('h1'), '404');
 	});
+
+	test(
+		'last parameter in a segment wins in cases of ambiguity',
+		'/routing/split-params',
+		async ({ page, clicknav }) => {
+			await clicknav('[href="/routing/split-params/x-y-z"]');
+			assert.equal(await page.textContent('h1'), 'x');
+			assert.equal(await page.textContent('h2'), 'y-z');
+		}
+	);
 }
