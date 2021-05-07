@@ -26,6 +26,14 @@ export default {
 
 The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
 
+## Environment variables
+
+By default, the server will accept connections on `0.0.0.0` using port 3000. These can be customised with the `PORT` and `HOST` environment variables:
+
+```
+HOST=127.0.0.1 PORT=4000 node build
+```
+
 ## License
 
 [MIT](LICENSE)
