@@ -1,5 +1,5 @@
 import { BaseBody, Headers } from './helper';
-import { ServerRequest, ServerResponse } from './endpoint';
+import { ServerRequest } from './endpoint';
 
 export type Incoming = {
 	method: string;
@@ -19,3 +19,9 @@ export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
 	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
 }) => ServerResponse | Promise<ServerResponse>;
+
+export type ServerResponse = {
+	status?: number;
+	headers?: Headers;
+	body?: string | Uint8Array;
+};

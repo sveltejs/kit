@@ -65,11 +65,13 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);
-					res.end(rendered.body);
+					res.write(rendered.body);
 				} else {
 					res.statusCode = 404;
-					res.end('Not found');
+					res.write('Not found');
 				}
+
+				res.end();
 			});
 		});
 	});

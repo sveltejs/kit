@@ -8,6 +8,7 @@ import { lowercase_keys } from './utils.js';
  * @param {import('types/hooks').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
+ * @returns {Promise<import('types/hooks').ServerResponse>}
  */
 export async function respond(incoming, options, state = {}) {
 	if (incoming.path.endsWith('/') && incoming.path !== '/') {
@@ -87,10 +88,16 @@ export async function respond(incoming, options, state = {}) {
 	}
 }
 
-/** @param {string} str */
-function hash(str) {
-	let hash = 5381,
-		i = str.length;
-	while (i) hash = (hash * 33) ^ str.charCodeAt(--i);
+/** @param {string | Uint8Array} value */
+function hash(value) {
+	let hash = 5381;
+	let i = value.length;
+
+	if (typeof value === 'string') {
+		while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
+	} else {
+		while (i) hash = (hash * 33) ^ value[--i];
+	}
+
 	return (hash >>> 0).toString(36);
 }

@@ -296,16 +296,18 @@ class Watcher extends EventEmitter {
 
 					if (rendered) {
 						res.writeHead(rendered.status, rendered.headers);
-						res.end(rendered.body);
+						res.write(rendered.body);
 					} else {
 						res.statusCode = 404;
-						res.end('Not found');
+						res.write('Not found');
 					}
 				} catch (e) {
 					this.vite.ssrFixStacktrace(e);
 					res.statusCode = 500;
-					res.end(e.stack);
+					res.write(e.stack);
 				}
+
+				res.end();
 			});
 		});
 	}

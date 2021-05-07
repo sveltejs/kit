@@ -3,7 +3,7 @@ import { lowercase_keys } from './utils.js';
 /**
  * @param {import('types/endpoint').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
- * @returns {Promise<import('types/endpoint').ServerResponse>}
+ * @returns {Promise<import('types/hooks').ServerResponse>}
  */
 export default async function render_route(request, route) {
 	const mod = await route.load();
@@ -21,8 +21,8 @@ export default async function render_route(request, route) {
 			if (typeof response !== 'object') {
 				return {
 					status: 500,
-					body: `Invalid response from route ${request.path};
-						 expected an object, got ${typeof response}`,
+					// prettier-ignore
+					body: `Invalid response from route ${request.path}: expected an object, got ${typeof response}`,
 					headers: {}
 				};
 			}
@@ -37,6 +37,15 @@ export default async function render_route(request, route) {
 			) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				body = JSON.stringify(body);
+			}
+
+			if (typeof body !== 'string' && !(body instanceof Uint8Array)) {
+				return {
+					status: 500,
+					// prettier-ignore
+					body: `Invalid response from route ${request.path}: body must be a string or Uint8Array`,
+					headers: {}
+				};
 			}
 
 			return { status, body, headers };
