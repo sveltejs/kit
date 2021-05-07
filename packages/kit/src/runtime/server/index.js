@@ -95,7 +95,7 @@ function hash(value) {
 	if (typeof value === 'string') {
 		while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
 	} else {
-		while (i) hash = (hash * 33) ^ value[i--];
+		while (i) hash = (hash * 33) ^ value[--i];
 	}
 
 	return (hash >>> 0).toString(36);
