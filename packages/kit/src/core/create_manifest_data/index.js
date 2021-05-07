@@ -68,8 +68,21 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const ext =
 					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
-				if (basename[0] === '_') {
-					if (basename[1] === '_' && !specials.has(basename.slice(0, -ext.length))) {
+				const name = basename.slice(0, -ext.length);
+
+				// TODO remove this after a while
+				['layout', 'layout.reset', 'error'].forEach((reserved) => {
+					if (name === `$${reserved}`) {
+						const prefix = posixify(path.relative(cwd, dir));
+						const bad = `${prefix}/$${reserved}${ext}`;
+						const good = `${prefix}/__${reserved}${ext}`;
+
+						throw new Error(`${bad} should be renamed ${good}`);
+					}
+				});
+
+				if (name[0] === '_') {
+					if (name[1] === '_' && !specials.has(name)) {
 						throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
 					}
 
@@ -79,7 +92,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				if (basename[0] === '.' && basename !== '.well-known') return null;
 				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
-				const segment = is_dir ? basename : basename.slice(0, -ext.length);
+				const segment = is_dir ? basename : name;
 
 				if (/\]\[/.test(segment)) {
 					throw new Error(`Invalid route ${file} — parameters must be separated`);
