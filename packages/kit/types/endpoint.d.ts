@@ -7,7 +7,7 @@ export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	rawBody: string | ArrayBuffer;
+	rawBody: string | Uint8Array;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 };

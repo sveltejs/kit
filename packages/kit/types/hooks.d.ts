@@ -7,7 +7,7 @@ export type Incoming = {
 	headers: Headers;
 	path: string;
 	query: URLSearchParams;
-	rawBody: string | ArrayBuffer;
+	rawBody: string | Uint8Array;
 	body?: BaseBody;
 };
 
