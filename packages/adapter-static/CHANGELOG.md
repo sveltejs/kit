@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- d871213: Remove Vite dependency from apps
+
 ## 1.0.0-next.8
 
 ### Patch Changes
