@@ -98,7 +98,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types/endpoint').ServerResponse>} */
+		/** @type {Map<string, import('types/hooks').ServerResponse>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(
@@ -172,7 +172,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				const cleaned = clean_html(rendered.body);
+				const cleaned = clean_html(/** @type {string} */ (rendered.body));
 
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
