@@ -68,7 +68,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const ext =
 					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
-				const name = basename.slice(0, -ext.length);
+				const name = ext ? basename.slice(0, -ext.length) : basename;
 
 				// TODO remove this after a while
 				['layout', 'layout.reset', 'error'].forEach((reserved) => {
