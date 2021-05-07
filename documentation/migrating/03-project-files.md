@@ -14,7 +14,7 @@ If you were using plugins for filetypes that are not automatically handled by [V
 
 ### src/client.js
 
-This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `$layout.svelte` file, inside an `onMount` callback.
+This file has no equivalent in SvelteKit. Any custom logic (beyond `sapper.start(...)`) should be expressed in your `__layout.svelte` file, inside an `onMount` callback.
 
 ### src/server.js
 
