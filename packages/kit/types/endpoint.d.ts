@@ -14,7 +14,7 @@ export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
 
 export type ServerResponse = {
 	status?: number;
-	headers?: Headers;
+	headers?: Partial<Headers>;
 	body?: any;
 };
 
