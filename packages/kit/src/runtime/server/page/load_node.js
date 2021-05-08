@@ -146,16 +146,21 @@ export async function load_node({
 							}
 						}
 
+						if (opts.body && typeof opts.body !== 'string') {
+							// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
+							// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
+							// non-string bodies are irksome to deal with, but luckily aren't particularly useful
+							// in this context anyway, so we take the easy route and ban them
+							throw new Error('Request body must be a string');
+						}
+
 						const rendered = await respond(
 							{
 								host: request.host,
 								method: opts.method || 'GET',
 								headers,
 								path: resolved,
-								// TODO per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
-								// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object
-								// @ts-ignore
-								rawBody: opts.body,
+								rawBody: /** @type {string} */ (opts.body),
 								query: new URLSearchParams(search)
 							},
 							options,
