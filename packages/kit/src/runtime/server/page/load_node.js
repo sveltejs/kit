@@ -42,6 +42,7 @@ export async function load_node({
 
 	/** @type {Array<{
 	 *   url: string;
+	 *   body: string;
 	 *   json: string;
 	 * }>} */
 	const fetched = [];
@@ -189,11 +190,14 @@ export async function load_node({
 									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
 								}
 
-								// prettier-ignore
-								fetched.push({
-									url,
-									json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
-								});
+								if (!opts.body || typeof opts.body === 'string') {
+									// prettier-ignore
+									fetched.push({
+										url,
+										body: /** @type {string} */ (opts.body),
+										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape(body)}}`
+									});
+								}
 
 								return body;
 							}

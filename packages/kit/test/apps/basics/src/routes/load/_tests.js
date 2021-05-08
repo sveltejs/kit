@@ -8,7 +8,7 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});
 
-	test('data is serialized', null, async ({ base, page, capture_requests, js }) => {
+	test('GET fetches are serialized', null, async ({ base, page, capture_requests, js }) => {
 		const requests = await capture_requests(async () => {
 			await page.goto(`${base}/load/serialization`);
 		});
@@ -21,6 +21,40 @@ export default function (test, is_dev) {
 			const script_contents = await page.innerHTML('script[type="svelte-data"]');
 
 			assert.equal(script_contents, payload, 'Page should contain serialized data');
+		}
+
+		assert.ok(
+			!requests.some((r) => r.endsWith('/load/serialization.json')),
+			'Should not load JSON over the wire'
+		);
+	});
+
+	test('POST fetches are serialized', null, async ({ base, page, capture_requests, js }) => {
+		const requests = await capture_requests(async () => {
+			await page.goto(`${base}/load/serialization-post`);
+		});
+
+		assert.equal(await page.textContent('h1'), 'a: X');
+		assert.equal(await page.textContent('h2'), 'b: Y');
+
+		const payload_a =
+			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"X"}';
+
+		const payload_b =
+			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"Y"}';
+
+		if (!js) {
+			// by the time JS has run, hydration will have nuked these scripts
+			const script_contents_a = await page.innerHTML(
+				'script[type="svelte-data"][url="/load/serialization-post.json"][body="3t25"]'
+			);
+
+			const script_contents_b = await page.innerHTML(
+				'script[type="svelte-data"][url="/load/serialization-post.json"][body="3t24"]'
+			);
+
+			assert.equal(script_contents_a, payload_a, 'Page should contain serialized data');
+			assert.equal(script_contents_b, payload_b, 'Page should contain serialized data');
 		}
 
 		assert.ok(

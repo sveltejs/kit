@@ -4,6 +4,6 @@ export type Loaded = {
 	node: SSRNode;
 	loaded: NormalizedLoadOutput;
 	context: Record<string, any>;
-	fetched: Array<{ url: string; json: string }>;
+	fetched: Array<{ url: string; body: string; json: string }>;
 	uses_credentials: boolean;
 };

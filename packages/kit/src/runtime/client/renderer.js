@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
-import { normalize } from '../load';
+import { hash } from '../hash.js';
+import { normalize } from '../load.js';
 
 /** @param {any} value */
 function page_store(value) {
@@ -37,7 +38,14 @@ function page_store(value) {
  */
 function initial_fetch(resource, opts) {
 	const url = typeof resource === 'string' ? resource : resource.url;
-	const script = document.querySelector(`script[type="svelte-data"][url="${url}"]`);
+
+	let selector = `script[type="svelte-data"][url="${url}"]`;
+
+	if (opts && typeof opts.body === 'string') {
+		selector += `[body="${hash(opts.body)}"]`;
+	}
+
+	const script = document.querySelector(selector);
 	if (script) {
 		const { body, ...init } = JSON.parse(script.textContent);
 		return Promise.resolve(new Response(body, init));
