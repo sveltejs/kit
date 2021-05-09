@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.70
+
+### Patch Changes
+
+- d871213: Remove Vite dependency from apps
+
 ## 2.0.0-next.69
 
 ### Patch Changes

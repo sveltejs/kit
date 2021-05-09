@@ -6,7 +6,7 @@ import { respond_with_error } from './respond_with_error.js';
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
- * @returns {Promise<import('types/endpoint').ServerResponse>}
+ * @returns {Promise<import('types/hooks').ServerResponse>}
  */
 export default async function render_page(request, route, options, state) {
 	if (state.initiator === route) {

@@ -20,6 +20,8 @@ import { posixify } from '../utils.js';
  *   route_suffix: string
  * }} Item */
 
+const specials = new Set(['__layout', '__layout.reset', '__error']);
+
 /**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
@@ -51,8 +53,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
-	 * @param {string[]} layout_stack // accumulated $layout.svelte components
-	 * @param {string[]} error_stack // accumulated $error.svelte components
+	 * @param {string[]} layout_stack // accumulated __layout.svelte components
+	 * @param {string[]} error_stack // accumulated __error.svelte components
 	 */
 	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
@@ -66,12 +68,31 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const ext =
 					config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
-				if (basename[0] === '$') return null; // $layout, $error
-				if (basename[0] === '_') return null; // private files
+				const name = ext ? basename.slice(0, -ext.length) : basename;
+
+				// TODO remove this after a while
+				['layout', 'layout.reset', 'error'].forEach((reserved) => {
+					if (name === `$${reserved}`) {
+						const prefix = posixify(path.relative(cwd, dir));
+						const bad = `${prefix}/$${reserved}${ext}`;
+						const good = `${prefix}/__${reserved}${ext}`;
+
+						throw new Error(`${bad} should be renamed ${good}`);
+					}
+				});
+
+				if (name[0] === '_') {
+					if (name[1] === '_' && !specials.has(name)) {
+						throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
+					}
+
+					return null;
+				}
+
 				if (basename[0] === '.' && basename !== '.well-known') return null;
 				if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
-				const segment = is_dir ? basename : basename.slice(0, -ext.length);
+				const segment = is_dir ? basename : name;
 
 				if (/\]\[/.test(segment)) {
 					throw new Error(`Invalid route ${file} — parameters must be separated`);
@@ -140,12 +161,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
 			if (item.is_dir) {
-				const layout_reset = find_layout('$layout.reset', item.file);
-				const layout = find_layout('$layout', item.file);
-				const error = find_layout('$error', item.file);
+				const layout_reset = find_layout('__layout.reset', item.file);
+				const layout = find_layout('__layout', item.file);
+				const error = find_layout('__error', item.file);
 
 				if (layout_reset && layout) {
-					throw new Error(`Cannot have $layout next to $layout.reset: ${layout_reset}`);
+					throw new Error(`Cannot have __layout next to __layout.reset: ${layout_reset}`);
 				}
 
 				if (layout_reset) components.push(layout_reset);
@@ -209,8 +230,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	const base = path.relative(cwd, config.kit.files.routes);
 
-	const layout = find_layout('$layout', base) || default_layout;
-	const error = find_layout('$error', base) || default_error;
+	const layout = find_layout('__layout', base) || default_layout;
+	const error = find_layout('__error', base) || default_error;
 
 	components.push(layout, error);
 

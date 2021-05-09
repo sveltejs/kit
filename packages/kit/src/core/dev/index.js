@@ -60,7 +60,7 @@ class Watcher extends EventEmitter {
 		this.cheapwatch = new CheapWatch({
 			dir: this.config.kit.files.routes,
 			/** @type {({ path }: { path: string }) => boolean} */
-			filter: ({ path }) => path.split('/').every((part) => !part.startsWith('_'))
+			filter: ({ path }) => path.split('/').every((part) => part[0] !== '_' || part[1] === '_')
 		});
 
 		await this.cheapwatch.init();
@@ -296,7 +296,8 @@ class Watcher extends EventEmitter {
 
 					if (rendered) {
 						res.writeHead(rendered.status, rendered.headers);
-						res.end(rendered.body);
+						if (rendered.body) res.write(rendered.body);
+						res.end();
 					} else {
 						res.statusCode = 404;
 						res.end('Not found');

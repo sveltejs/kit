@@ -89,7 +89,7 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 
 #### context
 
-`context` is passed from layout components to child layouts and page components. For the root `$layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `context` property, it will be available to subsequent `load` functions.
+`context` is passed from layout components to child layouts and page components. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `context` property, it will be available to subsequent `load` functions.
 
 > It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
 >

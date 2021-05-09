@@ -12,7 +12,7 @@ import { respond_with_error } from './respond_with_error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  * }} opts
- * @returns {Promise<import('types/endpoint').ServerResponse>}
+ * @returns {Promise<import('types/hooks').ServerResponse>}
  */
 export async function respond({ request, options, state, $session, route }) {
 	const match = route.pattern.exec(request.path);
@@ -158,7 +158,7 @@ export async function respond({ request, options, state, $session, route }) {
 						}
 					}
 
-					// TODO backtrack until we find an $error.svelte component
+					// TODO backtrack until we find an __error.svelte component
 					// that we can use as the leaf node
 					// for now just return regular error page
 					return await respond_with_error({

@@ -4,7 +4,7 @@ title: Pages and layouts
 
 ### Renamed files
 
-Your custom error page component should be renamed from `_error.svelte` to `$error.svelte`. Any `_layout.svelte` files should likewise be renamed `$layout.svelte`. The `_` prefix now exclusively denotes your _own_ 'private' components and modules, as opposed to those with a special meaning to SvelteKit.
+Your custom error page component should be renamed from `_error.svelte` to `__error.svelte`. Any `_layout.svelte` files should likewise be renamed `__layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own private modules are still denoted with a single `_` prefix.
 
 ### Imports
 
