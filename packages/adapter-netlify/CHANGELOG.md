@@ -1,5 +1,16 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- 11e7840: Ensure rawBody is a string or Uint8Array
+- Updated dependencies [11e7840]
+- Updated dependencies [11e7840]
+- Updated dependencies [9e20873]
+- Updated dependencies [2562ca0]
+  - @sveltejs/kit@1.0.0-next.103
+
 ## 1.0.0-next.11
 
 ### Patch Changes
