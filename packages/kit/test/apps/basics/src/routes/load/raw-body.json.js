@@ -2,8 +2,8 @@
 export function post(request) {
 	return {
 		body: {
-			body: request.body,
-			rawBody: request.rawBody
+			body: /** @type {string} */ (request.body),
+			rawBody: /** @type {string} */ (request.rawBody)
 		}
 	};
 }

@@ -52,10 +52,11 @@ async function handle(event) {
 	});
 }
 
-function read(request) {
+/** @param {Request} request */
+async function read(request) {
 	const type = request.headers.get('content-type') || '';
 	if (type.includes('application/octet-stream')) {
-		return request.arrayBuffer();
+		return new Uint8Array(await request.arrayBuffer());
 	}
 
 	return request.text();

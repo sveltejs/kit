@@ -22,8 +22,8 @@ type Request<Locals = Record<string, any>> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	rawBody: string | ArrayBuffer;
-	body: string | ArrayBuffer | ReadOnlyFormData | any;
+	rawBody: string | Uint8Array;
+	body: string | Uint8Array | ReadOnlyFormData | JSONValue;
 	locals: Locals;
 };
 

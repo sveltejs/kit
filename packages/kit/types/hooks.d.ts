@@ -1,5 +1,5 @@
 import { BaseBody, Headers } from './helper';
-import { ServerRequest, ServerResponse } from './endpoint';
+import { ServerRequest } from './endpoint';
 
 export type Incoming = {
 	method: string;
@@ -7,8 +7,14 @@ export type Incoming = {
 	headers: Headers;
 	path: string;
 	query: URLSearchParams;
-	rawBody: string | ArrayBuffer;
+	rawBody: string | Uint8Array;
 	body?: BaseBody;
+};
+
+export type ServerResponse = {
+	status: number;
+	headers: Headers;
+	body?: string | Uint8Array;
 };
 
 export type GetSession<Locals = Record<string, any>, Session = any> = {

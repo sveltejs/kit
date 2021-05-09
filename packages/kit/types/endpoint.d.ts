@@ -7,17 +7,26 @@ export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	rawBody: string | ArrayBuffer;
+	rawBody: string | Uint8Array;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 };
 
-export type ServerResponse = {
+type JSONValue =
+	| string
+	| number
+	| boolean
+	| null
+	| Date
+	| JSONValue[]
+	| { [key: string]: JSONValue };
+
+export type EndpointOutput = {
 	status?: number;
 	headers?: Headers;
-	body?: any;
+	body?: string | Uint8Array | JSONValue;
 };
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
 	request: ServerRequest<Locals, Body>
-) => void | ServerResponse | Promise<ServerResponse>;
+) => void | EndpointOutput | Promise<EndpointOutput>;
