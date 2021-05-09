@@ -65,8 +65,8 @@
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		},
-		"./http": {
-			"import": "./dist/http.js"
+		"./node": {
+			"import": "./dist/node.js"
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"

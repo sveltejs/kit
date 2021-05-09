@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import compression from 'compression';
 import polka from 'polka';
 import sirv from 'sirv';
-import { getRawBody } from '@sveltejs/kit/http'; // eslint-disable-line import/no-unresolved
+import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
 import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
 // App is a dynamic file built from the application layer.

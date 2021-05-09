@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { parse, pathToFileURL } from 'url';
 import sirv from 'sirv';
-import { getRawBody } from '../http/index.js';
+import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
