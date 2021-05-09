@@ -23,7 +23,7 @@ type JSONValue =
 
 export type EndpointOutput = {
 	status?: number;
-	headers?: Headers;
+	headers?: Partial<Headers>;
 	body?: string | Uint8Array | JSONValue;
 };
 
