@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.103
+
+### Patch Changes
+
+- 11e7840: Generate ETags for binary response bodies
+- 11e7840: Update request/response body types
+- 9e20873: Allow ServerResponse to have non-static set of headers
+- 2562ca0: Account for POST bodies when serializing fetches
+
 ## 1.0.0-next.102
 
 ### Patch Changes
