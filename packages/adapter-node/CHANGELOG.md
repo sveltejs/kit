@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- 0e09581: Make host configurable via process.env.HOST
+
 ## 1.0.0-next.18
 
 ### Patch Changes

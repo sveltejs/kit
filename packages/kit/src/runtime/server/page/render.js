@@ -1,5 +1,6 @@
 import devalue from 'devalue';
 import { writable } from 'svelte/store';
+import { hash } from '../../hash.js';
 
 const s = JSON.stringify;
 
@@ -29,7 +30,7 @@ export async function render_response({
 	const js = new Set(options.entry.js);
 	const styles = new Set();
 
-	/** @type {Array<{ url: string, json: string }>} */
+	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];
 
 	let rendered;
@@ -156,7 +157,11 @@ export async function render_response({
 		: `${rendered.html}
 
 			${serialized_data
-				.map(({ url, json }) => `<script type="svelte-data" url="${url}">${json}</script>`)
+				.map(({ url, body, json }) => {
+					return body
+						? `<script type="svelte-data" url="${url}" body="${hash(body)}">${json}</script>`
+						: `<script type="svelte-data" url="${url}">${json}</script>`;
+				})
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
 
