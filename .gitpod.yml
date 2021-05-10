@@ -4,9 +4,9 @@ image:
 tasks:
   - before: |
       npm i -g pnpm
-  - init: |
+    init: |
       pnpm i
       pnpm build
       pnpm test
-  - command: |
+    command: |
       git config core.hookspath .githooks
