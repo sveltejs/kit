@@ -42,6 +42,7 @@ const config = {
 		router: true,
 		ssr: true,
 		target: null,
+		trailingSlash: 'never',
 		vite: () => ({})
 	},
 
@@ -137,6 +138,16 @@ Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 ### target
 
 Specifies an element to mount the app to. It must be a DOM selector that identifies an element that exists in your template file. If unspecified, the app will be mounted to `document.body`.
+
+### trailingSlash
+
+Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
+
+- `"never"` — redirect `/x/` to `/x`
+- `"always"` — redirect `/x` to `/x/`
+- `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
+
+> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
 
 ### vite
 
