@@ -34,10 +34,15 @@ function page_store(value) {
 
 /**
  * @param {RequestInfo} resource
- * @param {RequestInit} opts
+ * @param {RequestInit & {serverUrl: string}} opts
  */
 function initial_fetch(resource, opts) {
-	const url = typeof resource === 'string' ? resource : resource.url;
+	let url = resource;
+	if (opts && opts.serverUrl) {
+		url = opts.serverUrl;
+	} else if (typeof resource !== 'string') {
+		url = resource.url;
+	}
 
 	let selector = `script[type="svelte-data"][url="${url}"]`;
 
