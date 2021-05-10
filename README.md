@@ -8,6 +8,14 @@ Please see [the documentation](https://kit.svelte.dev/docs) for information abou
 
 ## Developing
 
+### Online
+
+Click the button below to start a development environment in your browser. All dependencies are installed, the build step executed and the test suite completed, leaving you ready to contribute.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/sveltejs/kit)
+
+### Locally
+
 This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
 
 ```bash
