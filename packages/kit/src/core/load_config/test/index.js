@@ -41,7 +41,8 @@ async function testLoadDefaultConfig(path) {
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
 			router: true,
 			ssr: true,
-			target: null
+			target: null,
+			trailingSlash: 'never'
 		},
 		preprocess: null
 	});

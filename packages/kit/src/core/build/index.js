@@ -317,7 +317,8 @@ async function build_server(
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
-					template
+					template,
+					trailing_slash: ${s(config.kit.trailingSlash)}
 				};
 			}
 

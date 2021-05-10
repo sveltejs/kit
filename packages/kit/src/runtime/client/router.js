@@ -20,10 +20,12 @@ export class Router {
 	/** @param {{
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
+	 *    trailing_slash: import('types/internal').TrailingSlash;
 	 * }} opts */
-	constructor({ base, routes }) {
+	constructor({ base, routes, trailing_slash }) {
 		this.base = base;
 		this.routes = routes;
+		this.trailing_slash = trailing_slash;
 	}
 
 	/** @param {import('./renderer').Renderer} renderer */
@@ -215,15 +217,26 @@ export class Router {
 	async _navigate(url, scroll, chain, hash) {
 		const info = this.parse(url);
 
+		// remove trailing slashes
+		if (info.path !== '/') {
+			const has_trailing_slash = info.path.endsWith('/');
+
+			const incorrect =
+				(has_trailing_slash && this.trailing_slash === 'never') ||
+				(!has_trailing_slash &&
+					this.trailing_slash === 'always' &&
+					!info.path.split('/').pop().includes('.'));
+
+			if (incorrect) {
+				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
+				history.replaceState({}, '', `${info.path}${location.search}`);
+			}
+		}
+
 		this.renderer.notify({
 			path: info.path,
 			query: info.query
 		});
-
-		// remove trailing slashes
-		if (location.pathname.endsWith('/') && location.pathname !== '/') {
-			history.replaceState({}, '', `${location.pathname.slice(0, -1)}${location.search}`);
-		}
 
 		await this.renderer.update(info, chain, false);
 
