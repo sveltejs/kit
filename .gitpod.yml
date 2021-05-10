@@ -1,6 +1,18 @@
 image:
   file: .gitpod.Dockerfile
 
+ports:
+  - port: 3000
+    onOpen: ignore
+  - port: 4000
+    onOpen: ignore
+  - port: 5900
+    onOpen: ignore
+  - port: 6080
+    onOpen: ignore
+  - port: 24678
+    onOpen: ignore
+
 tasks:
   - before: |
       npm i -g pnpm
