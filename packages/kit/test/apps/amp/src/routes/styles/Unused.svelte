@@ -2,6 +2,6 @@
 
 <style>
 	p {
-		color: goldenrod;
+		color: #40b3ff;
 	}
 </style>

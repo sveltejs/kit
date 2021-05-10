@@ -97,7 +97,8 @@ class Watcher extends EventEmitter {
 			plugins: [
 				...(user_config.plugins || []),
 				svelte({
-					extensions: this.config.extensions
+					extensions: this.config.extensions,
+					emitCss: !this.config.kit.amp
 				})
 			],
 			publicDir: this.config.kit.files.assets,
