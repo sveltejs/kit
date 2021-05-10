@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- 9b448a6: Rename @sveltejs/kit/http to @sveltejs/kit/node
+- Updated dependencies [9b448a6]
+  - @sveltejs/kit@1.0.0-next.104
+
 ## 1.0.0-next.16
 
 ### Patch Changes

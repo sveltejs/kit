@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- 9b448a6: Rename @sveltejs/kit/http to @sveltejs/kit/node
+
 ## 1.0.0-next.19
 
 ### Patch Changes
