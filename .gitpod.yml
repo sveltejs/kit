@@ -1,0 +1,12 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - before: |
+      npm i -g pnpm
+  - init: |
+      pnpm i
+      pnpm build
+      pnpm test
+  - command: |
+      git config core.hookspath .githooks
