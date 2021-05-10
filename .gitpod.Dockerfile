@@ -1,7 +1,7 @@
 FROM gitpod/workspace-full-vnc
 
 RUN sudo apt-get update \
-  && apt-get install -y \
+  && sudo apt-get install -y \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
