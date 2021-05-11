@@ -181,7 +181,7 @@ importers:
       svelte: ^3.38.2
       svelte-preprocess: ^4.7.3
       typescript: ^4.2.4
-      vite: ^2.2.4
+      vite: ^2.3.0
     dependencies:
       '@fontsource/fira-mono': 4.2.2
       '@lukeed/uuid': 2.0.0
@@ -194,7 +194,7 @@ importers:
       svelte: 3.38.2
       svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
       typescript: 4.2.4
-      vite: 2.2.4
+      vite: 2.3.0
 
   packages/kit:
     specifiers:
@@ -227,12 +227,12 @@ importers:
       tiny-glob: ^0.2.8
       typescript: ^4.2.4
       uvu: ^0.5.1
-      vite: ^2.2.4
+      vite: ^2.3.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.10_e199ea43849c994a9b29d0b980598eb5
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.10_efcdfa8c171e6a2446d3b40a697264be
       cheap-watch: 1.0.3
       sade: 1.7.4
-      vite: 2.2.4
+      vite: 2.3.0
     devDependencies:
       '@rollup/plugin-replace': 2.4.2_rollup@2.47.0
       '@sveltejs/kit': 'link:'
@@ -631,7 +631,7 @@ packages:
       rollup: 2.47.0
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.10_e199ea43849c994a9b29d0b980598eb5:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.10_efcdfa8c171e6a2446d3b40a697264be:
     resolution: {integrity: sha512-ImvxbhPePm2hWNTKBSA3LHAYGwiEjHjvvgfPLXm4R87sfZ+BMXql9jBmDpzUC/URBLT4BB3Jxos/i523qkJBHg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -647,7 +647,7 @@ packages:
       source-map: 0.7.3
       svelte: 3.38.2
       svelte-hmr: 0.14.3_svelte@3.38.2
-      vite: 2.2.4
+      vite: 2.3.0
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -1520,8 +1520,8 @@ packages:
     requiresBuild: true
     dev: false
 
-  /esbuild/0.9.7:
-    resolution: {integrity: sha512-VtUf6aQ89VTmMLKrWHYG50uByMF4JQlVysb8dmg6cOgW8JnFCipmz7p+HNBl+RR3LLCuBxFGVauAe2wfnF9bLg==}
+  /esbuild/0.11.20:
+    resolution: {integrity: sha512-QOZrVpN/Yz74xfat0H6euSgn3RnwLevY1mJTEXneukz1ln9qB+ieaerRMzSeETpz/UJWsBMzRVR/andBht5WKw==}
     hasBin: true
     requiresBuild: true
 
@@ -3725,12 +3725,12 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/2.2.4:
-    resolution: {integrity: sha512-vnIwSNci+phFMp6krhy+FbYzKL0R67Sdt9mVZ96S27AewrApSJjTqncJcalk8sf60BgcbW4+1C6DFIWkxquO9g==}
+  /vite/2.3.0:
+    resolution: {integrity: sha512-gsCy0t3X9nGGYDoNiE2NJgYq6BPxrtKeo6FkpMXdMvtUluYxnRhl7xfpHaYDmQLCnMbYTWhvWS1L/Hpw/V9L5w==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     dependencies:
-      esbuild: 0.9.7
+      esbuild: 0.11.20
       postcss: 8.2.14
       resolve: 1.20.0
       rollup: 2.47.0
