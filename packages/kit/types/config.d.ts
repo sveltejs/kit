@@ -1,4 +1,4 @@
-import { Logger } from './internal';
+import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
 
 export type AdapterUtils = {
@@ -57,6 +57,7 @@ export type Config = {
 		router?: boolean;
 		ssr?: boolean;
 		target?: string;
+		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
@@ -95,6 +96,7 @@ export type ValidatedConfig = {
 		router: boolean;
 		ssr: boolean;
 		target: string;
+		trailingSlash: TrailingSlash;
 		vite: () => ViteConfig;
 	};
 	preprocess: any;

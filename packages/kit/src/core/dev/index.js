@@ -291,7 +291,8 @@ class Watcher extends EventEmitter {
 								}
 
 								return rendered;
-							}
+							},
+							trailing_slash: this.config.kit.trailingSlash
 						}
 					);
 

@@ -146,6 +146,7 @@ export type SSRRenderOptions = {
 	ssr: boolean;
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
+	trailing_slash: TrailingSlash;
 };
 
 export type SSRRenderState = {
@@ -207,3 +208,5 @@ export type NormalizedLoadOutput = {
 	context?: Record<string, any>;
 	maxage?: number;
 };
+
+export type TrailingSlash = 'never' | 'always' | 'ignore';
