@@ -181,7 +181,7 @@ importers:
       svelte: ^3.38.2
       svelte-preprocess: ^4.7.3
       typescript: ^4.2.4
-      vite: ^2.2.4
+      vite: ^2.3.0
     dependencies:
       '@fontsource/fira-mono': 4.2.2
       '@lukeed/uuid': 2.0.0
@@ -194,7 +194,7 @@ importers:
       svelte: 3.38.2
       svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
       typescript: 4.2.4
-      vite: 2.2.4
+      vite: 2.3.0
 
   packages/kit:
     specifiers:
@@ -227,12 +227,12 @@ importers:
       tiny-glob: ^0.2.8
       typescript: ^4.2.4
       uvu: ^0.5.1
-      vite: ^2.2.4
+      vite: ^2.3.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_e199ea43849c994a9b29d0b980598eb5
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_efcdfa8c171e6a2446d3b40a697264be
       cheap-watch: 1.0.3
       sade: 1.7.4
-      vite: 2.2.4
+      vite: 2.3.0
     devDependencies:
       '@rollup/plugin-replace': 2.4.2_rollup@2.47.0
       '@sveltejs/kit': 'link:'
@@ -631,7 +631,7 @@ packages:
       rollup: 2.47.0
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_e199ea43849c994a9b29d0b980598eb5:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_efcdfa8c171e6a2446d3b40a697264be:
     resolution: {integrity: sha512-ySB/GJsZV3h3jqjq5WIiaxVFkJK6vqtG9gS7Iw6SfUH9ZiFNw5JjQF69g68j9cNep3q4yRIYiG5/pI3YIdXEuA==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -647,7 +647,7 @@ packages:
       source-map: 0.7.3
       svelte: 3.38.2
       svelte-hmr: 0.14.3_svelte@3.38.2
-      vite: 2.2.4
+      vite: 2.3.0
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -1520,8 +1520,8 @@ packages:
     requiresBuild: true
     dev: false
 
-  /esbuild/0.9.7:
-    resolution: {integrity: sha512-VtUf6aQ89VTmMLKrWHYG50uByMF4JQlVysb8dmg6cOgW8JnFCipmz7p+HNBl+RR3LLCuBxFGVauAe2wfnF9bLg==}
+  /esbuild/0.11.20:
+    resolution: {integrity: sha512-QOZrVpN/Yz74xfat0H6euSgn3RnwLevY1mJTEXneukz1ln9qB+ieaerRMzSeETpz/UJWsBMzRVR/andBht5WKw==}
     hasBin: true
     requiresBuild: true
 
@@ -2119,8 +2119,8 @@ packages:
       ci-info: 2.0.0
     dev: true
 
-  /is-core-module/2.3.0:
-    resolution: {integrity: sha512-xSphU2KG9867tsYdLD4RWQ1VqdFl4HTO9Thf3I/3dLEfr0dbPTWKsuCKrgqMljg4nPE+Gq0VCnzT3gr0CyBmsw==}
+  /is-core-module/2.4.0:
+    resolution: {integrity: sha512-6A2fkfq1rfeQZjxrZJGerpLCTHRNEBiSgnu0+obeJpEPZRUooHgsizvzv0ZjJwOz3iWIHdJtVWJ/tmPr3D21/A==}
     dependencies:
       has: 1.0.3
 
@@ -2520,8 +2520,8 @@ packages:
       thenify-all: 1.6.0
     dev: true
 
-  /nanoid/3.1.22:
-    resolution: {integrity: sha512-/2ZUaJX2ANuLtTvqTlgqBQNJoQO398KyJgZloL0PZkC0dpysjncRUPsFe3DUPzz/y3h+u7C46np8RMuvF3jsSQ==}
+  /nanoid/3.1.23:
+    resolution: {integrity: sha512-FiB0kzdP0FFVGDKlRLEQ1BgDzU87dy5NnzjeW9YZNt+/c3+q82EQDUwniSAUxp/F0gFNI1ZhKU1FqYsMuqZVnw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -2855,12 +2855,12 @@ packages:
     resolution: {integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==}
     dev: true
 
-  /postcss/8.2.14:
-    resolution: {integrity: sha512-+jD0ZijcvyCqPQo/m/CW0UcARpdFylq04of+Q7RKX6f/Tu+dvpUI/9Sp81+i6/vJThnOBX09Quw0ZLOVwpzX3w==}
+  /postcss/8.2.15:
+    resolution: {integrity: sha512-2zO3b26eJD/8rb106Qu2o7Qgg52ND5HPjcyQiK2B98O388h43A448LCslC0dI2P97wCAQRJsFvwTRcXxTKds+Q==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       colorette: 1.2.2
-      nanoid: 3.1.22
+      nanoid: 3.1.23
       source-map: 0.6.1
 
   /preferred-pm/3.0.3:
@@ -3061,7 +3061,7 @@ packages:
   /resolve/1.20.0:
     resolution: {integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==}
     dependencies:
-      is-core-module: 2.3.0
+      is-core-module: 2.4.0
       path-parse: 1.0.6
 
   /retry/0.12.0:
@@ -3725,13 +3725,13 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/2.2.4:
-    resolution: {integrity: sha512-vnIwSNci+phFMp6krhy+FbYzKL0R67Sdt9mVZ96S27AewrApSJjTqncJcalk8sf60BgcbW4+1C6DFIWkxquO9g==}
+  /vite/2.3.0:
+    resolution: {integrity: sha512-gsCy0t3X9nGGYDoNiE2NJgYq6BPxrtKeo6FkpMXdMvtUluYxnRhl7xfpHaYDmQLCnMbYTWhvWS1L/Hpw/V9L5w==}
     engines: {node: '>=12.0.0'}
     hasBin: true
     dependencies:
-      esbuild: 0.9.7
-      postcss: 8.2.14
+      esbuild: 0.11.20
+      postcss: 8.2.15
       resolve: 1.20.0
       rollup: 2.47.0
     optionalDependencies:
