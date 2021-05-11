@@ -14,8 +14,9 @@ export default function ({ out = 'build' } = {}) {
 
 		async adapt(utils) {
 			utils.log.minor('Copying assets');
-			const static_directory = join(out, 'assets');
-			utils.copy_client_files(static_directory);
+			const static_directory = join(out, 'static');
+			const assets_directory = join(out, 'assets');
+			utils.copy_client_files(assets_directory);
 			utils.copy_static_files(static_directory);
 
 			utils.log.minor('Copying server');

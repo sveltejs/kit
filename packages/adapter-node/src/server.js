@@ -1,11 +1,11 @@
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
+import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
+import compression from 'compression';
 import fs from 'fs';
 import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import compression from 'compression';
 import polka from 'polka';
 import sirv from 'sirv';
-import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
-import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
+import { fileURLToPath } from 'url';
 
 // App is a dynamic file built from the application layer.
 
@@ -13,6 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const noop_handler = (_req, _res, next) => next();
 const paths = {
 	assets: join(__dirname, '/assets'),
+	static: join(__dirname, '/static'),
 	prerendered: join(__dirname, '/prerendered')
 };
 
@@ -27,6 +28,12 @@ export function createServer({ render }) {
 		? mutable(paths.prerendered)
 		: noop_handler;
 
+	const static_handler = fs.existsSync(paths.static)
+		? sirv(paths.static, {
+				maxAge: 3600
+		  })
+		: noop_handler;
+
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				maxAge: 31536000,
@@ -37,6 +44,7 @@ export function createServer({ render }) {
 	const server = polka().use(
 		compression({ threshold: 0 }),
 		assets_handler,
+		static_handler,
 		prerendered_handler,
 		async (req, res) => {
 			const parsed = new URL(req.url || '', 'http://localhost');
