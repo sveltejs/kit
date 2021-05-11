@@ -167,7 +167,8 @@ async function build_client({
 		plugins: [
 			...(user_config.plugins || []),
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				emitCss: !config.kit.amp
 			})
 		]
 	});

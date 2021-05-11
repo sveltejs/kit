@@ -51,7 +51,10 @@ export type SSRComponent = {
 		) => {
 			html: string;
 			head: string;
-			css: string;
+			css: {
+				code: string;
+				map: any; // TODO
+			};
 		};
 	};
 };
