@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.105
+
+### Patch Changes
+
+- f3c50a0: Bump Vite to 2.3.0
+- cfd6c3c: Use rendered CSS for AMP pages
+- 9a2cc0a: Add trailingSlash: 'never' | 'always' | 'ignore' option
+
 ## 1.0.0-next.104
 
 ### Patch Changes
