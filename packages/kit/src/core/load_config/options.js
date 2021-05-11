@@ -122,6 +122,8 @@ const options = {
 
 			target: expect_string(null),
 
+			trailingSlash: expect_enum(['never', 'always', 'ignore']),
+
 			vite: {
 				type: 'leaf',
 				default: () => ({}),
@@ -180,6 +182,28 @@ function expect_boolean(boolean) {
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
 				throw new Error(`${keypath} should be true or false, if specified`);
+			}
+			return option;
+		}
+	};
+}
+
+/**
+ * @param {string[]} options
+ * @returns {ConfigDefinition}
+ */
+function expect_enum(options, def = options[0]) {
+	return {
+		type: 'leaf',
+		default: def,
+		validate: (option, keypath) => {
+			if (!options.includes(option)) {
+				// prettier-ignore
+				const msg = options.length > 2
+					? `${keypath} should be one of ${options.slice(0, -1).map(option => `"${option}"`).join(', ')} or "${options[options.length - 1]}"`
+					: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
+
+				throw new Error(msg);
 			}
 			return option;
 		}

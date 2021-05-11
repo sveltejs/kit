@@ -200,7 +200,7 @@ importers:
     specifiers:
       '@rollup/plugin-replace': ^2.4.2
       '@sveltejs/kit': workspace:*
-      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.9
+      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.10
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
       '@types/marked': ^2.0.2
@@ -229,7 +229,7 @@ importers:
       uvu: ^0.5.1
       vite: ^2.3.0
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.9_efcdfa8c171e6a2446d3b40a697264be
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.10_efcdfa8c171e6a2446d3b40a697264be
       cheap-watch: 1.0.3
       sade: 1.7.4
       vite: 2.3.0
@@ -631,8 +631,8 @@ packages:
       rollup: 2.47.0
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.9_efcdfa8c171e6a2446d3b40a697264be:
-    resolution: {integrity: sha512-ySB/GJsZV3h3jqjq5WIiaxVFkJK6vqtG9gS7Iw6SfUH9ZiFNw5JjQF69g68j9cNep3q4yRIYiG5/pI3YIdXEuA==}
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.10_efcdfa8c171e6a2446d3b40a697264be:
+    resolution: {integrity: sha512-ImvxbhPePm2hWNTKBSA3LHAYGwiEjHjvvgfPLXm4R87sfZ+BMXql9jBmDpzUC/URBLT4BB3Jxos/i523qkJBHg==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
       svelte: ^3.37.0
@@ -2119,8 +2119,8 @@ packages:
       ci-info: 2.0.0
     dev: true
 
-  /is-core-module/2.4.0:
-    resolution: {integrity: sha512-6A2fkfq1rfeQZjxrZJGerpLCTHRNEBiSgnu0+obeJpEPZRUooHgsizvzv0ZjJwOz3iWIHdJtVWJ/tmPr3D21/A==}
+  /is-core-module/2.3.0:
+    resolution: {integrity: sha512-xSphU2KG9867tsYdLD4RWQ1VqdFl4HTO9Thf3I/3dLEfr0dbPTWKsuCKrgqMljg4nPE+Gq0VCnzT3gr0CyBmsw==}
     dependencies:
       has: 1.0.3
 
@@ -2520,8 +2520,8 @@ packages:
       thenify-all: 1.6.0
     dev: true
 
-  /nanoid/3.1.23:
-    resolution: {integrity: sha512-FiB0kzdP0FFVGDKlRLEQ1BgDzU87dy5NnzjeW9YZNt+/c3+q82EQDUwniSAUxp/F0gFNI1ZhKU1FqYsMuqZVnw==}
+  /nanoid/3.1.22:
+    resolution: {integrity: sha512-/2ZUaJX2ANuLtTvqTlgqBQNJoQO398KyJgZloL0PZkC0dpysjncRUPsFe3DUPzz/y3h+u7C46np8RMuvF3jsSQ==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -2855,12 +2855,12 @@ packages:
     resolution: {integrity: sha512-me2dL+chJVb88zpE228MvA6wIRy1CuXxGTwI5hYe4DnSnXRbtJT+9ggRj+49kgHgs/AKMTKOt/EkTHSvQJmRXA==}
     dev: true
 
-  /postcss/8.2.15:
-    resolution: {integrity: sha512-2zO3b26eJD/8rb106Qu2o7Qgg52ND5HPjcyQiK2B98O388h43A448LCslC0dI2P97wCAQRJsFvwTRcXxTKds+Q==}
+  /postcss/8.2.14:
+    resolution: {integrity: sha512-+jD0ZijcvyCqPQo/m/CW0UcARpdFylq04of+Q7RKX6f/Tu+dvpUI/9Sp81+i6/vJThnOBX09Quw0ZLOVwpzX3w==}
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       colorette: 1.2.2
-      nanoid: 3.1.23
+      nanoid: 3.1.22
       source-map: 0.6.1
 
   /preferred-pm/3.0.3:
@@ -3061,7 +3061,7 @@ packages:
   /resolve/1.20.0:
     resolution: {integrity: sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A==}
     dependencies:
-      is-core-module: 2.4.0
+      is-core-module: 2.3.0
       path-parse: 1.0.6
 
   /retry/0.12.0:
@@ -3731,7 +3731,7 @@ packages:
     hasBin: true
     dependencies:
       esbuild: 0.11.20
-      postcss: 8.2.15
+      postcss: 8.2.14
       resolve: 1.20.0
       rollup: 2.47.0
     optionalDependencies:

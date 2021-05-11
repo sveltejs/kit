@@ -167,7 +167,8 @@ async function build_client({
 		plugins: [
 			...(user_config.plugins || []),
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				emitCss: !config.kit.amp
 			})
 		]
 	});
@@ -317,7 +318,8 @@ async function build_server(
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
-					template
+					template,
+					trailing_slash: ${s(config.kit.trailingSlash)}
 				};
 			}
 

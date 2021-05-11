@@ -11,6 +11,7 @@ const config = {
 		floc: true,
 		target: '#content-goes-here',
 		host: 'example.com',
+		trailingSlash: 'always',
 		vite: {
 			build: {
 				minify: false
