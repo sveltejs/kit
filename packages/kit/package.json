@@ -6,7 +6,7 @@
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.10",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4",
-		"vite": "^2.3.0"
+		"vite": "2.2.4"
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^2.4.2",
