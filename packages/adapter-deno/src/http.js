@@ -1,3 +1,5 @@
+import { readAll } from 'https://deno.land/std@0.95.0/io/mod.ts';
+
 // import type { ServerRequest } from 'https://deno.land/std@0.95.0/http/server.ts';
 
 /**
@@ -20,7 +22,7 @@ export async function getRawBody(req) {
 		return null;
 	}
 
-	const data = await Deno.readAll(req.body);
+	const data = await readAll(req.body);
 
 	// return raw buffer for octet-stream content-type
 	if (type === 'application/octet-stream') {
