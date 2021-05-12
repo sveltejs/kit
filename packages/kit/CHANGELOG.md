@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.107
+
+### Patch Changes
+
+- ad83d40: update vite to ^2.3.1
+
 ## 1.0.0-next.106
 
 ### Patch Changes
