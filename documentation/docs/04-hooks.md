@@ -23,19 +23,19 @@ type Request<Locals = Record<string, any>> = {
 	params: Record<string, string>;
 	query: URLSearchParams;
 	rawBody: string | Uint8Array;
-	body: string | Uint8Array | ReadOnlyFormData | JSONValue;
-	locals: Locals;
+	body: string | Uint8Array | JSONValue;
+	locals: Locals; // see hooks handle
 };
 
 type Response = {
-	status?: number;
-	headers?: Headers;
-	body?: any;
+	status: number;
+	headers: Headers;
+	body?: string | Uint8Array;
 };
 
-type Handle<Locals = Record<string, any>> = ({
-	request: Request<Locals>,
-	render: (request: Request<Locals>) => Promise<Response>
+type Handle<Locals = Record<string, any>> = (input: {
+	request: Request<Locals>;
+	render: (request: Request<Locals>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;
 ```
 
