@@ -11,15 +11,25 @@ import { hash } from '../hash.js';
  * @param {import('types/internal').SSRRenderState} [state]
  */
 export async function respond(incoming, options, state = {}) {
-	if (incoming.path.endsWith('/') && incoming.path !== '/') {
-		const q = incoming.query.toString();
+	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
+		const has_trailing_slash = incoming.path.endsWith('/');
 
-		return {
-			status: 301,
-			headers: {
-				location: encodeURI(incoming.path.slice(0, -1) + (q ? `?${q}` : ''))
-			}
-		};
+		if (
+			(has_trailing_slash && options.trailing_slash === 'never') ||
+			(!has_trailing_slash &&
+				options.trailing_slash === 'always' &&
+				!incoming.path.split('/').pop().includes('.'))
+		) {
+			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
+			const q = incoming.query.toString();
+
+			return {
+				status: 301,
+				headers: {
+					location: encodeURI(path + (q ? `?${q}` : ''))
+				}
+			};
+		}
 	}
 
 	try {

@@ -87,7 +87,7 @@ export async function render_response({
 			unsubscribe();
 		}
 	} else {
-		rendered = { head: '', html: '', css: '' };
+		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
 	const include_js = page_config.router || page_config.hydrate;
@@ -95,8 +95,8 @@ export async function render_response({
 
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
-		? styles.size > 0
-			? `<style amp-custom>${Array.from(styles).join('\n')}</style>`
+		? styles.size > 0 || rendered.css.code.length > 0
+			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
 				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
@@ -124,6 +124,7 @@ export async function render_response({
 				host: ${page && page.host ? s(page.host) : 'location.host'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
+				trailing_slash: ${s(options.trailing_slash)},
 				hydrate: ${page_config.ssr && page_config.hydrate? `{
 					status: ${status},
 					error: ${serialize_error(error)},

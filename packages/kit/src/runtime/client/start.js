@@ -17,6 +17,7 @@ import { set_paths } from '../paths.js';
  *   host: string;
  *   route: boolean;
  *   spa: boolean;
+ *   trailing_slash: import('types/internal').TrailingSlash;
  *   hydrate: {
  *     status: number;
  *     error: Error;
@@ -24,7 +25,7 @@ import { set_paths } from '../paths.js';
  *     page: import('types/page').Page;
  *   };
  * }} opts */
-export async function start({ paths, target, session, host, route, spa, hydrate }) {
+export async function start({ paths, target, session, host, route, spa, trailing_slash, hydrate }) {
 	if (import.meta.env.DEV && !target) {
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
@@ -33,7 +34,8 @@ export async function start({ paths, target, session, host, route, spa, hydrate 
 		route &&
 		new Router({
 			base: paths.base,
-			routes
+			routes,
+			trailing_slash
 		});
 
 	const renderer = new Renderer({

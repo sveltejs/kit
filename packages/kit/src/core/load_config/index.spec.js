@@ -39,7 +39,8 @@ test('fills in defaults', () => {
 			},
 			router: true,
 			ssr: true,
-			target: null
+			target: null,
+			trailingSlash: 'never'
 		},
 		preprocess: null
 	});
@@ -122,7 +123,8 @@ test('fills in partial blanks', () => {
 			},
 			router: true,
 			ssr: true,
-			target: null
+			target: null,
+			trailingSlash: 'never'
 		},
 		preprocess: null
 	});
