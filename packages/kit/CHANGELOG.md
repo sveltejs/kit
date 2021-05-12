@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.106
+
+### Patch Changes
+
+- fe0531d: temporarily pin vite to version 2.2.4 until issues with 2.3.0 are resolved
+
 ## 1.0.0-next.105
 
 ### Patch Changes
