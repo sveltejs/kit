@@ -11,7 +11,7 @@ type LoadInput = {
 	page: {
 		host: string;
 		path: string;
-		params: Record<string, string | string[]>;
+		params: Record<string, string>;
 		query: URLSearchParams;
 	};
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -21,7 +21,7 @@ type LoadInput = {
 
 type LoadOutput = {
 	status?: number;
-	error?: Error;
+	error?: string | Error;
 	redirect?: string;
 	props?: Record<string, any>;
 	context?: Record<string, any>;
