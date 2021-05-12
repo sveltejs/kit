@@ -42,8 +42,8 @@ importers:
 
   examples/hn.svelte.dev:
     specifiers:
-      '@sveltejs/adapter-netlify': workspace:*
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/adapter-netlify': workspace:^
+      '@sveltejs/kit': workspace:^
       svelte: ^3.38.2
     devDependencies:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
@@ -53,7 +53,7 @@ importers:
   packages/adapter-begin:
     specifiers:
       '@architect/parser': ^3.0.1
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       rollup: ^2.47.0
       sirv: ^1.0.11
       typescript: ^4.2.4
@@ -67,7 +67,7 @@ importers:
 
   packages/adapter-cloudflare-workers:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       esbuild: ^0.11.18
       toml: ^3.0.0
     dependencies:
@@ -78,7 +78,7 @@ importers:
 
   packages/adapter-netlify:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       esbuild: ^0.11.18
       toml: ^3.0.0
       typescript: ^4.2.4
@@ -92,7 +92,7 @@ importers:
   packages/adapter-node:
     specifiers:
       '@rollup/plugin-json': ^4.1.0
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       c8: ^7.7.2
       compression: ^1.7.4
       node-fetch: ^3.0.0-beta.9
@@ -115,7 +115,7 @@ importers:
 
   packages/adapter-static:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       playwright-chromium: ^1.10.0
       port-authority: ^1.1.2
       sirv: ^1.0.11
@@ -129,7 +129,7 @@ importers:
 
   packages/adapter-vercel:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       esbuild: ^0.11.18
       typescript: ^4.2.4
     dependencies:
@@ -140,7 +140,7 @@ importers:
 
   packages/create-svelte:
     specifiers:
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@types/gitignore-parser': ^0.0.0
       '@types/prettier': ^2.2.3
       '@types/prompts': ^2.0.11
@@ -199,7 +199,7 @@ importers:
   packages/kit:
     specifiers:
       '@rollup/plugin-replace': ^2.4.2
-      '@sveltejs/kit': workspace:*
+      '@sveltejs/kit': workspace:^
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.10
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
