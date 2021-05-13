@@ -13,7 +13,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const noop_handler = (_req, _res, next) => next();
 const paths = {
 	assets: join(__dirname, '/assets'),
-	static: join(__dirname, '/static'),
 	prerendered: join(__dirname, '/prerendered')
 };
 
@@ -26,12 +25,6 @@ export function createServer({ render }) {
 
 	const prerendered_handler = fs.existsSync(paths.prerendered)
 		? mutable(paths.prerendered)
-		: noop_handler;
-
-	const static_handler = fs.existsSync(paths.static)
-		? sirv(paths.static, {
-				maxAge: 3600
-		  })
 		: noop_handler;
 
 	const assets_handler = fs.existsSync(paths.assets)
