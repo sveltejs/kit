@@ -21,6 +21,6 @@
 		"toml": "^3.0.0"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*"
+		"@sveltejs/kit": "workspace:^"
 	}
 }

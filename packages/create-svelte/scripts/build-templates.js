@@ -46,7 +46,7 @@ async function generate_templates(shared) {
 
 				if (name === 'package.template.json') {
 					// TODO package-specific versions
-					contents = contents.replace(/workspace:\*/g, 'next');
+					contents = contents.replace(/workspace:\^/g, 'next');
 					fs.writeFileSync(`${dir}/package.json`, contents);
 				} else {
 					ts.push({

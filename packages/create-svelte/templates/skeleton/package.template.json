@@ -7,7 +7,7 @@
 		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
 		"svelte": "^3.34.0"
 	},
 	"type": "module"

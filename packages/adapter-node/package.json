@@ -22,7 +22,7 @@
 	},
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
 		"c8": "^7.7.2",
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0-beta.9",
