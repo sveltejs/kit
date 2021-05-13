@@ -36,15 +36,17 @@ export function createServer({ render }) {
 
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
-				maxAge: 31536000,
-				immutable: true
+				setHeaders: (res, pathname, stats) => {
+					if (pathname.startsWith('/_app/')) {
+						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+					}
+				}
 		  })
 		: noop_handler;
 
 	const server = polka().use(
 		compression({ threshold: 0 }),
 		assets_handler,
-		static_handler,
 		prerendered_handler,
 		async (req, res) => {
 			const parsed = new URL(req.url || '', 'http://localhost');
