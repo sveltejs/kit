@@ -19,7 +19,7 @@
 		"@architect/parser": "^3.0.1"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
 		"rollup": "^2.47.0",
 		"sirv": "^1.0.11",
 		"typescript": "^4.2.4"

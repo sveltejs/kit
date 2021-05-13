@@ -9,8 +9,8 @@
 		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-netlify": "workspace:*",
-		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/adapter-netlify": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
 		"svelte": "^3.38.2"
 	}
 }
