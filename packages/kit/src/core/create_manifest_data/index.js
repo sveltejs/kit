@@ -349,7 +349,7 @@ function get_pattern(segments, add_trailing_slash) {
 		.map((segment) => {
 			return segment[0].spread
 				? '(?:\\/(.*))?'
-				: '\\/' +
+				: '\\/?' +
 						segment
 							.map((part) => {
 								return part.dynamic
