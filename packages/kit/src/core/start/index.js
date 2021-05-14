@@ -48,7 +48,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	return get_server(port, host, use_https, (req, res) => {
+	return get_server(port, host, use_https, config.kit, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {
