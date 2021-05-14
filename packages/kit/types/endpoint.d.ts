@@ -1,4 +1,4 @@
-import { Headers, ParameterizedBody } from './helper';
+import { Headers, MaybePromise, ParameterizedBody } from './helper';
 
 export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
 	method: string;
@@ -29,4 +29,4 @@ export type EndpointOutput = {
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
 	request: ServerRequest<Locals, Body>
-) => void | EndpointOutput | Promise<EndpointOutput>;
+) => void | MaybePromise<EndpointOutput>;

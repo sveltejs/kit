@@ -17,3 +17,5 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 // 'set-cookie' is a `string[]` (or at least `string | string[]`)
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
+
+export type MaybePromise<T> = T | Promise<T>;

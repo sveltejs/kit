@@ -1,4 +1,4 @@
-import { BaseBody, Headers } from './helper';
+import { BaseBody, Headers, MaybePromise } from './helper';
 import { ServerRequest } from './endpoint';
 
 export type Incoming = {
@@ -18,10 +18,10 @@ export type ServerResponse = {
 };
 
 export type GetSession<Locals = Record<string, any>, Session = any> = {
-	(request: ServerRequest<Locals>): Session | Promise<Session>;
+	(request: ServerRequest<Locals>): MaybePromise<Session>;
 };
 
 export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
-	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
-}) => ServerResponse | Promise<ServerResponse>;
+	render: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
+}) => MaybePromise<ServerResponse>;
