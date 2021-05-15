@@ -12,7 +12,9 @@ This function runs on every request, and determines the response. It receives th
 
 If unimplemented, defaults to `({ request, render }) => render(request)`.
 
-To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
+To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below. 
+
+> Unlike in `getSession` below, `request.locals` does _not_ have to be serializable, meaning you _can_ pass around functions and custom classes.
 
 ```ts
 type Request<Locals = Record<string, any>> = {
