@@ -199,10 +199,10 @@ export default function (test, is_dev) {
 				});
 
 				if (req.url === files_names[0]) {
-					res.end(JSON.stringify({answer: expect_answer}));
+					res.end(JSON.stringify({ answer: expect_answer }));
 				} else {
 					expect_answer = 43;
-					res.end(JSON.stringify({answer: expect_answer}));
+					res.end(JSON.stringify({ answer: expect_answer }));
 				}
 			}
 		});
