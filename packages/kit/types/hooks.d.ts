@@ -26,4 +26,4 @@ export type Handle<Locals = Record<string, any>> = (input: {
 	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
 }) => ServerResponse | Promise<ServerResponse>;
 
-export type serverFetch = (req: Request) => Promise<Response>;
+export type ServerFetch = (req: Request) => Promise<Response>;

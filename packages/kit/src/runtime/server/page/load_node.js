@@ -99,7 +99,7 @@ export async function load_node({
 
 				if (/^[a-zA-Z]+:/.test(url)) {
 					const request = new Request(url, /** @type {RequestInit} */ (opts));
-					if (options.hooks && options.hooks.serverFetch) {
+					if (options.hooks.serverFetch) {
 						response = await options.hooks.serverFetch.call(null, request);
 					} else {
 						response = await fetch(request);

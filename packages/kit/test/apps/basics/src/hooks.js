@@ -25,7 +25,7 @@ export async function handle({ request, render }) {
 	}
 }
 
-/** @type {import('@sveltejs/kit').serverFetch} */
+/** @type {import('@sveltejs/kit').ServerFetch} */
 export async function serverFetch(request) {
 	let newRequest = request;
 	if (request.url.endsWith('/server-fetch-request.json')) {
