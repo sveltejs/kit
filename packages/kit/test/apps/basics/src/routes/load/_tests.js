@@ -184,7 +184,7 @@ export default function (test, is_dev) {
 	test('handles external api', '/load', async ({ base, page }) => {
 		const port = await ports.find(4000);
 
-		const files_names = ['/server-fetch-request.json', '/server-fetch-request2.json']
+		const files_names = ['/server-fetch-request.json', '/server-fetch-request2.json'];
 
 		let times_responded = 0;
 		let expect_answer = 42;
