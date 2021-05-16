@@ -24,3 +24,16 @@ export async function handle({ request, render }) {
 		};
 	}
 }
+
+/** @type {import('@sveltejs/kit').serverFetch} */
+export async function serverFetch(request) {
+	let newRequest = request;
+	if (request.url.endsWith('/server-fetch-request.json')) {
+		newRequest = new Request(
+			request.url.replace('/server-fetch-request.json', '/server-fetch-request2.json'),
+			request
+		);
+	}
+
+	return fetch(newRequest);
+}

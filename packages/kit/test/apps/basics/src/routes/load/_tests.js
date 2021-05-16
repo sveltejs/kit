@@ -181,6 +181,44 @@ export default function (test, is_dev) {
 		server.close();
 	});
 
+	test('handles external api', '/load', async ({ base, page }) => {
+		const port = await ports.find(4000);
+
+		const files_names = ['/server-fetch-request.json', '/server-fetch-request2.json']
+
+		let times_responded = 0;
+		let expect_answer = 42;
+
+		const server = http.createServer(async (req, res) => {
+			if (files_names.includes(req.url)) {
+				times_responded += 1;
+
+				res.writeHead(200, {
+					'Access-Control-Allow-Origin': '*',
+					'content-type': 'application/json'
+				});
+
+				if (req.url === files_names[0]) {
+					res.end(JSON.stringify({answer: expect_answer}));
+				} else {
+					expect_answer = 43;
+					res.end(JSON.stringify({answer: expect_answer}));
+				}
+			}
+		});
+
+		await new Promise((fulfil) => {
+			server.listen(port, () => fulfil());
+		});
+
+		await page.goto(`${base}/load/server-fetch-request?port=${port}`);
+
+		assert.equal(times_responded, 1);
+		assert.equal(await page.textContent('h1'), `the answer is ${expect_answer}`);
+
+		server.close();
+	});
+
 	test(
 		'makes credentialed fetches to endpoints by default',
 		'/load',

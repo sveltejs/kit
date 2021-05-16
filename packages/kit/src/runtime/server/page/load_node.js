@@ -98,8 +98,12 @@ export async function load_node({
 				let response;
 
 				if (/^[a-zA-Z]+:/.test(url)) {
-					// external fetch
-					response = await fetch(url, /** @type {RequestInit} */ (opts));
+					const request = new Request(url, /** @type {RequestInit} */ (opts));
+					if (options.hooks && options.hooks.serverFetch) {
+						response = await options.hooks.serverFetch.call(null, request);
+					} else {
+						response = await fetch(request);
+					}
 				} else {
 					const [path, search] = url.split('?');
 
