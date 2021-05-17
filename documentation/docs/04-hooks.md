@@ -85,3 +85,19 @@ export function getSession(request) {
 ```
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+
+### serverFetch
+
+This function provides possibilities to replace `fetch` on the server-side for the external API requests. It's beneficial if you want to retrieve resources differently from what it is doing on the browser. For example, if you want to change URL or headers for server-side only.
+
+```ts
+type ServerFetch = (req: Request) => Promise<Response>;
+```
+
+```js
+/** @type {import('@sveltejs/kit').ServerFetch} */
+export async function serverFetch(request) {
+	const data = await getDataMethod(request);
+	return data;
+}
+```
