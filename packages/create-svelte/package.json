@@ -7,7 +7,7 @@
 		"prompts": "^2.4.1"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.2.3",
 		"@types/prompts": "^2.0.11",
