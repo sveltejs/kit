@@ -104,6 +104,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `5xx` — server error
 
 > For successful responses, SvelteKit will generate 304s automatically.
+> If you are unsure about status codes or can't remember them, a package like [http-status-codes](https://www.npmjs.com/package/http-status-codes) might help.
 
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 
