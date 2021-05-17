@@ -8,6 +8,14 @@ Please see [the documentation](https://kit.svelte.dev/docs) for information abou
 
 ## Developing
 
+Ensure that you have a recent version of node:
+
+```
+node -v
+```
+
+For node v12 you should have at least `v12.12.0` and for node v14 at least `v14.13.1`. 
+
 This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
 
 ```bash
