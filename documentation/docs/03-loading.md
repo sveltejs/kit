@@ -105,6 +105,8 @@ If you return a Promise from `load`, SvelteKit will delay rendering until the pr
 
 The HTTP status code for the page. If returning an `error` this must be a `4xx` or `5xx` response; if returning a `redirect` it must be a `3xx` response. The default is `200`.
 
+> If you are unsure about status codes or can't remember them, a package like [http-status-codes](https://www.npmjs.com/package/http-status-codes) might help.
+
 #### error
 
 If something goes wrong during `load`, return an `Error` object or a `string` describing the error alongside a `4xx` or `5xx` status code.
