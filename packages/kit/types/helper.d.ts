@@ -19,3 +19,6 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 export type Headers = Record<string, string>;
 
 export type MaybePromise<T> = T | Promise<T>;
+export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
+	? Val
+	: Default;
