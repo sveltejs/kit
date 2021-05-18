@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Make it possible to type context and props for LoadInput and LoadOutput
+Make it possible to type context, page params and props for LoadInput and LoadOutput
