@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 1.0.0-next.9
 
 ### Patch Changes

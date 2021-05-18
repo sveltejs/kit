@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.71
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 2.0.0-next.70
 
 ### Patch Changes

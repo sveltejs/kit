@@ -1,5 +1,11 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.8
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 1.0.0-next.7
 
 ### Patch Changes

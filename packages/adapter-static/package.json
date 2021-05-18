@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.9",
+	"version": "1.0.0-next.10",
 	"type": "module",
 	"main": "index.js",
 	"exports": {
