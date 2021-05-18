@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
@@ -39,7 +39,7 @@ export default function () {
 			utils.copy_client_files(publish);
 
 			utils.log.minor('Writing redirects...');
-			utils.copy(`${files}/_redirects`, `${publish}/_redirects`);
+			appendFileSync(`${publish}/_redirects`, '\n\n/* /.netlify/functions/render 200');
 		}
 	};
 
@@ -60,6 +60,12 @@ function validate_config() {
 		if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
 			throw new Error(
 				'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+			);
+		}
+
+		if (netlify_config.redirects) {
+			throw new Error(
+				"Redirects are not supported in netlify.toml. Use _redirects instead. For more details consult the readme's troubleshooting section."
 			);
 		}
 
