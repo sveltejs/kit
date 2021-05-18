@@ -1,5 +1,14 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+- Updated dependencies [dad93fc]
+- Updated dependencies [37fc04f]
+  - @sveltejs/kit@1.0.0-next.108
+
 ## 1.0.0-next.12
 
 ### Patch Changes
