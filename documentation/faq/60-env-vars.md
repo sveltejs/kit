@@ -2,7 +2,7 @@
 question: How do I use environment variables?
 ---
 
-Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. Only environment variables prefixed with `VITE_` are exposed. You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`.
+Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. Only environment variables prefixed with `VITE_` are exposed. You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`. We hope to see all environment variables exposed on the server-side [in the future](https://github.com/vitejs/vite/issues/3176).
 
 For example, you can create a `.env` file in your project root folder with a `VITE_*` variable:
 

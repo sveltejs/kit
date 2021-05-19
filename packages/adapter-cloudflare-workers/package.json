@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.7",
+	"version": "1.0.0-next.8",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -21,6 +21,6 @@
 		"toml": "^3.0.0"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^"
+		"@sveltejs/kit": "workspace:*"
 	}
 }
