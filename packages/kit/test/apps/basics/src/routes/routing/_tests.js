@@ -190,6 +190,18 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Great success!');
 	});
 
+	test(
+		'back button returns to previous route when previous route has been navigated to via hash anchor',
+		'/routing/hashes/a',
+		async ({ page, clicknav }) => {
+			await clicknav('[href="#hash-target"]');
+			await clicknav('[href="/routing/hashes/b"]');
+
+			await page.goBack();
+			assert.equal(await page.textContent('h1'), 'a');
+		}
+	);
+
 	test('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'borax is a mineral');
 
