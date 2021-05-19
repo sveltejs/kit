@@ -53,7 +53,7 @@
 		"build": "run-script-os",
 		"dev": "run-script-os",
 		"dev:default": "rm -rf assets/runtime && rollup -cw",
-		"dev:win32": "\"del /S /Q assets\\runtime && rollup -cw",
+		"dev:win32": "del /S /Q assets\\runtime && rollup -cw",
 		"build:default": "rm -rf assets/runtime && rollup -c",
 		"build:win32": "del /S /Q assets\\runtime && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
