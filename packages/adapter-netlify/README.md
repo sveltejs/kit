@@ -36,7 +36,9 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 It's recommended that you add the `build` and `functions` folders (or whichever other folders you specify) to your `.gitignore`.
 
-## Customizing Setup
+## Netlify alternatives to SvelteKit functionality
+
+You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
 
 ### Using Netlify Redirect Rules
 
@@ -45,10 +47,8 @@ During compilation a required "catch all" redirect rule is automatically appende
 - `[[redirects]]` in `netlify.toml` will never match as `_redirects` has a [higher priority](https://docs.netlify.com/routing/redirects/#rule-processing-order). So always put your rules in the [`_redirects` file](https://docs.netlify.com/routing/redirects/#syntax-for-the-redirects-file).
 - `_redirects` shouldn't have any custom "catch all" rules such as `/* /foobar/:splat`. Otherwise the automatically appended rule will never be applied as Netlify is only processing [the first matching rule](https://docs.netlify.com/routing/redirects/#rule-processing-order).
 
-### Defining Netlify Forms
+### Using Netlify Forms
 
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact.svelte`. (Don't forget to add the hidden `form-name` input element!)
 2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
-3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages), e.g. by using something like `<form netlify ... action="/success">`, then:
-   - Ensure `/routes/success.svelte` exists
-   - In it add the same prerender hint as in step 2
+3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages) like `<form netlify ... action="/success">` then ensure the corresponding `/routes/success.svelte` exists and is prerendered.
