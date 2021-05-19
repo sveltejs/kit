@@ -34,7 +34,8 @@
 		"svelte-check": "^1.5.2",
 		"tiny-glob": "^0.2.8",
 		"typescript": "^4.2.4",
-		"uvu": "^0.5.1"
+		"uvu": "^0.5.1",
+		"run-script-os": "^1.1.6"
 	},
 	"peerDependencies": {
 		"svelte": "^3.38.2"
@@ -49,8 +50,12 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"dev": "rm -rf assets/runtime && rollup -cw",
-		"build": "rm -rf assets/runtime && rollup -c",
+		"build": "run-script-os",
+		"dev": "run-script-os",
+		"dev:default": "rm -rf assets/runtime && rollup -cw",
+		"dev:win32": "\"del /S /Q assets\\runtime && rollup -cw",
+		"build:default": "rm -rf assets/runtime && rollup -c",
+		"build:win32": "del /S /Q assets\\runtime && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
