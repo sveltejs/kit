@@ -1,5 +1,4 @@
 ---
-'hn.svelte.dev': patch
 '@sveltejs/adapter-begin': patch
 '@sveltejs/adapter-cloudflare-workers': patch
 '@sveltejs/adapter-netlify': patch

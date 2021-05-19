@@ -1,6 +1,5 @@
 import http from 'http';
 import https from 'https';
-import fs from 'fs';
 /**
  *
  * @param {number} port
@@ -15,11 +14,16 @@ export async function get_server(port, host, use_https, user_config, handler) {
 	const https_options = {};
 
 	if (use_https) {
-		if (user_config.server?.https?.cert === undefined) {
-			https_options.key = https_options.cert = (await import('./cert.js')).createCertificate();
-		} else {
+		if (
+			user_config.server &&
+			user_config.server.https &&
+			user_config.server.https.key &&
+			user_config.server.https.cert
+		) {
 			https_options.key = user_config.server.https.key.toString();
 			https_options.cert = user_config.server.https.cert.toString();
+		} else {
+			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}
 	}
 
