@@ -27,6 +27,13 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			package: {
+				dir: 'package',
+				entries: {
+					include: ['**'],
+					exclude: []
+				}
+			},
 			paths: {
 				base: '',
 				assets: '/.'
@@ -111,6 +118,13 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			package: {
+				dir: 'package',
+				entries: {
+					include: ['**'],
+					exclude: []
+				}
+			},
 			paths: {
 				base: '',
 				assets: '/.'

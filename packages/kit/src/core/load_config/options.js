@@ -80,6 +80,36 @@ const options = {
 
 			hydrate: expect_boolean(true),
 
+			package: {
+				type: 'branch',
+				children: {
+					dir: expect_string('package'),
+					entries: {
+						type: 'branch',
+						children: {
+							include: {
+								type: 'leaf',
+								default: ['**'],
+								validate: (option, keypath) => {
+									if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
+										throw new Error(`${keypath} must be an array of strings`);
+									}
+								}
+							},
+							exclude: {
+								type: 'leaf',
+								default: [],
+								validate: (option, keypath) => {
+									if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
+										throw new Error(`${keypath} must be an array of strings`);
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+
 			paths: {
 				type: 'branch',
 				children: {
