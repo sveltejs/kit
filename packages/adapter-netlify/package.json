@@ -19,7 +19,7 @@
 	"dependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"esbuild": "^0.11.18",
-		"toml": "^3.0.0"
+		"@iarna/toml": "^2.2.5"
 	},
 	"devDependencies": {
 		"typescript": "^4.2.4"
