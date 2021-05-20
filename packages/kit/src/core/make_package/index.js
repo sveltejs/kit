@@ -41,7 +41,6 @@ export async function make_package(config, cwd = process.cwd()) {
 	};
 
 	for (const file of files) {
-		console.log(file, files_filter(file));
 		if (!files_filter(file)) continue;
 
 		const filename = path.join(config.kit.files.lib, file);
@@ -60,7 +59,9 @@ export async function make_package(config, cwd = process.cwd()) {
 			// it's a Svelte component
 			// TODO how to emit types?
 			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
-			out_contents = (await preprocess(source, config.preprocess, { filename })).code;
+			out_contents = config.preprocess
+				? (await preprocess(source, config.preprocess, { filename })).code
+				: source;
 		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
 			// TODO transpile TS file and emit types
 			throw new Error('TODO transpile TS and emit types');
