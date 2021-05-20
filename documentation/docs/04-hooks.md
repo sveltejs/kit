@@ -97,7 +97,14 @@ type ServerFetch = (req: Request) => Promise<Response>;
 ```js
 /** @type {import('@sveltejs/kit').ServerFetch} */
 export async function serverFetch(request) {
-	const data = await getDataMethod(request);
-	return data;
+	let newRequest = request;
+	if (request.url.startsWith('https://my.site/api')) {
+		newRequest = new Request(
+			request.url.replace('https://my.site/api', 'http://localhost:9999/'),
+			request,
+		);
+	}
+
+	return fetch(newRequest);
 }
 ```
