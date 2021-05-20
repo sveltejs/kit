@@ -22,5 +22,8 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "workspace:*"
 	}
 }

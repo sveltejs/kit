@@ -14,6 +14,9 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "uvu test test.js"
 	},
+	"peerDependencies": {
+		"@sveltejs/kit": "workspace:*"
+	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"playwright-chromium": "^1.10.0",

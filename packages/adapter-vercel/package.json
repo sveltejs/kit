@@ -17,10 +17,13 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"@sveltejs/kit": "workspace:*",
 		"esbuild": "^0.11.18"
 	},
+	"peerDependencies": {
+		"@sveltejs/kit": "workspace:*"
+	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
 		"typescript": "^4.2.4"
 	}
 }
