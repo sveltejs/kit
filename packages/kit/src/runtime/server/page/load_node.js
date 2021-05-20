@@ -98,6 +98,7 @@ export async function load_node({
 				let response;
 
 				if (/^[a-zA-Z]+:/.test(url)) {
+					// external fetch
 					const request = new Request(url, /** @type {RequestInit} */ (opts));
 					if (options.hooks.serverFetch) {
 						response = await options.hooks.serverFetch.call(null, request);
