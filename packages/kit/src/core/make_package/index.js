@@ -2,15 +2,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import globrex from 'globrex';
-import { mkdirp } from '../filesystem';
+import { mkdirp, rimraf } from '../filesystem';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
-	const include = config.kit.package.entries.include.map((str) => globrex(str));
-	const exclude = config.kit.package.entries.exclude.map((str) => globrex(str));
+	rimraf(path.join(cwd, config.kit.package.dir));
+
+	const files_filter = create_filter(config.kit.package.files);
+	const exports_filter = create_filter(config.kit.package.exports);
 
 	const files = walk(config.kit.files.lib);
 
@@ -39,6 +41,9 @@ export async function make_package(config, cwd = process.cwd()) {
 	};
 
 	for (const file of files) {
+		console.log(file, files_filter(file));
+		if (!files_filter(file)) continue;
+
 		const filename = path.join(config.kit.files.lib, file);
 		const source = fs.readFileSync(filename, 'utf8');
 
@@ -64,13 +69,9 @@ export async function make_package(config, cwd = process.cwd()) {
 			out_contents = source;
 		}
 
-		write(path.join(config.kit.package.dir, out_file), out_contents);
+		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		const is_entry =
-			include.some((glob) => glob.regex.test(file)) &&
-			!exclude.some((glob) => glob.regex.test(file));
-
-		if (is_entry) {
+		if (exports_filter(file)) {
 			const entry = `./${out_file}`;
 			package_pkg.exports[entry] = entry;
 		}
@@ -82,7 +83,27 @@ export async function make_package(config, cwd = process.cwd()) {
 		package_pkg.exports['.'] = main;
 	}
 
-	write(path.join(config.kit.package.dir, 'package.json'), JSON.stringify(package_pkg, null, '  '));
+	write(
+		path.join(cwd, config.kit.package.dir, 'package.json'),
+		JSON.stringify(package_pkg, null, '  ')
+	);
+}
+
+/**
+ * @param {{
+ *   include: string[];
+ *   exclude: string[];
+ * }} options
+ */
+function create_filter(options) {
+	const include = options.include.map((str) => str && globrex(str));
+	const exclude = options.exclude.map((str) => str && globrex(str));
+
+	/** @param {string} str */
+	const filter = (str) =>
+		include.some((glob) => glob.regex.test(str)) && !exclude.some((glob) => glob.regex.test(str));
+
+	return filter;
 }
 
 /** @param {string} cwd */

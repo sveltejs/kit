@@ -46,7 +46,11 @@ export type Config = {
 		hydrate?: boolean;
 		package?: {
 			dir?: string;
-			entries?: {
+			exports?: {
+				include?: string[];
+				exclude?: string[];
+			};
+			files?: {
 				include?: string[];
 				exclude?: string[];
 			};
@@ -92,7 +96,11 @@ export type ValidatedConfig = {
 		hydrate: boolean;
 		package: {
 			dir: string;
-			entries: {
+			exports: {
+				include: string[];
+				exclude: string[];
+			};
+			files: {
 				include: string[];
 				exclude: string[];
 			};

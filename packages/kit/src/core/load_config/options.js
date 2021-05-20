@@ -84,27 +84,18 @@ const options = {
 				type: 'branch',
 				children: {
 					dir: expect_string('package'),
-					entries: {
+					exports: {
 						type: 'branch',
 						children: {
-							include: {
-								type: 'leaf',
-								default: ['**'],
-								validate: (option, keypath) => {
-									if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
-										throw new Error(`${keypath} must be an array of strings`);
-									}
-								}
-							},
-							exclude: {
-								type: 'leaf',
-								default: [],
-								validate: (option, keypath) => {
-									if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
-										throw new Error(`${keypath} must be an array of strings`);
-									}
-								}
-							}
+							include: expect_array_of_strings(['**']),
+							exclude: expect_array_of_strings([])
+						}
+					},
+					files: {
+						type: 'branch',
+						children: {
+							include: expect_array_of_strings(['**']),
+							exclude: expect_array_of_strings([])
 						}
 					}
 				}
@@ -195,6 +186,23 @@ function expect_string(string, allow_empty = true) {
 			assert_is_string(option, keypath);
 			if (!allow_empty && option === '') {
 				throw new Error(`${keypath} cannot be empty`);
+			}
+			return option;
+		}
+	};
+}
+
+/**
+ * @param {string[]} array
+ * @returns {ConfigDefinition}
+ */
+function expect_array_of_strings(array) {
+	return {
+		type: 'leaf',
+		default: array,
+		validate: (option, keypath) => {
+			if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
+				throw new Error(`${keypath} must be an array of strings`);
 			}
 			return option;
 		}

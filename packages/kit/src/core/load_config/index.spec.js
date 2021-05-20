@@ -29,7 +29,11 @@ test('fills in defaults', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				entries: {
+				exports: {
+					include: ['**'],
+					exclude: []
+				},
+				files: {
 					include: ['**'],
 					exclude: []
 				}
@@ -120,7 +124,11 @@ test('fills in partial blanks', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				entries: {
+				exports: {
+					include: ['**'],
+					exclude: []
+				},
+				files: {
 					include: ['**'],
 					exclude: []
 				}

@@ -39,7 +39,11 @@ async function testLoadDefaultConfig(path) {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				entries: {
+				exports: {
+					include: ['**'],
+					exclude: []
+				},
+				files: {
 					include: ['**'],
 					exclude: []
 				}
