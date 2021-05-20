@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
-import toml from 'toml';
+import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 export default function () {
