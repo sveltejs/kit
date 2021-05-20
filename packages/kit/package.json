@@ -49,8 +49,8 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"dev": "rm -rf assets/runtime && rollup -cw",
-		"build": "rm -rf assets/runtime && rollup -c",
+		"build": "rollup -c",
+		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
