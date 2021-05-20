@@ -1,5 +1,15 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
 ## 1.0.0-next.10
 
 ### Patch Changes
