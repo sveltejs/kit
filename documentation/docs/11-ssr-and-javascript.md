@@ -64,14 +64,15 @@ In many cases, you'll only want to prerender specific pages in your app. You'll 
 
 The prerenderer will start at the root of your app and generate HTML for any prerenderable pages it finds. Each page is scanned for `<a>` elements that point to other pages that are candidates for prerendering — because of this, you generally don't need to specify which pages should be accessed. If you _do_ need to specify which pages should be accessed by the prerenderer, you can do so with the `pages` option in the [prerender configuration](#configuration-prerender).
 
+The primary benefit of fully prerendering a site is that you do not need to maintain / pay for NodeJS servers to perform SSR to serve pages. The SSR happens at deploy time, after which the site can be served from CDNs, leading to great performance. This delivery model is so powerful that it has a nickname: JAMStack. While static sites are a clear candidate for this model, JAMStack sites are not limited to static content. You can build fully authenticaled, dynamic, personalized sites with this model, just make sure all user specific data is fetched and rendered client side. Parts of pages may be pre-rendered, possibly with some placeholders, then replaced on the client with user specific data fetched from API endpoints in onMount(). You need API servers, instead of page servers.
+
 #### When not to prerender
 
 The basic rule is this: for a page to be prerenderable, any two users hitting it directly must get the same content from the server.
 
-> In other words, any app that involves user sessions or authentication is _not_ a candidate for `adapter-static`, even if individual pages within an app _are_ suitable for prerendering.
-
 Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The prerenderer will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
 
+Since the dynamic JAMStack sites require client side rendering, dynamic pages may fail on old devices. If your site needs to support older devices, a page server can understand and adapt to device specific needs, e.g. fully render HTML server side, or transpile JS, before shipping.
 #### Route conflicts
 
 Because prerendering writes to the filesystem, it isn't possible to have two endpoints that would cause a directory and a file to have the same name. For example, `src/routes/foo/index.js` and `src/routes/foo/bar.js` would try to create `foo` and `foo/bar`, which is impossible.
