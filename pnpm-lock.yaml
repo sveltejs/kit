@@ -84,9 +84,9 @@ importers:
       typescript: ^4.2.4
     dependencies:
       '@iarna/toml': 2.2.5
-      '@sveltejs/kit': link:../kit
       esbuild: 0.11.18
     devDependencies:
+      '@sveltejs/kit': link:../kit
       typescript: 4.2.4
 
   packages/adapter-node:
@@ -133,9 +133,9 @@ importers:
       esbuild: ^0.11.18
       typescript: ^4.2.4
     dependencies:
-      '@sveltejs/kit': link:../kit
       esbuild: 0.11.18
     devDependencies:
+      '@sveltejs/kit': link:../kit
       typescript: 4.2.4
 
   packages/create-svelte:
