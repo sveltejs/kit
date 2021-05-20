@@ -215,6 +215,7 @@ importers:
       eslint: ^7.25.0
       globrex: ^0.1.2
       kleur: ^4.1.4
+      locate-character: ^2.0.5
       marked: ^2.0.3
       node-fetch: ^3.0.0-beta.9
       port-authority: ^1.1.2
@@ -250,6 +251,7 @@ importers:
       eslint: 7.25.0
       globrex: 0.1.2
       kleur: 4.1.4
+      locate-character: 2.0.5
       marked: 2.0.3
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
@@ -2343,6 +2345,10 @@ packages:
       js-yaml: 3.14.1
       pify: 4.0.1
       strip-bom: 3.0.0
+    dev: true
+
+  /locate-character/2.0.5:
+    resolution: {integrity: sha512-n2GmejDXtOPBAZdIiEFy5dJ5N38xBCXLNOtw2WpB9kGh6pnrEuKlwYI+Tkpofc4wDtVXHtoAOJaMRlYG/oYaxg==}
     dev: true
 
   /locate-path/2.0.0:
