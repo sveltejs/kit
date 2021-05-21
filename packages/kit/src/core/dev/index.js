@@ -188,7 +188,7 @@ class Watcher extends EventEmitter {
 							hooks: {
 								getSession: hooks.getSession || (() => ({})),
 								handle: hooks.handle || (({ request, render }) => render(request)),
-								serverFetch: hooks.serverFetch
+								serverFetch: hooks.serverFetch || fetch
 							},
 							hydrate: this.config.kit.hydrate,
 							paths: this.config.kit.paths,
