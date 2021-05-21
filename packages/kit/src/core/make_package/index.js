@@ -64,7 +64,8 @@ export async function make_package(config, cwd = process.cwd()) {
 				: source;
 		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
 			// TODO transpile TS file and emit types
-			throw new Error('TODO transpile TS and emit types');
+			// also, we want to emit types from JSDoc annotations in .js files
+			throw new Error('svelte-kit package does not yet support TypeScript');
 		} else {
 			out_file = file;
 			out_contents = source;
