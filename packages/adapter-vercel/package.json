@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.18",
+	"version": "1.0.0-next.19",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -17,10 +17,13 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"@sveltejs/kit": "workspace:*",
 		"esbuild": "^0.11.18"
 	},
+	"peerDependencies": {
+		"@sveltejs/kit": "workspace:*"
+	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
 		"typescript": "^4.2.4"
 	}
 }

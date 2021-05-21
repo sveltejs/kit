@@ -1,7 +1,10 @@
 import commonjs from '@rollup/plugin-commonjs';
+import fs from 'fs';
 import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
+
+(fs.rmSync || fs.rmdirSync)('assets/runtime', { recursive: true, force: true });
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
