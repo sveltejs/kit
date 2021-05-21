@@ -89,6 +89,13 @@ export async function make_package(config, cwd = process.cwd()) {
 		path.join(cwd, config.kit.package.dir, 'package.json'),
 		JSON.stringify(package_pkg, null, '  ')
 	);
+
+	const project_readme = path.join(cwd, 'README.md');
+	const package_readme = path.join(cwd, config.kit.package.dir, 'README.md');
+
+	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
+		fs.copyFileSync(project_readme, package_readme);
+	}
 }
 
 /**
