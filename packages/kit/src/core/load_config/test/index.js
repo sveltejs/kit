@@ -41,7 +41,7 @@ async function testLoadDefaultConfig(path) {
 				dir: 'package',
 				exports: {
 					include: ['**'],
-					exclude: []
+					exclude: ['_*', '**/_*']
 				},
 				files: {
 					include: ['**'],

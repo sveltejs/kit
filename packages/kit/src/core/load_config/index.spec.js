@@ -31,7 +31,7 @@ test('fills in defaults', () => {
 				dir: 'package',
 				exports: {
 					include: ['**'],
-					exclude: []
+					exclude: ['_*', '**/_*']
 				},
 				files: {
 					include: ['**'],
@@ -126,7 +126,7 @@ test('fills in partial blanks', () => {
 				dir: 'package',
 				exports: {
 					include: ['**'],
-					exclude: []
+					exclude: ['_*', '**/_*']
 				},
 				files: {
 					include: ['**'],
