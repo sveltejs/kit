@@ -88,7 +88,7 @@ const options = {
 						type: 'branch',
 						children: {
 							include: expect_array_of_strings(['**']),
-							exclude: expect_array_of_strings([])
+							exclude: expect_array_of_strings(['_*', '**/_*'])
 						}
 					},
 					files: {
