@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
-import toml from 'toml';
+import toml from '@iarna/toml';
 
 export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
