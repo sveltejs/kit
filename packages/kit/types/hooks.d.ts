@@ -5,14 +5,14 @@ export type StrictBody = string | Uint8Array;
 export type Incoming = Omit<Location, 'params'> & {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody;
+	rawBody: StrictBody | null;
 	body?: ParameterizedBody;
 };
 
 export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody;
+	rawBody: StrictBody | null;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 };
