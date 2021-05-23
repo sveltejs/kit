@@ -116,7 +116,7 @@ class Watcher extends EventEmitter {
 				...user_config.server,
 				middlewareMode: true,
 				hmr: {
-					...user_config.server?.hmr,
+					...(user_config.server && user_config.server.hmr),
 					...(this.https ? { server: this.server, port: this.port } : {})
 				}
 			},
