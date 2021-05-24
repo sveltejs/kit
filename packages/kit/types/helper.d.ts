@@ -7,7 +7,7 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 	values: () => Iterator<string>;
 }
 
-export type BaseBody = string | Buffer | ReadOnlyFormData;
+type BaseBody = string | Buffer | ReadOnlyFormData;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: BaseBody & Body;

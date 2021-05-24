@@ -1,11 +1,18 @@
-import { BaseBody, Headers, Location } from './helper';
-import { ServerRequest } from './endpoint';
+import { Headers, Location, ParameterizedBody } from './helper';
 
 export type Incoming = Omit<Location, 'params'> & {
 	method: string;
 	headers: Headers;
 	rawBody: string | Uint8Array;
-	body?: BaseBody;
+	body?: ParameterizedBody;
+};
+
+export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
+	method: string;
+	headers: Headers;
+	rawBody: string | Uint8Array;
+	body: ParameterizedBody<Body>;
+	locals: Locals;
 };
 
 export type ServerResponse = {

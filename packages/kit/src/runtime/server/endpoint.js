@@ -10,7 +10,7 @@ function error(body) {
 }
 
 /**
- * @param {import('types/endpoint').ServerRequest} request
+ * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
  * @returns {Promise<import('types/hooks').ServerResponse>}
  */

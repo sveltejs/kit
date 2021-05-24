@@ -1,12 +1,5 @@
-import { Headers, Location, ParameterizedBody } from './helper';
-
-export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
-	method: string;
-	headers: Headers;
-	rawBody: string | Uint8Array;
-	body: ParameterizedBody<Body>;
-	locals: Locals;
-};
+import { ServerRequest } from './hooks';
+import { Headers } from './helper';
 
 type JSONValue =
 	| string

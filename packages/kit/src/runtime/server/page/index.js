@@ -2,7 +2,7 @@ import { respond } from './respond.js';
 import { respond_with_error } from './respond_with_error.js';
 
 /**
- * @param {import('types/endpoint').ServerRequest} request
+ * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
