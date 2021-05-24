@@ -1,16 +1,18 @@
 import { Headers, Location, ParameterizedBody } from './helper';
 
+export type StrictBody = string | Uint8Array;
+
 export type Incoming = Omit<Location, 'params'> & {
 	method: string;
 	headers: Headers;
-	rawBody: string | Uint8Array;
+	rawBody: StrictBody;
 	body?: ParameterizedBody;
 };
 
 export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
 	method: string;
 	headers: Headers;
-	rawBody: string | Uint8Array;
+	rawBody: StrictBody;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 };
@@ -18,7 +20,7 @@ export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Locati
 export type ServerResponse = {
 	status: number;
 	headers: Headers;
-	body?: string | Uint8Array;
+	body?: StrictBody;
 };
 
 export type GetSession<Locals = Record<string, any>, Session = any> = {
