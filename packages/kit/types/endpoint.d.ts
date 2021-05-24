@@ -13,7 +13,7 @@ type JSONValue =
 export type EndpointOutput = {
 	status?: number;
 	headers?: Partial<Headers>;
-	body?: string | Uint8Array | JSONValue;
+	body?: JSONValue | Uint8Array;
 };
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
