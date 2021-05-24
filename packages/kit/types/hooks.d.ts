@@ -1,12 +1,9 @@
-import { BaseBody, Headers } from './helper';
+import { BaseBody, Headers, Location } from './helper';
 import { ServerRequest } from './endpoint';
 
-export type Incoming = {
+export type Incoming = Omit<Location, 'params'> & {
 	method: string;
-	host: string;
 	headers: Headers;
-	path: string;
-	query: URLSearchParams;
 	rawBody: string | Uint8Array;
 	body?: BaseBody;
 };

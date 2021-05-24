@@ -1,12 +1,8 @@
-import { Headers, ParameterizedBody } from './helper';
+import { Headers, Location, ParameterizedBody } from './helper';
 
-export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
+export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
 	method: string;
-	host: string;
 	headers: Headers;
-	path: string;
-	params: Record<string, string>;
-	query: URLSearchParams;
 	rawBody: string | Uint8Array;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
