@@ -96,7 +96,7 @@ importers:
       c8: ^7.7.2
       compression: ^1.7.4
       node-fetch: ^3.0.0-beta.9
-      polka: ^1.0.0-next.14
+      polka: ^1.0.0-next.15
       rollup: ^2.47.0
       sirv: ^1.0.11
       typescript: ^4.2.4
@@ -107,7 +107,7 @@ importers:
       c8: 7.7.2
       compression: 1.7.4
       node-fetch: 3.0.0-beta.9
-      polka: 1.0.0-next.14
+      polka: 1.0.0-next.15
       rollup: 2.47.0
       sirv: 1.0.11
       typescript: 4.2.4
@@ -564,6 +564,10 @@ packages:
 
   /@polka/url/1.0.0-next.12:
     resolution: {integrity: sha512-6RglhutqrGFMO1MNUXp95RBuYIuc8wTnMAV5MUhLmjTOy78ncwOw7RgeQ/HeymkKXRhZd0s2DNrM1rL7unk3MQ==}
+    dev: true
+
+  /@polka/url/1.0.0-next.15:
+    resolution: {integrity: sha512-15spi3V28QdevleWBNXE4pIls3nFZmBbUGrW9IVPwiQczuSb9n76TCB4bsk8TSel+I1OkHEdPhu5QKMfY6rQHA==}
     dev: true
 
   /@rollup/plugin-commonjs/17.1.0_rollup@2.47.0:
@@ -2859,11 +2863,11 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /polka/1.0.0-next.14:
-    resolution: {integrity: sha512-nRxh6lifEred8F973wMJ3YA7z8EBAf+lWFLbhIh4MnYJXmZododD8FDGj+R81xnuNNG8b4PDqNXvrB5ShKcStA==}
-    engines: {node: '>=6'}
+  /polka/1.0.0-next.15:
+    resolution: {integrity: sha512-zBCZO40+USkSj0GDHMqufthqk4TIRc9xVGd50LbMvYNEwGHK8dZczLBQtw9pPHBM+i/Xg7ed7+c+r6J68XkWLg==}
+    engines: {node: '>=8'}
     dependencies:
-      '@polka/url': 1.0.0-next.12
+      '@polka/url': 1.0.0-next.15
       trouter: 3.2.0
     dev: true
 
