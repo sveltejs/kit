@@ -31,7 +31,7 @@
 		"rimraf": "^3.0.2",
 		"rollup": "^2.47.0",
 		"selfsigned": "^1.10.11",
-		"sirv": "^1.0.11",
+		"sirv": "^1.0.12",
 		"svelte": "^3.38.2",
 		"svelte-check": "^1.5.2",
 		"tiny-glob": "^0.2.8",

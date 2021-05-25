@@ -26,9 +26,9 @@
 		"c8": "^7.7.2",
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0-beta.9",
-		"polka": "^1.0.0-next.14",
+		"polka": "^1.0.0-next.15",
 		"rollup": "^2.47.0",
-		"sirv": "^1.0.11",
+		"sirv": "^1.0.12",
 		"typescript": "^4.2.4",
 		"uvu": "^0.5.1"
 	},
