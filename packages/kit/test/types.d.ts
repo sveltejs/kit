@@ -1,4 +1,4 @@
-/// <reference types="@sveltejs/kit" />
+/// <reference types="../types/index.js" />
 
 import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
 import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';

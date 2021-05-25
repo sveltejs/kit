@@ -121,6 +121,15 @@ export default function (test) {
 
 			const requests2 = await capture_requests(() => app.goto('/routing/prefetched'));
 			assert.equal(requests2, []);
+
+			try {
+				await app.prefetch('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (e) {
+				assert.ok(
+					e.message.includes('Attempted to prefetch a URL that does not belong to this app')
+				);
+			}
 		}
 	});
 
@@ -181,6 +190,18 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'Great success!');
 	});
 
+	test(
+		'back button returns to previous route when previous route has been navigated to via hash anchor',
+		'/routing/hashes/a',
+		async ({ page, clicknav }) => {
+			await clicknav('[href="#hash-target"]');
+			await clicknav('[href="/routing/hashes/b"]');
+
+			await page.goBack();
+			assert.equal(await page.textContent('h1'), 'a');
+		}
+	);
+
 	test('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
 		assert.equal(await page.textContent('h1'), 'borax is a mineral');
 
@@ -198,6 +219,15 @@ export default function (test) {
 			await clicknav('[href="/routing/split-params/x-y-z"]');
 			assert.equal(await page.textContent('h1'), 'x');
 			assert.equal(await page.textContent('h2'), 'y-z');
+		}
+	);
+
+	test(
+		'ignores navigation to URLs the app does not own',
+		'/routing',
+		async ({ page, clicknav }) => {
+			await clicknav('[href="https://www.google.com"]');
+			assert.equal(await page.url(), 'https://www.google.com/');
 		}
 	);
 }

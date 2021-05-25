@@ -5,8 +5,6 @@
 '@sveltejs/adapter-node': patch
 '@sveltejs/adapter-static': patch
 '@sveltejs/adapter-vercel': patch
-'create-svelte': patch
-'@sveltejs/kit': patch
 ---
 
-Fix workspace dependencies
+Make kit a peerDependency of the adapters

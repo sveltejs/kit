@@ -15,6 +15,8 @@ If unimplemented, defaults to `({ request, render }) => render(request)`.
 To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
 ```ts
+type Headers = Record<string, string>;
+
 type Request<Locals = Record<string, any>> = {
 	method: string;
 	host: string;
@@ -23,19 +25,19 @@ type Request<Locals = Record<string, any>> = {
 	params: Record<string, string>;
 	query: URLSearchParams;
 	rawBody: string | Uint8Array;
-	body: string | Uint8Array | ReadOnlyFormData | JSONValue;
-	locals: Locals;
+	body: ParameterizedBody<Body>;
+	locals: Locals; // populated by hooks handle
 };
 
 type Response = {
-	status?: number;
-	headers?: Headers;
-	body?: any;
+	status: number;
+	headers: Headers;
+	body?: string | Uint8Array;
 };
 
-type Handle<Locals = Record<string, any>> = ({
-	request: Request<Locals>,
-	render: (request: Request<Locals>) => Promise<Response>
+type Handle<Locals = Record<string, any>> = (input: {
+	request: Request<Locals>;
+	render: (request: Request<Locals>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;
 ```
 
