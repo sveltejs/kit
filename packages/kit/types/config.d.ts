@@ -22,7 +22,7 @@ export type AdapterUtils = {
 
 export type Adapter = {
 	name: string;
-	adapt: (utils: AdapterUtils) => Promise<void>;
+	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
 };
 
 export type Config = {

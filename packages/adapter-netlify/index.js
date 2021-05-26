@@ -9,7 +9,7 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-netlify',
 
-		async adapt(utils) {
+		async adapt({ utils }) {
 			const { publish, functions } = validate_config().build;
 
 			utils.rimraf(publish);

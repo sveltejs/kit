@@ -3,7 +3,7 @@
 
 import './ambient-modules';
 
-export { Adapter, AdapterUtils, Config } from './config';
+export { Adapter, AdapterUtils, Config, ValidatedConfig } from './config';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, Load, Page } from './page';
 export {
