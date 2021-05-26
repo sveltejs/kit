@@ -79,57 +79,6 @@ class Watcher extends EventEmitter {
 		/** @type {any} */
 		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
-		/** @type {?(req: any, res: any) => void} */
-		let viteHandler = (res, req) => {
-			res.statusCode = 204;
-			res.end();
-		};
-
-		this.server = await get_server(this.port, this.host, this.https, user_config, (req, res) => {
-			viteHandler(req, res);
-		});
-
-		/**
-		 * @type {vite.ViteDevServer}
-		 */
-		this.vite = await vite.createServer({
-			...user_config,
-			configFile: false,
-			root: this.cwd,
-			resolve: {
-				...user_config.resolve,
-				alias: {
-					...(user_config.resolve && user_config.resolve.alias),
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
-			},
-			plugins: [
-				...(user_config.plugins || []),
-				svelte({
-					extensions: this.config.extensions,
-					emitCss: !this.config.kit.amp
-				})
-			],
-			publicDir: this.config.kit.files.assets,
-			server: {
-				...user_config.server,
-				middlewareMode: true,
-				hmr: {
-					...(user_config.server && user_config.server.hmr),
-					...(this.https ? { server: this.server, port: this.port } : {})
-				}
-			},
-			optimizeDeps: {
-				...user_config.optimizeDeps,
-				entries: []
-			},
-			ssr: {
-				...user_config.ssr,
-				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
-			}
-		});
-
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
 		/**
@@ -145,7 +94,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
-		viteHandler = (req, res) => {
+		this.server = await get_server(this.port, this.host, this.https, user_config, (req, res) => {
 			this.vite.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);
@@ -324,7 +273,48 @@ class Watcher extends EventEmitter {
 					res.end(e.stack);
 				}
 			});
-		};
+		});
+
+		/**
+		 * @type {vite.ViteDevServer}
+		 */
+		this.vite = await vite.createServer({
+			...user_config,
+			configFile: false,
+			root: this.cwd,
+			resolve: {
+				...user_config.resolve,
+				alias: {
+					...(user_config.resolve && user_config.resolve.alias),
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
+				}
+			},
+			plugins: [
+				...(user_config.plugins || []),
+				svelte({
+					extensions: this.config.extensions,
+					emitCss: !this.config.kit.amp
+				})
+			],
+			publicDir: this.config.kit.files.assets,
+			server: {
+				...user_config.server,
+				middlewareMode: true,
+				hmr: {
+					...(user_config.server && user_config.server.hmr),
+					...(this.https ? { server: this.server, port: this.port } : {})
+				}
+			},
+			optimizeDeps: {
+				...user_config.optimizeDeps,
+				entries: []
+			},
+			ssr: {
+				...user_config.ssr,
+				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
+			}
+		});
 	}
 
 	update() {
