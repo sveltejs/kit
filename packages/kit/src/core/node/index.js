@@ -1,6 +1,6 @@
 /**
  * @param {import('http').IncomingMessage} req
- * @returns {Promise<string | Uint8Array>}
+ * @returns {Promise<import('types/hooks').StrictBody>}
  */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {

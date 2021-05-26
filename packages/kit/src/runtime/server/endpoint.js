@@ -10,7 +10,7 @@ function error(body) {
 }
 
 /**
- * @param {import('types/endpoint').ServerRequest} request
+ * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
  * @returns {Promise<import('types/hooks').ServerResponse>}
  */
@@ -51,14 +51,14 @@ export default async function render_route(request, route) {
 				);
 			}
 
-			/** @type {string | Uint8Array} */
+			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
 			if (typeof body === 'object' && (!type || type === 'application/json')) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				normalized_body = JSON.stringify(body);
 			} else {
-				normalized_body = /** @type {string | Uint8Array} */ (body);
+				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 			}
 
 			return { status, body: normalized_body, headers };
