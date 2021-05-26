@@ -7,7 +7,6 @@ import { get_utils } from './utils.js';
  * @param {import('types/internal').BuildData} build_data
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
-
 export async function adapt(config, build_data, { cwd = process.cwd(), verbose }) {
 	const { name, adapt } = config.kit.adapter;
 
