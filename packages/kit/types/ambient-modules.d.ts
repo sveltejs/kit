@@ -34,7 +34,10 @@ declare module '$app/navigation' {
 	 */
 	export function invalidate(href: string): Promise<any>;
 	/**
-	 * Programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's load function with the appropriate options.
+	 * Programmatically prefetches the given page, which means
+	 *  1. ensuring that the code for the page is loaded, and
+	 *  2. calling the page's load function with the appropriate options.
+	 *
 	 * This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with `sveltekit:prefetch`.
 	 * If the next navigation is to `href`, the values returned from load will be used, making navigation instantaneous.
 	 * Returns a Promise that resolves when the prefetch is complete.
@@ -45,8 +48,11 @@ declare module '$app/navigation' {
 	/**
 	 * Programmatically prefetches the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
-	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`)
-	 * or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike prefetch, this won't call preload for individual pages.
+	 *
+	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
+	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
+	 *
+	 * Unlike prefetch, this won't call preload for individual pages.
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
@@ -65,14 +71,15 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
+	type Page = import('@sveltejs/kit').Page;
+	type Navigating = { from: Page; to: Page };
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores(): {
-		navigating: Readable<{ from: Page; to: Page } | null>;
+		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
 		session: Writable<any>;
 	};
@@ -85,7 +92,7 @@ declare module '$app/stores' {
 	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<{ from: Page; to: Page } | null>;
+	export const navigating: Readable<Navigating | null>;
 	/**
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.

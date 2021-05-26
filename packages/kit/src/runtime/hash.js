@@ -1,4 +1,4 @@
-/** @param {string | Uint8Array} value */
+/** @param {import('types/hooks').StrictBody} value */
 export function hash(value) {
 	let hash = 5381;
 	let i = value.length;
