@@ -1,7 +1,7 @@
 {
 	"scripts": {
-		"validate": "svelte-check --tsconfig ./tsconfig.json",
-		"validate:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
+		"check": "svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch"
 	},
 	"devDependencies": {
 		"typescript": "^4.0.0",
