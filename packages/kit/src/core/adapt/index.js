@@ -7,6 +7,7 @@ import { get_utils } from './utils.js';
  * @param {import('types/internal').BuildData} build_data
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
+
 export async function adapt(config, build_data, { cwd = process.cwd(), verbose }) {
 	const { name, adapt } = config.kit.adapter;
 
@@ -14,7 +15,7 @@ export async function adapt(config, build_data, { cwd = process.cwd(), verbose }
 
 	const log = logger({ verbose });
 	const utils = get_utils({ cwd, config, build_data, log });
-	await adapt(utils);
+	await adapt({ utils, svelteConfig: config });
 
 	log.success('done');
 }

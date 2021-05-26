@@ -25,7 +25,7 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-begin',
 
-		async adapt(utils) {
+		async adapt({ utils }) {
 			utils.log.minor('Parsing app.arc file');
 			const { static: static_mount_point } = parse_arc('app.arc');
 
