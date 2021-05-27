@@ -41,7 +41,7 @@ export async function respond(incoming, options, state = {}) {
 				params: null,
 				locals: {}
 			},
-			render: async (request) => {
+			respond: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						options,

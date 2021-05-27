@@ -8,9 +8,9 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs on every request, and determines the response. It receives the `request` object and `render` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and `respond` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
-If unimplemented, defaults to `({ request, render }) => render(request)`.
+If unimplemented, defaults to `({ request, respond }) => respond(request)`.
 
 To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
@@ -37,16 +37,16 @@ type Response = {
 
 type Handle<Locals = Record<string, any>> = (input: {
 	request: Request<Locals>;
-	render: (request: Request<Locals>) => Response | Promise<Response>;
+	respond: (request: Request<Locals>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;
 ```
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, render }) {
+export async function handle({ request, respond }) {
 	request.locals.user = await getUserInformation(request.headers.cookie);
 
-	const response = await render(request);
+	const response = await respond(request);
 
 	return {
 		...response,

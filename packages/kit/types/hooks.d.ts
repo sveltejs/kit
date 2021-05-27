@@ -29,5 +29,5 @@ export type GetSession<Locals = Record<string, any>, Session = any> = {
 
 export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
-	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
+	respond: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
 }) => ServerResponse | Promise<ServerResponse>;
