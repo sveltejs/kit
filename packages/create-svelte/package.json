@@ -1,13 +1,13 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.70",
+	"version": "2.0.0-next.71",
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
 		"prompts": "^2.4.1"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
 		"@types/prettier": "^2.2.3",
 		"@types/prompts": "^2.0.11",

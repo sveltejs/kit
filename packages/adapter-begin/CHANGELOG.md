@@ -1,5 +1,22 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- 1ba1784: Prevent adapter from splitting query params if they contain commas
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 1.0.0-next.7
 
 ### Patch Changes

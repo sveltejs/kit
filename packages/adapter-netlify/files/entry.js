@@ -4,15 +4,9 @@ import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolve
 import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 export async function handler(event) {
-	const { path, httpMethod, headers, queryStringParameters, body, isBase64Encoded } = event;
+	const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;
 
-	const query = new URLSearchParams();
-	for (const k in queryStringParameters) {
-		const value = queryStringParameters[k];
-		value.split(', ').forEach((v) => {
-			query.append(k, v);
-		});
-	}
+	const query = new URLSearchParams(rawQuery);
 
 	const rawBody =
 		headers['content-type'] === 'application/octet-stream'

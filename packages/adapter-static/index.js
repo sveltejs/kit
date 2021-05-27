@@ -10,7 +10,7 @@ export default function ({ pages = 'build', assets = pages, fallback = null } = 
 	const adapter = {
 		name: '@sveltejs/adapter-static',
 
-		async adapt(utils) {
+		async adapt({ utils }) {
 			utils.copy_static_files(assets);
 			utils.copy_client_files(assets);
 

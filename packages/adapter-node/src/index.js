@@ -4,12 +4,8 @@ import * as app from './app.js';
 
 const { HOST = '0.0.0.0', PORT = 3000 } = process.env;
 
-const instance = createServer({ render: app.render }).listen(PORT, HOST, (err) => {
-	if (err) {
-		console.log('error', err);
-	} else {
-		console.log(`Listening on port ${PORT}`);
-	}
+const instance = createServer({ render: app.render }).listen(PORT, HOST, () => {
+	console.log(`Listening on port ${PORT}`);
 });
 
 export { instance };

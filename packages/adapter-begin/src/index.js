@@ -4,15 +4,9 @@ import url from 'url';
 import app from '@architect/shared/app.js'; // eslint-disable-line import/no-unresolved
 
 async function handler(event) {
-	const { host, rawPath: path, httpMethod, headers, queryStringParameters, body } = event;
+	const { host, rawPath: path, httpMethod, rawQueryString, headers, body } = event;
 
-	const query = new url.URLSearchParams();
-	for (const k in queryStringParameters) {
-		const value = queryStringParameters[k];
-		value.split(', ').forEach((v) => {
-			query.append(k, v);
-		});
-	}
+	const query = new url.URLSearchParams(rawQueryString);
 
 	const rendered = await app.render({
 		host,

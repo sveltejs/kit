@@ -1,5 +1,20 @@
 # @sveltejs/kit
 
+## 1.0.0-next.109
+
+### Patch Changes
+
+- 261ee1c: Update compatible Node versions
+- ec156c6: let hash only changes be handled by router
+- 586785d: Allow passing HTTPS key pair in Vite section of config
+
+## 1.0.0-next.108
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+- 37fc04f: Ignore URLs that the app does not own
+
 ## 1.0.0-next.107
 
 ### Patch Changes

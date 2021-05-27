@@ -1,5 +1,22 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- 71e293d: change toml parser to support dotted keys and other language features added after the TOML v0.4.0 spec
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 1.0.0-next.7
 
 ### Patch Changes

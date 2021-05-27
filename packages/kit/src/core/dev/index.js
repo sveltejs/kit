@@ -131,7 +131,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
-		this.server = await get_server(this.port, this.host, this.https, (req, res) => {
+		this.server = await get_server(this.port, this.host, this.https, user_config, (req, res) => {
 			this.vite.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);

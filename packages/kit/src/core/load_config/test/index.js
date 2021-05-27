@@ -37,6 +37,17 @@ async function testLoadDefaultConfig(path) {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			package: {
+				dir: 'package',
+				exports: {
+					include: ['**'],
+					exclude: ['_*', '**/_*']
+				},
+				files: {
+					include: ['**'],
+					exclude: []
+				}
+			},
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
 			router: true,

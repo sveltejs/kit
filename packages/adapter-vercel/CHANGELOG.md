@@ -1,5 +1,24 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
+## 1.0.0-next.18
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+- Updated dependencies [dad93fc]
+- Updated dependencies [37fc04f]
+  - @sveltejs/kit@1.0.0-next.108
+
 ## 1.0.0-next.17
 
 ### Patch Changes

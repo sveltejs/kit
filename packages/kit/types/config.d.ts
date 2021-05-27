@@ -22,7 +22,7 @@ export type AdapterUtils = {
 
 export type Adapter = {
 	name: string;
-	adapt: (utils: AdapterUtils) => Promise<void>;
+	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
 };
 
 export type Config = {
@@ -44,6 +44,17 @@ export type Config = {
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
+		package?: {
+			dir?: string;
+			exports?: {
+				include?: string[];
+				exclude?: string[];
+			};
+			files?: {
+				include?: string[];
+				exclude?: string[];
+			};
+		};
 		paths?: {
 			base?: string;
 			assets?: string;
@@ -83,6 +94,17 @@ export type ValidatedConfig = {
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;
+		package: {
+			dir: string;
+			exports: {
+				include: string[];
+				exclude: string[];
+			};
+			files: {
+				include: string[];
+				exclude: string[];
+			};
+		};
 		paths: {
 			base: string;
 			assets: string;

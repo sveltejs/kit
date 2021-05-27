@@ -7,7 +7,7 @@ interface ReadOnlyFormData extends Iterator<[string, string]> {
 	values: () => Iterator<string>;
 }
 
-export type BaseBody = string | Buffer | ReadOnlyFormData;
+type BaseBody = string | Buffer | ReadOnlyFormData;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: BaseBody & Body;
@@ -17,6 +17,13 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 // 'set-cookie' is a `string[]` (or at least `string | string[]`)
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
+
+export type Location<Params extends Record<string, string> = Record<string, string>> = {
+	host: string;
+	path: string;
+	params: Params;
+	query: URLSearchParams;
+};
 
 export type MaybePromise<T> = T | Promise<T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>

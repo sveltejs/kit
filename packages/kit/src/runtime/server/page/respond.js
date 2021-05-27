@@ -6,7 +6,7 @@ import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {{
- *   request: import('types/endpoint').ServerRequest;
+ *   request: import('types/hooks').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   $session: any;

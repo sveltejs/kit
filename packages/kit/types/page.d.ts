@@ -1,4 +1,4 @@
-import { MaybePromise, InferValue } from './helper';
+import { Location as Page, MaybePromise, InferValue } from './helper';
 
 export type LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
@@ -61,9 +61,4 @@ export type ErrorLoad<
 	>
 >;
 
-export type Page<Params extends Record<string, string> = Record<string, string>> = {
-	host: string;
-	path: string;
-	params: Params;
-	query: URLSearchParams;
-};
+export { Page };
