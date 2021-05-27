@@ -32,7 +32,8 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
   command = "npm run build"
   publish = "build/"
   functions = "functions/"
-	framework = "svelte"
+[dev]
+  framework = "svelte"
 ```
 
 It's recommended that you add the `build` and `functions` folders (or whichever other folders you specify) to your `.gitignore`.
