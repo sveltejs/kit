@@ -149,6 +149,9 @@ async function build_client({
 				...(user_config.build && user_config.build.rollupOptions),
 				input,
 				output: {
+					...(user_config.build &&
+						user_config.build.rollupOptions &&
+						user_config.build.rollupOptions.output),
 					entryFileNames: '[name]-[hash].js',
 					chunkFileNames: 'chunks/[name]-[hash].js',
 					assetFileNames: 'assets/[name]-[hash][extname]'
