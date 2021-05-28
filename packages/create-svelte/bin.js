@@ -184,8 +184,8 @@ function write_common_files(cwd, options) {
 	const pkg = /** @type {any} */ (JSON.parse(fs.readFileSync(pkg_file, 'utf-8')));
 
 	files.forEach((file) => {
-		const include = file.include.every((condition) => options[condition]);
-		const exclude = file.exclude.some((condition) => options[condition]);
+		const include = file.include.every((condition) => matchesCondition(condition, options));
+		const exclude = file.exclude.some((condition) => matchesCondition(condition, options));
 
 		if (exclude || !include) return;
 
@@ -203,6 +203,17 @@ function write_common_files(cwd, options) {
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
 
 	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
+}
+
+/**
+ * @param {import('./types/internal').Condition} condition
+ * @param {import('./types/internal').Options} options
+ * @returns {boolean}
+ */
+function matchesCondition(condition, options) {
+	return condition === 'default' || condition === 'skeleton'
+		? options.template === condition
+		: options[condition];
 }
 
 /**
