@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and `resolve` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
