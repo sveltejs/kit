@@ -242,7 +242,7 @@ export class Router {
 
 			if (incorrect) {
 				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
-				history.replaceState({}, '', `${info.path}${location.search}`);
+				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
 			}
 		}
 
