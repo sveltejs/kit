@@ -51,8 +51,9 @@ function handle_error(error) {
 /**
  * @param {number} port
  * @param {boolean} https
+ * @param {string} basePath
  */
-async function launch(port, https) {
+async function launch(port, https, basePath) {
 	const { exec } = await import('child_process');
 	let cmd = 'open';
 	if (process.platform == 'win32') {
@@ -64,7 +65,7 @@ async function launch(port, https) {
 			cmd = 'xdg-open';
 		}
 	}
-	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}`);
+	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}${basePath}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
@@ -81,6 +82,7 @@ prog
 
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
+		const basePath = config.kit.paths.base;
 
 		const { dev } = await import('./core/dev/index.js');
 
@@ -95,7 +97,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			welcome({ port, host, https, open });
+			welcome({ port, host, https, open, basePath });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -148,13 +150,13 @@ prog
 
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
-
+		const basePath = config.kit.paths.base;
 		const { start } = await import('./core/start/index.js');
 
 		try {
 			await start({ port, host, config, https });
 
-			welcome({ port, host, https, open });
+			welcome({ port, host, https, open, basePath });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -218,10 +220,11 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   basePath: string;
  * }} param0
  */
-function welcome({ port, host, https, open }) {
-	if (open) launch(port, https);
+function welcome({ port, host, https, open, basePath }) {
+	if (open) launch(port, https, basePath);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
@@ -234,12 +237,12 @@ function welcome({ port, host, https, open }) {
 
 			// prettier-ignore
 			if (details.internal) {
-				console.log(`  ${colors.gray('local:  ')} ${protocol}//${colors.bold(`localhost:${port}`)}`);
+				console.log(`  ${colors.gray('local:  ')} ${protocol}//${colors.bold(`localhost:${port}${basePath}`)}`);
 			} else {
 				if (details.mac === '00:00:00:00:00:00') return;
 
 				if (exposed) {
-					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
+					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}${basePath}`)}`);
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}
