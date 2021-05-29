@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.111
+
+### Patch Changes
+
+- eae1b1d: Rename handle's render parameter to resolve
+
 ## 1.0.0-next.110
 
 ### Patch Changes
