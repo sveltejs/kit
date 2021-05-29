@@ -92,9 +92,24 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} path
+	 */
+	function normalizeTrailingSlash(path) {
+		if (config.kit.trailingSlash === 'always') {
+			return path.endsWith('/') ? path : `${path}/`;
+		}
+		if (config.kit.trailingSlash === 'never') {
+			return !path.endsWith('/') || path === '/' ? path : path.slice(0, -1);
+		}
+		return path;
+	}
+
+	/**
+	 * @param {string} path
 	 * @param {string} parent
 	 */
 	async function visit(path, parent) {
+		path = normalizeTrailingSlash(path);
+
 		if (seen.has(path)) return;
 		seen.add(path);
 
