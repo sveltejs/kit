@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.72
+
+### Patch Changes
+
+- 1739443: Add svelte-check to TS templates
+- 6372690: gitignore package directory
+- f211906: Adjust build-template script to include package.json
+
 ## 2.0.0-next.71
 
 ### Patch Changes
