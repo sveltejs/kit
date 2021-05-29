@@ -8,7 +8,7 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
 
-		async adapt(utils) {
+		async adapt({ utils }) {
 			const dir = '.vercel_build_output';
 			utils.rimraf(dir);
 

@@ -1,16 +1,5 @@
-import { Headers, ParameterizedBody } from './helper';
-
-export type ServerRequest<Locals = Record<string, any>, Body = unknown> = {
-	method: string;
-	host: string;
-	headers: Headers;
-	path: string;
-	params: Record<string, string>;
-	query: URLSearchParams;
-	rawBody: string | Uint8Array;
-	body: ParameterizedBody<Body>;
-	locals: Locals;
-};
+import { ServerRequest } from './hooks';
+import { Headers } from './helper';
 
 type JSONValue =
 	| string
@@ -24,7 +13,7 @@ type JSONValue =
 export type EndpointOutput = {
 	status?: number;
 	headers?: Partial<Headers>;
-	body?: string | Uint8Array | JSONValue;
+	body?: JSONValue | Uint8Array;
 };
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
