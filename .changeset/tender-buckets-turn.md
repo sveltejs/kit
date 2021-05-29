@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Rename handle's render parameter to respond
+Rename handle's render parameter to resolve

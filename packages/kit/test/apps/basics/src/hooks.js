@@ -6,13 +6,13 @@ export function getSession(request) {
 }
 
 /** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, respond }) {
+export async function handle({ request, resolve }) {
 	const cookies = cookie.parse(request.headers.cookie || '');
 
 	request.locals.answer = 42;
 	request.locals.name = cookies.name;
 
-	const response = await respond(request);
+	const response = await resolve(request);
 
 	if (response) {
 		return {

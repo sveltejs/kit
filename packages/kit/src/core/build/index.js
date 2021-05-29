@@ -363,7 +363,7 @@ async function build_server(
 			// named imports without triggering Rollup's missing import detection
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
-				handle: hooks.handle || (({ request, respond }) => respond(request))
+				handle: hooks.handle || (({ request, resolve }) => resolve(request))
 			});
 
 			const module_lookup = {
