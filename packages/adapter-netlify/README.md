@@ -42,12 +42,18 @@ You may build your app using functionality provided directly by SvelteKit withou
 
 ### Using Netlify Redirect Rules
 
+> [Netlify docs here](https://docs.netlify.com/routing/redirects/)
+
+Netlify supports declarative redirects via a `_redirects` file placed in your `publish` directory (usually "`build`", as configured in your `netlify.toml` above. NOT in your project root next to `netlify.toml`).
+
 During compilation a required "catch all" redirect rule is automatically appended to your `_redirects` file. (If it doesn't exist yet, it will be created.) That means:
 
 - `[[redirects]]` in `netlify.toml` will never match as `_redirects` has a [higher priority](https://docs.netlify.com/routing/redirects/#rule-processing-order). So always put your rules in the [`_redirects` file](https://docs.netlify.com/routing/redirects/#syntax-for-the-redirects-file).
 - `_redirects` shouldn't have any custom "catch all" rules such as `/* /foobar/:splat`. Otherwise the automatically appended rule will never be applied as Netlify is only processing [the first matching rule](https://docs.netlify.com/routing/redirects/#rule-processing-order).
 
 ### Using Netlify Forms
+
+> [Netlify docs here](https://docs.netlify.com/forms/setup/)
 
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact.svelte`. (Don't forget to add the hidden `form-name` input element!)
 2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
