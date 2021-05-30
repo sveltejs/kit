@@ -1,12 +1,12 @@
-import { lowercase_keys } from '../utils.js';
 import { read_only_form_data } from './read_only_form_data.js';
 
-/** @param {import('types/hooks').Incoming} req */
-export function parse_body(req) {
-	const raw = req.rawBody;
+/**
+ * @param {import('types/hooks').StrictBody} raw
+ * @param {import('types/helper').Headers} headers
+ */
+export function parse_body(raw, headers) {
 	if (!raw) return raw;
 
-	const headers = lowercase_keys(req.headers);
 	const [type, ...directives] = headers['content-type'].split(/;\s*/);
 
 	if (typeof raw === 'string') {
