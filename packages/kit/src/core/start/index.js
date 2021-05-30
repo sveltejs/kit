@@ -40,6 +40,8 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 	});
 
 	app.init({
+		// This didn't have any impact
+		// paths: config.kit.paths,
 		paths: {
 			base: '',
 			assets: '/.'

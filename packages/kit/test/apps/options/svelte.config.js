@@ -7,6 +7,9 @@ const config = {
 			routes: 'source/pages',
 			template: 'source/template.html'
 		},
+		paths: {
+			base: '/base-path'
+		},
 		appDir: '_wheee',
 		floc: true,
 		target: '#content-goes-here',

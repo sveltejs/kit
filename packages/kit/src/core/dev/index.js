@@ -86,6 +86,8 @@ class Watcher extends EventEmitter {
 			...user_config,
 			configFile: false,
 			root: this.cwd,
+			// Adding this fixes some tests but breaks others.
+			// base: `${this.config.kit.paths.base}/`,
 			resolve: {
 				...user_config.resolve,
 				alias: {
