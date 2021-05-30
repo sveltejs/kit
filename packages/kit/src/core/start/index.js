@@ -48,19 +48,28 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	return get_server(port, host, use_https, (req, res) => {
+	return get_server(port, host, use_https, config.kit, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {
 			static_handler(req, res, async () => {
+				let body;
+
+				try {
+					body = await getRawBody(req);
+				} catch (err) {
+					res.statusCode = err.status || 400;
+					return res.end(err.reason || 'Invalid request body');
+				}
+
 				const rendered = await app.render({
 					host: /** @type {string} */ (config.kit.host ||
 						req.headers[config.kit.hostHeader || 'host']),
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
 					path: decodeURIComponent(parsed.pathname),
-					rawBody: await getRawBody(req),
-					query: new URLSearchParams(parsed.query || '')
+					query: new URLSearchParams(parsed.query || ''),
+					rawBody: body
 				});
 
 				if (rendered) {

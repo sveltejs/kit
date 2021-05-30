@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.12",
+	"version": "1.0.0-next.15",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -17,11 +17,14 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"@sveltejs/kit": "workspace:^",
 		"esbuild": "^0.11.18",
-		"toml": "^3.0.0"
+		"@iarna/toml": "^2.2.5"
+	},
+	"peerDependencies": {
+		"@sveltejs/kit": "workspace:*"
 	},
 	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
 		"typescript": "^4.2.4"
 	}
 }

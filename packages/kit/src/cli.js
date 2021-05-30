@@ -178,6 +178,22 @@ prog
 		);
 	});
 
+prog
+	.command('package')
+	.describe('Create a package')
+	.option('-d, --dir', 'Destination directory', 'package')
+	.action(async () => {
+		const config = await get_config();
+
+		const { make_package } = await import('./core/make_package/index.js');
+
+		try {
+			await make_package(config);
+		} catch (error) {
+			handle_error(error);
+		}
+	});
+
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */

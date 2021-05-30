@@ -1,5 +1,36 @@
 # @sveltejs/kit
 
+## 1.0.0-next.111
+
+### Patch Changes
+
+- eae1b1d: Rename handle's render parameter to resolve
+
+## 1.0.0-next.110
+
+### Patch Changes
+
+- 6372690: Add svelte-kit package command
+- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s)
+- bf77940: bump `polka` and `sirv` dependency versions
+- 2172469: Upgrade to Vite 2.3.4
+- 028abd9: Pass validated svelte config to adapter adapt function
+
+## 1.0.0-next.109
+
+### Patch Changes
+
+- 261ee1c: Update compatible Node versions
+- ec156c6: let hash only changes be handled by router
+- 586785d: Allow passing HTTPS key pair in Vite section of config
+
+## 1.0.0-next.108
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+- 37fc04f: Ignore URLs that the app does not own
+
 ## 1.0.0-next.107
 
 ### Patch Changes

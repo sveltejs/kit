@@ -1,3 +1,5 @@
+import { Location as Page } from './helper';
+
 export type LoadInput = {
 	page: Page;
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -22,9 +24,4 @@ export type LoadOutput = {
 /* Publicized Types */
 export type Load = (input: LoadInput) => LoadOutput | Promise<LoadOutput>;
 export type ErrorLoad = (input: ErrorLoadInput) => LoadOutput | Promise<LoadOutput>;
-export type Page = {
-	host: string;
-	path: string;
-	params: Record<string, string>;
-	query: URLSearchParams;
-};
+export { Page };

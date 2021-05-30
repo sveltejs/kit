@@ -1,5 +1,39 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 028abd9: Pass validated svelte config to adapter adapt function
+- Updated dependencies [6372690]
+- Updated dependencies [c3d36a3]
+- Updated dependencies [bf77940]
+- Updated dependencies [2172469]
+- Updated dependencies [028abd9]
+  - @sveltejs/kit@1.0.0-next.110
+
+## 1.0.0-next.14
+
+### Patch Changes
+
+- f59530f: Allow custom redirects for Netlify Adapter
+- 71e293d: change toml parser to support dotted keys and other language features added after the TOML v0.4.0 spec
+- 1ba1784: Prevent adapter from splitting query params if they contain commas
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
+## 1.0.0-next.13
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+- Updated dependencies [dad93fc]
+- Updated dependencies [37fc04f]
+  - @sveltejs/kit@1.0.0-next.108
+
 ## 1.0.0-next.12
 
 ### Patch Changes

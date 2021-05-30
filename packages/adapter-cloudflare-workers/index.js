@@ -1,14 +1,14 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
-import toml from 'toml';
+import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
 export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
-		async adapt(utils) {
+		async adapt({ utils }) {
 			const { site } = validate_config(utils);
 
 			const bucket = site.bucket;

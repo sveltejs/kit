@@ -1,4 +1,4 @@
-declare function plugin(options: {
+declare function plugin(options?: {
 	pages?: string;
 	assets?: string;
 	fallback?: string;

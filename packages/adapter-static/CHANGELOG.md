@@ -1,5 +1,34 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- bf77940: bump `polka` and `sirv` dependency versions
+- 028abd9: Pass validated svelte config to adapter adapt function
+- Updated dependencies [6372690]
+- Updated dependencies [c3d36a3]
+- Updated dependencies [bf77940]
+- Updated dependencies [2172469]
+- Updated dependencies [028abd9]
+  - @sveltejs/kit@1.0.0-next.110
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- dca4946: Make kit a peerDependency of the adapters
+- Updated dependencies [261ee1c]
+- Updated dependencies [ec156c6]
+- Updated dependencies [586785d]
+  - @sveltejs/kit@1.0.0-next.109
+
+## 1.0.0-next.10
+
+### Patch Changes
+
+- dad93fc: Fix workspace dependencies
+
 ## 1.0.0-next.9
 
 ### Patch Changes

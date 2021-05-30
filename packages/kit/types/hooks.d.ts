@@ -1,20 +1,26 @@
-import { BaseBody, Headers } from './helper';
-import { ServerRequest } from './endpoint';
+import { Headers, Location, ParameterizedBody } from './helper';
 
-export type Incoming = {
+export type StrictBody = string | Uint8Array;
+
+export type Incoming = Omit<Location, 'params'> & {
 	method: string;
-	host: string;
 	headers: Headers;
-	path: string;
-	query: URLSearchParams;
-	rawBody: string | Uint8Array;
-	body?: BaseBody;
+	rawBody: StrictBody | null;
+	body?: ParameterizedBody;
+};
+
+export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
+	method: string;
+	headers: Headers;
+	rawBody: StrictBody | null;
+	body: ParameterizedBody<Body>;
+	locals: Locals;
 };
 
 export type ServerResponse = {
 	status: number;
 	headers: Headers;
-	body?: string | Uint8Array;
+	body?: StrictBody;
 };
 
 export type GetSession<Locals = Record<string, any>, Session = any> = {
@@ -23,7 +29,7 @@ export type GetSession<Locals = Record<string, any>, Session = any> = {
 
 export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
-	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
+	resolve: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
 }) => ServerResponse | Promise<ServerResponse>;
 
 export type ServerFetch = (req: Request) => Promise<Response>;

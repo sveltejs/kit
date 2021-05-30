@@ -7,7 +7,7 @@ const s = JSON.stringify;
 /**
  *
  * @param {{
- *   request: import('types/endpoint').ServerRequest;
+ *   request: import('types/hooks').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage;

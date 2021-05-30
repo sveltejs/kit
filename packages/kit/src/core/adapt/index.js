@@ -14,7 +14,7 @@ export async function adapt(config, build_data, { cwd = process.cwd(), verbose }
 
 	const log = logger({ verbose });
 	const utils = get_utils({ cwd, config, build_data, log });
-	await adapt(utils);
+	await adapt({ utils, config });
 
 	log.success('done');
 }
