@@ -106,3 +106,55 @@ function find_svelte_packages(cwd) {
 export function get_no_external(cwd, user_specified_deps = []) {
 	return [...user_specified_deps, ...find_svelte_packages(cwd)];
 }
+
+/**
+ * Merges b into a, recursively, mutating a.
+ * @param {Object} a
+ * @param {Object} b
+ * @param {string[]} path array of property names representing the current
+ *     location in the tree
+ */
+function merge_into(a, b, conflicts = [], path = []) {
+	const is_object = (x) => typeof x === 'object' && !Array.isArray(x);
+	for (const prop in b) {
+		if (is_object(b[prop])) {
+			if (!is_object(a[prop])) {
+				if (a[prop] !== undefined) {
+					conflicts.push([...path, prop].join('.'));
+				}
+				a[prop] = {};
+			}
+			merge_into(a[prop], b[prop], conflicts, [...path, prop]);
+		} else if (Array.isArray(b[prop])) {
+			if (!Array.isArray(a[prop])) {
+				if (a[prop] !== undefined) {
+					conflicts.push([...path, prop].join('.'));
+				}
+				a[prop] = [];
+			}
+			a[prop].push(...b[prop]);
+		} else {
+			if (a[prop] !== undefined) {
+				conflicts.push([...path, prop].join('.'));
+			}
+			a[prop] = b[prop];
+		}
+	}
+}
+
+/**
+ * Takes zero or more objects and returns a new object that has all the values
+ * deeply merged together. None of the original objects will be mutated at any
+ * level, and the returned object will have no references to the original
+ * objects at any depth. If there's a conflict the last one wins, except for
+ * arrays which will be combined.
+ * @param {...Object} objects
+ * @returns {[Object, string[]]} a 2-tuple with the merged object, and a list of
+ *     merge conflicts if there were any, in dotted notation
+ */
+export function deep_merge(...objects) {
+	const result = {};
+	const conflicts = [];
+	objects.forEach((o) => merge_into(result, o, conflicts));
+	return [result, conflicts];
+}
