@@ -44,7 +44,7 @@ You may build your app using functionality provided directly by SvelteKit withou
 
 > [Netlify docs here](https://docs.netlify.com/routing/redirects/)
 
-Netlify supports declarative redirects via a `_redirects` file placed in your `publish` directory (usually "`build`", as configured in your `netlify.toml` above. NOT in your project root next to `netlify.toml`).
+Netlify supports declarative redirects via a `_redirects` file. Place it in the `static/` folder, NOT in your project root next to `netlify.toml`.
 
 During compilation a required "catch all" redirect rule is automatically appended to your `_redirects` file. (If it doesn't exist yet, it will be created.) That means:
 
