@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix issue with base path redirect.
+Fix redirect URLs when removing/adding trailing slash when `base` path is set

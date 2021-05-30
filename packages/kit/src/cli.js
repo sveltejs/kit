@@ -51,9 +51,9 @@ function handle_error(error) {
 /**
  * @param {number} port
  * @param {boolean} https
- * @param {string} basePath
+ * @param {string} base
  */
-async function launch(port, https, basePath) {
+async function launch(port, https, base) {
 	const { exec } = await import('child_process');
 	let cmd = 'open';
 	if (process.platform == 'win32') {
@@ -65,7 +65,7 @@ async function launch(port, https, basePath) {
 			cmd = 'xdg-open';
 		}
 	}
-	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}${basePath}`);
+	exec(`${cmd} ${https ? 'https' : 'http'}://localhost:${port}${base}`);
 }
 
 const prog = sade('svelte-kit').version('__VERSION__');
@@ -82,7 +82,7 @@ prog
 
 		process.env.NODE_ENV = 'development';
 		const config = await get_config();
-		const basePath = config.kit.paths.base;
+		const { base } = config.kit.paths;
 
 		const { dev } = await import('./core/dev/index.js');
 
@@ -97,7 +97,7 @@ prog
 				process.stderr.write(data);
 			});
 
-			welcome({ port, host, https, open, basePath });
+			welcome({ port, host, https, open, base });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -150,13 +150,13 @@ prog
 
 		process.env.NODE_ENV = 'production';
 		const config = await get_config();
-		const basePath = config.kit.paths.base;
+		const { base } = config.kit.paths;
 		const { start } = await import('./core/start/index.js');
 
 		try {
 			await start({ port, host, config, https });
 
-			welcome({ port, host, https, open, basePath });
+			welcome({ port, host, https, open, base });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -220,11 +220,11 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
- *   basePath: string;
+ *   base: string;
  * }} param0
  */
-function welcome({ port, host, https, open, basePath }) {
-	if (open) launch(port, https, basePath);
+function welcome({ port, host, https, open, base }) {
+	if (open) launch(port, https, base);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
@@ -237,12 +237,12 @@ function welcome({ port, host, https, open, basePath }) {
 
 			// prettier-ignore
 			if (details.internal) {
-				console.log(`  ${colors.gray('local:  ')} ${protocol}//${colors.bold(`localhost:${port}${basePath}`)}`);
+				console.log(`  ${colors.gray('local:  ')} ${protocol}//${colors.bold(`localhost:${port}${base}`)}`);
 			} else {
 				if (details.mac === '00:00:00:00:00:00') return;
 
 				if (exposed) {
-					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}${basePath}`)}`);
+					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}${base}`)}`);
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}
