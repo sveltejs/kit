@@ -2,12 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, get_no_external, posixify, resolve_entry, deep_merge } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import { SVELTE_KIT } from '../constants.js';
+import colors from 'kleur';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -134,24 +135,19 @@ async function build_client({
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
-	await vite.build({
-		...user_config,
+	/** @type {[any, string[]]} */
+	const [merged_config, conflicts] = deep_merge(user_config, {
 		configFile: false,
 		root: cwd,
 		base,
 		build: {
-			...user_config.build,
 			cssCodeSplit: true,
 			manifest: true,
 			outDir: client_out_dir,
 			polyfillDynamicImport: false,
 			rollupOptions: {
-				...(user_config.build && user_config.build.rollupOptions),
 				input,
 				output: {
-					...(user_config.build &&
-						user_config.build.rollupOptions &&
-						user_config.build.rollupOptions.output),
 					entryFileNames: '[name]-[hash].js',
 					chunkFileNames: 'chunks/[name]-[hash].js',
 					assetFileNames: 'assets/[name]-[hash][extname]'
@@ -160,21 +156,30 @@ async function build_client({
 			}
 		},
 		resolve: {
-			...user_config.resolve,
 			alias: {
-				...(user_config.resolve && user_config.resolve.alias),
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
-			...(user_config.plugins || []),
 			svelte({
 				extensions: config.extensions,
 				emitCss: !config.kit.amp
 			})
 		]
 	});
+
+	conflicts.forEach((conflict) => {
+		console.error(
+			colors
+				.bold()
+				.red(
+					`build_client: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+				)
+		);
+	});
+
+	await vite.build(merged_config);
 
 	/** @type {ClientManifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
@@ -398,19 +403,17 @@ async function build_server(
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
-	await vite.build({
-		...user_config,
+	/** @type {[any, string[]]} */
+	const [merged_config, conflicts] = deep_merge(user_config, {
 		configFile: false,
 		root: cwd,
 		base,
 		build: {
 			target: 'es2018',
-			...user_config.build,
 			ssr: true,
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
-				...(user_config.build && user_config.build.rollupOptions),
 				input: {
 					app: app_file
 				},
@@ -425,15 +428,12 @@ async function build_server(
 			}
 		},
 		resolve: {
-			...user_config.resolve,
 			alias: {
-				...(user_config.resolve && user_config.resolve.alias),
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},
 		plugins: [
-			...(user_config.plugins || []),
 			svelte({
 				extensions: config.extensions
 			})
@@ -443,7 +443,6 @@ async function build_server(
 		// so we need to ignore the fact that it's missing
 		// @ts-ignore
 		ssr: {
-			...user_config.ssr,
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok
 			noExternal: get_no_external(cwd, user_config.ssr && user_config.ssr.noExternal)
@@ -452,6 +451,18 @@ async function build_server(
 			entries: []
 		}
 	});
+
+	conflicts.forEach((conflict) => {
+		console.error(
+			colors
+				.bold()
+				.red(
+					`build_server: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+				)
+		);
+	});
+
+	await vite.build(merged_config);
 }
 
 /**
@@ -507,20 +518,18 @@ async function build_service_worker(
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
-	await vite.build({
-		...user_config,
+	/** @type {[any, string[]]} */
+	const [merged_config, conflicts] = deep_merge(user_config, {
 		configFile: false,
 		root: cwd,
 		base,
 		build: {
-			...user_config.build,
 			lib: {
 				entry: service_worker_entry_file,
 				name: 'app',
 				formats: ['es']
 			},
 			rollupOptions: {
-				...(user_config.build && user_config.build.rollupOptions),
 				output: {
 					entryFileNames: 'service-worker.js'
 				}
@@ -529,9 +538,7 @@ async function build_service_worker(
 			emptyOutDir: false
 		},
 		resolve: {
-			...user_config.resolve,
 			alias: {
-				...(user_config.resolve && user_config.resolve.alias),
 				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
 			}
 		},
@@ -539,6 +546,18 @@ async function build_service_worker(
 			entries: []
 		}
 	});
+
+	conflicts.forEach((conflict) => {
+		console.error(
+			colors
+				.bold()
+				.red(
+					`build_service_worker: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+				)
+		);
+	});
+
+	await vite.build(merged_config);
 }
 
 /** @param {string[]} array */
