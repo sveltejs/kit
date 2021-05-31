@@ -1,5 +1,18 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s)
+- 028abd9: Pass validated svelte config to adapter adapt function
+- Updated dependencies [6372690]
+- Updated dependencies [c3d36a3]
+- Updated dependencies [bf77940]
+- Updated dependencies [2172469]
+- Updated dependencies [028abd9]
+  - @sveltejs/kit@1.0.0-next.110
+
 ## 1.0.0-next.19
 
 ### Patch Changes

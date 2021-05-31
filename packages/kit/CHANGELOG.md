@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.111
+
+### Patch Changes
+
+- eae1b1d: Rename handle's render parameter to resolve
+
+## 1.0.0-next.110
+
+### Patch Changes
+
+- 6372690: Add svelte-kit package command
+- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s)
+- bf77940: bump `polka` and `sirv` dependency versions
+- 2172469: Upgrade to Vite 2.3.4
+- 028abd9: Pass validated svelte config to adapter adapt function
+
 ## 1.0.0-next.109
 
 ### Patch Changes

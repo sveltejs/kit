@@ -1,3 +1,3 @@
 <script>import {page} from '$app/stores';</script>
 
-<h1>{$page.params.slug.toUpperCase()}</h1>
+<h2>{$page.params.slug.toUpperCase()}</h2>

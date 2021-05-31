@@ -1,5 +1,18 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.10
+
+### Patch Changes
+
+- bf77940: bump `polka` and `sirv` dependency versions
+- 028abd9: Pass validated svelte config to adapter adapt function
+- Updated dependencies [6372690]
+- Updated dependencies [c3d36a3]
+- Updated dependencies [bf77940]
+- Updated dependencies [2172469]
+- Updated dependencies [028abd9]
+  - @sveltejs/kit@1.0.0-next.110
+
 ## 1.0.0-next.9
 
 ### Patch Changes
