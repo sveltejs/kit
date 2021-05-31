@@ -174,7 +174,9 @@ async function build_client({
 			colors
 				.bold()
 				.red(
-					`build_client: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+					`build_client: The value for ${colors.italic(
+						`kit.vite.${conflict}`
+					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
 				)
 		);
 	});
@@ -457,7 +459,9 @@ async function build_server(
 			colors
 				.bold()
 				.red(
-					`build_server: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+					`build_server: The value for ${colors.italic(
+						`kit.vite.${conflict}`
+					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
 				)
 		);
 	});
@@ -552,7 +556,9 @@ async function build_service_worker(
 			colors
 				.bold()
 				.red(
-					`build_service_worker: The value for ${conflict} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
+					`build_service_worker: The value for ${colors.italic(
+						`kit.vite.${conflict}`
+					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
 				)
 		);
 	});

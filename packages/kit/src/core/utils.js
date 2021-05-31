@@ -111,6 +111,7 @@ export function get_no_external(cwd, user_specified_deps = []) {
  * Merges b into a, recursively, mutating a.
  * @param {Object} a
  * @param {Object} b
+ * @param {string[]} conflicts array to accumulate conflicts in
  * @param {string[]} path array of property names representing the current
  *     location in the tree
  */
