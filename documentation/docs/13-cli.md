@@ -27,7 +27,7 @@ Builds a production version of your app, and runs your adapter if you have one s
 
 ### svelte-kit preview
 
-After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, the way your app will be served is dependent on the adapter used, see the documentaion of your chosen adapter for specific instructions on how to run your app.
+After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an adapter. The way your app will be served is dependent on the adapter used, see the documentation of your chosen adapter for specific instructions on how to run your app.
 
 Like `svelte-kit dev`, it accepts the following options:
 
