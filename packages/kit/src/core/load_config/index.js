@@ -135,8 +135,13 @@ export function validate_config(config) {
 	// resolve paths
 	const { paths } = validated.kit;
 
-	if (paths.base !== '' && !paths.base.startsWith('/')) {
-		throw new Error('config.kit.paths.base must be a root-relative path');
+	if (paths.base !== '') {
+		if (!paths.base.startsWith('/')) {
+			throw new Error('config.kit.paths.base must be a root-relative path');
+		}
+		if (paths.base.endsWith('/')) {
+			throw new Error('config.kit.paths.base must not end with /');
+		}
 	}
 
 	paths.assets = resolve(paths.base, paths.assets);
