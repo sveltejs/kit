@@ -39,12 +39,10 @@ export type Load<
 		InferValue<Input, 'pageParams', Record<string, string>>,
 		InferValue<Input, 'context', Record<string, any>>
 	>
-) => MaybePromise<
-	LoadOutput<
-		InferValue<Output, 'props', Record<string, any>>,
-		InferValue<Output, 'context', Record<string, any>>
-	>
->;
+) => MaybePromise<void | LoadOutput<
+	InferValue<Output, 'props', Record<string, any>>,
+	InferValue<Output, 'context', Record<string, any>>
+>>;
 
 export type ErrorLoad<
 	Input extends { context?: Record<string, any>; pageParams?: Record<string, string> } = {},

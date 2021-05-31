@@ -1,18 +1,18 @@
 import { Headers, Location, MaybePromise, ParameterizedBody } from './helper';
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = string | Uint8Array | null;
 
 export type Incoming = Omit<Location, 'params'> & {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody | null;
+	rawBody: StrictBody;
 	body?: ParameterizedBody;
 };
 
 export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody | null;
+	rawBody: StrictBody;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 };
