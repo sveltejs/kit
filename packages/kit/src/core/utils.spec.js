@@ -1,4 +1,4 @@
-import { test, suite } from 'uvu';
+import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { deep_merge } from './utils.js';
 
@@ -96,7 +96,7 @@ deepMergeSuite('merge with conflicts', async () => {
 });
 
 deepMergeSuite('merge with arrays', async () => {
-	const [merged, conflicts] = deep_merge(
+	const [merged] = deep_merge(
 		{
 			paths: ['/foo', '/bar']
 		},
@@ -110,7 +110,7 @@ deepMergeSuite('merge with arrays', async () => {
 });
 
 deepMergeSuite('empty', async () => {
-	const [merged, conflicts] = deep_merge();
+	const [merged] = deep_merge();
 	assert.equal(merged, {});
 });
 
@@ -137,7 +137,7 @@ deepMergeSuite('mutability safety', () => {
 	const snapshot1 = JSON.stringify(input1);
 	const snapshot2 = JSON.stringify(input2);
 
-	const [merged, conflicts] = deep_merge(input1, input2);
+	const [merged] = deep_merge(input1, input2);
 
 	// Mess with the result
 	merged.person.middleInitial = 'Z';
