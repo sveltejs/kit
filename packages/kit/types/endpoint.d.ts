@@ -18,4 +18,4 @@ export type EndpointOutput = {
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
 	request: ServerRequest<Locals, Body>
-) => void | MaybePromise<EndpointOutput>;
+) => MaybePromise<void | EndpointOutput>;
