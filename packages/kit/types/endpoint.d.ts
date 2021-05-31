@@ -1,5 +1,5 @@
 import { ServerRequest } from './hooks';
-import { Headers } from './helper';
+import { Headers, MaybePromise } from './helper';
 
 type JSONValue =
 	| string
@@ -18,4 +18,4 @@ export type EndpointOutput = {
 
 export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
 	request: ServerRequest<Locals, Body>
-) => void | EndpointOutput | Promise<EndpointOutput>;
+) => void | MaybePromise<EndpointOutput>;
