@@ -15,7 +15,7 @@ If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
 ```ts
-type Headers = Record<string, string>;
+type Headers = Record<string, string | undefined>;
 
 type Request<Locals = Record<string, any>> = {
 	method: string;

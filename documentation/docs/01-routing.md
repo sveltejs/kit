@@ -48,7 +48,7 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```ts
-type Headers = Record<string, string>;
+type Headers = Record<string, string | undefined>;
 
 type Request<Locals = Record<string, any>, Body = unknown> = {
 	method: string;
