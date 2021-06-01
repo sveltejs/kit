@@ -1,5 +1,12 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.21
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
 ## 1.0.0-next.20
 
 ### Patch Changes

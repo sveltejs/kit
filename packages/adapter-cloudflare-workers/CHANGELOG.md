@@ -1,5 +1,12 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
 ## 1.0.0-next.10
 
 ### Patch Changes
