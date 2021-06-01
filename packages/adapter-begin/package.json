@@ -19,7 +19,7 @@
 		"@architect/parser": "^3.0.1"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
+		"@sveltejs/kit": "workspace:^"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

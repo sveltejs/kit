@@ -33,6 +33,6 @@
 		"uvu": "^0.5.1"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
+		"@sveltejs/kit": "workspace:^"
 	}
 }

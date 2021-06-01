@@ -21,7 +21,7 @@
 		"@iarna/toml": "^2.2.5"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
+		"@sveltejs/kit": "workspace:^"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
