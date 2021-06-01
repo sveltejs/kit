@@ -2,7 +2,7 @@
 title: Adapters
 ---
 
-Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output that is optimised for a specific platform.
+Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output that is optimised for a specific platform. How the resulting app is served depends on the adapter and further instructions can be found in the documentation for each adapter.
 
 For example, if you want to run your app as a simple Node server, you would use the `@sveltejs/adapter-node` package:
 
