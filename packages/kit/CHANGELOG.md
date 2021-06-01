@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.112
+
+### Patch Changes
+
+- cbe029e: Allow non-lowercase 'content-type' header in ssr fetch requests
+- 1bf1a02: Make it possible to type context, page params and props for LoadInput and LoadOutput
+
 ## 1.0.0-next.111
 
 ### Patch Changes
