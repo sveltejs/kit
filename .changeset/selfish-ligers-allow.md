@@ -2,4 +2,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-fix: Append to \_redirects
+Allow `_redirects` to be placed in root directory
