@@ -20,9 +20,6 @@
 		"esbuild": "^0.11.18",
 		"@iarna/toml": "^2.2.5"
 	},
-	"peerDependencies": {
-		"@sveltejs/kit": "workspace:^"
-	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"typescript": "^4.2.4"
