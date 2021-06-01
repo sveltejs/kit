@@ -39,6 +39,7 @@ export default function () {
 			utils.copy_client_files(publish);
 
 			utils.log.minor('Writing redirects...');
+			utils.copy('_redirects', `${publish}/_redirects`);
 			appendFileSync(`${publish}/_redirects`, '\n\n/* /.netlify/functions/render 200');
 		}
 	};
