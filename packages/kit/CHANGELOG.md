@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.113
+
+### Patch Changes
+
+- 045c45c: update vite to 2.3.6
+
 ## 1.0.0-next.112
 
 ### Patch Changes

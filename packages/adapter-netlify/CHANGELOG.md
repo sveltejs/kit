@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
 ## 1.0.0-next.16
 
 ### Patch Changes
