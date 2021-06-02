@@ -17,8 +17,8 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"esbuild": "^0.11.18",
-		"@iarna/toml": "^2.2.5"
+		"@iarna/toml": "^2.2.5",
+		"esbuild": "^0.12.5"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

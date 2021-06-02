@@ -69,10 +69,10 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
-      esbuild: ^0.11.18
+      esbuild: ^0.12.5
     dependencies:
       '@iarna/toml': 2.2.5
-      esbuild: 0.11.18
+      esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
 
@@ -80,11 +80,11 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
-      esbuild: ^0.11.18
+      esbuild: ^0.12.5
       typescript: ^4.2.4
     dependencies:
       '@iarna/toml': 2.2.5
-      esbuild: 0.11.18
+      esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
       typescript: 4.2.4
@@ -130,10 +130,10 @@ importers:
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
-      esbuild: ^0.11.18
+      esbuild: ^0.12.5
       typescript: ^4.2.4
     dependencies:
-      esbuild: 0.11.18
+      esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
       typescript: 4.2.4
@@ -1524,12 +1524,6 @@ packages:
       is-date-object: 1.0.2
       is-symbol: 1.0.3
     dev: true
-
-  /esbuild/0.11.18:
-    resolution: {integrity: sha512-KD7v4N9b5B8bxPUNn/3GA9r0HWo4nJk3iwjZ+2zG1ffg+r8ig+wqj7sW6zgI6Sn4/B2FnbzqWxcAokAGGM5zwQ==}
-    hasBin: true
-    requiresBuild: true
-    dev: false
 
   /esbuild/0.12.5:
     resolution: {integrity: sha512-vcuP53pA5XiwUU4FnlXM+2PnVjTfHGthM7uP1gtp+9yfheGvFFbq/KyuESThmtoHPUrfZH5JpxGVJIFDVD1Egw==}
