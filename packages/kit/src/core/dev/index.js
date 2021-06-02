@@ -116,7 +116,14 @@ class Watcher extends EventEmitter {
 					const root = (await this.vite.ssrLoadModule(`/${this.dir}/generated/root.svelte`))
 						.default;
 
-					const rawBody = await getRawBody(req);
+					let body;
+
+					try {
+						body = await getRawBody(req);
+					} catch (err) {
+						res.statusCode = err.status || 400;
+						return res.end(err.reason || 'Invalid request body');
+					}
 
 					const host = /** @type {string} */ (this.config.kit.host ||
 						req.headers[this.config.kit.hostHeader || 'host']);
@@ -128,7 +135,7 @@ class Watcher extends EventEmitter {
 							host,
 							path: parsed.pathname,
 							query: new URLSearchParams(parsed.query),
-							rawBody
+							rawBody: body
 						},
 						{
 							amp: this.config.kit.amp,
@@ -150,7 +157,7 @@ class Watcher extends EventEmitter {
 							},
 							hooks: {
 								getSession: hooks.getSession || (() => ({})),
-								handle: hooks.handle || (({ request, render }) => render(request))
+								handle: hooks.handle || (({ request, resolve }) => resolve(request))
 							},
 							hydrate: this.config.kit.hydrate,
 							paths: this.config.kit.paths,

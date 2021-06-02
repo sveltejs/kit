@@ -1,5 +1,30 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.12
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
+## 1.0.0-next.10
+
+### Patch Changes
+
+- 028abd9: Pass validated svelte config to adapter adapt function
+- Updated dependencies [6372690]
+- Updated dependencies [c3d36a3]
+- Updated dependencies [bf77940]
+- Updated dependencies [2172469]
+- Updated dependencies [028abd9]
+  - @sveltejs/kit@1.0.0-next.110
+
 ## 1.0.0-next.9
 
 ### Patch Changes
