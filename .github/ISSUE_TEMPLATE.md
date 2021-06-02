@@ -18,9 +18,9 @@ change, please create an [RFC](https://github.com/sveltejs/rfcs).
 If you're filing an issue about a bug please include as much information
 as you can, including the following.
 
-- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,vite --binaries --browsers`
+- The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/adapter-node,@sveltejs/adapter-static,@sveltejs/adapter-begin,@sveltejs/adapter-netlify,@sveltejs/adapter-vercel vite --binaries --browsers`
 - Your browser
-- Your adapter (e.g. Node, static, Vercel, Begin, etc...)
+- If using an unofficial adapter, the adapter and version
 
 - _Repeatable steps to reproduce the issue_
 
