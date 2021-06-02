@@ -2,14 +2,12 @@ import http from 'http';
 import https from 'https';
 /**
  *
- * @param {number} port
- * @param {string} host
  * @param {boolean} use_https
  * @param {any} user_config
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @returns {Promise<http.Server | https.Server>}
  */
-export async function get_server(port, host, use_https, user_config, handler) {
+export async function get_server(use_https, user_config, handler) {
 	/** @type {https.ServerOptions} */
 	const https_options = {};
 
@@ -27,13 +25,23 @@ export async function get_server(port, host, use_https, user_config, handler) {
 		}
 	}
 
-	return new Promise((fulfil) => {
-		const server = use_https
+	return Promise.resolve(
+		use_https
 			? https.createServer(/** @type {https.ServerOptions} */ (https_options), handler)
-			: http.createServer(handler);
+			: http.createServer(handler)
+	);
+}
 
+/**
+ * @param {http.Server | https.Server} server
+ * @param {number} port
+ * @param {string} host
+ * @returns {Promise<void>}
+ */
+export async function set_listener(server, port, host) {
+	return new Promise((fulfil) => {
 		server.listen(port, host || '0.0.0.0', () => {
-			fulfil(server);
+			fulfil();
 		});
 	});
 }
