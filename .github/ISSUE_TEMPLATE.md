@@ -20,7 +20,7 @@ as you can, including the following.
 
 - The output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/adapter-node,@sveltejs/adapter-static,@sveltejs/adapter-begin,@sveltejs/adapter-netlify,@sveltejs/adapter-vercel vite --binaries --browsers`
 - Your browser
-- If using an unofficial adapter, the adapter and version
+- If using a community adapter, the adapter and version
 
 - _Repeatable steps to reproduce the issue_
 
