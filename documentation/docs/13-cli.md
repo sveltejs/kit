@@ -25,7 +25,7 @@ Builds a production version of your app, and runs your adapter if you have one s
 
 - `--verbose` — log more detail
 
-After building the app you can see the documentation of your chosen adapter for specific instructions on how to serve your app.
+After building the app, you can reference the documentation of your chosen [adapter](#adapters) and hosting platform for specific instructions on how to serve your app.
 
 ### svelte-kit preview
 
