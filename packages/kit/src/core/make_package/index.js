@@ -144,7 +144,7 @@ function loadTsconfig(filename, ts) {
 	// Do this so TS will not search for initial files which might take a while
 	config.include = [];
 	config.files = [];
-	let { options } = ts.parseJsonConfigFileContent(
+	const { options } = ts.parseJsonConfigFileContent(
 		config,
 		ts.sys,
 		basePath,
