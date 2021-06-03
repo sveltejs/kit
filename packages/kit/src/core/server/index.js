@@ -38,10 +38,6 @@ export async function get_server(use_https, user_config, handler) {
  * @param {string} host
  * @returns {Promise<void>}
  */
-export async function set_listener(server, port, host) {
-	return new Promise((fulfil) => {
-		server.listen(port, host || '0.0.0.0', () => {
-			fulfil();
-		});
-	});
+export function listen(server, port, host) {
+	server.listen(port, host || '0.0.0.0');
 }

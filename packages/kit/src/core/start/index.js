@@ -3,7 +3,7 @@ import { parse, pathToFileURL } from 'url';
 import sirv from 'sirv';
 import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
-import { get_server, set_listener } from '../server/index.js';
+import { get_server, listen } from '../server/index.js';
 import '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
@@ -84,7 +84,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		});
 	});
 
-	await set_listener(server, port, host);
+	listen(server, port, host);
 
 	return server;
 }
