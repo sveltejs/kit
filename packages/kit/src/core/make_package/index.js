@@ -63,9 +63,8 @@ export async function make_package(config, cwd = process.cwd()) {
 				? (await preprocess(source, config.preprocess, { filename })).code
 				: source;
 		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
-			// TODO transpile TS file and emit types
-			// also, we want to emit types from JSDoc annotations in .js files
-			throw new Error('svelte-kit package does not yet support TypeScript');
+			out_file = file.slice(0, -'.ts'.length) + '.js';
+			out_contents = await transpileTs(file, source);
 		} else {
 			out_file = file;
 			out_contents = source;
@@ -96,6 +95,63 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
 		fs.copyFileSync(project_readme, package_readme);
 	}
+}
+
+/**
+ * @param {string} filename
+ * @param {string} source
+ */
+async function transpileTs(filename, source) {
+	const ts = await tryLoadTs();
+	return ts.transpileModule(source, {
+		compilerOptions: loadTsconfig(filename, ts),
+		fileName: filename
+	}).outputText;
+}
+
+async function tryLoadTs() {
+	try {
+		return (await import('typescript')).default;
+	} catch (e) {
+		throw new Error(
+			'You need to install TypeScript if you want to transpile TypeScript files and/or generate type definitions'
+		);
+	}
+}
+
+/**
+ *
+ * @param {string} filename
+ * @param {import('typescript')} ts
+ */
+function loadTsconfig(filename, ts) {
+	let basePath = process.cwd();
+	const fileDirectory = path.dirname(filename);
+	let tsconfigFile = ts.findConfigFile(fileDirectory, ts.sys.fileExists);
+
+	if (!tsconfigFile) {
+		throw new Error('Failed to locate tsconfig or jsconfig');
+	}
+
+	tsconfigFile = path.isAbsolute(tsconfigFile) ? tsconfigFile : path.join(basePath, tsconfigFile);
+	basePath = path.dirname(tsconfigFile);
+	const { error, config } = ts.readConfigFile(tsconfigFile, ts.sys.readFile);
+
+	if (error) {
+		throw new Error('Malformed tsconfig');
+	}
+
+	// Do this so TS will not search for initial files which might take a while
+	config.include = [];
+	config.files = [];
+	let { options } = ts.parseJsonConfigFileContent(
+		config,
+		ts.sys,
+		basePath,
+		{ sourceMap: false },
+		tsconfigFile
+	);
+	return options;
 }
 
 /**
