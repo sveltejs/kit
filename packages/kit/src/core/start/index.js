@@ -84,7 +84,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		});
 	});
 
-	await this.server.listen(this.port, this.host || '0.0.0.0');
+	await server.listen(port, host || '0.0.0.0');
 
-	return server;
+	return Promise.resolve(server);
 }

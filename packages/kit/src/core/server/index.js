@@ -5,7 +5,7 @@ import https from 'https';
  * @param {boolean} use_https
  * @param {any} user_config
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
- * @returns {Promise<http.Server | https.Server>}
+ * @returns {Promise<import('net').Server>}
  */
 export async function get_server(use_https, user_config, handler) {
 	/** @type {https.ServerOptions} */
