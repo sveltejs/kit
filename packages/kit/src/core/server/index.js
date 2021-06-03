@@ -31,13 +31,3 @@ export async function get_server(use_https, user_config, handler) {
 			: http.createServer(handler)
 	);
 }
-
-/**
- * @param {http.Server | https.Server} server
- * @param {number} port
- * @param {string} host
- * @returns {Promise<void>}
- */
-export function listen(server, port, host) {
-	server.listen(port, host || '0.0.0.0');
-}
