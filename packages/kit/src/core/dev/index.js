@@ -79,6 +79,11 @@ class Watcher extends EventEmitter {
 		/** @type {any} */
 		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
+		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
+		let handler = (req, res) => {};
+
+		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
+
 		/**
 		 * @type {vite.ViteDevServer}
 		 */
@@ -104,7 +109,11 @@ class Watcher extends EventEmitter {
 			publicDir: this.config.kit.files.assets,
 			server: {
 				...user_config.server,
-				middlewareMode: true
+				middlewareMode: true,
+				hmr: {
+					...(user_config.server && user_config.server.hmr),
+					...(this.https ? { server: this.server, port: this.port } : {})
+				}
 			},
 			optimizeDeps: {
 				...user_config.optimizeDeps,
@@ -131,7 +140,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
-		this.server = await get_server(this.port, this.host, this.https, user_config, (req, res) => {
+		handler = (req, res) => {
 			this.vite.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);
@@ -317,7 +326,9 @@ class Watcher extends EventEmitter {
 					res.end(e.stack);
 				}
 			});
-		});
+		};
+
+		await this.server.listen(this.port, this.host || '0.0.0.0');
 	}
 
 	update() {
