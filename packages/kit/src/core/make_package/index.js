@@ -64,7 +64,7 @@ export async function make_package(config, cwd = process.cwd()) {
 				: source;
 		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
-			out_contents = await transpileTs(file, source);
+			out_contents = await transpile_ts(filename, source);
 		} else {
 			out_file = file;
 			out_contents = source;
@@ -101,15 +101,15 @@ export async function make_package(config, cwd = process.cwd()) {
  * @param {string} filename
  * @param {string} source
  */
-async function transpileTs(filename, source) {
-	const ts = await tryLoadTs();
+async function transpile_ts(filename, source) {
+	const ts = await try_load_ts();
 	return ts.transpileModule(source, {
-		compilerOptions: loadTsconfig(filename, ts),
+		compilerOptions: load_tsconfig(filename, ts),
 		fileName: filename
 	}).outputText;
 }
 
-async function tryLoadTs() {
+async function try_load_ts() {
 	try {
 		return (await import('typescript')).default;
 	} catch (e) {
@@ -120,22 +120,18 @@ async function tryLoadTs() {
 }
 
 /**
- *
  * @param {string} filename
  * @param {import('typescript')} ts
  */
-function loadTsconfig(filename, ts) {
-	let basePath = process.cwd();
-	const fileDirectory = path.dirname(filename);
-	let tsconfigFile = ts.findConfigFile(fileDirectory, ts.sys.fileExists);
+function load_tsconfig(filename, ts) {
+	const filedir = path.dirname(filename);
+	const tsconfig_filename = ts.findConfigFile(filedir, ts.sys.fileExists);
 
-	if (!tsconfigFile) {
+	if (!tsconfig_filename) {
 		throw new Error('Failed to locate tsconfig or jsconfig');
 	}
 
-	tsconfigFile = path.isAbsolute(tsconfigFile) ? tsconfigFile : path.join(basePath, tsconfigFile);
-	basePath = path.dirname(tsconfigFile);
-	const { error, config } = ts.readConfigFile(tsconfigFile, ts.sys.readFile);
+	const { error, config } = ts.readConfigFile(tsconfig_filename, ts.sys.readFile);
 
 	if (error) {
 		throw new Error('Malformed tsconfig');
@@ -147,9 +143,9 @@ function loadTsconfig(filename, ts) {
 	const { options } = ts.parseJsonConfigFileContent(
 		config,
 		ts.sys,
-		basePath,
+		path.dirname(tsconfig_filename),
 		{ sourceMap: false },
-		tsconfigFile
+		tsconfig_filename
 	);
 	return options;
 }
