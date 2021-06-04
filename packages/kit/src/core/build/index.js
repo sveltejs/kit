@@ -91,7 +91,7 @@ function print_vite_config_conflicts(scope, conflicts) {
 				.red(
 					`${prefix}The value for ${colors.italic(
 						`kit.vite.${conflict}`
-					)} specified in svelte.config.js has been ignored. This is controlled by SvelteKit.`
+					)} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
 				)
 		);
 	});
