@@ -109,14 +109,18 @@ export function get_no_external(cwd, user_specified_deps = []) {
 
 /**
  * Merges b into a, recursively, mutating a.
- * @param {Object} a
- * @param {Object} b
+ * @param {Record<string, any>} a
+ * @param {Record<string, any>} b
  * @param {string[]} conflicts array to accumulate conflicts in
  * @param {string[]} path array of property names representing the current
  *     location in the tree
  */
 function merge_into(a, b, conflicts = [], path = []) {
+	/**
+	 * @param {any} x
+	 */
 	const is_object = (x) => typeof x === 'object' && !Array.isArray(x);
+
 	for (const prop in b) {
 		if (is_object(b[prop])) {
 			if (!is_object(a[prop])) {
@@ -150,11 +154,12 @@ function merge_into(a, b, conflicts = [], path = []) {
  * objects at any depth. If there's a conflict the last one wins, except for
  * arrays which will be combined.
  * @param {...Object} objects
- * @returns {[Object, string[]]} a 2-tuple with the merged object, and a list of
- *     merge conflicts if there were any, in dotted notation
+ * @returns {[Record<string, any>, string[]]} a 2-tuple with the merged object,
+ *     and a list of merge conflicts if there were any, in dotted notation
  */
 export function deep_merge(...objects) {
 	const result = {};
+	/** @type {string[]} */
 	const conflicts = [];
 	objects.forEach((o) => merge_into(result, o, conflicts));
 	return [result, conflicts];

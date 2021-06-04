@@ -79,6 +79,25 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 }
 
 /**
+ * @param {string?} scope used to prefix the error message
+ * @param {string[]} conflicts array of conflicts in dotted notation
+ */
+function print_vite_config_conflicts(scope, conflicts) {
+	const prefix = scope ? scope + ': ' : '';
+	conflicts.forEach((conflict) => {
+		console.error(
+			colors
+				.bold()
+				.red(
+					`${prefix}The value for ${colors.italic(
+						`kit.vite.${conflict}`
+					)} specified in svelte.config.js has been ignored. This is controlled by SvelteKit.`
+				)
+		);
+	});
+}
+
+/**
  * @param {{
  *   cwd: string;
  *   base: string;
@@ -169,17 +188,7 @@ async function build_client({
 		]
 	});
 
-	conflicts.forEach((conflict) => {
-		console.error(
-			colors
-				.bold()
-				.red(
-					`build_client: The value for ${colors.italic(
-						`kit.vite.${conflict}`
-					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
-				)
-		);
-	});
+	print_vite_config_conflicts('build_client', conflicts);
 
 	await vite.build(merged_config);
 
@@ -454,17 +463,7 @@ async function build_server(
 		}
 	});
 
-	conflicts.forEach((conflict) => {
-		console.error(
-			colors
-				.bold()
-				.red(
-					`build_server: The value for ${colors.italic(
-						`kit.vite.${conflict}`
-					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
-				)
-		);
-	});
+	print_vite_config_conflicts('build_server', conflicts);
 
 	await vite.build(merged_config);
 }
@@ -551,17 +550,7 @@ async function build_service_worker(
 		}
 	});
 
-	conflicts.forEach((conflict) => {
-		console.error(
-			colors
-				.bold()
-				.red(
-					`build_service_worker: The value for ${colors.italic(
-						`kit.vite.${conflict}`
-					)} specified in svelte.config.js has been ignored, as this is controlled by SvelteKit`
-				)
-		);
-	});
+	print_vite_config_conflicts('build_service_worker', conflicts);
 
 	await vite.build(merged_config);
 }
