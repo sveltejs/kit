@@ -63,9 +63,8 @@ export async function make_package(config, cwd = process.cwd()) {
 				? (await preprocess(source, config.preprocess, { filename })).code
 				: source;
 		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
-			// TODO transpile TS file and emit types
-			// also, we want to emit types from JSDoc annotations in .js files
-			throw new Error('svelte-kit package does not yet support TypeScript');
+			out_file = file.slice(0, -'.ts'.length) + '.js';
+			out_contents = await transpile_ts(filename, source);
 		} else {
 			out_file = file;
 			out_contents = source;
@@ -96,6 +95,59 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
 		fs.copyFileSync(project_readme, package_readme);
 	}
+}
+
+/**
+ * @param {string} filename
+ * @param {string} source
+ */
+async function transpile_ts(filename, source) {
+	const ts = await try_load_ts();
+	return ts.transpileModule(source, {
+		compilerOptions: load_tsconfig(filename, ts),
+		fileName: filename
+	}).outputText;
+}
+
+async function try_load_ts() {
+	try {
+		return (await import('typescript')).default;
+	} catch (e) {
+		throw new Error(
+			'You need to install TypeScript if you want to transpile TypeScript files and/or generate type definitions'
+		);
+	}
+}
+
+/**
+ * @param {string} filename
+ * @param {import('typescript')} ts
+ */
+function load_tsconfig(filename, ts) {
+	const filedir = path.dirname(filename);
+	const tsconfig_filename = ts.findConfigFile(filedir, ts.sys.fileExists);
+
+	if (!tsconfig_filename) {
+		throw new Error('Failed to locate tsconfig or jsconfig');
+	}
+
+	const { error, config } = ts.readConfigFile(tsconfig_filename, ts.sys.readFile);
+
+	if (error) {
+		throw new Error('Malformed tsconfig');
+	}
+
+	// Do this so TS will not search for initial files which might take a while
+	config.include = [];
+	config.files = [];
+	const { options } = ts.parseJsonConfigFileContent(
+		config,
+		ts.sys,
+		path.dirname(tsconfig_filename),
+		{ sourceMap: false },
+		tsconfig_filename
+	);
+	return options;
 }
 
 /**

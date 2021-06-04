@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.10",
+	"version": "1.0.0-next.12",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -17,13 +17,10 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"esbuild": "^0.11.18",
-		"@iarna/toml": "^2.2.5"
+		"@iarna/toml": "^2.2.5",
+		"esbuild": "^0.12.5"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*"
-	},
-	"peerDependencies": {
 		"@sveltejs/kit": "workspace:*"
 	}
 }

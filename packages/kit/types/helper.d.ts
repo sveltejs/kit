@@ -18,9 +18,14 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string>;
 
-export type Location = {
+export type Location<Params extends Record<string, string> = Record<string, string>> = {
 	host: string;
 	path: string;
-	params: Record<string, string>;
+	params: Params;
 	query: URLSearchParams;
 };
+
+export type MaybePromise<T> = T | Promise<T>;
+export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
+	? Val
+	: Default;

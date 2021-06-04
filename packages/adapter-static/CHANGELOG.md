@@ -1,5 +1,12 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
 ## 1.0.0-next.12
 
 ### Patch Changes

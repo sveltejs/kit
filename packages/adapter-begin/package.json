@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-begin",
-	"version": "1.0.0-next.10",
+	"version": "1.0.0-next.11",
 	"main": "index.cjs",
 	"types": "index.d.ts",
 	"scripts": {
@@ -17,9 +17,6 @@
 	],
 	"dependencies": {
 		"@architect/parser": "^3.0.1"
-	},
-	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

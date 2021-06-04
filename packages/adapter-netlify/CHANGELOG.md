@@ -1,5 +1,19 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
+## 1.0.0-next.16
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+- 3b988a4: Allow `_redirects` to be placed in root directory
+
 ## 1.0.0-next.15
 
 ### Patch Changes
