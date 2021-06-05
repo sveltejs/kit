@@ -33,15 +33,17 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	try {
+		const headers = lowercase_keys(incoming.headers);
+
 		return await options.hooks.handle({
 			request: {
 				...incoming,
-				headers: lowercase_keys(incoming.headers),
-				body: parse_body(incoming),
+				headers,
+				body: parse_body(incoming.rawBody, headers),
 				params: null,
 				locals: {}
 			},
-			render: async (request) => {
+			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						options,

@@ -7,12 +7,21 @@ import { render } from '../output/server/app.js'; // eslint-disable-line import/
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
 
+	let body;
+
+	try {
+		body = await getRawBody(req);
+	} catch (err) {
+		res.statusCode = err.status || 400;
+		return res.end(err.reason || 'Invalid request body');
+	}
+
 	const rendered = await render({
 		method: req.method,
 		headers: req.headers,
 		path: pathname,
 		query: searchParams,
-		rawBody: await getRawBody(req)
+		rawBody: body
 	});
 
 	if (rendered) {
