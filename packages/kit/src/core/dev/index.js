@@ -84,6 +84,8 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
 
+		const alias = user_config.resolve && user_config.resolve.alias;
+
 		/**
 		 * @type {vite.ViteDevServer}
 		 */
@@ -93,11 +95,23 @@ class Watcher extends EventEmitter {
 			root: this.cwd,
 			resolve: {
 				...user_config.resolve,
-				alias: {
-					...(user_config.resolve && user_config.resolve.alias),
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
+				alias: Array.isArray(alias)
+					? [
+							...alias,
+							{
+								find: '$app',
+								replacement: path.resolve(`${this.dir}/runtime/app`)
+							},
+							{
+								find: '$lib',
+								replacement: this.config.kit.files.lib
+							}
+					  ]
+					: {
+							...alias,
+							$app: path.resolve(`${this.dir}/runtime/app`),
+							$lib: this.config.kit.files.lib
+					  }
 			},
 			plugins: [
 				...(user_config.plugins || []),
