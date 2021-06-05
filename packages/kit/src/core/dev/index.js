@@ -11,7 +11,7 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
-import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
+import { copy_assets, get_no_external, resolve_entry, deep_merge } from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
@@ -84,23 +84,17 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
 
-		/**
-		 * @type {vite.ViteDevServer}
-		 */
-		this.vite = await vite.createServer({
-			...user_config,
+		/** @type {[any, string[]]} */
+		const [merged_config, conflicts] = deep_merge(user_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
-				...user_config.resolve,
 				alias: {
-					...(user_config.resolve && user_config.resolve.alias),
 					$app: path.resolve(`${this.dir}/runtime/app`),
 					$lib: this.config.kit.files.lib
 				}
 			},
 			plugins: [
-				...(user_config.plugins || []),
 				svelte({
 					extensions: this.config.extensions,
 					emitCss: !this.config.kit.amp
@@ -108,22 +102,35 @@ class Watcher extends EventEmitter {
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
-				...user_config.server,
 				middlewareMode: true,
 				hmr: {
-					...(user_config.server && user_config.server.hmr),
 					...(this.https ? { server: this.server, port: this.port } : {})
 				}
 			},
 			optimizeDeps: {
-				...user_config.optimizeDeps,
 				entries: []
 			},
 			ssr: {
-				...user_config.ssr,
 				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
 			}
 		});
+
+		conflicts.forEach((conflict) => {
+			console.error(
+				colors
+					.bold()
+					.red(
+						`The value for ${colors.italic(
+							`kit.vite.${conflict}`
+						)} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
+					)
+			);
+		});
+
+		/**
+		 * @type {vite.ViteDevServer}
+		 */
+		this.vite = await vite.createServer(merged_config);
 
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
