@@ -79,6 +79,12 @@ const options = {
 			hostHeader: expect_string(null),
 
 			hydrate: expect_boolean(true),
+			serviceWorker: {
+				type: 'branch',
+				children: {
+					filesExclusions: expect_array_of_strings([])
+				}
+			},
 
 			package: {
 				type: 'branch',

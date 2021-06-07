@@ -94,6 +94,10 @@ export type ValidatedConfig = {
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;
+		serviceWorker: {
+			// Globs relative to assets folder.
+			filesExclusions: string[];
+		};
 		package: {
 			dir: string;
 			exports: {

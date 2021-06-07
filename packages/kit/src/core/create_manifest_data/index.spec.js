@@ -21,7 +21,10 @@ const create = (dir, extensions = ['.svelte']) => {
 					assets: path.resolve(cwd, 'static'),
 					routes: path.resolve(cwd, dir)
 				},
-				appDir: '_app'
+				appDir: '_app',
+				serviceWorker: {
+					filesExclusions: []
+				}
 			}
 		},
 		cwd,
