@@ -3,6 +3,7 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import globrex from 'globrex';
 import { mkdirp, rimraf } from '../filesystem';
+import { emitDts } from './generate-dts';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -95,6 +96,8 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
 		fs.copyFileSync(project_readme, package_readme);
 	}
+
+	await emitDts(await try_load_ts(), config);
 }
 
 /**
