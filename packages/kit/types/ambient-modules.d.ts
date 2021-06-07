@@ -26,7 +26,7 @@ declare module '$app/navigation' {
 	 */
 	export function goto(
 		href: string,
-		opts?: { replaceState?: boolean; noscroll?: boolean }
+		opts?: { replaceState?: boolean; noscroll?: boolean; state?: any }
 	): Promise<any>;
 	/**
 	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
