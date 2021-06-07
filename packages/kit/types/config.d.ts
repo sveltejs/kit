@@ -95,7 +95,9 @@ export type ValidatedConfig = {
 		hostHeader: string;
 		hydrate: boolean;
 		serviceWorker: {
-			// Globs relative to assets folder.
+			// Glob patterns relative to `files.assets` dir. Files matching this would not be available in $service-worker.files
+			// e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
+			// As og-tags-images are never loaded by a normal client(browser), they can be comfortably skipped from here.
 			filesExclusions: string[];
 		};
 		package: {

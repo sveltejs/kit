@@ -248,6 +248,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		 * @type {string[]}
 		 */
 		let exclusions = config.kit.serviceWorker.filesExclusions || [];
+
+		// .DS_STORE files are automatically removed to keep the compatiblity
 		exclusions = [...exclusions, '**/.DS_STORE'];
 
 		/**
@@ -403,7 +405,7 @@ function get_pattern(segments, add_trailing_slash) {
  * @param {string} dir
  * @param {string} path
  * @param {import('types/internal').Asset[]} files
- * @param {string[]} excludedPaths
+ * @param {string[]} excludedPaths Paths relative to dir which should be excluded from files list.
  */
 function list_files(dir, path, files = [], excludedPaths = []) {
 	fs.readdirSync(dir).forEach((file) => {
@@ -415,11 +417,7 @@ function list_files(dir, path, files = [], excludedPaths = []) {
 		if (stats.isDirectory()) {
 			list_files(full, joined, files, excludedPaths);
 		} else {
-			if (
-				excludedPaths.some((exclusion) => {
-					return exclusion === joined;
-				})
-			) {
+			if (excludedPaths.includes(joined)) {
 				return;
 			}
 			files.push({
