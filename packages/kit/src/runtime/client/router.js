@@ -178,8 +178,10 @@ export class Router {
 	}
 
 	/**
-	 * @param {string} href
-	 * @param {{ noscroll?: boolean, replaceState?: boolean, state?: any }} opts
+	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
+	 *
+	 * @param {GotoParams[0]} href
+	 * @param {GotoParams[1]} opts
 	 * @param {string[]} chain
 	 */
 	async goto(href, { noscroll = false, replaceState = false, state = {} } = {}, chain) {
