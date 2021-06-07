@@ -25,6 +25,9 @@ const config = {
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
 		},
+		serviceWorker: {
+			filesExclusions: []
+		},
 		floc: false,
 		host: null,
 		hostHeader: null,
@@ -75,6 +78,12 @@ An object containing zero or more of the following `string` values:
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
+
+### serviceWorker
+
+An object containing zero or more of the following values:
+
+- `filesExclusions` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### floc
 
