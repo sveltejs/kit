@@ -13,7 +13,10 @@ export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
 
 	const files_filter = create_filter(config.kit.package.files);
-	const exports_filter = create_filter(config.kit.package.exports);
+	const exports_filter = create_filter({
+		...config.kit.package.exports,
+		exclude: [...config.kit.package.exports.exclude, '*.d.ts']
+	});
 
 	const files = walk(config.kit.files.lib);
 
@@ -38,7 +41,8 @@ export async function make_package(config, cwd = process.cwd()) {
 		/** @type {Record<string, string>} */
 		exports: {
 			'./package.json': './package.json'
-		}
+		},
+		types: './types'
 	};
 
 	for (const file of files) {
@@ -58,12 +62,15 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		if (svelte_ext) {
 			// it's a Svelte component
-			// TODO how to emit types?
 			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
 			out_contents = config.preprocess
 				? (await preprocess(source, config.preprocess, { filename })).code
 				: source;
-		} else if (ext === '.ts' && !file.endsWith('.d.ts')) {
+		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
+			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
+			out_file = path.join('types', file);
+			out_contents = source;
+		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
 			out_contents = await transpile_ts(filename, source);
 		} else {
@@ -85,6 +92,8 @@ export async function make_package(config, cwd = process.cwd()) {
 		package_pkg.exports['.'] = main;
 	}
 
+	await emitDts(await try_load_ts(), config);
+
 	write(
 		path.join(cwd, config.kit.package.dir, 'package.json'),
 		JSON.stringify(package_pkg, null, '  ')
@@ -96,8 +105,6 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
 		fs.copyFileSync(project_readme, package_readme);
 	}
-
-	await emitDts(await try_load_ts(), config);
 }
 
 /**
@@ -137,7 +144,7 @@ function load_tsconfig(filename, ts) {
 	const { error, config } = ts.readConfigFile(tsconfig_filename, ts.sys.readFile);
 
 	if (error) {
-		throw new Error('Malformed tsconfig');
+		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));
 	}
 
 	// Do this so TS will not search for initial files which might take a while
