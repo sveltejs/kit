@@ -135,7 +135,7 @@ export function validate_config(config) {
 	// resolve paths
 	const { paths } = validated.kit;
 
-	if (paths.base !== '' && paths.base.endsWith('/') && !paths.base.startsWith('/')) {
+	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
 		throw new Error(
 			"config.kit.paths.base must be a root-relative path and does not ends with '/'. See https://kit.svelte.dev/docs#configuration-paths"
 		);
