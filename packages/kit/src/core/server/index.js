@@ -13,6 +13,7 @@ export async function get_server(use_https, user_config, handler) {
 
 	if (use_https) {
 		if (
+			user_config &&
 			user_config.server &&
 			user_config.server.https &&
 			user_config.server.https.key &&
