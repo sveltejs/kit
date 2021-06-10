@@ -116,7 +116,7 @@ Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with 
 An object containing zero or more of the following `string` values:
 
 - `assets` — an absolute path, or a path relative to `base`, where your app's files are served from. This is useful if your files are served from a storage bucket of some kind
-- `base` — a root-relative (i.e. starts with `/`) path that specifies where your app is served from. This allows the app to live on a non-root path
+- `base` — a root-relative path that must be prefixed with `/`. This specifies where your app is served from and allows the app to live on a non-root path
 
 ### prerender
 
