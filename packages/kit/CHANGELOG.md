@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.114
+
+### Patch Changes
+
+- 5aa64ab: fix: SSL for HMR websockets #844
+- fae75f1: add optional state parameter for goto function
+- fbd5f8a: package command can now transpile TypeScript files
+
 ## 1.0.0-next.113
 
 ### Patch Changes
