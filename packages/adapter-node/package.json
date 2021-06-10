@@ -20,6 +20,9 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
+	"dependencies": {
+		"esbuild": "^0.12.5"
+	},
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
