@@ -171,19 +171,19 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base must be a root-relative path. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^config\.kit\.paths\.base must be a root-relative path and does not ends with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
-test('fails if paths.base ends with /', () => {
+test("fails if paths.base ends with '/'", () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				paths: {
-					base: '/basePath/'
+					base: '/github-pages/'
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base must not end with \/$/);
+	}, /^config\.kit\.paths\.base must be a root-relative path and does not ends with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test('fails if prerender.pages are invalid', () => {
