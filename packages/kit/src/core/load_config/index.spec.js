@@ -171,7 +171,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base must be a root-relative path$/);
+	}, /^config\.kit\.paths\.base must be a root-relative path. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test('fails if prerender.pages are invalid', () => {
