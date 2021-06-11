@@ -27,4 +27,12 @@ export default function (test) {
 		assert.equal(await page.innerHTML('h2'), '/encoded/苗条');
 		assert.equal(await page.innerHTML('h3'), '/encoded/苗条');
 	});
+
+	test('sets charset on JSON Content-Type', null, async ({ fetch }) => {
+		const response = await fetch('/encoded/endpoint');
+		assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
+		/** @type {{ fruit?: string }} */
+		const body = await response.json();
+		assert.equal(body['fruit'], '🍎🍇🍌');
+	});
 }
