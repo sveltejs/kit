@@ -223,7 +223,7 @@ importers:
       selfsigned: ^1.10.11
       sirv: ^1.0.12
       svelte: ^3.38.2
-      svelte-check: ^1.5.2
+      svelte-check: ^2.0.0
       svelte2tsx: ~0.2.1
       tiny-glob: ^0.2.8
       typescript: ^4.2.4
@@ -259,7 +259,7 @@ importers:
       selfsigned: 1.10.11
       sirv: 1.0.12
       svelte: 3.38.2
-      svelte-check: 1.5.2_svelte@3.38.2
+      svelte-check: 2.1.0_svelte@3.38.2
       svelte2tsx: 0.2.1_svelte@3.38.2+typescript@4.2.4
       tiny-glob: 0.2.8
       typescript: 4.2.4
@@ -3398,8 +3398,8 @@ packages:
     dependencies:
       has-flag: 4.0.0
 
-  /svelte-check/1.5.2_svelte@3.38.2:
-    resolution: {integrity: sha512-x9Pc13r814TKrMXY70IyqDEmPzuFiqNSpBmsrMKrFpi995MiG+lmqYnyw8iQC+DGh7H3eUt3LIFXbNd396XIFw==}
+  /svelte-check/2.1.0_svelte@3.38.2:
+    resolution: {integrity: sha512-kKLXkFt0XZTn+O1fnilGTQ1SFLsOFF+lXp1YjPfeN9nX+Y3ZpELtZSQCkbuK6HMkWugFvsOM17FCOSa1mfrEFA==}
     hasBin: true
     peerDependencies:
       svelte: ^3.24.0
@@ -3409,6 +3409,7 @@ packages:
       glob: 7.1.6
       import-fresh: 3.3.0
       minimist: 1.2.5
+      sade: 1.7.4
       source-map: 0.7.3
       svelte: 3.38.2
       svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
