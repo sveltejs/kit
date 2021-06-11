@@ -31,8 +31,5 @@ export default function (test) {
 	test('sets charset on JSON Content-Type', null, async ({ fetch }) => {
 		const response = await fetch('/encoded/endpoint');
 		assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8');
-		/** @type {{ fruit?: string }} */
-		const body = await response.json();
-		assert.equal(body['fruit'], '🍎🍇🍌');
 	});
 }
