@@ -98,7 +98,7 @@ const options = {
 							exclude: expect_array_of_strings([])
 						}
 					},
-					types: expect_string('types')
+					types: expect_string('.')
 				}
 			},
 
