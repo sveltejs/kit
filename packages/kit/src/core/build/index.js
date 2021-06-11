@@ -6,7 +6,7 @@ import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import { SVELTE_KIT } from '../constants.js';
 

@@ -13,7 +13,7 @@ import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
 import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
@@ -85,15 +85,28 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
 
+		const alias = user_config.resolve && user_config.resolve.alias;
+
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(user_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
-				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
+				alias: Array.isArray(alias)
+					? [
+							{
+								find: '$app',
+								replacement: path.resolve(`${this.dir}/runtime/app`)
+							},
+							{
+								find: '$lib',
+								replacement: this.config.kit.files.lib
+							}
+					  ]
+					: {
+							$app: path.resolve(`${this.dir}/runtime/app`),
+							$lib: this.config.kit.files.lib
+					  }
 			},
 			plugins: [
 				svelte({

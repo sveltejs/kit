@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.25
+
+### Patch Changes
+
+- 0b780a6: Bundle server-side app during adapt phase
+
 ## 1.0.0-next.24
 
 ### Patch Changes
