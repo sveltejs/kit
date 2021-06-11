@@ -2,14 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import {
-	copy_assets,
-	get_no_external,
-	posixify,
-	resolve_entry,
-	deep_merge,
-	print_config_conflicts
-} from '../utils.js';
+import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
+import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
