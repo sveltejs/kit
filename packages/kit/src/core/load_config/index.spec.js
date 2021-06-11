@@ -171,7 +171,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^config\.kit\.paths\.base must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
