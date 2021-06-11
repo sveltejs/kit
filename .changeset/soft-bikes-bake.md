@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Fix redirect URLs when removing/adding trailing slash when `base` path is set
+Fix navigation when `base` path is set and validate that option's value
