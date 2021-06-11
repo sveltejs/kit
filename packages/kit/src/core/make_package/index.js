@@ -68,7 +68,7 @@ export async function make_package(config, cwd = process.cwd()) {
 				: source;
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
-			out_file = path.join('types', file);
+			out_file = path.join(config.kit.package.types, file);
 			out_contents = source;
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';

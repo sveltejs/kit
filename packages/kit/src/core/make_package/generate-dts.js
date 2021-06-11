@@ -5,7 +5,7 @@ import * as path from 'path';
  * @param {import('types/config').ValidatedConfig} config
  */
 export async function emit_dts(ts, config) {
-	const { options, filenames } = load_tsconfig(ts, config.kit.package.dir, config.kit.files.lib);
+	const { options, filenames } = load_tsconfig(ts, config);
 	const host = await create_ts_compiler_host(ts, options, config);
 	const program = ts.createProgram(filenames, options, host);
 	program.emit();
@@ -13,10 +13,10 @@ export async function emit_dts(ts, config) {
 
 /**
  * @param {import('typescript')} ts
- * @param {string} package_root
- * @param {string} lib_root
+ * @param {import('types/config').ValidatedConfig} config
  */
-function load_tsconfig(ts, package_root, lib_root) {
+function load_tsconfig(ts, config) {
+	const lib_root = config.kit.files.lib;
 	let tsconfig_file = ts.findConfigFile(lib_root, ts.sys.fileExists);
 
 	if (!tsconfig_file) {
@@ -27,7 +27,7 @@ function load_tsconfig(ts, package_root, lib_root) {
 		? tsconfig_file
 		: path.join(lib_root, tsconfig_file);
 	const basepath = path.dirname(tsconfig_file);
-	const { error, config } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
+	const { error, config: ts_config } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
 
 	if (error) {
 		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));
@@ -37,11 +37,11 @@ function load_tsconfig(ts, package_root, lib_root) {
 	// that the outputted types have the correct directory depth.
 	// This is a little brittle because we then may include more than the user wants
 	const lib_path_relative = path.relative(basepath, lib_root).split(path.sep).join('/');
-	config.include = [`${lib_path_relative}/**/*`];
-	config.files = [];
+	ts_config.include = [`${lib_path_relative}/**/*`];
+	ts_config.files = [];
 
 	const { options, fileNames: filenames } = ts.parseJsonConfigFileContent(
-		config,
+		ts_config,
 		ts.sys,
 		basepath,
 		{ sourceMap: false },
@@ -54,7 +54,7 @@ function load_tsconfig(ts, package_root, lib_root) {
 			...options,
 			declaration: true,
 			emitDeclarationOnly: true,
-			declarationDir: path.join(package_root, 'types'),
+			declarationDir: path.join(config.kit.package.dir, config.kit.package.types),
 			allowNonTsExtensions: true
 		},
 		filenames
