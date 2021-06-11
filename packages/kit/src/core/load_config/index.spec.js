@@ -37,7 +37,7 @@ test('fills in defaults', () => {
 					include: ['**'],
 					exclude: []
 				},
-				types: "."
+				types: '.'
 			},
 			paths: {
 				base: '',
@@ -133,7 +133,7 @@ test('fills in partial blanks', () => {
 					include: ['**'],
 					exclude: []
 				},
-				types: "."
+				types: '.'
 			},
 			paths: {
 				base: '',
