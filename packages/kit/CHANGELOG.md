@@ -1,5 +1,14 @@
 # @sveltejs/kit
 
+## 1.0.0-next.115
+
+### Patch Changes
+
+- 523c3e2: Allow vite.alias to be an array
+- 6fd46d1: \* update vite-plugin-svelte to 1.0.0-next.11 and use its named export
+  - update vite to 2.3.7
+- dc56d3c: Fix navigation when `base` path is set and validate that option's value
+
 ## 1.0.0-next.114
 
 ### Patch Changes
