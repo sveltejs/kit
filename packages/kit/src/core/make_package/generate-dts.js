@@ -1,16 +1,12 @@
 import * as path from 'path';
-import { createRequire } from 'module';
-
-// require.resolve-equivalent in ESM is still experimental, therefore create require here
-const require = createRequire(import.meta.url);
 
 /**
  * @param {import('typescript')} ts
  * @param {import('types/config').ValidatedConfig} config
  */
-export async function emitDts(ts, config) {
-	const { options, filenames } = loadTsconfig(ts, config.kit.package.dir, config.kit.files.lib);
-	const host = await createTsCompilerHost(ts, options, config);
+export async function emit_dts(ts, config) {
+	const { options, filenames } = load_tsconfig(ts, config.kit.package.dir, config.kit.files.lib);
+	const host = await create_ts_compiler_host(ts, options, config);
 	const program = ts.createProgram(filenames, options, host);
 	program.emit();
 }
@@ -20,16 +16,18 @@ export async function emitDts(ts, config) {
  * @param {string} package_root
  * @param {string} lib_root
  */
-function loadTsconfig(ts, package_root, lib_root) {
-	let tsconfigFile = ts.findConfigFile(lib_root, ts.sys.fileExists);
+function load_tsconfig(ts, package_root, lib_root) {
+	let tsconfig_file = ts.findConfigFile(lib_root, ts.sys.fileExists);
 
-	if (!tsconfigFile) {
+	if (!tsconfig_file) {
 		throw new Error('Failed to locate tsconfig or jsconfig');
 	}
 
-	tsconfigFile = path.isAbsolute(tsconfigFile) ? tsconfigFile : path.join(lib_root, tsconfigFile);
-	const basePath = path.dirname(tsconfigFile);
-	const { error, config } = ts.readConfigFile(tsconfigFile, ts.sys.readFile);
+	tsconfig_file = path.isAbsolute(tsconfig_file)
+		? tsconfig_file
+		: path.join(lib_root, tsconfig_file);
+	const basepath = path.dirname(tsconfig_file);
+	const { error, config } = ts.readConfigFile(tsconfig_file, ts.sys.readFile);
 
 	if (error) {
 		throw new Error('Malformed tsconfig\n' + JSON.stringify(error, null, 2));
@@ -38,16 +36,16 @@ function loadTsconfig(ts, package_root, lib_root) {
 	// Rewire includes and files. This ensures that only the files inside the lib are traversed and
 	// that the outputted types have the correct directory depth.
 	// This is a little brittle because we then may include more than the user wants
-	const lib_path_relative = path.relative(basePath, lib_root).split(path.sep).join('/');
+	const lib_path_relative = path.relative(basepath, lib_root).split(path.sep).join('/');
 	config.include = [`${lib_path_relative}/**/*`];
 	config.files = [];
 
 	const { options, fileNames: filenames } = ts.parseJsonConfigFileContent(
 		config,
 		ts.sys,
-		basePath,
+		basepath,
 		{ sourceMap: false },
-		tsconfigFile,
+		tsconfig_file,
 		undefined,
 		[{ extension: 'svelte', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]
 	);
@@ -69,39 +67,34 @@ function loadTsconfig(ts, package_root, lib_root) {
  * @param {import('types/config').ValidatedConfig} config
  * @returns
  */
-async function createTsCompilerHost(ts, options, config) {
+async function create_ts_compiler_host(ts, options, config) {
 	const svelte2tsx = await try_load_svelte2tsx();
-	const shims_path = require.resolve('svelte2tsx/svelte-shims.d.ts');
-	let shims = ts.sys.readFile(shims_path);
-	// Remove the "declare module 'svelte'" part
-	shims = shims.substr(shims.indexOf('}') + 1);
-
 	const host = ts.createCompilerHost(options);
 
-	const svelteSys = {
+	const svelte_sys = {
 		...ts.sys,
 		/**
 		 * @param {string} path
 		 */
 		fileExists(path) {
-			return ts.sys.fileExists(ensureRealSvelteFilePath(path));
+			return ts.sys.fileExists(ensure_real_svelte_filepath(path));
 		},
 		/**
 		 * @param {string} path
 		 * @param {string} encoding
 		 */
 		readFile(path, encoding = 'utf-8') {
-			if (isVirtualSvelteFilePath(path) || isSvelteFilePath(path)) {
-				const svelteFileName = ensureRealSvelteFilePath(path);
-				const svelteCode = ts.sys.readFile(svelteFileName, encoding);
+			if (is_virtual_svelte_filepath(path) || is_svelte_filepath(path)) {
+				path = ensure_real_svelte_filepath(path);
+				const code = ts.sys.readFile(path, encoding);
 				const isTsFile = // svelte-preprocess allows default languages
 					['ts', 'typescript'].includes(config.preprocess?.defaultLanguages?.script) ||
-					/<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(svelteCode);
-				const tsx = svelte2tsx(svelteCode, {
-					filename: svelteFileName,
-					isTsFile
-				});
-				return postprocessTSX(tsx.code, shims);
+					/<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(code);
+				return svelte2tsx(code, {
+					filename: path,
+					isTsFile,
+					mode: 'dts'
+				}).code;
 			} else {
 				return ts.sys.readFile(path, encoding);
 			}
@@ -120,135 +113,97 @@ async function createTsCompilerHost(ts, options, config) {
 		}
 	};
 
-	host.fileExists = svelteSys.fileExists;
-	host.readFile = svelteSys.readFile;
-	host.readDirectory = svelteSys.readDirectory;
+	host.fileExists = svelte_sys.fileExists;
+	host.readFile = svelte_sys.readFile;
+	host.readDirectory = svelte_sys.readDirectory;
 
 	host.resolveModuleNames = (
-		moduleNames,
-		containingFile,
-		_reusedNames,
-		_redirectedReference,
-		compilerOptions
+		module_names,
+		containing_file,
+		_reused_names,
+		_redirected_reference,
+		compiler_options
 	) => {
-		return moduleNames.map((moduleName) => {
-			const resolvedModule = resolveModuleName(moduleName, containingFile, compilerOptions);
-			return resolvedModule;
+		return module_names.map((module_name) => {
+			return resolve_module_name(module_name, containing_file, compiler_options);
 		});
 	};
 
 	/**
 	 * @param {string} name
-	 * @param {string} containingFile
-	 * @param {any} compilerOptions
+	 * @param {string} containing_file
+	 * @param {any} compiler_options
 	 */
-	function resolveModuleName(name, containingFile, compilerOptions) {
+	function resolve_module_name(name, containing_file, compiler_options) {
 		// Delegate to the TS resolver first.
 		// If that does not bring up anything, try the Svelte Module loader
 		// which is able to deal with .svelte files.
-		const tsResolvedModule = ts.resolveModuleName(name, containingFile, compilerOptions, ts.sys)
+		const ts_resolved_module = ts.resolveModuleName(name, containing_file, compiler_options, ts.sys)
 			.resolvedModule;
-		if (tsResolvedModule && !isVirtualSvelteFilePath(tsResolvedModule.resolvedFileName)) {
-			return tsResolvedModule;
+		if (ts_resolved_module && !is_virtual_svelte_filepath(ts_resolved_module.resolvedFileName)) {
+			return ts_resolved_module;
 		}
 
-		const svelteResolvedModule = ts.resolveModuleName(
+		const svelte_resolved_module = ts.resolveModuleName(
 			name,
-			containingFile,
-			compilerOptions,
-			svelteSys
+			containing_file,
+			compiler_options,
+			svelte_sys
 		).resolvedModule;
-		if (!svelteResolvedModule || !isVirtualSvelteFilePath(svelteResolvedModule.resolvedFileName)) {
-			return svelteResolvedModule;
+		if (
+			!svelte_resolved_module ||
+			!is_virtual_svelte_filepath(svelte_resolved_module.resolvedFileName)
+		) {
+			return svelte_resolved_module;
 		}
 
-		const resolvedFileName = toRealSvelteFilePath(svelteResolvedModule.resolvedFileName);
-
-		const resolvedSvelteModule = {
+		return {
 			extension: ts.ScriptKind.TSX,
-			resolvedFileName
+			resolvedFileName: to_real_svelte_filepath(svelte_resolved_module.resolvedFileName)
 		};
-		return resolvedSvelteModule;
 	}
 
 	return host;
-}
-
-/**
- * @param {string} code
- * @param {string} shims
- */
-function postprocessTSX(code, shims) {
-	// Removes the tsx code that was transformed from the htmlx code.
-	// It's unnecessary here and it makes the propDef emit the wrong type (don't know why)
-	// TODO: this logic should probably belong into svelte2tsx and become a output option
-	code =
-		code.substr(0, code.indexOf('\n() => (<>')).replace('<></>;', '') +
-		code.substr(code.lastIndexOf('</>);') + '</>);'.length);
-
-	const COMPONENT_SUFFIX = '__SvelteComponent_';
-	const regex = new RegExp(
-		`export default class (?<componentName>.+)${COMPONENT_SUFFIX}` +
-			` extends createSvelte2TsxComponent\\((?<propDef>.+)\\)`
-	);
-	const match = code.match(regex);
-	if (match && match.groups) {
-		const { componentName, propDef } = match.groups;
-		const oldComponentExport = match[0];
-		const newComponentExport =
-			`export default class ${componentName} extends SvelteComponentTyped` +
-			`<${componentName}Props, ${componentName}Events, ${componentName}Slots>`;
-		return (
-			`import { SvelteComponentTyped } from 'svelte';` +
-			// The component def contains some references to the (in language tools) globally defined
-			// shims. Include them here so types can be resolved within the same file
-			`${shims}\n` +
-			code.replace(oldComponentExport, newComponentExport) +
-			`const propDef = ${propDef};` +
-			`export type ${componentName}Props = typeof propDef.props;` +
-			`export type ${componentName}Events = typeof propDef.events;` +
-			`export type ${componentName}Slots = typeof propDef.slots;`
-		);
-	}
-	return code;
 }
 
 async function try_load_svelte2tsx() {
 	try {
 		return (await import('svelte2tsx')).default;
 	} catch (e) {
-		throw new Error('You need to install svelte2tsx if you want to generate type definitions');
+		throw new Error(
+			'You need to install svelte2tsx >=0.2.1 if you want to generate type definitions'
+		);
 	}
 }
 
 /**
- * @param {string} filePath
+ * @param {string} file_path
  * @returns
  */
-function isSvelteFilePath(filePath) {
-	return filePath.endsWith('.svelte');
+function is_svelte_filepath(file_path) {
+	return file_path.endsWith('.svelte');
 }
 
 /**
- * @param {string} filePath
+ * @param {string} file_path
  * @returns
  */
-function isVirtualSvelteFilePath(filePath) {
-	return filePath.endsWith('.svelte.ts');
+function is_virtual_svelte_filepath(file_path) {
+	return file_path.endsWith('.svelte.ts');
 }
 
 /**
- * @param {string} filePath
+ * @param {string} file_path
  * @returns
  */
-function toRealSvelteFilePath(filePath) {
-	return filePath.slice(0, -'.ts'.length);
+function to_real_svelte_filepath(file_path) {
+	return file_path.slice(0, -'.ts'.length);
 }
 
 /**
- * @param {string} filePath
+ * @param {string} file_path
  * @returns
  */
-function ensureRealSvelteFilePath(filePath) {
-	return isVirtualSvelteFilePath(filePath) ? toRealSvelteFilePath(filePath) : filePath;
+function ensure_real_svelte_filepath(file_path) {
+	return is_virtual_svelte_filepath(file_path) ? to_real_svelte_filepath(file_path) : file_path;
 }

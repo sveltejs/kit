@@ -3,7 +3,7 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import globrex from 'globrex';
 import { mkdirp, rimraf } from '../filesystem';
-import { emitDts } from './generate-dts';
+import { emit_dts } from './generate-dts';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -92,7 +92,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		package_pkg.exports['.'] = main;
 	}
 
-	await emitDts(await try_load_ts(), config);
+	await emit_dts(await try_load_ts(), config);
 
 	write(
 		path.join(cwd, config.kit.package.dir, 'package.json'),

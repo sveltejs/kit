@@ -224,7 +224,7 @@ importers:
       sirv: ^1.0.12
       svelte: ^3.38.2
       svelte-check: ^1.5.2
-      svelte2tsx: ~0.2.0
+      svelte2tsx: ~0.2.1
       tiny-glob: ^0.2.8
       typescript: ^4.2.4
       uvu: ^0.5.1
@@ -260,7 +260,7 @@ importers:
       sirv: 1.0.12
       svelte: 3.38.2
       svelte-check: 1.5.2_svelte@3.38.2
-      svelte2tsx: 0.2.0_svelte@3.38.2+typescript@4.2.4
+      svelte2tsx: 0.2.1_svelte@3.38.2+typescript@4.2.4
       tiny-glob: 0.2.8
       typescript: 4.2.4
       uvu: 0.5.1
@@ -3536,8 +3536,8 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.2.0_svelte@3.38.2+typescript@4.2.4:
-    resolution: {integrity: sha512-gag/5eqXOMfeHkPWbioEz2kk01KJpG2ZVxYMV35EWMGpxR4m6jzgNPkl7bYp5fEOuHQ99muyVQFIedu4wjgmZw==}
+  /svelte2tsx/0.2.1_svelte@3.38.2+typescript@4.2.4:
+    resolution: {integrity: sha512-3JNUm+rRz0BYwO53NDEqpswW3wU2uvKtpIBjrFbizso8HJpjHM1NCFyXvVfdeM9vG7xH6oh3n0G0tE9noAomKA==}
     peerDependencies:
       svelte: ^3.24
       typescript: ^4.1.2
