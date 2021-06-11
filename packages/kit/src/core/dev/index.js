@@ -11,7 +11,13 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
-import { copy_assets, get_no_external, resolve_entry, deep_merge } from '../utils.js';
+import {
+	copy_assets,
+	get_no_external,
+	resolve_entry,
+	deep_merge,
+	print_config_conflicts
+} from '../utils.js';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
@@ -115,17 +121,7 @@ class Watcher extends EventEmitter {
 			}
 		});
 
-		conflicts.forEach((conflict) => {
-			console.error(
-				colors
-					.bold()
-					.red(
-						`The value for ${colors.italic(
-							`kit.vite.${conflict}`
-						)} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
-					)
-			);
-		});
+		print_config_conflicts(conflicts, 'kit.vite.');
 
 		/**
 		 * @type {vite.ViteDevServer}

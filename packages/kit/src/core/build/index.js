@@ -2,13 +2,19 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, get_no_external, posixify, resolve_entry, deep_merge } from '../utils.js';
+import {
+	copy_assets,
+	get_no_external,
+	posixify,
+	resolve_entry,
+	deep_merge,
+	print_config_conflicts
+} from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import svelte from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import { SVELTE_KIT } from '../constants.js';
-import colors from 'kleur';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -76,25 +82,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			.map((route) => route.type === 'page' && route.path)
 			.filter(Boolean)
 	};
-}
-
-/**
- * @param {string?} scope used to prefix the error message
- * @param {string[]} conflicts array of conflicts in dotted notation
- */
-function print_vite_config_conflicts(scope, conflicts) {
-	const prefix = scope ? scope + ': ' : '';
-	conflicts.forEach((conflict) => {
-		console.error(
-			colors
-				.bold()
-				.red(
-					`${prefix}The value for ${colors.italic(
-						`kit.vite.${conflict}`
-					)} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
-				)
-		);
-	});
 }
 
 /**
@@ -188,7 +175,7 @@ async function build_client({
 		]
 	});
 
-	print_vite_config_conflicts('build_client', conflicts);
+	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
 
 	await vite.build(merged_config);
 
@@ -463,7 +450,7 @@ async function build_server(
 		}
 	});
 
-	print_vite_config_conflicts('build_server', conflicts);
+	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
 	await vite.build(merged_config);
 }
@@ -550,7 +537,7 @@ async function build_service_worker(
 		}
 	});
 
-	print_vite_config_conflicts('build_service_worker', conflicts);
+	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
 
 	await vite.build(merged_config);
 }
