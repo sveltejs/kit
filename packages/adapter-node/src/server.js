@@ -30,7 +30,9 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				maxAge: 31536000,
-				immutable: true
+				immutable: true,
+				gzip: true,
+				brotli: true
 		  })
 		: noop_handler;
 
