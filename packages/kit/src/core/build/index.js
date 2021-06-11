@@ -5,7 +5,7 @@ import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import { SVELTE_KIT } from '../constants.js';
 
