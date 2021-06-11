@@ -1,5 +1,42 @@
 # @sveltejs/kit
 
+## 1.0.0-next.114
+
+### Patch Changes
+
+- 5aa64ab: fix: SSL for HMR websockets #844
+- fae75f1: add optional state parameter for goto function
+- fbd5f8a: package command can now transpile TypeScript files
+
+## 1.0.0-next.113
+
+### Patch Changes
+
+- 045c45c: update vite to 2.3.6
+
+## 1.0.0-next.112
+
+### Patch Changes
+
+- cbe029e: Allow non-lowercase 'content-type' header in ssr fetch requests
+- 1bf1a02: Make it possible to type context, page params and props for LoadInput and LoadOutput
+
+## 1.0.0-next.111
+
+### Patch Changes
+
+- eae1b1d: Rename handle's render parameter to resolve
+
+## 1.0.0-next.110
+
+### Patch Changes
+
+- 6372690: Add svelte-kit package command
+- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s)
+- bf77940: bump `polka` and `sirv` dependency versions
+- 2172469: Upgrade to Vite 2.3.4
+- 028abd9: Pass validated svelte config to adapter adapt function
+
 ## 1.0.0-next.109
 
 ### Patch Changes

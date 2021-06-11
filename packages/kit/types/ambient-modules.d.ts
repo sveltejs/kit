@@ -22,11 +22,11 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to
-	 * @param opts Optional. If `replaceState` is `true`, a new history entry won't be created. If `noscroll` is `true`, the browser won't scroll to the top of the page after navigation.
+	 * @param opts Optional. If `replaceState` is `true`, a new history entry won't be created. If `noscroll` is `true`, the browser won't scroll to the top of the page after navigation. If state is set, its value will be used to set the initital state of the new history entry, it defaults to `{}`
 	 */
 	export function goto(
 		href: string,
-		opts?: { replaceState?: boolean; noscroll?: boolean }
+		opts?: { replaceState?: boolean; noscroll?: boolean; state?: any }
 	): Promise<any>;
 	/**
 	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`

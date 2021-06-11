@@ -7,38 +7,39 @@ export function getRawBody(req) {
 		const h = req.headers;
 
 		if (!h['content-type']) {
-			fulfil(null);
-			return;
+			return fulfil(null);
 		}
 
 		req.on('error', reject);
 
 		const length = Number(h['content-length']);
 
-		/** @type {Uint8Array} */
-		let data;
+		// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
+		if (isNaN(length) && h['transfer-encoding'] == null) {
+			return fulfil(null);
+		}
 
-		if (!isNaN(length)) {
-			data = new Uint8Array(length);
+		let data = new Uint8Array(length || 0);
 
-			let i = 0;
-
+		if (length > 0) {
+			let offset = 0;
 			req.on('data', (chunk) => {
-				data.set(chunk, i);
-				i += chunk.length;
+				const new_len = offset + Buffer.byteLength(chunk);
+
+				if (new_len > length) {
+					return reject({
+						status: 413,
+						reason: 'Exceeded "Content-Length" limit'
+					});
+				}
+
+				data.set(chunk, offset);
+				offset = new_len;
 			});
 		} else {
-			// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
-			if (h['transfer-encoding'] === undefined) {
-				fulfil(null);
-				return;
-			}
-
-			data = new Uint8Array(0);
-
 			req.on('data', (chunk) => {
 				const new_data = new Uint8Array(data.length + chunk.length);
-				new_data.set(data);
+				new_data.set(data, 0);
 				new_data.set(chunk, data.length);
 				data = new_data;
 			});
@@ -48,11 +49,11 @@ export function getRawBody(req) {
 			const [type] = h['content-type'].split(/;\s*/);
 
 			if (type === 'application/octet-stream') {
-				fulfil(data);
+				return fulfil(data);
 			}
 
-			const decoder = new TextDecoder(h['content-encoding'] || 'utf-8');
-			fulfil(decoder.decode(data));
+			const encoding = h['content-encoding'] || 'utf-8';
+			fulfil(new TextDecoder(encoding).decode(data));
 		});
 	});
 }

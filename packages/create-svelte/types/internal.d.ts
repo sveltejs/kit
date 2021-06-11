@@ -10,11 +10,13 @@ export type File = {
 	contents: string;
 };
 
+export type Condition = 'eslint' | 'prettier' | 'typescript' | 'skeleton' | 'default';
+
 export type Common = {
 	files: Array<{
 		name: string;
-		include: Array<'eslint' | 'prettier' | 'typescript'>;
-		exclude: Array<'eslint' | 'prettier' | 'typescript'>;
+		include: Array<Condition>;
+		exclude: Array<Condition>;
 		contents: string;
 	}>;
 };

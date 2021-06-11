@@ -5,7 +5,7 @@
  *   fallback?: string;
  * }} [opts]
  */
-export default function ({ pages = 'build', assets = pages, fallback = null } = {}) {
+export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-static',

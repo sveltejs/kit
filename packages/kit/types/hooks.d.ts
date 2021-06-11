@@ -1,6 +1,6 @@
-import { Headers, Location, ParameterizedBody } from './helper';
+import { Headers, Location, MaybePromise, ParameterizedBody } from './helper';
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = string | Uint8Array | null;
 
 export type Incoming = Omit<Location, 'params'> & {
 	method: string;
@@ -24,10 +24,10 @@ export type ServerResponse = {
 };
 
 export type GetSession<Locals = Record<string, any>, Session = any> = {
-	(request: ServerRequest<Locals>): Session | Promise<Session>;
+	(request: ServerRequest<Locals>): MaybePromise<Session>;
 };
 
 export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
-	render: (request: ServerRequest<Locals>) => ServerResponse | Promise<ServerResponse>;
-}) => ServerResponse | Promise<ServerResponse>;
+	resolve: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
+}) => MaybePromise<ServerResponse>;
