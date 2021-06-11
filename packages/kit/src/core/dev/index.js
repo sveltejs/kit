@@ -12,7 +12,7 @@ import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
 import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
