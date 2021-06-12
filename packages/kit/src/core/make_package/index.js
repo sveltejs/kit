@@ -42,7 +42,8 @@ export async function make_package(config, cwd = process.cwd()) {
 		exports: {
 			'./package.json': './package.json'
 		},
-		types: './types'
+		// '.' means "place them next to their implementation", in this case we don't need a types field
+		types: config.kit.package.types === '.' ? undefined : config.kit.package.types
 	};
 
 	for (const file of files) {
