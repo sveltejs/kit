@@ -25,6 +25,8 @@ import { Foo } from 'your-library';
 import Foo from 'your-library/Foo.svelte';
 ```
 
+The command also generates type definitions for Svelte, JavaScript and TypeScript files. You need to install `typescript >= 4.0.0` and `svelte2tsx >= 0.2.1` for this. By default, type definitions are placed next to their implementation, but you can [configure](#configuration-package) this behavior.
+
 ### Publishing
 
 To publish the generated package:
@@ -39,6 +41,4 @@ If you configure a custom [`package.dir`](#configuration-package), change `packa
 
 This is a relatively experimental feature and is not yet fully implemented:
 
-- if a preprocessor is specified, `.svelte` files are transformed (meaning they can contain TypeScript, for example), but `.d.ts` files are not generated
-- `.ts` files are not currently transformed, and will cause the process to fail
-- all other files are copied across as-is
+- all files except Svelte files (preprocessed) and TypeScript files (transpiled to JavaScript) are copied across as-is
