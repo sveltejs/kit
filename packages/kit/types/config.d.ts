@@ -54,7 +54,10 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
-			types?: string;
+			types?: {
+				folder?: string;
+				entry?: string;
+			};
 		};
 		paths?: {
 			base?: string;
@@ -105,7 +108,10 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
-			types: string;
+			types: {
+				folder: string;
+				entry: string | undefined;
+			};
 		};
 		paths: {
 			base: string;

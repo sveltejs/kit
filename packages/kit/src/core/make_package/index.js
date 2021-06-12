@@ -42,8 +42,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		exports: {
 			'./package.json': './package.json'
 		},
-		// '.' means "place them next to their implementation", in this case we don't need a types field
-		types: config.kit.package.types === '.' ? undefined : config.kit.package.types
+		types: config.kit.package.types.entry
 	};
 
 	for (const file of files) {
@@ -69,7 +68,7 @@ export async function make_package(config, cwd = process.cwd()) {
 				: source;
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
-			out_file = path.join(config.kit.package.types, file);
+			out_file = path.join(config.kit.package.types.folder, file);
 			out_contents = source;
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';

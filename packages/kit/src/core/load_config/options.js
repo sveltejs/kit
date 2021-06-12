@@ -98,7 +98,13 @@ const options = {
 							exclude: expect_array_of_strings([])
 						}
 					},
-					types: expect_string('.')
+					types: {
+						type: 'branch',
+						children: {
+							folder: expect_string('.'),
+							entry: expect_string(undefined)
+						}
+					}
 				}
 			},
 
