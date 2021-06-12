@@ -233,7 +233,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (element === 'a' || element === 'link') {
 						const rel = get_rel(attrs);
 						if (rel === 'external') continue;
-						
+
 						hrefs.push(get_href(attrs));
 					} else {
 						if (element === 'img') {
