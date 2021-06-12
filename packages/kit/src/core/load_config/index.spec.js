@@ -37,7 +37,10 @@ test('fills in defaults', () => {
 					include: ['**'],
 					exclude: []
 				},
-				types: '.'
+				types: {
+					folder: '.',
+					entry: undefined
+				}
 			},
 			paths: {
 				base: '',
@@ -133,7 +136,10 @@ test('fills in partial blanks', () => {
 					include: ['**'],
 					exclude: []
 				},
-				types: '.'
+				types: {
+					folder: '.',
+					entry: undefined
+				}
 			},
 			paths: {
 				base: '',

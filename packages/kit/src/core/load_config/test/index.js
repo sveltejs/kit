@@ -47,7 +47,10 @@ async function testLoadDefaultConfig(path) {
 					include: ['**'],
 					exclude: []
 				},
-				types: '.'
+				types: {
+					folder: '.',
+					entry: undefined
+				}
 			},
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
