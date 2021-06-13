@@ -38,23 +38,15 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			// validation
-			if (type === 'application/octet-stream' && !(body instanceof Uint8Array)) {
-				return error(
-					`Invalid response from route ${request.path}: body must be an instance of Uint8Array if content type is application/octet-stream`
-				);
-			}
-
-			if (body instanceof Uint8Array && type !== 'application/octet-stream') {
-				return error(
-					`Invalid response from route ${request.path}: Uint8Array body must be accompanied by content-type: application/octet-stream header`
-				);
-			}
-
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
-			if (typeof body === 'object' && (!type || type === 'application/json')) {
+			// ensure the body is an object
+			if (
+				typeof body === 'object' &&
+				!(body instanceof Uint8Array) &&
+				(!type || type === 'application/json')
+			) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				normalized_body = JSON.stringify(body);
 			} else {
