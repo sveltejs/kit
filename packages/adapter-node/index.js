@@ -28,7 +28,8 @@ export default function ({ out = 'build' } = {}) {
 				bundle: true,
 				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
 				format: 'esm',
-				platform: 'node'
+				platform: 'node',
+				target: 'node12'
 			});
 
 			utils.log.minor('Prerendering static pages');
