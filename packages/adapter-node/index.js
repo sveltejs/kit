@@ -29,6 +29,7 @@ export default function ({ out = 'build' } = {}) {
 				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
 				format: 'esm',
 				platform: 'node',
+				target: 'node12',
 				define: {
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
 				}

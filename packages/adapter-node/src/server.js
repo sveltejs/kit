@@ -34,7 +34,9 @@ export function createServer({ render }) {
 					if (pathname.startsWith(`/${esbuild_app_dir}/`)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
-				}
+				},
+				gzip: true,
+				brotli: true
 		  })
 		: noop_handler;
 
