@@ -44,20 +44,20 @@ const config = {
 		target: null,
 		trailingSlash: 'never',
 		package: {
-			dir: 'package';
+			dir: 'package',
 			exports: {
-				include: ['**'];
-				exclude: ['_*', '**/_*'];
-			};
+				include: ['**'],
+				exclude: ['_*', '**/_*']
+			},
 			files: {
-				include: ['**'];
-				exclude: [];
-			};
+				include: ['**'],
+				exclude: []
+			},
 			types: {
-				folder: '.';
-				entry: undefined;
-			};
-		};
+				folder: '.',
+				entry: undefined
+			}
+		},
 		vite: () => ({})
 	},
 
