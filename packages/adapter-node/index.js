@@ -1,6 +1,7 @@
-import { copyFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+import esbuild from 'esbuild';
 
 /**
  * @param {{
@@ -18,11 +19,18 @@ export default function ({ out = 'build' } = {}) {
 			utils.copy_client_files(static_directory);
 			utils.copy_static_files(static_directory);
 
-			utils.log.minor('Copying server');
-			utils.copy_server_files(out);
-
+			utils.log.minor('Building server');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
-			copyFileSync(`${files}/server.js`, `${out}/index.js`);
+			utils.copy(files, '.svelte-kit/node');
+			await esbuild.build({
+				entryPoints: ['.svelte-kit/node/index.js'],
+				outfile: join(out, 'index.js'),
+				bundle: true,
+				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
+				format: 'esm',
+				platform: 'node',
+				target: 'node12'
+			});
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

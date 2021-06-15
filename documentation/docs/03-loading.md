@@ -59,6 +59,13 @@ type LoadOutput = {
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 > `load` only applies to components that define pages, not the components that they import.
+>
+> It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
+>
+> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) method for getting data in order to avoid duplicate network requests
+> - should generally run on the same domain as any upstream API servers requiring credentials
+> - should not reference `window`, `document`, or any browser-specific objects
+> - should not reference any API keys or secrets directly, which will be exposed to the client, but instead call an endpoint using any required secrets
 
 ### Input
 
@@ -90,12 +97,6 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 #### context
 
 `context` is passed from layout components to child layouts and page components. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `context` property, it will be available to subsequent `load` functions.
-
-> It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
->
-> - should run on the same domain as any upstream API servers requiring credentials
-> - should not reference `window`, `document` or any browser-specific objects
-> - should not reference any API keys or secrets, which will be exposed to the client
 
 ### Output
 

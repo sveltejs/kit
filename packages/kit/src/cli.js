@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
 import * as ports from 'port-authority';
-import { load_config } from './core/load_config/index.js';
+import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 
 async function get_config() {
