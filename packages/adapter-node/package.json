@@ -21,7 +21,8 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.12.5"
+		"esbuild": "^0.12.5",
+		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",

@@ -17,12 +17,6 @@ const paths = {
 };
 
 export function createServer({ render }) {
-	const mutable = (dir) =>
-		sirv(dir, {
-			etag: true,
-			maxAge: 0
-		});
-
 	const immutable_path = (pathname) => {
 		// eslint-disable-next-line no-undef
 		let app_dir = esbuild_app_dir;
@@ -43,7 +37,12 @@ export function createServer({ render }) {
 	};
 
 	const prerendered_handler = fs.existsSync(paths.prerendered)
-		? mutable(paths.prerendered)
+		? sirv(paths.prerendered, {
+				etag: true,
+				maxAge: 0,
+				gzip: true,
+				brotli: true
+		  })
 		: noop_handler;
 
 	const assets_handler = fs.existsSync(paths.assets)
