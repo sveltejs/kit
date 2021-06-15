@@ -1,6 +1,3 @@
-declare function plugin(options?: {
-	out?: string;
-	precompress?: boolean;
-}): import('@sveltejs/kit').Adapter;
+declare function plugin(options?: {precompress?: boolean} & import('esbuild').BuildOptions): import('@sveltejs/kit').Adapter;
 
 export = plugin;

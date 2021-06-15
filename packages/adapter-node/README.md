@@ -13,9 +13,15 @@ import adapter from '@sveltejs/adapter-node';
 export default {
 	kit: {
 		adapter: adapter({
-			// default options are shown
-			out: 'build',
-			precompress: false
+			// default options are shown below
+			outdir: 'build',
+			precompress: false,
+			outfile: join(outdir, 'index.js')
+			bundle: true,
+			format: 'esm',
+			platform: 'node',
+			target: 'node12',
+			external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
 		})
 	}
 };
@@ -23,9 +29,9 @@ export default {
 
 ## Options
 
-### out
+All [esbuild build](https://esbuild.github.io/api/#build-api) options except for `entryPoints` are supported.
 
-The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
+The [outdir](https://esbuild.github.io/api/#outdir) is the directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
 
 ### precompress
 
