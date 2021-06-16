@@ -1,3 +1,4 @@
+import { readFileSync, statSync, createReadStream, createWriteStream } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { pipeline } from 'stream';
@@ -9,17 +10,26 @@ import glob from 'tiny-glob';
 const pipe = promisify(pipeline);
 
 /**
- * @param {{precompress?: boolean} & import('esbuild').BuildOptions} options
+ * @param {{
+ *   out?: string,
+ *   precompress?: boolean,
+ *   esbuildOptions?: import('esbuild').BuildOptions
+ * }} options
  */
 export default function ({
-	outdir = 'build',
-	outfile = join(outdir, 'index.js'),
-	bundle = true,
-	format = 'esm',
-	platform = 'node',
-	target = 'node12',
-	external = Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
-	...esbuildOptions
+	out = 'build',
+	precompress,
+	esbuildOptions: {
+		outfile,
+		outdir = typeof outfile === 'undefined' ? out : undefined,
+		bundle = true,
+		format = 'esm',
+		platform = 'node',
+		target = 'node12',
+		external = Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
+		entryPoints = ['.svelte-kit/node/index.js'],
+		...esbuildOptions
+	} = {}
 } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
@@ -27,7 +37,7 @@ export default function ({
 
 		async adapt({ utils, config }) {
 			utils.log.minor('Copying assets');
-			const static_directory = join(outdir, 'assets');
+			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
 			utils.copy_static_files(static_directory);
 
@@ -48,7 +58,7 @@ export default function ({
 				platform,
 				target,
 				external,
-				entryPoints: ['.svelte-kit/node/index.js'],
+				entryPoints,
 				define: {
 					...esbuildOptions.define,
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
@@ -57,7 +67,7 @@ export default function ({
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({
-				dest: `${outdir}/prerendered`
+				dest: `${out}/prerendered`
 			});
 			if (precompress) {
 				utils.log.minor('Compressing prerendered pages');

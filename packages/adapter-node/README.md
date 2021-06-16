@@ -14,14 +14,18 @@ export default {
 	kit: {
 		adapter: adapter({
 			// default options are shown below
-			outdir: 'build',
+			out: 'build',
 			precompress: false,
-			outfile: join(outdir, 'index.js')
-			bundle: true,
-			format: 'esm',
-			platform: 'node',
-			target: 'node12',
-			external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
+			esbuildOptions: {
+				outdir: out,
+				bundle: true,
+				format: 'esm',
+				platform: 'node',
+				target: 'node12',
+				external: [
+					/* package.json#dependencies */
+				]
+			}
 		})
 	}
 };
@@ -29,13 +33,28 @@ export default {
 
 ## Options
 
-All [esbuild build](https://esbuild.github.io/api/#build-api) options except for `entryPoints` are supported.
+### out
 
-The [outdir](https://esbuild.github.io/api/#outdir) is the directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
+The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
 
 ### precompress
 
 Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
+
+### esbuildOptions
+
+Any custom [esbuild build](https://esbuild.github.io/api/#build-api) options. It defaults to:
+
+```js
+{
+	outdir: out /* = 'build' */, // Unless a outfile is specified
+	bundle: true,
+	format: 'esm',
+	platform: 'node',
+	target: 'node12',
+	external: [ /* package.json#dependencies */ ]
+}
+```
 
 ## Environment variables
 
