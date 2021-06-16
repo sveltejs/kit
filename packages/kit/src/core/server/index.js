@@ -1,26 +1,25 @@
 import http from 'http';
 import https from 'https';
+//import config from '../../../test/apps/amp/svelte.config';
 /**
  *
  * @param {boolean} use_https
- * @param {any} user_config
+ * @param {import('types/config').ViteConfig} vite_config
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @returns {Promise<import('net').Server>}
  */
-export async function get_server(use_https, user_config, handler) {
+export async function get_server(use_https, vite_config, handler) {
 	/** @type {https.ServerOptions} */
-	const https_options = {};
+	const https_options =
+		vite_config && vite_config.server && vite_config.server.https === 'object'
+			? vite_config.server.https
+			: {};
+	const { key, cert } = https_options;
 
 	if (use_https) {
-		if (
-			user_config &&
-			user_config.server &&
-			user_config.server.https &&
-			user_config.server.https.key &&
-			user_config.server.https.cert
-		) {
-			https_options.key = user_config.server.https.key.toString();
-			https_options.cert = user_config.server.https.cert.toString();
+		if (key && cert) {
+			https_options.key = key;
+			https_options.cert = cert;
 		} else {
 			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}

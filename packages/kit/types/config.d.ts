@@ -123,3 +123,5 @@ export type ValidatedConfig = {
 	};
 	preprocess: any;
 };
+
+export type { ViteConfig };
