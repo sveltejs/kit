@@ -23,6 +23,19 @@ export function createServer({ render }) {
 			maxAge: 0
 		});
 
+	const immutable_path = (pathname) => {
+		// hard to tell if app_dir is mixed with static
+		// eslint-disable-next-line no-undef
+		if (esbuild_app_dir === '/') {
+			return false;
+		}
+
+		return (
+			// eslint-disable-next-line no-undef
+			pathname.startsWith(`/${esbuild_app_dir}/`) || pathname.startsWith(`${esbuild_app_dir}/`)
+		);
+	};
+
 	const prerendered_handler = fs.existsSync(paths.prerendered)
 		? mutable(paths.prerendered)
 		: noop_handler;
@@ -31,7 +44,7 @@ export function createServer({ render }) {
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
 					// eslint-disable-next-line no-undef
-					if (pathname.startsWith(`/${esbuild_app_dir}/`)) {
+					if (immutable_path(pathname)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
 				},
