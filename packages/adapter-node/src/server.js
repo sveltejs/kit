@@ -33,10 +33,10 @@ export function createServer({ render }) {
 		}
 
 		if (app_dir.startsWith('/')) {
-			app_dir = app_dir.substr(1);
+			app_dir = app_dir.slice(1);
 		}
 		if (app_dir.endsWith('/')) {
-			app_dir = app_dir.substr(0, app_dir.length - 1);
+			app_dir = app_dir.slice(0, -1);
 		}
 
 		return pathname.startsWith(`/${app_dir}/`);
