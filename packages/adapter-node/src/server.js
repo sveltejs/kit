@@ -24,16 +24,22 @@ export function createServer({ render }) {
 		});
 
 	const immutable_path = (pathname) => {
-		// hard to tell if app_dir is mixed with static
 		// eslint-disable-next-line no-undef
-		if (esbuild_app_dir === '/') {
+		let app_dir = esbuild_app_dir;
+
+		// hard to tell when app_dir is mixed with static
+		if (app_dir === '/') {
 			return false;
 		}
 
-		return (
-			// eslint-disable-next-line no-undef
-			pathname.startsWith(`/${esbuild_app_dir}/`) || pathname.startsWith(`${esbuild_app_dir}/`)
-		);
+		if (app_dir.startsWith('/')) {
+			app_dir = app_dir.substr(1);
+		}
+		if (app_dir.endsWith('/')) {
+			app_dir = app_dir.substr(0, app_dir.length - 1);
+		}
+
+		return pathname.startsWith(`/${app_dir}/`);
 	};
 
 	const prerendered_handler = fs.existsSync(paths.prerendered)
