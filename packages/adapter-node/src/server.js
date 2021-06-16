@@ -43,7 +43,6 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
-					// eslint-disable-next-line no-undef
 					if (immutable_path(pathname)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
