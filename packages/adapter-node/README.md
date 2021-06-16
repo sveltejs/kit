@@ -15,6 +15,7 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build'
+			precompress: false,
 		})
 	}
 };
@@ -25,6 +26,10 @@ export default {
 ### out
 
 The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
+
+### precompress
+
+Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
 
 ## Environment variables
 
