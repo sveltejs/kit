@@ -77,9 +77,8 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
-		const vite_config =
-			/** @type {import('types/config').ViteConfig} ViteConfig */
-			(this.config.kit.vite && this.config.kit.vite()) || {};
+		/** @type {import('types/config').ViteConfig} ViteConfig */
+		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
 		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
 		let handler = (req, res) => {};

@@ -48,7 +48,10 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	const server = await get_server(use_https, config.kit.vite, (req, res) => {
+	/** @type {import('types/config').ViteConfig} ViteConfig */
+	const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
+
+	const server = await get_server(use_https, vite_config, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {

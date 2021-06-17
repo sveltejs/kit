@@ -11,7 +11,7 @@ import https from 'https';
 export async function get_server(use_https, vite_config, handler) {
 	/** @type {https.ServerOptions} */
 	const https_options =
-		vite_config && vite_config.server && vite_config.server.https === 'object'
+		vite_config && vite_config.server && typeof vite_config.server.https === 'object'
 			? vite_config.server.https
 			: {};
 	const { key, cert } = https_options;
