@@ -157,13 +157,15 @@ export function validate_config(config) {
  */
 function merge_into(a, b, conflicts = [], path = []) {
 	/**
+	 * Checks for "plain old Javascript object", typically made as an object
+	 * literal. Excludes Arrays and built-in types like Buffer.
 	 * @param {any} x
 	 */
-	const is_object = (x) => typeof x === 'object' && !Array.isArray(x);
+	const is_plain_object = (x) => typeof x === 'object' && x.constructor === Object;
 
 	for (const prop in b) {
-		if (is_object(b[prop])) {
-			if (!is_object(a[prop])) {
+		if (is_plain_object(b[prop])) {
+			if (!is_plain_object(a[prop])) {
 				if (a[prop] !== undefined) {
 					conflicts.push([...path, prop].join('.'));
 				}
