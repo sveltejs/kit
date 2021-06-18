@@ -2,7 +2,8 @@
 	let loads = 0;
 
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ fetch }) {
+	export async function load({ fetch, uses }) {
+                uses('change-detection-layout');
 		const res = await fetch('/load/change-detection/data.json');
 		const { type } = await res.json();
 

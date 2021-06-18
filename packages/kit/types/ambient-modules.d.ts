@@ -29,10 +29,11 @@ declare module '$app/navigation' {
 		opts?: { replaceState?: boolean; noscroll?: boolean; state?: any }
 	): Promise<any>;
 	/**
-	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
-	 * @param href The invalidated resource
+	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `resource`
+	 * @param resource The invalidated resource
+	 * @param custom Optional. If `false` (default) resource is a URL that was requested with `fetch`. If `true` resource is a custom identifier registered with `uses(resource)` inside load. 
 	 */
-	export function invalidate(href: string): Promise<any>;
+	export function invalidate(resource: string, custom?: boolean): Promise<any>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and

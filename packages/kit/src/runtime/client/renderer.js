@@ -507,6 +507,9 @@ export class Renderer {
 					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
+				},
+				uses(resource) {
+					node.uses.dependencies.push(resource);
 				}
 			};
 

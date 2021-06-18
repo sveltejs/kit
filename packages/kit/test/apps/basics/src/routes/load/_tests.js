@@ -124,6 +124,10 @@ export default function (test, is_dev) {
 				await app.invalidate('/load/change-detection/data.json');
 				assert.equal(await page.textContent('h1'), 'layout loads: 3');
 				assert.equal(await page.textContent('h2'), 'x: b: 2');
+
+				await app.invalidate('change-detection-layout', true);
+				assert.equal(await page.textContent('h1'), 'layout loads: 4');
+				assert.equal(await page.textContent('h2'), 'x: b: 2');
 			}
 		}
 	);
