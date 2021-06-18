@@ -31,7 +31,7 @@ declare module '$app/navigation' {
 	/**
 	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `resource`
 	 * @param resource The invalidated resource
-	 * @param custom Optional. If `false` (default) resource is a URL that was requested with `fetch`. If `true` resource is a custom identifier registered with `uses(resource)` inside load. 
+	 * @param custom Optional. If `false` (default) resource is a URL that was requested with `fetch`. If `true` resource is a custom identifier registered with `uses(resource)` inside load.
 	 */
 	export function invalidate(resource: string, custom?: boolean): Promise<any>;
 	/**

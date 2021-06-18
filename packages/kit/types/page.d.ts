@@ -8,7 +8,7 @@ export type LoadInput<
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: any;
 	context: Context;
-        uses: (resource: string) => void;
+	uses: (resource: string) => void;
 };
 
 export type ErrorLoadInput<

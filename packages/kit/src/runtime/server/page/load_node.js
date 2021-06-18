@@ -234,7 +234,7 @@ export async function load_node({
 				);
 			},
 			context: { ...context },
-                        uses(){}
+			uses() {}
 		};
 
 		if (is_error) {
