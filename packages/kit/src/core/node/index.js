@@ -48,7 +48,12 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			const [type] = h['content-type'].split(/;\s*/);
 
-			if (type === 'application/octet-stream') {
+			if (
+				type.startsWith('image') ||
+				type.startsWith('audio') ||
+				type.startsWith('video') ||
+				type.includes('application/octet-stream')
+			) {
 				return fulfil(data);
 			}
 

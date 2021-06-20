@@ -55,9 +55,13 @@ async function handle(event) {
 /** @param {Request} request */
 async function read(request) {
 	const type = request.headers.get('content-type') || '';
-	if (type.includes('application/octet-stream')) {
+	if (
+		type.startsWith('image') ||
+		type.startsWith('audio') ||
+		type.startsWith('video') ||
+		type.includes('application/octet-stream')
+	) {
 		return new Uint8Array(await request.arrayBuffer());
 	}
-
 	return request.text();
 }
