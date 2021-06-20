@@ -12,7 +12,7 @@ Remove `polka` or `express`, if you're using one of those, and any middleware su
 
 ### devDependencies
 
-Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit`, `vite`, and whichever [adapter](/docs#adapters) you plan to use (see [next section](#project-files-configuration)).
+Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](/docs#adapters) you plan to use (see [next section](#project-files-configuration)).
 
 ### scripts
 
