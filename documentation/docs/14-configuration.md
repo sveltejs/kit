@@ -26,7 +26,7 @@ const config = {
 			template: 'src/app.html'
 		},
 		serviceWorker: {
-			filesExclusions: []
+			exclude: []
 		},
 		floc: false,
 		host: null,
@@ -83,7 +83,7 @@ An object containing zero or more of the following `string` values:
 
 An object containing zero or more of the following values:
 
-- `filesExclusions` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
+- `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### floc
 

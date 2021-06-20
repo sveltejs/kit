@@ -247,10 +247,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		/**
 		 * @type {string[]}
 		 */
-		let exclusions = config.kit.serviceWorker.exclude || [];
+		const exclusions = config.kit.serviceWorker.exclude || [];
 
 		// .DS_STORE files are automatically removed to keep the compatiblity
-		exclusions = [...exclusions, '**/.DS_STORE'];
+		exclusions.push('**/.DS_STORE');
 
 		/**
 		 * @type {string[]}
