@@ -39,7 +39,7 @@ test('fills in defaults', () => {
 				}
 			},
 			serviceWorker: {
-				filesExclusions: []
+				exclude: []
 			},
 			paths: {
 				base: '',
@@ -137,7 +137,7 @@ test('fills in partial blanks', () => {
 				}
 			},
 			serviceWorker: {
-				filesExclusions: []
+				exclude: []
 			},
 			paths: {
 				base: '',

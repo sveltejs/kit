@@ -82,7 +82,7 @@ const options = {
 			serviceWorker: {
 				type: 'branch',
 				children: {
-					filesExclusions: expect_array_of_strings([])
+					exclude: expect_array_of_strings([])
 				}
 			},
 
