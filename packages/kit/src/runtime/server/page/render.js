@@ -142,6 +142,14 @@ export async function render_response({
 				}` : 'null'}
 			});
 		</script>`;
+	} else if (options.service_worker) {
+		// a service worker will usually be registered inside the call to `start()` above, but not when
+		// `include_js` is false (both router = false and hydrate = false)
+		init = `<script type="module">
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('${options.service_worker}');
+			}
+		</script>`;
 	}
 
 	const head = [

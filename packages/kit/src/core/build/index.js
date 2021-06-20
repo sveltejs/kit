@@ -195,7 +195,16 @@ async function build_client({
  * @param {string} runtime
  */
 async function build_server(
-	{ cwd, base, config, manifest, build_dir, output_dir, client_entry_file },
+	{
+		cwd,
+		base,
+		config,
+		manifest,
+		build_dir,
+		output_dir,
+		client_entry_file,
+		service_worker_entry_file
+	},
 	client_manifest,
 	runtime
 ) {
@@ -315,6 +324,7 @@ async function build_server(
 					paths: settings.paths,
 					read: settings.read,
 					root,
+					${service_worker_entry_file ? "service_worker: '/service-worker.js'" : ''},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
