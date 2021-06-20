@@ -3,7 +3,7 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import globrex from 'globrex';
 import { mkdirp, rimraf } from '../filesystem';
-import { emit_dts } from './generate-dts';
+import { emit_dts } from './emit_dts';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
