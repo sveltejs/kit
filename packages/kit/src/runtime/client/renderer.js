@@ -109,7 +109,7 @@ export class Renderer {
 		this.stores.session.subscribe(async (value) => {
 			this.$session = value;
 
-			if (!ready) return;
+			if (!ready || !this.router) return;
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));

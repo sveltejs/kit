@@ -29,7 +29,7 @@ After building the app, you can reference the documentation of your chosen [adap
 
 ### svelte-kit preview
 
-After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an [adapter](#adapters). 
+After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an [adapter](#adapters).
 
 Like `svelte-kit dev`, it accepts the following options:
 
@@ -37,3 +37,7 @@ Like `svelte-kit dev`, it accepts the following options:
 - `-o`/`--open`
 - `-h`/`--host` (note the security caveat [above](#command-line-interface-svelte-kit-dev))
 - `-H`/`--https`
+
+### svelte-kit package
+
+For package authors, see [packaging](#packaging).
