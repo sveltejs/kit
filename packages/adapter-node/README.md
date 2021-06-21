@@ -14,7 +14,7 @@ export default {
 	kit: {
 		adapter: adapter({
 			// default options are shown
-			out: 'build'
+			out: 'build',
 			precompress: false,
 		})
 	}
