@@ -8,7 +8,7 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
 
-		async adapt({ utils }) {
+		async adapt({ utils, config }) {
 			const dir = '.vercel_build_output';
 			utils.rimraf(dir);
 
@@ -31,7 +31,8 @@ export default function () {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
-				platform: 'node'
+				platform: 'node',
+				...config?.kit?.vite()?.esbuild
 			});
 
 			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
