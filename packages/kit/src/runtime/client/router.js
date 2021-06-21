@@ -142,7 +142,9 @@ export class Router {
 		});
 
 		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
+			if (!this.enabled) return (window.location.href = location.href);
+
+			if (event.state) {
 				const url = new URL(location.href);
 				this._navigate(url, event.state['sveltekit:scroll'], []);
 			}

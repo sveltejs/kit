@@ -142,6 +142,10 @@ export async function render_response({
 				}` : 'null'}
 			});
 		</script>`;
+	} else if (!page_config.router) {
+		init = `<script>
+			addEventListener('popstate', () => location.reload());
+		</script>`;
 	}
 
 	const head = [
