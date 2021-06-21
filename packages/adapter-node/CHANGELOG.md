@@ -1,5 +1,12 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- 926481f: precompress assets and prerendered pages (html,js,json,css,svg,xml)
+- 318cdd7: Only cache files in config.kit.appDir
+
 ## 1.0.0-next.26
 
 ### Minor Changes
