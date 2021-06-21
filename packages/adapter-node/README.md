@@ -15,7 +15,7 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: false,
+			precompress: false
 		})
 	}
 };
