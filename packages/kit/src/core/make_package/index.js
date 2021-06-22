@@ -18,6 +18,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
+	delete pkg.scripts;
 	pkg.type = 'module'; // type must be 'module'
 
 	let user_defined_exports = true;
