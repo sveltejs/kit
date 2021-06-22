@@ -38,8 +38,26 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
+			const is_type_binary =
+				type.startsWith('image') ||
+				type.startsWith('audio') ||
+				type.startsWith('video') ||
+				type.includes('application/octet-stream');
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
+
+			// validation
+			if (is_type_binary && !(body instanceof Uint8Array)) {
+				return error(
+					`Invalid response from route ${request.path}: body must be an instance of Uint8Array if content type is image/*, audio/*, video/* or application/octet-stream `
+				);
+			}
+
+			if (body instanceof Uint8Array && !is_type_binary) {
+				return error(
+					`Invalid response from route ${request.path}: Uint8Array body must have content-type header of image/*, audio/*, video/* or application/octet-stream`
+				);
+			}
 
 			// ensure the body is an object
 			if (
