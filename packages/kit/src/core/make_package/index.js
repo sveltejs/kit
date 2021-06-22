@@ -18,27 +18,15 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
-	const package_pkg = {
-		name: pkg.name,
-		version: pkg.version,
-		description: pkg.description,
-		keywords: pkg.keywords,
-		homepage: pkg.homepage,
-		bugs: pkg.bugs,
-		license: pkg.license,
-		author: pkg.author,
-		contributors: pkg.contributors,
-		funding: pkg.funding,
-		repository: pkg.repository,
-		dependencies: pkg.dependencies,
-		private: pkg.private,
-		publishConfig: pkg.publishConfig,
-		type: 'module',
-		/** @type {Record<string, string>} */
-		exports: {
+	pkg.type = 'module'; // type must be 'module'
+
+	let user_defined_exports = true;
+	if (!('exports' in pkg)) {
+		user_defined_exports = false;
+		pkg.exports = {
 			'./package.json': './package.json'
-		}
-	};
+		};
+	}
 
 	for (const file of files) {
 		if (!files_filter(file)) continue;
@@ -72,22 +60,19 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		if (exports_filter(file)) {
+		if (!user_defined_exports && exports_filter(file)) {
 			const entry = `./${out_file}`;
-			package_pkg.exports[entry] = entry;
+			pkg.exports[entry] = entry;
 		}
 	}
 
-	const main = package_pkg.exports['./index.js'] || package_pkg.exports['./index.svelte'];
+	const main = pkg.exports['./index.js'] || pkg.exports['./index.svelte'];
 
-	if (main) {
-		package_pkg.exports['.'] = main;
+	if (!user_defined_exports && main) {
+		pkg.exports['.'] = main;
 	}
 
-	write(
-		path.join(cwd, config.kit.package.dir, 'package.json'),
-		JSON.stringify(package_pkg, null, '  ')
-	);
+	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const project_readme = path.join(cwd, 'README.md');
 	const readme_exists = fs.existsSync(project_readme);
