@@ -446,4 +446,35 @@ deepMergeSuite('mutability safety', () => {
 	assert.snapshot(snapshot2, JSON.stringify(input2));
 });
 
+// This would have failed before #1698
+deepMergeSuite('merge buffer', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			x: Buffer.from('foo', 'utf-8')
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(Object.keys(merged), ['x', 'y']);
+	assert.equal(conflicts.length, 0);
+});
+
+// This test failed before the current commit which adds it,
+// because empty object already has a handful of inherited
+// properties.
+deepMergeSuite('merge including toString', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			toString: () => '',
+			constructor: () => ''
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(conflicts.length, 0);
+	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
+});
+
 deepMergeSuite.run();
