@@ -32,8 +32,8 @@ export async function make_package(config, cwd = process.cwd()) {
 		repository: pkg.repository,
 		dependencies: pkg.dependencies,
 		private: pkg.private,
-		publishConfig: pkg.publishConfig,
 		files: pkg.files,
+		publishConfig: pkg.publishConfig,
 		type: 'module',
 		/** @type {Record<string, string>} */
 		exports: {
