@@ -27,6 +27,7 @@ export async function handler(event) {
 		return {
 			isBase64Encoded: false,
 			statusCode: rendered.status,
+			multiValueHeaders: rendered.multiValueHeaders,
 			headers: rendered.headers,
 			body: rendered.body
 		};
