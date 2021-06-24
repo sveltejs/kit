@@ -22,7 +22,7 @@ const pipe = promisify(pipeline);
 export default function ({
 	out = 'build',
 	precompress,
-	env: { host: hostEnv = 'HOST', port: portEnv = 'PORT' } = {}
+	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {}
 } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
@@ -45,8 +45,8 @@ export default function ({
 			writeFileSync(
 				join(files, 'env.js'),
 				`export const host = process.env[${JSON.stringify(
-					hostEnv
-				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(portEnv)}] || 3000;`
+					host_env
+				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
 			await esbuild.build({
 				entryPoints: ['.svelte-kit/node/index.js'],
