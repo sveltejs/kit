@@ -446,4 +446,31 @@ deepMergeSuite('mutability safety', () => {
 	assert.snapshot(snapshot2, JSON.stringify(input2));
 });
 
+deepMergeSuite('merge buffer', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			x: Buffer.from('foo', 'utf-8')
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(Object.keys(merged), ['x', 'y']);
+	assert.equal(conflicts.length, 0);
+});
+
+deepMergeSuite('merge including toString', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			toString: () => '',
+			constructor: () => ''
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(conflicts.length, 0);
+	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
+});
+
 deepMergeSuite.run();
