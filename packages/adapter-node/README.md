@@ -43,7 +43,7 @@ By default, the server will accept connections on `0.0.0.0` using port 3000. The
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
-However, which environment variables are used can also be customised by setting the `env` option. If specified, TKTKTK. It defaults to `{ host: 'HOST', port: 'PORT' }`.
+You can specify different environment variables if necessary using the `env` option.
 
 ## License
 
