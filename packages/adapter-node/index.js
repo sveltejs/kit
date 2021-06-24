@@ -43,7 +43,7 @@ export default function ({
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
 			writeFileSync(
-				join(files, 'env.js'),
+				'.svelte-kit/node/env.js',
 				`export const host = process.env[${JSON.stringify(
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
