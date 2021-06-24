@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.117
+
+### Patch Changes
+
+- 828732c: Specify actual Svelte version requirement
+
 ## 1.0.0-next.116
 
 ### Patch Changes
