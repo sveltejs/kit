@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- aa5cf15: Fix regression caused by writing `env.js` to the wrong path
+
 ## 1.0.0-next.28
 
 ### Patch Changes
