@@ -15,7 +15,11 @@ export default {
 		adapter: adapter({
 			// default options are shown
 			out: 'build',
-			precompress: false
+			precompress: false,
+			env: {
+				host: 'HOST',
+				port: 'PORT'
+			}
 		})
 	}
 };
@@ -31,13 +35,15 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `false`.
 
-## Environment variables
+### env
 
 By default, the server will accept connections on `0.0.0.0` using port 3000. These can be customised with the `PORT` and `HOST` environment variables:
 
 ```
 HOST=127.0.0.1 PORT=4000 node build
 ```
+
+However, which environment variables are used can also be customised by setting the `env` option. If specified, TKTKTK. It defaults to `{ host: 'HOST', port: 'PORT' }`.
 
 ## License
 
