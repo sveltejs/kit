@@ -1,5 +1,5 @@
 ---
-"@sveltejs/kit": patch
+'@sveltejs/kit': patch
 ---
 
-copy all root files on `svelte-kit package`
+copy essential root files on `svelte-kit package`

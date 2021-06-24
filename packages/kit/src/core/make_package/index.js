@@ -3,6 +3,7 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import globrex from 'globrex';
 import { mkdirp, rimraf } from '../filesystem';
+import essential_files from './essential_files';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -90,9 +91,12 @@ export async function make_package(config, cwd = process.cwd()) {
 		JSON.stringify(package_pkg, null, '  ')
 	);
 
-	for (const pathname of fs.readdirSync(cwd)) {
+	const whitelist = fs.readdirSync(cwd).filter((file) => {
+		return essential_files.some((name) => file.startsWith(name));
+	});
+	for (const pathname of whitelist) {
 		const full_path = path.join(cwd, pathname);
-		if (fs.lstatSync(full_path).isDirectory()) continue;
+		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
 		const package_path = path.join(cwd, config.kit.package.dir, pathname);
 		if (fs.existsSync(package_path)) continue;
