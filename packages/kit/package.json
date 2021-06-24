@@ -39,7 +39,7 @@
 		"uvu": "^0.5.1"
 	},
 	"peerDependencies": {
-		"svelte": "^3.24.0"
+		"svelte": "^3.34.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
