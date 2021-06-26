@@ -33,7 +33,7 @@ To publish the generated package:
 npm publish package
 ```
 
-If you configure a custom [`package.dir`](#configuration-package), change `package` accordingly.
+The `package` above is referring to the directory name generated, change accordingly if you configure a custom [`package.dir`](#configuration-package). If you're having problems publishing a package that is not yours, add a trailing slash at the end (e.g. `package/`).
 
 ### Caveats
 

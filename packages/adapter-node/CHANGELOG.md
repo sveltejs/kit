@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- aa5cf15: Fix regression caused by writing `env.js` to the wrong path
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- 1c8bdba: Allow the environment variables containing the host and port to serve on to be customised
+
 ## 1.0.0-next.27
 
 ### Patch Changes
