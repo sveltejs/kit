@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.118
+
+### Patch Changes
+
+- 5418254: Fix regex for getting links to crawl during prerendering
+
 ## 1.0.0-next.117
 
 ### Patch Changes
