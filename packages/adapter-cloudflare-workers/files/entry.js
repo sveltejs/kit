@@ -7,12 +7,26 @@ addEventListener('fetch', (event) => {
 });
 
 async function handle(event) {
+	// fall back to an app route
+	const request = event.request;
+	const request_url = new URL(request.url);
+
 	// try static files first
-	if (event.request.method == 'GET') {
+	if (event.request.method == 'GET' && /\/.+\..+$/.test(request_url.pathname)) {
 		try {
+			// TODO add per-asset/page options for cache
+			// use defaults for bot files (2d edge cache)
+			if (/sitemap.*\.xml$|robots.txt$/.test(request_url.pathname)) {
+				return await getAssetFromKV(event);
+			}
 			// TODO rather than attempting to get an asset,
 			// use the asset manifest to see if it exists
-			return await getAssetFromKV(event);
+			return await getAssetFromKV(event, {
+				cacheControl: {
+					browserTTL: STATIC_CACHE_TTL,
+					edgeTTL: EDGE_CACHE_TTL,
+				}
+			});
 		} catch (e) {
 			if (!(e instanceof NotFoundError)) {
 				return new Response('Error loading static asset:' + (e.message || e.toString()), {
@@ -21,10 +35,6 @@ async function handle(event) {
 			}
 		}
 	}
-
-	// fall back to an app route
-	const request = event.request;
-	const request_url = new URL(request.url);
 
 	try {
 		const rendered = await render({
@@ -37,6 +47,11 @@ async function handle(event) {
 		});
 
 		if (rendered) {
+			const { headers } = rendered;
+			// inject cache-control header
+			if (!!PAGE_CACHE_TTL && !(headers['Cache-Control'] || headers['cache-control'])) {
+				rendered.headers['cache-control'] = `max-age=${PAGE_CACHE_TTL}`;
+			}
 			return new Response(rendered.body, {
 				status: rendered.status,
 				headers: rendered.headers
