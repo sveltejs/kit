@@ -18,7 +18,7 @@ export default function (test, is_dev) {
 
 		if (!js) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[type="svelte-data"]');
+			const script_contents = await page.innerHTML('script[data-type="svelte-data"]');
 
 			assert.equal(script_contents, payload, 'Page should contain serialized data');
 		}
@@ -46,11 +46,11 @@ export default function (test, is_dev) {
 		if (!js) {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[type="svelte-data"][url="/load/serialization-post.json"][body="3t25"]'
+				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t25"]'
 			);
 
 			const script_contents_b = await page.innerHTML(
-				'script[type="svelte-data"][url="/load/serialization-post.json"][body="3t24"]'
+				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t24"]'
 			);
 
 			assert.equal(script_contents_a, payload_a, 'Page should contain serialized data');

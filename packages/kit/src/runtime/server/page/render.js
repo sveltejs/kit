@@ -159,9 +159,10 @@ export async function render_response({
 
 			${serialized_data
 				.map(({ url, body, json }) => {
-					return body
-						? `<script type="svelte-data" url="${url}" body="${hash(body)}">${json}</script>`
-						: `<script type="svelte-data" url="${url}">${json}</script>`;
+					const attrTag = 'data-type="svelte-data"';
+					const attrUrl = `data-url="${url}"`;
+					const attrBody = body ? `data-body="${hash(body)}"` : '';
+					return `<script type="application/json" ${attrTag} ${attrUrl} ${attrBody}>${json}</script>`;
 				})
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
