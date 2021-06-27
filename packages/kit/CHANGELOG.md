@@ -1,5 +1,26 @@
 # @sveltejs/kit
 
+## 1.0.0-next.118
+
+### Patch Changes
+
+- 5418254: Fix regex for getting links to crawl during prerendering
+
+## 1.0.0-next.117
+
+### Patch Changes
+
+- 828732c: Specify actual Svelte version requirement
+
+## 1.0.0-next.116
+
+### Patch Changes
+
+- ea8cd54: chore(kit): correct `engines` constraint
+- aedec24: Ensure router is initialized before parsing location
+- c7d5ce4: update vite to 2.3.8 and unpin
+- d259bca: Stricter regex for getting element attributes during prerendering
+
 ## 1.0.0-next.115
 
 ### Patch Changes
