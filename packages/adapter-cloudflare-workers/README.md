@@ -22,6 +22,13 @@ bucket = "./build"
 entry-point = "./workers-site"
 ```
 
+The adapter accepts the following configuration properties:
+| property | default | description |
+|---|---|---|
+| `pageCacheTTL` | `null` | Sets `cache-control` `max-age` for rendered responses if not defined. WARNING: this will apply to all page/request routes, disabled by default for security reasons. |
+| `staticCacheTTL` | `60 * 60 * 24 * 90` (90 days) | Sets `cache-control` `max-age` for static assets. |
+| `edgeCacheTTL` | `60 * 60 * 24 * 90` (90 days) | Sets CloudFlare Edge Cache TTL for static assets. |
+
 It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
 
 More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
