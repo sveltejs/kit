@@ -184,26 +184,22 @@ export default function (test, is_dev) {
 	test('handles external api', '/load', async ({ base, page }) => {
 		const port = await ports.find(4000);
 
-		const files_names = ['/server-fetch-request.json', '/server-fetch-request2.json'];
-
-		let times_responded = 0;
-		let expect_answer = 42;
+		/** @type {string[]} */
+		const requested_urls = [];
 
 		const server = http.createServer(async (req, res) => {
-			if (files_names.includes(req.url)) {
-				times_responded += 1;
+			requested_urls.push(req.url);
 
+			if (req.url === '/server-fetch-request-modified.json') {
 				res.writeHead(200, {
 					'Access-Control-Allow-Origin': '*',
 					'content-type': 'application/json'
 				});
 
-				if (req.url === files_names[0]) {
-					res.end(JSON.stringify({ answer: expect_answer }));
-				} else {
-					expect_answer = 43;
-					res.end(JSON.stringify({ answer: expect_answer }));
-				}
+				res.end(JSON.stringify({ answer: 42 }));
+			} else {
+				res.statusCode = 404;
+				res.end('not found');
 			}
 		});
 
@@ -213,8 +209,11 @@ export default function (test, is_dev) {
 
 		await page.goto(`${base}/load/server-fetch-request?port=${port}`);
 
-		assert.equal(times_responded, 1);
-		assert.equal(await page.textContent('h1'), `the answer is ${expect_answer}`);
+		assert.equal(requested_urls, [
+			'/server-fetch-request-modified.json'
+		]);
+
+		assert.equal(await page.textContent('h1'), 'the answer is 42');
 
 		server.close();
 	});
