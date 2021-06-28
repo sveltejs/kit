@@ -33,9 +33,9 @@ function get_src(attrs) {
 }
 
 /** @param {string} attrs */
-function get_rel(attrs) {
-	const match = /rel\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
-	return match && (match[1] || match[2] || match[3]);
+function is_rel_external(attrs) {
+	const match = /rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external))/.exec(attrs);
+	return !!match;
 }
 
 /** @param {string} attrs */
@@ -231,8 +231,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					const attrs = match[2];
 
 					if (element === 'a' || element === 'link') {
-						const rel = get_rel(attrs);
-						if (rel === 'external') continue;
+						if (is_rel_external(attrs)) continue;
 
 						hrefs.push(get_href(attrs));
 					} else {
