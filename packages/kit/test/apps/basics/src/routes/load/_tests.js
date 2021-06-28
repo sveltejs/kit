@@ -209,10 +209,7 @@ export default function (test, is_dev) {
 
 		await page.goto(`${base}/load/server-fetch-request?port=${port}`);
 
-		assert.equal(requested_urls, [
-			'/server-fetch-request-modified.json'
-		]);
-
+		assert.equal(requested_urls, ['/server-fetch-request-modified.json']);
 		assert.equal(await page.textContent('h1'), 'the answer is 42');
 
 		server.close();
