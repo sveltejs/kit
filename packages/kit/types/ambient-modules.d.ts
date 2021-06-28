@@ -26,7 +26,8 @@ declare module '$app/navigation' {
 	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
 	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
 	 * @param opts.state The state of the new/updated history entry
-	 */export function goto(
+	 */
+	export function goto(
 		href: string,
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<any>;
