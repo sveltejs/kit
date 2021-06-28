@@ -90,7 +90,9 @@ export function getSession(request) {
 
 ### serverFetch
 
-This function provides possibilities to replace `fetch` on the server-side for the external API requests. It's beneficial if you want to retrieve resources differently from what it is doing on the browser. For example, if you want to change URL or headers for server-side only.
+This function allows you to modify (or replace) a `fetch` request for an **external resource** that happens inside a `load` function that runs on the server (or during pre-rendering).
+
+For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
 type ServerFetch = (req: Request) => Promise<Response>;
@@ -99,14 +101,14 @@ type ServerFetch = (req: Request) => Promise<Response>;
 ```js
 /** @type {import('@sveltejs/kit').ServerFetch} */
 export async function serverFetch(request) {
-	let newRequest = request;
-	if (request.url.startsWith('https://my.site/api')) {
-		newRequest = new Request(
-			request.url.replace('https://my.site/api', 'http://localhost:9999/'),
-			request,
+	if (request.url.startsWith('https://api.yourapp.com/')) {
+		// clone the original request, but change the URL
+		request = new Request(
+			request.url.replace('https://api.yourapp.com/', 'http://localhost:9999/'),
+			request
 		);
 	}
 
-	return fetch(newRequest);
+	return fetch(request);
 }
 ```
