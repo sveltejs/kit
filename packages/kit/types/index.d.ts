@@ -11,5 +11,6 @@ export {
 	GetSession,
 	Handle,
 	ServerRequest as Request,
-	ServerResponse as Response
+	ServerResponse as Response,
+	ServerFetch
 } from './hooks';
