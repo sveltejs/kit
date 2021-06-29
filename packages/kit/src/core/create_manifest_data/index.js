@@ -60,7 +60,11 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
-			.filter((f) => !f.startsWith('node_modules'))
+			.filter((f) =>
+				process.env.SVELTE_KIT_FILES_IGNORE_PREFIX
+					? !process.env.SVELTE_KIT_FILES_IGNORE_PREFIX.split(',').find((g) => f.startsWith(g))
+					: true
+			)
 			.map((basename) => {
 				const resolved = path.join(dir, basename);
 				const file = posixify(path.relative(cwd, resolved));
