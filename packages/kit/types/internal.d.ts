@@ -1,5 +1,5 @@
 import { Load } from './page';
-import { Incoming, GetSession, Handle, ServerResponse } from './hooks';
+import { Incoming, GetSession, Handle, ServerResponse, ServerFetch } from './hooks';
 import { RequestHandler } from './endpoint';
 
 type PageId = string;
@@ -111,6 +111,7 @@ export type SSRManifest = {
 export type Hooks = {
 	getSession?: GetSession;
 	handle?: Handle;
+	serverFetch?: ServerFetch;
 };
 
 export type SSRNode = {
