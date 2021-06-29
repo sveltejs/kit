@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.119
+
+### Patch Changes
+
+- 064f848: Implement serverFetch hook
+- 882fb12: Add keepfocus option to goto
+
 ## 1.0.0-next.118
 
 ### Patch Changes
