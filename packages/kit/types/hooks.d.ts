@@ -31,3 +31,5 @@ export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;
 	resolve: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
 }) => MaybePromise<ServerResponse>;
+
+export type ServerFetch = (req: Request) => Promise<Response>;

@@ -181,7 +181,13 @@ function merge_into(a, b, conflicts = [], path = []) {
 			}
 			a[prop].push(...b[prop]);
 		} else {
-			if (a[prop] !== undefined) {
+			// Since we're inside a for/in loop which loops over enumerable
+			// properties only, we want parity here and to check if 'a' has
+			// enumerable-only property 'prop'. Using 'hasOwnProperty' to
+			// exclude inherited properties is close enough. It is possible
+			// that someone uses Object.defineProperty to create a direct,
+			// non-enumerable property but let's not worry about that.
+			if (Object.prototype.hasOwnProperty.call(a, prop)) {
 				conflicts.push([...path, prop].join('.'));
 			}
 			a[prop] = b[prop];
