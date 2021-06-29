@@ -1,4 +1,4 @@
-import { readFileSync, statSync, createReadStream, createWriteStream } from 'fs';
+import { readFileSync, statSync, createReadStream, createWriteStream, writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { pipeline } from 'stream';
@@ -12,10 +12,18 @@ const pipe = promisify(pipeline);
 /**
  * @param {{
  *   out?: string;
- *   precompress?: boolean
+ *   precompress?: boolean;
+ *   env?: {
+ *     host?: string;
+ *     port?: string;
+ *   };
  * }} options
  */
-export default function ({ out = 'build', precompress } = {}) {
+export default function ({
+	out = 'build',
+	precompress,
+	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {}
+} = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-node',
@@ -34,6 +42,12 @@ export default function ({ out = 'build', precompress } = {}) {
 			utils.log.minor('Building server');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
+			writeFileSync(
+				'.svelte-kit/node/env.js',
+				`export const host = process.env[${JSON.stringify(
+					host_env
+				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
+			);
 			await esbuild.build({
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
