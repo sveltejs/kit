@@ -168,10 +168,10 @@ async function create_ts_compiler_host(ts, options, config) {
 
 async function try_load_svelte2tsx() {
 	try {
-		return (await import('svelte2tsx')).default;
+		return (await import('svelte2tsx')).svelte2tsx;
 	} catch (e) {
 		throw new Error(
-			'You need to install svelte2tsx >=0.2.1 if you want to generate type definitions'
+			'You need to install svelte2tsx >=0.3.0 if you want to generate type definitions'
 		);
 	}
 }
