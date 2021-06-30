@@ -1,6 +1,7 @@
 import { test, suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { validate_config, deep_merge } from './index.js';
+import { ignoreFilePrefixes } from '../../core/create_manifest_data/index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
@@ -196,6 +197,16 @@ test('fails if prerender.pages are invalid', () => {
 			}
 		});
 	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+});
+
+test('properly filters out ignored prefixes', () => {
+    const files = [ 'node_modules/filterme', 'abc/node_modules/ok', 'special_prefix/maybefilterme' ];
+    let filtered = files.filter(f => ignoreFilePrefixes(undefined, f));
+    assert.equal(filtered, files);
+    filtered = files.filter(f => ignoreFilePrefixes("node_modules", f));
+    assert.equal(filtered, ['abc/node_modules/ok', 'special_prefix/maybefilterme']);
+    filtered = files.filter(f => ignoreFilePrefixes("node_modules,special_prefix", f));
+    assert.equal(filtered, ['abc/node_modules/ok']);
 });
 
 /**
