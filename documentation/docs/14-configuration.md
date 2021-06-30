@@ -168,10 +168,9 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 Options related to [creating a package](#packaging).
 
-Generating type definitions:
-
-- `types.folder` - the folder where to place the type definitions. By default they are placed next to their implementation. A common alternative is to place them in a `types` folder.
-- `types.entry` - when importing from the root of the package (`import { foo } from 'your-package'`), TypeScript needs to know where to look for the entry point's type definitions. By default this option is `undefined`, which means TypeScript is looking for a `index.d.ts` file. If you set the `folder` option, you likely also want to set this option. So for example if you set `folder` to types and you have a `index.js` which is your entry point, `entry` would be `./types/index.d.ts`
+- `dir` - output directory
+- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
+- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
 
 ### vite
 

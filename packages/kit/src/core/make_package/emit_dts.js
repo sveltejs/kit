@@ -54,7 +54,7 @@ function load_tsconfig(ts, config) {
 			...options,
 			declaration: true,
 			emitDeclarationOnly: true,
-			declarationDir: path.join(config.kit.package.dir, config.kit.package.types.folder),
+			declarationDir: config.kit.package.dir,
 			allowNonTsExtensions: true
 		},
 		filenames
