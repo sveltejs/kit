@@ -22,8 +22,10 @@ import { posixify } from '../utils.js';
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
 
-const ignoreFilePrefixes = (f) =>
-	!process.env.SVELTE_KIT_FILES_IGNORE_PREFIX.split(',').find((g) => f.startsWith(g));
+export const ignoreFilePrefixes = (prefixes, f) => {
+	if (!prefixes) return true;
+	return !prefixes.split(',').find((g) => f.startsWith(g));
+};
 
 /**
  * @param {{
@@ -63,7 +65,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		/** @type {Item[]} */
 		const items = fs
 			.readdirSync(dir)
-			.filter((f) => (process.env.SVELTE_KIT_FILES_IGNORE_PREFIX ? ignoreFilePrefixes(f) : true))
+			.filter((f) => ignoreFilePrefixes(process.env.SVELTE_KIT_FILES_IGNORE_PREFIX))
 			.map((basename) => {
 				const resolved = path.join(dir, basename);
 				const file = posixify(path.relative(cwd, resolved));
