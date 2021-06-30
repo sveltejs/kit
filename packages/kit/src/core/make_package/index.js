@@ -12,6 +12,9 @@ import { emit_dts } from './emit_dts';
 export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
 
+	// Generate type definitions first so hand-written types can overwrite generated ones
+	await emit_dts(await try_load_ts(), config);
+
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
 		...config.kit.package.exports,
@@ -90,8 +93,6 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (main) {
 		package_pkg.exports['.'] = main;
 	}
-
-	await emit_dts(await try_load_ts(), config);
 
 	write(
 		path.join(cwd, config.kit.package.dir, 'package.json'),
