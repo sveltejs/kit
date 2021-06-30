@@ -23,8 +23,10 @@ async function handle(event) {
 			// use the asset manifest to see if it exists
 			return await getAssetFromKV(event, {
 				cacheControl: {
+					// eslint-disable-next-line no-undef
 					browserTTL: STATIC_CACHE_TTL,
-					edgeTTL: EDGE_CACHE_TTL,
+					// eslint-disable-next-line no-undef
+					edgeTTL: EDGE_CACHE_TTL
 				}
 			});
 		} catch (e) {
@@ -49,7 +51,9 @@ async function handle(event) {
 		if (rendered) {
 			const { headers } = rendered;
 			// inject cache-control header
+			// eslint-disable-next-line no-undef
 			if (!!PAGE_CACHE_TTL && !(headers['Cache-Control'] || headers['cache-control'])) {
+				// eslint-disable-next-line no-undef
 				rendered.headers['cache-control'] = `max-age=${PAGE_CACHE_TTL}`;
 			}
 			return new Response(rendered.body, {
