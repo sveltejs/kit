@@ -77,7 +77,7 @@ An object containing zero or more of the following `string` values:
 - `template` — the location of the template for HTML responses
 
 You can ignore prefixes using the `SVELTE_KIT_FILES_IGNORE_PREFIX` (for example: `SVELTE_KIT_FILES_IGNORE_PREFIX=node_modules yarn build`,
-which will ignore any file that starts with node_modules)
+which will ignore any file that starts with the string `node_modules`)
 
 ### floc
 
