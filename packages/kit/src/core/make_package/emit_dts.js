@@ -1,12 +1,14 @@
 import * as path from 'path';
+import { createRequire } from 'module';
 
 /**
  * @param {import('typescript')} ts
  * @param {import('types/config').ValidatedConfig} config
  */
 export async function emit_dts(ts, config) {
-	const { options, filenames } = load_tsconfig(ts, config);
-	const host = await create_ts_compiler_host(ts, options, config);
+	const svelte_map = await create_svelte_map(ts, config);
+	const { options, filenames } = load_tsconfig(ts, config, svelte_map);
+	const host = await create_ts_compiler_host(ts, options, svelte_map);
 	const program = ts.createProgram(filenames, options, host);
 	program.emit();
 }
@@ -14,8 +16,9 @@ export async function emit_dts(ts, config) {
 /**
  * @param {import('typescript')} ts
  * @param {import('types/config').ValidatedConfig} config
+ * @param {SvelteMap} svelte_map
  */
-function load_tsconfig(ts, config) {
+function load_tsconfig(ts, config, svelte_map) {
 	const lib_root = config.kit.files.lib;
 	let tsconfig_file = ts.findConfigFile(lib_root, ts.sys.fileExists);
 
@@ -40,7 +43,7 @@ function load_tsconfig(ts, config) {
 	ts_config.include = [`${lib_path_relative}/**/*`];
 	ts_config.files = [];
 
-	const { options, fileNames: filenames } = ts.parseJsonConfigFileContent(
+	const { options, fileNames } = ts.parseJsonConfigFileContent(
 		ts_config,
 		ts.sys,
 		basepath,
@@ -49,6 +52,24 @@ function load_tsconfig(ts, config) {
 		undefined,
 		[{ extension: 'svelte', isMixedContent: true, scriptKind: ts.ScriptKind.Deferred }]
 	);
+
+	const filenames = fileNames.map((name) => {
+		if (!is_svelte_filepath(name)) {
+			return name;
+		}
+		// We need to trick TypeScript into thinking that Svelte files
+		// are either TS or JS files in order to generate correct d.ts
+		// definition files.
+		const is_ts_file = svelte_map.add(name);
+		return name + (is_ts_file ? '.ts' : '.js');
+	});
+
+	// require.resolve-equivalent in ESM is still experimental, therefore create require here
+	const require = createRequire(import.meta.url);
+	// Add ambient functions so TS knows how to resolve its invocations in the
+	// code output of svelte2tsx.
+	filenames.push(require.resolve('svelte2tsx/svelte-shims.d.ts'));
+
 	return {
 		options: {
 			...options,
@@ -64,20 +85,30 @@ function load_tsconfig(ts, config) {
 /**
  * @param {import('typescript')} ts
  * @param {import('typescript').CompilerOptions} options
- * @param {import('types/config').ValidatedConfig} config
+ * @param {SvelteMap} svelte_map
  * @returns
  */
-async function create_ts_compiler_host(ts, options, config) {
-	const svelte2tsx = await try_load_svelte2tsx();
+async function create_ts_compiler_host(ts, options, svelte_map) {
 	const host = ts.createCompilerHost(options);
 
 	const svelte_sys = {
 		...ts.sys,
 		/**
-		 * @param {string} path
+		 * @param {string} original_path
 		 */
-		fileExists(path) {
-			return ts.sys.fileExists(ensure_real_svelte_filepath(path));
+		fileExists(original_path) {
+			const path = ensure_real_svelte_filepath(original_path);
+			const exists = ts.sys.fileExists(path);
+			if (exists && is_svelte_filepath(path)) {
+				const is_ts_file = svelte_map.add(path);
+				if (
+					(is_ts_file && !is_ts_filepath(original_path)) ||
+					(!is_ts_file && is_ts_filepath(original_path))
+				) {
+					return false;
+				}
+			}
+			return exists;
 		},
 		/**
 		 * @param {string} path
@@ -86,15 +117,7 @@ async function create_ts_compiler_host(ts, options, config) {
 		readFile(path, encoding = 'utf-8') {
 			if (is_virtual_svelte_filepath(path) || is_svelte_filepath(path)) {
 				path = ensure_real_svelte_filepath(path);
-				const code = ts.sys.readFile(path, encoding);
-				const isTsFile = // svelte-preprocess allows default languages
-					['ts', 'typescript'].includes(config.preprocess?.defaultLanguages?.script) ||
-					/<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(code);
-				return svelte2tsx(code, {
-					filename: path,
-					isTsFile,
-					mode: 'dts'
-				}).code;
+				return svelte_map.get(path);
 			} else {
 				return ts.sys.readFile(path, encoding);
 			}
@@ -166,12 +189,56 @@ async function create_ts_compiler_host(ts, options, config) {
 	return host;
 }
 
+/**
+ * @typedef SvelteMap
+ * @property {(path: string) => boolean} add
+ * @property {(key: string) => string | undefined} get
+ */
+
+/**
+ * Generates a map to which we add the transformed code of Svelte files
+ * early on when we first need to look at the file contents and can read
+ * those transformed source later on.
+ *
+ * @param {import('typescript')} ts
+ * @param {import('types/config').ValidatedConfig} config
+ * @returns {Promise<SvelteMap>}
+ */
+async function create_svelte_map(ts, config) {
+	const svelte2tsx = await try_load_svelte2tsx();
+	const svelte_files = new Map();
+
+	/**
+	 * @param {string} path
+	 * @returns {boolean} if file is a TS file
+	 */
+	function add(path) {
+		const code = ts.sys.readFile(path, 'utf-8');
+		const isTsFile = // svelte-preprocess allows default languages
+			['ts', 'typescript'].includes(config.preprocess?.defaultLanguages?.script) ||
+			/<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(code);
+		const transformed = svelte2tsx(code, {
+			filename: path,
+			isTsFile,
+			mode: 'dts'
+		}).code;
+		svelte_files.set(path, transformed);
+		return isTsFile;
+	}
+
+	return { add, get: /** @param {string} key */ (key) => svelte_files.get(key) };
+}
+
 async function try_load_svelte2tsx() {
 	try {
-		return (await import('svelte2tsx')).svelte2tsx;
+		const svelte2tsx = (await import('svelte2tsx')).svelte2tsx;
+		if (!svelte2tsx) {
+			throw new Error('Old svelte2tsx version');
+		}
+		return svelte2tsx;
 	} catch (e) {
 		throw new Error(
-			'You need to install svelte2tsx >=0.3.0 if you want to generate type definitions'
+			'You need to install svelte2tsx >=0.4.0 if you want to generate type definitions'
 		);
 	}
 }
@@ -188,8 +255,16 @@ function is_svelte_filepath(file_path) {
  * @param {string} file_path
  * @returns
  */
+function is_ts_filepath(file_path) {
+	return file_path.endsWith('.ts');
+}
+
+/**
+ * @param {string} file_path
+ * @returns
+ */
 function is_virtual_svelte_filepath(file_path) {
-	return file_path.endsWith('.svelte.ts');
+	return file_path.endsWith('.svelte.ts') || file_path.endsWith('svelte.js');
 }
 
 /**
@@ -197,7 +272,7 @@ function is_virtual_svelte_filepath(file_path) {
  * @returns
  */
 function to_real_svelte_filepath(file_path) {
-	return file_path.slice(0, -'.ts'.length);
+	return file_path.slice(0, -3); // -'.js'.length || -'.ts'.length
 }
 
 /**
