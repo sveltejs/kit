@@ -76,6 +76,9 @@ An object containing zero or more of the following `string` values:
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
 
+You can ignore prefixes using the `SVELTE_KIT_FILES_IGNORE_PREFIX` (for example: `SVELTE_KIT_FILES_IGNORE_PREFIX=node_modules yarn build`,
+which will ignore any file that starts with node_modules)
+
 ### floc
 
 Google's [FLoC](https://github.com/WICG/floc) is a technology for targeted advertising that the [Electronic Frontier Foundation](https://www.eff.org/) has deemed [harmful](https://www.eff.org/deeplinks/2021/03/googles-floc-terrible-idea) to user privacy. [Browsers other than Chrome](https://www.theverge.com/2021/4/16/22387492/google-floc-ad-tech-privacy-browsers-brave-vivaldi-edge-mozilla-chrome-safari) have declined to implement it.
