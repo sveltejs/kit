@@ -13,8 +13,9 @@ export type LoadInput<
 
 export type ErrorLoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
-	Context extends Record<string, any> = Record<string, any>
-> = LoadInput<PageParams, Context> & {
+	Context extends Record<string, any> = Record<string, any>,
+	Session = any
+> = LoadInput<PageParams, Context, Session> & {
 	status: number;
 	error: Error;
 };
@@ -33,12 +34,17 @@ export type LoadOutput<
 
 // Publicized Types
 export type Load<
-	Input extends { context?: Record<string, any>; pageParams?: Record<string, string> } = {},
+	Input extends {
+		context?: Record<string, any>;
+		pageParams?: Record<string, string>;
+		session?: any;
+	} = {},
 	Output extends { context?: Record<string, any>; props?: Record<string, any> } = {}
 > = (
 	input: LoadInput<
 		InferValue<Input, 'pageParams', Record<string, string>>,
-		InferValue<Input, 'context', Record<string, any>>
+		InferValue<Input, 'context', Record<string, any>>,
+		InferValue<Input, 'session', any>
 	>
 ) => MaybePromise<void | LoadOutput<
 	InferValue<Output, 'props', Record<string, any>>,
@@ -46,12 +52,17 @@ export type Load<
 >>;
 
 export type ErrorLoad<
-	Input extends { context?: Record<string, any>; pageParams?: Record<string, string> } = {},
+	Input extends {
+		context?: Record<string, any>;
+		pageParams?: Record<string, string>;
+		session?: any;
+	} = {},
 	Output extends { context?: Record<string, any>; props?: Record<string, any> } = {}
 > = (
 	input: ErrorLoadInput<
 		InferValue<Input, 'pageParams', Record<string, string>>,
-		InferValue<Input, 'context', Record<string, any>>
+		InferValue<Input, 'context', Record<string, any>>,
+		InferValue<Input, 'session', any>
 	>
 ) => MaybePromise<
 	LoadOutput<
