@@ -15,6 +15,10 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+	/**
+	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`. By default, `svelte-kit dev` runs in `development` mode and `svelte-kit build` runs in `production` mode.
+	 */
+	export const mode: string;
 }
 
 declare module '$app/navigation' {
