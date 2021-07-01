@@ -10,12 +10,16 @@ type JSONValue =
 	| JSONValue[]
 	| { [key: string]: JSONValue };
 
-export type EndpointOutput = {
+type DefaultBody = JSONValue | Uint8Array;
+
+export type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
 	status?: number;
 	headers?: Partial<Headers>;
-	body?: JSONValue | Uint8Array;
+	body?: Body;
 };
 
-export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
-	request: ServerRequest<Locals, Body>
-) => MaybePromise<void | EndpointOutput>;
+export type RequestHandler<
+	Locals = Record<string, any>,
+	Input = unknown,
+	Output extends DefaultBody = DefaultBody
+> = (request: ServerRequest<Locals, Input>) => MaybePromise<void | EndpointOutput<Output>>;
