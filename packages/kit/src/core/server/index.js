@@ -19,14 +19,8 @@ export async function get_server(use_https, user_config, handler) {
 			user_config.server.https.key &&
 			user_config.server.https.cert
 		) {
-
-			try {
-				https_options.key = fs.readFileSync(user_config.server.https.key.toString(), 'utf8');
-				https_options.cert = fs.readFileSync(user_config.server.https.cert.toString(), 'utf8');
-			} catch (err) {
-				throw err;
-			}
-
+			https_options.key = fs.readFileSync(user_config.server.https.key.toString(), 'utf8');
+			https_options.cert = fs.readFileSync(user_config.server.https.cert.toString(), 'utf8');
 		} else {
 			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}
