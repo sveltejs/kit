@@ -49,7 +49,7 @@ Stores are _contextual_ — they are added to the [context](https://svelte.dev/t
 
 Because of that, the stores are not free-floating objects: they must be accessed during component initialisation, like anything else that would be accessed with `getContext`.
 
-- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. Most of the time, you won't need to use it.
+- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. Use this to synchronously get the stores during component or page initialization, so that it can be manipulated asynchronously later. This can be safely ignored if the stores are only accessed with the `$`-prefix syntax.
 
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate.
 
