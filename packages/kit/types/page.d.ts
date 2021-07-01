@@ -2,11 +2,12 @@ import { Location as Page, MaybePromise, InferValue } from './helper';
 
 export type LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
-	Context extends Record<string, any> = Record<string, any>
+	Context extends Record<string, any> = Record<string, any>,
+	Session = any
 > = {
 	page: Page<PageParams>;
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
-	session: any;
+	session: Session;
 	context: Context;
 };
 
