@@ -7,7 +7,7 @@ export const browser = !import.meta.env.SSR;
  */
 export const dev = !!import.meta.env.DEV;
 /**
- * @type {import('$app/env).mode}
+ * @type {import('$app/env').mode}
  */
 export const mode = import.meta.env.MODE
 /**
