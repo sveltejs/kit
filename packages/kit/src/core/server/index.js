@@ -1,5 +1,6 @@
 import http from 'http';
 import https from 'https';
+import fs from 'fs';
 /**
  *
  * @param {boolean} use_https
@@ -18,8 +19,14 @@ export async function get_server(use_https, user_config, handler) {
 			user_config.server.https.key &&
 			user_config.server.https.cert
 		) {
-			https_options.key = user_config.server.https.key.toString();
-			https_options.cert = user_config.server.https.cert.toString();
+
+			try {
+				https_options.key = fs.readFileSync(user_config.server.https.key.toString(), 'utf8');
+				https_options.cert = fs.readFileSync(user_config.server.https.cert.toString(), 'utf8');
+			} catch (err) {
+				throw err;
+			}
+
 		} else {
 			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}
