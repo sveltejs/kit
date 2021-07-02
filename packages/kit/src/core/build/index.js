@@ -109,7 +109,6 @@ async function build_client({
 	copy_assets(build_dir);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
-	process.env.VITE_SVELTEKIT_SERVICE_WORKER = service_worker_entry_file ? '/service-worker.js' : '';
 
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
