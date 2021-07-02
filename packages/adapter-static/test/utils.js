@@ -33,9 +33,10 @@ export function run(app, callback) {
 
 			rimraf(`${cwd}/build`);
 
-			await spawn(`${process.execPath} ${cli_path} build`, {
+			await spawn(`"${process.execPath}" ${cli_path} build`, {
 				cwd,
-				stdio: 'inherit'
+				stdio: 'inherit',
+				shell: true
 			});
 
 			context.cwd = cwd;
@@ -64,13 +65,15 @@ export function run(app, callback) {
 	suite.run();
 }
 
+const parameterRegex = new RegExp('"[^"]+"|[\\S]+', 'g');
+
 /**
  * @param {string} str
  * @param {child_process.SpawnOptions} opts
  */
 function spawn(str, opts) {
 	return new Promise((fulfil, reject) => {
-		const [cmd, ...args] = str.split(' ');
+		const [cmd, ...args] = str.match(parameterRegex);
 
 		const child = child_process.spawn(cmd, args, opts);
 
