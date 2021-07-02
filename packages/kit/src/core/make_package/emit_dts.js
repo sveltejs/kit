@@ -213,8 +213,11 @@ async function create_svelte_map(ts, config) {
 	function add(path) {
 		const code = ts.sys.readFile(path, 'utf-8');
 		const isTsFile = // svelte-preprocess allows default languages
-			['ts', 'typescript'].includes(config.preprocess?.defaultLanguages?.script) ||
-			/<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(code);
+			['ts', 'typescript'].includes(
+				config.preprocess &&
+					config.preprocess.defaultLanguages &&
+					config.preprocess.defaultLanguages.script
+			) || /<script\s+[^>]*?lang=('|")(ts|typescript)('|")/.test(code);
 		const transformed = svelte2tsx(code, {
 			filename: path,
 			isTsFile,
