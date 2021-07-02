@@ -211,4 +211,17 @@ export default function (test, is_dev) {
 			assert.ok(!has_stack_trace, 'Stack trace is visible');
 		}
 	});
+
+	test(
+		'server-side 4xx status without error from load()',
+		'/errors/load-status-without-error',
+		async ({ page, response }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(
+				await page.textContent('#message'),
+				'This is your custom error page saying: "Unauthorized"'
+			);
+			assert.equal(response.status(), 401);
+		}
+	);
 }
