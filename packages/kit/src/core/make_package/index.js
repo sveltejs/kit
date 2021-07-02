@@ -72,6 +72,13 @@ export async function make_package(config, cwd = process.cwd()) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
 			out_contents = source;
+			if (fs.existsSync(path.join(cwd, config.kit.package.dir, out_file))) {
+				console.warn(
+					'Found already existing file from d.ts generation for ' +
+						out_file +
+						'. This file will be overwritten.'
+				);
+			}
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
 			out_contents = await transpile_ts(filename, source);
