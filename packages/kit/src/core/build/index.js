@@ -109,7 +109,6 @@ async function build_client({
 	copy_assets(build_dir);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
-	process.env.VITE_SVELTEKIT_SERVICE_WORKER = service_worker_entry_file ? '/service-worker.js' : '';
 
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
@@ -195,7 +194,16 @@ async function build_client({
  * @param {string} runtime
  */
 async function build_server(
-	{ cwd, base, config, manifest, build_dir, output_dir, client_entry_file },
+	{
+		cwd,
+		base,
+		config,
+		manifest,
+		build_dir,
+		output_dir,
+		client_entry_file,
+		service_worker_entry_file
+	},
 	client_manifest,
 	runtime
 ) {
@@ -317,6 +325,7 @@ async function build_server(
 					paths: settings.paths,
 					read: settings.read,
 					root,
+					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
