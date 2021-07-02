@@ -74,7 +74,7 @@ If a page fails to load (see [Loading](#loading)), SvelteKit will render an erro
 
 For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
 
-> SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommend that you bring your own.
+> SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommended that you bring your own.
 
 If an error component has a [`load`](#loading) function, it will be called with `error` and `status` properties:
 
