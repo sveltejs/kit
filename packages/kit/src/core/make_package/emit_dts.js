@@ -4,11 +4,12 @@ import { createRequire } from 'module';
 /**
  * @param {import('typescript')} ts
  * @param {import('types/config').ValidatedConfig} config
+ * @param {string} cwd
  */
-export async function emit_dts(ts, config) {
+export async function emit_dts(ts, config, cwd) {
 	const svelte_map = await create_svelte_map(ts, config);
 	const { options, filenames } = load_tsconfig(ts, config, svelte_map);
-	const host = await create_ts_compiler_host(ts, options, svelte_map);
+	const host = await create_ts_compiler_host(ts, options, svelte_map, cwd);
 	const program = ts.createProgram(filenames, options, host);
 	program.emit();
 }
@@ -20,10 +21,17 @@ export async function emit_dts(ts, config) {
  */
 function load_tsconfig(ts, config, svelte_map) {
 	const lib_root = config.kit.files.lib;
+
+	const jsconfig_file = ts.findConfigFile(lib_root, ts.sys.fileExists, 'jsconfig.json');
 	let tsconfig_file = ts.findConfigFile(lib_root, ts.sys.fileExists);
 
-	if (!tsconfig_file) {
+	if (!tsconfig_file && !jsconfig_file) {
 		throw new Error('Failed to locate tsconfig or jsconfig');
+	}
+
+	tsconfig_file = tsconfig_file || jsconfig_file;
+	if (jsconfig_file && is_subpath(path.dirname(tsconfig_file), path.dirname(jsconfig_file))) {
+		tsconfig_file = jsconfig_file;
 	}
 
 	tsconfig_file = path.isAbsolute(tsconfig_file)
@@ -86,15 +94,20 @@ function load_tsconfig(ts, config, svelte_map) {
  * @param {import('typescript')} ts
  * @param {import('typescript').CompilerOptions} options
  * @param {SvelteMap} svelte_map
+ * @param {string} cwd
  * @returns
  */
-async function create_ts_compiler_host(ts, options, svelte_map) {
+async function create_ts_compiler_host(ts, options, svelte_map, cwd) {
 	const host = ts.createCompilerHost(options);
+	// TypeScript writes the files relative to the found tsconfig/jsconfig
+	// which - at least in the case of the tests - is wrong. Therefore prefix
+	// the output paths. See Typescript issue #25430 for more.
+	const path_prefix = path.relative(process.cwd(), cwd);
 
 	const svelte_sys = {
 		...ts.sys,
 		/**
-		 * @param {string} original_path
+		 * @type {import('typescript').System['fileExists']}
 		 */
 		fileExists(original_path) {
 			const path = ensure_real_svelte_filepath(original_path);
@@ -111,8 +124,7 @@ async function create_ts_compiler_host(ts, options, svelte_map) {
 			return exists;
 		},
 		/**
-		 * @param {string} path
-		 * @param {string} encoding
+		 * @type {import('typescript').System['readFile']}
 		 */
 		readFile(path, encoding = 'utf-8') {
 			if (is_virtual_svelte_filepath(path) || is_svelte_filepath(path)) {
@@ -123,22 +135,24 @@ async function create_ts_compiler_host(ts, options, svelte_map) {
 			}
 		},
 		/**
-		 * @param {string} path
-		 * @param {string[]} extensions
-		 * @param {string[]} exclude
-		 * @param {string[]} include
-		 * @param {number} depth
-		 * @returns
+		 * @type {import('typescript').System['readDirectory']}
 		 */
 		readDirectory(path, extensions, exclude, include, depth) {
 			const extensionsWithSvelte = (extensions ?? []).concat('.svelte');
 			return ts.sys.readDirectory(path, extensionsWithSvelte, exclude, include, depth);
+		},
+		/**
+		 * @type {import('typescript').System['writeFile']}
+		 */
+		writeFile(fileName, data, writeByteOrderMark) {
+			return ts.sys.writeFile(path.join(path_prefix, fileName), data, writeByteOrderMark);
 		}
 	};
 
 	host.fileExists = svelte_sys.fileExists;
 	host.readFile = svelte_sys.readFile;
 	host.readDirectory = svelte_sys.readDirectory;
+	host.writeFile = svelte_sys.writeFile;
 
 	host.resolveModuleNames = (
 		module_names,
@@ -167,23 +181,7 @@ async function create_ts_compiler_host(ts, options, svelte_map) {
 			return ts_resolved_module;
 		}
 
-		const svelte_resolved_module = ts.resolveModuleName(
-			name,
-			containing_file,
-			compiler_options,
-			svelte_sys
-		).resolvedModule;
-		if (
-			!svelte_resolved_module ||
-			!is_virtual_svelte_filepath(svelte_resolved_module.resolvedFileName)
-		) {
-			return svelte_resolved_module;
-		}
-
-		return {
-			extension: ts.ScriptKind.TSX,
-			resolvedFileName: to_real_svelte_filepath(svelte_resolved_module.resolvedFileName)
-		};
+		return ts.resolveModuleName(name, containing_file, compiler_options, svelte_sys).resolvedModule;
 	}
 
 	return host;
@@ -281,4 +279,13 @@ function to_real_svelte_filepath(file_path) {
  */
 function ensure_real_svelte_filepath(file_path) {
 	return is_virtual_svelte_filepath(file_path) ? to_real_svelte_filepath(file_path) : file_path;
+}
+
+/**
+ * @param {string} maybe_parent
+ * @param {string} maybe_child
+ */
+function is_subpath(maybe_parent, maybe_child) {
+	const relative = path.relative(maybe_parent, maybe_child);
+	return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
 }

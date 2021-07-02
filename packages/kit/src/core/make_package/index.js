@@ -1,9 +1,9 @@
 import * as fs from 'fs';
+import globrex from 'globrex';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
-import globrex from 'globrex';
-import { mkdirp, rimraf } from '../filesystem';
-import { emit_dts } from './emit_dts';
+import { mkdirp, rimraf } from '../filesystem/index.js';
+import { emit_dts } from './emit_dts.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -13,7 +13,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
 
 	// Generate type definitions first so hand-written types can overwrite generated ones
-	await emit_dts(await try_load_ts(), config);
+	await emit_dts(await try_load_ts(), config, cwd);
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({

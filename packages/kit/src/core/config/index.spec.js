@@ -36,10 +36,6 @@ test('fills in defaults', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				types: {
-					folder: '.',
-					entry: undefined
 				}
 			},
 			paths: {
@@ -135,10 +131,6 @@ test('fills in partial blanks', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				types: {
-					folder: '.',
-					entry: undefined
 				}
 			},
 			paths: {
