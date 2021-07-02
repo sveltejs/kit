@@ -5,6 +5,7 @@ import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolve
 import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 init();
+
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
 

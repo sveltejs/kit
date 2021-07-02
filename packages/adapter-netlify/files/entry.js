@@ -4,6 +4,7 @@ import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolve
 import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
 init();
+
 export async function handler(event) {
 	const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;
 

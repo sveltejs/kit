@@ -3,6 +3,7 @@ import { init, render } from '../output/server/app.js'; // eslint-disable-line i
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
 
 init();
+
 addEventListener('fetch', (event) => {
 	event.respondWith(handle(event));
 });

@@ -5,6 +5,7 @@ import { init, render } from '../output/server/app.js'; // eslint-disable-line i
 import { host, port } from './env.js'; // eslint-disable-line import/no-unresolved
 
 init();
+
 const instance = createServer({ render }).listen(port, host, () => {
 	console.log(`Listening on port ${port}`);
 });
