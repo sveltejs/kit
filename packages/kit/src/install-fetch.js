@@ -1,7 +1,20 @@
-// @ts-nocheck
 import fetch, { Response, Request, Headers } from 'node-fetch';
 
-globalThis.fetch = fetch;
-globalThis.Response = Response;
-globalThis.Request = Request;
-globalThis.Headers = Headers;
+Object.defineProperties(globalThis, {
+    fetch: {
+        enumerable: true,
+        value: fetch
+    },
+    Response: {
+        enumerable: true,
+        value: Response
+    },
+    Request: {
+        enumerable: true,
+        value: Request
+    },
+    Headers: {
+        enumerable: true,
+        value: Headers
+    }
+});

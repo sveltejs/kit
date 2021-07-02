@@ -2,8 +2,9 @@ import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/n
 import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
 // TODO hardcoding the relative location makes this brittle
-import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 
+init();
 export default async (req, res) => {
 	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
 
