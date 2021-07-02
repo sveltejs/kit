@@ -10,4 +10,10 @@ export default function (test) {
 		const res = await fetch('/endpoint-output/empty');
 		assert.equal(res.status, 200);
 	});
+
+	test.only('set-cookie without body', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/headers');
+		assert.equal(res.status, 200);
+		assert.equal(res.headers.has('set-cookie'), true);
+	});
 }
