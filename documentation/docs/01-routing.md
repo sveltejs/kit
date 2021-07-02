@@ -74,7 +74,7 @@ type RequestHandler<
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > = (
-	request: ServerRequest<Locals, Input>
+	request: Request<Locals, Input>
 ) => void | EndpointOutput<Output> | Promise<void | EndpointOutput<Output>>;
 ```
 
