@@ -159,10 +159,10 @@ export async function render_response({
 
 			${serialized_data
 				.map(({ url, body, json }) => {
-					const attrTag = 'data-type="svelte-data"';
-					const attrUrl = `data-url="${url}"`;
-					const attrBody = body ? `data-body="${hash(body)}"` : '';
-					return `<script type="application/json" ${attrTag} ${attrUrl} ${attrBody}>${json}</script>`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url="${url}"`;
+					if (body) attributes += ` data-body="${hash(body)}"`;
+
+					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
