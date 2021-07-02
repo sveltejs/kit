@@ -5,10 +5,14 @@
 export function normalize(loaded) {
 	// TODO should this behaviour be dev-only?
 
-	if (loaded.error || (loaded.status && loaded.status >= 400 && loaded.status <= 599)) {
+	if (
+		loaded.error ||
+		(loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect)
+	) {
 		const status = loaded.status;
 		if (!loaded.error) {
 			let errorMessage = '';
+			const statuses = [400, 401, 403, 404, 409, 500];
 			switch (status) {
 				case 400:
 					errorMessage = 'Bad Request';
@@ -30,7 +34,7 @@ export function normalize(loaded) {
 					break;
 			}
 			return {
-				status,
+				status: statuses.includes(status) ? status : 500,
 				error: new Error(errorMessage)
 			};
 		}
