@@ -5,36 +5,35 @@
 export function normalize(loaded) {
 	// TODO should this behaviour be dev-only?
 
-	if (loaded.error) {
-		//if (loaded.error || (loaded.status >= 400 && loaded.status <= 599)) {
+	if (loaded.error || (loaded.status && loaded.status >= 400 && loaded.status <= 599)) {
 		const status = loaded.status;
-		// if (!loaded.error) {
-		// 	let errorMessage = '';
-		// 	switch (status) {
-		// 		case 400:
-		// 			errorMessage = 'Bad Request';
-		// 			break;
-		// 		case 401:
-		// 			errorMessage = 'Unauthorized';
-		// 			break;
-		// 		case 403:
-		// 			errorMessage = 'Forbidden';
-		// 			break;
-		// 		case 404:
-		// 			errorMessage = 'Not Found';
-		// 			break;
-		// 		case 409:
-		// 			errorMessage = 'Conflict';
-		// 			break;
-		// 		case 500:
-		// 			errorMessage = 'Internal Server Error';
-		// 			break;
-		// 	}
-		// 	return {
-		// 		status,
-		// 		error: new Error(errorMessage)
-		// 	}
-		// }
+		if (!loaded.error) {
+			let errorMessage = '';
+			switch (status) {
+				case 400:
+					errorMessage = 'Bad Request';
+					break;
+				case 401:
+					errorMessage = 'Unauthorized';
+					break;
+				case 403:
+					errorMessage = 'Forbidden';
+					break;
+				case 404:
+					errorMessage = 'Not Found';
+					break;
+				case 409:
+					errorMessage = 'Conflict';
+					break;
+				default:
+					errorMessage = 'Internal Server Error';
+					break;
+			}
+			return {
+				status,
+				error: new Error(errorMessage)
+			};
+		}
 		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
 
 		if (!(error instanceof Error)) {
