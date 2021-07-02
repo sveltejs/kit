@@ -1,11 +1,18 @@
-import { readFileSync, statSync, createReadStream, createWriteStream, writeFileSync } from 'fs';
+import esbuild from 'esbuild';
+import {
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  readFileSync,
+  statSync,
+  writeFileSync
+} from 'fs';
 import { join } from 'path';
-import { fileURLToPath } from 'url';
 import { pipeline } from 'stream';
+import glob from 'tiny-glob';
+import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 import zlib from 'zlib';
-import esbuild from 'esbuild';
-import glob from 'tiny-glob';
 
 const pipe = promisify(pipeline);
 
@@ -65,7 +72,7 @@ export default function ({
 			await utils.prerender({
 				dest: `${out}/prerendered`
 			});
-			if (precompress) {
+			if (precompress && existsSync(`${out}/prerendered`)) {
 				utils.log.minor('Compressing prerendered pages');
 				await compress(`${out}/prerendered`);
 			}
