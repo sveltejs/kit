@@ -22,6 +22,7 @@ export async function respond({ request, options, state, $session, route }) {
 		host: request.host,
 		path: request.path,
 		query: request.query,
+		lang: route.lang,
 		params
 	};
 

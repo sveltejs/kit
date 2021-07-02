@@ -23,6 +23,7 @@ export type Location<Params extends Record<string, string> = Record<string, stri
 	path: string;
 	params: Params;
 	query: URLSearchParams;
+	lang?: string;
 };
 
 export type MaybePromise<T> = T | Promise<T>;

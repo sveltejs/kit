@@ -507,7 +507,8 @@ export class Renderer {
 					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				lang: page.lang
 			};
 
 			if (error) {
