@@ -367,6 +367,7 @@ class Watcher extends EventEmitter {
 						type: 'page',
 						pattern: route.pattern,
 						params: get_params(route.params),
+						lang: route.lang,
 						a: route.a,
 						b: route.b
 					};

@@ -70,6 +70,10 @@ export type Config = {
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
+		i18n?: {
+			locales?: string[];
+			defaultLocale?: string;
+		};
 	};
 	preprocess?: any;
 };
@@ -120,6 +124,10 @@ export type ValidatedConfig = {
 		target: string;
 		trailingSlash: TrailingSlash;
 		vite: () => ViteConfig;
+		i18n?: {
+			locales?: string[];
+			defaultLocale?: string;
+		}
 	};
 	preprocess: any;
 };

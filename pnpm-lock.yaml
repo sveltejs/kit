@@ -50,6 +50,21 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.38.2
 
+  examples/i18n:
+    specifiers:
+      '@fontsource/fira-mono': ^4.2.2
+      '@lukeed/uuid': ^2.0.0
+      '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
+      svelte: ^3.34.0
+    dependencies:
+      '@fontsource/fira-mono': 4.2.2
+      '@lukeed/uuid': 2.0.0
+      cookie: 0.4.1
+    devDependencies:
+      '@sveltejs/kit': link:../../packages/kit
+      svelte: 3.38.2
+
   packages/adapter-begin:
     specifiers:
       '@architect/parser': ^3.0.1

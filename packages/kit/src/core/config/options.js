@@ -162,6 +162,25 @@ const options = {
 
 					return option;
 				}
+			},
+
+			i18n: {
+				type: 'branch',
+				children: {
+					locales: {
+						type: 'leaf',
+						default: null,
+						validate: (option, keypath) => {
+							if (!Array.isArray(option) || option.some(o => typeof o !== 'string')) {
+								const message = `${keypath} should be an Array of strings`;
+								throw new Error(`${message}. See https://kit.svelte.dev/docs#TODO`);
+							}
+		
+							return option;
+						}
+					},
+					defaultLocale: expect_string(null)
+				}
 			}
 		}
 	},

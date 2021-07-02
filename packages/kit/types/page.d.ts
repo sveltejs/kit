@@ -9,6 +9,7 @@ export type LoadInput<
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: Session;
 	context: Context;
+	lang?: string;
 };
 
 export type ErrorLoadInput<
