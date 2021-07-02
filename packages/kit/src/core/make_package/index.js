@@ -1,9 +1,9 @@
 import * as fs from 'fs';
+import globrex from 'globrex';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
-import globrex from 'globrex';
-import { mkdirp, rimraf } from '../filesystem';
-import { emit_dts } from './emit_dts';
+import { mkdirp, rimraf } from '../filesystem/index.js';
+import { emit_dts } from './emit_dts.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -11,6 +11,9 @@ import { emit_dts } from './emit_dts';
  */
 export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
+
+	// Generate type definitions first so hand-written types can overwrite generated ones
+	await emit_dts(await try_load_ts(), config, cwd);
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
@@ -41,8 +44,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		/** @type {Record<string, string>} */
 		exports: {
 			'./package.json': './package.json'
-		},
-		types: config.kit.package.types.entry
+		}
 	};
 
 	for (const file of files) {
@@ -68,8 +70,15 @@ export async function make_package(config, cwd = process.cwd()) {
 				: source;
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
-			out_file = path.join(config.kit.package.types.folder, file);
+			out_file = file;
 			out_contents = source;
+			if (fs.existsSync(path.join(cwd, config.kit.package.dir, out_file))) {
+				console.warn(
+					'Found already existing file from d.ts generation for ' +
+						out_file +
+						'. This file will be overwritten.'
+				);
+			}
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
 			out_contents = await transpile_ts(filename, source);
@@ -91,8 +100,6 @@ export async function make_package(config, cwd = process.cwd()) {
 	if (main) {
 		package_pkg.exports['.'] = main;
 	}
-
-	await emit_dts(await try_load_ts(), config);
 
 	write(
 		path.join(cwd, config.kit.package.dir, 'package.json'),

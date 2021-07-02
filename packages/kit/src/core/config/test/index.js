@@ -46,10 +46,6 @@ async function testLoadDefaultConfig(path) {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				types: {
-					folder: '.',
-					entry: undefined
 				}
 			},
 			paths: { base: '', assets: '/.' },
