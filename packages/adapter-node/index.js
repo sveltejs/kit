@@ -1,11 +1,11 @@
 import esbuild from 'esbuild';
 import {
-  createReadStream,
-  createWriteStream,
-  existsSync,
-  readFileSync,
-  statSync,
-  writeFileSync
+	createReadStream,
+	createWriteStream,
+	existsSync,
+	readFileSync,
+	statSync,
+	writeFileSync
 } from 'fs';
 import { join } from 'path';
 import { pipeline } from 'stream';
