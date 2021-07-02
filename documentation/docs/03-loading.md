@@ -6,7 +6,7 @@ A component that defines a page or a layout can export a `load` function that ru
 
 > Since `load` can run on the server as well as the client browser, any state changes to a variable that happens on the server will be saved and persisted, and all clients hitting the server-rendered page will be exposed to the already mutated state instead of a clean one.
 >
-> It is recommended to make any state changes in the `<script>` block or outside of `load`.
+> It is recommended to make any state changes in the `<script>` block or outside of `load`. To share states exclusive to individual clients, use [`request.locals`](#hooks-handle) or [session](#loading-input-session).
 
 Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
