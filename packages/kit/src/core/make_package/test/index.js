@@ -52,6 +52,14 @@ async function test_make_package(path) {
  * @param {string} content
  */
 function format(file, content) {
+	if (file.endsWith('package.json')) {
+		// For some reason these are ordered differently in different test environments
+		const json = JSON.parse(content);
+		json.exports = Object.keys(json.exports)
+			.sort()
+			.map((key) => json.exports[key]);
+		content = JSON.stringify(json);
+	}
 	return prettier.format(content, {
 		parser: file.endsWith('.svelte') ? 'svelte' : file.endsWith('.json') ? 'json' : 'babel-ts',
 		plugins: ['prettier-plugin-svelte']
