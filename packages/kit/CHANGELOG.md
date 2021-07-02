@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.120
+
+### Minor Changes
+
+- 9fbaeda: fix attribute validation in generated script tag
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+- 0d69e55: Add generic type for session
+- 325c223: Improve RequestHandler and EndpointOutput type declarations.
+- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled
+
+  Remove service worker registration code from `start.js`, and instead inject it
+  in the HTML `<head>`, removing the `VITE_SVELTEKIT_SERVICE_WORKER` environment
+  variable definition in the process.
+
+  Service worker registration code is now always included in the HTML response, if
+  the specified `config.kit.files.serviceWorker` or the default
+  `src/service-worker.js` file exists, and decoupled from the Rollup-generated
+  client-side JS bundle.
+
+- ae3ef19: Fail if config.kit.appDir starts or ends with a slash
+
 ## 1.0.0-next.119
 
 ### Patch Changes

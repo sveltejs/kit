@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.30
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
 ## 1.0.0-next.29
 
 ### Patch Changes
