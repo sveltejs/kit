@@ -17,4 +17,10 @@ export default function (test) {
 		assert.equal(res.status, 200);
 		assert.equal(res.headers.has('set-cookie'), true);
 	});
+
+	test.only('200 status by default', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/body');
+		assert.equal(res.status, 200);
+		assert.equal(await res.text(), '{}');
+	});
 }
