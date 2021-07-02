@@ -285,9 +285,11 @@ async function build_server(
 
 			let options = null;
 
+			const default_settings = { paths: ${s(config.kit.paths)} };
+
 			// allow paths to be overridden in svelte-kit preview
 			// and in prerendering
-			export function init(settings) {
+			export function init(settings = default_settings) {
 				set_paths(settings.paths);
 				set_prerendering(settings.prerendering || false);
 
@@ -379,8 +381,6 @@ async function build_server(
 					...metadata_lookup[file]
 				};
 			}
-
-			init({ paths: ${s(config.kit.paths)} });
 
 			export function render(request, {
 				prerender
