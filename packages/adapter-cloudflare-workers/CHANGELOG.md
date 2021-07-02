@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
 ## 1.0.0-next.12
 
 ### Patch Changes
