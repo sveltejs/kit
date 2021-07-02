@@ -323,7 +323,7 @@ async function build_server(
 					paths: settings.paths,
 					read: settings.read,
 					root,
-					${service_worker_entry_file ? "service_worker: '/service-worker.js'" : ''},
+					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
