@@ -138,7 +138,7 @@ async function create_ts_compiler_host(ts, options, svelte_map, cwd) {
 		 * @type {import('typescript').System['readDirectory']}
 		 */
 		readDirectory(path, extensions, exclude, include, depth) {
-			const extensionsWithSvelte = (extensions ?? []).concat('.svelte');
+			const extensionsWithSvelte = (extensions || []).concat('.svelte');
 			return ts.sys.readDirectory(path, extensionsWithSvelte, exclude, include, depth);
 		},
 		/**
