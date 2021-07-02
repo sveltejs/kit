@@ -9,6 +9,7 @@ export default function (test) {
 	test.only('200 status on empty endpoint', null, async ({ fetch }) => {
 		const res = await fetch('/endpoint-output/empty');
 		assert.equal(res.status, 200);
+		assert.equal(await res.json(), {});
 	});
 
 	test.only('set-cookie without body', null, async ({ fetch }) => {
