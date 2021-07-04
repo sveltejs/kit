@@ -1,11 +1,11 @@
+import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
+import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
+import compression from 'compression';
 import fs from 'fs';
 import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
-import compression from 'compression';
 import polka from 'polka';
 import sirv from 'sirv';
-import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
-import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
+import { fileURLToPath } from 'url';
 
 // App is a dynamic file built from the application layer.
 
@@ -17,20 +17,41 @@ const paths = {
 };
 
 export function createServer({ render }) {
-	const mutable = (dir) =>
-		sirv(dir, {
-			etag: true,
-			maxAge: 0
-		});
+	const immutable_path = (pathname) => {
+		// eslint-disable-next-line no-undef
+		let app_dir = esbuild_app_dir;
+
+		// hard to tell when app_dir is mixed with static
+		if (app_dir === '/') {
+			return false;
+		}
+
+		if (app_dir.startsWith('/')) {
+			app_dir = app_dir.slice(1);
+		}
+		if (app_dir.endsWith('/')) {
+			app_dir = app_dir.slice(0, -1);
+		}
+
+		return pathname.startsWith(`/${app_dir}/`);
+	};
 
 	const prerendered_handler = fs.existsSync(paths.prerendered)
-		? mutable(paths.prerendered)
+		? sirv(paths.prerendered, {
+				etag: true,
+				maxAge: 0,
+				gzip: true,
+				brotli: true
+		  })
 		: noop_handler;
 
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
-				maxAge: 31536000,
-				immutable: true,
+				setHeaders: (res, pathname, stats) => {
+					if (immutable_path(pathname)) {
+						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
+					}
+				},
 				gzip: true,
 				brotli: true
 		  })

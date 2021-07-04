@@ -87,3 +87,28 @@ export function getSession(request) {
 ```
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+
+### serverFetch
+
+This function allows you to modify (or replace) a `fetch` request for an **external resource** that happens inside a `load` function that runs on the server (or during pre-rendering).
+
+For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
+
+```ts
+type ServerFetch = (req: Request) => Promise<Response>;
+```
+
+```js
+/** @type {import('@sveltejs/kit').ServerFetch} */
+export async function serverFetch(request) {
+	if (request.url.startsWith('https://api.yourapp.com/')) {
+		// clone the original request, but change the URL
+		request = new Request(
+			request.url.replace('https://api.yourapp.com/', 'http://localhost:9999/'),
+			request
+		);
+	}
+
+	return fetch(request);
+}
+```

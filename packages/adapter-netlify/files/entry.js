@@ -1,7 +1,9 @@
 import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 
 // TODO hardcoding the relative location makes this brittle
-import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+
+init();
 
 export async function handler(event) {
 	const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;

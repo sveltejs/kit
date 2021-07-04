@@ -1,6 +1,8 @@
 // TODO hardcoding the relative location makes this brittle
-import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
+
+init();
 
 addEventListener('fetch', (event) => {
 	event.respondWith(handle(event));

@@ -1,7 +1,8 @@
-import options from './options.js';
-import * as url from 'url';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import * as url from 'url';
+import { logger } from '../utils.js';
+import options from './options.js';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -133,7 +134,7 @@ export function validate_config(config) {
 	const validated = validate(options, config, 'config');
 
 	// resolve paths
-	const { paths } = validated.kit;
+	const { paths, appDir } = validated.kit;
 
 	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
 		throw new Error(
@@ -141,7 +142,94 @@ export function validate_config(config) {
 		);
 	}
 
+	if (appDir.startsWith('/') || appDir.endsWith('/')) {
+		throw new Error(
+			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
+		);
+	}
+
 	paths.assets = resolve(paths.base, paths.assets);
 
 	return validated;
+}
+
+/**
+ * Merges b into a, recursively, mutating a.
+ * @param {Record<string, any>} a
+ * @param {Record<string, any>} b
+ * @param {string[]} conflicts array to accumulate conflicts in
+ * @param {string[]} path array of property names representing the current
+ *     location in the tree
+ */
+function merge_into(a, b, conflicts = [], path = []) {
+	/**
+	 * Checks for "plain old Javascript object", typically made as an object
+	 * literal. Excludes Arrays and built-in types like Buffer.
+	 * @param {any} x
+	 */
+	const is_plain_object = (x) => typeof x === 'object' && x.constructor === Object;
+
+	for (const prop in b) {
+		if (is_plain_object(b[prop])) {
+			if (!is_plain_object(a[prop])) {
+				if (a[prop] !== undefined) {
+					conflicts.push([...path, prop].join('.'));
+				}
+				a[prop] = {};
+			}
+			merge_into(a[prop], b[prop], conflicts, [...path, prop]);
+		} else if (Array.isArray(b[prop])) {
+			if (!Array.isArray(a[prop])) {
+				if (a[prop] !== undefined) {
+					conflicts.push([...path, prop].join('.'));
+				}
+				a[prop] = [];
+			}
+			a[prop].push(...b[prop]);
+		} else {
+			// Since we're inside a for/in loop which loops over enumerable
+			// properties only, we want parity here and to check if 'a' has
+			// enumerable-only property 'prop'. Using 'hasOwnProperty' to
+			// exclude inherited properties is close enough. It is possible
+			// that someone uses Object.defineProperty to create a direct,
+			// non-enumerable property but let's not worry about that.
+			if (Object.prototype.hasOwnProperty.call(a, prop)) {
+				conflicts.push([...path, prop].join('.'));
+			}
+			a[prop] = b[prop];
+		}
+	}
+}
+
+/**
+ * Takes zero or more objects and returns a new object that has all the values
+ * deeply merged together. None of the original objects will be mutated at any
+ * level, and the returned object will have no references to the original
+ * objects at any depth. If there's a conflict the last one wins, except for
+ * arrays which will be combined.
+ * @param {...Object} objects
+ * @returns {[Record<string, any>, string[]]} a 2-tuple with the merged object,
+ *     and a list of merge conflicts if there were any, in dotted notation
+ */
+export function deep_merge(...objects) {
+	const result = {};
+	/** @type {string[]} */
+	const conflicts = [];
+	objects.forEach((o) => merge_into(result, o, conflicts));
+	return [result, conflicts];
+}
+
+/**
+ * @param {string[]} conflicts - array of conflicts in dotted notation
+ * @param {string=} pathPrefix - prepended in front of the path
+ * @param {string=} scope - used to prefix the whole error message
+ */
+export function print_config_conflicts(conflicts, pathPrefix = '', scope) {
+	const prefix = scope ? scope + ': ' : '';
+	const log = logger({ verbose: false });
+	conflicts.forEach((conflict) => {
+		log.error(
+			`${prefix}The value for ${pathPrefix}${conflict} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
+		);
+	});
 }
