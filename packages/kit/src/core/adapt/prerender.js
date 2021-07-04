@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} html */
@@ -58,6 +58,8 @@ const REDIRECT = 3;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	__fetch_polyfill();
+
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	const seen = new Set();

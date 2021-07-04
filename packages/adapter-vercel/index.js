@@ -31,6 +31,7 @@ export default function () {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
+				inject: [join(files, 'shims.js')],
 				platform: 'node'
 			});
 
