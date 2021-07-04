@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import globrex from 'globrex';
+import { createRequire } from 'module';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
@@ -216,7 +217,6 @@ function write(file, contents) {
 	mkdirp(path.dirname(file));
 	fs.writeFileSync(file, contents);
 }
-import { createRequire } from 'module';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
