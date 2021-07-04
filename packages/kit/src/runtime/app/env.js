@@ -9,7 +9,7 @@ export const dev = !!import.meta.env.DEV;
 /**
  * @type {import('$app/env').mode}
  */
-export const mode = import.meta.env.MODE
+export const mode = import.meta.env.MODE;
 /**
  * @type {import('$app/env').amp}
  */
