@@ -7,12 +7,13 @@ SvelteKit makes a number of modules available to your application.
 ### $app/env
 
 ```js
-import { amp, browser, dev, prerendering } from '$app/env';
+import { amp, browser, dev, mode, prerendering } from '$app/env';
 ```
 
 - `amp` is `true` or `false` depending on the corresponding value in your [project configuration](#configuration)
 - `browser` is `true` or `false` depending on whether the app is running in the browser or on the server
 - `dev` is `true` in development mode, `false` in production
+- `mode` is `development` in development mode or `production` during build, unless otherwise configured in `config.kit.vite.mode`.
 - `prerendering` is `true` when [prerendering](#ssr-and-javascript-prerender), `false` otherwise
 
 ### $app/navigation
