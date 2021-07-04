@@ -121,7 +121,7 @@ export class Router {
 			// Ignore if tag has
 			// 1. 'download' attribute
 			// 2. 'rel' attribute includes external
-			const rel = a.getAttribute('rel')?.split(/\s+/);
+			const rel = a.getAttribute('rel') && a.getAttribute('rel').split(/\s+/);
 
 			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
 				return;
