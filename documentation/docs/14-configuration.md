@@ -52,10 +52,6 @@ const config = {
 			files: {
 				include: ['**'],
 				exclude: []
-			},
-			types: {
-				folder: '.',
-				entry: undefined
 			}
 		},
 		vite: () => ({})
