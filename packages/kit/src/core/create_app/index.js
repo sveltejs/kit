@@ -33,7 +33,7 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 	const base = path.relative(cwd, dir);
 
 	write_if_changed(`${dir}/manifest.js`, generate_client_manifest(manifest_data, base));
-
+	write_if_changed(`${dir}/routes.json`, generate_route_manifest(manifest_data));
 	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data, base));
 }
 
@@ -105,6 +105,28 @@ function generate_client_manifest(manifest_data, base) {
 
 		export const fallback = [c[0](), c[1]()];
 	`);
+}
+
+/**
+ * Information about all page routes, in a language-agnostic JSON file.
+ *
+ * @param {ManifestData} manifest_data
+ * @returns {string}
+ */
+function generate_route_manifest(manifest_data) {
+	const page_routes = manifest_data.routes
+		.map((route) => {
+			if (route.type === 'page') {
+				const pattern = route.pattern.toString();
+				return {
+					pattern: pattern.slice(1, pattern.length - 1), // strip delimiters
+					params: route.params,
+					componentPath: route.a[route.a.length - 1]
+				};
+			}
+		})
+		.filter((route) => !!route);
+	return JSON.stringify(page_routes, undefined, 2);
 }
 
 /**
