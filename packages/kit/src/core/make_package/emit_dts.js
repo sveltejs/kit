@@ -81,9 +81,11 @@ function load_tsconfig(ts, config, svelte_map) {
 	return {
 		options: {
 			...options,
-			declaration: true,
-			emitDeclarationOnly: true,
-			declarationDir: config.kit.package.dir,
+			noEmit: false, // Set to true in case of jsconfig, force false, else nothing is emitted
+			moduleResolution: ts.ModuleResolutionKind.NodeJs, // Classic if not set, which gives wrong results
+			declaration: true, // Needed for d.ts file generation
+			emitDeclarationOnly: true, // We only want d.ts file generation
+			declarationDir: config.kit.package.dir, // Where to put the declarations
 			allowNonTsExtensions: true
 		},
 		filenames
