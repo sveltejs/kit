@@ -3,7 +3,6 @@ import globrex from 'globrex';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
-import { emit_dts } from './emit_dts.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -13,7 +12,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
 
 	// Generate type definitions first so hand-written types can overwrite generated ones
-	await emit_dts(await try_load_ts(), config, cwd);
+	await emit_dts(config);
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
@@ -216,4 +215,32 @@ function walk(cwd) {
 function write(file, contents) {
 	mkdirp(path.dirname(file));
 	fs.writeFileSync(file, contents);
+}
+import { createRequire } from 'module';
+
+/**
+ * @param {import('types/config').ValidatedConfig} config
+ */
+export async function emit_dts(config) {
+	const require = createRequire(import.meta.url);
+	const emit = await try_load_svelte2tsx();
+	emit({
+		libRoot: config.kit.files.lib,
+		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
+		declarationDir: config.kit.package.dir
+	});
+}
+
+async function try_load_svelte2tsx() {
+	try {
+		const svelte2tsx = (await import('svelte2tsx')).emitDts;
+		if (!svelte2tsx) {
+			throw new Error('Old svelte2tsx version');
+		}
+		return svelte2tsx;
+	} catch (e) {
+		throw new Error(
+			'You need to install svelte2tsx >=0.4.1 if you want to generate type definitions'
+		);
+	}
 }
