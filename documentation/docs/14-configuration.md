@@ -14,7 +14,7 @@ const config = {
 	extensions: ['.svelte'],
 
 	kit: {
-		adapter: null,
+		adapter: { adapt: () => {} },
 		amp: false,
 		appDir: '_app',
 		files: {
