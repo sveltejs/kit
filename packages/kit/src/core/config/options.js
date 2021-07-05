@@ -1,4 +1,4 @@
-const noop = () => {};
+const identity = (/** @type {any} */ id) => id;
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -7,7 +7,7 @@ const options = {
 	compilerOptions: {
 		type: 'leaf',
 		default: null,
-		validate: noop
+		validate: identity
 	},
 
 	extensions: {
@@ -169,7 +169,7 @@ const options = {
 	preprocess: {
 		type: 'leaf',
 		default: null,
-		validate: noop
+		validate: identity
 	}
 };
 

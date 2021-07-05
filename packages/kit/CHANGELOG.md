@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 1.0.0-next.120
+
+### Minor Changes
+
+- 9fbaeda: fix attribute validation in generated script tag
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+- 0d69e55: Add generic type for session
+- 325c223: Improve RequestHandler and EndpointOutput type declarations.
+- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled
+- ae3ef19: Fail if config.kit.appDir starts or ends with a slash
+
+## 1.0.0-next.119
+
+### Patch Changes
+
+- 064f848: Implement serverFetch hook
+- 882fb12: Add keepfocus option to goto
+
+## 1.0.0-next.118
+
+### Patch Changes
+
+- 5418254: Fix regex for getting links to crawl during prerendering
+
+## 1.0.0-next.117
+
+### Patch Changes
+
+- 828732c: Specify actual Svelte version requirement
+
+## 1.0.0-next.116
+
+### Patch Changes
+
+- ea8cd54: chore(kit): correct `engines` constraint
+- aedec24: Ensure router is initialized before parsing location
+- c7d5ce4: update vite to 2.3.8 and unpin
+- d259bca: Stricter regex for getting element attributes during prerendering
+
 ## 1.0.0-next.115
 
 ### Patch Changes

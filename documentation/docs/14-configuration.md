@@ -43,6 +43,17 @@ const config = {
 		ssr: true,
 		target: null,
 		trailingSlash: 'never',
+		package: {
+			dir: 'package',
+			exports: {
+				include: ['**'],
+				exclude: ['_*', '**/_*']
+			},
+			files: {
+				include: ['**'],
+				exclude: []
+			}
+		},
 		vite: () => ({})
 	},
 
@@ -63,7 +74,7 @@ Enable [AMP](#amp) mode.
 
 ### appDir
 
-The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely).
+The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
 
 ### files
 
@@ -148,6 +159,14 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
+
+### package
+
+Options related to [creating a package](#packaging).
+
+- `dir` - output directory
+- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
+- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
 
 ### vite
 

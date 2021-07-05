@@ -109,7 +109,6 @@ async function build_client({
 	copy_assets(build_dir);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
-	process.env.VITE_SVELTEKIT_SERVICE_WORKER = service_worker_entry_file ? '/service-worker.js' : '';
 
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
@@ -195,7 +194,16 @@ async function build_client({
  * @param {string} runtime
  */
 async function build_server(
-	{ cwd, base, config, manifest, build_dir, output_dir, client_entry_file },
+	{
+		cwd,
+		base,
+		config,
+		manifest,
+		build_dir,
+		output_dir,
+		client_entry_file,
+		service_worker_entry_file
+	},
 	client_manifest,
 	runtime
 ) {
@@ -285,9 +293,11 @@ async function build_server(
 
 			let options = null;
 
+			const default_settings = { paths: ${s(config.kit.paths)} };
+
 			// allow paths to be overridden in svelte-kit preview
 			// and in prerendering
-			export function init(settings) {
+			export function init(settings = default_settings) {
 				set_paths(settings.paths);
 				set_prerendering(settings.prerendering || false);
 
@@ -315,6 +325,7 @@ async function build_server(
 					paths: settings.paths,
 					read: settings.read,
 					root,
+					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
@@ -363,7 +374,8 @@ async function build_server(
 			// named imports without triggering Rollup's missing import detection
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
-				handle: hooks.handle || (({ request, resolve }) => resolve(request))
+				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+				serverFetch: hooks.serverFetch || fetch
 			});
 
 			const module_lookup = {
@@ -378,8 +390,6 @@ async function build_server(
 					...metadata_lookup[file]
 				};
 			}
-
-			init({ paths: ${s(config.kit.paths)} });
 
 			export function render(request, {
 				prerender
