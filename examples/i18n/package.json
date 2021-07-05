@@ -7,6 +7,7 @@
     "preview": "svelte-kit preview"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^1.0.0-next.13",
     "@sveltejs/kit": "workspace:*",
     "svelte": "^3.34.0"
   },
