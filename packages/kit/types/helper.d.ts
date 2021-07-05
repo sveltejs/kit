@@ -1,10 +1,11 @@
-interface ReadOnlyFormData extends Iterator<[string, string]> {
+interface ReadOnlyFormData {
 	get: (key: string) => string;
 	getAll: (key: string) => string[];
 	has: (key: string) => boolean;
 	entries: () => Iterator<[string, string]>;
 	keys: () => Iterator<string>;
 	values: () => Iterator<string>;
+	[Symbol.iterator]: () => Generator<[string, string], void>;
 }
 
 type BaseBody = string | Buffer | ReadOnlyFormData;
