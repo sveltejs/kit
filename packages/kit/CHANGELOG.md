@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.121
+
+### Patch Changes
+
+- 939188e: Use UTF-8 encoding for JSON endpoint responses by default
+- 5b3e1e6: Add types generation to svelte-kit package command
+- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops
+
 ## 1.0.0-next.120
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.31
+
+### Patch Changes
+
+- c639586: Check if '[out]/prerendered' exists, before precompressing
+
 ## 1.0.0-next.30
 
 ### Patch Changes
