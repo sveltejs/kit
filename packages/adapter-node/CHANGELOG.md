@@ -39,12 +39,9 @@
 
 ## 1.0.0-next.26
 
-### Minor Changes
-
-- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
-
 ### Patch Changes
 
+- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
 - 53f3322: Fix build when using TypeScript and there is a `tsconfig.json` with `target: 'es2019'` or earlier
 
 ## 1.0.0-next.25
@@ -188,7 +185,7 @@
 
 ## 1.0.0-next.4
 
-### Minor Changes
+### Patch Changes
 
 - Make adapter node work under esm
 
