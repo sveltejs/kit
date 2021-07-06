@@ -1,4 +1,3 @@
-import './require_shim';
 import { createServer } from './server';
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
