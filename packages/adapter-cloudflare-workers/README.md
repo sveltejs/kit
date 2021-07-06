@@ -25,3 +25,7 @@ entry-point = "./workers-site"
 It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
 
 More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
+
+## Changelog
+
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare-workers/CHANGELOG.md).
