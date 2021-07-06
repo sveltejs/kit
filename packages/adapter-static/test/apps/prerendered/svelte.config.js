@@ -4,7 +4,14 @@ import adapter from '../../../index.js';
 const config = {
 	kit: {
 		adapter: adapter(),
-		target: '#svelte'
+		target: '#svelte',
+		vite: {
+			server: {
+				fs: {
+					strict: true
+				}
+			}
+		}
 	}
 };
 

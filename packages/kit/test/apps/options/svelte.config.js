@@ -17,7 +17,12 @@ const config = {
 			build: {
 				minify: false
 			},
-			clearScreen: false
+			clearScreen: false,
+			server: {
+				fs: {
+					strict: true
+				}
+			}
 		}
 	}
 };

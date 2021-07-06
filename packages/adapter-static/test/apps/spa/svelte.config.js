@@ -6,7 +6,14 @@ const config = {
 		adapter: adapter({
 			fallback: '200.html'
 		}),
-		target: '#svelte'
+		target: '#svelte',
+		vite: {
+			server: {
+				fs: {
+					strict: true
+				}
+			}
+		}
 	}
 };
 
