@@ -67,7 +67,7 @@ class ReadOnlyFormData {
 	*values() {
 		for (const [, value] of this.#map) {
 			for (let i = 0; i < value.length; i += 1) {
-				yield value;
+				yield value[i];
 			}
 		}
 	}
