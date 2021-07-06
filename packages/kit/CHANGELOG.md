@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.122
+
+### Patch Changes
+
+- d09a4e1: Surface Svelte compiler errors
+- 79b4fe2: Update Vite to ^2.4.1
+- 2ac5781: Use esbuild inject API to insert shims
+
 ## 1.0.0-next.121
 
 ### Patch Changes

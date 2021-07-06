@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.32
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
 ## 1.0.0-next.31
 
 ### Patch Changes
