@@ -147,7 +147,7 @@ export function normalize(loaded) {
 					break;
 			}
 
-			let statusRecognized = errorMessage !== 'not assigned';
+			const statusRecognized = errorMessage !== 'not assigned';
 			return {
 				status: statusRecognized ? status : 500,
 				error: new Error(statusRecognized ? errorMessage : 'Internal Server Error')
