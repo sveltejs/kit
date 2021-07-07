@@ -142,8 +142,11 @@ async function build_client({
 		}
 	};
 
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(default_config, user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -424,8 +427,11 @@ async function build_server(
 		}
 	};
 
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(default_config, user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -539,8 +545,11 @@ async function build_service_worker(
 		}
 	};
 
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(default_config, user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,

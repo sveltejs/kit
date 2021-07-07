@@ -97,8 +97,11 @@ class Watcher extends EventEmitter {
 
 		const alias = user_config.resolve && user_config.resolve.alias;
 
+		// don't warn on overriding defaults
+		const [modified_user_config] = deep_merge(default_config, user_config);
+
 		/** @type {[any, string[]]} */
-		const [merged_config, conflicts] = deep_merge(default_config, user_config, {
+		const [merged_config, conflicts] = deep_merge(modified_user_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
