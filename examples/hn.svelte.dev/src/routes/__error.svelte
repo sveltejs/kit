@@ -24,8 +24,11 @@
 
 <h1>{title}</h1>
 
-<p>{message}</p>
+<pre>{message}</pre>
 
+{#if dev && error.frame}
+	<pre>{error.frame}</pre>
+{/if}
 {#if dev && error.stack}
 	<pre>{error.stack}</pre>
 {/if}

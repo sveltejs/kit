@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { parse, pathToFileURL, resolve } from 'url';
 import { mkdirp } from '../filesystem/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} html */
@@ -16,13 +16,13 @@ function clean_html(html) {
 
 /** @param {string} attrs */
 function get_href(attrs) {
-	const match = /[\s'"]href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
+	const match = /([\s'"]|^)href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
 /** @param {string} attrs */
 function get_src(attrs) {
-	const match = /[\s'"]src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
+	const match = /([\s'"]|^)src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
@@ -30,7 +30,7 @@ function get_src(attrs) {
 function get_srcset_urls(attrs) {
 	const results = [];
 	// Note that the srcset allows any ASCII whitespace, including newlines.
-	const match = /[\s'"]srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
+	const match = /([\s'"]|^)srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
 	if (match) {
 		const attr_content = match[1] || match[2] || match[3];
 		// Parse the content of the srcset attribute.
@@ -58,6 +58,8 @@ const REDIRECT = 3;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	__fetch_polyfill();
+
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	const seen = new Set();

@@ -24,3 +24,4 @@
 <a href="/load/fetch-credentialed">fetch credentialed</a>
 <a href="/load/large-response">large response</a>
 <a href="/load/raw-body">raw body</a>
+<a href="/load/server-fetch-request">server fetch request</a>

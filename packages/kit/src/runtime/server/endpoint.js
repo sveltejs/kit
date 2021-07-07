@@ -54,8 +54,11 @@ export default async function render_route(request, route) {
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
-			if (typeof body === 'object' && (!type || type === 'application/json')) {
-				headers = { ...headers, 'content-type': 'application/json' };
+			if (
+				typeof body === 'object' &&
+				(!type || type === 'application/json' || type === 'application/json; charset=utf-8')
+			) {
+				headers = { ...headers, 'content-type': 'application/json; charset=utf-8' };
 				normalized_body = JSON.stringify(body);
 			} else {
 				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);

@@ -3,6 +3,8 @@
 import url from 'url';
 import app from '@architect/shared/app.js'; // eslint-disable-line import/no-unresolved
 
+// TODO: run init() on the app before handling routes
+
 async function handler(event) {
 	const { host, rawPath: path, httpMethod, rawQueryString, headers, body } = event;
 

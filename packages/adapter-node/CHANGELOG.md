@@ -1,5 +1,35 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.32
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- c639586: Check if '[out]/prerendered' exists, before precompressing
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
+## 1.0.0-next.29
+
+### Patch Changes
+
+- aa5cf15: Fix regression caused by writing `env.js` to the wrong path
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- 1c8bdba: Allow the environment variables containing the host and port to serve on to be customised
+
 ## 1.0.0-next.27
 
 ### Patch Changes
@@ -9,12 +39,9 @@
 
 ## 1.0.0-next.26
 
-### Minor Changes
-
-- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
-
 ### Patch Changes
 
+- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
 - 53f3322: Fix build when using TypeScript and there is a `tsconfig.json` with `target: 'es2019'` or earlier
 
 ## 1.0.0-next.25
@@ -158,7 +185,7 @@
 
 ## 1.0.0-next.4
 
-### Minor Changes
+### Patch Changes
 
 - Make adapter node work under esm
 
