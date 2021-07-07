@@ -38,9 +38,9 @@ A variety of official adapters exist for serverless platforms...
 - [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [Netlify](https://netlify.com)
 - [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [Vercel](https://vercel.com)
 
-...and others:
+...and traditional platforms:
 
 - [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
 - [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
-> The adapter API is still in flux and will likely change before 1.0.
+You may also [write your own](#writing-an-adapter).
