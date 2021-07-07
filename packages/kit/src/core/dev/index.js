@@ -82,6 +82,14 @@ class Watcher extends EventEmitter {
 		/** @type {any} */
 		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
+		const default_config = {
+			server: {
+				fs: {
+					strict: true
+				}
+			}
+		};
+
 		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
 		let handler = (req, res) => {};
 
@@ -90,7 +98,7 @@ class Watcher extends EventEmitter {
 		const alias = user_config.resolve && user_config.resolve.alias;
 
 		/** @type {[any, string[]]} */
-		const [merged_config, conflicts] = deep_merge(user_config, {
+		const [merged_config, conflicts] = deep_merge(default_config, user_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
