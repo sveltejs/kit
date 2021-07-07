@@ -249,7 +249,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		 */
 		const exclusions = config.kit.serviceWorker.exclude || [];
 
-		// .DS_STORE files are automatically removed to keep the compatiblity
 		exclusions.push('**/.DS_STORE');
 
 		/**
