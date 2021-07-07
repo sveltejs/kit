@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.29.0"
+		"svelte": "^3.38.3"
 	},
 	"type": "module"
 }
