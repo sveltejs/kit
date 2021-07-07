@@ -24,6 +24,44 @@ import glob from 'tiny-glob/sync.js';
 const specials = new Set(['__layout', '__layout.reset', '__error']);
 
 /**
+ *
+ * @param {import('types/config').ValidatedConfig} config
+ * @returns {import('types/internal').ManifestData['assets']}
+ */
+function get_assets_list(config) {
+	const assets_dir = config.kit.files.assets;
+	/**
+	 * @type {import('types/internal').Asset[]}
+	 */
+	let assets = [];
+	if (fs.existsSync(assets_dir)) {
+		/**
+		 * @type {string[]}
+		 */
+		const exclusions = config.kit.serviceWorker.exclude || [];
+
+		exclusions.push('**/.DS_STORE');
+
+		/**
+		 * @type {string[]}
+		 */
+		let excluded_paths = [];
+
+		exclusions.forEach((exclusion) => {
+			excluded_paths = [
+				...excluded_paths,
+				...glob(exclusion, {
+					cwd: assets_dir,
+					dot: true
+				})
+			];
+		});
+		assets = list_files(assets_dir, '', [], excluded_paths);
+	}
+	return assets;
+}
+
+/**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
  *   output: string;
@@ -238,38 +276,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	walk(config.kit.files.routes, [], [], [layout], [error]);
 
-	const assets_dir = config.kit.files.assets;
-	/**
-	 * @type {import('types/internal').Asset[]}
-	 */
-	let assets = [];
-	if (fs.existsSync(assets_dir)) {
-		/**
-		 * @type {string[]}
-		 */
-		const exclusions = config.kit.serviceWorker.exclude || [];
-
-		exclusions.push('**/.DS_STORE');
-
-		/**
-		 * @type {string[]}
-		 */
-		let excluded_paths = [];
-
-		exclusions.forEach((exclusion) => {
-			excluded_paths = [
-				...excluded_paths,
-				...glob(exclusion, {
-					cwd: assets_dir,
-					dot: true
-				})
-			];
-		});
-		assets = list_files(assets_dir, '', [], excluded_paths);
-	}
-
 	return {
-		assets,
+		assets: get_assets_list(config),
 		layout,
 		error,
 		components,
