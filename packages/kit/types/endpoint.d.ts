@@ -1,5 +1,5 @@
 import { ServerRequest } from './hooks';
-import { Headers } from './helper';
+import { Headers, MaybePromise } from './helper';
 
 type JSONValue =
 	| string
@@ -10,12 +10,16 @@ type JSONValue =
 	| JSONValue[]
 	| { [key: string]: JSONValue };
 
-export type EndpointOutput = {
+type DefaultBody = JSONValue | Uint8Array;
+
+export type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
 	status?: number;
 	headers?: Headers;
-	body?: JSONValue | Uint8Array;
+	body?: Body;
 };
 
-export type RequestHandler<Locals = Record<string, any>, Body = unknown> = (
-	request: ServerRequest<Locals, Body>
-) => void | EndpointOutput | Promise<EndpointOutput>;
+export type RequestHandler<
+	Locals = Record<string, any>,
+	Input = unknown,
+	Output extends DefaultBody = DefaultBody
+> = (request: ServerRequest<Locals, Input>) => MaybePromise<void | EndpointOutput<Output>>;

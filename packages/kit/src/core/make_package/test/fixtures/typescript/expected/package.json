@@ -1,0 +1,13 @@
+{
+	"name": "javascript",
+	"version": "1.0.0",
+	"description": "package-javascript-test",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./index.js": "./index.js",
+		"./Test.svelte": "./Test.svelte",
+		"./Test2.svelte": "./Test2.svelte",
+		".": "./index.js"
+	}
+}

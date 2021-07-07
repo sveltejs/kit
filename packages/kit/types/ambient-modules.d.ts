@@ -22,11 +22,14 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to
-	 * @param opts Optional. If `replaceState` is `true`, a new history entry won't be created. If `noscroll` is `true`, the browser won't scroll to the top of the page after navigation.
+	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+	 * @param opts.state The state of the new/updated history entry
 	 */
 	export function goto(
 		href: string,
-		opts?: { replaceState?: boolean; noscroll?: boolean }
+		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<any>;
 	/**
 	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `href`
@@ -78,10 +81,10 @@ declare module '$app/stores' {
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
 	 * Most of the time, you won't need to use it.
 	 */
-	export function getStores(): {
+	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
-		session: Writable<any>;
+		session: Writable<Session>;
 	};
 	/**
 	 * A readable store whose value reflects the object passed to load functions.

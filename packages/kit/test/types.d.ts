@@ -31,7 +31,7 @@ export type TestContext = {
 	};
 
 	watcher: any; // watcher type is not exposed
-	server: import('http').Server;
+	server: import('net').Server;
 	reset: () => Promise<void>;
 	unpatch: () => void;
 };

@@ -1,10 +1,11 @@
-interface ReadOnlyFormData extends Iterator<[string, string]> {
+interface ReadOnlyFormData {
 	get: (key: string) => string;
 	getAll: (key: string) => string[];
 	has: (key: string) => boolean;
-	entries: () => Iterator<[string, string]>;
-	keys: () => Iterator<string>;
-	values: () => Iterator<string>;
+	entries: () => Generator<[string, string], void>;
+	keys: () => Generator<string, void>;
+	values: () => Generator<string, void>;
+	[Symbol.iterator]: () => Generator<[string, string], void>;
 }
 
 type BaseBody = string | Buffer | ReadOnlyFormData;
@@ -18,9 +19,14 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 // but this can't happen until TypeScript 4.3
 export type Headers = Record<string, string | undefined>;
 
-export type Location = {
+export type Location<Params extends Record<string, string> = Record<string, string>> = {
 	host: string;
 	path: string;
-	params: Record<string, string>;
+	params: Params;
 	query: URLSearchParams;
 };
+
+export type MaybePromise<T> = T | Promise<T>;
+export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
+	? Val
+	: Default;

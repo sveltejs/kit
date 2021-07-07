@@ -1,5 +1,24 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
+## 1.0.0-next.12
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
 ## 1.0.0-next.10
 
 ### Patch Changes

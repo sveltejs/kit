@@ -1,5 +1,30 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.24
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.23
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
+## 1.0.0-next.22
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
+## 1.0.0-next.21
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+
 ## 1.0.0-next.20
 
 ### Patch Changes

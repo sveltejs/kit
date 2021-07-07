@@ -99,7 +99,8 @@ export async function load_node({
 
 				if (/^[a-zA-Z]+:/.test(url)) {
 					// external fetch
-					response = await fetch(url, /** @type {RequestInit} */ (opts));
+					const request = new Request(url, /** @type {RequestInit} */ (opts));
+					response = await options.hooks.serverFetch.call(null, request);
 				} else {
 					const [path, search] = url.split('?');
 

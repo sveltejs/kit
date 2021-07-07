@@ -30,18 +30,20 @@ if (browser) {
 }
 ```
 
-You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM. In this case, you may still find a benefit of including a `browser` check as shown below because Vite may otherwise attempt to optimize the dependency and fail on it. [We hope to make this unnecessary in the future](https://github.com/sveltejs/svelte/issues/6372).
 
 ```html
 <script>
 	import { onMount } from 'svelte';
+	import { browser } from '$app/env';
 
-	let awkward;
+	let lib;
 
-	onMount(async () => {
-		const module = await import('some-browser-only-library');
-		awkward = module.default;
-	});
+	if (browser) {
+		onMount(async () => {
+			lib = (await import('some-browser-only-library')).default;
+		});
+	}
 </script>
 ```
 

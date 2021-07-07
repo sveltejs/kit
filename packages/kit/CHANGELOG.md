@@ -1,5 +1,90 @@
 # @sveltejs/kit
 
+## 1.0.0-next.122
+
+### Patch Changes
+
+- d09a4e1: Surface Svelte compiler errors
+- 79b4fe2: Update Vite to ^2.4.1
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.121
+
+### Patch Changes
+
+- 939188e: Use UTF-8 encoding for JSON endpoint responses by default
+- 5b3e1e6: Add types generation to svelte-kit package command
+- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops
+
+## 1.0.0-next.120
+
+### Patch Changes
+
+- 9fbaeda: fix attribute validation in generated script tag
+- 9f0c54a: Externalize app initialization to adapters
+- 0d69e55: Add generic type for session
+- 325c223: Improve RequestHandler and EndpointOutput type declarations.
+- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled
+- ae3ef19: Fail if config.kit.appDir starts or ends with a slash
+
+## 1.0.0-next.119
+
+### Patch Changes
+
+- 064f848: Implement serverFetch hook
+- 882fb12: Add keepfocus option to goto
+
+## 1.0.0-next.118
+
+### Patch Changes
+
+- 5418254: Fix regex for getting links to crawl during prerendering
+
+## 1.0.0-next.117
+
+### Patch Changes
+
+- 828732c: Specify actual Svelte version requirement
+
+## 1.0.0-next.116
+
+### Patch Changes
+
+- ea8cd54: chore(kit): correct `engines` constraint
+- aedec24: Ensure router is initialized before parsing location
+- c7d5ce4: update vite to 2.3.8 and unpin
+- d259bca: Stricter regex for getting element attributes during prerendering
+
+## 1.0.0-next.115
+
+### Patch Changes
+
+- 523c3e2: Allow vite.alias to be an array
+- 6fd46d1: \* update vite-plugin-svelte to 1.0.0-next.11 and use its named export
+  - update vite to 2.3.7
+- dc56d3c: Fix navigation when `base` path is set and validate that option's value
+
+## 1.0.0-next.114
+
+### Patch Changes
+
+- 5aa64ab: fix: SSL for HMR websockets #844
+- fae75f1: add optional state parameter for goto function
+- fbd5f8a: package command can now transpile TypeScript files
+
+## 1.0.0-next.113
+
+### Patch Changes
+
+- 045c45c: update vite to 2.3.6
+
+## 1.0.0-next.112
+
+### Patch Changes
+
+- cbe029e: Allow non-lowercase 'content-type' header in ssr fetch requests
+- 1bf1a02: Make it possible to type context, page params and props for LoadInput and LoadOutput
+
 ## 1.0.0-next.111
 
 ### Patch Changes
@@ -462,12 +547,9 @@
 
 ## 1.0.0-next.45
 
-### Minor Changes
-
-- 925638a: Remove endpoints from the files built for the client
-
 ### Patch Changes
 
+- 925638a: Remove endpoints from the files built for the client
 - c3cf3f3: Bump deps
 - 625747d: kit: bundle @sveltejs/kit into built application
 - Updated dependencies [c3cf3f3]
