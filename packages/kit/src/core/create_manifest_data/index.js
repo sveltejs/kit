@@ -406,7 +406,7 @@ function get_pattern(segments, add_trailing_slash) {
  * @param {import('types/internal').Asset[]} files
  * @param {string[]} excludedPaths Paths relative to dir which should be excluded from files list.
  */
-function list_files(dir, path, files = [], excludedPaths = []) {
+function list_files(dir, path, files = [], excluded_paths = []) {
 	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;
 
