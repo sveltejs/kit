@@ -15,7 +15,7 @@ import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -23,6 +23,8 @@ import { SVELTE_KIT } from '../constants.js';
 
 /** @param {Options} opts */
 export function dev(opts) {
+	__fetch_polyfill();
+
 	return new Watcher(opts).init();
 }
 
@@ -207,14 +209,18 @@ class Watcher extends EventEmitter {
 								this.vite.ssrFixStacktrace(error);
 								return error.stack;
 							},
-							handle_error: (error) => {
+							handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
 								this.vite.ssrFixStacktrace(error);
 								console.error(colors.bold().red(error.message));
+								if (error.frame) {
+									console.error(colors.gray(error.frame));
+								}
 								console.error(colors.gray(error.stack));
 							},
 							hooks: {
 								getSession: hooks.getSession || (() => ({})),
-								handle: hooks.handle || (({ request, resolve }) => resolve(request))
+								handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+								serverFetch: hooks.serverFetch || fetch
 							},
 							hydrate: this.config.kit.hydrate,
 							paths: this.config.kit.paths,

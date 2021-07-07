@@ -61,6 +61,10 @@ export default {
 
 When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) option set will be prerendered.
 
+## Changelog
+
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-static/CHANGELOG.md).
+
 ## License
 
 [MIT](LICENSE)

@@ -21,7 +21,11 @@ import { amp, browser, dev, prerendering } from '$app/env';
 import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 ```
 
-- `goto(href, { replaceState, noscroll, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional. If `replaceState` is true, a new history entry won't be created. If `noscroll` is true, the browser won't scroll to the top of the page after navigation. If state is set, its value will be used to set the initital state of the new history entry, it defaults to `{}`.
+- `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
+    - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+    - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+    - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+    - `state` (object, default `{}`) The state of the new/updated history entry
 - `invalidate(href)` causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. It returns a `Promise` that resolves when the page is subsequently updated.
 - `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 - `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched; otherwise, you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
@@ -45,9 +49,9 @@ Stores are _contextual_ — they are added to the [context](https://svelte.dev/t
 
 Because of that, the stores are not free-floating objects: they must be accessed during component initialisation, like anything else that would be accessed with `getContext`.
 
-- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. Most of the time, you won't need to use it.
+- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. This needs to be called at the top-level or synchronously during component or page initialisation.
 
-The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate.
+The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
 - `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
