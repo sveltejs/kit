@@ -98,6 +98,8 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 
 > When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately without an additional network request.
 
+> Cookies will only be passed through if the target host is the same as the SvelteKit application or a higher subdomain of it.
+
 #### session
 
 `session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [`getSession`](#hooks-getsession) to learn how to use it.
