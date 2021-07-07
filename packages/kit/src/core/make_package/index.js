@@ -4,7 +4,7 @@ import { createRequire } from 'module';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
-import essential_files from './essential_files';
+import essential_files from './essential_files.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
