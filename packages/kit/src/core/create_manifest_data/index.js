@@ -254,18 +254,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		/**
 		 * @type {string[]}
 		 */
-		let excludedPaths = [];
+		let excluded_paths = [];
 
 		exclusions.forEach((exclusion) => {
-			excludedPaths = [
-				...excludedPaths,
+			excluded_paths = [
+				...excluded_paths,
 				...glob(exclusion, {
 					cwd: assets_dir,
 					dot: true
 				})
 			];
 		});
-		assets = list_files(assets_dir, '', [], excludedPaths);
+		assets = list_files(assets_dir, '', [], excluded_paths);
 	}
 
 	return {
@@ -404,7 +404,7 @@ function get_pattern(segments, add_trailing_slash) {
  * @param {string} dir
  * @param {string} path
  * @param {import('types/internal').Asset[]} files
- * @param {string[]} excludedPaths Paths relative to dir which should be excluded from files list.
+ * @param {string[]} excluded_paths Paths relative to dir which should be excluded from files list.
  */
 function list_files(dir, path, files = [], excluded_paths = []) {
 	fs.readdirSync(dir).forEach((file) => {
@@ -414,9 +414,9 @@ function list_files(dir, path, files = [], excluded_paths = []) {
 		const joined = path ? `${path}/${file}` : file;
 
 		if (stats.isDirectory()) {
-			list_files(full, joined, files, excludedPaths);
+			list_files(full, joined, files, excluded_paths);
 		} else {
-			if (excludedPaths.includes(joined)) {
+			if (excluded_paths.includes(joined)) {
 				return;
 			}
 			files.push({
