@@ -23,4 +23,17 @@ export default function (test) {
 		assert.equal(res.status, 200);
 		assert.equal(await res.text(), '{}');
 	});
+
+	test('does not throw on blob method', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/empty');
+		assert.type(await res.blob(), 'object');
+	});
+	test('does not throw on arrayBuffer method', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/empty');
+		assert.type(await res.arrayBuffer(), 'object');
+	});
+	test('does not throw on buffer method', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/empty');
+		assert.type(await res.buffer(), 'object');
+	});
 }
