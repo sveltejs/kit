@@ -92,7 +92,8 @@ export async function make_package(config, cwd = process.cwd()) {
 	);
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
-		return essential_files.some((name) => file.startsWith(name));
+		const lowercased = file.toLowerCase();
+		return essential_files.some((name) => lowercased.startsWith(name.toLowerCase()));
 	});
 	for (const pathname of whitelist) {
 		const full_path = path.join(cwd, pathname);
