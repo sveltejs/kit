@@ -42,4 +42,4 @@ A variety of official adapters exist for serverless platforms...
 - [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
 - [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
-You may also [write your own](#writing-an-adapter).
+As well as [community-provided adapters](https://github.com/sveltejs/integrations#sveltekit-adapters). You may also [write your own adapter](#writing-an-adapter).
