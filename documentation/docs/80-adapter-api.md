@@ -9,7 +9,7 @@ Adapters packages must implement the following API, which creates an `Adapter`:
 /**
  * @param {AdapterSpecificOptions} options
  */
-export default function () {
+export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	return {
 		name: '',
