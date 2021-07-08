@@ -103,7 +103,8 @@ const options = {
 							include: expect_array_of_strings(['**']),
 							exclude: expect_array_of_strings([])
 						}
-					}
+					},
+					emitTypes: expect_boolean(true)
 				}
 			},
 

@@ -55,7 +55,8 @@ const config = {
 			files: {
 				include: ['**'],
 				exclude: []
-			}
+			},
+			emitTypes: true
 		},
 		vite: () => ({})
 	},

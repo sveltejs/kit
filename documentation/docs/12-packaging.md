@@ -30,11 +30,13 @@ import Foo from 'your-library/Foo.svelte';
 
 To publish the generated package:
 
-```
+```sh
 npm publish package
 ```
 
 The `package` above is referring to the directory name generated, change accordingly if you configure a custom [`package.dir`](#configuration-package). If you're having problems publishing a package that is not yours, add a trailing slash at the end (e.g. `package/`).
+
+By default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. This requires `svelte2tsx` and `typescript` to be installed. While generating types is configurable, we believe it is best for ecosystem quality to generate types, always. Please make sure you have a good reason to author a package without types when setting `config.kit.package.emitTypes = false`.
 
 ### Caveats
 

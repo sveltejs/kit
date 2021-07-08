@@ -110,6 +110,7 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
+			emitTypes: boolean;
 		};
 		paths: {
 			base: string;

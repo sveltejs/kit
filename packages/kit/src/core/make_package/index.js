@@ -12,8 +12,10 @@ import { mkdirp, rimraf } from '../filesystem/index.js';
 export async function make_package(config, cwd = process.cwd()) {
 	rimraf(path.join(cwd, config.kit.package.dir));
 
-	// Generate type definitions first so hand-written types can overwrite generated ones
-	await emit_dts(config);
+	if (config.kit.package.emitTypes) {
+		// Generate type definitions first so hand-written types can overwrite generated ones
+		await emit_dts(config);
+	}
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
