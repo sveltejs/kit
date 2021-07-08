@@ -57,6 +57,7 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
+			emitTypes?: boolean;
 		};
 		paths?: {
 			base?: string;
