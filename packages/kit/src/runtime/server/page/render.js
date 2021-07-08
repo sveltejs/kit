@@ -215,8 +215,8 @@ function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
-		const { name, message, stack, frame, loc } = error;
-		serialized = try_serialize({ name, message, stack, frame, loc });
+		const { name, message, stack } = error;
+		serialized = try_serialize({ ...error, name, message, stack });
 	}
 	if (!serialized) {
 		serialized = '{}';
