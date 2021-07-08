@@ -1,0 +1,12 @@
+{
+	"name": "javascript",
+	"version": "1.0.0",
+	"description": "package-javascript-test",
+	"exports": {
+		"./package.json": "./package.json",
+		".": {
+			"import": "./index.js"
+		}
+	},
+	"type": "module"
+}
