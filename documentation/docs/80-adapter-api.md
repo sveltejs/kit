@@ -6,6 +6,9 @@ We recommend [looking at the source for an adapter](https://github.com/sveltejs/
 
 Adapters must implement the following API:
 ```
+/**
+ * @param {AdapterSpecificOptions} options
+ */
 export default function () {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	return {
