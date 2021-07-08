@@ -236,6 +236,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			for (const entry of build_data.entries) {
 				await visit(entry, null);
 			}
+		} else if (entry === '**') {
+			for (const route of build_data.dynamic_routes) {
+				const svelte_path = route.a[route.a.length - 1];
+				const match = svelte_path.match(/^src\/routes(.*)\.svelte$/);
+				await visit(match[1], null);
+			}
 		} else {
 			await visit(entry, null);
 		}

@@ -130,7 +130,7 @@ const options = {
 							}
 
 							option.forEach((page) => {
-								if (page !== '*' && page[0] !== '/') {
+								if (page !== '*' && page !== '**' && page[0] !== '/') {
 									throw new Error(
 										`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
 									);

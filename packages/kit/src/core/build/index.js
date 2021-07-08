@@ -74,7 +74,10 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		static: options.manifest.assets.map((asset) => posixify(asset.file)),
 		entries: options.manifest.routes
 			.map((route) => route.type === 'page' && route.path)
-			.filter(Boolean)
+			.filter(Boolean),
+		// prettier-ignore
+		/** @type import('types/internal').PageData[] */
+		dynamic_routes: (options.manifest.routes.filter((route) => route.type === 'page' && !route.path))
 	};
 }
 

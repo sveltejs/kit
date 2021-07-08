@@ -200,6 +200,7 @@ export type BuildData = {
 	server: string[];
 	static: string[];
 	entries: string[];
+	dynamic_routes: PageData[];
 };
 
 export type NormalizedLoadOutput = {

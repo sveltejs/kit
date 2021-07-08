@@ -40,7 +40,7 @@ suite('copy files', () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: [] };
+	const build_data = { client: [], server: [], static: [], entries: [], dynamic_routes: [] };
 
 	const utils = get_utils({ cwd, config, build_data, log });
 
@@ -91,7 +91,13 @@ suite('prerender', async () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
+	const build_data = {
+		client: [],
+		server: [],
+		static: [],
+		entries: ['/nested'],
+		dynamic_routes: []
+	};
 
 	const utils = get_utils({ cwd, config, build_data, log });
 
