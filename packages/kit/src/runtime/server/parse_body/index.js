@@ -42,7 +42,7 @@ function get_urlencoded(text) {
 		.split('&')
 		.forEach((str) => {
 			const [key, value] = str.split('=');
-			append(decodeURIComponent(key), decodeURIComponent(value));
+			append(key, value);
 		});
 
 	return data;
