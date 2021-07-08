@@ -1,7 +1,7 @@
 {
-	"name": "javascript",
+	"name": "nested",
 	"version": "1.0.0",
-	"description": "package-javascript-test",
+	"description": "package-nested-test",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",

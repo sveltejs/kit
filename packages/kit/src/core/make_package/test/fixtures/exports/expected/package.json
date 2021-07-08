@@ -1,7 +1,7 @@
 {
-	"name": "javascript",
+	"name": "exports",
 	"version": "1.0.0",
-	"description": "package-javascript-test",
+	"description": "package-exports-test",
 	"exports": {
 		"./package.json": "./package.json",
 		".": {

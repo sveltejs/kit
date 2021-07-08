@@ -114,4 +114,8 @@ test('create package with user defined settings (exports)', async () => {
 	await test_make_package('exports');
 });
 
+test('create package with preserved files', async () => {
+	await test_make_package('casing');
+});
+
 test.run();
