@@ -92,7 +92,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
-	const project_readme = path.join(cwd, 'README.md');
+	const original_case = fs.readdirSync(cwd).find((file) => file.toLowerCase() === 'readme.md');
+	const project_readme = path.join(cwd, original_case || 'README.md');
 	const readme_exists = fs.existsSync(project_readme);
 	if (!readme_exists) return;
 
