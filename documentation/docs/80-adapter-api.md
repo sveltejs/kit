@@ -4,7 +4,7 @@ title: Writing an Adapter
 
 We recommend [looking at the source for an adapter](https://github.com/sveltejs/kit/tree/master/packages) to a platform similar to yours and copying it as a starting point.
 
-Adapters must implement the following API:
+Adapters packages must implement the following API, which creates an `Adapter`:
 ```
 /**
  * @param {AdapterSpecificOptions} options
@@ -18,6 +18,8 @@ export default function () {
 	};
 }
 ```
+
+The types for `Adapter` and its parameters are available in [types/config.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/config.d.ts).
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 - Clear out the build directory
