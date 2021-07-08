@@ -23,11 +23,11 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 - Clear out the build directory
-- Provide code that:
+- Output code that:
   - Calls `init`
   - Converts from the patform's request to a [SvelteKit request](#hooks-handle), call `render`, convert from a [SvelteKit response](#hooks-handle) to the platform's
+  - Globally shims `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper to use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, etc. if desired
-- Globally shim `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper to use `node-fetch`
 - Call `prerender`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
