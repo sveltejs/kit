@@ -46,6 +46,7 @@ export type Config = {
 		hydrate?: boolean;
 		package?: {
 			dir?: string;
+			emitTypes?: boolean;
 			exports?: {
 				include?: string[];
 				exclude?: string[];
@@ -54,11 +55,10 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
-			emitTypes?: boolean;
 		};
 		paths?: {
-			base?: string;
 			assets?: string;
+			base?: string;
 		};
 		prerender?: {
 			crawl?: boolean;
@@ -100,6 +100,7 @@ export type ValidatedConfig = {
 		hydrate: boolean;
 		package: {
 			dir: string;
+			emitTypes: boolean;
 			exports: {
 				include: string[];
 				exclude: string[];
@@ -108,11 +109,10 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
-			emitTypes: boolean;
 		};
 		paths: {
-			base: string;
 			assets: string;
+			base: string;
 		};
 		prerender: {
 			crawl: boolean;
