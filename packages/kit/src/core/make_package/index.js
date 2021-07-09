@@ -5,6 +5,8 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
 
+const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
+
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} cwd
@@ -41,6 +43,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		repository: pkg.repository,
 		dependencies: pkg.dependencies,
 		private: pkg.private,
+		files: pkg.files,
 		publishConfig: pkg.publishConfig,
 		type: 'module',
 		/** @type {Record<string, string>} */
@@ -108,11 +111,17 @@ export async function make_package(config, cwd = process.cwd()) {
 		JSON.stringify(package_pkg, null, '  ')
 	);
 
-	const project_readme = path.join(cwd, 'README.md');
-	const package_readme = path.join(cwd, config.kit.package.dir, 'README.md');
+	const whitelist = fs.readdirSync(cwd).filter((file) => {
+		const lowercased = file.toLowerCase();
+		return essential_files.some((name) => lowercased.startsWith(name.toLowerCase()));
+	});
+	for (const pathname of whitelist) {
+		const full_path = path.join(cwd, pathname);
+		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
-	if (fs.existsSync(project_readme) && !fs.existsSync(package_readme)) {
-		fs.copyFileSync(project_readme, package_readme);
+		const package_path = path.join(cwd, config.kit.package.dir, pathname);
+		if (fs.existsSync(package_path)) continue;
+		fs.copyFileSync(full_path, package_path);
 	}
 }
 
