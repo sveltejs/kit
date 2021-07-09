@@ -32,13 +32,12 @@ export async function make_package(config, cwd = process.cwd()) {
 	delete pkg.scripts;
 	pkg.type = 'module'; // type must be 'module'
 
-	let user_defined_exports = true;
-	if (!('exports' in pkg)) {
-		user_defined_exports = false;
-		pkg.exports = {
-			'./package.json': './package.json'
-		};
-	}
+	const user_defined_exports = 'exports' in pkg;
+
+	// We still want to always predefine some exports
+	// like package.json that is used by other packages
+	if (!pkg.exports) pkg.exports = {};
+	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
 		if (!files_filter(file)) continue;
