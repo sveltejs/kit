@@ -45,6 +45,10 @@ HOST=127.0.0.1 PORT=4000 node build
 
 You can specify different environment variables if necessary using the `env` option.
 
+## Changelog
+
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-node/CHANGELOG.md).
+
 ## License
 
 [MIT](LICENSE)

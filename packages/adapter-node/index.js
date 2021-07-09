@@ -63,6 +63,7 @@ export default function ({
 				format: 'esm',
 				platform: 'node',
 				target: 'node12',
+				inject: [join(files, 'shims.js')],
 				define: {
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
 				}

@@ -1,13 +1,35 @@
 # @sveltejs/kit
 
-## 1.0.0-next.120
-
-### Minor Changes
-
-- 9fbaeda: fix attribute validation in generated script tag
+## 1.0.0-next.123
 
 ### Patch Changes
 
+- 4b25615: Fix ReadOnlyFormData keys and values method implementation
+- 64f749d: ServiceWorker files exclusion support available through svelte.config.js
+- 4d2fec5: Enable Vite's server.fs.strict by default
+- 1ec368a: Expose Vite.js mode from \$app/env
+
+## 1.0.0-next.122
+
+### Patch Changes
+
+- d09a4e1: Surface Svelte compiler errors
+- 79b4fe2: Update Vite to ^2.4.1
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.121
+
+### Patch Changes
+
+- 939188e: Use UTF-8 encoding for JSON endpoint responses by default
+- 5b3e1e6: Add types generation to svelte-kit package command
+- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops
+
+## 1.0.0-next.120
+
+### Patch Changes
+
+- 9fbaeda: fix attribute validation in generated script tag
 - 9f0c54a: Externalize app initialization to adapters
 - 0d69e55: Add generic type for session
 - 325c223: Improve RequestHandler and EndpointOutput type declarations.
@@ -534,12 +556,9 @@
 
 ## 1.0.0-next.45
 
-### Minor Changes
-
-- 925638a: Remove endpoints from the files built for the client
-
 ### Patch Changes
 
+- 925638a: Remove endpoints from the files built for the client
 - c3cf3f3: Bump deps
 - 625747d: kit: bundle @sveltejs/kit into built application
 - Updated dependencies [c3cf3f3]

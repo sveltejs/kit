@@ -134,8 +134,19 @@ async function build_client({
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
+	const default_config = {
+		server: {
+			fs: {
+				strict: true
+			}
+		}
+	};
+
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -313,7 +324,10 @@ async function build_server(
 					floc: ${config.kit.floc},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => String(error), // for security
-					handle_error: error => {
+					handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
+						if (error.frame) {
+							console.error(error.frame);
+						}
 						console.error(error.stack);
 						error.stack = options.get_stack(error);
 					},
@@ -405,8 +419,19 @@ async function build_server(
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
+	const default_config = {
+		server: {
+			fs: {
+				strict: true
+			}
+		}
+	};
+
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -512,8 +537,19 @@ async function build_service_worker(
 	/** @type {any} */
 	const user_config = config.kit.vite();
 
+	const default_config = {
+		server: {
+			fs: {
+				strict: true
+			}
+		}
+	};
+
+	// don't warn on overriding defaults
+	const [modified_user_config] = deep_merge(default_config, user_config);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_user_config, {
 		configFile: false,
 		root: cwd,
 		base,

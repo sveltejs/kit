@@ -1,4 +1,3 @@
-import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
 import compression from 'compression';
 import fs from 'fs';

@@ -44,6 +44,9 @@ export type Config = {
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
+		serviceWorker?: {
+			exclude?: string[];
+		};
 		package?: {
 			dir?: string;
 			exports?: {
@@ -54,6 +57,7 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
+			emitTypes?: boolean;
 		};
 		paths?: {
 			base?: string;
@@ -94,6 +98,9 @@ export type ValidatedConfig = {
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;
+		serviceWorker: {
+			exclude: string[];
+		};
 		package: {
 			dir: string;
 			exports: {
@@ -104,6 +111,7 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
+			emitTypes: boolean;
 		};
 		paths: {
 			base: string;

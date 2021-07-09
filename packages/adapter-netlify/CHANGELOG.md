@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
 ## 1.0.0-next.18
 
 ### Patch Changes

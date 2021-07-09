@@ -118,4 +118,8 @@ test('create package with preserved files', async () => {
 	await test_make_package('casing');
 });
 
+test('create package (javascript without types)', async () => {
+	await test_make_package('javascript_no_types');
+});
+
 test.run();
