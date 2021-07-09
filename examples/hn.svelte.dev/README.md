@@ -15,7 +15,6 @@ You can then build an run this example, which will be accessible at [localhost:3
 
 ```bash
 cd examples/hn.svelte.dev
-pnpm install
 pnpm dev
 ```
 

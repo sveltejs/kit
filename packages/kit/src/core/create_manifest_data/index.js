@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
+import glob from 'tiny-glob/sync.js';
 
 /** @typedef {{
  *   content: string;
@@ -21,6 +22,44 @@ import { posixify } from '../utils.js';
  * }} Item */
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
+
+/**
+ *
+ * @param {import('types/config').ValidatedConfig} config
+ * @returns {import('types/internal').ManifestData['assets']}
+ */
+function get_assets_list(config) {
+	const assets_dir = config.kit.files.assets;
+	/**
+	 * @type {import('types/internal').Asset[]}
+	 */
+	let assets = [];
+	if (fs.existsSync(assets_dir)) {
+		/**
+		 * @type {string[]}
+		 */
+		const exclusions = config.kit.serviceWorker.exclude || [];
+
+		exclusions.push('**/.DS_STORE');
+
+		/**
+		 * @type {string[]}
+		 */
+		let excluded_paths = [];
+
+		exclusions.forEach((exclusion) => {
+			excluded_paths = [
+				...excluded_paths,
+				...glob(exclusion, {
+					cwd: assets_dir,
+					dot: true
+				})
+			];
+		});
+		assets = list_files(assets_dir, '', [], excluded_paths);
+	}
+	return assets;
+}
 
 /**
  * @param {{
@@ -237,10 +276,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	walk(config.kit.files.routes, [], [], [layout], [error]);
 
-	const assets_dir = config.kit.files.assets;
-
 	return {
-		assets: fs.existsSync(assets_dir) ? list_files(assets_dir, '') : [],
+		assets: get_assets_list(config),
 		layout,
 		error,
 		components,
@@ -375,8 +412,9 @@ function get_pattern(segments, add_trailing_slash) {
  * @param {string} dir
  * @param {string} path
  * @param {import('types/internal').Asset[]} files
+ * @param {string[]} excluded_paths Paths relative to dir which should be excluded from files list.
  */
-function list_files(dir, path, files = []) {
+function list_files(dir, path, files = [], excluded_paths = []) {
 	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;
 
@@ -384,9 +422,11 @@ function list_files(dir, path, files = []) {
 		const joined = path ? `${path}/${file}` : file;
 
 		if (stats.isDirectory()) {
-			list_files(full, joined, files);
+			list_files(full, joined, files, excluded_paths);
 		} else {
-			if (file === '.DS_Store') return;
+			if (excluded_paths.includes(joined)) {
+				return;
+			}
 			files.push({
 				file: joined,
 				size: stats.size,

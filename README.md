@@ -38,7 +38,7 @@ git config core.hookspath .githooks
 
 ### Changelogs
 
-For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts.
+For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
 
 ### Releases
 

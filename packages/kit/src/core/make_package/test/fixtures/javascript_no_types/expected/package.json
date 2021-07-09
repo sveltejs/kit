@@ -1,7 +1,7 @@
 {
-	"name": "typescript",
+	"name": "javascript-no-types",
 	"version": "1.0.0",
-	"description": "package-typescript-test",
+	"description": "package-javascript-no-types-test",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
