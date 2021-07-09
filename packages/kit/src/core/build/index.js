@@ -321,6 +321,9 @@ async function build_server(
 					template,
 					trailing_slash: ${s(config.kit.trailingSlash)}
 				};
+				${config.kit.i18n
+					? `options.i18n = ${s(config.kit.i18n)};`
+					: ''}
 			}
 
 			const d = decodeURIComponent;

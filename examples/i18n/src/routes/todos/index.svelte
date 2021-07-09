@@ -3,14 +3,15 @@
 
 	// see https://kit.svelte.dev/docs#loading
 	export const load = async ({ fetch, lang }) => {
-		console.log('in load function', lang);
 		const res = await fetch('/todos.json');
+		// console.trace('where did you go?');
+		console.log('do a cms call with lang: ', lang);
 
 		if (res.ok) {
 			const todos = await res.json();
 
 			return {
-				props: { todos, lang }
+				props: { todos }
 			};
 		}
 
@@ -25,9 +26,19 @@
 <script>
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import { switchLocalePath } from '$app/navigation';
+	import { tick } from 'svelte';
+	import { page } from '$app/stores';
 
 	export let todos;
-	export let lang;
+
+	let selectedLang;
+	const locales = ['en', 'de'];
+
+	const switchLocale = async () => {
+		await tick();
+		switchLocalePath(selectedLang);
+	};
 
 	async function patch(res) {
 		const todo = await res.json();
@@ -44,7 +55,18 @@
 </svelte:head>
 
 <div class="todos">
-	<h1>Todos (lang = {lang})</h1>
+	<h1>Todos (lang = {$page.lang})</h1>
+
+	<select
+		name="lang-switcher"
+		id="lang-switcher"
+		on:change={switchLocale}
+		bind:value={selectedLang}
+	>
+		{#each locales as locale}
+			<option value={locale} selected={locale === $page.lang}>{locale}</option>
+		{/each}
+	</select>
 
 	<form
 		class="new"

@@ -1,6 +1,8 @@
 <script>
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
+
+	$: console.log('updated page store', $page);
 </script>
 
 <header>
@@ -8,6 +10,8 @@
 		<a href="https://kit.svelte.dev">
 			<img src={logo} alt="SvelteKit" />
 		</a>
+
+		<span>lang: {$page.lang}</span>
 	</div>
 
 	<nav>

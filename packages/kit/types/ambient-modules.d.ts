@@ -59,6 +59,14 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
+	/**
+	 * Programmatically switches locale to the specified lang.
+	 *
+	 * 1. locales will be removed from current URL
+	 * 2. url will be prefixed if lang is not defaultLocale
+	 * 3. will call goto
+	 */
+	export function switchLocalePath(lang: string): Promise<any>;
 }
 
 declare module '$app/paths' {

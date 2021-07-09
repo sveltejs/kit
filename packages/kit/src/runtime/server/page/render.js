@@ -141,6 +141,11 @@ export async function render_response({
 						params: ${s(page.params)}
 					}
 				}` : 'null'}
+				${options.i18n
+					? `,
+					defaultLocale: '${options.i18n.defaultLocale}',
+					locales: ${s(options.i18n.locales)}`
+					: ''}
 			});
 		</script>`;
 	}

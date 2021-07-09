@@ -136,6 +136,10 @@ export type SSRRenderOptions = {
 	handle_error: (error: Error) => void;
 	hooks: Hooks;
 	hydrate: boolean;
+	i18n?: {
+		defaultLocale?: string;
+		locales?: string[];
+	}
 	load_component: (id: PageId) => Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {

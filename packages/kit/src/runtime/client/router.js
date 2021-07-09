@@ -21,11 +21,15 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
+	 *    defaultLocale?: string;
+	 *    locales?: string[];
 	 * }} opts */
-	constructor({ base, routes, trailing_slash }) {
+	constructor({ base, routes, trailing_slash, defaultLocale, locales = [] }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
+		this.defaultLocale = defaultLocale;
+		this.locales = locales;
 	}
 
 	/** @param {import('./renderer').Renderer} renderer */
@@ -274,5 +278,25 @@ export class Router {
 		} else {
 			scrollTo(0, 0);
 		}
+	}
+
+	/**
+	 * @param {string} lang
+	 */
+	switchLocalePath(lang) {
+		let url = `${location.pathname}${location.search}`;
+		if (this.defaultLocale
+			&& this.locales.find(locale => locale === lang)) {
+			// remove locales prefix
+			this.locales.forEach(locale => {
+				url = url.replace(`/${locale}`, '');
+			});
+			// !defaultLocale => prefix
+			url = this.defaultLocale === lang
+				? url
+				: `/${lang}${url}`;
+		}
+
+		return this.goto(url, {}, []);
 	}
 }

@@ -14,6 +14,7 @@ export const goto = import.meta.env.SSR ? guard('goto') : goto_;
 export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate_;
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
+export const switchLocalePath = import.meta.env.SSR ? guard('switchLocalePath') : switchLocalePath_;
 
 /**
  * @type {import('$app/navigation').goto}
@@ -48,4 +49,11 @@ async function prefetchRoutes_(pathnames) {
 	const promises = matching.map((r) => r.length !== 1 && Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
+}
+
+/**
+ * @type {import('$app/navigation').switchLocalePath}
+ */
+function switchLocalePath_(lang) {
+	return router.switchLocalePath(lang);
 }
