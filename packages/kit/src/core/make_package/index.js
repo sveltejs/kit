@@ -104,8 +104,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
 		const package_path = path.join(cwd, config.kit.package.dir, pathname);
-		if (fs.existsSync(package_path)) continue;
-		fs.copyFileSync(full_path, package_path);
+		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
 }
 
