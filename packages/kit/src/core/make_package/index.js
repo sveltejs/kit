@@ -4,7 +4,8 @@ import { createRequire } from 'module';
 import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
-import essential_files from './essential_files.js';
+
+const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
 /**
  * @param {import('types/config').ValidatedConfig} config
