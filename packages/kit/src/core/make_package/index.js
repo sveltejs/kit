@@ -5,6 +5,8 @@ import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf } from '../filesystem/index.js';
 
+const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
+
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} cwd
@@ -94,15 +96,17 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
-	const original_case = fs.readdirSync(cwd).find((file) => file.toLowerCase() === 'readme.md');
-	const project_readme = path.join(cwd, original_case || 'README.md');
-	const readme_exists = fs.existsSync(project_readme);
-	if (!readme_exists) return;
+	const whitelist = fs.readdirSync(cwd).filter((file) => {
+		const lowercased = file.toLowerCase();
+		return essential_files.some((name) => lowercased.startsWith(name.toLowerCase()));
+	});
+	for (const pathname of whitelist) {
+		const full_path = path.join(cwd, pathname);
+		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
-	const preserved_filename = fs.realpathSync.native(project_readme).slice(-'README.md'.length);
-	const package_readme = path.join(cwd, config.kit.package.dir, preserved_filename);
-	if (!fs.existsSync(package_readme)) {
-		fs.copyFileSync(project_readme, package_readme);
+		const package_path = path.join(cwd, config.kit.package.dir, pathname);
+		if (fs.existsSync(package_path)) continue;
+		fs.copyFileSync(full_path, package_path);
 	}
 }
 
