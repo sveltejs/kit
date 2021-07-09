@@ -96,7 +96,7 @@ export type SSREndpoint = {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
+export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, string?];
 
 export type CSREndpoint = [RegExp];
 

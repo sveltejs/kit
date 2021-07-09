@@ -332,6 +332,8 @@ export class Renderer {
 			return this.loading.promise;
 		}
 
+		console.log(info, no_cache);
+
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
@@ -360,6 +362,7 @@ export class Renderer {
 				},
 				no_cache
 			);
+
 			if (result) return result;
 		}
 
@@ -540,7 +543,7 @@ export class Renderer {
 			return this.cache.get(key);
 		}
 
-		const [pattern, a, b, get_params] = route;
+		const [pattern, a, b, get_params, lang] = route;
 		const params = get_params ? get_params(pattern.exec(path)) : {};
 
 		const changed = this.current.page && {
@@ -552,6 +555,7 @@ export class Renderer {
 
 		/** @type {import('types/page').Page} */
 		const page = { host: this.host, path, query, params };
+		if (lang) page.lang = lang;
 
 		/** @type {import('./types').BranchNode[]} */
 		const branch = [];
