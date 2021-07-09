@@ -3,7 +3,6 @@
 	"version": "1.0.0",
 	"description": "package-exports-test",
 	"exports": {
-		"./package.json": "./package.json",
 		".": {
 			"import": "./index.js"
 		}
