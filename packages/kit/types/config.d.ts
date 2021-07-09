@@ -44,11 +44,9 @@ export type Config = {
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
-		serviceWorker?: {
-			exclude?: string[];
-		};
 		package?: {
 			dir?: string;
+			emitTypes?: boolean;
 			exports?: {
 				include?: string[];
 				exclude?: string[];
@@ -57,11 +55,10 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
-			emitTypes?: boolean;
 		};
 		paths?: {
-			base?: string;
 			assets?: string;
+			base?: string;
 		};
 		prerender?: {
 			crawl?: boolean;
@@ -70,6 +67,9 @@ export type Config = {
 			pages?: string[];
 		};
 		router?: boolean;
+		serviceWorker?: {
+			exclude?: string[];
+		};
 		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
@@ -98,11 +98,9 @@ export type ValidatedConfig = {
 		host: string;
 		hostHeader: string;
 		hydrate: boolean;
-		serviceWorker: {
-			exclude: string[];
-		};
 		package: {
 			dir: string;
+			emitTypes: boolean;
 			exports: {
 				include: string[];
 				exclude: string[];
@@ -111,11 +109,10 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
-			emitTypes: boolean;
 		};
 		paths: {
-			base: string;
 			assets: string;
+			base: string;
 		};
 		prerender: {
 			crawl: boolean;
@@ -124,6 +121,9 @@ export type ValidatedConfig = {
 			pages: string[];
 		};
 		router: boolean;
+		serviceWorker: {
+			exclude: string[];
+		};
 		ssr: boolean;
 		target: string;
 		trailingSlash: TrailingSlash;

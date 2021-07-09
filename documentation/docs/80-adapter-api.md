@@ -5,15 +5,17 @@ title: Writing an Adapter
 We recommend [looking at the source for an adapter](https://github.com/sveltejs/kit/tree/master/packages) to a platform similar to yours and copying it as a starting point.
 
 Adapters packages must implement the following API, which creates an `Adapter`:
-```
+
+```js
 /**
  * @param {AdapterSpecificOptions} options
  */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	return {
-		name: '',
+		name: 'adapter-package-name',
 		async adapt({ utils, config }) {
+			// adapter implementation
 		}
 	};
 }
@@ -22,6 +24,7 @@ export default function (options) {
 The types for `Adapter` and its parameters are available in [types/config.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/config.d.ts).
 
 Within the `adapt` method, there are a number of things that an adapter should do:
+
 - Clear out the build directory
 - Output code that:
   - Calls `init`

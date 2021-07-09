@@ -25,13 +25,22 @@ const config = {
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
 		},
-		serviceWorker: {
-			exclude: []
-		},
 		floc: false,
 		host: null,
 		hostHeader: null,
 		hydrate: true,
+		package: {
+			dir: 'package',
+			emitTypes: true,
+			exports: {
+				include: ['**'],
+				exclude: ['_*', '**/_*']
+			},
+			files: {
+				include: ['**'],
+				exclude: []
+			}
+		},
 		paths: {
 			assets: '',
 			base: ''
@@ -43,21 +52,12 @@ const config = {
 			pages: ['*']
 		},
 		router: true,
+		serviceWorker: {
+			exclude: []
+		},
 		ssr: true,
 		target: null,
 		trailingSlash: 'never',
-		package: {
-			dir: 'package',
-			exports: {
-				include: ['**'],
-				exclude: ['_*', '**/_*']
-			},
-			files: {
-				include: ['**'],
-				exclude: []
-			},
-			emitTypes: true
-		},
 		vite: () => ({})
 	},
 
@@ -85,17 +85,11 @@ The directory relative to `paths.assets` where the built JS and CSS (and importe
 An object containing zero or more of the following `string` values:
 
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+- `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
-- `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
-
-### serviceWorker
-
-An object containing zero or more of the following values:
-
-- `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### floc
 
@@ -132,6 +126,15 @@ export default {
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
+### package
+
+Options related to [creating a package](#packaging).
+
+- `dir` - output directory
+- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead).
+- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
+- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
+
 ### paths
 
 An object containing zero or more of the following `string` values:
@@ -152,6 +155,12 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
 
+### serviceWorker
+
+An object containing zero or more of the following values:
+
+- `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
+
 ### ssr
 
 Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
@@ -169,15 +178,6 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
-
-### package
-
-Options related to [creating a package](#packaging).
-
-- `dir` - output directory
-- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
-- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
-- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead).
 
 ### vite
 
