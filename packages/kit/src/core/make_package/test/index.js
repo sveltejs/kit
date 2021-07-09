@@ -74,4 +74,8 @@ test('create package (typescript)', async () => {
 	await test_make_package('typescript');
 });
 
+test('create package (javascript without types)', async () => {
+	await test_make_package('javascript_no_types');
+});
+
 test.run();

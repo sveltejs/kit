@@ -57,6 +57,7 @@ export type Config = {
 				include?: string[];
 				exclude?: string[];
 			};
+			emitTypes?: boolean;
 		};
 		paths?: {
 			base?: string;
@@ -110,6 +111,7 @@ export type ValidatedConfig = {
 				include: string[];
 				exclude: string[];
 			};
+			emitTypes: boolean;
 		};
 		paths: {
 			base: string;
