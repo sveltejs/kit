@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.24
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.23
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
 ## 1.0.0-next.22
 
 ### Patch Changes

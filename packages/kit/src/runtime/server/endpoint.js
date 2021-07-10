@@ -55,7 +55,7 @@ export default async function render_route(request, route) {
 
 			if (
 				(typeof body === 'object' || typeof body === 'undefined') &&
-				(!type || type === 'application/json')
+				(!type || type.startsWith('application/json'))
 			) {
 				headers = { ...headers, 'content-type': 'application/json' };
 				normalized_body = JSON.stringify(body || {});

@@ -144,6 +144,14 @@ export async function render_response({
 		</script>`;
 	}
 
+	if (options.service_worker) {
+		init += `<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('${options.service_worker}');
+			}
+		</script>`;
+	}
+
 	const head = [
 		rendered.head,
 		styles.size && !options.amp
@@ -202,13 +210,13 @@ function try_serialize(data, fail) {
 
 // Ensure we return something truthy so the client will not re-render the page over the error
 
-/** @param {Error} error */
+/** @param {Error & {frame?: string} & {loc?: object}} error */
 function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
 		const { name, message, stack } = error;
-		serialized = try_serialize({ name, message, stack });
+		serialized = try_serialize({ ...error, name, message, stack });
 	}
 	if (!serialized) {
 		serialized = '{}';

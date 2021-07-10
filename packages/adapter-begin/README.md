@@ -31,3 +31,7 @@ get /
 @static
 folder public
 ```
+
+## Changelog
+
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-begin/CHANGELOG.md).
