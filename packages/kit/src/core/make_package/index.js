@@ -29,28 +29,15 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
-	const package_pkg = {
-		name: pkg.name,
-		version: pkg.version,
-		description: pkg.description,
-		keywords: pkg.keywords,
-		homepage: pkg.homepage,
-		bugs: pkg.bugs,
-		license: pkg.license,
-		author: pkg.author,
-		contributors: pkg.contributors,
-		funding: pkg.funding,
-		repository: pkg.repository,
-		dependencies: pkg.dependencies,
-		private: pkg.private,
-		files: pkg.files,
-		publishConfig: pkg.publishConfig,
-		type: 'module',
-		/** @type {Record<string, string>} */
-		exports: {
-			'./package.json': './package.json'
-		}
-	};
+	delete pkg.scripts;
+	pkg.type = 'module'; // type must be 'module'
+
+	const user_defined_exports = 'exports' in pkg;
+
+	// We still want to always predefine some exports
+	// like package.json that is used by other packages
+	if (!pkg.exports) pkg.exports = {};
+	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
 		if (!files_filter(file)) continue;
@@ -94,22 +81,19 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		if (exports_filter(file)) {
-			const entry = `./${out_file}`;
-			package_pkg.exports[entry] = entry;
+		if (!user_defined_exports && exports_filter(file)) {
+			const entry = `./${out_file.replace(/\\/g, '/')}`;
+			pkg.exports[entry] = entry;
 		}
 	}
 
-	const main = package_pkg.exports['./index.js'] || package_pkg.exports['./index.svelte'];
+	const main = pkg.exports['./index.js'] || pkg.exports['./index.svelte'];
 
-	if (main) {
-		package_pkg.exports['.'] = main;
+	if (!user_defined_exports && main) {
+		pkg.exports['.'] = main;
 	}
 
-	write(
-		path.join(cwd, config.kit.package.dir, 'package.json'),
-		JSON.stringify(package_pkg, null, '  ')
-	);
+	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
@@ -120,8 +104,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
 		const package_path = path.join(cwd, config.kit.package.dir, pathname);
-		if (fs.existsSync(package_path)) continue;
-		fs.copyFileSync(full_path, package_path);
+		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
 }
 
