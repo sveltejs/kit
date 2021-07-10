@@ -1,5 +1,16 @@
 # @sveltejs/kit
 
+## 1.0.0-next.124
+
+### Patch Changes
+
+- 34d2049: handle undefined body on endpoint output
+- c826016: add config.kit.package.emitTypes
+- 8854e2f: Bump vite-plugin-svelte to 1.0.0-next.12
+- af1aa54: copy essential root files on `svelte-kit package`
+- 872840a: Pass along custom properties added to Error
+- 868f97a: Preserve README casing and package.json contents on svelte-kit package
+
 ## 1.0.0-next.123
 
 ### Patch Changes
