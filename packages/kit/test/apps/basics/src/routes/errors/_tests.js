@@ -214,14 +214,26 @@ export default function (test, is_dev) {
 
 	test(
 		'server-side 4xx status without error from load()',
-		'/errors/load-status-without-error',
+		'/errors/load-status-without-error-server',
 		async ({ page, response }) => {
 			assert.equal(await page.textContent('footer'), 'Custom layout');
 			assert.equal(
 				await page.textContent('#message'),
-				'This is your custom error page saying: "Unauthorized"'
+				'This is your custom error page saying: "Internal Server Error"'
 			);
 			assert.equal(response.status(), 401);
+		}
+	);
+
+	test(
+		'client-side 4xx status without error from load()',
+		'/errors/load-status-without-error-client',
+		async ({ page, js }) => {
+			if (js) {
+				const body = await page.textContent('body');
+				console.log(body);
+				assert.ok(await body.includes('Internal Server Error'), 'Should throw error');
+			}
 		}
 	);
 }
