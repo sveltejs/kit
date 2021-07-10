@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.74
+
+### Patch Changes
+
+- 4c7ccfd: Add \$lib alias to js/tsconfig
+
 ## 2.0.0-next.73
 
 ### Patch Changes
