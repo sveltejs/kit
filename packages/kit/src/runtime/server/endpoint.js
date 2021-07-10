@@ -33,7 +33,7 @@ export default async function render_route(request, route) {
 				);
 			}
 
-			let { status = 200, body = {}, headers = {} } = response;
+			let { status = 200, body, headers = {} } = response;
 
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
@@ -54,9 +54,12 @@ export default async function render_route(request, route) {
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
-			if (typeof body === 'object' && (!type || type === 'application/json')) {
+			if (
+				(typeof body === 'object' || typeof body === 'undefined') &&
+				(!type || type === 'application/json')
+			) {
 				headers = { ...headers, 'content-type': 'application/json' };
-				normalized_body = JSON.stringify(body);
+				normalized_body = JSON.stringify(body || {});
 			} else {
 				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 			}
