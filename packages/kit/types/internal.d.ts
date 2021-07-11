@@ -1,11 +1,11 @@
-import { Load } from './page';
-import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
 import { RequestHandler } from './endpoint';
-import { ParameterizedBody } from './helper';
+import { Headers, Location, ParameterizedBody } from './helper';
+import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
+import { Load } from './page';
 
 type PageId = string;
 
-type Incoming = Omit<Location, 'params'> & {
+export type Incoming = Omit<Location, 'params'> & {
 	method: string;
 	headers: Headers;
 	rawBody: StrictBody;
