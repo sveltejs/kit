@@ -1,4 +1,4 @@
-import { isContentTypeBinary } from '../../core/utils.js';
+import { isContentTypeBinary } from '../../core/adapter-utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */

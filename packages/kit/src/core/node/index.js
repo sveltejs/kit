@@ -1,4 +1,4 @@
-import { isContentTypeBinary } from '../utils.js';
+import { isContentTypeBinary } from '../adapter-utils.js';
 
 /**
  * @param {import('http').IncomingMessage} req
