@@ -1,8 +1,16 @@
 import { Load } from './page';
-import { Incoming, GetSession, Handle, ServerResponse, ServerFetch } from './hooks';
+import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
 import { RequestHandler } from './endpoint';
+import { ParameterizedBody } from './helper';
 
 type PageId = string;
+
+type Incoming = Omit<Location, 'params'> & {
+	method: string;
+	headers: Headers;
+	rawBody: StrictBody;
+	body?: ParameterizedBody;
+};
 
 export type Logger = {
 	(msg: string): void;
