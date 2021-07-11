@@ -38,7 +38,7 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			const is_type_binary = isContentTypeBinary(type) === 'buffer';
+			const is_type_binary = isContentTypeBinary(type);
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 

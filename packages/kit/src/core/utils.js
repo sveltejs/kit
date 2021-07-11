@@ -113,13 +113,13 @@ export function get_no_external(cwd, user_specified_deps = []) {
  * This is intended to be used with both requests and responses, to have a consistent body parsing across adapters.
  *
  * @param {string} content_type The `content-type` header of a request/response.
- * @returns {"string"|"buffer"}
+ * @returns {boolean}
  */
 export function isContentTypeBinary(content_type) {
-	return content_type.startsWith('image') ||
+	return (
+		content_type.startsWith('image') ||
 		content_type.startsWith('audio') ||
 		content_type.startsWith('video') ||
 		content_type.startsWith('application/octet-stream')
-		? 'buffer'
-		: 'string';
+	);
 }

@@ -50,7 +50,7 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			const [type] = h['content-type'].split(/;\s*/);
 
-			if (isContentTypeBinary(type) === 'buffer') {
+			if (isContentTypeBinary(type)) {
 				return fulfil(data);
 			}
 
