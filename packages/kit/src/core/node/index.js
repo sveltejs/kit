@@ -1,4 +1,4 @@
-import { get_body_type } from '../utils';
+import { get_body_type } from '../utils.js';
 
 /**
  * @param {import('http').IncomingMessage} req
