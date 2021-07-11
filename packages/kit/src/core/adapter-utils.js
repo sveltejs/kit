@@ -6,7 +6,6 @@
  * @param {string} content_type The `content-type` header of a request/response.
  * @returns {boolean}
  */
-
 export function isContentTypeBinary(content_type) {
 	return (
 		content_type.startsWith('image') ||

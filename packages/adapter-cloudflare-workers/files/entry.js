@@ -58,7 +58,7 @@ async function handle(event) {
 /** @param {Request} request */
 async function read(request) {
 	const type = request.headers.get('content-type') || '';
-	if (isContentTypeBinary(type) === 'buffer') {
+	if (isContentTypeBinary(type)) {
 		return new Uint8Array(await request.arrayBuffer());
 	}
 	return request.text();

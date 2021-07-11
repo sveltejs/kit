@@ -10,12 +10,11 @@ export async function handler(event) {
 	const query = new URLSearchParams(rawQuery);
 
 	const type = headers['content-type'];
-	const rawBody =
-		isContentTypeBinary(type) === 'buffer'
-			? new TextEncoder('base64').encode(body)
-			: isBase64Encoded
-			? Buffer.from(body, 'base64').toString()
-			: body;
+	const rawBody = isContentTypeBinary(type)
+		? new TextEncoder('base64').encode(body)
+		: isBase64Encoded
+		? Buffer.from(body, 'base64').toString()
+		: body;
 
 	const rendered = await render({
 		method: httpMethod,
