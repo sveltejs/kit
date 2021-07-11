@@ -40,7 +40,7 @@ export default async function render_route(request, route) {
 
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
-			const is_type_binary = isContentTypeBinary(type);
+			const is_type_binary = type && isContentTypeBinary(type);
 
 			// validation
 			if (is_type_binary && !(body instanceof Uint8Array)) {
