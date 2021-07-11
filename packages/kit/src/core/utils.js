@@ -106,3 +106,20 @@ function find_svelte_packages(cwd) {
 export function get_no_external(cwd, user_specified_deps = []) {
 	return [...user_specified_deps, ...find_svelte_packages(cwd)];
 }
+
+/**
+ * Decides how the body should be parsed based on its mime type.
+ *
+ * This is intended to be used with both requests and responses, to have a consistent body parsing across adapters.
+ *
+ * @param {string} content_type The `content-type` header of a request/response.
+ * @returns {"string"|"buffer"}
+ */
+export function get_body_type(content_type) {
+	return content_type.startsWith('image') ||
+		content_type.startsWith('audio') ||
+		content_type.startsWith('video') ||
+		content_type.startsWith('application/octet-stream')
+		? 'buffer'
+		: 'string';
+}
