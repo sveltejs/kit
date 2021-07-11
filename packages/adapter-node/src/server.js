@@ -82,7 +82,8 @@ export function createServer({ render }) {
 
 			if (rendered) {
 				res.writeHead(rendered.status, rendered.headers);
-				res.end(rendered.body);
+				if (rendered.body) res.write(rendered.body);
+				res.end();
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');
