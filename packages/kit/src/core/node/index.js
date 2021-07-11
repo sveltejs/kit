@@ -1,3 +1,5 @@
+import { get_body_type } from '../utils';
+
 /**
  * @param {import('http').IncomingMessage} req
  * @returns {Promise<import('types/hooks').StrictBody>}
@@ -48,12 +50,7 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			const [type] = h['content-type'].split(/;\s*/);
 
-			if (
-				type.startsWith('image') ||
-				type.startsWith('audio') ||
-				type.startsWith('video') ||
-				type.includes('application/octet-stream')
-			) {
+			if (get_body_type(type) === 'buffer') {
 				return fulfil(data);
 			}
 
