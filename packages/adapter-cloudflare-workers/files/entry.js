@@ -1,7 +1,7 @@
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
-import { get_body_type } from '@sveltejs/kit/utils'; // eslint-disable-line import/no-unresolved
+import { isContentTypeBinary } from '@sveltejs/kit/adapter-utils'; // eslint-disable-line import/no-unresolved
 
 init();
 
@@ -58,7 +58,7 @@ async function handle(event) {
 /** @param {Request} request */
 async function read(request) {
 	const type = request.headers.get('content-type') || '';
-	if (get_body_type(type) === 'buffer') {
+	if (isContentTypeBinary(type) === 'buffer') {
 		return new Uint8Array(await request.arrayBuffer());
 	}
 	return request.text();

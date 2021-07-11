@@ -1,6 +1,6 @@
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
-import { get_body_type } from '@sveltejs/kit/utils'; // eslint-disable-line import/no-unresolved
+import { isContentTypeBinary } from '@sveltejs/kit/adapter-utils'; // eslint-disable-line import/no-unresolved
 
 init();
 
@@ -11,7 +11,7 @@ export async function handler(event) {
 
 	const type = headers['content-type'];
 	const rawBody =
-		get_body_type(type) === 'buffer'
+		isContentTypeBinary(type) === 'buffer'
 			? new TextEncoder('base64').encode(body)
 			: isBase64Encoded
 			? Buffer.from(body, 'base64').toString()
