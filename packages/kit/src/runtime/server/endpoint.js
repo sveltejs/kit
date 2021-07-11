@@ -1,4 +1,4 @@
-import { get_body_type } from '../../core/utils.js';
+import { isContentTypeBinary } from '../../core/utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -38,7 +38,7 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			const is_type_binary = get_body_type(type) === 'buffer';
+			const is_type_binary = isContentTypeBinary(type) === 'buffer';
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 

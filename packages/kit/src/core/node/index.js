@@ -1,4 +1,4 @@
-import { get_body_type } from '../utils.js';
+import { isContentTypeBinary } from '../utils.js';
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -50,7 +50,7 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			const [type] = h['content-type'].split(/;\s*/);
 
-			if (get_body_type(type) === 'buffer') {
+			if (isContentTypeBinary(type) === 'buffer') {
 				return fulfil(data);
 			}
 

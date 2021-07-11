@@ -115,7 +115,7 @@ export function get_no_external(cwd, user_specified_deps = []) {
  * @param {string} content_type The `content-type` header of a request/response.
  * @returns {"string"|"buffer"}
  */
-export function get_body_type(content_type) {
+export function isContentTypeBinary(content_type) {
 	return content_type.startsWith('image') ||
 		content_type.startsWith('audio') ||
 		content_type.startsWith('video') ||
