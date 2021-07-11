@@ -8,7 +8,7 @@ interface ReadOnlyFormData {
 	[Symbol.iterator]: () => Generator<[string, string], void>;
 }
 
-type BaseBody = string | Buffer | ReadOnlyFormData;
+type BaseBody = string | Uint8Array | ReadOnlyFormData;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: BaseBody & Body;
