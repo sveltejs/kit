@@ -121,7 +121,7 @@ export class Router {
 			// Ignore if tag has
 			// 1. 'download' attribute
 			// 2. 'rel' attribute includes external
-			const rel = a.getAttribute('rel')?.split(/\s+/);
+			const rel = a.getAttribute('rel') && a.getAttribute('rel').split(/\s+/);
 
 			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
 				return;
@@ -135,15 +135,16 @@ export class Router {
 			if (!this.owns(url)) return;
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
+
 			history.pushState({}, '', url.href);
-			this._navigate(url, noscroll ? scroll_state() : null, [], url.hash);
+			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], []);
+				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
 
@@ -177,16 +178,22 @@ export class Router {
 	}
 
 	/**
-	 * @param {string} href
-	 * @param {{ noscroll?: boolean, replaceState?: boolean }} opts
+	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
+	 *
+	 * @param {GotoParams[0]} href
+	 * @param {GotoParams[1]} opts
 	 * @param {string[]} chain
 	 */
-	async goto(href, { noscroll = false, replaceState = false } = {}, chain) {
+	async goto(
+		href,
+		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
+		chain
+	) {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled && this.owns(url)) {
-			history[replaceState ? 'replaceState' : 'pushState']({}, '', href);
-			return this._navigate(url, noscroll ? scroll_state() : null, chain, url.hash);
+			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
+			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
 		}
 
 		location.href = url.href;
@@ -220,10 +227,11 @@ export class Router {
 	/**
 	 * @param {URL} url
 	 * @param {{ x: number, y: number }} scroll
+	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async _navigate(url, scroll, chain, hash) {
+	async _navigate(url, scroll, keepfocus, chain, hash) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -253,7 +261,9 @@ export class Router {
 
 		await this.renderer.update(info, chain, false);
 
-		document.body.focus();
+		if (!keepfocus) {
+			document.body.focus();
+		}
 
 		const deep_linked = hash && document.getElementById(hash.slice(1));
 		if (scroll) {

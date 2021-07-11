@@ -39,10 +39,10 @@ function page_store(value) {
 function initial_fetch(resource, opts) {
 	const url = typeof resource === 'string' ? resource : resource.url;
 
-	let selector = `script[type="svelte-data"][url="${url}"]`;
+	let selector = `script[data-type="svelte-data"][data-url="${url}"]`;
 
 	if (opts && typeof opts.body === 'string') {
-		selector += `[body="${hash(opts.body)}"]`;
+		selector += `[data-body="${hash(opts.body)}"]`;
 	}
 
 	const script = document.querySelector(selector);
@@ -109,7 +109,7 @@ export class Renderer {
 		this.stores.session.subscribe(async (value) => {
 			this.$session = value;
 
-			if (!ready) return;
+			if (!ready || !this.router) return;
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));

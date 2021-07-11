@@ -56,11 +56,3 @@ export async function start({ paths, target, session, host, route, spa, trailing
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
 }
-
-if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {
-	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.register(
-			/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER)
-		);
-	}
-}

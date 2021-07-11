@@ -18,3 +18,7 @@ export default {
 	}
 };
 ```
+
+## Changelog
+
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-vercel/CHANGELOG.md).

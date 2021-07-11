@@ -4,7 +4,7 @@ import sirv from 'sirv';
 import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} dir */
@@ -24,6 +24,8 @@ const mutable = (dir) =>
  * }} opts
  */
 export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
+	__fetch_polyfill();
+
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 
 	/** @type {import('types/internal').App} */
@@ -50,7 +52,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	return get_server(port, host, use_https, config.kit, (req, res) => {
+	const server = await get_server(use_https, config.kit, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {
@@ -85,4 +87,8 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 			});
 		});
 	});
+
+	await server.listen(port, host || '0.0.0.0');
+
+	return Promise.resolve(server);
 }

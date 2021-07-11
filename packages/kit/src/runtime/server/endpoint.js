@@ -25,12 +25,11 @@ export default async function render_route(request, route) {
 		const params = route.params(match);
 
 		const response = await handler({ ...request, params });
+		const preface = `Invalid response from route ${request.path}`;
 
 		if (response) {
 			if (typeof response !== 'object') {
-				return error(
-					`Invalid response from route ${request.path}: expected an object, got ${typeof response}`
-				);
+				return error(`${preface}: expected an object, got ${typeof response}`);
 			}
 
 			let { status = 200, body, headers = {} } = response;
@@ -41,22 +40,25 @@ export default async function render_route(request, route) {
 			// validation
 			if (type === 'application/octet-stream' && !(body instanceof Uint8Array)) {
 				return error(
-					`Invalid response from route ${request.path}: body must be an instance of Uint8Array if content type is application/octet-stream`
+					`${preface}: body must be an instance of Uint8Array if content type is application/octet-stream`
 				);
 			}
 
 			if (body instanceof Uint8Array && type !== 'application/octet-stream') {
 				return error(
-					`Invalid response from route ${request.path}: Uint8Array body must be accompanied by content-type: application/octet-stream header`
+					`${preface}: Uint8Array body must be accompanied by content-type: application/octet-stream header`
 				);
 			}
 
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
-			if (typeof body === 'object' && (!type || type === 'application/json')) {
-				headers = { ...headers, 'content-type': 'application/json' };
-				normalized_body = JSON.stringify(body);
+			if (
+				(typeof body === 'object' || typeof body === 'undefined') &&
+				(!type || type.startsWith('application/json'))
+			) {
+				headers = { ...headers, 'content-type': 'application/json; charset=utf-8' };
+				normalized_body = JSON.stringify(body || {});
 			} else {
 				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 			}

@@ -38,7 +38,7 @@ git config core.hookspath .githooks
 
 ### Changelogs
 
-For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts.
+For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
 
 ### Releases
 
@@ -55,3 +55,5 @@ npm publish --access=public
 ### Testing
 
 Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
+
+You may need to install some dependencies first e.g. with `npx playwright install-deps` (which only works on Ubuntu).

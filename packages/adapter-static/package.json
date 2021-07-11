@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.12",
+	"version": "1.0.0-next.13",
 	"type": "module",
 	"main": "index.js",
 	"exports": {
@@ -13,9 +13,6 @@
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "uvu test test.js"
-	},
-	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",

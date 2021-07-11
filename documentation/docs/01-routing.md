@@ -49,6 +49,7 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 
 ```ts
 type Headers = Record<string, string>;
+type DefaultBody = JSONValue | Uint8Array;
 
 type Request<Locals = Record<string, any>, Body = unknown> = {
 	method: string;
@@ -62,15 +63,19 @@ type Request<Locals = Record<string, any>, Body = unknown> = {
 	locals: Locals; // populated by hooks handle
 };
 
-type EndpointOutput = {
+type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
 	status?: number;
 	headers?: Headers;
-	body?: string | Uint8Array | JSONValue;
+	body?: Body;
 };
 
-type RequestHandler<Locals = Record<string, any>> = (
-	request: Request<Locals>
-) => void | EndpointOutput | Promise<EndpointOutput>;
+type RequestHandler<
+	Locals = Record<string, any>,
+	Input = unknown,
+	Output extends DefaultBody = DefaultBody
+> = (
+	request: Request<Locals, Input>
+) => void | EndpointOutput<Output> | Promise<void | EndpointOutput<Output>>;
 ```
 
 ```js
