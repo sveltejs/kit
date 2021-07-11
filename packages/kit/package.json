@@ -74,6 +74,9 @@
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
 		},
+		"./utils": {
+			"import": "./dist/utils.js"
+		},
 		"./types": "./types/index.d.ts"
 	},
 	"types": "types/index.d.ts",
