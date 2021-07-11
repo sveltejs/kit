@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.23",
+	"version": "1.0.0-next.32",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -20,6 +20,10 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
+	"dependencies": {
+		"esbuild": "^0.12.5",
+		"tiny-glob": "^0.2.9"
+	},
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
@@ -31,8 +35,5 @@
 		"sirv": "^1.0.12",
 		"typescript": "^4.2.4",
 		"uvu": "^0.5.1"
-	},
-	"peerDependencies": {
-		"@sveltejs/kit": "workspace:*"
 	}
 }

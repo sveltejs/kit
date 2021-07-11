@@ -1,5 +1,18 @@
 # create-svelte
 
+## 2.0.0-next.74
+
+### Patch Changes
+
+- 4c7ccfd: Add \$lib alias to js/tsconfig
+
+## 2.0.0-next.73
+
+### Patch Changes
+
+- 2d2fab1: Add favicon to skeleton template
+- 6aa4988: Replace favicon
+
 ## 2.0.0-next.72
 
 ### Patch Changes

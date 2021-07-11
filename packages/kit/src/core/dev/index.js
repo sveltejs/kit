@@ -12,9 +12,10 @@ import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
 import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
-import svelte from '@sveltejs/vite-plugin-svelte';
+import { deep_merge, print_config_conflicts } from '../config/index.js';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -22,6 +23,8 @@ import { SVELTE_KIT } from '../constants.js';
 
 /** @param {Options} opts */
 export function dev(opts) {
+	__fetch_polyfill();
+
 	return new Watcher(opts).init();
 }
 
@@ -79,23 +82,46 @@ class Watcher extends EventEmitter {
 		/** @type {any} */
 		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
-		/**
-		 * @type {vite.ViteDevServer}
-		 */
-		this.vite = await vite.createServer({
-			...user_config,
+		const default_config = {
+			server: {
+				fs: {
+					strict: true
+				}
+			}
+		};
+
+		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
+		let handler = (req, res) => {};
+
+		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
+
+		const alias = user_config.resolve && user_config.resolve.alias;
+
+		// don't warn on overriding defaults
+		const [modified_user_config] = deep_merge(default_config, user_config);
+
+		/** @type {[any, string[]]} */
+		const [merged_config, conflicts] = deep_merge(modified_user_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
-				...user_config.resolve,
-				alias: {
-					...(user_config.resolve && user_config.resolve.alias),
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
+				alias: Array.isArray(alias)
+					? [
+							{
+								find: '$app',
+								replacement: path.resolve(`${this.dir}/runtime/app`)
+							},
+							{
+								find: '$lib',
+								replacement: this.config.kit.files.lib
+							}
+					  ]
+					: {
+							$app: path.resolve(`${this.dir}/runtime/app`),
+							$lib: this.config.kit.files.lib
+					  }
 			},
 			plugins: [
-				...(user_config.plugins || []),
 				svelte({
 					extensions: this.config.extensions,
 					emitCss: !this.config.kit.amp
@@ -103,18 +129,25 @@ class Watcher extends EventEmitter {
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
-				...user_config.server,
-				middlewareMode: true
+				middlewareMode: true,
+				hmr: {
+					...(this.https ? { server: this.server, port: this.port } : {})
+				}
 			},
 			optimizeDeps: {
-				...user_config.optimizeDeps,
 				entries: []
 			},
 			ssr: {
-				...user_config.ssr,
 				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
 			}
 		});
+
+		print_config_conflicts(conflicts, 'kit.vite.');
+
+		/**
+		 * @type {vite.ViteDevServer}
+		 */
+		this.vite = await vite.createServer(merged_config);
 
 		const validator = this.config.kit.amp && (await amp_validator.getInstance());
 
@@ -131,7 +164,7 @@ class Watcher extends EventEmitter {
 			}
 		};
 
-		this.server = await get_server(this.port, this.host, this.https, user_config, (req, res) => {
+		handler = (req, res) => {
 			this.vite.middlewares(req, res, async () => {
 				try {
 					const parsed = parse(req.url);
@@ -187,14 +220,18 @@ class Watcher extends EventEmitter {
 								this.vite.ssrFixStacktrace(error);
 								return error.stack;
 							},
-							handle_error: (error) => {
+							handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
 								this.vite.ssrFixStacktrace(error);
 								console.error(colors.bold().red(error.message));
+								if (error.frame) {
+									console.error(colors.gray(error.frame));
+								}
 								console.error(colors.gray(error.stack));
 							},
 							hooks: {
 								getSession: hooks.getSession || (() => ({})),
-								handle: hooks.handle || (({ request, render }) => render(request))
+								handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+								serverFetch: hooks.serverFetch || fetch
 							},
 							hydrate: this.config.kit.hydrate,
 							paths: this.config.kit.paths,
@@ -317,7 +354,9 @@ class Watcher extends EventEmitter {
 					res.end(e.stack);
 				}
 			});
-		});
+		};
+
+		await this.server.listen(this.port, this.host || '0.0.0.0');
 	}
 
 	update() {

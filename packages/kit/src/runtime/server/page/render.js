@@ -144,6 +144,14 @@ export async function render_response({
 		</script>`;
 	}
 
+	if (options.service_worker) {
+		init += `<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('${options.service_worker}');
+			}
+		</script>`;
+	}
+
 	const head = [
 		rendered.head,
 		styles.size && !options.amp
@@ -159,9 +167,10 @@ export async function render_response({
 
 			${serialized_data
 				.map(({ url, body, json }) => {
-					return body
-						? `<script type="svelte-data" url="${url}" body="${hash(body)}">${json}</script>`
-						: `<script type="svelte-data" url="${url}">${json}</script>`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url="${url}"`;
+					if (body) attributes += ` data-body="${hash(body)}"`;
+
+					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
@@ -201,13 +210,13 @@ function try_serialize(data, fail) {
 
 // Ensure we return something truthy so the client will not re-render the page over the error
 
-/** @param {Error} error */
+/** @param {Error & {frame?: string} & {loc?: object}} error */
 function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
 		const { name, message, stack } = error;
-		serialized = try_serialize({ name, message, stack });
+		serialized = try_serialize({ ...error, name, message, stack });
 	}
 	if (!serialized) {
 		serialized = '{}';

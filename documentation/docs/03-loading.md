@@ -7,26 +7,34 @@ A component that defines a page or a layout can export a `load` function that ru
 Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
 ```ts
-type LoadInput = {
+type LoadInput<
+	PageParams extends Record<string, string> = Record<string, string>,
+	Context extends Record<string, any> = Record<string, any>,
+	Session = any
+> = {
 	page: {
 		host: string;
 		path: string;
-		params: Record<string, string>;
+		params: PageParams;
 		query: URLSearchParams;
 	};
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
-	session: any;
-	context: Record<string, any>;
+	session: Session;
+	context: Context;
 };
 
-type LoadOutput = {
+type LoadOutput<
+	Props extends Record<string, any> = Record<string, any>,
+	Context extends Record<string, any> = Record<string, any>
+> = {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
-	props?: Record<string, any>;
-	context?: Record<string, any>;
+	props?: Props;
+	context?: Context;
 	maxage?: number;
 };
+
 ```
 
 ```html
@@ -59,6 +67,13 @@ type LoadOutput = {
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 > `load` only applies to components that define pages, not the components that they import.
+>
+> It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
+>
+> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) method for getting data in order to avoid duplicate network requests
+> - should generally run on the same domain as any upstream API servers requiring credentials
+> - should not reference `window`, `document`, or any browser-specific objects
+> - should not reference any API keys or secrets directly, which will be exposed to the client, but instead call an endpoint using any required secrets
 
 ### Input
 
@@ -90,12 +105,6 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 #### context
 
 `context` is passed from layout components to child layouts and page components. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `context` property, it will be available to subsequent `load` functions.
-
-> It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
->
-> - should run on the same domain as any upstream API servers requiring credentials
-> - should not reference `window`, `document` or any browser-specific objects
-> - should not reference any API keys or secrets, which will be exposed to the client
 
 ### Output
 

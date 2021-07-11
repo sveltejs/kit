@@ -1,5 +1,31 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.18
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
+## 1.0.0-next.17
+
+### Patch Changes
+
+- c51ab7d: Upgrade esbuild to ^0.12.5
+
+## 1.0.0-next.16
+
+### Patch Changes
+
+- edc307d: Remove peerDependencies due to pnpm bug
+- 2636e68: Attempt to fix peerDependencies specification
+- 3b988a4: Allow `_redirects` to be placed in root directory
+
 ## 1.0.0-next.15
 
 ### Patch Changes

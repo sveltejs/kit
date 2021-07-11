@@ -50,7 +50,7 @@ Ordinarily, SvelteKit 'hydrates' your server-rendered HTML into an interactive p
 
 ### prerender
 
-It's likely that at least some pages of your app can be represented as a simple HTML file, since they contain no dynamic or user-specific data. These pages can be _prerendered_ by your [adapter](#adapters).
+It's likely that at least some pages of your app can be represented as a simple HTML file, since they contain no dynamic or user-specific data. These pages can be _prerendered_ by your [adapter](#adapters), which typically results in better performance and lower costs (since CDNs can make assumptions about static content that they can't make about dynamically server-rendered content, unless your cache headers are expertly configured).
 
 If your entire app is suitable for prerendering, you could use [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static), which will generate HTML files for every page, plus additional files that are requested by `load` functions in those pages.
 
@@ -68,7 +68,7 @@ The prerenderer will start at the root of your app and generate HTML for any pre
 
 The basic rule is this: for a page to be prerenderable, any two users hitting it directly must get the same content from the server.
 
-> In other words, any app that involves user sessions or authentication is _not_ a candidate for `adapter-static`, even if individual pages within an app _are_ suitable for prerendering.
+> In other words, any app that involves user sessions or authentication is _not_ a candidate for `adapter-static`, even if individual pages within an app _are_ suitable for prerendering. You can of course fetch personalized data in `onMount` in a prerendered page, but this may result in a poorer user experience since it will involve blank initial content or loading indicators.
 
 Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The prerenderer will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
 

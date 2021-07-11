@@ -15,7 +15,9 @@ export default function (test, is_dev) {
 		} else {
 			// ensure data wasn't inlined
 			assert.equal(
-				await page.evaluate(() => document.querySelectorAll('script[type="svelte-data"]').length),
+				await page.evaluate(
+					() => document.querySelectorAll('script[data-type="svelte-data"]').length
+				),
 				0
 			);
 		}

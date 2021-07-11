@@ -8,9 +8,9 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs on every request, and determines the response. It receives the `request` object and `render` method, which calls SvelteKit's default renderer. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
-If unimplemented, defaults to `({ request, render }) => render(request)`.
+If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
 To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
@@ -37,16 +37,16 @@ type Response = {
 
 type Handle<Locals = Record<string, any>> = (input: {
 	request: Request<Locals>;
-	render: (request: Request<Locals>) => Response | Promise<Response>;
+	resolve: (request: Request<Locals>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;
 ```
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, render }) {
+export async function handle({ request, resolve }) {
 	request.locals.user = await getUserInformation(request.headers.cookie);
 
-	const response = await render(request);
+	const response = await resolve(request);
 
 	return {
 		...response,
@@ -87,3 +87,28 @@ export function getSession(request) {
 ```
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+
+### serverFetch
+
+This function allows you to modify (or replace) a `fetch` request for an **external resource** that happens inside a `load` function that runs on the server (or during pre-rendering).
+
+For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
+
+```ts
+type ServerFetch = (req: Request) => Promise<Response>;
+```
+
+```js
+/** @type {import('@sveltejs/kit').ServerFetch} */
+export async function serverFetch(request) {
+	if (request.url.startsWith('https://api.yourapp.com/')) {
+		// clone the original request, but change the URL
+		request = new Request(
+			request.url.replace('https://api.yourapp.com/', 'http://localhost:9999/'),
+			request
+		);
+	}
+
+	return fetch(request);
+}
+```

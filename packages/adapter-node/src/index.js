@@ -1,11 +1,12 @@
 import { createServer } from './server';
-/*eslint import/no-unresolved: [2, { ignore: ['\.\/app\.js$'] }]*/
-import * as app from './app.js';
+// TODO hardcoding the relative location makes this brittle
+import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+import { host, port } from './env.js'; // eslint-disable-line import/no-unresolved
 
-const { HOST = '0.0.0.0', PORT = 3000 } = process.env;
+init();
 
-const instance = createServer({ render: app.render }).listen(PORT, HOST, () => {
-	console.log(`Listening on port ${PORT}`);
+const instance = createServer({ render }).listen(port, host, () => {
+	console.log(`Listening on port ${port}`);
 });
 
 export { instance };
