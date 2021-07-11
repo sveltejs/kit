@@ -46,7 +46,11 @@ async function testLoadDefaultConfig(path) {
 				files: {
 					include: ['**'],
 					exclude: []
-				}
+				},
+				emitTypes: true
+			},
+			serviceWorker: {
+				exclude: []
 			},
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },

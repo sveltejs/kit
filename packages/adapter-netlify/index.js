@@ -24,6 +24,7 @@ export default function () {
 				entryPoints: ['.svelte-kit/netlify/entry.js'],
 				outfile: join(functions, 'render/index.js'),
 				bundle: true,
+				inject: [join(files, 'shims.js')],
 				platform: 'node'
 			});
 

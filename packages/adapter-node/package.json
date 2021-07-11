@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.30",
+	"version": "1.0.0-next.32",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
