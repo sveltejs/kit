@@ -54,6 +54,6 @@ npm publish --access=public
 
 ### Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, provide the `FILTER` env var with the test name `FILTER="includes paths" pnpm test`.
 
 You may need to install some dependencies first e.g. with `npx playwright install-deps` (which only works on Ubuntu).
