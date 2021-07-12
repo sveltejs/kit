@@ -1,4 +1,4 @@
-import { isContentTypeBinary } from '../../core/adapter-utils.js';
+import { isContentTypeTextual } from '../../core/adapter-utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -38,18 +38,12 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			const is_type_binary = type && isContentTypeBinary(type);
+			const is_type_textual = isContentTypeTextual(type);
 
 			// validation
-			if (is_type_binary && !(body instanceof Uint8Array)) {
+			if (!is_type_textual && !(body instanceof Uint8Array)) {
 				return error(
-					`${preface}: body must be an instance of Uint8Array if content type is image/*, audio/*, video/* or application/octet-stream`
-				);
-			}
-
-			if (body instanceof Uint8Array && !is_type_binary) {
-				return error(
-					`${preface}: Uint8Array body must have content-type header of image/*, audio/*, video/* or application/octet-stream`
+					`${preface}: body must be an instance of Uint8Array if content-type is not a supported textual content-type`
 				);
 			}
 
