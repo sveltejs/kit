@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.75
+
+### Patch Changes
+
+- fe68e13: Simplify component file names
+
 ## 2.0.0-next.74
 
 ### Patch Changes
