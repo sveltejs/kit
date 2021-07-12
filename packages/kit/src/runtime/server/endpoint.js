@@ -63,7 +63,7 @@ export default async function render_route(request, route) {
 				(!type || type.startsWith('application/json'))
 			) {
 				headers = { ...headers, 'content-type': 'application/json; charset=utf-8' };
-				normalized_body = JSON.stringify(body || {});
+				normalized_body = JSON.stringify(typeof body === 'undefined' ? {} : body);
 			} else {
 				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 			}
