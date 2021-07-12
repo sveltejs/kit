@@ -36,4 +36,10 @@ export default function (test) {
 		const res = await fetch('/endpoint-output/empty');
 		assert.type(await res.buffer(), 'object');
 	});
+
+	test('null body returns null json value', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/null');
+		assert.equal(res.status, 200);
+		assert.equal(await res.json(), null);
+	});
 }
