@@ -1,3 +1,4 @@
+import { isContentTypeBinary } from '../../core/adapter-utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -37,24 +38,28 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
+			const is_type_binary = type && isContentTypeBinary(type);
+
 			// validation
-			if (type === 'application/octet-stream' && !(body instanceof Uint8Array)) {
+			if (is_type_binary && !(body instanceof Uint8Array)) {
 				return error(
-					`${preface}: body must be an instance of Uint8Array if content type is application/octet-stream`
+					`${preface}: body must be an instance of Uint8Array if content type is image/*, audio/*, video/* or application/octet-stream`
 				);
 			}
 
-			if (body instanceof Uint8Array && type !== 'application/octet-stream') {
+			if (body instanceof Uint8Array && !is_type_binary) {
 				return error(
-					`${preface}: Uint8Array body must be accompanied by content-type: application/octet-stream header`
+					`${preface}: Uint8Array body must have content-type header of image/*, audio/*, video/* or application/octet-stream`
 				);
 			}
 
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
+			// ensure the body is an object
 			if (
 				(typeof body === 'object' || typeof body === 'undefined') &&
+				!(body instanceof Uint8Array) &&
 				(!type || type.startsWith('application/json'))
 			) {
 				headers = { ...headers, 'content-type': 'application/json; charset=utf-8' };
