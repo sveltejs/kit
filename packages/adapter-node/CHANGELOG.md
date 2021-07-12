@@ -1,5 +1,12 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.33
+
+### Patch Changes
+
+- 463199c: Handle Uint8Array bodies from endpoints
+- 0db0889: log both host and port
+
 ## 1.0.0-next.32
 
 ### Patch Changes

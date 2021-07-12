@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.125
+
+### Patch Changes
+
+- 7faf52f: Update and consolidate checks for binary body types
+- f854b89: Replace return type of Buffer with Uint8Array
+- f854b89: Remove Incoming from public types
+
 ## 1.0.0-next.124
 
 ### Patch Changes
