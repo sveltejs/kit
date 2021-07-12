@@ -9,7 +9,7 @@
 export function isContentTypeBinary(content_type) {
 	return (
 		content_type.startsWith('image/') ||
-		content_type.startsWith('audio') ||
+		content_type.startsWith('audio/') ||
 		content_type.startsWith('video') ||
 		content_type.startsWith('application/octet-stream')
 	);
