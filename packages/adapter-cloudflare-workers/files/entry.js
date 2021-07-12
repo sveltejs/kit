@@ -61,5 +61,6 @@ async function read(request) {
 	if (isContentTypeBinary(type)) {
 		return new Uint8Array(await request.arrayBuffer());
 	}
+
 	return request.text();
 }

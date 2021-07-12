@@ -38,8 +38,6 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			/** @type {import('types/hooks').StrictBody} */
-			let normalized_body;
 			const is_type_binary = type && isContentTypeBinary(type);
 
 			// validation
@@ -54,6 +52,9 @@ export default async function render_route(request, route) {
 					`${preface}: Uint8Array body must have content-type header of image/*, audio/*, video/* or application/octet-stream`
 				);
 			}
+
+			/** @type {import('types/hooks').StrictBody} */
+			let normalized_body;
 
 			// ensure the body is an object
 			if (
