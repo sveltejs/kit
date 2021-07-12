@@ -43,7 +43,7 @@ export default async function render_route(request, route) {
 			// validation
 			if (is_type_binary && !(body instanceof Uint8Array)) {
 				return error(
-					`${preface}: body must be an instance of Uint8Array if content type is image/*, audio/*, video/* or application/octet-stream `
+					`${preface}: body must be an instance of Uint8Array if content type is image/*, audio/*, video/* or application/octet-stream`
 				);
 			}
 
