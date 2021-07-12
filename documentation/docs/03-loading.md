@@ -4,12 +4,6 @@ title: Loading
 
 A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
 
-> Since `load` can run on the server as well as the client browser, any state changes to a variable that happens on the server will be saved and persisted, and all clients hitting the server-rendered page will be exposed to the already mutated state instead of a clean one.
->
-> It is recommended to make any state changes in the `<script>` block or outside of `load`. To share states exclusive to individual clients, use [`request.locals`](#hooks-handle) or [session](#loading-input-session).
-
-Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
-
 ```ts
 type LoadInput = {
 	page: {
@@ -32,6 +26,8 @@ type LoadOutput = {
 	maxage?: number;
 };
 ```
+
+Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
 ```html
 <script context="module">
@@ -62,12 +58,16 @@ type LoadOutput = {
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-> `load` only applies to components that define pages, not the components that they import. Code called inside `load` blocks:
->
-> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) method for getting data in order to avoid duplicate network requests
-> - should generally run on the same domain as any upstream API servers requiring credentials
-> - should not reference `window`, `document`, or any browser-specific objects
-> - should not reference any API keys or secrets directly, which will be exposed to the client, but instead call an endpoint using any required secrets
+> `load` only applies to [pages](#routing-pages) and [layouts](#layouts), and it may run on either the server or in the client browser.
+
+Code called inside `load` blocks:
+
+- should use the SvelteKit-provided [`fetch`](#loading-input-fetch) method for getting data in order to avoid duplicate network requests
+- should generally run on the same domain as any upstream API servers requiring credentials
+- should not reference `window`, `document`, or any browser-specific objects
+- should not reference any API keys or secrets directly, which will be exposed to the client, but instead call an endpoint using any required secrets
+
+> Any state changes to a variable that happens on the server will be saved and persisted on that server as well, and all clients hitting the server-rendered page will be exposed to the already mutated state from the server. To share states exclusive to individual clients, use [`request.locals`](#hooks-handle) or [session](#loading-input-session).
 
 ### Input
 
