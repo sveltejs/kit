@@ -10,6 +10,11 @@ function error(body) {
 	};
 }
 
+/** @param {unknown} s */
+function is_string(s) {
+	return typeof s === 'string' || s instanceof String;
+}
+
 /**
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
@@ -40,10 +45,9 @@ export default async function render_route(request, route) {
 
 			const is_type_textual = isContentTypeTextual(type);
 
-			// validation
-			if (!is_type_textual && !(body instanceof Uint8Array)) {
+			if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
 				return error(
-					`${preface}: body must be an instance of Uint8Array if content-type is not a supported textual content-type`
+					`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
 				);
 			}
 
