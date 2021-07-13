@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.21
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+
 ## 1.0.0-next.20
 
 ### Patch Changes
