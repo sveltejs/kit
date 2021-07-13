@@ -10,6 +10,7 @@ function error(body) {
 	};
 }
 
+/** @param {string} s */
 function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
 }
