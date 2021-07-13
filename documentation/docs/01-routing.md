@@ -6,7 +6,7 @@ At the heart of SvelteKit is a _filesystem-based router_. This means that the st
 
 > You can change this to a different directory by editing the [project config](#configuration).
 
-There are two types of route — **pages** and **endpoints**.
+There are two types of routes — **pages** and **endpoints**.
 
 Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
 
