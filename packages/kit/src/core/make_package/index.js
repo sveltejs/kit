@@ -226,15 +226,22 @@ export async function emit_dts(config) {
 }
 
 async function try_load_svelte2tsx() {
-	try {
-		const svelte2tsx = (await import('svelte2tsx')).emitDts;
-		if (!svelte2tsx) {
-			throw new Error('Old svelte2tsx version');
-		}
-		return svelte2tsx;
-	} catch (e) {
+	const svelte2tsx = await load();
+	const emit_dts = svelte2tsx.emitDts;
+	if (!emit_dts) {
 		throw new Error(
 			'You need to install svelte2tsx >=0.4.1 if you want to generate type definitions'
 		);
+	}
+	return emit_dts;
+	
+	async function load() {
+		try {
+			return await import('svelte2tsx');
+		} catch (e) {
+			throw new Error(
+				'You need to install svelte2tsx and typescript if you want to generate type definitions\n' + e
+			);
+		}
 	}
 }
