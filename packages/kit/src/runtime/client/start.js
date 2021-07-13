@@ -24,7 +24,7 @@ import { set_paths } from '../paths.js';
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
  *     page: import('types/page').Page;
  *   };
- * 	 defaultLocale: string;
+ *   defaultLocale: string;
  *   locales: string[];
  * }} opts */
 export async function start({ paths, target, session, host, route, spa, trailing_slash, hydrate, defaultLocale, locales }) {
