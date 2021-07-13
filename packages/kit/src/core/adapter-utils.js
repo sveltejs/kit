@@ -10,9 +10,9 @@ export function isContentTypeTextual(content_type) {
 	if (!content_type) return true; // defaults to json
 	const [type] = content_type.split(';'); // get the mime type
 	return (
-		content_type === 'text/plain' ||
-		content_type === 'application/json' ||
-		content_type === 'application/x-www-form-urlencoded' ||
-		content_type === 'multipart/form-data'
+		type === 'text/plain' ||
+		type === 'application/json' ||
+		type === 'application/x-www-form-urlencoded' ||
+		type === 'multipart/form-data'
 	);
 }
