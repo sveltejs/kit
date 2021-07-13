@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.127
+
+### Patch Changes
+
+- bb3ae21: Fix endpoint validation to allow returning string for all content types
+
 ## 1.0.0-next.126
 
 ### Patch Changes
