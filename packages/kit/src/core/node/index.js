@@ -52,10 +52,10 @@ export function getRawBody(req) {
 
 			if (isContentTypeTextual(type)) {
 				const encoding = h['content-encoding'] || 'utf-8';
-				fulfil(new TextDecoder(encoding).decode(data));
+				return fulfil(new TextDecoder(encoding).decode(data));
 			}
 
-			return fulfil(data);
+			fulfil(data);
 		});
 	});
 }
