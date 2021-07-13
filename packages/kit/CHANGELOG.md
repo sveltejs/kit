@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.126
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+- 6da07b8: fix returning null from endpoints
+
 ## 1.0.0-next.125
 
 ### Patch Changes
