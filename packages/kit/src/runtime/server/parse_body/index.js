@@ -36,14 +36,8 @@ export function parse_body(raw, headers) {
 /** @param {string} text */
 function get_urlencoded(text) {
 	const { data, append } = read_only_form_data();
-
-	text
-		.replace(/\+/g, ' ')
-		.split('&')
-		.forEach((str) => {
-			const [key, value] = str.split('=');
-			append(key, value);
-		});
+	const params = new URLSearchParams(text);
+	params.forEach((value, key) => append(key, value));
 
 	return data;
 }
