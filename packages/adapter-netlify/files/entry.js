@@ -26,13 +26,10 @@ export async function handler(event) {
 	});
 
 	if (rendered) {
-		const multiValueHeaders = getMultivalueHeaders(rendered.headers, 'set-cookie');
-
 		return {
 			isBase64Encoded: false,
 			statusCode: rendered.status,
-			headers: rendered.headers,
-			multiValueHeaders,
+			...splitHeaders(headers, 'set-cookie'),
 			body: rendered.body
 		};
 	}
@@ -44,19 +41,25 @@ export async function handler(event) {
 }
 
 /**
- * Separates headers that hold arrays from the others, and removes them from the original headers
- *
+ * Splits headers into two categories: single value and multi value
  * @param {Record<string, string | string[]>} headers
  * @param  {...string} fields
- * @returns {Record<string, string[]>}
+ * @returns {{
+ * headers: Record<string, string>,
+ * multiValueHeaders: Record<string, string[]>
+ * }}
  */
-function getMultivalueHeaders(headers, ...fields) {
-	const res = {};
+function splitHeaders(headers, ...fields) {
+	const h = { ...headers };
+	const m = {};
 	for (const field of fields) {
-		if (Array.isArray(headers[field])) {
-			res[field] = headers[field];
-			delete headers[field];
+		if (Array.isArray(h[field])) {
+			m[field] = h[field];
+			delete h[field];
 		}
 	}
-	return res;
+	return {
+		headers: h,
+		multiValueHeaders: m
+	};
 }
