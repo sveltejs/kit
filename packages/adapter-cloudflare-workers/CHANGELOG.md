@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+
 ## 1.0.0-next.14
 
 ### Patch Changes
