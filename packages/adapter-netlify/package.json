@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.19",
+	"version": "1.0.0-next.21",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"

@@ -1,0 +1,13 @@
+{
+	"name": "nested",
+	"version": "1.0.0",
+	"description": "package-nested-test",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./internal": "./internal/index.js",
+		"./internal/Test.svelte": "./internal/Test.svelte",
+		"./Test.svelte": "./Test.svelte",
+		".": "./index.js"
+	}
+}

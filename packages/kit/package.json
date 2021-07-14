@@ -1,9 +1,9 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.122",
+	"version": "1.0.0-next.127",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.11",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.12",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4",
 		"vite": "^2.4.1"
@@ -73,6 +73,9 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
+		},
+		"./adapter-utils": {
+			"import": "./dist/adapter-utils.js"
 		},
 		"./types": "./types/index.d.ts"
 	},

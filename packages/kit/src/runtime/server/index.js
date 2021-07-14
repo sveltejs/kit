@@ -6,7 +6,7 @@ import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 
 /**
- * @param {import('types/hooks').Incoming} incoming
+ * @param {import('types/internal').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
  */

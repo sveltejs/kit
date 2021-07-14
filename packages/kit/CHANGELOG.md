@@ -1,5 +1,46 @@
 # @sveltejs/kit
 
+## 1.0.0-next.127
+
+### Patch Changes
+
+- bb3ae21: Fix endpoint validation to allow returning string for all content types
+
+## 1.0.0-next.126
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+- 6da07b8: fix returning null from endpoints
+
+## 1.0.0-next.125
+
+### Patch Changes
+
+- 7faf52f: Update and consolidate checks for binary body types
+- f854b89: Replace return type of Buffer with Uint8Array
+- f854b89: Remove Incoming from public types
+
+## 1.0.0-next.124
+
+### Patch Changes
+
+- 34d2049: handle undefined body on endpoint output
+- c826016: add config.kit.package.emitTypes
+- 8854e2f: Bump vite-plugin-svelte to 1.0.0-next.12
+- af1aa54: copy essential root files on `svelte-kit package`
+- 872840a: Pass along custom properties added to Error
+- 868f97a: Preserve README casing and package.json contents on svelte-kit package
+
+## 1.0.0-next.123
+
+### Patch Changes
+
+- 4b25615: Fix ReadOnlyFormData keys and values method implementation
+- 64f749d: ServiceWorker files exclusion support available through svelte.config.js
+- 4d2fec5: Enable Vite's server.fs.strict by default
+- 1ec368a: Expose Vite.js mode from \$app/env
+
 ## 1.0.0-next.122
 
 ### Patch Changes
