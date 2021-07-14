@@ -29,7 +29,7 @@ export async function handler(event) {
 		return {
 			isBase64Encoded: false,
 			statusCode: rendered.status,
-			...splitHeaders(headers, 'set-cookie'),
+			...splitHeaders(headers),
 			body: rendered.body
 		};
 	}
@@ -43,20 +43,18 @@ export async function handler(event) {
 /**
  * Splits headers into two categories: single value and multi value
  * @param {Record<string, string | string[]>} headers
- * @param  {...string} fields
  * @returns {{
  * headers: Record<string, string>,
  * multiValueHeaders: Record<string, string[]>
  * }}
  */
-function splitHeaders(headers, ...fields) {
-	const h = { ...headers };
+function splitHeaders(headers) {
+	const h = {};
 	const m = {};
-	for (const field of fields) {
-		if (Array.isArray(h[field])) {
-			m[field] = h[field];
-			delete h[field];
-		}
+	for (const key in headers) {
+		const value = headers[key];
+		const target = Array.isArray(value) ? m : h;
+		target[key] = value;
 	}
 	return {
 		headers: h,
