@@ -234,13 +234,14 @@ async function try_load_svelte2tsx() {
 		);
 	}
 	return emit_dts;
-	
+
 	async function load() {
 		try {
 			return await import('svelte2tsx');
 		} catch (e) {
 			throw new Error(
-				'You need to install svelte2tsx and typescript if you want to generate type definitions\n' + e
+				'You need to install svelte2tsx and typescript if you want to generate type definitions\n' +
+					e
 			);
 		}
 	}
