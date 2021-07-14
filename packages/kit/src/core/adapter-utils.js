@@ -15,7 +15,7 @@ export function isContentTypeBinary(content_type) {
 	);
 }
 
-/** Adds glob patterns to the
+/** Adds glob patterns to the project's `.gitignore`
  * @param {object} options
  * @param {string[]} options.patterns An array of glob patterns to be inserted into the project's `.gitignore` file
  * @param {boolean} [options.generate] Whether the `.gitignore` file should be created if it doesn't exist
