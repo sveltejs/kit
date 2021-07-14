@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.128
+
+### Patch Changes
+
+- 27e9067: Better error messages when something goes wrong while emitting types
+- 277029d: Change index.js exports to directory exports when packaging
+
 ## 1.0.0-next.127
 
 ### Patch Changes
