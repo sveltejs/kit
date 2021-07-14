@@ -5,7 +5,6 @@
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
-		"./index.js": "./index.js",
 		"./Test.svelte": "./Test.svelte",
 		".": "./index.js"
 	}
