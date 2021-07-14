@@ -26,10 +26,13 @@ export async function handler(event) {
 	});
 
 	if (rendered) {
+		const multiValueHeaders = getMultivalueHeaders(rendered.headers, 'set-cookie');
+
 		return {
 			isBase64Encoded: false,
 			statusCode: rendered.status,
 			headers: rendered.headers,
+			multiValueHeaders,
 			body: rendered.body
 		};
 	}
@@ -38,4 +41,22 @@ export async function handler(event) {
 		statusCode: 404,
 		body: 'Not found'
 	};
+}
+
+/**
+ * Separates headers that hold arrays from the others, and removes them from the original headers
+ *
+ * @param {Record<string, string | string[]>} headers
+ * @param  {...string} fields
+ * @returns {Record<string, string[]>}
+ */
+function getMultivalueHeaders(headers, ...fields) {
+	const res = {};
+	for (const field of fields) {
+		if (Array.isArray(headers[field])) {
+			res[field] = headers[field];
+			delete headers[field];
+		}
+	}
+	return res;
 }
