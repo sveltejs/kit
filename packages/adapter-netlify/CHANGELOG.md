@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.22
+
+### Patch Changes
+
+- 9461178: Use multivalue headers to set multiple cookies
+
 ## 1.0.0-next.21
 
 ### Patch Changes
