@@ -3,7 +3,6 @@
  * @returns {import('types/internal').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
-	// TODO should this behaviour be dev-only?
 	const has_error_status =
 		loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect;
 	if (loaded.error || has_error_status) {
