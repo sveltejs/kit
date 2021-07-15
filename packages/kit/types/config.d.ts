@@ -1,5 +1,6 @@
 import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
+import { I18n } from './helper';
 
 export type AdapterUtils = {
 	log: Logger;
@@ -124,10 +125,7 @@ export type ValidatedConfig = {
 		target: string;
 		trailingSlash: TrailingSlash;
 		vite: () => ViteConfig;
-		i18n?: {
-			locales?: string[];
-			defaultLocale?: string;
-		}
+		i18n?: I18n;
 	};
 	preprocess: any;
 };

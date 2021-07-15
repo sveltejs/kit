@@ -63,7 +63,8 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				i18n: writable(null)
 			},
 			page,
 			components: branch.map(({ node }) => node.module.default)

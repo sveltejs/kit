@@ -30,3 +30,8 @@ export type MaybePromise<T> = T | Promise<T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
+
+export type I18n = {
+	locales: string[];
+	defaultLocale: string;
+}

@@ -29,7 +29,6 @@ const s = JSON.stringify;
  * }} options
  */
 export function create_app({ manifest_data, output, cwd = process.cwd() }) {
-	console.log(manifest_data);
 	const dir = `${output}/generated`;
 	const base = path.relative(cwd, dir);
 

@@ -4,6 +4,7 @@
 import './ambient-modules';
 
 export { Adapter, AdapterUtils, Config, ValidatedConfig } from './config';
+export { I18n } from './helper';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, Load, Page, LoadInput, LoadOutput, ErrorLoadInput } from './page';
 export {

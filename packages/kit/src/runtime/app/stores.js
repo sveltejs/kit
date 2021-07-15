@@ -33,7 +33,10 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		session: stores.session
+		session: stores.session,
+		i18n: {
+			subscribe: stores.i18n.subscribe
+		}
 	};
 };
 
@@ -51,6 +54,15 @@ export const navigating = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
 		const store = getStores().navigating;
+		return store.subscribe(fn);
+	}
+};
+
+/** @type {typeof import('$app/stores').i18n} */
+export const i18n = {
+	/** @param {(value: any) => void} fn */
+	subscribe(fn) {
+		const store = getStores().i18n;
 		return store.subscribe(fn);
 	}
 };

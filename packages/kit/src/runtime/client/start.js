@@ -24,10 +24,21 @@ import { set_paths } from '../paths.js';
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
  *     page: import('types/page').Page;
  *   };
- *   defaultLocale: string;
- *   locales: string[];
+ *   defaultLocale?: string;
+ *   locales?: string[];
  * }} opts */
-export async function start({ paths, target, session, host, route, spa, trailing_slash, hydrate, defaultLocale, locales }) {
+export async function start({
+	paths,
+	target,
+	session,
+	host,
+	route,
+	spa,
+	trailing_slash,
+	hydrate,
+	defaultLocale,
+	locales
+}) {
 	if (import.meta.env.DEV && !target) {
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
@@ -47,7 +58,11 @@ export async function start({ paths, target, session, host, route, spa, trailing
 		fallback,
 		target,
 		session,
-		host
+		host,
+		i18n: {
+			defaultLocale,
+			locales
+		}
 	});
 
 	init(router);

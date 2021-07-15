@@ -84,15 +84,17 @@ declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
 	type Page = import('@sveltejs/kit').Page;
 	type Navigating = { from: Page; to: Page };
+	type I18n = import('@sveltejs/kit').I18n;
 
 	/**
-	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
+	 * A convenience function around `getContext` that returns `{ navigating, page, session, i18n? }`.
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
 		session: Writable<Session>;
+		i18n: Readable<I18n>;
 	};
 	/**
 	 * A readable store whose value reflects the object passed to load functions.
@@ -109,6 +111,11 @@ declare module '$app/stores' {
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<any>;
+	/**
+	 * A readable store.
+	 * Can retrieve defaultLocale and locales from settings
+	 */
+	export const i18n: Readable<I18n>;
 }
 
 declare module '$service-worker' {

@@ -63,8 +63,9 @@ export class Renderer {
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
+	 *   i18n: {defaultLocale?: string, locales?: string[]}
 	 * }} opts */
-	constructor({ Root, fallback, target, session, host }) {
+	constructor({ Root, fallback, target, session, host, i18n }) {
 		this.Root = Root;
 		this.fallback = fallback;
 		this.host = host;
@@ -98,7 +99,8 @@ export class Renderer {
 		this.stores = {
 			page: page_store({}),
 			navigating: writable(null),
-			session: writable(session)
+			session: writable(session),
+			i18n: writable(i18n)
 		};
 
 		this.$session = null;
@@ -332,8 +334,6 @@ export class Renderer {
 			return this.loading.promise;
 		}
 
-		console.log(info, no_cache);
-
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
@@ -362,7 +362,6 @@ export class Renderer {
 				},
 				no_cache
 			);
-
 			if (result) return result;
 		}
 
