@@ -4,14 +4,12 @@
  */
 export function normalize(loaded) {
 	// TODO should this behaviour be dev-only?
-
-	if (
-		loaded.error ||
-		(loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect)
-	) {
+	const hasStatusError =
+		loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect;
+	if (loaded.error || hasStatusError) {
 		const status = loaded.status;
-		if (!loaded.error) {
-			console.warn(' "status" property was returned from load() without an error ');
+
+		if (!loaded.error && hasStatusError) {
 			return {
 				status,
 				error: new Error('Internal Server Error')

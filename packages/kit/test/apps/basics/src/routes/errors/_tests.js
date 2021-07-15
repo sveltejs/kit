@@ -228,10 +228,10 @@ export default function (test, is_dev) {
 	test(
 		'client-side 4xx status without error from load()',
 		'/errors/load-status-without-error-client',
-		async ({ page, js }) => {
+		async ({ page, js, response }) => {
 			if (js) {
 				const body = await page.textContent('body');
-				console.log(body);
+				//console.log(response.status(), body);
 				assert.ok(await body.includes('Internal Server Error'), 'Should throw error');
 			}
 		}
