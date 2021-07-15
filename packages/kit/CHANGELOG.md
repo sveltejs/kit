@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.130
+
+### Patch Changes
+
+- 53e9285d: feat(config): Friendlier error messages for common errors
+- 41da1ebe: Handle 4xx and 5xx statuses without requiring `Error` instance
+- 073fc3b5: feat(cli): respect NODE_ENV when set by user
+
 ## 1.0.0-next.129
 
 ### Patch Changes

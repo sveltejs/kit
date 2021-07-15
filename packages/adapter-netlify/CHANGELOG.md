@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.23
+
+### Patch Changes
+
+- 67ca3a39: return the correct headers
+
 ## 1.0.0-next.22
 
 ### Patch Changes
