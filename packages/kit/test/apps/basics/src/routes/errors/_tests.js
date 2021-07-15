@@ -231,7 +231,6 @@ export default function (test, is_dev) {
 		async ({ page, js, response }) => {
 			if (js) {
 				const body = await page.textContent('body');
-				//console.log(response.status(), body);
 				assert.ok(await body.includes('Internal Server Error'), 'Should throw error');
 			}
 		}
