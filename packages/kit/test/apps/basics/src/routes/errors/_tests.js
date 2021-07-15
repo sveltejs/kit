@@ -217,10 +217,7 @@ export default function (test, is_dev) {
 		'/errors/load-status-without-error-server',
 		async ({ page, response }) => {
 			assert.equal(await page.textContent('footer'), 'Custom layout');
-			assert.equal(
-				await page.textContent('#message'),
-				'This is your custom error page saying: "Internal Server Error"'
-			);
+			assert.equal(await page.textContent('#message'), 'This is your custom error page saying: ""');
 			assert.equal(response.status(), 401);
 		}
 	);
@@ -228,10 +225,14 @@ export default function (test, is_dev) {
 	test(
 		'client-side 4xx status without error from load()',
 		'/errors/load-status-without-error-client',
-		async ({ page, js, response }) => {
+		async ({ page, js }) => {
 			if (js) {
-				const body = await page.textContent('body');
-				assert.ok(await body.includes('Internal Server Error'), 'Should throw error');
+				assert.equal(await page.textContent('footer'), 'Custom layout');
+				assert.equal(
+					await page.textContent('#message'),
+					'This is your custom error page saying: ""'
+				);
+				assert.equal(await page.innerHTML('h1'), '401', 'Should set status code');
 			}
 		}
 	);
