@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.131
+
+### Patch Changes
+
+- 0bc1b309: Minor optimization in parse_body
+
 ## 1.0.0-next.130
 
 ### Patch Changes
