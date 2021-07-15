@@ -4,6 +4,8 @@ import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
 
+const hasScheme = (/** @type {string} */ url) => /^[a-zA-Z]+:/.test(url);
+
 /**
  *
  * @param {{
@@ -97,7 +99,7 @@ export async function load_node({
 
 				let response;
 
-				if (/^[a-zA-Z]+:/.test(url)) {
+				if (hasScheme(url)) {
 					// possibly external fetch
 					if (typeof request.host !== 'undefined') {
 						const { hostname: fetchHostname } = new URL(url);
@@ -107,7 +109,6 @@ export async function load_node({
 						// if SvelteKit is serving my.domain.com:
 						// -        domain.com WILL NOT receive cookies
 						// -     my.domain.com WILL receive cookies
-						// -    amy.domain.com WILL NOT receive cookies
 						// -    api.domain.dom WILL NOT receive cookies
 						// - sub.my.domain.com WILL receive cookies
 						// ports do not affect the resolution
