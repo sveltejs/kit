@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.129
+
+### Patch Changes
+
+- e246455: Passthrough server-side fetch cookies for most same-origin scenarios
+
 ## 1.0.0-next.128
 
 ### Patch Changes
