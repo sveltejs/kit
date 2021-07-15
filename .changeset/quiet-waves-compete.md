@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Handling 4xx and 5xx status messages without errors from load
+Handle 4xx and 5xx statuses without requiring `Error` instance
