@@ -3,11 +3,19 @@
  * @returns {import('types/internal').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
-	// TODO should this behaviour be dev-only?
-
-	if (loaded.error) {
-		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
+	const has_error_status =
+		loaded.status && loaded.status >= 400 && loaded.status <= 599 && !loaded.redirect;
+	if (loaded.error || has_error_status) {
 		const status = loaded.status;
+
+		if (!loaded.error && has_error_status) {
+			return {
+				status,
+				error: new Error()
+			};
+		}
+
+		const error = typeof loaded.error === 'string' ? new Error(loaded.error) : loaded.error;
 
 		if (!(error instanceof Error)) {
 			return {
