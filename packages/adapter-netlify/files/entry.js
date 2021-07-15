@@ -29,7 +29,7 @@ export async function handler(event) {
 		return {
 			isBase64Encoded: false,
 			statusCode: rendered.status,
-			...splitHeaders(headers),
+			...splitHeaders(rendered.headers),
 			body: rendered.body
 		};
 	}
