@@ -28,12 +28,11 @@
 	import { flip } from 'svelte/animate';
 	import { switchLocalePath } from '$app/navigation';
 	import { tick } from 'svelte';
-	import { page } from '$app/stores';
+	import { page, i18n } from '$app/stores';
 
 	export let todos;
 
 	let selectedLang;
-	const locales = ['en', 'de'];
 
 	const switchLocale = async () => {
 		await tick();
@@ -56,14 +55,21 @@
 
 <div class="todos">
 	<h1>Todos (lang = {$page.lang})</h1>
+	<h2>i18n - store:</h2>
+	<pre>
+		{JSON.stringify($i18n, null, 2)}
+	</pre>
 
+	<h2>
+		Lang switcher generated from i18n store and setting selected according to store $page.lang
+	</h2>
 	<select
 		name="lang-switcher"
 		id="lang-switcher"
 		on:change={switchLocale}
 		bind:value={selectedLang}
 	>
-		{#each locales as locale}
+		{#each $i18n.locales as locale}
 			<option value={locale} selected={locale === $page.lang}>{locale}</option>
 		{/each}
 	</select>
