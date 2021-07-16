@@ -25,21 +25,18 @@ export function isContentTypeTextual(content_type) {
  * @param {boolean} [options.generate] Whether the `.gitignore` file should be created if it doesn't exist
  */
 export async function updateIgnores({ patterns, generate = false }) {
-	const { existsSync } = await import('fs');
-	const { readFile, writeFile, appendFile } = await import('fs/promises');
+	const fs = await import('fs');
 
 	const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
 	const title = '# Generated adapter build';
 
-	// TODO: mapping each target to a promise and
-	// using Promise.all may have a better performance
 	for (const target of targets) {
-		if (!existsSync(target)) {
+		if (!fs.existsSync(target)) {
 			if (!generate) continue;
-			await writeFile(target, '');
+			fs.writeFileSync(target, '');
 		}
 
-		const file = await readFile(target, { encoding: 'utf-8' });
+		const file = fs.readFileSync(target, { encoding: 'utf-8' });
 		const lines = file.split('\n');
 		const start_index = lines.indexOf(title);
 
@@ -47,9 +44,9 @@ export async function updateIgnores({ patterns, generate = false }) {
 		if (start_index === -1) {
 			const last = lines[lines.length - 1];
 			if (last.trim().length !== 0) {
-				await appendFile(target, '\n');
+				fs.appendFileSync(target, '\n');
 			}
-			await appendFile(target, ['', title, ...patterns].join('\n'));
+			fs.appendFileSync(target, ['', title, ...patterns].join('\n'));
 			continue;
 		}
 
@@ -71,6 +68,6 @@ export async function updateIgnores({ patterns, generate = false }) {
 		if (new_lines.size === 0) return;
 
 		lines.splice(insertion_index, 0, ...new_lines);
-		await writeFile(target, lines.join('\n'));
+		fs.writeFileSync(target, lines.join('\n'));
 	}
 }
