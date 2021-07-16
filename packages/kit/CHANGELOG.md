@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.0.0-next.131
+
+### Patch Changes
+
+- 0bc1b309: Minor optimization in parse_body
+
+## 1.0.0-next.130
+
+### Patch Changes
+
+- 53e9285d: feat(config): Friendlier error messages for common errors
+- 41da1ebe: Handle 4xx and 5xx statuses without requiring `Error` instance
+- 073fc3b5: feat(cli): respect NODE_ENV when set by user
+
+## 1.0.0-next.129
+
+### Patch Changes
+
+- e246455: Passthrough server-side fetch cookies for most same-origin scenarios
+
+## 1.0.0-next.128
+
+### Patch Changes
+
+- 27e9067: Better error messages when something goes wrong while emitting types
+- 277029d: Change index.js exports to directory exports when packaging
+
+## 1.0.0-next.127
+
+### Patch Changes
+
+- bb3ae21: Fix endpoint validation to allow returning string for all content types
+
+## 1.0.0-next.126
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+- 6da07b8: fix returning null from endpoints
+
 ## 1.0.0-next.125
 
 ### Patch Changes

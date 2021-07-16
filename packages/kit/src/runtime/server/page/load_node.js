@@ -4,6 +4,8 @@ import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
 
+const hasScheme = (/** @type {string} */ url) => /^[a-zA-Z]+:/.test(url);
+
 /**
  *
  * @param {{
@@ -97,10 +99,32 @@ export async function load_node({
 
 				let response;
 
-				if (/^[a-zA-Z]+:/.test(url)) {
-					// external fetch
-					const request = new Request(url, /** @type {RequestInit} */ (opts));
-					response = await options.hooks.serverFetch.call(null, request);
+				if (hasScheme(url)) {
+					// possibly external fetch
+					if (typeof request.host !== 'undefined') {
+						const { hostname: fetchHostname } = new URL(url);
+						const [serverHostname] = request.host.split(':');
+
+						// allow cookie passthrough for "same-origin"
+						// if SvelteKit is serving my.domain.com:
+						// -        domain.com WILL NOT receive cookies
+						// -     my.domain.com WILL receive cookies
+						// -    api.domain.dom WILL NOT receive cookies
+						// - sub.my.domain.com WILL receive cookies
+						// ports do not affect the resolution
+						// leading dot prevents mydomain.com matching domain.com
+						if (`.${fetchHostname}`.endsWith(`.${serverHostname}`) && opts.credentials !== 'omit') {
+							uses_credentials = true;
+
+							opts.headers = {
+								...opts.headers,
+								cookie: request.headers.cookie
+							};
+						}
+					}
+
+					const externalRequest = new Request(url, /** @type {RequestInit} */ (opts));
+					response = await options.hooks.serverFetch.call(null, externalRequest);
 				} else {
 					const [path, search] = url.split('?');
 

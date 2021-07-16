@@ -71,4 +71,34 @@ test('load default config (esm)', async () => {
 	await testLoadDefaultConfig('default-esm');
 });
 
+test('errors on loading config without default export', async () => {
+	let errorMessage = null;
+	try {
+		const cwd = join(__dirname, 'fixtures', 'export-missing');
+		await load_config({ cwd });
+	} catch (e) {
+		errorMessage = e.message;
+	}
+
+	assert.equal(
+		errorMessage,
+		'Your config is missing default exports. Make sure to include "export default config;"'
+	);
+});
+
+test('errors on loading config with incorrect default export', async () => {
+	let errorMessage = null;
+	try {
+		const cwd = join(__dirname, 'fixtures', 'export-string');
+		await load_config({ cwd });
+	} catch (e) {
+		errorMessage = e.message;
+	}
+
+	assert.equal(
+		errorMessage,
+		'Unexpected config type "string", make sure your default export is an object.'
+	);
+});
+
 test.run();
