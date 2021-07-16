@@ -11,6 +11,9 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt({ utils }) {
+			if (utils.update_ignores({ patterns: [pages, assets] })) {
+				utils.log.minor('Ignore files updated');
+			}
 			utils.copy_static_files(assets);
 			utils.copy_client_files(assets);
 
