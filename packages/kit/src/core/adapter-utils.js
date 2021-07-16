@@ -64,7 +64,3 @@ export async function updateGitIgnore({ patterns, generate = false }) {
 	lines.splice(insertion_index, 0, ...new_lines);
 	await writeFile(path, lines.join('\n'));
 }
-
-updateGitIgnore({
-	patterns: ['.foo', 'mehdasd/asdad', 'bar;sd']
-});
