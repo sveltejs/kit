@@ -65,7 +65,7 @@ export async function updateIgnores({ patterns, generate = false }) {
 		for (const line of lines) {
 			new_lines.delete(line);
 		}
-		if (new_lines.size === 0) return;
+		if (new_lines.size === 0) continue;
 
 		lines.splice(insertion_index, 0, ...new_lines);
 		fs.writeFileSync(target, lines.join('\n'));
