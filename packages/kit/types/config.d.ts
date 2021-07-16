@@ -9,6 +9,7 @@ export type AdapterUtils = {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
+	update_ignores: ({ patterns, generate }: { patterns: string[]; generate?: boolean }) => boolean;
 	prerender: ({
 		all,
 		dest,

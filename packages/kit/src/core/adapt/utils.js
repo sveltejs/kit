@@ -1,6 +1,7 @@
 import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../filesystem/index.js';
 import { prerender } from './prerender.js';
+import fs from 'fs';
 
 /**
  *
@@ -47,6 +48,57 @@ export function get_utils({ cwd, config, build_data, log }) {
 					log
 				});
 			}
+		},
+
+		/** @param {{patterns: string[], generate?: boolean}} options */
+		update_ignores({ patterns, generate = false }) {
+			const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
+			const title = '# Generated adapter build';
+			let changed = false;
+			for (const target of targets) {
+				if (!fs.existsSync(target)) {
+					if (!generate) continue;
+					fs.writeFileSync(target, '');
+				}
+
+				const file = fs.readFileSync(target, { encoding: 'utf-8' });
+				const lines = file.split('\n');
+				const start_index = lines.indexOf(title);
+
+				// append to file
+				if (start_index === -1) {
+					let prefix = '';
+					const last = lines[lines.length - 1];
+					if (lines.length > 1) prefix += '\n';
+					if (last.trim().length !== 0) prefix += '\n';
+
+					fs.appendFileSync(target, [`${prefix}${title}`, ...patterns].join('\n'));
+					changed = true;
+					continue;
+				}
+
+				let insertion_index = lines.length - 1;
+
+				// find last empty line
+				for (let i = start_index; i < lines.length; i++) {
+					const line = lines[i];
+					if (line.trim().length === 0) {
+						insertion_index = i;
+						break;
+					}
+				}
+				const new_lines = new Set(patterns);
+				// remove repeated lines
+				for (const line of lines) {
+					new_lines.delete(line);
+				}
+				if (new_lines.size === 0) continue;
+
+				lines.splice(insertion_index, 0, ...new_lines);
+				fs.writeFileSync(target, lines.join('\n'));
+				changed = true;
+			}
+			return changed;
 		}
 	};
 }
