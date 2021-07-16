@@ -17,6 +17,10 @@ export default function () {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
+			if (utils.update_ignores({ patterns: [publish, functions] })) {
+				utils.log.minor('Ignore files updated');
+			}
+
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');
 
