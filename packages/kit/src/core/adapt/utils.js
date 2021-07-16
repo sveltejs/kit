@@ -55,6 +55,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 			const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
 			const title = '# Generated adapter output';
 			let changed = false;
+			// TODO: may be necessary to handle deletion of unused/old patterns
 			for (const target of targets) {
 				if (!fs.existsSync(target)) {
 					if (!generate) continue;
