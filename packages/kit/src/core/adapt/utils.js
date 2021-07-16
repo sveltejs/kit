@@ -53,7 +53,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 		/** @param {{patterns: string[], generate?: boolean}} options */
 		update_ignores({ patterns, generate = false }) {
 			const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
-			const title = '# Generated adapter build';
+			const title = '# Generated adapter output';
 			let changed = false;
 			for (const target of targets) {
 				if (!fs.existsSync(target)) {
