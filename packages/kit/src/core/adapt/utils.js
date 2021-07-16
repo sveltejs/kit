@@ -89,8 +89,10 @@ export function get_utils({ cwd, config, build_data, log }) {
 				}
 				const new_lines = new Set(patterns);
 				// remove repeated lines
-				for (const line of lines) {
-					new_lines.delete(line);
+				for (let i = start_index; i < insertion_index; i++) {
+					const line = lines[i];
+					// this will prevent commented ignores to be reinserted
+					new_lines.delete(line.replace(/#\s*/, ''));
 				}
 				if (new_lines.size === 0) continue;
 
