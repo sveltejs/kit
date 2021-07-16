@@ -8,6 +8,8 @@ This is very experimental; the adapter API isn't at all fleshed out, and things 
 
 > ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).
 
+> ⚠️ For the time being, Netlify's default Node version is 12. SvelteKit requires Node v14 to build. you can pin the Node version with a [`.nvmrc`](https://github.com/nvm-sh/nvm#nvmrc) file: `echo "14" > .nvmrc` or [set the `NODE_ENV` environment variable](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript).
+
 ```bash
 npm i -D @sveltejs/adapter-netlify@next
 ```
