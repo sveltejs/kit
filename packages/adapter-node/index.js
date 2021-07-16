@@ -36,6 +36,9 @@ export default function ({
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
+			if (utils.update_ignores({ patterns: [out] })) {
+				utils.log.minor('Ignore files updated');
+			}
 			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
