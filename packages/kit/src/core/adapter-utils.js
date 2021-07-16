@@ -42,11 +42,12 @@ export async function updateIgnores({ patterns, generate = false }) {
 
 		// append to file
 		if (start_index === -1) {
+			let prefix = '';
 			const last = lines[lines.length - 1];
-			if (last.trim().length !== 0) {
-				fs.appendFileSync(target, '\n');
-			}
-			fs.appendFileSync(target, ['', title, ...patterns].join('\n'));
+			if (lines.length > 1) prefix += '\n';
+			if (last.trim().length !== 0) prefix += '\n';
+
+			fs.appendFileSync(target, [`${prefix}${title}`, ...patterns].join('\n'));
 			continue;
 		}
 
