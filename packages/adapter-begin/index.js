@@ -33,6 +33,14 @@ export default function () {
 			const static_directory = resolve(static_mount_point);
 			const server_directory = resolve(join('src', 'shared'));
 
+			if (
+				utils.update_ignores({
+					patterns: [static_directory, lambda_directory, server_directory]
+				})
+			) {
+				utils.log.minor('Ignore files updated');
+			}
+
 			utils.log.minor('Writing client application...');
 			utils.copy_static_files(static_directory);
 			utils.copy_client_files(static_directory);
