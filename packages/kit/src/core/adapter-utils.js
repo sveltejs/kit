@@ -31,6 +31,8 @@ export async function updateIgnores({ patterns, generate = false }) {
 	const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
 	const title = '# Generated adapter build';
 
+	// TODO: mapping each target to a promise and
+	// using Promise.all may have a better performance
 	for (const target of targets) {
 		if (!existsSync(target)) {
 			if (!generate) continue;
