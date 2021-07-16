@@ -17,7 +17,7 @@ export function isContentTypeTextual(content_type) {
 	);
 }
 
-/** Adds glob patterns to the project's `.gitignore`
+/** Adds glob patterns to the project's `.gitignore` and files alike
  *
  * This function should be run at build time.
  * @param {object} options
