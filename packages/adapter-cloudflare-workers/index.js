@@ -16,6 +16,10 @@ export default function () {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
+			if (utils.update_ignores({ patterns: [bucket, entrypoint] })) {
+				utils.log.minor('Ignore files updated');
+			}
+
 			utils.rimraf(bucket);
 			utils.rimraf(entrypoint);
 
