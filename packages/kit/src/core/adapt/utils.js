@@ -50,8 +50,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 			}
 		},
 
-		/** @param {{patterns: string[], generate?: boolean}} options */
-		update_ignores({ patterns, generate = false }) {
+		/** @param {{patterns: string[], generate?: boolean, log?: boolean}} options */
+		update_ignores({ patterns, generate = false, log = true }) {
 			const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
 			const title = '# Generated adapter output';
 			let changed = false;
@@ -101,7 +101,9 @@ export function get_utils({ cwd, config, build_data, log }) {
 				fs.writeFileSync(target, lines.join('\n'));
 				changed = true;
 			}
-			return changed;
+			if (log && changed) {
+				this.log.minor('Ignore files updated');
+			}
 		}
 	};
 }
