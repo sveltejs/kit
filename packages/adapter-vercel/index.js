@@ -10,9 +10,8 @@ export default function () {
 
 		async adapt({ utils }) {
 			const dir = '.vercel_build_output';
-			if (utils.update_ignores({ patterns: [dir] })) {
-				utils.log.minor('Ignore files updated');
-			}
+
+			utils.update_ignores({ patterns: [dir] });
 			utils.rimraf(dir);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
