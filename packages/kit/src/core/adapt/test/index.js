@@ -91,7 +91,7 @@ suite('prerender', async () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
+	const build_data = { client: [], server: [], static: [], entries: ['/nested', '/noindex.html'] };
 
 	const utils = get_utils({ cwd, config, build_data, log });
 
@@ -103,7 +103,7 @@ suite('prerender', async () => {
 		dest
 	});
 
-	assert.equal(glob('**', { cwd: `${prerendered_files}` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: `${prerendered_files}` }), glob('**', { cwd: dest, flush: true }));
 
 	rimraf.sync(dest);
 });
