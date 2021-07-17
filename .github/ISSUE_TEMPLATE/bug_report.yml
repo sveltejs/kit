@@ -31,7 +31,7 @@ body:
     id: system-info
     attributes:
       label: System Info
-      description: Output of `npx envinfo --system --npmPackages svelte,@sveltejs/kit,@sveltejs/adapter-node,@sveltejs/adapter-static,@sveltejs/adapter-begin,@sveltejs/adapter-netlify,@sveltejs/adapter-vercel vite --binaries --browsers`
+      description: Output of `npx envinfo --system --binaries --browsers --npmPackages "{svelte,@sveltejs/*,vite}"`
       render: shell
       placeholder: System, Binaries, Browsers
     validations:
