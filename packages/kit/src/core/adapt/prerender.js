@@ -97,7 +97,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 */
 	function normalize(path) {
 		if (config.kit.trailingSlash === 'always') {
-			return path.endsWith('/') ? path : `${path}/`;
+			return path.endsWith('/') || path.endsWith('.html') ? path : `${path}/`;
 		} else if (config.kit.trailingSlash === 'never') {
 			return !path.endsWith('/') || path === '/' ? path : path.slice(0, -1);
 		}
@@ -143,7 +143,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const parts = path.split('/');
-			if (is_html && parts[parts.length - 1] !== 'index.html') {
+			if (is_html && !parts[parts.length - 1].endsWith('.html')) {
 				parts.push('index.html');
 			}
 
@@ -172,7 +172,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const is_html = result.headers['content-type'] === 'text/html';
 
 				const parts = dependency_path.split('/');
-				if (is_html && parts[parts.length - 1] !== 'index.html') {
+				if (is_html && !parts[parts.length - 1].endsWith('.html')) {
 					parts.push('index.html');
 				}
 
