@@ -4,7 +4,7 @@ import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
-export default function () {
+export default function (options = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -29,12 +29,22 @@ export default function () {
 			utils.log.minor('Generating worker...');
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
+			const {
+				pageCacheTTL = null,
+				staticCacheTTL = 60 * 60 * 24 * 90, // 90 days
+				edgeCacheTTL = 60 * 60 * 24 * 90 // 90 days
+			} = options;
 			await esbuild.build({
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',
-				platform: 'node' // TODO would be great if we could generate ESM and use type = "javascript"
+				platform: 'node', // TODO would be great if we could generate ESM and use type = "javascript"
+				define: {
+					PAGE_CACHE_TTL: pageCacheTTL,
+					STATIC_CACHE_TTL: staticCacheTTL,
+					EDGE_CACHE_TTL: edgeCacheTTL
+				}
 			});
 
 			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
