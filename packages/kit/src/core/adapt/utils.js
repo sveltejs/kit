@@ -61,9 +61,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 					if (!generate) continue;
 					fs.writeFileSync(target, '');
 				}
-
 				const file = fs.readFileSync(target, { encoding: 'utf-8' });
-				const lines = file.split('\n');
+				const lines = file.split(/\r?\n/);
 				const start_index = lines.indexOf(title);
 
 				// append to file
