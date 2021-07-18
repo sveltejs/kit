@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: 12.x
+          cache: npm
 
       - run: npm install -g pnpm
       - run: pnpm install --frozen-lockfile
@@ -34,7 +35,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens
       #   if: steps.changesets.outputs.published == 'true'

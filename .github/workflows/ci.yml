@@ -4,19 +4,20 @@ on:
   push:
     branches:
       - master
-  pull_request:
+  pull_request: null
 env:
   CI: true
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
 
 jobs:
   Lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
+          cache: npm
       - name: Cache ~/.pnpm-store
         uses: actions/cache@main
         with:
@@ -44,9 +45,10 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
       - name: Get paths for OS
         uses: ./.github/actions/env
         id: paths
@@ -85,9 +87,10 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
       - name: Get paths for OS
         uses: ./.github/actions/env
         id: paths
