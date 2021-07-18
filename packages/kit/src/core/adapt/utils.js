@@ -77,6 +77,14 @@ export function get_utils({ cwd, config, build_data, log }) {
 					continue;
 				}
 
+				const new_lines = new Set(patterns);
+				// remove repeated lines
+				for (const line of lines) {
+					// this will prevent commented ignores to be reinserted
+					new_lines.delete(line.replace(/#\s*/, ''));
+				}
+				if (new_lines.size === 0) continue;
+
 				let insertion_index = lines.length - 1;
 
 				// find last empty line
@@ -87,14 +95,6 @@ export function get_utils({ cwd, config, build_data, log }) {
 						break;
 					}
 				}
-				const new_lines = new Set(patterns);
-				// remove repeated lines
-				for (let i = start_index; i <= insertion_index; i++) {
-					const line = lines[i];
-					// this will prevent commented ignores to be reinserted
-					new_lines.delete(line.replace(/#\s*/, ''));
-				}
-				if (new_lines.size === 0) continue;
 
 				lines.splice(insertion_index, 0, ...new_lines);
 				fs.writeFileSync(target, lines.join('\n'));
