@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.16
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
 ## 1.0.0-next.15
 
 ### Patch Changes

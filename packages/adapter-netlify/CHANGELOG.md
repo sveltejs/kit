@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.24
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
 ## 1.0.0-next.23
 
 ### Patch Changes

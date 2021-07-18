@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.34
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
 ## 1.0.0-next.33
 
 ### Patch Changes
