@@ -77,7 +77,7 @@ If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallt
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`.
+The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`. The `load` function is reactive to the parameters defined in the method signature. If the function is written as taking a single parameter, it will re-run everytime `page`, `session` or `context` changes. If the parameter is declared as a destructured object, it will only re-run when the declared properties change.
 
 #### page
 
