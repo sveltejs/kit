@@ -71,6 +71,9 @@
 		"./node": {
 			"import": "./dist/node.js"
 		},
+		"./hooks": {
+			"import": "./dist/hooks.js"
+		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
 		},
