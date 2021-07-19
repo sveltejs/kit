@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.132
+
+### Patch Changes
+
+- 7b440b2b: Fix URL resolution for server-side fetch
+
 ## 1.0.0-next.131
 
 ### Patch Changes
