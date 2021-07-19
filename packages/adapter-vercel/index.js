@@ -10,9 +10,9 @@ import esbuild from 'esbuild';
 /**
  * @param {{
  *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} options
+ * }} [options]
  **/
-export default function (options = { esbuild: (opts) => opts }) {
+export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
@@ -36,13 +36,17 @@ export default function (options = { esbuild: (opts) => opts }) {
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
-			const buildOptions = await options.esbuild({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				inject: [join(files, 'shims.js')],
 				platform: 'node'
-			});
+			};
+
+			const buildOptions =
+				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
 
 			await esbuild.build(buildOptions);
 
