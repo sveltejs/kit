@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.26
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
 ## 1.0.0-next.25
 
 ### Patch Changes
