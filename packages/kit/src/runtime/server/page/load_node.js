@@ -84,8 +84,7 @@ export async function load_node({
 					};
 				}
 
-				const [path, search] = url.split('?');
-				const resolved = resolve(request.path, path);
+				const resolved = resolve(request.path, url.split('?')[0]);
 
 				let response;
 
@@ -132,6 +131,8 @@ export async function load_node({
 						// in this context anyway, so we take the easy route and ban them
 						throw new Error('Request body must be a string');
 					}
+
+					const search = url.includes('?') ? url.slice(url.indexOf('?') + 1) : '';
 
 					const rendered = await respond(
 						{
