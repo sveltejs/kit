@@ -77,7 +77,7 @@ If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallt
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`. The `load` function is reactive to the parameters defined in the method signature. If the function is written as taking a single parameter, it will re-run everytime `page`, `session` or `context` changes. If the parameter is declared as a destructured object, it will only re-run when the declared properties change.
+The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `context` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, context })` function will re-run every time `session` or `context` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
 
 #### page
 
