@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.76
+
+### Patch Changes
+
+- b9e63381: Add DOM to lib in tsconfig
+
 ## 2.0.0-next.75
 
 ### Patch Changes

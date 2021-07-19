@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
 ## 1.0.0-next.34
 
 ### Patch Changes
