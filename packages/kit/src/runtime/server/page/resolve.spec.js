@@ -38,4 +38,12 @@ test('resolves a root-relative path with .', () => {
 	assert.equal(resolve('/a/b/c', '/x/./y/../z'), '/x/z');
 });
 
+test('resolves a protocol-relative path', () => {
+	assert.equal(resolve('/a/b/c', '//example.com/foo'), '//example.com/foo');
+});
+
+test('resolves an absolute path', () => {
+	assert.equal(resolve('/a/b/c', 'https://example.com/foo'), 'https://example.com/foo');
+});
+
 test.run();

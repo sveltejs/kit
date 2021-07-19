@@ -4,8 +4,6 @@ import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
 
-const hasScheme = (/** @type {string} */ url) => /^[a-zA-Z]+:/.test(url);
-
 /**
  *
  * @param {{
@@ -86,24 +84,91 @@ export async function load_node({
 					};
 				}
 
-				if (options.read && url.startsWith(options.paths.assets)) {
-					// when running `start`, or prerendering, `assets` should be
-					// config.kit.paths.assets, but we should still be able to fetch
-					// assets directly from `static`
-					url = url.replace(options.paths.assets, '');
-				}
-
-				if (url.startsWith('//')) {
-					throw new Error(`Cannot request protocol-relative URL (${url}) in server-side fetch`);
-				}
+				const [path, search] = url.split('?');
+				const resolved = resolve(request.path, path);
 
 				let response;
 
-				if (hasScheme(url)) {
-					// possibly external fetch
+				// handle fetch requests for static assets. e.g. prebaked data, etc.
+				// we need to support everything the browser's fetch supports
+				const filename = resolved.replace(options.paths.assets, '').slice(1);
+				const filename_html = `${filename}/index.html`; // path may also match path/index.html
+				const asset = options.manifest.assets.find(
+					(d) => d.file === filename || d.file === filename_html
+				);
+
+				if (asset) {
+					response = options.read
+						? new Response(options.read(asset.file), {
+								headers: {
+									'content-type': asset.type
+								}
+						  })
+						: await fetch(
+								// TODO we need to know what protocol to use
+								`http://${page.host}/${asset.file}`,
+								/** @type {RequestInit} */ (opts)
+						  );
+				} else if (resolved.startsWith(options.paths.base)) {
+					const relative = resolved.replace(options.paths.base, '');
+
+					const headers = /** @type {import('types/helper').Headers} */ ({ ...opts.headers });
+
+					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
+					if (opts.credentials !== 'omit') {
+						uses_credentials = true;
+
+						headers.cookie = request.headers.cookie;
+
+						if (!headers.authorization) {
+							headers.authorization = request.headers.authorization;
+						}
+					}
+
+					if (opts.body && typeof opts.body !== 'string') {
+						// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
+						// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
+						// non-string bodies are irksome to deal with, but luckily aren't particularly useful
+						// in this context anyway, so we take the easy route and ban them
+						throw new Error('Request body must be a string');
+					}
+
+					const rendered = await respond(
+						{
+							host: request.host,
+							method: opts.method || 'GET',
+							headers,
+							path: relative,
+							rawBody: /** @type {string} */ (opts.body),
+							query: new URLSearchParams(search)
+						},
+						options,
+						{
+							fetched: url,
+							initiator: route
+						}
+					);
+
+					if (rendered) {
+						if (state.prerender) {
+							state.prerender.dependencies.set(relative, rendered);
+						}
+
+						response = new Response(rendered.body, {
+							status: rendered.status,
+							headers: rendered.headers
+						});
+					}
+				} else {
+					// external
+					if (resolved.startsWith('//')) {
+						throw new Error(`Cannot request protocol-relative URL (${url}) in server-side fetch`);
+					}
+
+					// external fetch
 					if (typeof request.host !== 'undefined') {
-						const { hostname: fetchHostname } = new URL(url);
-						const [serverHostname] = request.host.split(':');
+						const { hostname: fetch_hostname } = new URL(url);
+						const [server_hostname] = request.host.split(':');
 
 						// allow cookie passthrough for "same-origin"
 						// if SvelteKit is serving my.domain.com:
@@ -113,7 +178,10 @@ export async function load_node({
 						// - sub.my.domain.com WILL receive cookies
 						// ports do not affect the resolution
 						// leading dot prevents mydomain.com matching domain.com
-						if (`.${fetchHostname}`.endsWith(`.${serverHostname}`) && opts.credentials !== 'omit') {
+						if (
+							`.${fetch_hostname}`.endsWith(`.${server_hostname}`) &&
+							opts.credentials !== 'omit'
+						) {
 							uses_credentials = true;
 
 							opts.headers = {
@@ -123,89 +191,8 @@ export async function load_node({
 						}
 					}
 
-					const externalRequest = new Request(url, /** @type {RequestInit} */ (opts));
-					response = await options.hooks.serverFetch.call(null, externalRequest);
-				} else {
-					const [path, search] = url.split('?');
-
-					// otherwise we're dealing with an internal fetch
-					const resolved = resolve(request.path, path);
-
-					// handle fetch requests for static assets. e.g. prebaked data, etc.
-					// we need to support everything the browser's fetch supports
-					const filename = resolved.slice(1);
-					const filename_html = `${filename}/index.html`; // path may also match path/index.html
-					const asset = options.manifest.assets.find(
-						(d) => d.file === filename || d.file === filename_html
-					);
-
-					if (asset) {
-						// we don't have a running server while prerendering because jumping between
-						// processes would be inefficient so we have options.read instead
-						if (options.read) {
-							response = new Response(options.read(asset.file), {
-								headers: {
-									'content-type': asset.type
-								}
-							});
-						} else {
-							// TODO we need to know what protocol to use
-							response = await fetch(
-								`http://${page.host}/${asset.file}`,
-								/** @type {RequestInit} */ (opts)
-							);
-						}
-					}
-
-					if (!response) {
-						const headers = /** @type {import('types/helper').Headers} */ ({ ...opts.headers });
-
-						// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
-						if (opts.credentials !== 'omit') {
-							uses_credentials = true;
-
-							headers.cookie = request.headers.cookie;
-
-							if (!headers.authorization) {
-								headers.authorization = request.headers.authorization;
-							}
-						}
-
-						if (opts.body && typeof opts.body !== 'string') {
-							// per https://developer.mozilla.org/en-US/docs/Web/API/Request/Request, this can be a
-							// Blob, BufferSource, FormData, URLSearchParams, USVString, or ReadableStream object.
-							// non-string bodies are irksome to deal with, but luckily aren't particularly useful
-							// in this context anyway, so we take the easy route and ban them
-							throw new Error('Request body must be a string');
-						}
-
-						const rendered = await respond(
-							{
-								host: request.host,
-								method: opts.method || 'GET',
-								headers,
-								path: resolved,
-								rawBody: /** @type {string} */ (opts.body),
-								query: new URLSearchParams(search)
-							},
-							options,
-							{
-								fetched: url,
-								initiator: route
-							}
-						);
-
-						if (rendered) {
-							if (state.prerender) {
-								state.prerender.dependencies.set(resolved, rendered);
-							}
-
-							response = new Response(rendered.body, {
-								status: rendered.status,
-								headers: rendered.headers
-							});
-						}
-					}
+					const external_request = new Request(url, /** @type {RequestInit} */ (opts));
+					response = await options.hooks.serverFetch.call(null, external_request);
 				}
 
 				if (response) {
