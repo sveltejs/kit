@@ -11,9 +11,9 @@ import { fileURLToPath } from 'url';
 /**
  * @param {{
  *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} options
+ * }} [options]
  **/
-export default function (options = { esbuild: (opts) => opts }) {
+export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -38,13 +38,17 @@ export default function (options = { esbuild: (opts) => opts }) {
 			utils.log.minor('Generating worker...');
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
-			const buildOptions = await options.esbuild({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',
-				platform: 'browser' // TODO would be great if we could generate ESM and use type = "javascript"
-			});
+				platform: 'browser'
+			};
+
+			const buildOptions =
+				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
 
 			await esbuild.build(buildOptions);
 

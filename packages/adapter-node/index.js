@@ -31,14 +31,12 @@ const pipe = promisify(pipeline);
  *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
  * }} options
  */
-export default function (
-	{
-		out = 'build',
-		precompress,
-		env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
-		esbuild: esbuildConfig
-	} = { esbuild: (opts) => opts }
-) {
+export default function ({
+	out = 'build',
+	precompress,
+	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
+	esbuild: esbuildConfig
+} = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-node',
@@ -63,7 +61,8 @@ export default function (
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
-			const buildOptions = await esbuildConfig({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
@@ -75,7 +74,8 @@ export default function (
 				define: {
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
 				}
-			});
+			};
+			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
 			await esbuild.build(buildOptions);
 
 			utils.log.minor('Prerendering static pages');
