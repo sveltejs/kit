@@ -43,6 +43,7 @@ body:
       description: Select the severity of this issue
       options:
         - annoyance
+        - serious, but I can work around it
         - blocking an upgrade
         - blocking all usage of SvelteKit
     validations:
