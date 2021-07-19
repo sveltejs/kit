@@ -2,7 +2,7 @@
     import { createEventDispatcher } from 'svelte';
     export const astring: string;
 
-    const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher<{ event: boolean }>();
     dispatch('event', true);
 </script>
 
