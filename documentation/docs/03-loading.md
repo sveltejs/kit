@@ -7,6 +7,8 @@ A component that defines a page or a layout can export a `load` function that ru
 Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
 ```ts
+// TypeScript types for loading
+
 type LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Context extends Record<string, any> = Record<string, any>,
@@ -40,6 +42,7 @@ type LoadOutput<
 ```html
 <script context="module">
 	/**
+	// if you are using TypeScript
 	 * @type {import('@sveltejs/kit').Load}
 	 */
 	export async function load({ page, fetch, session, context }) {
