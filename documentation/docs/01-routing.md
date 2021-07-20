@@ -30,7 +30,7 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
 
 ```html
-<!-- src/routes/about.svelte -->
+<!-- src/routes/about.svelte or src/routes/about/index.svelte -->
 <svelte:head>
 	<title>About</title>
 </svelte:head>
@@ -48,6 +48,8 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```ts
+// TypeScript types for endpoints
+
 type Headers = Record<string, string>;
 type DefaultBody = JSONValue | Uint8Array;
 
@@ -82,6 +84,7 @@ type RequestHandler<
 import db from '$lib/database';
 
 /**
+// if you are using TypeScript
  * @type {import('@sveltejs/kit').RequestHandler}
  */
 export async function get({ params }) {
