@@ -15,6 +15,8 @@ If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
 ```ts
+// TypeScript types for handle
+
 type Headers = Record<string, string>;
 
 type Request<Locals = Record<string, any>> = {
@@ -65,6 +67,8 @@ This function takes the `request` object and returns a `session` object that is 
 If unimplemented, session is `{}`.
 
 ```ts
+// TypeScript types for getSession
+
 type GetSession<Locals = Record<string, any>, Session = any> = {
 	(request: Request<Locals>): Session | Promise<Session>;
 };
@@ -95,6 +99,7 @@ This function allows you to modify (or replace) a `fetch` request for an **exter
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
+// TypeScript types for serverFetch
 type ServerFetch = (req: Request) => Promise<Response>;
 ```
 
