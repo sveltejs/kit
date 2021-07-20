@@ -48,6 +48,8 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods.
 
 ```ts
+// Endpoint TypeScript type definitions
+
 type Headers = Record<string, string>;
 type DefaultBody = JSONValue | Uint8Array;
 

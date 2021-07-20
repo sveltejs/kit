@@ -13,6 +13,8 @@ This function runs on every request, for both pages and endpoints, and determine
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
 ```ts
+// handle TypeScript type definitions
+
 type Headers = Record<string, string>;
 
 type Request<Locals = Record<string, any>> = {
@@ -65,6 +67,8 @@ This function takes the `request` object and returns a `session` object that is 
 If unimplemented, session is `{}`.
 
 ```ts
+// getSession TypeScript type definition
+
 type GetSession<Locals = Record<string, any>, Session = any> = {
 	(request: Request<Locals>): Session | Promise<Session>;
 };
@@ -73,15 +77,15 @@ type GetSession<Locals = Record<string, any>, Session = any> = {
 ```js
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
-	return {
+	return request.locals.user ? {
 		user: {
 			// only include properties needed client-side —
 			// exclude anything else attached to the user
 			// like access tokens etc
-			name: request.locals.user?.name,
-			email: request.locals.user?.email,
-			avatar: request.locals.user?.avatar
-		}
+			name: request.locals.user.name,
+			email: request.locals.user.email,
+			avatar: request.locals.user.avatar
+		} : {};
 	};
 }
 ```
