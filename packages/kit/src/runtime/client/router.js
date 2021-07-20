@@ -269,8 +269,10 @@ export class Router {
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
-			// scroll is an element id (from a hash), we need to compute y
-			scrollTo(0, deep_linked.getBoundingClientRect().top + scrollY);
+			// Here we use `scrollIntoView` on the element instead of `scrollTo`
+			// because it natively supports the `scroll-margin` and `scroll-behavior`
+			// CSS properties.
+			deep_linked.scrollIntoView();
 		} else {
 			scrollTo(0, 0);
 		}
