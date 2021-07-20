@@ -50,33 +50,18 @@ export function get_utils({ cwd, config, build_data, log }) {
 			}
 		},
 
-		/** @param {{patterns: string[], generate?: boolean, log?: boolean}} options */
-		update_ignores({ patterns, generate = false, log = true }) {
+		/** @param {{patterns: string[], log?: boolean}} options */
+		update_ignores({ patterns, log = true }) {
 			const targets = ['.gitignore', '.prettierignore', '.eslintignore'];
-			const title = '# Generated adapter output';
-			let changed = false;
-			// TODO: may be necessary to handle deletion of unused/old patterns
 			for (const target of targets) {
-				if (!fs.existsSync(target)) {
-					if (!generate) continue;
-					fs.writeFileSync(target, '');
-				}
+				if (!fs.existsSync(target)) continue;
+
 				const file = fs.readFileSync(target, { encoding: 'utf-8' });
 				const lines = file.split(/\r?\n/);
-				const start_index = lines.indexOf(title);
 
-				// append to file
-				if (start_index === -1) {
-					let prefix = '';
-					const last = lines[lines.length - 1];
-					if (lines.length > 1) prefix += '\n';
-					if (last.trim().length !== 0) prefix += '\n';
-
-					fs.appendFileSync(target, [`${prefix}${title}`, ...patterns].join('\n'));
-					changed = true;
-					continue;
-				}
-
+				// using new Set(...patterns, ...lines) can remove lines of the file
+				// that the user may not want and doesn't account for
+				// commented glob patterns
 				const new_lines = new Set(patterns);
 				// remove repeated lines
 				for (const line of lines) {
@@ -84,24 +69,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 					new_lines.delete(line.replace(/#\s*/, ''));
 				}
 				if (new_lines.size === 0) continue;
-
-				let insertion_index = lines.length - 1;
-
-				// find last empty line
-				for (let i = start_index; i < lines.length; i++) {
-					const line = lines[i];
-					if (line.trim().length === 0) {
-						insertion_index = i;
-						break;
-					}
-				}
-
-				lines.splice(insertion_index, 0, ...new_lines);
-				fs.writeFileSync(target, lines.join('\n'));
-				changed = true;
-			}
-			if (log && changed) {
-				this.log.minor('Ignore files updated');
+				fs.writeFileSync(target, [...lines, ...new_lines].join('\n'));
+				if (log) this.log.success(`Updated ${target}`);
 			}
 		}
 	};
