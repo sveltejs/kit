@@ -12,8 +12,6 @@ This function runs on every request, for both pages and endpoints, and determine
 
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
-To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
-
 ```ts
 type Headers = Record<string, string>;
 
@@ -40,6 +38,8 @@ type Handle<Locals = Record<string, any>> = (input: {
 	resolve: (request: Request<Locals>) => Response | Promise<Response>;
 }) => Response | Promise<Response>;
 ```
+
+To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
