@@ -1,5 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
+import { coalesce_to_error } from '../utils.js';
 
 /**
  * @param {{
@@ -67,7 +68,9 @@ export async function respond_with_error({ request, options, state, $session, st
 			branch,
 			page
 		});
-	} catch (error) {
+	} catch (/** @type {unknown} */ err) {
+		const error = coalesce_to_error(err);
+
 		options.handle_error(error);
 
 		return {

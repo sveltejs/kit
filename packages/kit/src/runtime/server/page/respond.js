@@ -1,6 +1,7 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
+import { coalesce_to_error } from '../utils.js';
 
 /** @typedef {import('./types.js').Loaded} Loaded */
 
@@ -29,7 +30,9 @@ export async function respond({ request, options, state, $session, route }) {
 
 	try {
 		nodes = await Promise.all(route.a.map((id) => id && options.load_component(id)));
-	} catch (error) {
+	} catch (/** @type {unknown} */ err) {
+		const error = coalesce_to_error(err);
+
 		options.handle_error(error);
 
 		return await respond_with_error({
@@ -66,7 +69,7 @@ export async function respond({ request, options, state, $session, route }) {
 	/** @type {number} */
 	let status = 200;
 
-	/** @type {Error} */
+	/** @type {Error|undefined} */
 	let error;
 
 	ssr: if (page_config.ssr) {
@@ -108,7 +111,9 @@ export async function respond({ request, options, state, $session, route }) {
 					if (loaded.loaded.error) {
 						({ status, error } = loaded.loaded);
 					}
-				} catch (e) {
+				} catch (/** @type {unknown} */ err) {
+					const e = coalesce_to_error(err);
+
 					options.handle_error(e);
 
 					status = 500;
@@ -150,7 +155,9 @@ export async function respond({ request, options, state, $session, route }) {
 
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
-							} catch (e) {
+							} catch (/** @type {unknown} */ err) {
+								const e = coalesce_to_error(err);
+
 								options.handle_error(e);
 
 								continue;
@@ -194,7 +201,9 @@ export async function respond({ request, options, state, $session, route }) {
 			branch: branch && branch.filter(Boolean),
 			page
 		});
-	} catch (error) {
+	} catch (/** @type {unknown} */ err) {
+		const error = coalesce_to_error(err);
+
 		options.handle_error(error);
 
 		return await respond_with_error({
