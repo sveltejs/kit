@@ -2,6 +2,7 @@ import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../filesystem/index.js';
 import { prerender } from './prerender.js';
 import fs from 'fs';
+import { EOL } from 'os';
 
 /**
  *
@@ -59,14 +60,13 @@ export function get_utils({ cwd, config, build_data, log }) {
 				const file = fs.readFileSync(target, { encoding: 'utf-8' });
 				const lines = file.split(/\r?\n/);
 				const new_lines = new Set(patterns);
-
 				// remove repeated lines
 				for (const line of lines) {
 					// this will prevent commented ignores to be reinserted
 					new_lines.delete(line.replace(/#\s*/, ''));
 				}
 				if (new_lines.size === 0) continue;
-				fs.writeFileSync(target, [...lines, ...new_lines].join('\n'));
+				fs.writeFileSync(target, [...lines, ...new_lines].join(EOL));
 				if (log) this.log.success(`Updated ${target}`);
 			}
 		}
