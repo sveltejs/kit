@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.133
+
+### Patch Changes
+
+- 68190496: chore: Vite to ^2.4.3, vite-plugin-svelte to ^1.0.0-next.13
+- 0cbcd7c3: [fix] correctly detect external fetches
+- 51ec789f: Scrolling to an anchor via a hash now supports `scroll-*` CSS properties
+
 ## 1.0.0-next.132
 
 ### Patch Changes
