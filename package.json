@@ -26,7 +26,7 @@
 		"@rollup/plugin-commonjs": "^17.1.0",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^11.2.1",
-		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.6.0",
+		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.7.0",
 		"@typescript-eslint/eslint-plugin": "^4.22.1",
 		"@typescript-eslint/parser": "^4.22.1",
 		"eslint": "^7.25.0",

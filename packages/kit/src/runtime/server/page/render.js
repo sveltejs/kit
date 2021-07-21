@@ -125,7 +125,7 @@ export async function render_response({
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
-				hydrate: ${page_config.ssr && page_config.hydrate? `{
+				hydrate: ${page_config.ssr && page_config.hydrate ? `{
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [

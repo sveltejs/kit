@@ -8,7 +8,7 @@ importers:
       '@rollup/plugin-commonjs': ^17.1.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^11.2.1
-      '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.6.0
+      '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.7.0
       '@typescript-eslint/eslint-plugin': ^4.22.1
       '@typescript-eslint/parser': ^4.22.1
       eslint: ^7.25.0
@@ -23,7 +23,7 @@ importers:
       '@rollup/plugin-commonjs': 17.1.0_rollup@2.47.0
       '@rollup/plugin-json': 4.1.0_rollup@2.47.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.47.0
-      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_af975cea70dee4e144b531430cd3ccb8
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_af975cea70dee4e144b531430cd3ccb8
       '@typescript-eslint/eslint-plugin': 4.22.1_f2cf9a191be19a59b06aad4f4e4a9af1
       '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.2.4
       eslint: 7.25.0
@@ -4026,11 +4026,11 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f_af975cea70dee4e144b531430cd3ccb8:
-    resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/7224f2bba6ac40407c332b41fa2bede946f4868f}
-    id: github.com/sveltejs/eslint-config/7224f2bba6ac40407c332b41fa2bede946f4868f
+  github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_af975cea70dee4e144b531430cd3ccb8:
+    resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/885b062904591606c030b4e8eb9160c63f16b322}
+    id: github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322
     name: '@sveltejs/eslint-config'
-    version: 5.6.0
+    version: 5.7.0
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 3'
       '@typescript-eslint/parser': '>= 3'
