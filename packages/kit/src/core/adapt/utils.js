@@ -58,11 +58,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 
 				const file = fs.readFileSync(target, { encoding: 'utf-8' });
 				const lines = file.split(/\r?\n/);
-
-				// using new Set(...patterns, ...lines) can remove lines of the file
-				// that the user may not want and doesn't account for
-				// commented glob patterns
 				const new_lines = new Set(patterns);
+
 				// remove repeated lines
 				for (const line of lines) {
 					// this will prevent commented ignores to be reinserted
