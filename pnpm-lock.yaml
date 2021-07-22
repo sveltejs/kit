@@ -17,22 +17,22 @@ importers:
       playwright-chromium: ^1.10.0
       prettier: 2.2.1
       rollup: ^2.47.0
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     devDependencies:
       '@changesets/cli': 2.16.0
       '@rollup/plugin-commonjs': 17.1.0_rollup@2.47.0
       '@rollup/plugin-json': 4.1.0_rollup@2.47.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.47.0
-      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_af975cea70dee4e144b531430cd3ccb8
-      '@typescript-eslint/eslint-plugin': 4.22.1_f2cf9a191be19a59b06aad4f4e4a9af1
-      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.2.4
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_e06a55b69b64d662e59758f070767acb
+      '@typescript-eslint/eslint-plugin': 4.22.1_4a6fd0e9ae8b280fdcb1e0b655944632
+      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.3.5
       eslint: 7.25.0
       eslint-plugin-import: 2.22.1_eslint@7.25.0
       eslint-plugin-svelte3: 3.2.0_eslint@7.25.0
       playwright-chromium: 1.10.0
       prettier: 2.2.1
       rollup: 2.47.0
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   .github/actions/env:
     specifiers:
@@ -56,14 +56,14 @@ importers:
       '@sveltejs/kit': workspace:*
       rollup: ^2.47.0
       sirv: ^1.0.12
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     dependencies:
       '@architect/parser': 3.0.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       rollup: 2.47.0
       sirv: 1.0.12
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   packages/adapter-cloudflare-workers:
     specifiers:
@@ -81,13 +81,13 @@ importers:
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
       esbuild: ^0.12.5
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   packages/adapter-node:
     specifiers:
@@ -101,7 +101,7 @@ importers:
       rollup: ^2.47.0
       sirv: ^1.0.12
       tiny-glob: ^0.2.9
-      typescript: ^4.2.4
+      typescript: ^4.3.5
       uvu: ^0.5.1
     dependencies:
       esbuild: 0.12.5
@@ -115,7 +115,7 @@ importers:
       polka: 1.0.0-next.15
       rollup: 2.47.0
       sirv: 1.0.12
-      typescript: 4.2.4
+      typescript: 4.3.5
       uvu: 0.5.1
 
   packages/adapter-static:
@@ -124,24 +124,24 @@ importers:
       playwright-chromium: ^1.10.0
       port-authority: ^1.1.2
       sirv: ^1.0.12
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     devDependencies:
       '@sveltejs/kit': link:../kit
       playwright-chromium: 1.10.0
       port-authority: 1.1.2
       sirv: 1.0.12
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.12.5
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     dependencies:
       esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   packages/create-svelte:
     specifiers:
@@ -157,7 +157,7 @@ importers:
       sucrase: ^3.18.1
       svelte-preprocess: ^4.7.3
       tiny-glob: ^0.2.8
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     dependencies:
       kleur: 4.1.4
       prompts: 2.4.1
@@ -170,9 +170,9 @@ importers:
       prettier: 2.2.1
       prettier-plugin-svelte: 2.2.0_prettier@2.2.1
       sucrase: 3.18.1
-      svelte-preprocess: 4.7.3_typescript@4.2.4
+      svelte-preprocess: 4.7.3_typescript@4.3.5
       tiny-glob: 0.2.8
-      typescript: 4.2.4
+      typescript: 4.3.5
 
   packages/create-svelte/templates/default:
     specifiers:
@@ -185,7 +185,7 @@ importers:
       cookie: ^0.4.1
       svelte: ^3.34.0
       svelte-preprocess: ^4.7.3
-      typescript: ^4.2.4
+      typescript: ^4.3.5
     dependencies:
       '@fontsource/fira-mono': 4.2.2
       '@lukeed/uuid': 2.0.0
@@ -196,8 +196,8 @@ importers:
       '@sveltejs/adapter-vercel': link:../../../adapter-vercel
       '@sveltejs/kit': link:../../../kit
       svelte: 3.38.2
-      svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.2.4
-      typescript: 4.2.4
+      svelte-preprocess: 4.7.3_svelte@3.38.2+typescript@4.3.5
+      typescript: 4.3.5
 
   packages/kit:
     specifiers:
@@ -231,7 +231,7 @@ importers:
       svelte-check: ^2.2.0
       svelte2tsx: ~0.4.1
       tiny-glob: ^0.2.8
-      typescript: ^4.2.4
+      typescript: ^4.3.5
       uvu: ^0.5.1
       vite: ^2.4.3
     dependencies:
@@ -265,9 +265,9 @@ importers:
       sirv: 1.0.12
       svelte: 3.38.3
       svelte-check: 2.2.0_svelte@3.38.3
-      svelte2tsx: 0.4.1_svelte@3.38.3+typescript@4.2.4
+      svelte2tsx: 0.4.1_svelte@3.38.3+typescript@4.3.5
       tiny-glob: 0.2.8
-      typescript: 4.2.4
+      typescript: 4.3.5
       uvu: 0.5.1
 
 packages:
@@ -792,7 +792,7 @@ packages:
     dev: true
     optional: true
 
-  /@typescript-eslint/eslint-plugin/4.22.1_f2cf9a191be19a59b06aad4f4e4a9af1:
+  /@typescript-eslint/eslint-plugin/4.22.1_4a6fd0e9ae8b280fdcb1e0b655944632:
     resolution: {integrity: sha512-kVTAghWDDhsvQ602tHBc6WmQkdaYbkcTwZu+7l24jtJiYvm9l+/y/b2BZANEezxPDiX5MK2ZecE+9BFi/YJryw==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -803,8 +803,8 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@typescript-eslint/experimental-utils': 4.22.1_eslint@7.25.0+typescript@4.2.4
-      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.2.4
+      '@typescript-eslint/experimental-utils': 4.22.1_eslint@7.25.0+typescript@4.3.5
+      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.3.5
       '@typescript-eslint/scope-manager': 4.22.1
       debug: 4.3.1
       eslint: 7.25.0
@@ -812,13 +812,13 @@ packages:
       lodash: 4.17.21
       regexpp: 3.1.0
       semver: 7.3.5
-      tsutils: 3.21.0_typescript@4.2.4
-      typescript: 4.2.4
+      tsutils: 3.21.0_typescript@4.3.5
+      typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /@typescript-eslint/experimental-utils/4.22.1_eslint@7.25.0+typescript@4.2.4:
+  /@typescript-eslint/experimental-utils/4.22.1_eslint@7.25.0+typescript@4.3.5:
     resolution: {integrity: sha512-svYlHecSMCQGDO2qN1v477ax/IDQwWhc7PRBiwAdAMJE7GXk5stF4Z9R/8wbRkuX/5e9dHqbIWxjeOjckK3wLQ==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -827,7 +827,7 @@ packages:
       '@types/json-schema': 7.0.7
       '@typescript-eslint/scope-manager': 4.22.1
       '@typescript-eslint/types': 4.22.1
-      '@typescript-eslint/typescript-estree': 4.22.1_typescript@4.2.4
+      '@typescript-eslint/typescript-estree': 4.22.1_typescript@4.3.5
       eslint: 7.25.0
       eslint-scope: 5.1.1
       eslint-utils: 2.1.0
@@ -836,7 +836,7 @@ packages:
       - typescript
     dev: true
 
-  /@typescript-eslint/parser/4.22.1_eslint@7.25.0+typescript@4.2.4:
+  /@typescript-eslint/parser/4.22.1_eslint@7.25.0+typescript@4.3.5:
     resolution: {integrity: sha512-l+sUJFInWhuMxA6rtirzjooh8cM/AATAe3amvIkqKFeMzkn85V+eLzb1RyuXkHak4dLfYzOmF6DXPyflJvjQnw==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -848,10 +848,10 @@ packages:
     dependencies:
       '@typescript-eslint/scope-manager': 4.22.1
       '@typescript-eslint/types': 4.22.1
-      '@typescript-eslint/typescript-estree': 4.22.1_typescript@4.2.4
+      '@typescript-eslint/typescript-estree': 4.22.1_typescript@4.3.5
       debug: 4.3.1
       eslint: 7.25.0
-      typescript: 4.2.4
+      typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -869,7 +869,7 @@ packages:
     engines: {node: ^8.10.0 || ^10.13.0 || >=11.10.1}
     dev: true
 
-  /@typescript-eslint/typescript-estree/4.22.1_typescript@4.2.4:
+  /@typescript-eslint/typescript-estree/4.22.1_typescript@4.3.5:
     resolution: {integrity: sha512-p3We0pAPacT+onSGM+sPR+M9CblVqdA9F1JEdIqRVlxK5Qth4ochXQgIyb9daBomyQKAXbygxp1aXQRV0GC79A==}
     engines: {node: ^10.12.0 || >=12.0.0}
     peerDependencies:
@@ -884,8 +884,8 @@ packages:
       globby: 11.0.3
       is-glob: 4.0.1
       semver: 7.3.5
-      tsutils: 3.21.0_typescript@4.2.4
-      typescript: 4.2.4
+      tsutils: 3.21.0_typescript@4.3.5
+      typescript: 4.3.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -3448,7 +3448,7 @@ packages:
       svelte: 3.38.3
     dev: false
 
-  /svelte-preprocess/4.7.3_svelte@3.38.2+typescript@4.2.4:
+  /svelte-preprocess/4.7.3_svelte@3.38.2+typescript@4.3.5:
     resolution: {integrity: sha512-Zx1/xLeGOIBlZMGPRCaXtlMe4ZA0faato5Dc3CosEqwu75MIEPuOstdkH6cy+RYTUYynoxzNaDxkPX4DbrPwRA==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -3494,7 +3494,7 @@ packages:
       detect-indent: 6.0.0
       strip-indent: 3.0.0
       svelte: 3.38.2
-      typescript: 4.2.4
+      typescript: 4.3.5
     dev: true
 
   /svelte-preprocess/4.7.3_svelte@3.38.3+typescript@4.2.4:
@@ -3546,7 +3546,7 @@ packages:
       typescript: 4.2.4
     dev: true
 
-  /svelte-preprocess/4.7.3_typescript@4.2.4:
+  /svelte-preprocess/4.7.3_typescript@4.3.5:
     resolution: {integrity: sha512-Zx1/xLeGOIBlZMGPRCaXtlMe4ZA0faato5Dc3CosEqwu75MIEPuOstdkH6cy+RYTUYynoxzNaDxkPX4DbrPwRA==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -3591,7 +3591,7 @@ packages:
       '@types/sass': 1.16.0
       detect-indent: 6.0.0
       strip-indent: 3.0.0
-      typescript: 4.2.4
+      typescript: 4.3.5
     dev: true
 
   /svelte/3.38.2:
@@ -3604,7 +3604,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.4.1_svelte@3.38.3+typescript@4.2.4:
+  /svelte2tsx/0.4.1_svelte@3.38.3+typescript@4.3.5:
     resolution: {integrity: sha512-qqXWg+wlsYXhtolKI2NGL52rK7ACejNzEKn98qcz2T6Fd1e73+YPZMw/FNeGRSZLCdNxzGf7QJDhzIiK3MXihA==}
     peerDependencies:
       svelte: ^3.24
@@ -3613,7 +3613,7 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.38.3
-      typescript: 4.2.4
+      typescript: 4.3.5
     dev: true
 
   /table/6.6.0:
@@ -3738,14 +3738,14 @@ packages:
     resolution: {integrity: sha512-gS9GVHRU+RGn5KQM2rllAlR3dU6m7AcpJKdtH8gFvQiC4Otgk98XnmMU+nZenHt/+VhnBPWwgrJsyrdcw6i23w==}
     dev: true
 
-  /tsutils/3.21.0_typescript@4.2.4:
+  /tsutils/3.21.0_typescript@4.3.5:
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
     engines: {node: '>= 6'}
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
     dependencies:
       tslib: 1.14.1
-      typescript: 4.2.4
+      typescript: 4.3.5
     dev: true
 
   /tty-table/2.8.13:
@@ -3790,6 +3790,12 @@ packages:
 
   /typescript/4.2.4:
     resolution: {integrity: sha512-V+evlYHZnQkaz8TRBuxTA92yZBPotr5H+WhQ7bD3hZUndx5tGOa1fuCgeSjxAzM1RiN5IzvadIXTVefuuwZCRg==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.3.5:
+    resolution: {integrity: sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
@@ -4026,7 +4032,7 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_af975cea70dee4e144b531430cd3ccb8:
+  github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_e06a55b69b64d662e59758f070767acb:
     resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/885b062904591606c030b4e8eb9160c63f16b322}
     id: github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322
     name: '@sveltejs/eslint-config'
@@ -4040,10 +4046,10 @@ packages:
       eslint-plugin-svelte3: '>= 2'
       typescript: '>= 3'
     dependencies:
-      '@typescript-eslint/eslint-plugin': 4.22.1_f2cf9a191be19a59b06aad4f4e4a9af1
-      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.2.4
+      '@typescript-eslint/eslint-plugin': 4.22.1_4a6fd0e9ae8b280fdcb1e0b655944632
+      '@typescript-eslint/parser': 4.22.1_eslint@7.25.0+typescript@4.3.5
       eslint: 7.25.0
       eslint-plugin-import: 2.22.1_eslint@7.25.0
       eslint-plugin-svelte3: 3.2.0_eslint@7.25.0
-      typescript: 4.2.4
+      typescript: 4.3.5
     dev: true

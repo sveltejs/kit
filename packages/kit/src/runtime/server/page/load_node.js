@@ -263,6 +263,10 @@ export async function load_node({
 	// that returns nothing, we fall through to the next one
 	if (!loaded && is_leaf && !is_error) return;
 
+	if (!loaded) {
+		throw new Error(`${node.entry} - load must return a value except for page fall through`);
+	}
+
 	return {
 		node,
 		loaded: normalize(loaded),

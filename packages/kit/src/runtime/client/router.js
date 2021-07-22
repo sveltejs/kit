@@ -71,7 +71,7 @@ export class Router {
 			}, 50);
 		});
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
@@ -82,7 +82,7 @@ export class Router {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
