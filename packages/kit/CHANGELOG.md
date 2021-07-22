@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.136
+
+### Patch Changes
+
+- 69b92ec1: [chore] improved typing on core library
+
 ## 1.0.0-next.135
 
 ### Patch Changes
