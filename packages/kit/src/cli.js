@@ -44,7 +44,9 @@ async function get_config() {
 /** @param {Error} error */
 function handle_error(error) {
 	console.log(colors.bold().red(`> ${error.message}`));
-	console.log(colors.gray(error.stack));
+	if (error.stack) {
+		console.log(colors.gray(error.stack));
+	}
 	process.exit(1);
 }
 
@@ -229,6 +231,7 @@ function welcome({ port, host, https, open }) {
 	const exposed = host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
+		if (!interfaces) return;
 		interfaces.forEach((details) => {
 			if (details.family !== 'IPv4') return;
 

@@ -73,7 +73,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		server,
 		static: options.manifest.assets.map((asset) => posixify(asset.file)),
 		entries: options.manifest.routes
-			.map((route) => route.type === 'page' && route.path)
+			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean)
 	};
 }
@@ -87,7 +87,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  */
 async function build_client({
@@ -199,7 +199,7 @@ async function build_client({
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -219,7 +219,7 @@ async function build_server(
 	runtime
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
-	if (!fs.existsSync(hooks_file)) {
+	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
 		fs.writeFileSync(hooks_file, '');
 	}
@@ -271,7 +271,7 @@ async function build_server(
 					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
 					return fs.readFileSync(resolved, 'utf-8');
 			  })
-			: null;
+			: [];
 
 		metadata_lookup[file] = {
 			entry: prefix + client_manifest[file].file,
@@ -493,7 +493,7 @@ async function build_server(
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  * @param {ClientManifest} client_manifest
  */

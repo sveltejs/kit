@@ -174,7 +174,8 @@ function create_filter(options) {
 
 	/** @param {string} str */
 	const filter = (str) =>
-		include.some((glob) => glob.regex.test(str)) && !exclude.some((glob) => glob.regex.test(str));
+		include.some((glob) => glob && glob.regex.test(str)) &&
+		!exclude.some((glob) => glob && glob.regex.test(str));
 
 	return filter;
 }

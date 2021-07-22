@@ -12,7 +12,7 @@
 		"@rollup/plugin-replace": "^2.4.2",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.0",
-		"@types/globrex": "^0.1.0",
+		"@types/globrex": "^0.1.1",
 		"@types/marked": "^2.0.2",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.43",

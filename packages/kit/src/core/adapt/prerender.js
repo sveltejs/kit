@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
-import { parse, pathToFileURL, resolve } from 'url';
+import { pathToFileURL, resolve, URL } from 'url';
 import { mkdirp } from '../filesystem/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
@@ -54,7 +54,7 @@ const REDIRECT = 3;
  *   log: import('types/internal').Logger;
  *   config: import('types/config').ValidatedConfig;
  *   build_data: import('types/internal').BuildData;
- *   fallback: string;
+ *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
@@ -75,7 +75,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	/** @type {(status: number, path: string, parent: string, verb: string) => void} */
+	/** @type {(status: number, path: string, parent: string | null, verb: string) => void} */
 	const error = config.kit.prerender.force
 		? (status, path, parent, verb) => {
 				log.error(`${status} ${path}${parent ? ` (${verb} from ${parent})` : ''}`);
@@ -107,7 +107,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} path
-	 * @param {string} parent
+	 * @param {string?} parent
 	 */
 	async function visit(path, parent) {
 		path = normalize(path);
@@ -129,7 +129,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			},
 			{
 				prerender: {
-					fallback: null,
 					all,
 					dependencies
 				}
@@ -161,7 +160,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
-				writeFileSync(file, rendered.body);
+				writeFileSync(file, rendered.body || '');
 			} else if (response_type !== OK) {
 				error(rendered.status, path, parent, 'linked');
 			}
@@ -179,7 +178,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				writeFileSync(file, result.body);
+				if (result.body) writeFileSync(file, result.body);
 
 				if (response_type === OK) {
 					log.info(`${result.status} ${dependency_path}`);
@@ -216,12 +215,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					const resolved = resolve(path, href);
 					if (resolved[0] !== '/') continue;
 
-					const parsed = parse(resolved);
+					const parsed = new URL(resolved, 'http://localhost');
 
 					const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
 					if (files.has(file)) continue;
 
-					if (parsed.query) {
+					if (parsed.search) {
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
@@ -254,14 +253,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			{
 				prerender: {
 					fallback,
-					all: false,
-					dependencies: null
+					all: false
 				}
 			}
 		);
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
-		writeFileSync(file, rendered.body);
+		writeFileSync(file, rendered.body || '');
 	}
 }

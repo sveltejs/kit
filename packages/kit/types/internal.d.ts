@@ -38,12 +38,12 @@ export type App = {
 		incoming: Incoming,
 		options?: {
 			prerender: {
-				fallback: string;
+				fallback?: string;
 				all: boolean;
-				dependencies: Map<string, ServerResponse>;
+				dependencies?: Map<string, ServerResponse>;
 			};
 		}
-	) => ServerResponse;
+	) => Promise<ServerResponse>;
 };
 
 export type SSRComponent = {
@@ -139,7 +139,7 @@ export type SSRRenderOptions = {
 		js: string[];
 	};
 	floc: boolean;
-	get_stack: (error: Error) => string;
+	get_stack: (error: Error) => string | undefined;
 	handle_error: (error: Error) => void;
 	hooks: Hooks;
 	hydrate: boolean;
@@ -174,7 +174,7 @@ export type SSRRenderState = {
 export type Asset = {
 	file: string;
 	size: number;
-	type: string;
+	type: string | null;
 };
 
 export type PageData = {
