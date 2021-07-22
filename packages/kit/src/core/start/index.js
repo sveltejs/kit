@@ -17,7 +17,7 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
- *   host: string;
+ *   host?: string;
  *   config: import('types/config').ValidatedConfig;
  *   https?: boolean;
  *   cwd?: string;

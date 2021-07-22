@@ -10,7 +10,7 @@ const s = JSON.stringify;
  *   request: import('types/hooks').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
- *   route: import('types/internal').SSRPage;
+ *   route: import('types/internal').SSRPage | null;
  *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
@@ -99,9 +99,11 @@ export async function load_node({
 				if (asset) {
 					response = options.read
 						? new Response(options.read(asset.file), {
-								headers: {
-									'content-type': asset.type
-								}
+								headers: asset.type
+									? {
+											'content-type': asset.type
+									  }
+									: {}
 						  })
 						: await fetch(
 								// TODO we need to know what protocol to use

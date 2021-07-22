@@ -18,7 +18,7 @@ import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
-/** @typedef {{ cwd?: string, port: number, host: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
+/** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
@@ -47,9 +47,8 @@ class Watcher extends EventEmitter {
 		this.config = config;
 
 		/**
-		 * @type {vite.ViteDevServer}
+		 * @type {vite.ViteDevServer | undefined}
 		 */
-		// @ts-ignore
 		this.vite;
 
 		process.on('exit', () => {
@@ -198,6 +197,7 @@ class Watcher extends EventEmitter {
 					pattern: route.pattern,
 					params: get_params(route.params),
 					load: async () => {
+						if (!this.vite) throw new Error('Vite server has not been initialized');
 						const url = path.resolve(this.cwd, route.file);
 						return await this.vite.ssrLoadModule(url);
 					}
@@ -281,7 +281,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 
 				if (req.url === '/favicon.ico') return;
 
-				/** @type {import('types/internal').Hooks} */
+				/** @type {Partial<import('types/internal').Hooks>} */
 				const hooks = resolve_entry(config.kit.files.hooks)
 					? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 					: {};

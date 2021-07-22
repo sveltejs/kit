@@ -19,9 +19,10 @@ export default function (test, is_dev) {
 				await clicknav('[href="/no-ssr/other"]');
 
 				assert.equal(
-					await page.evaluate(
-						() => getComputedStyle(document.querySelector('#svelte-announcer')).position
-					),
+					await page.evaluate(() => {
+						const el = document.querySelector('#svelte-announcer');
+						return el && getComputedStyle(el).position;
+					}),
 					'absolute'
 				);
 			}

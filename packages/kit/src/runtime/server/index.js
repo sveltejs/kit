@@ -18,7 +18,7 @@ export async function respond(incoming, options, state = {}) {
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!incoming.path.split('/').pop().includes('.'))
+				!(incoming.path.split('/').pop() || '').includes('.'))
 		) {
 			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
 			const q = incoming.query.toString();
@@ -40,7 +40,7 @@ export async function respond(incoming, options, state = {}) {
 				...incoming,
 				headers,
 				body: parse_body(incoming.rawBody, headers),
-				params: null,
+				params: {},
 				locals: {}
 			},
 			resolve: async (request) => {
@@ -50,7 +50,6 @@ export async function respond(incoming, options, state = {}) {
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
-						error: null,
 						branch: [],
 						page: null
 					});

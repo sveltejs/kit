@@ -1,6 +1,6 @@
 import { Headers, Location, MaybePromise, ParameterizedBody } from './helper';
 
-export type StrictBody = string | Uint8Array | null;
+export type StrictBody = string | Uint8Array;
 
 export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
 	method: string;

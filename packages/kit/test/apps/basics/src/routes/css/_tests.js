@@ -4,21 +4,30 @@ import * as assert from 'uvu/assert';
 export default function (test) {
 	test('applies imported styles', '/css', async ({ page }) => {
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('.styled')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('.styled');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(255, 0, 0)'
 		);
 	});
 
 	test('applies layout styles', '/css', async ({ page }) => {
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('footer')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('footer');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(128, 0, 128)'
 		);
 	});
 
 	test('applies local styles', '/css', async ({ page }) => {
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('.also-styled')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('.also-styled');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(0, 0, 255)'
 		);
 	});
@@ -31,9 +40,10 @@ export default function (test) {
 				await clicknav('[href="/css/other"]');
 
 				assert.equal(
-					await page.evaluate(
-						() => getComputedStyle(document.querySelector('#svelte-announcer')).position
-					),
+					await page.evaluate(() => {
+						const el = document.querySelector('#svelte-announcer');
+						return el && getComputedStyle(el).position;
+					}),
 					'absolute'
 				);
 			}

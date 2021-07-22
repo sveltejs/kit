@@ -3,6 +3,8 @@ import * as assert from 'uvu/assert';
 /** @type {import('test').TestMaker} */
 export default function (test) {
 	test('replaces %svelte.xxx% tags safely', '/unsafe-replacement', async ({ page }) => {
-		assert.match(await page.textContent('body'), '$& $&');
+		const content = await page.textContent('body');
+		if (!content) throw new Error('No body content');
+		assert.match(content, '$& $&');
 	});
 }

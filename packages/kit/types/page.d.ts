@@ -16,8 +16,8 @@ export type ErrorLoadInput<
 	Context extends Record<string, any> = Record<string, any>,
 	Session = any
 > = LoadInput<PageParams, Context, Session> & {
-	status: number;
-	error: Error;
+	status?: number;
+	error?: Error;
 };
 
 export type LoadOutput<
