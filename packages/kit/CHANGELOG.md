@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.135
+
+### Patch Changes
+
+- 3b293f2a: update svelte to 3.40 and vite-plugin-svelte to 1.0.0-next.14
+- 34b923d1: [chore] stricter TypeScript checking
+
 ## 1.0.0-next.134
 
 ### Patch Changes
