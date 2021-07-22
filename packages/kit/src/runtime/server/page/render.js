@@ -12,7 +12,7 @@ const s = JSON.stringify;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
- *   error: Error,
+ *   error?: Error,
  *   branch: import('./types').Loaded[];
  *   page: import('types/page').Page
  * }} opts
