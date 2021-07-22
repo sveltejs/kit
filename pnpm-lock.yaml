@@ -205,7 +205,7 @@ importers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.14
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
-      '@types/globrex': ^0.1.0
+      '@types/globrex': ^0.1.1
       '@types/marked': ^2.0.2
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.43
@@ -243,7 +243,7 @@ importers:
       '@rollup/plugin-replace': 2.4.2_rollup@2.47.0
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.0
-      '@types/globrex': 0.1.0
+      '@types/globrex': 0.1.1
       '@types/marked': 2.0.2
       '@types/mime': 2.0.3
       '@types/node': 14.14.43
@@ -725,8 +725,8 @@ packages:
       '@types/node': 14.14.43
     dev: true
 
-  /@types/globrex/0.1.0:
-    resolution: {integrity: sha512-aBkxDgp/UbnluE+CIT3V3PoNewwOlLCzXSF3ipD86Slv8xVjwxrDAfSGbsfGgMzPo/fEMPXc+gNUJbtiugwfoA==}
+  /@types/globrex/0.1.1:
+    resolution: {integrity: sha512-bce8X5Yb8l8ou2VDaEG8CYY1p6NynmswkaasO1pdAzFASKJ43sjf9MQdVH6VmKNG2bPEEmvI5onJJSH+1qOMOA==}
     dev: true
 
   /@types/istanbul-lib-coverage/2.0.3:

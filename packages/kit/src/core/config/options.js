@@ -181,7 +181,7 @@ const options = {
 };
 
 /**
- * @param {string} string
+ * @param {string | null} string
  * @param {boolean} allow_empty
  * @returns {ConfigDefinition}
  */

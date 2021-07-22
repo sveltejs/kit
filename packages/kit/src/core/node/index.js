@@ -48,7 +48,7 @@ export function getRawBody(req) {
 		}
 
 		req.on('end', () => {
-			const [type] = h['content-type'].split(/;\s*/);
+			const [type] = (h['content-type'] || '').split(/;\s*/);
 
 			if (isContentTypeTextual(type)) {
 				const encoding = h['content-encoding'] || 'utf-8';
