@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.134
+
+### Patch Changes
+
+- e1e5920a: [fix] correctly find links during prerendering
+- c7db715e: Handle errors with incorrect type
+
 ## 1.0.0-next.133
 
 ### Patch Changes
