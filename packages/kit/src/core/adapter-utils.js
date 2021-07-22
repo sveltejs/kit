@@ -3,7 +3,7 @@
  *
  * This is intended to be used with both requests and responses, to have a consistent body parsing across adapters.
  *
- * @param {string?} content_type The `content-type` header of a request/response.
+ * @param {string|undefined|null} content_type The `content-type` header of a request/response.
  * @returns {boolean}
  */
 export function isContentTypeTextual(content_type) {

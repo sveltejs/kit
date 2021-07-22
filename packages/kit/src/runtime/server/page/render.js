@@ -210,7 +210,7 @@ function try_serialize(data, fail) {
 
 // Ensure we return something truthy so the client will not re-render the page over the error
 
-/** @param {Error & {frame?: string} & {loc?: object}} error */
+/** @param {(Error & {frame?: string} & {loc?: object}) | undefined | null} error */
 function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);

@@ -8,6 +8,10 @@ export function resolve(base, path) {
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);
 
+	if (!base_match) {
+		throw new Error(`bad base path: "${base}"`);
+	}
+
 	const baseparts = path_match ? [] : base.slice(base_match[0].length).split('/');
 	const pathparts = path_match ? path.slice(path_match[0].length).split('/') : path.split('/');
 

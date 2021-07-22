@@ -46,7 +46,7 @@ function initial_fetch(resource, opts) {
 	}
 
 	const script = document.querySelector(selector);
-	if (script) {
+	if (script && script.textContent) {
 		const { body, ...init } = JSON.parse(script.textContent);
 		return Promise.resolve(new Response(body, init));
 	}
@@ -69,8 +69,8 @@ export class Renderer {
 		this.fallback = fallback;
 		this.host = host;
 
-		/** @type {import('./router').Router} */
-		this.router = null;
+		/** @type {import('./router').Router | undefined} */
+		this.router;
 
 		this.target = target;
 
@@ -133,13 +133,13 @@ export class Renderer {
 		/** @type {Record<string, any>} */
 		let context = {};
 
-		/** @type {import('./types').NavigationResult} */
+		/** @type {import('./types').NavigationResult | undefined} */
 		let result;
 
-		/** @type {number} */
+		/** @type {number | undefined} */
 		let new_status;
 
-		/** @type {Error} new_error */
+		/** @type {Error | undefined} new_error */
 		let new_error;
 
 		try {
@@ -150,8 +150,8 @@ export class Renderer {
 					module: await nodes[i],
 					page,
 					context,
-					status: is_leaf && status,
-					error: is_leaf && error
+					status: is_leaf ? status : undefined,
+					error: is_leaf ? error : undefined
 				});
 
 				branch.push(node);
@@ -535,8 +535,9 @@ export class Renderer {
 	async _load({ route, path, query }, no_cache) {
 		const key = `${path}?${query}`;
 
-		if (!no_cache && this.cache.has(key)) {
-			return this.cache.get(key);
+		if (!no_cache) {
+			const cached = this.cache.get(key);
+			if (cached) return cached;
 		}
 
 		const [pattern, a, b, get_params] = route;

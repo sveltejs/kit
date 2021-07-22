@@ -46,7 +46,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			page,
 			node: default_error,
 			$session,
-			context: loaded.context,
+			context: loaded ? loaded.context : {},
 			is_leaf: false,
 			is_error: true,
 			status,

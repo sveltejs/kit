@@ -117,9 +117,9 @@ export type SSRManifest = {
 };
 
 export type Hooks = {
-	getSession?: GetSession;
-	handle?: Handle;
-	serverFetch?: ServerFetch;
+	getSession: GetSession;
+	handle: Handle;
+	serverFetch: ServerFetch;
 };
 
 export type SSRNode = {
@@ -161,7 +161,7 @@ export type SSRRenderOptions = {
 
 export type SSRRenderState = {
 	fetched?: string;
-	initiator?: SSRPage;
+	initiator?: SSRPage | null;
 	prerender?: {
 		fallback: string;
 		all: boolean;

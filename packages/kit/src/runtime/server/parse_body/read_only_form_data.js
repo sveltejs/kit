@@ -9,7 +9,7 @@ export function read_only_form_data() {
 		 */
 		append(key, value) {
 			if (map.has(key)) {
-				map.get(key).push(value);
+				(map.get(key) || []).push(value);
 			} else {
 				map.set(key, [value]);
 			}
