@@ -71,7 +71,7 @@ export class Router {
 			}, 50);
 		});
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
@@ -82,7 +82,7 @@ export class Router {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
@@ -121,7 +121,7 @@ export class Router {
 			// Ignore if tag has
 			// 1. 'download' attribute
 			// 2. 'rel' attribute includes external
-			const rel = a.getAttribute('rel')?.split(/\s+/);
+			const rel = a.getAttribute('rel') && a.getAttribute('rel').split(/\s+/);
 
 			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
 				return;
@@ -137,14 +137,14 @@ export class Router {
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
 
 			history.pushState({}, '', url.href);
-			this._navigate(url, noscroll ? scroll_state() : null, [], url.hash);
+			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], []);
+				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
 
@@ -184,12 +184,16 @@ export class Router {
 	 * @param {GotoParams[1]} opts
 	 * @param {string[]} chain
 	 */
-	async goto(href, { noscroll = false, replaceState = false, state = {} } = {}, chain) {
+	async goto(
+		href,
+		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
+		chain
+	) {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled && this.owns(url)) {
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
-			return this._navigate(url, noscroll ? scroll_state() : null, chain, url.hash);
+			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
 		}
 
 		location.href = url.href;
@@ -223,10 +227,11 @@ export class Router {
 	/**
 	 * @param {URL} url
 	 * @param {{ x: number, y: number }} scroll
+	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
 	 * @param {string} [hash]
 	 */
-	async _navigate(url, scroll, chain, hash) {
+	async _navigate(url, scroll, keepfocus, chain, hash) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -256,14 +261,18 @@ export class Router {
 
 		await this.renderer.update(info, chain, false);
 
-		document.body.focus();
+		if (!keepfocus) {
+			document.body.focus();
+		}
 
 		const deep_linked = hash && document.getElementById(hash.slice(1));
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
-			// scroll is an element id (from a hash), we need to compute y
-			scrollTo(0, deep_linked.getBoundingClientRect().top + scrollY);
+			// Here we use `scrollIntoView` on the element instead of `scrollTo`
+			// because it natively supports the `scroll-margin` and `scroll-behavior`
+			// CSS properties.
+			deep_linked.scrollIntoView();
 		} else {
 			scrollTo(0, 0);
 		}

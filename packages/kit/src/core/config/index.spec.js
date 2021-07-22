@@ -1,6 +1,6 @@
-import { test, suite } from 'uvu';
+import { suite, test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { validate_config, deep_merge } from './index.js';
+import { deep_merge, validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
@@ -36,7 +36,11 @@ test('fills in defaults', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				}
+				},
+				emitTypes: true
+			},
+			serviceWorker: {
+				exclude: []
 			},
 			paths: {
 				base: '',
@@ -131,7 +135,11 @@ test('fills in partial blanks', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				}
+				},
+				emitTypes: true
+			},
+			serviceWorker: {
+				exclude: []
 			},
 			paths: {
 				base: '',
@@ -160,6 +168,36 @@ test('fails if kit.appDir is blank', () => {
 			}
 		});
 	}, /^config\.kit\.appDir cannot be empty$/);
+});
+
+test('fails if kit.appDir is only slash', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				appDir: '/'
+			}
+		});
+	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
+});
+
+test('fails if kit.appDir starts with slash', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				appDir: '/_app'
+			}
+		});
+	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
+});
+
+test('fails if kit.appDir ends with slash', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				appDir: '_app/'
+			}
+		});
+	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -444,6 +482,33 @@ deepMergeSuite('mutability safety', () => {
 	// Make sure nothing in the inputs changed
 	assert.snapshot(snapshot1, JSON.stringify(input1));
 	assert.snapshot(snapshot2, JSON.stringify(input2));
+});
+
+deepMergeSuite('merge buffer', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			x: Buffer.from('foo', 'utf-8')
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(Object.keys(merged), ['x', 'y']);
+	assert.equal(conflicts.length, 0);
+});
+
+deepMergeSuite('merge including toString', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			toString: () => '',
+			constructor: () => ''
+		},
+		{
+			y: 12345
+		}
+	);
+	assert.equal(conflicts.length, 0);
+	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
 });
 
 deepMergeSuite.run();

@@ -1,3 +1,4 @@
+import { isContentTypeTextual } from '../../core/adapter-utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -7,6 +8,11 @@ function error(body) {
 		body,
 		headers: {}
 	};
+}
+
+/** @param {unknown} s */
+function is_string(s) {
+	return typeof s === 'string' || s instanceof String;
 }
 
 /**
@@ -25,12 +31,11 @@ export default async function render_route(request, route) {
 		const params = route.params(match);
 
 		const response = await handler({ ...request, params });
+		const preface = `Invalid response from route ${request.path}`;
 
 		if (response) {
 			if (typeof response !== 'object') {
-				return error(
-					`Invalid response from route ${request.path}: expected an object, got ${typeof response}`
-				);
+				return error(`${preface}: expected an object, got ${typeof response}`);
 			}
 
 			let { status = 200, body, headers = {} } = response;
@@ -38,25 +43,25 @@ export default async function render_route(request, route) {
 			headers = lowercase_keys(headers);
 			const type = headers['content-type'];
 
-			// validation
-			if (type === 'application/octet-stream' && !(body instanceof Uint8Array)) {
-				return error(
-					`Invalid response from route ${request.path}: body must be an instance of Uint8Array if content type is application/octet-stream`
-				);
-			}
+			const is_type_textual = isContentTypeTextual(type);
 
-			if (body instanceof Uint8Array && type !== 'application/octet-stream') {
+			if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
 				return error(
-					`Invalid response from route ${request.path}: Uint8Array body must be accompanied by content-type: application/octet-stream header`
+					`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
 				);
 			}
 
 			/** @type {import('types/hooks').StrictBody} */
 			let normalized_body;
 
-			if (typeof body === 'object' && (!type || type === 'application/json')) {
-				headers = { ...headers, 'content-type': 'application/json' };
-				normalized_body = JSON.stringify(body);
+			// ensure the body is an object
+			if (
+				(typeof body === 'object' || typeof body === 'undefined') &&
+				!(body instanceof Uint8Array) &&
+				(!type || type.startsWith('application/json'))
+			) {
+				headers = { ...headers, 'content-type': 'application/json; charset=utf-8' };
+				normalized_body = JSON.stringify(typeof body === 'undefined' ? {} : body);
 			} else {
 				normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 			}

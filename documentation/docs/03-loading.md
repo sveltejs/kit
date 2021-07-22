@@ -4,31 +4,40 @@ title: Loading
 
 A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
 
-Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
-
 ```ts
-type LoadInput = {
+// load TypeScript type definitions
+
+type LoadInput<
+	PageParams extends Record<string, string> = Record<string, string>,
+	Context extends Record<string, any> = Record<string, any>,
+	Session = any
+> = {
 	page: {
 		host: string;
 		path: string;
-		params: Record<string, string>;
+		params: PageParams;
 		query: URLSearchParams;
 	};
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
-	session: any;
-	context: Record<string, any>;
-        uses: (resource: string) => void;
+	session: Session;
+	context: Context;
+	uses: (resource: string) => void;
 };
 
-type LoadOutput = {
+type LoadOutput<
+	Props extends Record<string, any> = Record<string, any>,
+	Context extends Record<string, any> = Record<string, any>
+> = {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
-	props?: Record<string, any>;
-	context?: Record<string, any>;
+	props?: Props;
+	context?: Context;
 	maxage?: number;
 };
 ```
+
+Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
 
 ```html
 <script context="module">
@@ -70,7 +79,7 @@ If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallt
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`.
+The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `context` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, context })` function will re-run every time `session` or `context` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
 
 #### page
 
@@ -90,6 +99,8 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 `fetch` is equivalent to the native `fetch` web API, and can make credentialed requests. It can be used across both client and server contexts.
 
 > When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately without an additional network request.
+
+> Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
 
 #### session
 

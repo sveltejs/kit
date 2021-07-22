@@ -2,11 +2,11 @@ import render_page from './page/index.js';
 import { render_response } from './page/render.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
-import { lowercase_keys } from './utils.js';
+import { coalesce_to_error, lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 
 /**
- * @param {import('types/hooks').Incoming} incoming
+ * @param {import('types/internal').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
  */
@@ -89,7 +89,9 @@ export async function respond(incoming, options, state = {}) {
 				return await render_page(request, null, options, state);
 			}
 		});
-	} catch (e) {
+	} catch (/** @type {unknown} */ err) {
+		const e = coalesce_to_error(err);
+
 		options.handle_error(e);
 
 		return {

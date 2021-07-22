@@ -1,3 +1,5 @@
+import { isContentTypeTextual } from '../adapter-utils.js';
+
 /**
  * @param {import('http').IncomingMessage} req
  * @returns {Promise<import('types/hooks').StrictBody>}
@@ -48,12 +50,12 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			const [type] = h['content-type'].split(/;\s*/);
 
-			if (type === 'application/octet-stream') {
-				return fulfil(data);
+			if (isContentTypeTextual(type)) {
+				const encoding = h['content-encoding'] || 'utf-8';
+				return fulfil(new TextDecoder(encoding).decode(data));
 			}
 
-			const encoding = h['content-encoding'] || 'utf-8';
-			fulfil(new TextDecoder(encoding).decode(data));
+			fulfil(data);
 		});
 	});
 }

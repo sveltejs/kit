@@ -15,6 +15,12 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+	/**
+	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
+	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
+	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
+	 */
+	export const mode: string;
 }
 
 declare module '$app/navigation' {
@@ -22,11 +28,14 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to
-	 * @param opts Optional. If `replaceState` is `true`, a new history entry won't be created. If `noscroll` is `true`, the browser won't scroll to the top of the page after navigation. If state is set, its value will be used to set the initital state of the new history entry, it defaults to `{}`
+	 * @param opts.replaceState If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+	 * @param opts.noscroll If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+	 * @param opts.keepfocus If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+	 * @param opts.state The state of the new/updated history entry
 	 */
 	export function goto(
 		href: string,
-		opts?: { replaceState?: boolean; noscroll?: boolean; state?: any }
+		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
 	): Promise<any>;
 	/**
 	 * Returns a Promise that resolves when SvelteKit re-runs any current `load` functions that depend on `resource`
@@ -61,11 +70,11 @@ declare module '$app/navigation' {
 
 declare module '$app/paths' {
 	/**
-	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.files.base` in your project configuration.
+	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your project configuration.
 	 */
 	export const base: string;
 	/**
-	 * A root-relative or absolute path that matches `config.kit.files.assets` (after it has been resolved against base).
+	 * A root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against base).
 	 */
 	export const assets: string;
 }
@@ -79,10 +88,10 @@ declare module '$app/stores' {
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
 	 * Most of the time, you won't need to use it.
 	 */
-	export function getStores(): {
+	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
-		session: Writable<any>;
+		session: Writable<Session>;
 	};
 	/**
 	 * A readable store whose value reflects the object passed to load functions.

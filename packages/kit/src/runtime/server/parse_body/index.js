@@ -7,9 +7,9 @@ import { read_only_form_data } from './read_only_form_data.js';
 export function parse_body(raw, headers) {
 	if (!raw) return raw;
 
-	const [type, ...directives] = headers['content-type'].split(/;\s*/);
-
 	if (typeof raw === 'string') {
+		const [type, ...directives] = headers['content-type'].split(/;\s*/);
+
 		switch (type) {
 			case 'text/plain':
 				return raw;

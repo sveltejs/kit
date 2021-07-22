@@ -1,8 +1,16 @@
-import { Load } from './page';
-import { Incoming, GetSession, Handle, ServerResponse } from './hooks';
 import { RequestHandler } from './endpoint';
+import { Headers, Location, ParameterizedBody } from './helper';
+import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
+import { Load } from './page';
 
 type PageId = string;
+
+export type Incoming = Omit<Location, 'params'> & {
+	method: string;
+	headers: Headers;
+	rawBody: StrictBody;
+	body?: ParameterizedBody;
+};
 
 export type Logger = {
 	(msg: string): void;
@@ -111,6 +119,7 @@ export type SSRManifest = {
 export type Hooks = {
 	getSession?: GetSession;
 	handle?: Handle;
+	serverFetch?: ServerFetch;
 };
 
 export type SSRNode = {
@@ -143,6 +152,7 @@ export type SSRRenderOptions = {
 	read: (file: string) => Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
+	service_worker?: string;
 	ssr: boolean;
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
