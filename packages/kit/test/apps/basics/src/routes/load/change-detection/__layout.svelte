@@ -3,7 +3,7 @@
 
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch, uses }) {
-                uses('change-detection-layout');
+		uses('change-detection-layout');
 		const res = await fetch('/load/change-detection/data.json');
 		const { type } = await res.json();
 
