@@ -180,7 +180,7 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
-					// @ts-ignore TODO: fix this and document wtf start is
+					// @ts-expect-error TODO: fix this and document wtf start is
 					response,
 					js: false
 				});
@@ -230,7 +230,7 @@ function duplicate(test_fn, config, is_build) {
 						await context.pages.js.evaluate(() => window.navigated);
 					},
 					js: true,
-					// @ts-ignore TODO: fix this and document wtf start is
+					// @ts-expect-error TODO: fix this and document wtf start is
 					response
 				});
 			});
@@ -239,7 +239,7 @@ function duplicate(test_fn, config, is_build) {
 }
 
 async function main() {
-	// @ts-ignore
+	// @ts-expect-error
 	globalThis.UVU_DEFER = 1;
 	const uvu = await import('uvu');
 
@@ -257,9 +257,9 @@ async function main() {
 		const name = `dev:${app}`;
 
 		// manually replicate uvu global state
-		// @ts-ignore
+		// @ts-expect-error
 		const count = globalThis.UVU_QUEUE.push([name]);
-		// @ts-ignore
+		// @ts-expect-error
 		globalThis.UVU_INDEX = count - 1;
 
 		/** @type {import('uvu').Test<import('./types').TestContext>} */
@@ -292,9 +292,9 @@ async function main() {
 
 		/** @type {import('test').TestFunction} */
 		const test = Object.assign(duplicate(suite, config, false), {
-			// @ts-ignore
+			// @ts-expect-error
 			skip: duplicate(suite.skip, config, false),
-			// @ts-ignore
+			// @ts-expect-error
 			only: duplicate(suite.only, config, false)
 		});
 
@@ -315,9 +315,9 @@ async function main() {
 		const name = `build:${app}`;
 
 		// manually replicate uvu global state
-		// @ts-ignore
+		// @ts-expect-error
 		const count = globalThis.UVU_QUEUE.push([name]);
-		// @ts-ignore
+		// @ts-expect-error
 		globalThis.UVU_INDEX = count - 1;
 
 		/** @type {import('uvu').Test<import('./types').TestContext>} */
@@ -356,9 +356,9 @@ async function main() {
 
 		/** @type {import('test').TestFunction} */
 		const test = Object.assign(duplicate(suite, config, true), {
-			// @ts-ignore
+			// @ts-expect-error
 			skip: duplicate(suite.skip, config, true),
-			// @ts-ignore
+			// @ts-expect-error
 			only: duplicate(suite.only, config, true)
 		});
 
