@@ -50,8 +50,7 @@ export async function respond(incoming, options, state = {}) {
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
-						branch: [],
-						page: null
+						branch: []
 					});
 				}
 
@@ -67,13 +66,13 @@ export async function respond(incoming, options, state = {}) {
 						// inject ETags for 200 responses
 						if (response.status === 200) {
 							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-								const etag = `"${hash(response.body)}"`;
+								const etag = `"${hash(response.body || '')}"`;
 
 								if (request.headers['if-none-match'] === etag) {
 									return {
 										status: 304,
 										headers: {},
-										body: null
+										body: ''
 									};
 								}
 

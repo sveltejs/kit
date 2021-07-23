@@ -10,7 +10,7 @@ export function normalize(loaded) {
 
 		if (!loaded.error && has_error_status) {
 			return {
-				status,
+				status: status || 500,
 				error: new Error()
 			};
 		}

@@ -5,6 +5,7 @@ import { deep_merge, validate_config } from './index.js';
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
+	// @ts-ignore
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
@@ -104,6 +105,7 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.vite(), {});
 
+	// @ts-ignore
 	delete validated.kit.vite;
 
 	assert.equal(validated, {

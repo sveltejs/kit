@@ -247,8 +247,11 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					type: 'page',
 					pattern,
 					params,
+					// @ts-ignore
 					path,
+					// @ts-ignore
 					a,
+					// @ts-ignore
 					b
 				});
 			} else {
