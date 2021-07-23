@@ -93,7 +93,7 @@ async function setup({ port }) {
 		pages,
 		/**
 		 * @param {import('node-fetch').RequestInfo} url
-		 * @param {import('node-fetch').RequestInit} opts
+		 * @param {import('node-fetch').RequestInit | undefined} opts
 		 */
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,

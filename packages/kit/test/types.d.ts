@@ -47,7 +47,7 @@ export interface TestFunctionBase {
 	(
 		name: string,
 		start: string | null,
-		callback: (context: TestContext) => void,
+		callback: (context: TestContext) => Promise<void>,
 		options?: TestOptions
 	): void;
 }
