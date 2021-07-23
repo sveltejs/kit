@@ -11,6 +11,6 @@
 	"devDependencies": {
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.38.2"
+		"svelte": "^3.40.0"
 	}
 }

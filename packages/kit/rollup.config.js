@@ -10,7 +10,8 @@ const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
 	Object.keys(pkg.peerDependencies || {}),
 	Object.keys(process.binding('natives')),
-	'typescript'
+	'typescript',
+	'svelte2tsx'
 );
 
 export default [
@@ -47,7 +48,8 @@ export default [
 			cli: 'src/cli.js',
 			ssr: 'src/runtime/server/index.js',
 			node: 'src/core/node/index.js',
-			'install-fetch': 'src/install-fetch.js'
+			'install-fetch': 'src/install-fetch.js',
+			'adapter-utils': 'src/core/adapter-utils.js'
 		},
 		output: {
 			dir: 'dist',

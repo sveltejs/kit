@@ -1,0 +1,12 @@
+{
+	"name": "exports",
+	"version": "1.0.0",
+	"description": "package-exports-test",
+	"exports": {
+		".": {
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"type": "module"
+}

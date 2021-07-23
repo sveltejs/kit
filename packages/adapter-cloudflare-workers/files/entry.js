@@ -1,6 +1,9 @@
 // TODO hardcoding the relative location makes this brittle
-import { render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
+import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
+import { isContentTypeTextual } from '@sveltejs/kit/adapter-utils'; // eslint-disable-line import/no-unresolved
+
+init();
 
 addEventListener('fetch', (event) => {
 	event.respondWith(handle(event));
@@ -55,9 +58,9 @@ async function handle(event) {
 /** @param {Request} request */
 async function read(request) {
 	const type = request.headers.get('content-type') || '';
-	if (type.includes('application/octet-stream')) {
-		return new Uint8Array(await request.arrayBuffer());
+	if (isContentTypeTextual(type)) {
+		return request.text();
 	}
 
-	return request.text();
+	return new Uint8Array(await request.arrayBuffer());
 }

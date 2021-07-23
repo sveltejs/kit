@@ -59,7 +59,10 @@ export default function (test, is_dev) {
 		);
 
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('h1')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('h1');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(255, 0, 0)'
 		);
 	});
@@ -146,9 +149,10 @@ export default function (test, is_dev) {
 			const body = await page.textContent('body');
 
 			assert.ok(
-				body.includes(
-					'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-				)
+				body &&
+					body.includes(
+						'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+					)
 			);
 		}
 	);
@@ -161,9 +165,10 @@ export default function (test, is_dev) {
 				const body = await page.textContent('body');
 
 				assert.ok(
-					await body.includes(
-						'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
-					),
+					body &&
+						body.includes(
+							'Error: "error" property returned from load() must be a string or instance of Error, received type "object"'
+						),
 					'Should throw error'
 				);
 			}
@@ -198,12 +203,12 @@ export default function (test, is_dev) {
 			assert.ok(lines[2].includes('endpoint.json'), 'Logs error stack in dev');
 		}
 
-		assert.equal(res.status(), 500);
+		assert.equal(res && res.status(), 500);
 		assert.equal(await page.textContent('#message'), 'This is your custom error page saying: ""');
 
 		const contents = await page.textContent('#stack');
 		const location = 'endpoint.svelte:12:15';
-		const has_stack_trace = contents.includes(location);
+		const has_stack_trace = contents && contents.includes(location);
 
 		if (is_dev) {
 			assert.ok(has_stack_trace, `Could not find ${location} in ${contents}`);
@@ -211,4 +216,29 @@ export default function (test, is_dev) {
 			assert.ok(!has_stack_trace, 'Stack trace is visible');
 		}
 	});
+
+	test(
+		'server-side 4xx status without error from load()',
+		'/errors/load-status-without-error-server',
+		async ({ page, response }) => {
+			assert.equal(await page.textContent('footer'), 'Custom layout');
+			assert.equal(await page.textContent('#message'), 'This is your custom error page saying: ""');
+			assert.equal(response.status(), 401);
+		}
+	);
+
+	test(
+		'client-side 4xx status without error from load()',
+		'/errors/load-status-without-error-client',
+		async ({ page, js }) => {
+			if (js) {
+				assert.equal(await page.textContent('footer'), 'Custom layout');
+				assert.equal(
+					await page.textContent('#message'),
+					'This is your custom error page saying: ""'
+				);
+				assert.equal(await page.innerHTML('h1'), '401', 'Should set status code');
+			}
+		}
+	);
 }

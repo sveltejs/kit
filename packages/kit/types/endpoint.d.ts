@@ -14,7 +14,7 @@ type DefaultBody = JSONValue | Uint8Array;
 
 export type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
 	status?: number;
-	headers?: Partial<Headers>;
+	headers?: Headers;
 	body?: Body;
 };
 

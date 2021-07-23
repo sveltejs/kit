@@ -1,18 +1,18 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.119",
+	"version": "1.0.0-next.137",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.11",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.14",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4",
-		"vite": "^2.3.8"
+		"vite": "^2.4.3"
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^2.4.2",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.0",
-		"@types/globrex": "^0.1.0",
+		"@types/globrex": "^0.1.1",
 		"@types/marked": "^2.0.2",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.43",
@@ -32,10 +32,11 @@
 		"rollup": "^2.47.0",
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.12",
-		"svelte": "^3.38.2",
-		"svelte-check": "^1.5.2",
+		"svelte": "^3.40.0",
+		"svelte-check": "^2.2.0",
+		"svelte2tsx": "~0.4.1",
 		"tiny-glob": "^0.2.8",
-		"typescript": "^4.2.4",
+		"typescript": "^4.3.5",
 		"uvu": "^0.5.1"
 	},
 	"peerDependencies": {
@@ -53,8 +54,8 @@
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -cw",
-		"lint": "eslint --ignore-path .gitignore \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
-		"check": "tsc && svelte-check",
+		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/core/make_package/test/**\" \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"check": "tsc && svelte-check --ignore \"src/core/make_package/test\"",
 		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
@@ -72,6 +73,9 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
+		},
+		"./adapter-utils": {
+			"import": "./dist/adapter-utils.js"
 		},
 		"./types": "./types/index.d.ts"
 	},

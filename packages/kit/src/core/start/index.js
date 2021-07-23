@@ -4,7 +4,7 @@ import sirv from 'sirv';
 import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
-import '../../install-fetch.js';
+import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
 /** @param {string} dir */
@@ -17,13 +17,15 @@ const mutable = (dir) =>
 /**
  * @param {{
  *   port: number;
- *   host: string;
+ *   host?: string;
  *   config: import('types/config').ValidatedConfig;
  *   https?: boolean;
  *   cwd?: string;
  * }} opts
  */
 export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
+	__fetch_polyfill();
+
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 
 	/** @type {import('types/internal').App} */
@@ -32,7 +34,10 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 	/** @type {import('sirv').RequestHandler} */
 	const static_handler = fs.existsSync(config.kit.files.assets)
 		? mutable(config.kit.files.assets)
-		: (_req, _res, next) => next();
+		: (_req, _res, next) => {
+				if (!next) throw new Error('No next() handler is available');
+				return next();
+		  };
 
 	const assets_handler = sirv(resolve(cwd, `${SVELTE_KIT}/output/client`), {
 		maxAge: 31536000,
@@ -53,6 +58,8 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 
 		assets_handler(req, res, () => {
 			static_handler(req, res, async () => {
+				if (!req.method) throw new Error('Incomplete request');
+
 				let body;
 
 				try {
@@ -67,7 +74,7 @@ export async function start({ port, host, config, https: use_https = false, cwd 
 						req.headers[config.kit.hostHeader || 'host']),
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
-					path: decodeURIComponent(parsed.pathname),
+					path: parsed.pathname ? decodeURIComponent(parsed.pathname) : '',
 					query: new URLSearchParams(parsed.query || ''),
 					rawBody: body
 				});

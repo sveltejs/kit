@@ -15,6 +15,7 @@ async function testLoadDefaultConfig(path) {
 
 	const config = await load_config({ cwd });
 
+	// @ts-ignore
 	delete config.kit.vite; // can't test equality of a function
 
 	assert.equal(config, {
@@ -46,7 +47,11 @@ async function testLoadDefaultConfig(path) {
 				files: {
 					include: ['**'],
 					exclude: []
-				}
+				},
+				emitTypes: true
+			},
+			serviceWorker: {
+				exclude: []
 			},
 			paths: { base: '', assets: '/.' },
 			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
@@ -65,6 +70,36 @@ test('load default config (cjs)', async () => {
 
 test('load default config (esm)', async () => {
 	await testLoadDefaultConfig('default-esm');
+});
+
+test('errors on loading config without default export', async () => {
+	let errorMessage = null;
+	try {
+		const cwd = join(__dirname, 'fixtures', 'export-missing');
+		await load_config({ cwd });
+	} catch (e) {
+		errorMessage = e.message;
+	}
+
+	assert.equal(
+		errorMessage,
+		'Your config is missing default exports. Make sure to include "export default config;"'
+	);
+});
+
+test('errors on loading config with incorrect default export', async () => {
+	let errorMessage = null;
+	try {
+		const cwd = join(__dirname, 'fixtures', 'export-string');
+		await load_config({ cwd });
+	} catch (e) {
+		errorMessage = e.message;
+	}
+
+	assert.equal(
+		errorMessage,
+		'Unexpected config type "string", make sure your default export is an object.'
+	);
 });
 
 test.run();

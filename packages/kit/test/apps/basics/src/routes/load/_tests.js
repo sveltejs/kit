@@ -14,7 +14,7 @@ export default function (test, is_dev) {
 		});
 
 		const payload =
-			'{"status":200,"statusText":"","headers":{"content-type":"application/json"},"body":"{\\"answer\\":42}"}';
+			'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
 
 		if (!js) {
 			// by the time JS has run, hydration will have nuked these scripts
@@ -159,7 +159,7 @@ export default function (test, is_dev) {
 					if (!res.write(chunk)) {
 						await new Promise((fulfil) => {
 							res.once('drain', () => {
-								fulfil();
+								fulfil(undefined);
 							});
 						});
 					}
@@ -170,7 +170,7 @@ export default function (test, is_dev) {
 		});
 
 		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil());
+			server.listen(port, () => fulfil(undefined));
 		});
 
 		await page.goto(`${base}/load/large-response?port=${port}`);
@@ -188,6 +188,7 @@ export default function (test, is_dev) {
 		const requested_urls = [];
 
 		const server = http.createServer(async (req, res) => {
+			if (!req.url) throw new Error('Incomplete request');
 			requested_urls.push(req.url);
 
 			if (req.url === '/server-fetch-request-modified.json') {
@@ -204,7 +205,7 @@ export default function (test, is_dev) {
 		});
 
 		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil());
+			server.listen(port, () => fulfil(undefined));
 		});
 
 		await page.goto(`${base}/load/server-fetch-request?port=${port}`);

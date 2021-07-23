@@ -93,7 +93,7 @@ async function setup({ port }) {
 		pages,
 		/**
 		 * @param {import('node-fetch').RequestInfo} url
-		 * @param {import('node-fetch').RequestInit} opts
+		 * @param {import('node-fetch').RequestInit | undefined} opts
 		 */
 		fetch: (url, opts) => fetch(`${base}${url}`, opts),
 		capture_requests,
@@ -180,6 +180,7 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
+					// @ts-ignore TODO: fix this and document wtf start is
 					response,
 					js: false
 				});
@@ -229,6 +230,7 @@ function duplicate(test_fn, config, is_build) {
 						await context.pages.js.evaluate(() => window.navigated);
 					},
 					js: true,
+					// @ts-ignore TODO: fix this and document wtf start is
 					response
 				});
 			});

@@ -46,8 +46,8 @@ type TestOptions = {
 export interface TestFunctionBase {
 	(
 		name: string,
-		start: string,
-		callback: (context: TestContext) => void,
+		start: string | null,
+		callback: (context: TestContext) => Promise<void>,
 		options?: TestOptions
 	): void;
 }

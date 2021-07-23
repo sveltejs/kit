@@ -43,15 +43,15 @@ export async function start({
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
 
-	const router =
-		route &&
-		new Router({
-			base: paths.base,
-			routes,
-			trailing_slash,
-			defaultLocale,
-			locales
-		});
+	const router = route
+		? new Router({
+				base: paths.base,
+				routes,
+				trailing_slash,
+				defaultLocale,
+				locales
+		  })
+		: null;
 
 	const renderer = new Renderer({
 		Root,
@@ -69,17 +69,10 @@ export async function start({
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
-	if (route) router.init(renderer);
-
-	if (spa) router.goto(location.href, { replaceState: true }, []);
+	if (router) {
+		router.init(renderer);
+		if (spa) router.goto(location.href, { replaceState: true }, []);
+	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
-}
-
-if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {
-	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.register(
-			/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER)
-		);
-	}
 }

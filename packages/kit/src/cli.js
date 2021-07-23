@@ -44,7 +44,9 @@ async function get_config() {
 /** @param {Error} error */
 function handle_error(error) {
 	console.log(colors.bold().red(`> ${error.message}`));
-	console.log(colors.gray(error.stack));
+	if (error.stack) {
+		console.log(colors.gray(error.stack));
+	}
 	process.exit(1);
 }
 
@@ -79,7 +81,7 @@ prog
 	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
 
-		process.env.NODE_ENV = 'development';
+		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
 
 		const { dev } = await import('./core/dev/index.js');
@@ -106,7 +108,7 @@ prog
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
-		process.env.NODE_ENV = 'production';
+		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 		const config = await get_config();
 
 		try {
@@ -146,7 +148,7 @@ prog
 	.action(async ({ port, host, https, open }) => {
 		await check_port(port);
 
-		process.env.NODE_ENV = 'production';
+		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 		const config = await get_config();
 
 		const { start } = await import('./core/start/index.js');
@@ -229,6 +231,7 @@ function welcome({ port, host, https, open }) {
 	const exposed = host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
+		if (!interfaces) return;
 		interfaces.forEach((details) => {
 			if (details.family !== 'IPv4') return;
 

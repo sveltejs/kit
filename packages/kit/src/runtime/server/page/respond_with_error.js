@@ -1,5 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
+import { coalesce_to_error } from '../utils.js';
 
 /**
  * @param {{
@@ -22,7 +23,8 @@ export async function respond_with_error({ request, options, state, $session, st
 		params: {}
 	};
 
-	const loaded = await load_node({
+	// error pages don't fall through, so we know it's not undefined
+	const loaded = /** @type {import('./types').Loaded} */ (await load_node({
 		request,
 		options,
 		state,
@@ -33,11 +35,11 @@ export async function respond_with_error({ request, options, state, $session, st
 		context: {},
 		is_leaf: false,
 		is_error: false
-	});
+	}));
 
 	const branch = [
 		loaded,
-		await load_node({
+		/** @type {import('./types').Loaded} */ (await load_node({
 			request,
 			options,
 			state,
@@ -45,12 +47,12 @@ export async function respond_with_error({ request, options, state, $session, st
 			page,
 			node: default_error,
 			$session,
-			context: loaded.context,
+			context: loaded ? loaded.context : {},
 			is_leaf: false,
 			is_error: true,
 			status,
 			error
-		})
+		}))
 	];
 
 	try {
@@ -67,7 +69,9 @@ export async function respond_with_error({ request, options, state, $session, st
 			branch,
 			page
 		});
-	} catch (error) {
+	} catch (/** @type {unknown} */ err) {
+		const error = coalesce_to_error(err);
+
 		options.handle_error(error);
 
 		return {

@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.17",
+	"version": "1.0.0-next.25",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -22,6 +22,6 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"typescript": "^4.2.4"
+		"typescript": "^4.3.5"
 	}
 }

@@ -34,7 +34,7 @@ function page_store(value) {
 
 /**
  * @param {RequestInfo} resource
- * @param {RequestInit} opts
+ * @param {RequestInit} [opts]
  */
 function initial_fetch(resource, opts) {
 	const url = typeof resource === 'string' ? resource : resource.url;
@@ -46,7 +46,7 @@ function initial_fetch(resource, opts) {
 	}
 
 	const script = document.querySelector(selector);
-	if (script) {
+	if (script && script.textContent) {
 		const { body, ...init } = JSON.parse(script.textContent);
 		return Promise.resolve(new Response(body, init));
 	}
@@ -70,8 +70,8 @@ export class Renderer {
 		this.fallback = fallback;
 		this.host = host;
 
-		/** @type {import('./router').Router} */
-		this.router = null;
+		/** @type {import('./router').Router | undefined} */
+		this.router;
 
 		this.target = target;
 
@@ -83,7 +83,9 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
+			// @ts-ignore
 			page: null,
+			// @ts-ignore
 			session_id: null,
 			branch: []
 		};
@@ -91,6 +93,7 @@ export class Renderer {
 		/** @type {Map<string, import('./types').NavigationResult>} */
 		this.cache = new Map();
 
+		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult> | null}} */
 		this.loading = {
 			id: null,
 			promise: null
@@ -115,7 +118,7 @@ export class Renderer {
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
-			this.update(info, [], true);
+			if (info) this.update(info, [], true);
 		});
 		ready = true;
 	}
@@ -129,20 +132,14 @@ export class Renderer {
 	 * }} selected
 	 */
 	async start({ status, error, nodes, page }) {
-		/** @type {import('./types').BranchNode[]} */
+		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
 		/** @type {Record<string, any>} */
 		let context = {};
 
-		/** @type {import('./types').NavigationResult} */
+		/** @type {import('./types').NavigationResult | undefined} */
 		let result;
-
-		/** @type {number} */
-		let new_status;
-
-		/** @type {Error} new_error */
-		let new_error;
 
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
@@ -152,8 +149,8 @@ export class Renderer {
 					module: await nodes[i],
 					page,
 					context,
-					status: is_leaf && status,
-					error: is_leaf && error
+					status: is_leaf ? status : undefined,
+					error: is_leaf ? error : undefined
 				});
 
 				branch.push(node);
@@ -161,8 +158,12 @@ export class Renderer {
 				if (node && node.loaded) {
 					if (node.loaded.error) {
 						if (error) throw node.loaded.error;
-						new_status = node.loaded.status;
-						new_error = node.loaded.error;
+						result = await this._load_error({
+							status: node.loaded.status,
+							error: node.loaded.error,
+							path: page.path,
+							query: page.query
+						});
 					} else if (node.loaded.context) {
 						context = {
 							...context,
@@ -176,14 +177,9 @@ export class Renderer {
 		} catch (e) {
 			if (error) throw e;
 
-			new_status = 500;
-			new_error = e;
-		}
-
-		if (new_error) {
 			result = await this._load_error({
-				status: new_status,
-				error: new_error,
+				status: 500,
+				error: e,
 				path: page.path,
 				query: page.query
 			});
@@ -204,6 +200,7 @@ export class Renderer {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		if (this.started) {
+			// @ts-ignore
 			this.stores.navigating.set({
 				from: {
 					path: this.current.page.path,
@@ -270,6 +267,7 @@ export class Renderer {
 		this.loading.promise = null;
 		this.loading.id = null;
 
+		if (!this.router) return;
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
@@ -295,8 +293,8 @@ export class Renderer {
 
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
-				const info = this.router.parse(new URL(location.href));
-				await this.update(info, [], true);
+				const info = this.router && this.router.parse(new URL(location.href));
+				if (info) await this.update(info, [], true);
 
 				this.invalidating = null;
 			});
@@ -331,14 +329,16 @@ export class Renderer {
 	 */
 	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id) {
+			// @ts-ignore if the id is defined then the promise is too
 			return this.loading.promise;
 		}
 
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
+			// check if endpoint route
 			if (route.length === 1) {
-				return { reload: true };
+				return { reload: true, props: {}, state: this.current };
 			}
 
 			// load code for subsequent routes immediately, if they are as
@@ -347,7 +347,10 @@ export class Renderer {
 			while (j < info.routes.length) {
 				const next = info.routes[j];
 				if (next[0].toString() === route[0].toString()) {
-					if (next.length !== 1) next[1].forEach((loader) => loader());
+					// if it's a page route
+					if (next.length !== 1) {
+						next[1].forEach((loader) => loader());
+					}
 					j += 1;
 				} else {
 					break;
@@ -377,11 +380,11 @@ export class Renderer {
 	 *
 	 * @param {{
 	 *   page: import('types/page').Page;
-	 *   branch: import('./types').BranchNode[]
+	 *   branch: Array<import('./types').BranchNode | undefined>
 	 * }} opts
 	 */
 	async _get_navigation_result_from_branch({ page, branch }) {
-		const filtered = branch.filter(Boolean);
+		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
@@ -396,7 +399,8 @@ export class Renderer {
 		};
 
 		for (let i = 0; i < filtered.length; i += 1) {
-			if (filtered[i].loaded) result.props[`props_${i}`] = await filtered[i].loaded.props;
+			const loaded = filtered[i].loaded;
+			if (loaded) result.props[`props_${i}`] = await loaded.props;
 		}
 
 		if (
@@ -438,7 +442,6 @@ export class Renderer {
 	}
 
 	/**
-	 *
 	 * @param {{
 	 *   status?: number;
 	 *   error?: Error;
@@ -533,16 +536,18 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
 	async _load({ route, path, query }, no_cache) {
 		const key = `${path}?${query}`;
 
-		if (!no_cache && this.cache.has(key)) {
-			return this.cache.get(key);
+		if (!no_cache) {
+			const cached = this.cache.get(key);
+			if (cached) return cached;
 		}
 
 		const [pattern, a, b, get_params, lang] = route;
+		// @ts-ignore - the pattern is for the route which we've already matched to this path
 		const params = get_params ? get_params(pattern.exec(path)) : {};
 
 		const changed = this.current.page && {
@@ -556,24 +561,24 @@ export class Renderer {
 		const page = { host: this.host, path, query, params };
 		if (lang) page.lang = lang;
 
-		/** @type {import('./types').BranchNode[]} */
+		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
 		/** @type {Record<string, any>} */
 		let context = {};
 		let context_changed = false;
 
-		/** @type {number} */
+		/** @type {number | undefined} */
 		let status = 200;
 
-		/** @type {Error} */
-		let error = null;
+		/** @type {Error | undefined} */
+		let error;
 
 		// preload modules
 		a.forEach((loader) => loader());
 
 		load: for (let i = 0; i < a.length; i += 1) {
-			/** @type {import('./types').BranchNode} */
+			/** @type {import('./types').BranchNode | undefined} */
 			let node;
 
 			try {
@@ -609,7 +614,9 @@ export class Renderer {
 
 						if (node.loaded.redirect) {
 							return {
-								redirect: node.loaded.redirect
+								redirect: node.loaded.redirect,
+								props: {},
+								state: this.current
 							};
 						}
 
@@ -634,7 +641,7 @@ export class Renderer {
 					if (b[i]) {
 						let error_loaded;
 
-						/** @type {import('./types').BranchNode} */
+						/** @type {import('./types').BranchNode | undefined} */
 						let node_loaded;
 						let j = i;
 						while (!(node_loaded = branch[j])) {
@@ -650,7 +657,7 @@ export class Renderer {
 								context: node_loaded.context
 							});
 
-							if (error_loaded.loaded.error) {
+							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
 								continue;
 							}
 
@@ -685,7 +692,7 @@ export class Renderer {
 
 	/**
 	 * @param {{
-	 *   status: number;
+	 *   status?: number;
 	 *   error: Error;
 	 *   path: string;
 	 *   query: URLSearchParams
@@ -712,7 +719,7 @@ export class Renderer {
 				error,
 				module: await this.fallback[1],
 				page,
-				context: node && node.loaded && node.loaded.context
+				context: (node && node.loaded && node.loaded.context) || {}
 			})
 		];
 

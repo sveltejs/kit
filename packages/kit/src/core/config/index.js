@@ -13,6 +13,17 @@ import options from './options.js';
  * @returns {any}
  */
 function validate(definition, option, keypath) {
+	if (typeof option !== 'object') {
+		if (typeof option === 'undefined') {
+			throw new Error(
+				'Your config is missing default exports. Make sure to include "export default config;"'
+			);
+		} else {
+			throw new Error(
+				`Unexpected config type "${typeof option}", make sure your default export is an object.`
+			);
+		}
+	}
 	for (const key in option) {
 		if (!(key in definition)) {
 			let message = `Unexpected option ${keypath}.${key}`;

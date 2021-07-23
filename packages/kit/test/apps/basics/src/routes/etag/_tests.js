@@ -11,9 +11,11 @@ export default function (test) {
 			assert.ok(!!etag);
 
 			const r2 = await fetch('/etag/text', {
-				headers: {
-					'if-none-match': etag
-				}
+				headers: etag
+					? {
+							'if-none-match': etag
+					  }
+					: {}
 			});
 
 			assert.equal(r2.status, 304);
@@ -32,9 +34,11 @@ export default function (test) {
 			assert.ok(!!etag);
 
 			const r2 = await fetch('/etag/binary', {
-				headers: {
-					'if-none-match': etag
-				}
+				headers: etag
+					? {
+							'if-none-match': etag
+					  }
+					: {}
 			});
 
 			assert.equal(r2.status, 304);

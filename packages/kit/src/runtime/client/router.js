@@ -8,8 +8,8 @@ function scroll_state() {
 }
 
 /**
- * @param {Node} node
- * @returns {HTMLAnchorElement | SVGAElement}
+ * @param {Node | null} node
+ * @returns {HTMLAnchorElement | SVGAElement | null}
  */
 function find_anchor(node) {
 	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
@@ -75,7 +75,7 @@ export class Router {
 			}, 50);
 		});
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(/** @type {Node} */ (event.target));
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
@@ -86,7 +86,7 @@ export class Router {
 		/** @type {NodeJS.Timeout} */
 		let mousemove_timeout;
 
-		/** @param {MouseEvent} event */
+		/** @param {MouseEvent|TouchEvent} event */
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
@@ -125,7 +125,7 @@ export class Router {
 			// Ignore if tag has
 			// 1. 'download' attribute
 			// 2. 'rel' attribute includes external
-			const rel = a.getAttribute('rel')?.split(/\s+/);
+			const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
 			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
 				return;
@@ -166,7 +166,7 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {import('./types').NavigationInfo}
+	 * @returns {import('./types').NavigationInfo | undefined}
 	 */
 	parse(url) {
 		if (this.owns(url)) {
@@ -225,12 +225,13 @@ export class Router {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
+		// @ts-ignore
 		return this.renderer.load(info);
 	}
 
 	/**
 	 * @param {URL} url
-	 * @param {{ x: number, y: number }} scroll
+	 * @param {{ x: number, y: number }?} scroll
 	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
 	 * @param {string} [hash]
@@ -250,7 +251,7 @@ export class Router {
 				(has_trailing_slash && this.trailing_slash === 'never') ||
 				(!has_trailing_slash &&
 					this.trailing_slash === 'always' &&
-					!info.path.split('/').pop().includes('.'));
+					!(info.path.split('/').pop() || '').includes('.'));
 
 			if (incorrect) {
 				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
@@ -258,11 +259,13 @@ export class Router {
 			}
 		}
 
+		// @ts-ignore6
 		this.renderer.notify({
 			path: info.path,
 			query: info.query
 		});
 
+		// @ts-ignore
 		await this.renderer.update(info, chain, false);
 
 		if (!keepfocus) {
@@ -273,8 +276,10 @@ export class Router {
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
 		} else if (deep_linked) {
-			// scroll is an element id (from a hash), we need to compute y
-			scrollTo(0, deep_linked.getBoundingClientRect().top + scrollY);
+			// Here we use `scrollIntoView` on the element instead of `scrollTo`
+			// because it natively supports the `scroll-margin` and `scroll-behavior`
+			// CSS properties.
+			deep_linked.scrollIntoView();
 		} else {
 			scrollTo(0, 0);
 		}

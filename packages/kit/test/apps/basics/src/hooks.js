@@ -14,15 +14,13 @@ export async function handle({ request, resolve }) {
 
 	const response = await resolve(request);
 
-	if (response) {
-		return {
-			...response,
-			headers: {
-				...response.headers,
-				'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
-			}
-		};
-	}
+	return {
+		...response,
+		headers: {
+			...response.headers,
+			'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
+		}
+	};
 }
 
 /** @type {import('@sveltejs/kit').ServerFetch} */

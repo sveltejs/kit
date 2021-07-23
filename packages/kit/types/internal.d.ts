@@ -1,8 +1,16 @@
-import { Load } from './page';
-import { Incoming, GetSession, Handle, ServerResponse, ServerFetch } from './hooks';
 import { RequestHandler } from './endpoint';
+import { Headers, Location, ParameterizedBody } from './helper';
+import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
+import { Load } from './page';
 
 type PageId = string;
+
+export type Incoming = Omit<Location, 'params'> & {
+	method: string;
+	headers: Headers;
+	rawBody: StrictBody;
+	body?: ParameterizedBody;
+};
 
 export type Logger = {
 	(msg: string): void;
@@ -30,12 +38,12 @@ export type App = {
 		incoming: Incoming,
 		options?: {
 			prerender: {
-				fallback: string;
+				fallback?: string;
 				all: boolean;
-				dependencies: Map<string, ServerResponse>;
+				dependencies?: Map<string, ServerResponse>;
 			};
 		}
-	) => ServerResponse;
+	) => Promise<ServerResponse>;
 };
 
 export type SSRComponent = {
@@ -110,9 +118,9 @@ export type SSRManifest = {
 };
 
 export type Hooks = {
-	getSession?: GetSession;
-	handle?: Handle;
-	serverFetch?: ServerFetch;
+	getSession: GetSession;
+	handle: Handle;
+	serverFetch: ServerFetch;
 };
 
 export type SSRNode = {
@@ -132,7 +140,7 @@ export type SSRRenderOptions = {
 		js: string[];
 	};
 	floc: boolean;
-	get_stack: (error: Error) => string;
+	get_stack: (error: Error) => string | undefined;
 	handle_error: (error: Error) => void;
 	hooks: Hooks;
 	hydrate: boolean;
@@ -149,6 +157,7 @@ export type SSRRenderOptions = {
 	read: (file: string) => Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
+	service_worker?: string;
 	ssr: boolean;
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
@@ -157,7 +166,7 @@ export type SSRRenderOptions = {
 
 export type SSRRenderState = {
 	fetched?: string;
-	initiator?: SSRPage;
+	initiator?: SSRPage | null;
 	prerender?: {
 		fallback: string;
 		all: boolean;
@@ -170,7 +179,7 @@ export type SSRRenderState = {
 export type Asset = {
 	file: string;
 	size: number;
-	type: string;
+	type: string | null;
 };
 
 export type PageData = {
@@ -208,7 +217,7 @@ export type BuildData = {
 };
 
 export type NormalizedLoadOutput = {
-	status?: number;
+	status: number;
 	error?: Error;
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;

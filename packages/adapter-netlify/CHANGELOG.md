@@ -1,5 +1,53 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.25
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
+## 1.0.0-next.24
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
+## 1.0.0-next.23
+
+### Patch Changes
+
+- 67ca3a39: return the correct headers
+
+## 1.0.0-next.22
+
+### Patch Changes
+
+- 9461178: Use multivalue headers to set multiple cookies
+
+## 1.0.0-next.21
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+
+## 1.0.0-next.20
+
+### Patch Changes
+
+- 7faf52f: Update and consolidate checks for binary body types
+
+## 1.0.0-next.19
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.18
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
 ## 1.0.0-next.17
 
 ### Patch Changes
