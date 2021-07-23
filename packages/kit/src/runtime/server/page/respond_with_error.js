@@ -23,7 +23,8 @@ export async function respond_with_error({ request, options, state, $session, st
 		params: {}
 	};
 
-	const loaded = await load_node({
+	// error pages don't fall through, so we know it's not undefined
+	const loaded = /** @type {import('./types').Loaded} */ (await load_node({
 		request,
 		options,
 		state,
@@ -34,11 +35,11 @@ export async function respond_with_error({ request, options, state, $session, st
 		context: {},
 		is_leaf: false,
 		is_error: false
-	});
+	}));
 
 	const branch = [
 		loaded,
-		await load_node({
+		/** @type {import('./types').Loaded} */ (await load_node({
 			request,
 			options,
 			state,
@@ -51,7 +52,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			is_error: true,
 			status,
 			error
-		})
+		}))
 	];
 
 	try {

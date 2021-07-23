@@ -124,7 +124,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path,
-				rawBody: null,
+				rawBody: '',
 				query: new URLSearchParams()
 			},
 			{
@@ -247,7 +247,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
-				rawBody: null,
+				rawBody: '',
 				query: new URLSearchParams()
 			},
 			{

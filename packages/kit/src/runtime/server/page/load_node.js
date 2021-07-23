@@ -20,7 +20,7 @@ const s = JSON.stringify;
  *   status?: number;
  *   error?: Error;
  * }} opts
- * @returns {Promise<import('./types').Loaded>}
+ * @returns {Promise<import('./types').Loaded | undefined>} undefined for fallthrough
  */
 export async function load_node({
 	request,

@@ -13,8 +13,8 @@ const s = JSON.stringify;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   branch: Array<import('./types').Loaded> | undefined;
- *   page: import('types/page').Page
+ *   branch?: Array<import('./types').Loaded>;
+ *   page?: import('types/page').Page
  * }} opts
  */
 export async function render_response({
@@ -134,10 +134,10 @@ export async function render_response({
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					page: {
-						host: ${page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-						path: ${s(page.path)},
-						query: new URLSearchParams(${s(page.query.toString())}),
-						params: ${s(page.params)}
+						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
+						path: ${s(page && page.path)},
+						query: new URLSearchParams(${page ? s(page.query.toString()) : ''}),
+						params: ${page && s(page.params)}
 					}
 				}` : 'null'}
 			});

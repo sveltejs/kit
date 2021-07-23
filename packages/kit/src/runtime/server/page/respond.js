@@ -13,10 +13,11 @@ import { coalesce_to_error } from '../utils.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  * }} opts
- * @returns {Promise<import('types/hooks').ServerResponse>}
+ * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
 export async function respond({ request, options, state, $session, route }) {
 	const match = route.pattern.exec(request.path);
+	// @ts-ignore we already know there's a match
 	const params = route.params(match);
 
 	const page = {
@@ -29,7 +30,7 @@ export async function respond({ request, options, state, $session, route }) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((id) => id && options.load_component(id)));
+		nodes = await Promise.all(route.a.map((id) => options.load_component(id)));
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
@@ -48,9 +49,9 @@ export async function respond({ request, options, state, $session, route }) {
 	const leaf = nodes[nodes.length - 1].module;
 
 	const page_config = {
-		ssr: 'ssr' in leaf ? leaf.ssr : options.ssr,
-		router: 'router' in leaf ? leaf.router : options.router,
-		hydrate: 'hydrate' in leaf ? leaf.hydrate : options.hydrate
+		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
+		router: 'router' in leaf ? !!leaf.router : options.router,
+		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};
 
 	if (!leaf.prerender && state.prerender && !state.prerender.all) {
@@ -59,7 +60,7 @@ export async function respond({ request, options, state, $session, route }) {
 		return {
 			status: 204,
 			headers: {},
-			body: null
+			body: ''
 		};
 	}
 
@@ -110,6 +111,8 @@ export async function respond({ request, options, state, $session, route }) {
 
 					if (loaded.loaded.error) {
 						({ status, error } = loaded.loaded);
+					} else {
+						branch.push(loaded);
 					}
 				} catch (/** @type {unknown} */ err) {
 					const e = coalesce_to_error(err);
@@ -134,7 +137,8 @@ export async function respond({ request, options, state, $session, route }) {
 							}
 
 							try {
-								error_loaded = await load_node({
+								// there's no fallthough on an error page, so we know it's not undefined
+								error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
 									request,
 									options,
 									state,
@@ -147,7 +151,7 @@ export async function respond({ request, options, state, $session, route }) {
 									is_error: true,
 									status,
 									error
-								});
+								}));
 
 								if (error_loaded.loaded.error) {
 									continue;
@@ -178,8 +182,6 @@ export async function respond({ request, options, state, $session, route }) {
 					});
 				}
 			}
-
-			branch.push(loaded);
 
 			if (loaded && loaded.loaded.context) {
 				// TODO come up with better names for stuff

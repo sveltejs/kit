@@ -34,7 +34,7 @@ function page_store(value) {
 
 /**
  * @param {RequestInfo} resource
- * @param {RequestInit} opts
+ * @param {RequestInit} [opts]
  */
 function initial_fetch(resource, opts) {
 	const url = typeof resource === 'string' ? resource : resource.url;
@@ -82,7 +82,9 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
+			// @ts-ignore
 			page: null,
+			// @ts-ignore
 			session_id: null,
 			branch: []
 		};
@@ -114,7 +116,7 @@ export class Renderer {
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
-			this.update(info, [], true);
+			if (info) this.update(info, [], true);
 		});
 		ready = true;
 	}
@@ -137,12 +139,6 @@ export class Renderer {
 		/** @type {import('./types').NavigationResult | undefined} */
 		let result;
 
-		/** @type {number | undefined} */
-		let new_status;
-
-		/** @type {Error | undefined} new_error */
-		let new_error;
-
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
@@ -160,8 +156,12 @@ export class Renderer {
 				if (node && node.loaded) {
 					if (node.loaded.error) {
 						if (error) throw node.loaded.error;
-						new_status = node.loaded.status;
-						new_error = node.loaded.error;
+						result = await this._load_error({
+							status: node.loaded.status,
+							error: node.loaded.error,
+							path: page.path,
+							query: page.query
+						});
 					} else if (node.loaded.context) {
 						context = {
 							...context,
@@ -175,14 +175,9 @@ export class Renderer {
 		} catch (e) {
 			if (error) throw e;
 
-			new_status = 500;
-			new_error = e;
-		}
-
-		if (new_error) {
 			result = await this._load_error({
-				status: new_status,
-				error: new_error,
+				status: 500,
+				error: e,
 				path: page.path,
 				query: page.query
 			});
@@ -203,6 +198,7 @@ export class Renderer {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		if (this.started) {
+			// @ts-ignore
 			this.stores.navigating.set({
 				from: {
 					path: this.current.page.path,
@@ -269,6 +265,7 @@ export class Renderer {
 		this.loading.promise = null;
 		this.loading.id = null;
 
+		if (!this.router) return;
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
@@ -294,8 +291,8 @@ export class Renderer {
 
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
-				const info = this.router.parse(new URL(location.href));
-				await this.update(info, [], true);
+				const info = this.router && this.router.parse(new URL(location.href));
+				if (info) await this.update(info, [], true);
 
 				this.invalidating = null;
 			});
@@ -330,6 +327,7 @@ export class Renderer {
 	 */
 	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id) {
+			// @ts-ignore if the id is defined then the promise is too
 			return this.loading.promise;
 		}
 
@@ -338,7 +336,7 @@ export class Renderer {
 
 			// check if endpoint route
 			if (route.length === 1) {
-				return { reload: true };
+				return { reload: true, props: {}, state: this.current };
 			}
 
 			// load code for subsequent routes immediately, if they are as
@@ -399,7 +397,8 @@ export class Renderer {
 		};
 
 		for (let i = 0; i < filtered.length; i += 1) {
-			if (filtered[i].loaded) result.props[`props_${i}`] = await filtered[i].loaded.props;
+			const loaded = filtered[i].loaded;
+			if (loaded) result.props[`props_${i}`] = await loaded.props;
 		}
 
 		if (
@@ -534,7 +533,7 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
 	async _load({ route, path, query }, no_cache) {
 		const key = `${path}?${query}`;
@@ -545,6 +544,7 @@ export class Renderer {
 		}
 
 		const [pattern, a, b, get_params] = route;
+		// @ts-ignore - the pattern is for the route which we've already matched to this path
 		const params = get_params ? get_params(pattern.exec(path)) : {};
 
 		const changed = this.current.page && {
@@ -610,7 +610,9 @@ export class Renderer {
 
 						if (node.loaded.redirect) {
 							return {
-								redirect: node.loaded.redirect
+								redirect: node.loaded.redirect,
+								props: {},
+								state: this.current
 							};
 						}
 
@@ -651,7 +653,7 @@ export class Renderer {
 								context: node_loaded.context
 							});
 
-							if (error_loaded && error_loaded.loaded.error) {
+							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
 								continue;
 							}
 
@@ -713,7 +715,7 @@ export class Renderer {
 				error,
 				module: await this.fallback[1],
 				page,
-				context: node && node.loaded && node.loaded.context
+				context: (node && node.loaded && node.loaded.context) || {}
 			})
 		];
 
