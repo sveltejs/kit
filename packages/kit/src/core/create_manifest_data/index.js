@@ -262,6 +262,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					b
 				};
 				const i18n = config.kit.i18n;
+				// @ts-ignore
 				if (i18n) baseRoute.lang = i18n.defaultLocale;
 
 				routes.push(baseRoute);
@@ -285,7 +286,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 								params,
 								path: `/${locale}${path}`,
 								lang: locale,
+								// @ts-ignore
 								a,
+								// @ts-ignore
 								b
 							});
 						});

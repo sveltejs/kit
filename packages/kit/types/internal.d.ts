@@ -84,7 +84,7 @@ export type SSRPage = {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
-	lang: string;
+	lang?: string;
 	// plan a is to render 1 or more layout components followed
 	// by a leaf component. if one of them fails in `load`, we
 	// backtrack until we find the nearest error component —
