@@ -13,7 +13,7 @@ const s = JSON.stringify;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   branch: import('./types').Loaded[];
+ *   branch: Array<import('./types').Loaded> | undefined;
  *   page: import('types/page').Page
  * }} opts
  */
@@ -129,7 +129,7 @@ export async function render_response({
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [
-						${branch
+						${(branch || [])
 						.map(({ node }) => `import(${s(node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],

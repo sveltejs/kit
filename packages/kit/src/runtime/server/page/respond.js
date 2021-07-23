@@ -63,7 +63,7 @@ export async function respond({ request, options, state, $session, route }) {
 		};
 	}
 
-	/** @type {Loaded[]} */
+	/** @type {Array<Loaded> | undefined} */
 	let branch;
 
 	/** @type {number} */
@@ -79,7 +79,7 @@ export async function respond({ request, options, state, $session, route }) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
-			/** @type {Loaded} */
+			/** @type {Loaded | undefined} */
 			let loaded;
 
 			if (node) {

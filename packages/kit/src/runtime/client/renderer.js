@@ -90,6 +90,7 @@ export class Renderer {
 		/** @type {Map<string, import('./types').NavigationResult>} */
 		this.cache = new Map();
 
+		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult> | null}} */
 		this.loading = {
 			id: null,
 			promise: null
@@ -127,7 +128,7 @@ export class Renderer {
 	 * }} selected
 	 */
 	async start({ status, error, nodes, page }) {
-		/** @type {import('./types').BranchNode[]} */
+		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
 		/** @type {Record<string, any>} */
@@ -335,6 +336,7 @@ export class Renderer {
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
+			// check if endpoint route
 			if (route.length === 1) {
 				return { reload: true };
 			}
@@ -345,7 +347,10 @@ export class Renderer {
 			while (j < info.routes.length) {
 				const next = info.routes[j];
 				if (next[0].toString() === route[0].toString()) {
-					if (next.length !== 1) next[1].forEach((loader) => loader());
+					// if it's a page route
+					if (next.length !== 1) {
+						next[1].forEach((loader) => loader());
+					}
 					j += 1;
 				} else {
 					break;
@@ -375,11 +380,11 @@ export class Renderer {
 	 *
 	 * @param {{
 	 *   page: import('types/page').Page;
-	 *   branch: import('./types').BranchNode[]
+	 *   branch: Array<import('./types').BranchNode | undefined>
 	 * }} opts
 	 */
 	async _get_navigation_result_from_branch({ page, branch }) {
-		const filtered = branch.filter(Boolean);
+		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
@@ -436,7 +441,6 @@ export class Renderer {
 	}
 
 	/**
-	 *
 	 * @param {{
 	 *   status?: number;
 	 *   error?: Error;
@@ -553,24 +557,24 @@ export class Renderer {
 		/** @type {import('types/page').Page} */
 		const page = { host: this.host, path, query, params };
 
-		/** @type {import('./types').BranchNode[]} */
+		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
 		/** @type {Record<string, any>} */
 		let context = {};
 		let context_changed = false;
 
-		/** @type {number} */
+		/** @type {number | undefined} */
 		let status = 200;
 
-		/** @type {Error} */
-		let error = null;
+		/** @type {Error | undefined} */
+		let error;
 
 		// preload modules
 		a.forEach((loader) => loader());
 
 		load: for (let i = 0; i < a.length; i += 1) {
-			/** @type {import('./types').BranchNode} */
+			/** @type {import('./types').BranchNode | undefined} */
 			let node;
 
 			try {
@@ -631,7 +635,7 @@ export class Renderer {
 					if (b[i]) {
 						let error_loaded;
 
-						/** @type {import('./types').BranchNode} */
+						/** @type {import('./types').BranchNode | undefined} */
 						let node_loaded;
 						let j = i;
 						while (!(node_loaded = branch[j])) {
@@ -647,7 +651,7 @@ export class Renderer {
 								context: node_loaded.context
 							});
 
-							if (error_loaded.loaded.error) {
+							if (error_loaded && error_loaded.loaded.error) {
 								continue;
 							}
 
@@ -682,7 +686,7 @@ export class Renderer {
 
 	/**
 	 * @param {{
-	 *   status: number;
+	 *   status?: number;
 	 *   error: Error;
 	 *   path: string;
 	 *   query: URLSearchParams
