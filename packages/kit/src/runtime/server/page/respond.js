@@ -17,7 +17,7 @@ import { coalesce_to_error } from '../utils.js';
  */
 export async function respond({ request, options, state, $session, route }) {
 	const match = route.pattern.exec(request.path);
-	// @ts-ignore we already know there's a match
+	// @ts-expect-error we already know there's a match
 	const params = route.params(match);
 
 	const page = {

@@ -2,7 +2,7 @@
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ page, fetch }) {
 		const res = await fetch('/caching/private/uses-fetch.json', {
-			// @ts-ignore
+			// @ts-expect-error
 			credentials: page.query.get('credentials')
 		});
 

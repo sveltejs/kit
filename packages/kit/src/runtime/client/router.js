@@ -221,7 +221,7 @@ export class Router {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		// @ts-ignore
+		// @ts-expect-error
 		return this.renderer.load(info);
 	}
 
@@ -255,13 +255,13 @@ export class Router {
 			}
 		}
 
-		// @ts-ignore6
+		// @ts-expect-error
 		this.renderer.notify({
 			path: info.path,
 			query: info.query
 		});
 
-		// @ts-ignore
+		// @ts-expect-error
 		await this.renderer.update(info, chain, false);
 
 		if (!keepfocus) {

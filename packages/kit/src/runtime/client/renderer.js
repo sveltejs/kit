@@ -82,9 +82,9 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
-			// @ts-ignore
+			// @ts-expect-error
 			page: null,
-			// @ts-ignore
+			// @ts-expect-error
 			session_id: null,
 			branch: []
 		};
@@ -198,7 +198,7 @@ export class Renderer {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		if (this.started) {
-			// @ts-ignore
+			// @ts-expect-error
 			this.stores.navigating.set({
 				from: {
 					path: this.current.page.path,
@@ -327,7 +327,7 @@ export class Renderer {
 	 */
 	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id) {
-			// @ts-ignore if the id is defined then the promise is too
+			// @ts-expect-error if the id is defined then the promise is too
 			return this.loading.promise;
 		}
 
@@ -544,7 +544,7 @@ export class Renderer {
 		}
 
 		const [pattern, a, b, get_params] = route;
-		// @ts-ignore - the pattern is for the route which we've already matched to this path
+		// @ts-expect-error - the pattern is for the route which we've already matched to this path
 		const params = get_params ? get_params(pattern.exec(path)) : {};
 
 		const changed = this.current.page && {

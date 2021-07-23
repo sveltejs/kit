@@ -30,7 +30,7 @@ suite('copy files', () => {
 	/** @type {import('types/config').ValidatedConfig} */
 	const config = {
 		kit: {
-			// @ts-ignore
+			// @ts-expect-error
 			files: {
 				assets: join(__dirname, 'fixtures/basic/static')
 			},
@@ -76,13 +76,13 @@ suite('prerender', async () => {
 	const config = {
 		extensions: ['.svelte'],
 		kit: {
-			// @ts-ignore
+			// @ts-expect-error
 			files: {
 				assets: join(__dirname, 'fixtures/prerender/static'),
 				routes: join(__dirname, 'fixtures/prerender/src/routes')
 			},
 			appDir: '_app',
-			// @ts-ignore
+			// @ts-expect-error
 			prerender: {
 				pages: ['*'],
 				enabled: true
