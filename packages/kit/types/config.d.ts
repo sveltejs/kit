@@ -78,6 +78,15 @@ export interface Config {
 	preprocess?: any;
 }
 
+export type PrerenderErrorHandler = (errorDetails: {
+	status: number;
+	path: string;
+	referrer: string | null;
+	referenceType: 'linked' | 'fetched';
+}) => void | never;
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+
 export interface ValidatedConfig {
 	compilerOptions: any;
 	extensions: string[];
@@ -117,7 +126,7 @@ export interface ValidatedConfig {
 		prerender: {
 			crawl: boolean;
 			enabled: boolean;
-			force: boolean;
+			onError: PrerenderOnErrorValue;
 			pages: string[];
 		};
 		router: boolean;

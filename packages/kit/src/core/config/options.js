@@ -121,7 +121,17 @@ const options = {
 				children: {
 					crawl: expect_boolean(true),
 					enabled: expect_boolean(true),
-					force: expect_boolean(false),
+					onError: {
+						type: 'leaf',
+						default: 'fail',
+						validate: (option, keypath) => {
+							if (typeof option === 'function') return option;
+							if (['continue', 'fail'].includes(option)) return option;
+							throw new Error(
+								`${keypath} should be either a custom function or one of "continue" or "fail"`
+							);
+						}
+					},
 					pages: {
 						type: 'leaf',
 						default: ['*'],
