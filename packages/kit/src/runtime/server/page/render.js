@@ -10,7 +10,7 @@ const s = JSON.stringify;
  * @param {{
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
- *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
+ *   page_config: import('types/config').PageOpts;
  *   status: number;
  *   error?: Error,
  *   branch?: Array<import('./types').Loaded>;

@@ -28,7 +28,11 @@ const config = {
 		floc: false,
 		host: null,
 		hostHeader: null,
-		hydrate: true,
+		// hydrate unless disabled on page
+		hydrate: async ({ page }) => {
+			const leaf = await page;
+			return 'hydrate' in leaf ? !!leaf.hydrate : true;
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -47,15 +51,24 @@ const config = {
 		},
 		prerender: {
 			crawl: true,
-			enabled: true,
+			// don't prerender unless enabled on page
+			enabled: expect_page_scriptable(async ({ page }) => !!(await page).prerender),
 			onError: 'fail',
 			pages: ['*']
 		},
-		router: true,
+		// route unless disabled on page
+		router: async ({ page }) => {
+			const leaf = await page;
+			return 'router' in leaf ? !!leaf.router : true;
+		},
 		serviceWorker: {
 			exclude: []
 		},
-		ssr: true,
+		// do SSR unless disabled on page
+		ssr: async ({ page }) => {
+			const leaf = await page;
+			return 'ssr' in leaf ? !!leaf.ssr : true;
+		},
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})

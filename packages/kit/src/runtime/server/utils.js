@@ -17,3 +17,15 @@ export function lowercase_keys(obj) {
 export function coalesce_to_error(err) {
 	return err instanceof Error ? err : new Error(JSON.stringify(err));
 }
+
+/**
+ * @param {any} opt
+ * @param {object} ctx
+ * @returns
+ */
+export async function resolve_option(opt, ctx) {
+	if (typeof opt === 'function') {
+		return await opt(ctx);
+	}
+	return opt;
+}

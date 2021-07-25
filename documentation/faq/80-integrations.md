@@ -18,7 +18,7 @@ Please use SDK v9 which provides a modular SDK approach that's currently in beta
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
-Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. [This currently occurs even when SSR is disabled](https://github.com/sveltejs/kit/issues/754).
+Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. This occurs even when SSR is disabled unless you also override the default values for `hydrate`, `router`, and `prerender.enabled` [as mentioned in the docs](docs#ssr-and-javascript-ssr).
 
 If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
 
@@ -30,20 +30,17 @@ if (browser) {
 }
 ```
 
-You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM. In this case, you may still find a benefit of including a `browser` check as shown below because Vite may otherwise attempt to optimize the dependency and fail on it. [We hope to make this unnecessary in the future](https://github.com/sveltejs/svelte/issues/6372).
+You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM.
 
 ```html
 <script>
 	import { onMount } from 'svelte';
-	import { browser } from '$app/env';
 
 	let lib;
 
-	if (browser) {
-		onMount(async () => {
-			lib = (await import('some-browser-only-library')).default;
-		});
-	}
+	onMount(async () => {
+		lib = (await import('some-browser-only-library')).default;
+	});
 </script>
 ```
 

@@ -78,7 +78,10 @@ const options = {
 
 			hostHeader: expect_string(null),
 
-			hydrate: expect_boolean(true),
+			hydrate: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'hydrate' in leaf ? !!leaf.hydrate : true;
+			}),
 			serviceWorker: {
 				type: 'branch',
 				children: {
@@ -120,7 +123,7 @@ const options = {
 				type: 'branch',
 				children: {
 					crawl: expect_boolean(true),
-					enabled: expect_boolean(true),
+					enabled: expect_page_scriptable(async ({ page }) => !!(await page).prerender),
 					// TODO: remove this for the 1.0 release
 					force: {
 						type: 'leaf',
@@ -170,9 +173,15 @@ const options = {
 				}
 			},
 
-			router: expect_boolean(true),
+			router: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'router' in leaf ? !!leaf.router : true;
+			}),
 
-			ssr: expect_boolean(true),
+			ssr: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'ssr' in leaf ? !!leaf.ssr : true;
+			}),
 
 			target: expect_string(null),
 
@@ -253,6 +262,23 @@ function expect_boolean(boolean) {
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
 				throw new Error(`${keypath} should be true or false, if specified`);
+			}
+			return option;
+		}
+	};
+}
+
+/**
+ * @param {import('types/config').ScriptablePageOpt<boolean>} value
+ * @returns {ConfigDefinition}
+ */
+function expect_page_scriptable(value) {
+	return {
+		type: 'leaf',
+		default: value,
+		validate: (option, keypath) => {
+			if (typeof option !== 'boolean' && typeof option !== 'function') {
+				throw new Error(`${keypath} should be a boolean or function that returns one`);
 			}
 			return option;
 		}
