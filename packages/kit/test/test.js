@@ -5,7 +5,7 @@ import fetch from 'node-fetch';
 import { chromium } from 'playwright-chromium';
 import { dev } from '../src/core/dev/index.js';
 import { build } from '../src/core/build/index.js';
-import { start } from '../src/core/start/index.js';
+import { preview } from '../src/core/preview/index.js';
 import { load_config } from '../src/core/config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { format } from 'util';
@@ -17,7 +17,7 @@ import { format } from 'util';
 async function setup({ port }) {
 	const base = `http://localhost:${port}`;
 
-	const browser = await chromium.launch();
+	const browser = await chromium.launch({ headless: true });
 
 	const contexts = {
 		js: await browser.newContext({ javaScriptEnabled: true }),
@@ -165,10 +165,11 @@ function duplicate(test_fn, config, is_build) {
 			if (!dev) return;
 		}
 
-		if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
-
 		if (nojs) {
-			test_fn(`${name} [no js]`, async (context) => {
+			name = `${name} [no js]`;
+			if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+
+			test_fn(name, async (context) => {
 				let response;
 
 				if (start) {
@@ -188,7 +189,10 @@ function duplicate(test_fn, config, is_build) {
 		}
 
 		if (js && !config.kit.amp) {
-			test_fn(`${name} [js]`, async (context) => {
+			name = `${name} [js]`;
+			if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+
+			test_fn(name, async (context) => {
 				let response;
 
 				if (start) {
@@ -332,7 +336,7 @@ async function main() {
 					runtime: '../../../../../src/runtime/server/index.js'
 				});
 
-				context.server = await start({ port, config, cwd, host: undefined, https: false });
+				context.server = await preview({ port, config, cwd, host: undefined, https: false });
 				Object.assign(context, await setup({ port }));
 			} catch (e) {
 				// the try-catch is necessary pending https://github.com/lukeed/uvu/issues/80

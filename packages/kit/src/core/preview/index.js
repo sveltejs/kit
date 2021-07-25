@@ -23,7 +23,13 @@ const mutable = (dir) =>
  *   cwd?: string;
  * }} opts
  */
-export async function start({ port, host, config, https: use_https = false, cwd = process.cwd() }) {
+export async function preview({
+	port,
+	host,
+	config,
+	https: use_https = false,
+	cwd = process.cwd()
+}) {
 	__fetch_polyfill();
 
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);

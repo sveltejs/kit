@@ -151,10 +151,10 @@ prog
 		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 		const config = await get_config();
 
-		const { start } = await import('./core/start/index.js');
+		const { preview } = await import('./core/preview/index.js');
 
 		try {
-			await start({ port, host, config, https });
+			await preview({ port, host, config, https });
 
 			welcome({ port, host, https, open });
 		} catch (error) {
