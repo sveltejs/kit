@@ -121,6 +121,22 @@ const options = {
 				children: {
 					crawl: expect_boolean(true),
 					enabled: expect_boolean(true),
+					// TODO: remove this for the 1.0 release
+					force: {
+						type: 'leaf',
+						default: undefined,
+						validate: (option, keypath) => {
+							if (typeof option !== undefined) {
+								const newSetting = option ? 'continue' : 'fail';
+								const needsSetting = newSetting === 'continue';
+								throw new Error(
+									`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
+										needsSetting ? '' : ' (or leave it undefined)'
+									} to get the same behavior as you would with \`force: ${JSON.stringify(option)}\``
+								);
+							}
+						}
+					},
 					onError: {
 						type: 'leaf',
 						default: 'fail',

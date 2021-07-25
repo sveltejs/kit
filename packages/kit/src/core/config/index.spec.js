@@ -50,6 +50,8 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
 				onError: 'fail',
 				pages: ['*']
 			},
@@ -150,6 +152,8 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
 				onError: 'fail',
 				pages: ['*']
 			},
