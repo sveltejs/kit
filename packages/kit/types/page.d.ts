@@ -1,36 +1,36 @@
 import { Location as Page, MaybePromise, InferValue } from './helper';
 
-export type LoadInput<
+export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Context extends Record<string, any> = Record<string, any>,
 	Session = any
-> = {
+> {
 	page: Page<PageParams>;
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: Session;
 	context: Context;
-};
+}
 
-export type ErrorLoadInput<
+export interface ErrorLoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Context extends Record<string, any> = Record<string, any>,
 	Session = any
-> = LoadInput<PageParams, Context, Session> & {
+> extends LoadInput<PageParams, Context, Session> {
 	status?: number;
 	error?: Error;
-};
+}
 
-export type LoadOutput<
+export interface LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
 	Context extends Record<string, any> = Record<string, any>
-> = {
+> {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
 	props?: Props;
 	context?: Context;
 	maxage?: number;
-};
+}
 
 // Publicized Types
 export type Load<

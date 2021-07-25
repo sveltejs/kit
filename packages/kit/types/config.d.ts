@@ -1,7 +1,7 @@
 import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
 
-export type AdapterUtils = {
+export interface AdapterUtils {
 	log: Logger;
 	rimraf: (dir: string) => void;
 	mkdirp: (dir: string) => void;
@@ -18,14 +18,14 @@ export type AdapterUtils = {
 		dest: string;
 		fallback?: string;
 	}) => Promise<void>;
-};
+}
 
-export type Adapter = {
+export interface Adapter {
 	name: string;
 	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
-};
+}
 
-export type Config = {
+export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
@@ -76,9 +76,9 @@ export type Config = {
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
-};
+}
 
-export type ValidatedConfig = {
+export interface ValidatedConfig {
 	compilerOptions: any;
 	extensions: string[];
 	kit: {
@@ -130,4 +130,4 @@ export type ValidatedConfig = {
 		vite: () => ViteConfig;
 	};
 	preprocess: any;
-};
+}

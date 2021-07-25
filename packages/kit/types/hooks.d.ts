@@ -2,23 +2,23 @@ import { Headers, Location, MaybePromise, ParameterizedBody } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export type ServerRequest<Locals = Record<string, any>, Body = unknown> = Location & {
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown> extends Location {
 	method: string;
 	headers: Headers;
 	rawBody: StrictBody;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
-};
+}
 
-export type ServerResponse = {
+export interface ServerResponse {
 	status: number;
 	headers: Headers;
 	body?: StrictBody;
-};
+}
 
-export type GetSession<Locals = Record<string, any>, Session = any> = {
+export interface GetSession<Locals = Record<string, any>, Session = any> {
 	(request: ServerRequest<Locals>): MaybePromise<Session>;
-};
+}
 
 export type Handle<Locals = Record<string, any>> = (input: {
 	request: ServerRequest<Locals>;

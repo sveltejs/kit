@@ -12,11 +12,11 @@ type JSONValue =
 
 type DefaultBody = JSONValue | Uint8Array;
 
-export type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
+export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
 	headers?: Headers;
 	body?: Body;
-};
+}
 
 export type RequestHandler<
 	Locals = Record<string, any>,
