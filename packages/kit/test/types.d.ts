@@ -7,7 +7,7 @@ import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fe
 // seems like that's no longer an issue? in which case we don't need
 // to wrap all these methods
 
-export type TestContext = {
+export interface TestContext {
 	base: string;
 	page: Page;
 	pages: {
@@ -34,14 +34,14 @@ export type TestContext = {
 	server: import('net').Server;
 	reset: () => Promise<void>;
 	unpatch: () => void;
-};
+}
 
-type TestOptions = {
+interface TestOptions {
 	js?: boolean;
 	nojs?: boolean;
 	dev?: boolean;
 	build?: boolean;
-};
+}
 
 export interface TestFunctionBase {
 	(
