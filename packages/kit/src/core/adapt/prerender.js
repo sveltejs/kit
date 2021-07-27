@@ -5,6 +5,12 @@ import { mkdirp } from '../filesystem/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
+/**
+ * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
+ * @typedef {import('types/config').PrerenderOnErrorValue} OnError
+ * @typedef {import('types/internal').Logger} Logger
+ */
+
 /** @param {string} html */
 function clean_html(html) {
 	return html
@@ -45,13 +51,34 @@ function get_srcset_urls(attrs) {
 	return results;
 }
 
+/** @type {(errorDetails: Parameters<PrerenderErrorHandler>[0] ) => string} */
+function errorDetailsToString({ status, path, referrer, referenceType }) {
+	return `${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
+}
+
+/** @type {(log: Logger, onError: OnError) => PrerenderErrorHandler} */
+function chooseErrorHandler(log, onError) {
+	switch (onError) {
+		case 'continue':
+			return (errorDetails) => {
+				log.error(errorDetailsToString(errorDetails));
+			};
+		case 'fail':
+			return (errorDetails) => {
+				throw new Error(errorDetailsToString(errorDetails));
+			};
+		default:
+			return onError;
+	}
+}
+
 const OK = 2;
 const REDIRECT = 3;
 
 /** @param {{
  *   cwd: string;
  *   out: string;
- *   log: import('types/internal').Logger;
+ *   log: Logger;
  *   config: import('types/config').ValidatedConfig;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
@@ -75,14 +102,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	/** @type {(status: number, path: string, parent: string | null, verb: string) => void} */
-	const error = config.kit.prerender.force
-		? (status, path, parent, verb) => {
-				log.error(`${status} ${path}${parent ? ` (${verb} from ${parent})` : ''}`);
-		  }
-		: (status, path, parent, verb) => {
-				throw new Error(`${status} ${path}${parent ? ` (${verb} from ${parent})` : ''}`);
-		  };
+	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
 	const files = new Set([...build_data.static, ...build_data.client]);
 
@@ -107,9 +127,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} path
-	 * @param {string?} parent
+	 * @param {string?} referrer
 	 */
-	async function visit(path, parent) {
+	async function visit(path, referrer) {
 		path = normalize(path);
 
 		if (seen.has(path)) return;
@@ -162,7 +182,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				log.info(`${rendered.status} ${path}`);
 				writeFileSync(file, rendered.body || '');
 			} else if (response_type !== OK) {
-				error(rendered.status, path, parent, 'linked');
+				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
 			dependencies.forEach((result, dependency_path) => {
@@ -183,7 +203,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				if (response_type === OK) {
 					log.info(`${result.status} ${dependency_path}`);
 				} else {
-					error(result.status, dependency_path, path, 'fetched');
+					error({
+						status: result.status,
+						path: dependency_path,
+						referrer: path,
+						referenceType: 'fetched'
+					});
 				}
 			});
 
