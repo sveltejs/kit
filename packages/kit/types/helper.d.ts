@@ -26,7 +26,8 @@ export type Location<Params extends Record<string, string> = Record<string, stri
 	query: URLSearchParams;
 };
 
-export type MaybePromise<T> = T | Promise<T>;
+export type Index<T = any> = Record<string, T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
+export type MaybePromise<T> = T | Promise<T>;
