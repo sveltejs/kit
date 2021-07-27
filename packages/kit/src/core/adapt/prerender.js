@@ -33,7 +33,7 @@ function get_src(attrs) {
 }
 
 /** @param {string} attrs */
-function is_rel_external(attrs) {
+export function is_rel_external(attrs) {
 	const match = /rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external))/.exec(attrs);
 	return !!match;
 }
