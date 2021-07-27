@@ -174,7 +174,10 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: config.kit.ssr
+				}
 			})
 		]
 	});
@@ -462,7 +465,10 @@ async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				compilerOptions: {
+					hydratable: config.kit.ssr
+				}
 			})
 		],
 		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
