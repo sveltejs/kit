@@ -138,7 +138,7 @@ class Watcher extends EventEmitter {
 					extensions: this.config.extensions,
 					emitCss: !this.config.kit.amp,
 					compilerOptions: {
-						hydratable: this.config.kit.ssr
+						hydratable: !!this.config.kit.hydrate
 					}
 				})
 			],

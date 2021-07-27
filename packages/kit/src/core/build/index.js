@@ -176,7 +176,7 @@ async function build_client({
 				extensions: config.extensions,
 				emitCss: !config.kit.amp,
 				compilerOptions: {
-					hydratable: config.kit.ssr
+					hydratable: !!config.kit.hydrate
 				}
 			})
 		]
@@ -467,7 +467,7 @@ async function build_server(
 			svelte({
 				extensions: config.extensions,
 				compilerOptions: {
-					hydratable: config.kit.ssr
+					hydratable: !!config.kit.hydrate
 				}
 			})
 		],
