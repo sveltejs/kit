@@ -1,4 +1,5 @@
 import { UserConfig as ViteConfig } from 'vite';
+import { RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
@@ -70,56 +71,6 @@ export interface Config {
 	preprocess?: any;
 }
 
-export interface ValidatedConfig {
-	compilerOptions: any;
-	extensions: string[];
-	kit: {
-		adapter: Adapter;
-		amp: boolean;
-		appDir: string;
-		files: {
-			assets: string;
-			hooks: string;
-			lib: string;
-			routes: string;
-			serviceWorker: string;
-			setup: string;
-			template: string;
-		};
-		floc: boolean;
-		host: string;
-		hostHeader: string;
-		hydrate: boolean;
-		package: {
-			dir: string;
-			emitTypes: boolean;
-			exports: {
-				include: string[];
-				exclude: string[];
-			};
-			files: {
-				include: string[];
-				exclude: string[];
-			};
-		};
-		paths: {
-			assets: string;
-			base: string;
-		};
-		prerender: {
-			crawl: boolean;
-			enabled: boolean;
-			force: boolean;
-			pages: string[];
-		};
-		router: boolean;
-		serviceWorker: {
-			exclude: string[];
-		};
-		ssr: boolean;
-		target: string;
-		trailingSlash: TrailingSlash;
-		vite: () => ViteConfig;
-	};
-	preprocess: any;
-}
+export type ValidatedConfig = RecursiveRequired<Config> & {
+	kit: { files: { setup: string } };
+};
