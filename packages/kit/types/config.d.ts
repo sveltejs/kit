@@ -1,5 +1,5 @@
-import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
+import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -9,20 +9,12 @@ export interface AdapterUtils {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
-	prerender: ({
-		all,
-		dest,
-		fallback
-	}: {
-		all?: boolean;
-		dest: string;
-		fallback?: string;
-	}) => Promise<void>;
+	prerender: (options: { all?: boolean; dest: string; fallback?: string }) => Promise<void>;
 }
 
 export interface Adapter {
 	name: string;
-	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
+	adapt: (context: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
 }
 
 export interface Config {
