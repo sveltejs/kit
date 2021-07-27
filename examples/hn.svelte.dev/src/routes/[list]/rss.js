@@ -1,6 +1,6 @@
 /**
  * @param {string} list
- * @param {Record<string,any>[]} items
+ * @param {Record<string, any>[]} items
  */
 const render = (list, items) => `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
@@ -34,7 +34,7 @@ const render = (list, items) => `<?xml version="1.0" encoding="UTF-8" ?>
 /**
  * @type {import('@sveltejs/kit').RequestHandler}
  */
-export function get({params}) {
+export function get({ params }) {
 	const list =
 		params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
 
