@@ -1,3 +1,4 @@
+import { ServerRequest } from './hooks';
 import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
 
@@ -25,6 +26,20 @@ export interface Adapter {
 	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
 }
 
+export interface PageOpts {
+	ssr: boolean;
+	router: boolean;
+	hydrate: boolean;
+	prerender: boolean;
+}
+
+export interface PageOptsContext {
+	request: ServerRequest;
+	page: Promise<PageOpts>;
+}
+
+export type ScriptablePageOpt<T> = T | (({ request, page }: PageOptsContext) => Promise<T>);
+
 export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
@@ -43,7 +58,7 @@ export interface Config {
 		floc?: boolean;
 		host?: string;
 		hostHeader?: string;
-		hydrate?: boolean;
+		hydrate?: ScriptablePageOpt<boolean>;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -62,15 +77,15 @@ export interface Config {
 		};
 		prerender?: {
 			crawl?: boolean;
-			enabled?: boolean;
+			enabled?: ScriptablePageOpt<boolean>;
 			force?: boolean;
 			pages?: string[];
 		};
-		router?: boolean;
+		router?: ScriptablePageOpt<boolean>;
 		serviceWorker?: {
 			exclude?: string[];
 		};
-		ssr?: boolean;
+		ssr?: ScriptablePageOpt<boolean>;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
@@ -106,7 +121,7 @@ export interface ValidatedConfig {
 		floc: boolean;
 		host: string;
 		hostHeader: string;
-		hydrate: boolean;
+		hydrate: ScriptablePageOpt<boolean>;
 		package: {
 			dir: string;
 			emitTypes: boolean;
@@ -125,15 +140,15 @@ export interface ValidatedConfig {
 		};
 		prerender: {
 			crawl: boolean;
-			enabled: boolean;
+			enabled: ScriptablePageOpt<boolean>;
 			onError: PrerenderOnErrorValue;
 			pages: string[];
 		};
-		router: boolean;
+		router: ScriptablePageOpt<boolean>;
 		serviceWorker: {
 			exclude: string[];
 		};
-		ssr: boolean;
+		ssr: ScriptablePageOpt<boolean>;
 		target: string;
 		trailingSlash: TrailingSlash;
 		vite: () => ViteConfig;
