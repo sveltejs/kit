@@ -33,6 +33,17 @@ export interface PageOptsContext {
 
 export type ScriptablePageOpt<T> = T | (({ request, page }: PageOptsContext) => Promise<T>);
 
+export interface PrerenderErrorHandler {
+	(details: {
+		status: number;
+		path: string;
+		referrer: string | null;
+		referenceType: 'linked' | 'fetched';
+	}): void;
+}
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+
 export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
@@ -71,7 +82,7 @@ export interface Config {
 		prerender?: {
 			crawl?: boolean;
 			enabled?: ScriptablePageOpt<boolean>;
-			force?: boolean;
+			onError?: PrerenderOnErrorValue;
 			pages?: string[];
 		};
 		router?: ScriptablePageOpt<boolean>;
@@ -86,15 +97,6 @@ export interface Config {
 	preprocess?: any;
 }
 
-export type PrerenderErrorHandler = (errorDetails: {
-	status: number;
-	path: string;
-	referrer: string | null;
-	referenceType: 'linked' | 'fetched';
-}) => void | never;
-
-export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
-
 export type ValidatedConfig = RecursiveRequired<Config> & {
-	kit: { files: { setup: string } };
+	kit: { files: { setup: string } }; // only for validated
 };
