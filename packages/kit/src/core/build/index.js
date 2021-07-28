@@ -174,7 +174,10 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		]
 	});
@@ -332,16 +335,17 @@ async function build_server(
 						error.stack = options.get_stack(error);
 					},
 					hooks: get_hooks(user_hooks),
-					hydrate: ${s(config.kit.hydrate)},
+					hydrate: ${config.kit.hydrate},
 					initiator: undefined,
 					load_component,
 					manifest,
 					paths: settings.paths,
+					prerender: ${config.kit.prerender && config.kit.prerender.enabled},
 					read: settings.read,
 					root,
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
-					router: ${s(config.kit.router)},
-					ssr: ${s(config.kit.ssr)},
+					router: ${config.kit.router},
+					ssr: ${config.kit.ssr},
 					target: ${s(config.kit.target)},
 					template,
 					trailing_slash: ${s(config.kit.trailingSlash)}
@@ -462,7 +466,10 @@ async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		],
 		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129

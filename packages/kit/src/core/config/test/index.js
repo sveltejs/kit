@@ -14,9 +14,7 @@ async function testLoadDefaultConfig(path) {
 	const cwd = join(__dirname, 'fixtures', path);
 
 	const config = await load_config({ cwd });
-
-	// @ts-expect-error
-	delete config.kit.vite; // can't test equality of a function
+	delete_complex_opts(config);
 
 	assert.equal(config, {
 		compilerOptions: null,
@@ -37,7 +35,6 @@ async function testLoadDefaultConfig(path) {
 			floc: false,
 			host: null,
 			hostHeader: null,
-			hydrate: true,
 			package: {
 				dir: 'package',
 				exports: {
@@ -54,9 +51,7 @@ async function testLoadDefaultConfig(path) {
 				exclude: []
 			},
 			paths: { base: '', assets: '/.' },
-			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
-			router: true,
-			ssr: true,
+			prerender: { crawl: true, force: undefined, onError: 'fail', pages: ['*'] },
 			target: null,
 			trailingSlash: 'never'
 		},
@@ -103,3 +98,17 @@ test('errors on loading config with incorrect default export', async () => {
 });
 
 test.run();
+
+/** @param {import('types/config').ValidatedConfig} validated */
+function delete_complex_opts(validated) {
+	// @ts-expect-error
+	delete validated.kit.vite;
+	// @ts-expect-error
+	delete validated.kit.hydrate;
+	// @ts-expect-error
+	delete validated.kit.prerender.enabled;
+	// @ts-expect-error
+	delete validated.kit.router;
+	// @ts-expect-error
+	delete validated.kit.ssr;
+}

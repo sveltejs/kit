@@ -1,5 +1,6 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
+import { ServerRequest } from './hooks';
 import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
@@ -17,6 +18,20 @@ export interface Adapter {
 	name: string;
 	adapt: (context: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
 }
+
+export interface PageOpts {
+	ssr: boolean;
+	router: boolean;
+	hydrate: boolean;
+	prerender: boolean;
+}
+
+export interface PageOptsContext {
+	request: ServerRequest;
+	page: Promise<PageOpts>;
+}
+
+export type ScriptablePageOpt<T> = T | (({ request, page }: PageOptsContext) => Promise<T>);
 
 export interface Config {
 	compilerOptions?: any;
@@ -36,7 +51,7 @@ export interface Config {
 		floc?: boolean;
 		host?: string;
 		hostHeader?: string;
-		hydrate?: boolean;
+		hydrate?: ScriptablePageOpt<boolean>;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -55,21 +70,30 @@ export interface Config {
 		};
 		prerender?: {
 			crawl?: boolean;
-			enabled?: boolean;
+			enabled?: ScriptablePageOpt<boolean>;
 			force?: boolean;
 			pages?: string[];
 		};
-		router?: boolean;
+		router?: ScriptablePageOpt<boolean>;
 		serviceWorker?: {
 			exclude?: string[];
 		};
-		ssr?: boolean;
+		ssr?: ScriptablePageOpt<boolean>;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
 }
+
+export type PrerenderErrorHandler = (errorDetails: {
+	status: number;
+	path: string;
+	referrer: string | null;
+	referenceType: 'linked' | 'fetched';
+}) => void | never;
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
 export type ValidatedConfig = RecursiveRequired<Config> & {
 	kit: { files: { setup: string } };

@@ -26,10 +26,11 @@ export type Location<Params extends Record<string, string> = Record<string, stri
 	query: URLSearchParams;
 };
 
-export type MaybePromise<T> = T | Promise<T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
+export type MaybePromise<T> = T | Promise<T>;
+export type Rec<T = any> = Record<string, T>;
 export type RecursiveRequired<T> = {
 	[K in keyof T]-?: Extract<T[K], Function> extends never
 		? RecursiveRequired<T[K]>

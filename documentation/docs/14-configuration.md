@@ -28,7 +28,11 @@ const config = {
 		floc: false,
 		host: null,
 		hostHeader: null,
-		hydrate: true,
+		// hydrate unless disabled on page
+		hydrate: async ({ page }) => {
+			const leaf = await page;
+			return 'hydrate' in leaf ? !!leaf.hydrate : true;
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -47,15 +51,24 @@ const config = {
 		},
 		prerender: {
 			crawl: true,
-			enabled: true,
-			force: false,
+			// don't prerender unless enabled on page
+			enabled: expect_page_scriptable(async ({ page }) => !!(await page).prerender),
+			onError: 'fail',
 			pages: ['*']
 		},
-		router: true,
+		// route unless disabled on page
+		router: async ({ page }) => {
+			const leaf = await page;
+			return 'router' in leaf ? !!leaf.router : true;
+		},
 		serviceWorker: {
 			exclude: []
 		},
-		ssr: true,
+		// do SSR unless disabled on page
+		ssr: async ({ page }) => {
+			const leaf = await page;
+			return 'ssr' in leaf ? !!leaf.ssr : true;
+		},
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -148,7 +161,30 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
-- `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
+- `onError`
+
+  - `'fail'` — (default) fails the build when a routing error is encountered when following a link
+  - `'continue'` — allows the build to continue, despite routing errors
+  - `function` — custom error handler allowing you to log, `throw` and fail the build, or take other action of your choosing based on the details of the crawl
+
+    ```ts
+    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
+    const handleError = ({ status, path, referrer, referenceType }) => {
+    	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
+    	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
+    };
+
+    export default {
+    	kit: {
+    		adapter: static(),
+    		target: '#svelte',
+    		prerender: {
+    			onError: handleError
+    		}
+    	}
+    };
+    ```
+
 - `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
 ### router

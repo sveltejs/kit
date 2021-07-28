@@ -136,7 +136,10 @@ class Watcher extends EventEmitter {
 			plugins: [
 				svelte({
 					extensions: this.config.extensions,
-					emitCss: !this.config.kit.amp
+					emitCss: !this.config.kit.amp,
+					compilerOptions: {
+						hydratable: !!this.config.kit.hydrate
+					}
 				})
 			],
 			publicDir: this.config.kit.files.assets,
@@ -392,6 +395,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							};
 						},
 						manifest,
+						prerender: config.kit.prerender.enabled,
 						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 						root,
 						router: config.kit.router,

@@ -6,15 +6,17 @@ By default, SvelteKit will render any component first on the server and send it 
 
 You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
 
-If both are specified, per-page settings override per-app settings in case of conflicts. Each setting can be controlled independently, but `ssr` and `hydrate` cannot both be `false` since that would result in nothing being rendered at all.
+The app-wide config options take a function, which lets you set configure the option in an advanced manner on a per-request and per-page basis. E.g. you could disable SSR for `/admin` or enable SSR only for search engine crawlers (aka [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering)).
+
+ Each setting can be controlled independently, but `ssr` and `hydrate` cannot both be `false` since that would result in nothing being rendered at all.
 
 ### ssr
 
-Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa).
+Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). The default app-wide config option value is a function which reads the page value. Reading the page value causes the page to be loaded on the server. If you'd like to avoid this because you're building a SPA, you will need to set a value such as a boolean for each of the four rendering options which does not access the page-level settings.
 
 > In most situations this is not recommended: see [the discussion in the appendix](#appendix-ssr). Consider whether it's truly appropriate to disable and don't simply disable SSR because you've hit an issue with it.
 
-You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr), or a page-level `ssr` export:
+SSR can be configured with app-wide [`ssr` config option](#configuration-ssr), or a page-level `ssr` export:
 
 ```html
 <script context="module">
@@ -26,7 +28,7 @@ You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr),
 
 SvelteKit includes a [client-side router](#appendix-routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
 
-In certain circumstances you might need to disable [client-side routing](#appendix-routing) with the app-wide [`router` config option](#configuration-router) or the page-level `router` export:
+In certain circumstances you might need to configure [client-side routing](#appendix-routing) with the app-wide [`router` config option](#configuration-router) or the page-level `router` export:
 
 ```html
 <script context="module">

@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { coalesce_to_error } from '../utils.js';
+import { coalesce_to_error, resolve_option } from '../utils.js';
 
 /**
  * @param {{
@@ -55,15 +55,20 @@ export async function respond_with_error({ request, options, state, $session, st
 		}))
 	];
 
+	const leaf_promise = async () => branch[branch.length - 1].node.module;
+
+	const page_config = {
+		ssr: await resolve_option(options.ssr, { request, page: leaf_promise }),
+		router: await resolve_option(options.router, { request, page: leaf_promise }),
+		hydrate: await resolve_option(options.hydrate, { request, page: leaf_promise }),
+		prerender: await resolve_option(options.prerender, { request, page: leaf_promise })
+	};
+
 	try {
 		return await render_response({
 			options,
 			$session,
-			page_config: {
-				hydrate: options.hydrate,
-				router: options.router,
-				ssr: options.ssr
-			},
+			page_config,
 			status,
 			error,
 			branch,

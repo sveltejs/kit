@@ -1,3 +1,9 @@
-export function get(req, res) {
-	res.redirect('/top/rss');
+/**
+ * @type {import('@sveltejs/kit').RequestHandler}
+ */
+export function get() {
+	return {
+		headers: { Location: '/top/rss' },
+		status: 301
+	};
 }
