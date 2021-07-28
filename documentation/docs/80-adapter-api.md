@@ -26,7 +26,7 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
-- Call `utils.update_ignores` to ignore build output in existing `.gitignore`, `.eslintignore` and `.prettierignore` files at the location of `svelte.config.js`
+- Call `utils.update_ignores` to ignore build output in existing `.gitignore` files at the location of `svelte.config.js`
 - Output code that:
   - Calls `init`
   - Converts from the patform's request to a [SvelteKit request](#hooks-handle), calls `render`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
