@@ -34,5 +34,7 @@ export type Rec<T = any> = Record<string, T>;
 export type RecursiveRequired<T> = {
 	[K in keyof T]-?: Extract<T[K], Function> extends never
 		? RecursiveRequired<T[K]>
-		: Extract<T[K], Function>;
+		: K extends 'vite' // transform into function
+		? Extract<T[K], Function>
+		: T[K]; // else leave them be as-is or union
 };
