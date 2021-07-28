@@ -1,8 +1,8 @@
-import { Location as Page, MaybePromise, InferValue } from './helper';
+import { InferValue, Location as Page, MaybePromise, Rec } from './helper';
 
 export interface LoadInput<
-	PageParams extends Record<string, string> = Record<string, string>,
-	Context extends Record<string, any> = Record<string, any>,
+	PageParams extends Rec<string> = Rec<string>,
+	Context extends Rec = Rec,
 	Session = any
 > {
 	page: Page<PageParams>;
@@ -12,18 +12,15 @@ export interface LoadInput<
 }
 
 export interface ErrorLoadInput<
-	PageParams extends Record<string, string> = Record<string, string>,
-	Context extends Record<string, any> = Record<string, any>,
+	PageParams extends Rec<string> = Rec<string>,
+	Context extends Rec = Rec,
 	Session = any
 > extends LoadInput<PageParams, Context, Session> {
 	status?: number;
 	error?: Error;
 }
 
-export interface LoadOutput<
-	Props extends Record<string, any> = Record<string, any>,
-	Context extends Record<string, any> = Record<string, any>
-> {
+export interface LoadOutput<Props extends Rec = Rec, Context extends Rec = Rec> {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
@@ -32,43 +29,44 @@ export interface LoadOutput<
 	maxage?: number;
 }
 
-// Publicized Types
-export type Load<
-	Input extends {
-		context?: Record<string, any>;
-		pageParams?: Record<string, string>;
-		session?: any;
-	} = {},
-	Output extends { context?: Record<string, any>; props?: Record<string, any> } = {}
-> = (
-	input: LoadInput<
-		InferValue<Input, 'pageParams', Record<string, string>>,
-		InferValue<Input, 'context', Record<string, any>>,
-		InferValue<Input, 'session', any>
-	>
-) => MaybePromise<void | LoadOutput<
-	InferValue<Output, 'props', Record<string, any>>,
-	InferValue<Output, 'context', Record<string, any>>
->>;
+interface LoadInputExtends {
+	context?: Rec;
+	pageParams?: Rec<string>;
+	session?: any;
+}
 
-export type ErrorLoad<
-	Input extends {
-		context?: Record<string, any>;
-		pageParams?: Record<string, string>;
-		session?: any;
-	} = {},
-	Output extends { context?: Record<string, any>; props?: Record<string, any> } = {}
-> = (
-	input: ErrorLoadInput<
-		InferValue<Input, 'pageParams', Record<string, string>>,
-		InferValue<Input, 'context', Record<string, any>>,
-		InferValue<Input, 'session', any>
-	>
-) => MaybePromise<
-	LoadOutput<
-		InferValue<Output, 'props', Record<string, any>>,
-		InferValue<Output, 'context', Record<string, any>>
-	>
->;
+interface LoadOutputExtends {
+	context?: Rec;
+	props?: Rec;
+}
+
+export interface Load<
+	Input extends LoadInputExtends = Required<LoadInputExtends>,
+	Output extends LoadOutputExtends = Required<LoadOutputExtends>
+> {
+	(
+		input: LoadInput<
+			InferValue<Input, 'pageParams', Rec<string>>,
+			InferValue<Input, 'context', Rec>,
+			InferValue<Input, 'session', any>
+		>
+	): MaybePromise<void | LoadOutput<
+		InferValue<Output, 'props', Rec>,
+		InferValue<Output, 'context', Rec>
+	>>;
+}
+
+export interface ErrorLoad<
+	Input extends LoadInputExtends = Required<LoadInputExtends>,
+	Output extends LoadOutputExtends = Required<LoadOutputExtends>
+> {
+	(
+		input: ErrorLoadInput<
+			InferValue<Input, 'pageParams', Rec<string>>,
+			InferValue<Input, 'context', Rec>,
+			InferValue<Input, 'session', any>
+		>
+	): MaybePromise<LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'context', Rec>>>;
+}
 
 export { Page };

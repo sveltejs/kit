@@ -20,9 +20,13 @@ export interface GetSession<Locals = Record<string, any>, Session = any> {
 	(request: ServerRequest<Locals>): MaybePromise<Session>;
 }
 
-export type Handle<Locals = Record<string, any>> = (input: {
-	request: ServerRequest<Locals>;
-	resolve: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
-}) => MaybePromise<ServerResponse>;
+export interface Handle<Locals = Record<string, any>> {
+	(input: {
+		request: ServerRequest<Locals>;
+		resolve: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
+	}): MaybePromise<ServerResponse>;
+}
 
-export type ServerFetch = (req: Request) => Promise<Response>;
+export interface ServerFetch {
+	(req: Request): Promise<Response>;
+}

@@ -18,8 +18,10 @@ export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	body?: Body;
 }
 
-export type RequestHandler<
+export interface RequestHandler<
 	Locals = Record<string, any>,
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
-> = (request: ServerRequest<Locals, Input>) => MaybePromise<void | EndpointOutput<Output>>;
+> {
+	(request: ServerRequest<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
+}
