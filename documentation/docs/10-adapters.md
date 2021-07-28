@@ -31,7 +31,7 @@ export default {
 };
 ```
 
-Some adapters may modify your project's `.gitignore`, `.prettierignore` and `.eslintignore` to include their build output. In case you don't want those patterns included you can comment them out: 
+Some adapters may modify your project's `.gitignore` to include their build output. In case you don't want those patterns included you can comment them out: 
 
 ```diff
 .svelte-kit
