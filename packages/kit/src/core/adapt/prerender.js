@@ -33,6 +33,12 @@ function get_src(attrs) {
 }
 
 /** @param {string} attrs */
+export function is_rel_external(attrs) {
+	const match = /rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external))/.exec(attrs);
+	return !!match;
+}
+
+/** @param {string} attrs */
 function get_srcset_urls(attrs) {
 	const results = [];
 	// Note that the srcset allows any ASCII whitespace, including newlines.
@@ -225,6 +231,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					const attrs = match[2];
 
 					if (element === 'a' || element === 'link') {
+						if (is_rel_external(attrs)) continue;
+
 						hrefs.push(get_href(attrs));
 					} else {
 						if (element === 'img') {
