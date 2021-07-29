@@ -1,3 +1,7 @@
+/**
+ * @param {string} list
+ * @param {Record<string, any>[]} items
+ */
 const render = (list, items) => `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
 <channel>
@@ -27,9 +31,12 @@ const render = (list, items) => `<?xml version="1.0" encoding="UTF-8" ?>
 </channel>
 </rss>`;
 
-export function get(req, res) {
+/**
+ * @type {import('@sveltejs/kit').RequestHandler}
+ */
+export function get({ params }) {
 	const list =
-		req.params.list === 'top' ? 'news' : req.params.list === 'new' ? 'newest' : req.params.list;
+		params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
 
 	fetch(`https://api.hnpwa.com/v0/${list}/1.json`)
 		.then((r) => r.json())

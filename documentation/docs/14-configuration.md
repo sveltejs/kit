@@ -28,19 +28,47 @@ const config = {
 		floc: false,
 		host: null,
 		hostHeader: null,
-		hydrate: true,
+		// hydrate unless disabled on page
+		hydrate: async ({ page }) => {
+			const leaf = await page;
+			return 'hydrate' in leaf ? !!leaf.hydrate : true;
+		},
+		package: {
+			dir: 'package',
+			emitTypes: true,
+			exports: {
+				include: ['**'],
+				exclude: ['_*', '**/_*']
+			},
+			files: {
+				include: ['**'],
+				exclude: []
+			}
+		},
 		paths: {
 			assets: '',
 			base: ''
 		},
 		prerender: {
 			crawl: true,
-			enabled: true,
-			force: false,
+			// don't prerender unless enabled on page
+			enabled: expect_page_scriptable(async ({ page }) => !!(await page).prerender),
+			onError: 'fail',
 			pages: ['*']
 		},
-		router: true,
-		ssr: true,
+		// route unless disabled on page
+		router: async ({ page }) => {
+			const leaf = await page;
+			return 'router' in leaf ? !!leaf.router : true;
+		},
+		serviceWorker: {
+			exclude: []
+		},
+		// do SSR unless disabled on page
+		ssr: async ({ page }) => {
+			const leaf = await page;
+			return 'ssr' in leaf ? !!leaf.ssr : true;
+		},
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -63,17 +91,17 @@ Enable [AMP](#amp) mode.
 
 ### appDir
 
-The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely).
+The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
 
 ### files
 
 An object containing zero or more of the following `string` values:
 
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
+- `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
-- `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `template` — the location of the template for HTML responses
 
 ### floc
@@ -111,6 +139,15 @@ export default {
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
+### package
+
+Options related to [creating a package](#packaging).
+
+- `dir` - output directory
+- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead).
+- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
+- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
+
 ### paths
 
 An object containing zero or more of the following `string` values:
@@ -124,12 +161,41 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
-- `force` — if `true`, a page that fails to render will _not_ cause the entire build to fail
+- `onError`
+
+  - `'fail'` — (default) fails the build when a routing error is encountered when following a link
+  - `'continue'` — allows the build to continue, despite routing errors
+  - `function` — custom error handler allowing you to log, `throw` and fail the build, or take other action of your choosing based on the details of the crawl
+
+    ```ts
+    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
+    const handleError = ({ status, path, referrer, referenceType }) => {
+    	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
+    	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
+    };
+
+    export default {
+    	kit: {
+    		adapter: static(),
+    		target: '#svelte',
+    		prerender: {
+    			onError: handleError
+    		}
+    	}
+    };
+    ```
+
 - `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
 ### router
 
 Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
+
+### serviceWorker
+
+An object containing zero or more of the following values:
+
+- `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### ssr
 

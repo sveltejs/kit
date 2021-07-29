@@ -1,7 +1,8 @@
+import { ServerRequest } from './hooks';
 import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
 
-export type AdapterUtils = {
+export interface AdapterUtils {
 	log: Logger;
 	rimraf: (dir: string) => void;
 	mkdirp: (dir: string) => void;
@@ -9,6 +10,7 @@ export type AdapterUtils = {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
+	update_ignores: ({ patterns, log }: { patterns: string[]; log?: boolean }) => void;
 	prerender: ({
 		all,
 		dest,
@@ -18,14 +20,28 @@ export type AdapterUtils = {
 		dest: string;
 		fallback?: string;
 	}) => Promise<void>;
-};
+}
 
-export type Adapter = {
+export interface Adapter {
 	name: string;
 	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
-};
+}
 
-export type Config = {
+export interface PageOpts {
+	ssr: boolean;
+	router: boolean;
+	hydrate: boolean;
+	prerender: boolean;
+}
+
+export interface PageOptsContext {
+	request: ServerRequest;
+	page: Promise<PageOpts>;
+}
+
+export type ScriptablePageOpt<T> = T | (({ request, page }: PageOptsContext) => Promise<T>);
+
+export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
@@ -43,9 +59,10 @@ export type Config = {
 		floc?: boolean;
 		host?: string;
 		hostHeader?: string;
-		hydrate?: boolean;
+		hydrate?: ScriptablePageOpt<boolean>;
 		package?: {
 			dir?: string;
+			emitTypes?: boolean;
 			exports?: {
 				include?: string[];
 				exclude?: string[];
@@ -56,25 +73,37 @@ export type Config = {
 			};
 		};
 		paths?: {
-			base?: string;
 			assets?: string;
+			base?: string;
 		};
 		prerender?: {
 			crawl?: boolean;
-			enabled?: boolean;
+			enabled?: ScriptablePageOpt<boolean>;
 			force?: boolean;
 			pages?: string[];
 		};
-		router?: boolean;
-		ssr?: boolean;
+		router?: ScriptablePageOpt<boolean>;
+		serviceWorker?: {
+			exclude?: string[];
+		};
+		ssr?: ScriptablePageOpt<boolean>;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
-};
+}
 
-export type ValidatedConfig = {
+export type PrerenderErrorHandler = (errorDetails: {
+	status: number;
+	path: string;
+	referrer: string | null;
+	referenceType: 'linked' | 'fetched';
+}) => void | never;
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+
+export interface ValidatedConfig {
 	compilerOptions: any;
 	extensions: string[];
 	kit: {
@@ -93,9 +122,10 @@ export type ValidatedConfig = {
 		floc: boolean;
 		host: string;
 		hostHeader: string;
-		hydrate: boolean;
+		hydrate: ScriptablePageOpt<boolean>;
 		package: {
 			dir: string;
+			emitTypes: boolean;
 			exports: {
 				include: string[];
 				exclude: string[];
@@ -106,20 +136,23 @@ export type ValidatedConfig = {
 			};
 		};
 		paths: {
-			base: string;
 			assets: string;
+			base: string;
 		};
 		prerender: {
 			crawl: boolean;
-			enabled: boolean;
-			force: boolean;
+			enabled: ScriptablePageOpt<boolean>;
+			onError: PrerenderOnErrorValue;
 			pages: string[];
 		};
-		router: boolean;
-		ssr: boolean;
+		router: ScriptablePageOpt<boolean>;
+		serviceWorker: {
+			exclude: string[];
+		};
+		ssr: ScriptablePageOpt<boolean>;
 		target: string;
 		trailingSlash: TrailingSlash;
 		vite: () => ViteConfig;
 	};
 	preprocess: any;
-};
+}

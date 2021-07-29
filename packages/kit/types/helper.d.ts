@@ -1,13 +1,14 @@
-interface ReadOnlyFormData extends Iterator<[string, string]> {
+interface ReadOnlyFormData {
 	get: (key: string) => string;
 	getAll: (key: string) => string[];
 	has: (key: string) => boolean;
-	entries: () => Iterator<[string, string]>;
-	keys: () => Iterator<string>;
-	values: () => Iterator<string>;
+	entries: () => Generator<[string, string], void>;
+	keys: () => Generator<string, void>;
+	values: () => Generator<string, void>;
+	[Symbol.iterator]: () => Generator<[string, string], void>;
 }
 
-type BaseBody = string | Buffer | ReadOnlyFormData;
+type BaseBody = string | Uint8Array | ReadOnlyFormData;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: BaseBody & Body;
@@ -25,7 +26,8 @@ export type Location<Params extends Record<string, string> = Record<string, stri
 	query: URLSearchParams;
 };
 
-export type MaybePromise<T> = T | Promise<T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
+export type MaybePromise<T> = T | Promise<T>;
+export type Rec<T = any> = Record<string, T>;

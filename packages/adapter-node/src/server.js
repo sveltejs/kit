@@ -1,4 +1,3 @@
-import '@sveltejs/kit/install-fetch'; // eslint-disable-line import/no-unresolved
 import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
 import compression from 'compression';
 import fs from 'fs';
@@ -83,7 +82,8 @@ export function createServer({ render }) {
 
 			if (rendered) {
 				res.writeHead(rendered.status, rendered.headers);
-				res.end(rendered.body);
+				if (rendered.body) res.write(rendered.body);
+				res.end();
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');

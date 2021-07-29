@@ -16,12 +16,15 @@ const create = (dir, extensions = ['.svelte']) => {
 		config: {
 			extensions,
 			kit: {
-				// @ts-ignore
+				// @ts-expect-error
 				files: {
 					assets: path.resolve(cwd, 'static'),
 					routes: path.resolve(cwd, dir)
 				},
-				appDir: '_app'
+				appDir: '_app',
+				serviceWorker: {
+					exclude: []
+				}
 			}
 		},
 		cwd,

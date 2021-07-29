@@ -1,8 +1,8 @@
-import options from './options.js';
-import * as url from 'url';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import * as url from 'url';
 import { logger } from '../utils.js';
+import options from './options.js';
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -13,6 +13,17 @@ import { logger } from '../utils.js';
  * @returns {any}
  */
 function validate(definition, option, keypath) {
+	if (typeof option !== 'object') {
+		if (typeof option === 'undefined') {
+			throw new Error(
+				'Your config is missing default exports. Make sure to include "export default config;"'
+			);
+		} else {
+			throw new Error(
+				`Unexpected config type "${typeof option}", make sure your default export is an object.`
+			);
+		}
+	}
 	for (const key in option) {
 		if (!(key in definition)) {
 			let message = `Unexpected option ${keypath}.${key}`;
@@ -134,11 +145,17 @@ export function validate_config(config) {
 	const validated = validate(options, config, 'config');
 
 	// resolve paths
-	const { paths } = validated.kit;
+	const { paths, appDir } = validated.kit;
 
 	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
 		throw new Error(
 			"kit.paths.base option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
+		);
+	}
+
+	if (appDir.startsWith('/') || appDir.endsWith('/')) {
+		throw new Error(
+			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
 		);
 	}
 

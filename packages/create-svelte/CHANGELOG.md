@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.0.0-next.76
+
+### Patch Changes
+
+- b9e63381: Add DOM to lib in tsconfig
+
+## 2.0.0-next.75
+
+### Patch Changes
+
+- fe68e13: Simplify component file names
+
+## 2.0.0-next.74
+
+### Patch Changes
+
+- 4c7ccfd: Add \$lib alias to js/tsconfig
+
 ## 2.0.0-next.73
 
 ### Patch Changes

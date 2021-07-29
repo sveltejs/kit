@@ -1,13 +1,24 @@
-import { readFileSync, statSync, createReadStream, createWriteStream, writeFileSync } from 'fs';
+import esbuild from 'esbuild';
+import {
+	createReadStream,
+	createWriteStream,
+	existsSync,
+	readFileSync,
+	statSync,
+	writeFileSync
+} from 'fs';
 import { join } from 'path';
-import { fileURLToPath } from 'url';
 import { pipeline } from 'stream';
+import glob from 'tiny-glob';
+import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 import zlib from 'zlib';
-import esbuild from 'esbuild';
-import glob from 'tiny-glob';
 
 const pipe = promisify(pipeline);
+
+/**
+ * @typedef {import('esbuild').BuildOptions} BuildOptions
+ */
 
 /**
  * @param {{
@@ -17,18 +28,21 @@ const pipe = promisify(pipeline);
  *     host?: string;
  *     port?: string;
  *   };
+ *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
  * }} options
  */
 export default function ({
 	out = 'build',
 	precompress,
-	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {}
+	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
+	esbuild: esbuildConfig
 } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
+			utils.update_ignores({ patterns: [out] });
 			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
@@ -48,7 +62,8 @@ export default function ({
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
-			await esbuild.build({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
@@ -56,16 +71,19 @@ export default function ({
 				format: 'esm',
 				platform: 'node',
 				target: 'node12',
+				inject: [join(files, 'shims.js')],
 				define: {
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
 				}
-			});
+			};
+			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
+			await esbuild.build(buildOptions);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({
 				dest: `${out}/prerendered`
 			});
-			if (precompress) {
+			if (precompress && existsSync(`${out}/prerendered`)) {
 				utils.log.minor('Compressing prerendered pages');
 				await compress(`${out}/prerendered`);
 			}

@@ -1,0 +1,12 @@
+{
+	"name": "typescript",
+	"version": "1.0.0",
+	"description": "package-typescript-test",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./Test.svelte": "./Test.svelte",
+		"./Test2.svelte": "./Test2.svelte",
+		".": "./index.js"
+	}
+}

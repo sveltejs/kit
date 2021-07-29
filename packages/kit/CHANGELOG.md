@@ -1,5 +1,150 @@
 # @sveltejs/kit
 
+## 1.0.0-next.138
+
+### Patch Changes
+
+- d6563169: [chore] prefer interfaces to types
+- b18a45c1: explicitly set compilerOptions.hydratable to config.kit.hydrate
+- 538de3eb: [feat] More powerful and configurable rendering options
+- 20dad18a: Remove the `prerender.force` option in favor of `prerender.onError`
+
+## 1.0.0-next.137
+
+### Patch Changes
+
+- bce1d76a: [chore] improved typing for runtime and tests
+- 2a1e9795: [chore] enable TypeScript strict mode
+
+## 1.0.0-next.136
+
+### Patch Changes
+
+- 69b92ec1: [chore] improved typing on core library
+
+## 1.0.0-next.135
+
+### Patch Changes
+
+- 3b293f2a: update svelte to 3.40 and vite-plugin-svelte to 1.0.0-next.14
+- 34b923d1: [chore] stricter TypeScript checking
+
+## 1.0.0-next.134
+
+### Patch Changes
+
+- e1e5920a: [fix] correctly find links during prerendering
+- c7db715e: Handle errors with incorrect type
+
+## 1.0.0-next.133
+
+### Patch Changes
+
+- 68190496: chore: Vite to ^2.4.3, vite-plugin-svelte to ^1.0.0-next.13
+- 0cbcd7c3: [fix] correctly detect external fetches
+- 51ec789f: Scrolling to an anchor via a hash now supports `scroll-*` CSS properties
+
+## 1.0.0-next.132
+
+### Patch Changes
+
+- 7b440b2b: Fix URL resolution for server-side fetch
+
+## 1.0.0-next.131
+
+### Patch Changes
+
+- 0bc1b309: Minor optimization in parse_body
+
+## 1.0.0-next.130
+
+### Patch Changes
+
+- 53e9285d: feat(config): Friendlier error messages for common errors
+- 41da1ebe: Handle 4xx and 5xx statuses without requiring `Error` instance
+- 073fc3b5: feat(cli): respect NODE_ENV when set by user
+
+## 1.0.0-next.129
+
+### Patch Changes
+
+- e246455: Passthrough server-side fetch cookies for most same-origin scenarios
+
+## 1.0.0-next.128
+
+### Patch Changes
+
+- 27e9067: Better error messages when something goes wrong while emitting types
+- 277029d: Change index.js exports to directory exports when packaging
+
+## 1.0.0-next.127
+
+### Patch Changes
+
+- bb3ae21: Fix endpoint validation to allow returning string for all content types
+
+## 1.0.0-next.126
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+- 6da07b8: fix returning null from endpoints
+
+## 1.0.0-next.125
+
+### Patch Changes
+
+- 7faf52f: Update and consolidate checks for binary body types
+- f854b89: Replace return type of Buffer with Uint8Array
+- f854b89: Remove Incoming from public types
+
+## 1.0.0-next.124
+
+### Patch Changes
+
+- 34d2049: handle undefined body on endpoint output
+- c826016: add config.kit.package.emitTypes
+- 8854e2f: Bump vite-plugin-svelte to 1.0.0-next.12
+- af1aa54: copy essential root files on `svelte-kit package`
+- 872840a: Pass along custom properties added to Error
+- 868f97a: Preserve README casing and package.json contents on svelte-kit package
+
+## 1.0.0-next.123
+
+### Patch Changes
+
+- 4b25615: Fix ReadOnlyFormData keys and values method implementation
+- 64f749d: ServiceWorker files exclusion support available through svelte.config.js
+- 4d2fec5: Enable Vite's server.fs.strict by default
+- 1ec368a: Expose Vite.js mode from \$app/env
+
+## 1.0.0-next.122
+
+### Patch Changes
+
+- d09a4e1: Surface Svelte compiler errors
+- 79b4fe2: Update Vite to ^2.4.1
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.121
+
+### Patch Changes
+
+- 939188e: Use UTF-8 encoding for JSON endpoint responses by default
+- 5b3e1e6: Add types generation to svelte-kit package command
+- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops
+
+## 1.0.0-next.120
+
+### Patch Changes
+
+- 9fbaeda: fix attribute validation in generated script tag
+- 9f0c54a: Externalize app initialization to adapters
+- 0d69e55: Add generic type for session
+- 325c223: Improve RequestHandler and EndpointOutput type declarations.
+- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled
+- ae3ef19: Fail if config.kit.appDir starts or ends with a slash
+
 ## 1.0.0-next.119
 
 ### Patch Changes
@@ -520,12 +665,9 @@
 
 ## 1.0.0-next.45
 
-### Minor Changes
-
-- 925638a: Remove endpoints from the files built for the client
-
 ### Patch Changes
 
+- 925638a: Remove endpoints from the files built for the client
 - c3cf3f3: Bump deps
 - 625747d: kit: bundle @sveltejs/kit into built application
 - Updated dependencies [c3cf3f3]

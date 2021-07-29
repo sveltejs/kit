@@ -15,6 +15,12 @@ declare module '$app/env' {
 	 * `true` when prerendering, `false` otherwise.
 	 */
 	export const prerendering: boolean;
+	/**
+	 * The Vite.js mode the app is running in. Configure in `config.kit.vite.mode`.
+	 * Vite.js loads the dotenv file associated with the provided mode, `.env.[mode]` or `.env.[mode].local`.
+	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
+	 */
+	export const mode: string;
 }
 
 declare module '$app/navigation' {
@@ -63,11 +69,11 @@ declare module '$app/navigation' {
 
 declare module '$app/paths' {
 	/**
-	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.files.base` in your project configuration.
+	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your project configuration.
 	 */
 	export const base: string;
 	/**
-	 * A root-relative or absolute path that matches `config.kit.files.assets` (after it has been resolved against base).
+	 * A root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against base).
 	 */
 	export const assets: string;
 }

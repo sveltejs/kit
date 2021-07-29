@@ -9,7 +9,7 @@ export function read_only_form_data() {
 		 */
 		append(key, value) {
 			if (map.has(key)) {
-				map.get(key).push(value);
+				(map.get(key) || []).push(value);
 			} else {
 				map.set(key, [value]);
 			}
@@ -61,17 +61,13 @@ class ReadOnlyFormData {
 	}
 
 	*keys() {
-		for (const [key, value] of this.#map) {
-			for (let i = 0; i < value.length; i += 1) {
-				yield key;
-			}
-		}
+		for (const [key] of this.#map) yield key;
 	}
 
 	*values() {
 		for (const [, value] of this.#map) {
 			for (let i = 0; i < value.length; i += 1) {
-				yield value;
+				yield value[i];
 			}
 		}
 	}

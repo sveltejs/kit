@@ -10,11 +10,11 @@ const s = JSON.stringify;
  * @param {{
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
- *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
+ *   page_config: import('types/config').PageOpts;
  *   status: number;
- *   error: Error,
- *   branch: import('./types').Loaded[];
- *   page: import('types/page').Page
+ *   error?: Error,
+ *   branch?: Array<import('./types').Loaded>;
+ *   page?: import('types/page').Page
  * }} opts
  */
 export async function render_response({
@@ -125,22 +125,30 @@ export async function render_response({
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
-				hydrate: ${page_config.ssr && page_config.hydrate? `{
+				hydrate: ${page_config.ssr && page_config.hydrate ? `{
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [
-						${branch
+						${(branch || [])
 						.map(({ node }) => `import(${s(node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					page: {
-						host: ${page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-						path: ${s(page.path)},
-						query: new URLSearchParams(${s(page.query.toString())}),
-						params: ${s(page.params)}
+						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
+						path: ${s(page && page.path)},
+						query: new URLSearchParams(${page ? s(page.query.toString()) : ''}),
+						params: ${page && s(page.params)}
 					}
 				}` : 'null'}
 			});
+		</script>`;
+	}
+
+	if (options.service_worker) {
+		init += `<script>
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.register('${options.service_worker}');
+			}
 		</script>`;
 	}
 
@@ -159,9 +167,10 @@ export async function render_response({
 
 			${serialized_data
 				.map(({ url, body, json }) => {
-					return body
-						? `<script type="svelte-data" url="${url}" body="${hash(body)}">${json}</script>`
-						: `<script type="svelte-data" url="${url}">${json}</script>`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url="${url}"`;
+					if (body) attributes += ` data-body="${hash(body)}"`;
+
+					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t\t\t')}
 		`.replace(/^\t{2}/gm, '');
@@ -201,13 +210,13 @@ function try_serialize(data, fail) {
 
 // Ensure we return something truthy so the client will not re-render the page over the error
 
-/** @param {Error} error */
+/** @param {(Error & {frame?: string} & {loc?: object}) | undefined | null} error */
 function serialize_error(error) {
 	if (!error) return null;
 	let serialized = try_serialize(error);
 	if (!serialized) {
 		const { name, message, stack } = error;
-		serialized = try_serialize({ name, message, stack });
+		serialized = try_serialize({ ...error, name, message, stack });
 	}
 	if (!serialized) {
 		serialized = '{}';

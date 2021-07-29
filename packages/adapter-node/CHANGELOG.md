@@ -1,5 +1,42 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- 463199c: Handle Uint8Array bodies from endpoints
+- 0db0889: log both host and port
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- 2ac5781: Use esbuild inject API to insert shims
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- c639586: Check if '[out]/prerendered' exists, before precompressing
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- 9f0c54a: Externalize app initialization to adapters
+
 ## 1.0.0-next.29
 
 ### Patch Changes
@@ -21,12 +58,9 @@
 
 ## 1.0.0-next.26
 
-### Minor Changes
-
-- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
-
 ### Patch Changes
 
+- 9a7195b: Allow sirv to looks for precompiled gzip and brotli files by default
 - 53f3322: Fix build when using TypeScript and there is a `tsconfig.json` with `target: 'es2019'` or earlier
 
 ## 1.0.0-next.25
@@ -170,7 +204,7 @@
 
 ## 1.0.0-next.4
 
-### Minor Changes
+### Patch Changes
 
 - Make adapter node work under esm
 

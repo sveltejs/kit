@@ -31,16 +31,24 @@ export default {
 };
 ```
 
+Some adapters may modify your project's `.gitignore` to include their build output. In case you don't want those patterns included you can comment them out: 
+
+```diff
+.svelte-kit
+.env
+
+- build
++ # build
+```
 A variety of official adapters exist for serverless platforms...
 
-- [`adapter-begin`](https://github.com/sveltejs/kit/tree/master/packages/adapter-begin) — for [Begin](https://begin.com)
 - [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers) — for [Cloudflare Workers](https://developers.cloudflare.com/workers/)
 - [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [Netlify](https://netlify.com)
 - [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [Vercel](https://vercel.com)
 
-...and others:
+...and traditional platforms:
 
 - [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
 - [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
-> The adapter API is still in flux and will likely change before 1.0.
+As well as [community-provided adapters](https://github.com/sveltejs/integrations#sveltekit-adapters). You may also [write your own adapter](#writing-an-adapter).

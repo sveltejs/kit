@@ -19,6 +19,7 @@ export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : pr
  * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
+	// @ts-expect-error
 	return router.goto(href, opts, []);
 }
 
@@ -27,6 +28,7 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
+	// @ts-expect-error
 	return router.renderer.invalidate(href);
 }
 
@@ -34,6 +36,7 @@ async function invalidate_(resource) {
  * @type {import('$app/navigation').prefetch}
  */
 function prefetch_(href) {
+	// @ts-expect-error
 	return router.prefetch(new URL(href, get_base_uri(document)));
 }
 
@@ -42,10 +45,15 @@ function prefetch_(href) {
  */
 async function prefetchRoutes_(pathnames) {
 	const matching = pathnames
-		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
-		: router.routes;
+		? // @ts-expect-error
+		  router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+		: // @ts-expect-error
+		  router.routes;
 
-	const promises = matching.map((r) => r.length !== 1 && Promise.all(r[1].map((load) => load())));
+	const promises = matching
+		.filter((r) => r && r.length > 1)
+		// @ts-expect-error
+		.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
 }

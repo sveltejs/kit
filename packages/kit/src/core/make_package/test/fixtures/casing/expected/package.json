@@ -1,0 +1,11 @@
+{
+	"name": "casing",
+	"version": "1.0.0",
+	"description": "package-casing-test",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./Test.svelte": "./Test.svelte",
+		".": "./index.js"
+	}
+}

@@ -1,6 +1,6 @@
-// @ts-ignore
+// @ts-expect-error
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
-// @ts-ignore
+// @ts-expect-error
 import { routes, fallback } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
@@ -30,13 +30,13 @@ export async function start({ paths, target, session, host, route, spa, trailing
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
 
-	const router =
-		route &&
-		new Router({
-			base: paths.base,
-			routes,
-			trailing_slash
-		});
+	const router = route
+		? new Router({
+				base: paths.base,
+				routes,
+				trailing_slash
+		  })
+		: null;
 
 	const renderer = new Renderer({
 		Root,
@@ -50,17 +50,10 @@ export async function start({ paths, target, session, host, route, spa, trailing
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
-	if (route) router.init(renderer);
-
-	if (spa) router.goto(location.href, { replaceState: true }, []);
+	if (router) {
+		router.init(renderer);
+		if (spa) router.goto(location.href, { replaceState: true }, []);
+	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
-}
-
-if (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER) {
-	if ('serviceWorker' in navigator) {
-		navigator.serviceWorker.register(
-			/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_SERVICE_WORKER)
-		);
-	}
 }

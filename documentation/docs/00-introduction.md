@@ -15,7 +15,7 @@ SvelteKit is a framework for building extremely high-performance web apps. You'r
 - Each page of your app is a [Svelte](https://svelte.dev) component
 - You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
 
-Building an app with all the modern best practices — code-splitting, offline support, server-rendered views with client-side hydration — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
+Building an app with all the modern best practices — code-splitting, [offline support](#service-workers), [server-rendered views](#appendix-ssr) with [client-side hydration](#appendix-hydration) — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
 You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
 

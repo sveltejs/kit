@@ -45,10 +45,13 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods.
 
 ```ts
+// Endpoint TypeScript type definitions
+
 type Headers = Record<string, string>;
+type DefaultBody = JSONValue | Uint8Array;
 
 type Request<Locals = Record<string, any>, Body = unknown> = {
 	method: string;
@@ -62,16 +65,22 @@ type Request<Locals = Record<string, any>, Body = unknown> = {
 	locals: Locals; // populated by hooks handle
 };
 
-type EndpointOutput = {
+type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
 	status?: number;
 	headers?: Headers;
-	body?: string | Uint8Array | JSONValue;
+	body?: Body;
 };
 
-type RequestHandler<Locals = Record<string, any>> = (
-	request: Request<Locals>
-) => void | EndpointOutput | Promise<EndpointOutput>;
+type RequestHandler<
+	Locals = Record<string, any>,
+	Input = unknown,
+	Output extends DefaultBody = DefaultBody
+> = (
+	request: Request<Locals, Input>
+) => void | EndpointOutput<Output> | Promise<void | EndpointOutput<Output>>;
 ```
+
+ For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';

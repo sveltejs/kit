@@ -11,18 +11,24 @@ export default function (test, is_dev) {
 		assert.equal(await page.innerHTML('h2'), 'The answer is 42');
 		assert.equal(await page.innerHTML('p'), 'amp is true');
 
-		const script = await page.$('script[type="svelte-data"]');
+		const script = await page.$('script[data-type="svelte-data"]');
 		assert.ok(!script, 'Should not include serialized data');
 	});
 
 	test('styles are applied', '/valid', async ({ page }) => {
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('p')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('p');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(255, 0, 0)'
 		);
 
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('footer')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('footer');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(128, 0, 128)'
 		);
 	});

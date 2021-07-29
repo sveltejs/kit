@@ -2,11 +2,11 @@ import render_page from './page/index.js';
 import { render_response } from './page/render.js';
 import render_endpoint from './endpoint.js';
 import { parse_body } from './parse_body/index.js';
-import { lowercase_keys } from './utils.js';
+import { coalesce_to_error, lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 
 /**
- * @param {import('types/hooks').Incoming} incoming
+ * @param {import('types/internal').Incoming} incoming
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} [state]
  */
@@ -18,7 +18,7 @@ export async function respond(incoming, options, state = {}) {
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!incoming.path.split('/').pop().includes('.'))
+				!(incoming.path.split('/').pop() || '').includes('.'))
 		) {
 			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
 			const q = incoming.query.toString();
@@ -40,7 +40,7 @@ export async function respond(incoming, options, state = {}) {
 				...incoming,
 				headers,
 				body: parse_body(incoming.rawBody, headers),
-				params: null,
+				params: {},
 				locals: {}
 			},
 			resolve: async (request) => {
@@ -48,11 +48,9 @@ export async function respond(incoming, options, state = {}) {
 					return await render_response({
 						options,
 						$session: await options.hooks.getSession(request),
-						page_config: { ssr: false, router: true, hydrate: true },
+						page_config: { ssr: false, router: true, hydrate: true, prerender: true },
 						status: 200,
-						error: null,
-						branch: [],
-						page: null
+						branch: []
 					});
 				}
 
@@ -68,13 +66,13 @@ export async function respond(incoming, options, state = {}) {
 						// inject ETags for 200 responses
 						if (response.status === 200) {
 							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-								const etag = `"${hash(response.body)}"`;
+								const etag = `"${hash(response.body || '')}"`;
 
 								if (request.headers['if-none-match'] === etag) {
 									return {
 										status: 304,
 										headers: {},
-										body: null
+										body: ''
 									};
 								}
 
@@ -89,7 +87,9 @@ export async function respond(incoming, options, state = {}) {
 				return await render_page(request, null, options, state);
 			}
 		});
-	} catch (e) {
+	} catch (/** @type {unknown} */ err) {
+		const e = coalesce_to_error(err);
+
 		options.handle_error(e);
 
 		return {

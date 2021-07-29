@@ -3,7 +3,6 @@
 	export async function load({ page, fetch }) {
 		const url = `http://localhost:${page.query.get('port')}/server-fetch-request.json`;
 
-		// @ts-ignore
 		const res = await fetch(url);
 		const { answer } = await res.json();
 		return {

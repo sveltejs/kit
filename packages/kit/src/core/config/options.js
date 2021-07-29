@@ -1,4 +1,4 @@
-const noop = () => {};
+const identity = (/** @type {any} */ id) => id;
 
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
@@ -7,7 +7,7 @@ const options = {
 	compilerOptions: {
 		type: 'leaf',
 		default: null,
-		validate: noop
+		validate: identity
 	},
 
 	extensions: {
@@ -78,7 +78,16 @@ const options = {
 
 			hostHeader: expect_string(null),
 
-			hydrate: expect_boolean(true),
+			hydrate: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'hydrate' in leaf ? !!leaf.hydrate : true;
+			}),
+			serviceWorker: {
+				type: 'branch',
+				children: {
+					exclude: expect_array_of_strings([])
+				}
+			},
 
 			package: {
 				type: 'branch',
@@ -97,7 +106,8 @@ const options = {
 							include: expect_array_of_strings(['**']),
 							exclude: expect_array_of_strings([])
 						}
-					}
+					},
+					emitTypes: expect_boolean(true)
 				}
 			},
 
@@ -113,8 +123,34 @@ const options = {
 				type: 'branch',
 				children: {
 					crawl: expect_boolean(true),
-					enabled: expect_boolean(true),
-					force: expect_boolean(false),
+					enabled: expect_page_scriptable(async ({ page }) => !!(await page).prerender),
+					// TODO: remove this for the 1.0 release
+					force: {
+						type: 'leaf',
+						default: undefined,
+						validate: (option, keypath) => {
+							if (typeof option !== undefined) {
+								const newSetting = option ? 'continue' : 'fail';
+								const needsSetting = newSetting === 'continue';
+								throw new Error(
+									`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
+										needsSetting ? '' : ' (or leave it undefined)'
+									} to get the same behavior as you would with \`force: ${JSON.stringify(option)}\``
+								);
+							}
+						}
+					},
+					onError: {
+						type: 'leaf',
+						default: 'fail',
+						validate: (option, keypath) => {
+							if (typeof option === 'function') return option;
+							if (['continue', 'fail'].includes(option)) return option;
+							throw new Error(
+								`${keypath} should be either a custom function or one of "continue" or "fail"`
+							);
+						}
+					},
 					pages: {
 						type: 'leaf',
 						default: ['*'],
@@ -137,9 +173,15 @@ const options = {
 				}
 			},
 
-			router: expect_boolean(true),
+			router: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'router' in leaf ? !!leaf.router : true;
+			}),
 
-			ssr: expect_boolean(true),
+			ssr: expect_page_scriptable(async ({ page }) => {
+				const leaf = await page;
+				return 'ssr' in leaf ? !!leaf.ssr : true;
+			}),
 
 			target: expect_string(null),
 
@@ -169,12 +211,12 @@ const options = {
 	preprocess: {
 		type: 'leaf',
 		default: null,
-		validate: noop
+		validate: identity
 	}
 };
 
 /**
- * @param {string} string
+ * @param {string | null} string
  * @param {boolean} allow_empty
  * @returns {ConfigDefinition}
  */
@@ -220,6 +262,23 @@ function expect_boolean(boolean) {
 		validate: (option, keypath) => {
 			if (typeof option !== 'boolean') {
 				throw new Error(`${keypath} should be true or false, if specified`);
+			}
+			return option;
+		}
+	};
+}
+
+/**
+ * @param {import('types/config').ScriptablePageOpt<boolean>} value
+ * @returns {ConfigDefinition}
+ */
+function expect_page_scriptable(value) {
+	return {
+		type: 'leaf',
+		default: value,
+		validate: (option, keypath) => {
+			if (typeof option !== 'boolean' && typeof option !== 'function') {
+				throw new Error(`${keypath} should be a boolean or function that returns one`);
 			}
 			return option;
 		}

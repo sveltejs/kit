@@ -2,14 +2,14 @@
 	"name": "~TODO~",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "svelte-kit dev",
-		"build": "svelte-kit build",
-		"start": "svelte-kit start"
+		"dev": "../../../../kit/svelte-kit.js dev",
+		"build": "../../../../kit/svelte-kit.js build",
+		"start": "../../../../kit/svelte-kit.js start"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "next",
 		"@sveltejs/kit": "next",
-		"svelte": "^3.29.0"
+		"svelte": "^3.40.0"
 	},
 	"type": "module"
 }
