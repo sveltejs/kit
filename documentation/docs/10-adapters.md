@@ -8,11 +8,11 @@ For example, if you want to run your app as a simple Node server, you would use 
 
 ```js
 // svelte.config.js
-import node from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-node';
 
 export default {
 	kit: {
-		adapter: node()
+		adapter: adapter()
 	}
 };
 ```
@@ -21,12 +21,12 @@ With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will gen
 
 ```diff
 // svelte.config.js
-import node from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-node';
 
 export default {
 	kit: {
--		adapter: node()
-+		adapter: node({ out: 'my-output-directory' })
+-		adapter: adapter()
++		adapter: adapter({ out: 'my-output-directory' })
 	}
 };
 ```
