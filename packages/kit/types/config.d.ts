@@ -79,7 +79,7 @@ export interface Config {
 		prerender?: {
 			crawl?: boolean;
 			enabled?: ScriptablePageOpt<boolean>;
-			force?: boolean;
+			onError?: PrerenderOnErrorValue;
 			pages?: string[];
 		};
 		router?: ScriptablePageOpt<boolean>;
