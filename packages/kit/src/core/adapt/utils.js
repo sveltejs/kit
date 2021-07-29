@@ -1,6 +1,7 @@
 import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../filesystem/index.js';
 import { prerender } from './prerender.js';
+import fs from 'fs';
 
 /**
  * @param {{
@@ -42,6 +43,25 @@ export function get_utils({ cwd, config, build_data, log }) {
 					log
 				});
 			}
+		},
+
+		/** @param {{patterns: string[], log?: boolean}} options */
+		update_ignores({ patterns, log = true }) {
+			const target = '.gitignore';
+			if (!fs.existsSync(target)) return;
+
+			const file = fs.readFileSync(target, { encoding: 'utf-8' });
+			const eol = file.includes('\r\n') ? '\r\n' : '\n';
+			const lines = file.split(eol);
+			const new_lines = new Set(patterns);
+			// remove repeated lines
+			for (const line of lines) {
+				// this will prevent commented ignores to be reinserted
+				new_lines.delete(line.replace(/#\s*/, ''));
+			}
+			if (new_lines.size === 0) return;
+			fs.writeFileSync(target, [...lines, ...new_lines].join(eol));
+			if (log) this.log.success(`Updated ${target}`);
 		}
 	};
 }
