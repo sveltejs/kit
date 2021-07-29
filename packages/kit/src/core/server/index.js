@@ -39,11 +39,10 @@ export async function get_server(use_https, vite_config, handler) {
 
 	return Promise.resolve(
 		use_https
-			? https.createServer(/** @type {https.ServerOptions} */(https_options), handler)
+			? https.createServer(/** @type {https.ServerOptions} */ (https_options), handler)
 			: http.createServer(handler)
 	);
 }
-
 
 /**
  *
