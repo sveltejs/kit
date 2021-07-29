@@ -11,6 +11,7 @@ export interface AdapterUtils {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
+  update_ignores: ({ patterns, log }: { patterns: string[]; log?: boolean }) => void;
 	prerender: (options: { all?: boolean; dest: string; fallback?: string }) => Promise<void>;
 }
 
