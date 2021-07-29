@@ -155,3 +155,5 @@ export interface ValidatedConfig {
 	};
 	preprocess: any;
 }
+
+export type { ViteConfig };

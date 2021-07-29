@@ -59,7 +59,11 @@ export async function preview({
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	const server = await get_server(use_https, config.kit, (req, res) => {
+	const vite_config =
+		/** @type {import('types/config').ViteConfig} ViteConfig */
+		(config.kit.vite && config.kit.vite()) || {};
+
+	const server = await get_server(use_https, vite_config, (req, res) => {
 		const parsed = parse(req.url || '');
 
 		assets_handler(req, res, () => {

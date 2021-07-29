@@ -91,8 +91,8 @@ class Watcher extends EventEmitter {
 	async init_server() {
 		if (!this.manifest) throw new Error('Must call init() before init_server()');
 
-		/** @type {any} */
-		const user_config = (this.config.kit.vite && this.config.kit.vite()) || {};
+		/** @type {import('types/config').ViteConfig} ViteConfig */
+		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
 		const default_config = {
 			server: {
@@ -105,12 +105,12 @@ class Watcher extends EventEmitter {
 		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
 		let handler = (req, res) => {};
 
-		this.server = await get_server(this.https, user_config, (req, res) => handler(req, res));
+		this.server = await get_server(this.https, vite_config, (req, res) => handler(req, res));
 
-		const alias = user_config.resolve && user_config.resolve.alias;
+		const alias = vite_config.resolve && vite_config.resolve.alias;
 
 		// don't warn on overriding defaults
-		const [modified_user_config] = deep_merge(default_config, user_config);
+		const [modified_user_config] = deep_merge(default_config, vite_config);
 
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_user_config, {
@@ -153,7 +153,8 @@ class Watcher extends EventEmitter {
 				entries: []
 			},
 			ssr: {
-				noExternal: get_no_external(this.cwd, user_config.ssr && user_config.ssr.noExternal)
+				// @ts-ignore // ssr not defined in vite config.ts
+				noExternal: get_no_external(this.cwd, vite_config.ssr && vite_config.ssr.noExternal)
 			}
 		});
 
