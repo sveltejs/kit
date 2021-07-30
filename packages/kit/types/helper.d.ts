@@ -31,3 +31,14 @@ export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, 
 	: Default;
 export type MaybePromise<T> = T | Promise<T>;
 export type Rec<T = any> = Record<string, T>;
+export type RecursiveRequired<T> = {
+	// Recursive implementation of TypeScript's Required utility type.
+	// will continue until it reaches a primitive or union
+	// with a Function in it, except for the 'vite' key
+	// which we want the end result to be just a function
+	[K in keyof T]-?: Extract<T[K], Function> extends never
+		? RecursiveRequired<T[K]>
+		: K extends 'vite'
+		? Extract<T[K], Function>
+		: T[K];
+};

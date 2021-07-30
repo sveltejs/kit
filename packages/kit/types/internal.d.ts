@@ -1,4 +1,4 @@
-import { PageOpts, ScriptablePageOpt, ValidatedConfig } from './config';
+import { PageOpts, ScriptablePageOpt } from './config';
 import { RequestHandler } from './endpoint';
 import { Headers, Location, ParameterizedBody } from './helper';
 import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
