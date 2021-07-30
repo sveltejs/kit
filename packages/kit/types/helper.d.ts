@@ -32,7 +32,7 @@ export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, 
 export type MaybePromise<T> = T | Promise<T>;
 export type Rec<T = any> = Record<string, T>;
 export type RecursiveRequired<T> = {
-	// Recursive implementation of Required utility type.
+	// Recursive implementation of TypeScript's Required utility type.
 	// will continue until it reaches a primitive or union
 	// with a Function in it, except for the 'vite' key
 	// which we want the end result to be just a function
