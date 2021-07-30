@@ -5,32 +5,28 @@ import { read_only_form_data } from './read_only_form_data.js';
  * @param {import('types/helper').Headers} headers
  */
 export function parse_body(raw, headers) {
-	if (!raw) return raw;
+	if (!raw || typeof raw !== 'string') return raw;
 
-	if (typeof raw === 'string') {
-		const [type, ...directives] = headers['content-type'].split(/;\s*/);
+	const [type, ...directives] = headers['content-type'].split(/;\s*/);
 
-		switch (type) {
-			case 'text/plain':
-				return raw;
+	switch (type) {
+		case 'text/plain':
+			return raw;
 
-			case 'application/json':
-				return JSON.parse(raw);
+		case 'application/json':
+			return JSON.parse(raw);
 
-			case 'application/x-www-form-urlencoded':
-				return get_urlencoded(raw);
+		case 'application/x-www-form-urlencoded':
+			return get_urlencoded(raw);
 
-			case 'multipart/form-data': {
-				const boundary = directives.find((directive) => directive.startsWith('boundary='));
-				if (!boundary) throw new Error('Missing boundary');
-				return get_multipart(raw, boundary.slice('boundary='.length));
-			}
-			default:
-				throw new Error(`Invalid Content-Type ${type}`);
+		case 'multipart/form-data': {
+			const boundary = directives.find((directive) => directive.startsWith('boundary='));
+			if (!boundary) throw new Error('Missing boundary');
+			return get_multipart(raw, boundary.slice('boundary='.length));
 		}
+		default:
+			throw new Error(`Invalid Content-Type ${type}`);
 	}
-
-	return raw;
 }
 
 /** @param {string} text */
