@@ -4,10 +4,14 @@ import * as assert from 'uvu/assert';
 import fetch from 'node-fetch';
 import httpProxy from 'http-proxy';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
+const socketPath = path.join(os.tmpdir(), 'mysocket');
 
 const PROXY_PORT = 9090;
-const { SOCKET_PATH = '/tmp/socket' } = process.env;
-const DEFAULT_SERVER_OPTS = { render: () => {} };
+const { SOCKET_PATH = socketPath } = process.env;
+const DEFAULT_SERVER_OPTS = { render: () => { } };
 
 function cleanupSocketFile() {
 	if (fs.existsSync(SOCKET_PATH)) {
