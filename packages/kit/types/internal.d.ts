@@ -1,4 +1,3 @@
-import { PageOpts, ScriptablePageOpt } from './config';
 import { RequestHandler } from './endpoint';
 import { Headers, Location, ParameterizedBody } from './helper';
 import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
@@ -47,7 +46,11 @@ export interface App {
 	) => Promise<ServerResponse>;
 }
 
-export interface SSRComponent extends PageOpts {
+export interface SSRComponent {
+	ssr?: boolean;
+	router?: boolean;
+	hydrate?: boolean;
+	prerender?: boolean;
 	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
@@ -139,19 +142,18 @@ export interface SSRRenderOptions {
 	get_stack: (error: Error) => string | undefined;
 	handle_error: (error: Error) => void;
 	hooks: Hooks;
-	hydrate: ScriptablePageOpt<boolean>;
+	hydrate: boolean;
 	load_component: (id: PageId) => Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	prerender: ScriptablePageOpt<boolean>;
 	read: (file: string) => Buffer;
 	root: SSRComponent['default'];
-	router: ScriptablePageOpt<boolean>;
+	router: boolean;
 	service_worker?: string;
-	ssr: ScriptablePageOpt<boolean>;
+	ssr: boolean;
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
 	trailing_slash: TrailingSlash;
