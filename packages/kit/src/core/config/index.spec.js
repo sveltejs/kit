@@ -4,8 +4,7 @@ import { deep_merge, validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
-
-	delete validated.kit.vite;
+	delete_complex_opts(validated);
 
 	assert.equal(validated, {
 		compilerOptions: null,
@@ -26,7 +25,6 @@ test('fills in defaults', () => {
 			floc: false,
 			host: null,
 			hostHeader: null,
-			hydrate: true,
 			package: {
 				dir: 'package',
 				exports: {
@@ -48,12 +46,11 @@ test('fills in defaults', () => {
 			},
 			prerender: {
 				crawl: true,
-				enabled: true,
-				force: false,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
+				onError: 'fail',
 				pages: ['*']
 			},
-			router: true,
-			ssr: true,
 			target: null,
 			trailingSlash: 'never'
 		},
@@ -65,7 +62,7 @@ test('errors on invalid values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-ignore
+				// @ts-expect-error
 				target: 42
 			}
 		});
@@ -77,7 +74,7 @@ test('errors on invalid nested values', () => {
 		validate_config({
 			kit: {
 				files: {
-					// @ts-ignore
+					// @ts-expect-error
 					potato: 'blah'
 				}
 			}
@@ -104,7 +101,7 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.vite(), {});
 
-	delete validated.kit.vite;
+	delete_complex_opts(validated);
 
 	assert.equal(validated, {
 		compilerOptions: null,
@@ -125,7 +122,6 @@ test('fills in partial blanks', () => {
 			floc: false,
 			host: null,
 			hostHeader: null,
-			hydrate: true,
 			package: {
 				dir: 'package',
 				exports: {
@@ -147,12 +143,11 @@ test('fills in partial blanks', () => {
 			},
 			prerender: {
 				crawl: true,
-				enabled: true,
-				force: false,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
+				onError: 'fail',
 				pages: ['*']
 			},
-			router: true,
-			ssr: true,
 			target: null,
 			trailingSlash: 'never'
 		},
@@ -258,7 +253,6 @@ function validate_paths(name, input, output) {
 		assert.equal(
 			validate_config({
 				kit: {
-					// @ts-ignore
 					paths: input
 				}
 			}).kit.paths,
@@ -524,3 +518,17 @@ deepMergeSuite('merge including toString', () => {
 });
 
 deepMergeSuite.run();
+
+/** @param {import('types/config').ValidatedConfig} validated */
+function delete_complex_opts(validated) {
+	// @ts-expect-error
+	delete validated.kit.vite;
+	// @ts-expect-error
+	delete validated.kit.hydrate;
+	// @ts-expect-error
+	delete validated.kit.prerender.enabled;
+	// @ts-expect-error
+	delete validated.kit.router;
+	// @ts-expect-error
+	delete validated.kit.ssr;
+}

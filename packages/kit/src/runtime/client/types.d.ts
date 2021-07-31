@@ -1,5 +1,5 @@
 import { Page } from '../../../types/page';
-import { CSRComponent, CSRRoute, NormalizedLoadOutput } from '../../../types/internal';
+import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from '../../../types/internal';
 
 export type NavigationInfo = {
 	id: string;
@@ -9,7 +9,7 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
-	route: CSRRoute;
+	route: CSRPage;
 	path: string;
 	query: URLSearchParams;
 };
@@ -17,13 +17,13 @@ export type NavigationCandidate = {
 export type NavigationResult = {
 	reload?: boolean;
 	redirect?: string;
-	state?: NavigationState;
-	props?: Record<string, any>;
+	state: NavigationState;
+	props: Record<string, any>;
 };
 
 export type BranchNode = {
 	module: CSRComponent;
-	loaded: NormalizedLoadOutput;
+	loaded: NormalizedLoadOutput | null;
 	uses: {
 		params: Set<string>;
 		path: boolean;
@@ -37,6 +37,6 @@ export type BranchNode = {
 
 export type NavigationState = {
 	page: Page;
-	branch: BranchNode[];
+	branch: Array<BranchNode | undefined>;
 	session_id: number;
 };

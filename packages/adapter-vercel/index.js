@@ -3,13 +3,24 @@ import { join } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-export default function () {
+/**
+ * @typedef {import('esbuild').BuildOptions} BuildOptions
+ */
+
+/**
+ * @param {{
+ *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
+ * }} [options]
+ **/
+export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt({ utils }) {
 			const dir = '.vercel_build_output';
+
+			utils.update_ignores({ patterns: [dir] });
 			utils.rimraf(dir);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
@@ -27,13 +38,19 @@ export default function () {
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
-			await esbuild.build({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				inject: [join(files, 'shims.js')],
 				platform: 'node'
-			});
+			};
+
+			const buildOptions =
+				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
+
+			await esbuild.build(buildOptions);
 
 			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 

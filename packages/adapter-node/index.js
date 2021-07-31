@@ -17,6 +17,10 @@ import zlib from 'zlib';
 const pipe = promisify(pipeline);
 
 /**
+ * @typedef {import('esbuild').BuildOptions} BuildOptions
+ */
+
+/**
  * @param {{
  *   out?: string;
  *   precompress?: boolean;
@@ -24,18 +28,21 @@ const pipe = promisify(pipeline);
  *     host?: string;
  *     port?: string;
  *   };
+ *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
  * }} options
  */
 export default function ({
 	out = 'build',
 	precompress,
-	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {}
+	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
+	esbuild: esbuildConfig
 } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
+			utils.update_ignores({ patterns: [out] });
 			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
@@ -55,7 +62,8 @@ export default function ({
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
-			await esbuild.build({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
@@ -67,7 +75,9 @@ export default function ({
 				define: {
 					esbuild_app_dir: '"' + config.kit.appDir + '"'
 				}
-			});
+			};
+			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
+			await esbuild.build(buildOptions);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

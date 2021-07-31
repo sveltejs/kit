@@ -1,5 +1,24 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- 463199c: Handle Uint8Array bodies from endpoints
+- 0db0889: log both host and port
+
 ## 1.0.0-next.32
 
 ### Patch Changes

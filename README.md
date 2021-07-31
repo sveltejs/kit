@@ -54,6 +54,14 @@ npm publish --access=public
 
 ### Testing
 
-Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`. To run a single test, open up the file and change `test` to `test.only` for the relevant test.
+Run `pnpm test` to run the tests from all subpackages. Browser tests live in subdirectories of `packages/kit/test` such as `packages/kit/test/apps/basics`.
+
+You can run the tests for only a single package by first moving to that directory. E.g. `cd packages/kit`.
+
+You must rebuild each time before running the tests if you've made code changes.
+
+To run a single integration test, provide the `FILTER` env var with the test name. E.g. `FILTER="includes paths" pnpm test:integration`. You're also supposed to be a open up the file and change `test` to `test.only`, but this doesn't work as well. Help would be appreciated in fixing that.
+
+You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser.
 
 You may need to install some dependencies first e.g. with `npx playwright install-deps` (which only works on Ubuntu).

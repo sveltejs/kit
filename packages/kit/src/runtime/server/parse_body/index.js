@@ -5,32 +5,28 @@ import { read_only_form_data } from './read_only_form_data.js';
  * @param {import('types/helper').Headers} headers
  */
 export function parse_body(raw, headers) {
-	if (!raw) return raw;
+	if (!raw || typeof raw !== 'string') return raw;
 
 	const [type, ...directives] = headers['content-type'].split(/;\s*/);
 
-	if (typeof raw === 'string') {
-		switch (type) {
-			case 'text/plain':
-				return raw;
+	switch (type) {
+		case 'text/plain':
+			return raw;
 
-			case 'application/json':
-				return JSON.parse(raw);
+		case 'application/json':
+			return JSON.parse(raw);
 
-			case 'application/x-www-form-urlencoded':
-				return get_urlencoded(raw);
+		case 'application/x-www-form-urlencoded':
+			return get_urlencoded(raw);
 
-			case 'multipart/form-data': {
-				const boundary = directives.find((directive) => directive.startsWith('boundary='));
-				if (!boundary) throw new Error('Missing boundary');
-				return get_multipart(raw, boundary.slice('boundary='.length));
-			}
-			default:
-				throw new Error(`Invalid Content-Type ${type}`);
+		case 'multipart/form-data': {
+			const boundary = directives.find((directive) => directive.startsWith('boundary='));
+			if (!boundary) throw new Error('Missing boundary');
+			return get_multipart(raw, boundary.slice('boundary='.length));
 		}
+		default:
+			throw new Error(`Invalid Content-Type ${type}`);
 	}
-
-	return raw;
 }
 
 /** @param {string} text */
@@ -55,18 +51,17 @@ function get_urlencoded(text) {
 function get_multipart(text, boundary) {
 	const parts = text.split(`--${boundary}`);
 
-	const nope = () => {
-		throw new Error('Malformed form data');
-	};
-
 	if (parts[0] !== '' || parts[parts.length - 1].trim() !== '--') {
-		nope();
+		throw new Error('Malformed form data');
 	}
 
 	const { data, append } = read_only_form_data();
 
 	parts.slice(1, -1).forEach((part) => {
 		const match = /\s*([\s\S]+?)\r\n\r\n([\s\S]*)\s*/.exec(part);
+		if (!match) {
+			throw new Error('Malformed form data');
+		}
 		const raw_headers = match[1];
 		const body = match[2].trim();
 
@@ -89,7 +84,7 @@ function get_multipart(text, boundary) {
 			});
 
 			if (name === 'content-disposition') {
-				if (value !== 'form-data') nope();
+				if (value !== 'form-data') throw new Error('Malformed form data');
 
 				if (directives.filename) {
 					// TODO we probably don't want to do this automatically
@@ -102,7 +97,7 @@ function get_multipart(text, boundary) {
 			}
 		});
 
-		if (!key) nope();
+		if (!key) throw new Error('Malformed form data');
 
 		append(key, body);
 	});

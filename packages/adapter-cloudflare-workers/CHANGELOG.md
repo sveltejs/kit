@@ -1,5 +1,29 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- e9f78999: fix: include esbuild config in adapter type definition
+
+## 1.0.0-next.16
+
+### Patch Changes
+
+- e6995797: feat(adapters): expose esbuild configuration
+
+## 1.0.0-next.15
+
+### Patch Changes
+
+- 4720b67: Default body parsing to binary
+
+## 1.0.0-next.14
+
+### Patch Changes
+
+- 7faf52f: Update and consolidate checks for binary body types
+
 ## 1.0.0-next.13
 
 ### Patch Changes

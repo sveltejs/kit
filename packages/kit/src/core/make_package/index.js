@@ -83,7 +83,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		if (!user_defined_exports && exports_filter(file)) {
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
-			pkg.exports[entry] = entry;
+			const key = entry.endsWith('/index.js') ? entry.slice(0, -'/index.js'.length) : entry;
+			pkg.exports[key] = entry;
 		}
 	}
 
@@ -173,7 +174,8 @@ function create_filter(options) {
 
 	/** @param {string} str */
 	const filter = (str) =>
-		include.some((glob) => glob.regex.test(str)) && !exclude.some((glob) => glob.regex.test(str));
+		include.some((glob) => glob && glob.regex.test(str)) &&
+		!exclude.some((glob) => glob && glob.regex.test(str));
 
 	return filter;
 }
@@ -226,15 +228,23 @@ export async function emit_dts(config) {
 }
 
 async function try_load_svelte2tsx() {
-	try {
-		const svelte2tsx = (await import('svelte2tsx')).emitDts;
-		if (!svelte2tsx) {
-			throw new Error('Old svelte2tsx version');
-		}
-		return svelte2tsx;
-	} catch (e) {
+	const svelte2tsx = await load();
+	const emit_dts = svelte2tsx.emitDts;
+	if (!emit_dts) {
 		throw new Error(
 			'You need to install svelte2tsx >=0.4.1 if you want to generate type definitions'
 		);
+	}
+	return emit_dts;
+
+	async function load() {
+		try {
+			return await import('svelte2tsx');
+		} catch (e) {
+			throw new Error(
+				'You need to install svelte2tsx and typescript if you want to generate type definitions\n' +
+					e
+			);
+		}
 	}
 }

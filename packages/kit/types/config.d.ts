@@ -1,7 +1,9 @@
-import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
+import { RecursiveRequired } from './helper';
+import { ServerRequest } from './hooks';
+import { Logger, TrailingSlash } from './internal';
 
-export type AdapterUtils = {
+export interface AdapterUtils {
 	log: Logger;
 	rimraf: (dir: string) => void;
 	mkdirp: (dir: string) => void;
@@ -9,23 +11,41 @@ export type AdapterUtils = {
 	copy_server_files: (dest: string) => void;
 	copy_static_files: (dest: string) => void;
 	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
-	prerender: ({
-		all,
-		dest,
-		fallback
-	}: {
-		all?: boolean;
-		dest: string;
-		fallback?: string;
-	}) => Promise<void>;
-};
+	update_ignores: ({ patterns, log }: { patterns: string[]; log?: boolean }) => void;
+	prerender: (options: { all?: boolean; dest: string; fallback?: string }) => Promise<void>;
+}
 
-export type Adapter = {
+export interface Adapter {
 	name: string;
-	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
-};
+	adapt: (context: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
+}
 
-export type Config = {
+export interface PageOpts {
+	ssr: boolean;
+	router: boolean;
+	hydrate: boolean;
+	prerender: boolean;
+}
+
+export interface PageOptsContext {
+	request: ServerRequest;
+	page: Promise<PageOpts>;
+}
+
+export type ScriptablePageOpt<T> = T | (({ request, page }: PageOptsContext) => Promise<T>);
+
+export interface PrerenderErrorHandler {
+	(details: {
+		status: number;
+		path: string;
+		referrer: string | null;
+		referenceType: 'linked' | 'fetched';
+	}): void;
+}
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+
+export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
@@ -43,7 +63,7 @@ export type Config = {
 		floc?: boolean;
 		host?: string;
 		hostHeader?: string;
-		hydrate?: boolean;
+		hydrate?: ScriptablePageOpt<boolean>;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -62,72 +82,22 @@ export type Config = {
 		};
 		prerender?: {
 			crawl?: boolean;
-			enabled?: boolean;
-			force?: boolean;
+			enabled?: ScriptablePageOpt<boolean>;
+			onError?: PrerenderOnErrorValue;
 			pages?: string[];
 		};
-		router?: boolean;
+		router?: ScriptablePageOpt<boolean>;
 		serviceWorker?: {
 			exclude?: string[];
 		};
-		ssr?: boolean;
+		ssr?: ScriptablePageOpt<boolean>;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
-};
+}
 
-export type ValidatedConfig = {
-	compilerOptions: any;
-	extensions: string[];
-	kit: {
-		adapter: Adapter;
-		amp: boolean;
-		appDir: string;
-		files: {
-			assets: string;
-			hooks: string;
-			lib: string;
-			routes: string;
-			serviceWorker: string;
-			setup: string;
-			template: string;
-		};
-		floc: boolean;
-		host: string;
-		hostHeader: string;
-		hydrate: boolean;
-		package: {
-			dir: string;
-			emitTypes: boolean;
-			exports: {
-				include: string[];
-				exclude: string[];
-			};
-			files: {
-				include: string[];
-				exclude: string[];
-			};
-		};
-		paths: {
-			assets: string;
-			base: string;
-		};
-		prerender: {
-			crawl: boolean;
-			enabled: boolean;
-			force: boolean;
-			pages: string[];
-		};
-		router: boolean;
-		serviceWorker: {
-			exclude: string[];
-		};
-		ssr: boolean;
-		target: string;
-		trailingSlash: TrailingSlash;
-		vite: () => ViteConfig;
-	};
-	preprocess: any;
+export type ValidatedConfig = RecursiveRequired<Config> & {
+	kit: { files: { setup: string } }; // only for validated
 };

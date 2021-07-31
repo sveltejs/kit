@@ -1,16 +1,16 @@
 {
-	"name": "test/basics",
+	"name": "test-basics",
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "svelte-kit dev",
-		"build": "svelte-kit build",
-		"preview": "svelte-kit preview"
+		"dev": "../../../svelte-kit.js dev",
+		"build": "../../../svelte-kit.js build",
+		"preview": "../../../svelte-kit.js preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.38.3"
+		"svelte": "^3.40.0"
 	},
 	"type": "module"
 }

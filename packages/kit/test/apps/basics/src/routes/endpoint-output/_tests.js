@@ -36,4 +36,24 @@ export default function (test) {
 		const res = await fetch('/endpoint-output/empty');
 		assert.type(await res.buffer(), 'object');
 	});
+
+	test('null body returns null json value', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/null');
+		assert.equal(res.status, 200);
+		assert.equal(await res.json(), null);
+	});
+
+	test('gets string response with XML Content-Type', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/xml-text');
+
+		assert.equal(res.headers.get('content-type'), 'application/xml');
+		assert.equal(await res.text(), '<foo />');
+	});
+
+	test.only('gets binary response with XML Content-Type', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/xml-bytes');
+
+		assert.equal(res.headers.get('content-type'), 'application/xml');
+		assert.equal(await res.text(), '<foo />');
+	});
 }

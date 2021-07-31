@@ -4,7 +4,7 @@ declare const __propDef: {
 		astring: string;
 	};
 	events: {
-		event: CustomEvent<any>;
+		event: CustomEvent<boolean>;
 	} & {
 		[evt: string]: CustomEvent<any>;
 	};

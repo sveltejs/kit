@@ -1,9 +1,9 @@
 import http from 'http';
 import https from 'https';
+
 /**
- *
  * @param {boolean} use_https
- * @param {any} user_config
+ * @param {import('vite').UserConfig} user_config
  * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
  * @returns {Promise<import('net').Server>}
  */
@@ -12,14 +12,13 @@ export async function get_server(use_https, user_config, handler) {
 	const https_options = {};
 
 	if (use_https) {
-		if (
-			user_config.server &&
-			user_config.server.https &&
-			user_config.server.https.key &&
-			user_config.server.https.cert
-		) {
-			https_options.key = user_config.server.https.key.toString();
-			https_options.cert = user_config.server.https.cert.toString();
+		const secure_opts = user_config.server
+			? /** @type {import('tls').SecureContextOptions} */ (user_config.server.https)
+			: {};
+
+		if (secure_opts.key && secure_opts.cert) {
+			https_options.key = secure_opts.key.toString();
+			https_options.cert = secure_opts.cert.toString();
 		} else {
 			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
 		}

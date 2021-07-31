@@ -148,7 +148,7 @@ export default function (test) {
 
 	test('resets the active element after navigation', '/routing', async ({ page, clicknav }) => {
 		await clicknav('[href="/routing/a"]');
-		await page.waitForFunction(() => document.activeElement.nodeName == 'BODY');
+		await page.waitForFunction(() => (document.activeElement || {}).nodeName == 'BODY');
 	});
 
 	test(

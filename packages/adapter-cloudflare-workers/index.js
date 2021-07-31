@@ -4,7 +4,16 @@ import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
-export default function () {
+/**
+ * @typedef {import('esbuild').BuildOptions} BuildOptions
+ */
+
+/**
+ * @param {{
+ *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
+ * }} [options]
+ **/
+export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	const adapter = {
 		name: '@sveltejs/adapter-cloudflare-workers',
@@ -15,6 +24,8 @@ export default function () {
 			const entrypoint = site['entry-point'] || 'workers-site';
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
+
+			utils.update_ignores({ patterns: [bucket, entrypoint] });
 
 			utils.rimraf(bucket);
 			utils.rimraf(entrypoint);
@@ -29,13 +40,19 @@ export default function () {
 			utils.log.minor('Generating worker...');
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
-			await esbuild.build({
+			/** @type {BuildOptions} */
+			const defaultOptions = {
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',
-				platform: 'node' // TODO would be great if we could generate ESM and use type = "javascript"
-			});
+				platform: 'browser'
+			};
+
+			const buildOptions =
+				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
+
+			await esbuild.build(buildOptions);
 
 			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
 

@@ -73,7 +73,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		server,
 		static: options.manifest.assets.map((asset) => posixify(asset.file)),
 		entries: options.manifest.routes
-			.map((route) => route.type === 'page' && route.path)
+			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean)
 	};
 }
@@ -87,7 +87,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  */
 async function build_client({
@@ -174,7 +174,10 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		]
 	});
@@ -199,7 +202,7 @@ async function build_client({
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -219,7 +222,7 @@ async function build_server(
 	runtime
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
-	if (!fs.existsSync(hooks_file)) {
+	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
 		fs.writeFileSync(hooks_file, '');
 	}
@@ -271,7 +274,7 @@ async function build_server(
 					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
 					return fs.readFileSync(resolved, 'utf-8');
 			  })
-			: null;
+			: [];
 
 		metadata_lookup[file] = {
 			entry: prefix + client_manifest[file].file,
@@ -332,16 +335,17 @@ async function build_server(
 						error.stack = options.get_stack(error);
 					},
 					hooks: get_hooks(user_hooks),
-					hydrate: ${s(config.kit.hydrate)},
+					hydrate: ${config.kit.hydrate},
 					initiator: undefined,
 					load_component,
 					manifest,
 					paths: settings.paths,
+					prerender: ${config.kit.prerender && config.kit.prerender.enabled},
 					read: settings.read,
 					root,
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
-					router: ${s(config.kit.router)},
-					ssr: ${s(config.kit.ssr)},
+					router: ${config.kit.router},
+					ssr: ${config.kit.ssr},
 					target: ${s(config.kit.target)},
 					template,
 					trailing_slash: ${s(config.kit.trailingSlash)}
@@ -462,13 +466,15 @@ async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		],
 		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
 		// it's not exposed in the typescript definitions as a result
 		// so we need to ignore the fact that it's missing
-		// @ts-ignore
 		ssr: {
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok
@@ -493,7 +499,7 @@ async function build_server(
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  * @param {ClientManifest} client_manifest
  */

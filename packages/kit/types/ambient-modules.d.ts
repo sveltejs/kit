@@ -69,11 +69,11 @@ declare module '$app/navigation' {
 
 declare module '$app/paths' {
 	/**
-	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.files.base` in your project configuration.
+	 * A root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your project configuration.
 	 */
 	export const base: string;
 	/**
-	 * A root-relative or absolute path that matches `config.kit.files.assets` (after it has been resolved against base).
+	 * A root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against base).
 	 */
 	export const assets: string;
 }

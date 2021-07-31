@@ -17,12 +17,18 @@ export default function (test, is_dev) {
 
 	test('styles are applied', '/valid', async ({ page }) => {
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('p')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('p');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(255, 0, 0)'
 		);
 
 		assert.equal(
-			await page.evaluate(() => getComputedStyle(document.querySelector('footer')).color),
+			await page.evaluate(() => {
+				const el = document.querySelector('footer');
+				return el && getComputedStyle(el).color;
+			}),
 			'rgb(128, 0, 128)'
 		);
 	});

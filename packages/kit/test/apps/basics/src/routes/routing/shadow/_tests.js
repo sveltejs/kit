@@ -6,7 +6,9 @@ export default function (test) {
 		const random = String(Math.random());
 
 		await page.evaluate((random) => {
-			document.querySelector('input').value = random;
+			const el = document.querySelector('input');
+			if (!el) throw new Error('Could not find input');
+			el.value = random;
 		}, random);
 
 		await clicknav('button');
