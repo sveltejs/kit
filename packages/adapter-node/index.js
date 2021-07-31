@@ -25,6 +25,7 @@ const pipe = promisify(pipeline);
  *   out?: string;
  *   precompress?: boolean;
  *   env?: {
+ *     path?: string;
  *     host?: string;
  *     port?: string;
  *   };
@@ -34,7 +35,7 @@ const pipe = promisify(pipeline);
 export default function ({
 	out = 'build',
 	precompress,
-	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
+	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
 	esbuild: esbuildConfig
 } = {}) {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -57,7 +58,9 @@ export default function ({
 			utils.copy(files, '.svelte-kit/node');
 			writeFileSync(
 				'.svelte-kit/node/env.js',
-				`export const host = process.env[${JSON.stringify(
+				`export const path = process.env[${JSON.stringify(
+					path_env
+				)}] || false;\nexport const host = process.env[${JSON.stringify(
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
