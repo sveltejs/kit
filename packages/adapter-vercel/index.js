@@ -19,8 +19,6 @@ export default function (options) {
 
 		async adapt({ utils }) {
 			const dir = '.vercel_build_output';
-
-			utils.update_ignores({ patterns: [dir] });
 			utils.rimraf(dir);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));

@@ -25,8 +25,6 @@ export default function (options) {
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
-			utils.update_ignores({ patterns: [bucket, entrypoint] });
-
 			utils.rimraf(bucket);
 			utils.rimraf(entrypoint);
 
