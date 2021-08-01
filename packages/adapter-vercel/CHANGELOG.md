@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- d81de603: revert adapters automatically updating .gitignore (#1924)
+
 ## 1.0.0-next.26
 
 ### Patch Changes

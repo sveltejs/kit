@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.140
+
+### Patch Changes
+
+- e55bc44a: [fix] revert change to rendering options (#2008)
+- d81de603: revert adapters automatically updating .gitignore (#1924)
+- 5911b1c7: [fix] consider protocol-relative URLs as external
+
 ## 1.0.0-next.139
 
 ### Patch Changes
