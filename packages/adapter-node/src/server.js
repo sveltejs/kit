@@ -16,25 +16,6 @@ const paths = {
 };
 
 export function createServer({ render }) {
-	const immutable_path = (pathname) => {
-		// eslint-disable-next-line no-undef
-		let app_dir = esbuild_app_dir;
-
-		// hard to tell when app_dir is mixed with static
-		if (app_dir === '/') {
-			return false;
-		}
-
-		if (app_dir.startsWith('/')) {
-			app_dir = app_dir.slice(1);
-		}
-		if (app_dir.endsWith('/')) {
-			app_dir = app_dir.slice(0, -1);
-		}
-
-		return pathname.startsWith(`/${app_dir}/`);
-	};
-
 	const prerendered_handler = fs.existsSync(paths.prerendered)
 		? sirv(paths.prerendered, {
 				etag: true,
@@ -47,7 +28,8 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
-					if (immutable_path(pathname)) {
+					// eslint-disable-next-line no-undef
+					if (pathname.startsWith(APP_DIR)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
 				},
