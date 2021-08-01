@@ -67,14 +67,15 @@ Our example blog page might contain a `load` function like the following. Note t
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-> `load` only applies to components that define pages, not the components that they import.
->
-> It is important to note that `load` may run on either the server or in the client browser. Code called inside `load` blocks:
->
-> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) method for getting data in order to avoid duplicate network requests
-> - should generally run on the same domain as any upstream API servers requiring credentials
-> - should not reference `window`, `document`, or any browser-specific objects
-> - should not reference any API keys or secrets directly, which will be exposed to the client, but instead call an endpoint using any required secrets
+> `load` only applies to [page](#routing-pages) and [layout](#layouts) components, and can run both on the server (unless [ssr](#ssr-and-javascript-ssr) is disabled) and in the browser.
+
+Code called inside `load` blocks:
+
+- should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`, which doesn't have access to cookies on the server and cannot make requests against the app's own endpoints
+- should not reference `window`, `document`, or any browser-specific objects
+- should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
+
+> Mutating any shared state on the server will affect all clients, not just the current one.
 
 ### Input
 
