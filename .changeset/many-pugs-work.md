@@ -2,4 +2,4 @@
 '@sveltejs/adapter-netlify': patch
 ---
 
-update build output locations"
+update build output locations
