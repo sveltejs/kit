@@ -31,15 +31,6 @@ export default {
 };
 ```
 
-Some adapters may modify your project's `.gitignore` to include their build output. In case you don't want those patterns included you can comment them out: 
-
-```diff
-.svelte-kit
-.env
-
-- build
-+ # build
-```
 A variety of official adapters exist for serverless platforms...
 
 - [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers) — for [Cloudflare Workers](https://developers.cloudflare.com/workers/)

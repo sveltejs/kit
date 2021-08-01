@@ -26,7 +26,6 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
-- Call `utils.update_ignores` to ignore build output in existing `.gitignore` files at the location of `svelte.config.js`
 - Output code that:
   - Calls `init`
   - Converts from the platform's request to a [SvelteKit request](#hooks-handle), calls `render`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
@@ -34,5 +33,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Bundle the output to avoid needing to install dependencies on the target platform, if desired
 - Call `utils.prerender`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
+
+If possible, we recommend putting the adapter output under `'.svelte-kit/' + adapterName` with any intermediate output under `'.svelte-kit/' + adapterName + '/intermediate'`.
 
 > The adapter API may change before 1.0.
