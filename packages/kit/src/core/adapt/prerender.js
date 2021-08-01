@@ -246,7 +246,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (!href) continue;
 
 					const resolved = resolve(path, href);
-					if (resolved[0] !== '/') continue;
+					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
 
