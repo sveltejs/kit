@@ -29,11 +29,11 @@ export default function (options) {
 			utils.update_ignores({ patterns: [publish, functions] });
 
 			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');
+			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/intermediate/entry.js');
 
 			/** @type {BuildOptions} */
 			const defaultOptions = {
-				entryPoints: ['.svelte-kit/netlify/entry.js'],
+				entryPoints: ['.svelte-kit/netlify/intermediate/entry.js'],
 				outfile: join(functions, 'render/index.js'),
 				bundle: true,
 				inject: [join(files, 'shims.js')],

@@ -32,11 +32,11 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 ```toml
 [build]
   command = "npm run build"
-  publish = "build/"
-  functions = "functions/"
+  publish = ".svelte-kit/netlify/build/"
+  functions = ".svelte-kit/netlify/functions/"
 ```
 
-It's recommended that you add the `build` and `functions` folders (or whichever other folders you specify) to your `.gitignore`.
+In this example, we placed the `build` and `functions` folders under `.svelte-kit/netlify`. If you specify another location, you will probably also want to add them to your `.gitignore`.
 
 ## Netlify alternatives to SvelteKit functionality
 
