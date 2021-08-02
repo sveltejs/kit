@@ -85,8 +85,8 @@ export function getSession(request) {
 			name: request.locals.user.name,
 			email: request.locals.user.email,
 			avatar: request.locals.user.avatar
-		} : {};
-	};
+		}
+	} : {};
 }
 ```
 
