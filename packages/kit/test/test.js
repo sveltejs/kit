@@ -166,10 +166,10 @@ function duplicate(test_fn, config, is_build) {
 		}
 
 		if (nojs) {
-			name = `${name} [no js]`;
-			if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+			const specific_name = `${name} [no js]`;
+			if (process.env.FILTER && !specific_name.includes(process.env.FILTER)) return;
 
-			test_fn(name, async (context) => {
+			test_fn(specific_name, async (context) => {
 				let response;
 
 				if (start) {
@@ -189,10 +189,10 @@ function duplicate(test_fn, config, is_build) {
 		}
 
 		if (js && !config.kit.amp) {
-			name = `${name} [js]`;
-			if (process.env.FILTER && !name.includes(process.env.FILTER)) return;
+			const specific_name = `${name} [js]`;
+			if (process.env.FILTER && !specific_name.includes(process.env.FILTER)) return;
 
-			test_fn(name, async (context) => {
+			test_fn(specific_name, async (context) => {
 				let response;
 
 				if (start) {
