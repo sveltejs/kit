@@ -19,7 +19,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 ### $app/navigation
 
 ```js
-import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
+import { goto, invalidate, prefetch, prefetchRoutes, switchLocalePath } from '$app/navigation';
 ```
 
 - `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
@@ -30,6 +30,7 @@ import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 - `invalidate(href)` causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. It returns a `Promise` that resolves when the page is subsequently updated.
 - `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 - `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched; otherwise, you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
+- `switchLocalPath(newLAng)` redirects the user to the same slug, but with `newLang/` prefix. There is also a check if `newLang` is available through the config and if `newLang` is different from `currentLang`.
 
 ### $app/paths
 
@@ -43,7 +44,7 @@ import { base, assets } from '$app/paths';
 ### $app/stores
 
 ```js
-import { getStores, navigating, page, session } from '$app/stores';
+import { getStores, i18n, navigating, page, session } from '$app/stores';
 ```
 
 Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `page` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
@@ -54,8 +55,10 @@ Because of that, the stores are not free-floating objects: they must be accessed
 
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
+- `i18n` gives you access to whatever is defined inside of the config. It can be used to programmatically generate a language switcher. The availabele properties are `defaultLocale` and `locales`. For mire info see [the config section](#i18n)
+
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
-- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
+- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params`, `query` and `i18n`. See the [`page` section](#loading-input-page) above for more details.
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib

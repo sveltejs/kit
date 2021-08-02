@@ -29,6 +29,7 @@ const config = {
 		host: null,
 		hostHeader: null,
 		hydrate: true,
+		i18n: null,
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -125,6 +126,20 @@ export default {
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### i18n
+Enables i18n routes and makes them available in `$app/stores.i18n`. The configuration expects the following:
+```js
+// svelte.config.js
+export default {
+	kit: {
+		i18n: {
+			defaultLocale: string
+			locales: string[]
+		}
+	}
+};
+```
 
 ### package
 

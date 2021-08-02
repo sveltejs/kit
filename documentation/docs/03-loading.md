@@ -21,6 +21,7 @@ type LoadInput<
 	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
 	session: Session;
 	context: Context;
+	lang: string;
 };
 
 type LoadOutput<
