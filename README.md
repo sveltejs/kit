@@ -60,7 +60,7 @@ You can run the tests for only a single package by first moving to that director
 
 You must rebuild each time before running the tests if you've made code changes.
 
-To run a single integration test, provide the `FILTER` env var with the test name. E.g. `FILTER="includes paths" pnpm test:integration`. You're also supposed to be a open up the file and change `test` to `test.only`, but this doesn't work as well. Help would be appreciated in fixing that.
+To run a single integration test, provide the `FILTER` env var with the test name. E.g. `FILTER="includes paths" pnpm test:integration`. You can also open up the file and change `test` to `test.only`.
 
 You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser.
 

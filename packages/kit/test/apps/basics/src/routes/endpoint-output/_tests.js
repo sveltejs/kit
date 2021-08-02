@@ -50,7 +50,7 @@ export default function (test) {
 		assert.equal(await res.text(), '<foo />');
 	});
 
-	test.only('gets binary response with XML Content-Type', null, async ({ fetch }) => {
+	test('gets binary response with XML Content-Type', null, async ({ fetch }) => {
 		const res = await fetch('/endpoint-output/xml-bytes');
 
 		assert.equal(res.headers.get('content-type'), 'application/xml');
