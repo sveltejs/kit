@@ -1,15 +1,15 @@
 <script context="module">
 	/** @type {import("@sveltejs/kit").Load} */
 	export async function load({ page, fetch }) {
-		const res = await fetch(`/routing/fallthrough/${page.params.mineral}.json`);
+		const res = await fetch(`/routing/fallthrough-advanced/${page.params.animal}.json`);
 
 		if (res.ok) {
 			const { type } = await res.json();
 
-			if (type === 'mineral') {
+			if (type === 'animal') {
 				return {
 					props: {
-						mineral: page.params.mineral
+						animal: page.params.animal
 					}
 				};
 			}
@@ -19,7 +19,7 @@
 
 <script>
 	/** @type {string} */
-	export let mineral;
+	export let animal;
 </script>
 
-<h1>{mineral} is a mineral</h1>
+<h1>{animal} is an animal</h1>
