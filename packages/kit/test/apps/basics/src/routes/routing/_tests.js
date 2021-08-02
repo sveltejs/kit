@@ -202,15 +202,23 @@ export default function (test) {
 		}
 	);
 
-	test('falls through', '/routing/fallthrough/borax', async ({ page, clicknav }) => {
-		assert.equal(await page.textContent('h1'), 'borax is a mineral');
-
-		await clicknav('[href="/routing/fallthrough/camel"]');
-		assert.equal(await page.textContent('h1'), 'camel is an animal');
-
-		await clicknav('[href="/routing/fallthrough/potato"]');
-		assert.equal(await page.textContent('h1'), '404');
+	test('fallthrough', '/routing/fallthrough-simple/invalid', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('h1'), 'Page');
 	});
+
+	test(
+		'dynamic fallthrough of pages and endpoints',
+		'/routing/fallthrough-advanced/borax',
+		async ({ page, clicknav }) => {
+			assert.equal(await page.textContent('h1'), 'borax is a mineral');
+
+			await clicknav('[href="/routing/fallthrough-advanced/camel"]');
+			assert.equal(await page.textContent('h1'), 'camel is an animal');
+
+			await clicknav('[href="/routing/fallthrough-advanced/potato"]');
+			assert.equal(await page.textContent('h1'), '404');
+		}
+	);
 
 	test(
 		'last parameter in a segment wins in cases of ambiguity',
