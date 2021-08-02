@@ -172,21 +172,32 @@ const options = {
 			},
 
 			i18n: {
-				type: 'branch',
-				children: {
-					locales: {
-						type: 'leaf',
-						default: null,
-						validate: (option, keypath) => {
-							if (!Array.isArray(option) || option.some(o => typeof o !== 'string')) {
-								const message = `${keypath} should be an Array of strings`;
-								throw new Error(`${message}. See https://kit.svelte.dev/docs#TODO`);
-							}
-		
-							return option;
+				type: 'leaf',
+				default: null,
+				validate: (option, keypath) => {
+					if (typeof option !== 'object' || option === null || Array.isArray(option)) {
+						throw new Error(`${keypath} should be an Object. See https://kit.svelte.dev/docs#i18n`);
+					}
+
+					const keys = Object.keys(option);
+					['defaultLocale', 'locales'].forEach((key) => {
+						if (!keys.includes(key)) {
+							throw new Error(`${keypath} should have the property ${key}. See https://kit.svelte.dev/docs#i18n`);
 						}
-					},
-					defaultLocale: expect_string(null)
+					});
+
+					if (typeof option.defaultLocale !== 'string' || !option.defaultLocale.length) {
+						
+						throw new Error(`${keypath}.defaultLocale should be a none empty string. See https://kit.svelte.dev/docs#i18n`);
+					}
+
+					const locales = options.locales;
+					if (!Array.isArray(locales) || !locales.length || locales.some(locale => typeof locale !== 'string' || !locale.length)) {
+						
+						throw new Error(`${keypath}.locales should be an array of none empty strings. See https://kit.svelte.dev/docs#i18n`);
+					}
+
+					return option
 				}
 			}
 		}
