@@ -56,7 +56,7 @@
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/core/make_package/test/**\" \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check --ignore \"src/core/make_package/test\"",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
 		"test": "npm run test:unit && npm run test:integration",
