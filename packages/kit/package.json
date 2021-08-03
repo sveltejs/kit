@@ -37,7 +37,6 @@
 		"svelte-check": "^2.2.0",
 		"svelte2tsx": "~0.4.1",
 		"tiny-glob": "^0.2.8",
-		"typescript": "^4.3.5",
 		"uvu": "^0.5.1"
 	},
 	"peerDependencies": {
