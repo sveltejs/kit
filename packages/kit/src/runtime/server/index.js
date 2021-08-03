@@ -1,8 +1,10 @@
-import render_page from './page/index.js';
+import { render_endpoint } from './endpoint.js';
+import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
-import render_endpoint from './endpoint.js';
+import { respond_with_error } from './page/respond_with_error.js';
 import { parse_body } from './parse_body/index.js';
-import { coalesce_to_error, lowercase_keys } from './utils.js';
+import { lowercase_keys } from './utils.js';
+import { coalesce_to_error } from '../utils.js';
 import { hash } from '../hash.js';
 
 /**
@@ -84,7 +86,15 @@ export async function respond(incoming, options, state = {}) {
 					}
 				}
 
-				return await render_page(request, null, options, state);
+				const $session = await options.hooks.getSession(request);
+				return await respond_with_error({
+					request,
+					options,
+					state,
+					$session,
+					status: 404,
+					error: new Error(`Not found: ${request.path}`)
+				});
 			}
 		});
 	} catch (/** @type {unknown} */ err) {
