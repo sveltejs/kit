@@ -1,7 +1,7 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
-import { coalesce_to_error } from '../utils.js';
+import { coalesce_to_error } from '../../utils.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded

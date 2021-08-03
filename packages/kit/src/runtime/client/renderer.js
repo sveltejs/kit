@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
+import { coalesce_to_error } from '../utils.js';
 
 /** @param {any} value */
 function page_store(value) {
@@ -139,6 +140,8 @@ export class Renderer {
 		/** @type {import('./types').NavigationResult | undefined} */
 		let result;
 
+		let error_args;
+
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
@@ -156,12 +159,12 @@ export class Renderer {
 				if (node && node.loaded) {
 					if (node.loaded.error) {
 						if (error) throw node.loaded.error;
-						result = await this._load_error({
+						error_args = {
 							status: node.loaded.status,
 							error: node.loaded.error,
 							path: page.path,
 							query: page.query
-						});
+						};
 					} else if (node.loaded.context) {
 						context = {
 							...context,
@@ -171,13 +174,15 @@ export class Renderer {
 				}
 			}
 
-			result = await this._get_navigation_result_from_branch({ page, branch });
-		} catch (e) {
+			result = error_args
+				? await this._load_error(error_args)
+				: await this._get_navigation_result_from_branch({ page, branch });
+		} catch (/** @type {unknown} */ e) {
 			if (error) throw e;
 
 			result = await this._load_error({
 				status: 500,
-				error: e,
+				error: coalesce_to_error(e),
 				path: page.path,
 				query: page.query
 			});
