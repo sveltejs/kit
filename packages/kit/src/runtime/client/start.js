@@ -47,9 +47,7 @@ export async function start({
 		? new Router({
 				base: paths.base,
 				routes,
-				trailing_slash,
-				defaultLocale,
-				locales
+				trailing_slash
 		  })
 		: null;
 

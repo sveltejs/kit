@@ -73,6 +73,10 @@ declare module '$app/navigation' {
 	 * 3. will call goto
 	 */
 	export function switchLocalePath(lang: string): Promise<any>;
+	/**
+	 * Returns the route prefixed with current lang
+	 */
+	export function i18nRoute(route: string): string;
 }
 
 declare module '$app/paths' {

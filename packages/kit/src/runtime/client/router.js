@@ -1,4 +1,5 @@
 import { get_base_uri } from './utils';
+import { i18n, page } from '$app/stores';
 
 function scroll_state() {
 	return {
@@ -21,15 +22,11 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 *    defaultLocale?: string;
-	 *    locales?: string[];
 	 * }} opts */
-	constructor({ base, routes, trailing_slash, defaultLocale, locales = [] }) {
+	constructor({ base, routes, trailing_slash}) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
-		this.defaultLocale = defaultLocale;
-		this.locales = locales;
 	}
 
 	/** @param {import('./renderer').Renderer} renderer */
@@ -157,6 +154,14 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
+
+		// inject lang
+		page.subscribe(({lang}) => this._lang = lang);
+		// inject i18n
+		i18n.subscribe(({defaultLocale, locales}) => {
+			this.defaultLocale = defaultLocale;
+			this.locales = locales;
+		});
 	}
 
 	/** @param {URL} url */
@@ -291,7 +296,7 @@ export class Router {
 	switchLocalePath(lang) {
 		let url = `${location.pathname}${location.search}`;
 		if (this.defaultLocale
-			&& this.locales.find(locale => locale === lang)) {
+			&& this.locales?.find(locale => locale === lang)) {
 			// remove locales prefix
 			this.locales.forEach(locale => {
 				url = url.replace(`/${locale}`, '');
@@ -303,5 +308,15 @@ export class Router {
 		}
 
 		return this.goto(url, {}, []);
+	}
+
+	/**
+	 * @param {string} route
+	 * @returns {string}
+	 */
+	i18nRoute(route) {
+		return this._lang === this.defaultLocale
+			? route
+			: `${this._lang}/${route}`;
 	}
 }
