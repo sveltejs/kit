@@ -8,7 +8,6 @@ yarn.lock
 /packages/create-svelte/template/CHANGELOG.md
 .env
 .vercel_build_output
-.netlify
 .svelte-kit
 .cloudflare
 .pnpm-debug.log
