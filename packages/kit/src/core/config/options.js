@@ -223,7 +223,7 @@ const options = {
 						throw new Error(`${keypath}.locales should be an array of none empty strings. See https://kit.svelte.dev/docs#i18n`);
 					}
 
-					return option
+					return option;
 				}
 			}
 		}
