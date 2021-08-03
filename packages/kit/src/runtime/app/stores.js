@@ -26,7 +26,7 @@ export const getStores = () => {
 		navigating: {
 			subscribe: stores.navigating.subscribe
 		},
-		// @ts-ignore - deprecated, not part of type definitions, but still callable
+		// @ts-expect-error - deprecated, not part of type definitions, but still callable
 		get preloading() {
 			console.error('stores.preloading is deprecated; use stores.navigating instead');
 			return {

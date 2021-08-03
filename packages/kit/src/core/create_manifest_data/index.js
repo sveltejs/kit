@@ -254,11 +254,11 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					type: 'page',
 					pattern,
 					params,
-					// @ts-ignore
+					// @ts-expect-error
 					path,
-					// @ts-ignore
+					// @ts-expect-error
 					a,
-					// @ts-ignore
+					// @ts-expect-error
 					b
 				};
 				const i18n = config.kit.i18n;

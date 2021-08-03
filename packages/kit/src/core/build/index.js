@@ -174,7 +174,10 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		]
 	});
@@ -466,13 +469,15 @@ async function build_server(
 		},
 		plugins: [
 			svelte({
-				extensions: config.extensions
+				extensions: config.extensions,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		],
 		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
 		// it's not exposed in the typescript definitions as a result
 		// so we need to ignore the fact that it's missing
-		// @ts-ignore
 		ssr: {
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok

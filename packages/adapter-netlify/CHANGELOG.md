@@ -1,5 +1,12 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.26
+
+### Patch Changes
+
+- 4cb4e749: update build output locations
+- d81de603: revert adapters automatically updating .gitignore (#1924)
+
 ## 1.0.0-next.25
 
 ### Patch Changes

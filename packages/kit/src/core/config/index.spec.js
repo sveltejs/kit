@@ -5,7 +5,7 @@ import { deep_merge, validate_config } from './index.js';
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	// @ts-ignore
+	// @ts-expect-error
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
@@ -50,7 +50,9 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				force: false,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
+				onError: 'fail',
 				pages: ['*']
 			},
 			router: true,
@@ -66,7 +68,7 @@ test('errors on invalid values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-ignore
+				// @ts-expect-error
 				target: 42
 			}
 		});
@@ -78,7 +80,7 @@ test('errors on invalid nested values', () => {
 		validate_config({
 			kit: {
 				files: {
-					// @ts-ignore
+					// @ts-expect-error
 					potato: 'blah'
 				}
 			}
@@ -105,7 +107,7 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.vite(), {});
 
-	// @ts-ignore
+	// @ts-expect-error
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
@@ -150,7 +152,9 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				force: false,
+				// TODO: remove this for the 1.0 release
+				force: undefined,
+				onError: 'fail',
 				pages: ['*']
 			},
 			router: true,
@@ -248,7 +252,6 @@ function validate_paths(name, input, output) {
 		assert.equal(
 			validate_config({
 				kit: {
-					// @ts-ignore
 					paths: input
 				}
 			}).kit.paths,

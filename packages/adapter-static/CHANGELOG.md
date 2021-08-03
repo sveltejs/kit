@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- d81de603: revert adapters automatically updating .gitignore (#1924)
+
 ## 1.0.0-next.13
 
 ### Patch Changes

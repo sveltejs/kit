@@ -1,9 +1,8 @@
 let random = 0;
 
-/** @type {import('@sveltejs/kit').RequestHandler} */
+/** @type {import('@sveltejs/kit').RequestHandler<any, FormData>} */
 export function post({ body }) {
-	// @ts-ignore (TODO make the types work somehow)
-	random = body.get('random');
+	random = +body.get('random');
 }
 
 export function get() {

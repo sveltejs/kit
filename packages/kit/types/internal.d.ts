@@ -5,23 +5,23 @@ import { Load } from './page';
 
 type PageId = string;
 
-export type Incoming = Omit<Location, 'params'> & {
+export interface Incoming extends Omit<Location, 'params'> {
 	method: string;
 	headers: Headers;
 	rawBody: StrictBody;
 	body?: ParameterizedBody;
-};
+}
 
-export type Logger = {
+export interface Logger {
 	(msg: string): void;
 	success: (msg: string) => void;
 	error: (msg: string) => void;
 	warn: (msg: string) => void;
 	minor: (msg: string) => void;
 	info: (msg: string) => void;
-};
+}
 
-export type App = {
+export interface App {
 	init: ({
 		paths,
 		prerendering,
@@ -44,9 +44,9 @@ export type App = {
 			};
 		}
 	) => Promise<ServerResponse>;
-};
+}
 
-export type SSRComponent = {
+export interface SSRComponent {
 	ssr?: boolean;
 	router?: boolean;
 	hydrate?: boolean;
@@ -65,7 +65,7 @@ export type SSRComponent = {
 			};
 		};
 	};
-};
+}
 
 export type SSRComponentLoader = () => Promise<SSRComponent>;
 
@@ -73,14 +73,14 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type SSRPagePart = {
+export interface SSRPagePart {
 	id: string;
 	load: SSRComponentLoader;
-};
+}
 
 export type GetParams = (match: RegExpExecArray) => Record<string, string>;
 
-export type SSRPage = {
+export interface SSRPage {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
@@ -91,16 +91,16 @@ export type SSRPage = {
 	// plan b — and render that instead
 	a: PageId[];
 	b: PageId[];
-};
+}
 
-export type SSREndpoint = {
+export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: GetParams;
 	load: () => Promise<{
 		[method: string]: RequestHandler;
 	}>;
-};
+}
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
@@ -110,28 +110,28 @@ export type CSREndpoint = [RegExp];
 
 export type CSRRoute = CSREndpoint | CSRPage;
 
-export type SSRManifest = {
+export interface SSRManifest {
 	assets: Asset[];
 	layout: string;
 	error: string;
 	routes: SSRRoute[];
-};
+}
 
-export type Hooks = {
+export interface Hooks {
 	getSession: GetSession;
 	handle: Handle;
 	serverFetch: ServerFetch;
-};
+}
 
-export type SSRNode = {
+export interface SSRNode {
 	module: SSRComponent;
 	entry: string; // client-side module corresponding to this component
 	css: string[];
 	js: string[];
 	styles: string[];
-};
+}
 
-export type SSRRenderOptions = {
+export interface SSRRenderOptions {
 	amp: boolean;
 	dev: boolean;
 	entry: {
@@ -162,9 +162,9 @@ export type SSRRenderOptions = {
 	target: string;
 	template: ({ head, body }: { head: string; body: string }) => string;
 	trailing_slash: TrailingSlash;
-};
+}
 
-export type SSRRenderState = {
+export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
 	prerender?: {
@@ -174,15 +174,15 @@ export type SSRRenderState = {
 		error: Error;
 	};
 	fallback?: string;
-};
+}
 
-export type Asset = {
+export interface Asset {
 	file: string;
 	size: number;
 	type: string | null;
-};
+}
 
-export type PageData = {
+export interface PageData {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
@@ -190,39 +190,39 @@ export type PageData = {
 	lang?: string;
 	a: string[];
 	b: string[];
-};
+}
 
-export type EndpointData = {
+export interface EndpointData {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: string[];
 	file: string;
-};
+}
 
 export type RouteData = PageData | EndpointData;
 
-export type ManifestData = {
+export interface ManifestData {
 	assets: Asset[];
 	layout: string;
 	error: string;
 	components: string[];
 	routes: RouteData[];
-};
+}
 
-export type BuildData = {
+export interface BuildData {
 	client: string[];
 	server: string[];
 	static: string[];
 	entries: string[];
-};
+}
 
-export type NormalizedLoadOutput = {
+export interface NormalizedLoadOutput {
 	status: number;
 	error?: Error;
 	redirect?: string;
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	context?: Record<string, any>;
 	maxage?: number;
-};
+}
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';

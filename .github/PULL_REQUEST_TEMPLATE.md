@@ -1,3 +1,9 @@
+# IMPORTANT
+
+There is current a bug which results in our tests not being run: https://github.com/sveltejs/kit/issues/2069
+
+As a result, we are unlikely to merge any PRs until that issue is fixed. Help would be appreciated in fixing that issue.
+
 ### Before submitting the PR, please make sure you do the following
 - [ ] It's really useful if your PR references an issue where it is discussed ahead of time. In many cases, features are absent for a reason. For large changes, please create an RFC: https://github.com/sveltejs/rfcs
 - [ ] This message body should clearly illustrate what problems it solves.

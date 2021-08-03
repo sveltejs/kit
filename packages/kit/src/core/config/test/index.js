@@ -15,7 +15,7 @@ async function testLoadDefaultConfig(path) {
 
 	const config = await load_config({ cwd });
 
-	// @ts-ignore
+	// @ts-expect-error
 	delete config.kit.vite; // can't test equality of a function
 
 	assert.equal(config, {
@@ -54,7 +54,7 @@ async function testLoadDefaultConfig(path) {
 				exclude: []
 			},
 			paths: { base: '', assets: '/.' },
-			prerender: { crawl: true, enabled: true, force: false, pages: ['*'] },
+			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
 			router: true,
 			ssr: true,
 			target: null,

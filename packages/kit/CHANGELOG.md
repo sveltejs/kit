@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.140
+
+### Patch Changes
+
+- e55bc44a: [fix] revert change to rendering options (#2008)
+- d81de603: revert adapters automatically updating .gitignore (#1924)
+- 5911b1c7: [fix] consider protocol-relative URLs as external
+
+## 1.0.0-next.139
+
+### Patch Changes
+
+- 883d4b85: Add public API to let adapters update .gitignore
+- 8cbe3b05: Change `force` to `onError` in prerender config options
+- 1b18a844: Don't check external links on prerender
+- 7645399a: [fix] correctly pass Vite options in preview mode
+
+## 1.0.0-next.138
+
+### Patch Changes
+
+- d6563169: [chore] prefer interfaces to types
+- b18a45c1: explicitly set compilerOptions.hydratable to config.kit.hydrate
+- 538de3eb: [feat] More powerful and configurable rendering options
+- 20dad18a: Remove the `prerender.force` option in favor of `prerender.onError`
+
 ## 1.0.0-next.137
 
 ### Patch Changes

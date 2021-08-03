@@ -1,8 +1,8 @@
-import { Logger, TrailingSlash } from './internal';
 import { UserConfig as ViteConfig } from 'vite';
 import { I18n } from './helper';
+import { Logger, TrailingSlash } from './internal';
 
-export type AdapterUtils = {
+export interface AdapterUtils {
 	log: Logger;
 	rimraf: (dir: string) => void;
 	mkdirp: (dir: string) => void;
@@ -19,14 +19,14 @@ export type AdapterUtils = {
 		dest: string;
 		fallback?: string;
 	}) => Promise<void>;
-};
+}
 
-export type Adapter = {
+export interface Adapter {
 	name: string;
-	adapt: ({ utils, config }: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
-};
+	adapt: (context: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
+}
 
-export type Config = {
+export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
@@ -81,9 +81,18 @@ export type Config = {
 		};
 	};
 	preprocess?: any;
-};
+}
 
-export type ValidatedConfig = {
+export type PrerenderErrorHandler = (errorDetails: {
+	status: number;
+	path: string;
+	referrer: string | null;
+	referenceType: 'linked' | 'fetched';
+}) => void | never;
+
+export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
+
+export interface ValidatedConfig {
 	compilerOptions: any;
 	extensions: string[];
 	kit: {
@@ -122,7 +131,7 @@ export type ValidatedConfig = {
 		prerender: {
 			crawl: boolean;
 			enabled: boolean;
-			force: boolean;
+			onError: PrerenderOnErrorValue;
 			pages: string[];
 		};
 		router: boolean;
@@ -136,4 +145,4 @@ export type ValidatedConfig = {
 		i18n?: I18n;
 	};
 	preprocess: any;
-};
+}
