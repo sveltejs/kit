@@ -19,6 +19,7 @@
 		"playwright-chromium": "^1.10.0",
 		"port-authority": "^1.1.2",
 		"sirv": "^1.0.12",
+		"svelte": "^3.40.0",
 		"uvu": "^0.5.1"
 	}
 }
