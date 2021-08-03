@@ -181,7 +181,7 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
-					// @ts-expect-error TODO: fix this and document wtf start is
+					// @ts-expect-error
 					response,
 					js: false
 				});
@@ -234,7 +234,7 @@ function duplicate(test_fn, config, is_build) {
 						await context.pages.js.evaluate(() => window.navigated);
 					},
 					js: true,
-					// @ts-expect-error TODO: fix this and document wtf start is
+					// @ts-expect-error
 					response
 				});
 			});
