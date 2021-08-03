@@ -2,7 +2,7 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports two functions, both optional, that run on the server — **handle** and **getSession**.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — **handle**, **getSession** and **serverFetch**.
 
 > The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
 
