@@ -41,7 +41,7 @@ export async function render_endpoint(request, route) {
 	const preface = `Invalid response from route ${request.path}`;
 
 	if (!response) {
-		return error('no response');
+		return;
 	}
 	if (typeof response !== 'object') {
 		return error(`${preface}: expected an object, got ${typeof response}`);
