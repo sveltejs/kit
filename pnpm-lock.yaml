@@ -56,14 +56,12 @@ importers:
       '@sveltejs/kit': workspace:*
       rollup: ^2.55.0
       sirv: ^1.0.12
-      typescript: ^4.3.5
     dependencies:
       '@architect/parser': 3.0.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       rollup: 2.55.0
       sirv: 1.0.12
-      typescript: 4.3.5
 
   packages/adapter-cloudflare-workers:
     specifiers:
@@ -81,13 +79,11 @@ importers:
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
       esbuild: ^0.12.5
-      typescript: ^4.3.5
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
-      typescript: 4.3.5
 
   packages/adapter-node:
     specifiers:
@@ -101,7 +97,6 @@ importers:
       rollup: ^2.55.0
       sirv: ^1.0.12
       tiny-glob: ^0.2.9
-      typescript: ^4.3.5
       uvu: ^0.5.1
     dependencies:
       esbuild: 0.12.5
@@ -115,7 +110,6 @@ importers:
       polka: 1.0.0-next.15
       rollup: 2.55.0
       sirv: 1.0.12
-      typescript: 4.3.5
       uvu: 0.5.1
 
   packages/adapter-static:
@@ -124,24 +118,20 @@ importers:
       playwright-chromium: ^1.10.0
       port-authority: ^1.1.2
       sirv: ^1.0.12
-      typescript: ^4.3.5
     devDependencies:
       '@sveltejs/kit': link:../kit
       playwright-chromium: 1.10.0
       port-authority: 1.1.2
       sirv: 1.0.12
-      typescript: 4.3.5
 
   packages/adapter-vercel:
     specifiers:
       '@sveltejs/kit': workspace:*
       esbuild: ^0.12.5
-      typescript: ^4.3.5
     dependencies:
       esbuild: 0.12.5
     devDependencies:
       '@sveltejs/kit': link:../kit
-      typescript: 4.3.5
 
   packages/create-svelte:
     specifiers:
@@ -157,7 +147,6 @@ importers:
       sucrase: ^3.18.1
       svelte-preprocess: ^4.7.3
       tiny-glob: ^0.2.8
-      typescript: ^4.3.5
     dependencies:
       kleur: 4.1.4
       prompts: 2.4.1
@@ -172,7 +161,6 @@ importers:
       sucrase: 3.18.1
       svelte-preprocess: 4.7.3_typescript@4.3.5
       tiny-glob: 0.2.8
-      typescript: 4.3.5
 
   packages/create-svelte/templates/default:
     specifiers:
@@ -231,7 +219,6 @@ importers:
       svelte-check: ^2.2.0
       svelte2tsx: ~0.4.1
       tiny-glob: ^0.2.8
-      typescript: ^4.3.5
       uvu: ^0.5.1
       vite: ^2.4.3
     dependencies:
@@ -267,7 +254,6 @@ importers:
       svelte-check: 2.2.0_svelte@3.40.0
       svelte2tsx: 0.4.1_svelte@3.40.0+typescript@4.3.5
       tiny-glob: 0.2.8
-      typescript: 4.3.5
       uvu: 0.5.1
 
 packages:

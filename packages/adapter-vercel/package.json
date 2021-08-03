@@ -20,7 +20,6 @@
 		"esbuild": "^0.12.5"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"typescript": "^4.3.5"
+		"@sveltejs/kit": "workspace:*"
 	}
 }
