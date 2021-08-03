@@ -1,6 +1,6 @@
 <script context="module">
 	/** @type {import("@sveltejs/kit").Load} */
-	export const load = ({ page }) => {
+	export const load = () => {
 		return {
 			props: {}
 		};
