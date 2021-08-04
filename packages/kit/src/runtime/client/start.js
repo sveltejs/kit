@@ -30,14 +30,6 @@ export async function start({ paths, target, session, host, route, spa, trailing
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
 
-	const router = route
-		? new Router({
-				base: paths.base,
-				routes,
-				trailing_slash
-		  })
-		: null;
-
 	const renderer = new Renderer({
 		Root,
 		fallback,
@@ -46,13 +38,22 @@ export async function start({ paths, target, session, host, route, spa, trailing
 		host
 	});
 
+	const router = route
+		? new Router({
+				base: paths.base,
+				routes,
+				trailing_slash,
+				renderer
+		  })
+		: null;
+
 	init(router);
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
 	if (router) {
-		router.init(renderer);
 		if (spa) router.goto(location.href, { replaceState: true }, []);
+		router.init_listeners();
 	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
