@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npx pnpm i -r --store=node_modules/.pnpm-store && npx pnpm run build"
   publish = ".svelte-kit/netlify/build/"
   functions = ".svelte-kit/netlify/functions/"
 
