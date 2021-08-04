@@ -4,7 +4,7 @@
   functions = ".svelte-kit/netlify/functions/"
 
 [build.environment]
-  NPM_FLAGS="--prefix=/opt/buildhome/hn.svelte.dev"
+  NPM_FLAGS="--prefix=/dev/null"
 
 [[plugins]]
   package = "/.netlify/netlify-plugin-pnpm"
