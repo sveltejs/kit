@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.142
+
+### Patch Changes
+
+- aed1bd07: [fix] fully initialize router before rendering
+- 970bb04c: restore reverted config changes
+
 ## 1.0.0-next.141
 
 ### Patch Changes
