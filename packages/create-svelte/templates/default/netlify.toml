@@ -1,4 +1,10 @@
 [build]
   command = "npm run build"
-  publish = ".netlify/build/"
-  functions = ".netlify/functions/"
+  publish = ".svelte-kit/netlify/build/"
+  functions = ".svelte-kit/netlify/functions/"
+
+[build.environment]
+  NPM_FLAGS="--prefix=/dev/null"
+
+[[plugins]]
+  package = "/.netlify/netlify-plugin-pnpm"
