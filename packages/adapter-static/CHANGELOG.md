@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- b3e7c8b3: [chore] update build output location
+
 ## 1.0.0-next.14
 
 ### Patch Changes

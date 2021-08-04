@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.37
+
+### Patch Changes
+
+- b3e7c8b3: [chore] update build output location
+
 ## 1.0.0-next.36
 
 ### Patch Changes
