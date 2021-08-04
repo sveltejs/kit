@@ -1,13 +1,7 @@
 import { ServerRequest } from './hooks';
 import { Headers, MaybePromise } from './helper';
 
-type JSONValue =
-	| string
-	| number
-	| boolean
-	| null
-	| JSONValue[]
-	| { [key: string]: JSONValue };
+type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 type DefaultBody = JSONValue | Uint8Array;
 
