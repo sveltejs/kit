@@ -2,7 +2,6 @@
 	"name": "~TODO~",
 	"version": "0.0.1",
 	"scripts": {
-		"preinstall": "cwd",
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
 		"start": "svelte-kit start"
