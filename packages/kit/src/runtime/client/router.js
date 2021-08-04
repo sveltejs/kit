@@ -17,25 +17,33 @@ function find_anchor(node) {
 }
 
 export class Router {
-	/** @param {{
+	/**
+	 * @param {{
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 * }} opts */
-	constructor({ base, routes, trailing_slash }) {
+	 *    renderer: import('./renderer').Renderer
+	 * }} opts
+	 */
+	constructor({ base, routes, trailing_slash, renderer }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
-	}
 
-	/** @param {import('./renderer').Renderer} renderer */
-	init(renderer) {
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
 		renderer.router = this;
 
 		this.enabled = true;
 
+		// make it possible to reset focus
+		document.body.setAttribute('tabindex', '-1');
+
+		// create initial history entry, so we can return here
+		history.replaceState(history.state || {}, '', location.href);
+	}
+
+	init_listeners() {
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
 		}
@@ -147,12 +155,6 @@ export class Router {
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
-
-		// make it possible to reset focus
-		document.body.setAttribute('tabindex', '-1');
-
-		// create initial history entry, so we can return here
-		history.replaceState(history.state || {}, '', location.href);
 	}
 
 	/** @param {URL} url */
@@ -221,7 +223,6 @@ export class Router {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		// @ts-expect-error
 		return this.renderer.load(info);
 	}
 
@@ -255,13 +256,11 @@ export class Router {
 			}
 		}
 
-		// @ts-expect-error
 		this.renderer.notify({
 			path: info.path,
 			query: info.query
 		});
 
-		// @ts-expect-error
 		await this.renderer.update(info, chain, false);
 
 		if (!keepfocus) {
