@@ -1,10 +1,10 @@
 [build]
-  command = "npx pnpm i -r --store=node_modules/.pnpm-store && npx pnpm run build"
+  command = "npm run build"
   publish = ".svelte-kit/netlify/build/"
   functions = ".svelte-kit/netlify/functions/"
 
 [build.environment]
-  NPM_FLAGS="--prefix=/dev/null"
+  NPM_FLAGS="--prefix=/dev/null --force"
 
 [[plugins]]
   package = "/.netlify/netlify-plugin-pnpm"
