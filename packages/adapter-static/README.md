@@ -14,8 +14,8 @@ export default {
 	kit: {
 		adapter: adapter({
 			// default options are shown
-			pages: 'build',
-			assets: 'build',
+			pages: '.svelte-kit/static/build',
+			assets: '.svelte-kit/static/build',
 			fallback: null
 		})
 	}
@@ -28,7 +28,7 @@ Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender ev
 
 ### pages
 
-The directory to write prerendered pages to. It defaults to `build`.
+The directory to write prerendered pages to. It defaults to `.svelte-kit/static/build`.
 
 ### assets
 
