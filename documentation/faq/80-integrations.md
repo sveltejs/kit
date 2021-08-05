@@ -23,18 +23,16 @@ Vite will attempt to process all imported libraries and may fail when encounteri
 If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
 
 ```js
-<script>
-	import { browser } from '$app/env';
+import { browser } from '$app/env';
 
-	if (browser) {
-		// client-only code here
-	}
-</script>
+if (browser) {
+	// client-only code here
+}
 ```
 
 You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
 
-```html
+```js
 import { onMount } from 'svelte';
 
 onMount(async () => {
@@ -45,7 +43,7 @@ onMount(async () => {
 
 If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
 
-```html
+```js
 import { onMount } from 'svelte';
 import { method } from 'some-browser-only-library');
 
