@@ -316,7 +316,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						headers: /** @type {import('types/helper').Headers} */ (req.headers),
 						method: req.method,
 						host,
-						path: parsed.pathname,
+						path: decodeURI(parsed.pathname),
 						query: parsed.searchParams,
 						rawBody: body
 					},

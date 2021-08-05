@@ -1,8 +1,8 @@
 {
 	"name": "kit",
 	"version": "0.0.1",
-	"description": "",
-	"main": "index.js",
+	"description": "monorepo for @sveltejs/kit and friends",
+	"private": true,
 	"scripts": {
 		"build": "pnpm build --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
 		"test": "pnpm -r test --workspace-concurrency=1",

@@ -46,6 +46,9 @@ interface TestOptions {
 export interface TestFunctionBase {
 	(
 		name: string,
+		/**
+		 * The first page to load in the browser. May by null for testing endpoints with fetch
+		 */
 		start: string | null,
 		callback: (context: TestContext) => Promise<void>,
 		options?: TestOptions

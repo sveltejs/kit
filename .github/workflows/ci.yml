@@ -33,6 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 6
     strategy:
+      fail-fast: false
       matrix:
         node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]

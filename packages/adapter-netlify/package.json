@@ -13,7 +13,7 @@
 	],
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
@@ -21,7 +21,6 @@
 		"esbuild": "^0.12.5"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"typescript": "^4.3.5"
+		"@sveltejs/kit": "workspace:*"
 	}
 }
