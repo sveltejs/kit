@@ -392,7 +392,7 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				serverFetch: hooks.serverFetch || fetch
+				externalFetch: hooks.externalFetch || fetch
 			});
 
 			const module_lookup = {
