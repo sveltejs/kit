@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.77
+
+### Patch Changes
+
+- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit)
+
 ## 2.0.0-next.76
 
 ### Patch Changes
