@@ -4,7 +4,7 @@ import { run } from './utils.js';
 
 run('prerendered', (test) => {
 	test('generates HTML files', ({ cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/.svelte-kit/static/build/index.html`));
+		assert.ok(fs.existsSync(`${cwd}/build/index.html`));
 	});
 
 	test('prerenders content', async ({ base, page }) => {
@@ -15,15 +15,15 @@ run('prerendered', (test) => {
 
 run('spa', (test) => {
 	test('generates a fallback page', ({ cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/.svelte-kit/static/build/200.html`));
+		assert.ok(fs.existsSync(`${cwd}/build/200.html`));
 	});
 
 	test('does not prerender pages without prerender=true', ({ cwd }) => {
-		assert.ok(!fs.existsSync(`${cwd}/.svelte-kit/static/build/index.html`));
+		assert.ok(!fs.existsSync(`${cwd}/build/index.html`));
 	});
 
 	test('prerenders page with prerender=true', ({ cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/.svelte-kit/static/build/about/index.html`));
+		assert.ok(fs.existsSync(`${cwd}/build/about/index.html`));
 	});
 
 	test('renders content in fallback page when JS runs', async ({ base, page }) => {
