@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit)
+
 ## 1.0.0-next.26
 
 ### Patch Changes
