@@ -299,9 +299,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 
 				if (/** @type {any} */ (hooks).serverFetch) {
 					// TODO remove this for 1.0
-					throw new Error(
-						'The serverFetch hook has been renamed to externalFetch.'
-					);
+					throw new Error('The serverFetch hook has been renamed to externalFetch.');
 				}
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
