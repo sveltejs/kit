@@ -27,16 +27,15 @@ export default {
 };
 ```
 
-Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
+Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets and functions to based on the `build.publish` settings, as per this sample configuration:
 
 ```toml
 [build]
   command = "npm run build"
   publish = ".svelte-kit/netlify/build/"
-  functions = ".svelte-kit/netlify/functions/"
 ```
 
-In this example, we placed the `build` and `functions` folders under `.svelte-kit/netlify`. If you specify another location, you will probably also want to add them to your `.gitignore`.
+There should be no need to change the publish location, but if you specify another location, you will probably also want to add it to your `.gitignore`.
 
 ## Netlify alternatives to SvelteKit functionality
 

@@ -19,10 +19,9 @@ export default function (options) {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt({ utils }) {
-			const { publish, functions } = validate_config().build;
+			const { publish } = validate_config().build;
 
 			utils.rimraf(publish);
-			utils.rimraf(functions);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
@@ -32,7 +31,7 @@ export default function (options) {
 			/** @type {BuildOptions} */
 			const defaultOptions = {
 				entryPoints: ['.svelte-kit/netlify/intermediate/entry.js'],
-				outfile: join(functions, 'render/index.js'),
+				outfile: '.netlify/functions-internal/__render.js',
 				bundle: true,
 				inject: [join(files, 'shims.js')],
 				platform: 'node'
@@ -43,7 +42,7 @@ export default function (options) {
 
 			await esbuild.build(buildOptions);
 
-			writeFileSync(join(functions, 'package.json'), JSON.stringify({ type: 'commonjs' }));
+			writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
 			utils.log.info('Prerendering static pages...');
 			await utils.prerender({
@@ -55,8 +54,10 @@ export default function (options) {
 			utils.copy_client_files(publish);
 
 			utils.log.minor('Writing redirects...');
-			utils.copy('_redirects', `${publish}/_redirects`);
-			appendFileSync(`${publish}/_redirects`, '\n\n/* /.netlify/functions/render 200');
+
+			const redirectPath = join(publish, '_redirects');
+			utils.copy('_redirects', redirectPath);
+			appendFileSync(redirectPath, '\n\n/* /.netlify/functions/__render 200');
 		}
 	};
 
@@ -74,9 +75,9 @@ function validate_config() {
 			throw err;
 		}
 
-		if (!netlify_config.build || !netlify_config.build.publish || !netlify_config.build.functions) {
+		if (!netlify_config.build || !netlify_config.build.publish) {
 			throw new Error(
-				'You must specify build.publish and build.functions in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+				'You must specify build.publish in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
 			);
 		}
 

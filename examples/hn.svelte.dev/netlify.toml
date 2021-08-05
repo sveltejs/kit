@@ -1,10 +1,13 @@
 [build]
   command = "npm run build"
   publish = ".svelte-kit/netlify/build/"
-  functions = ".svelte-kit/netlify/functions/"
 
 [build.environment]
   NPM_FLAGS="--prefix=/dev/null"
 
 [[plugins]]
   package = "/.netlify/netlify-plugin-pnpm"
+
+[dev]
+# Disable svelte-kit dev so we can test functions
+framework = "#static"
