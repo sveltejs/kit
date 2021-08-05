@@ -34,6 +34,6 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Call `utils.prerender`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
-If possible, we recommend putting the adapter output under `'.svelte-kit/' + adapterName` with any intermediate output under `'.svelte-kit/' + adapterName + '/intermediate'`.
+If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `'.svelte-kit/' + adapterName`.
 
 > The adapter API may change before 1.0.

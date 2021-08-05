@@ -31,7 +31,7 @@ export function run(app, callback) {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 			const cli_path = fileURLToPath(new URL('../../kit/src/cli.js', import.meta.url));
 
-			rimraf(`${cwd}/.svelte-kit/static/build`);
+			rimraf(`${cwd}/build`);
 
 			await spawn(`"${process.execPath}" ${cli_path} build`, {
 				cwd,
@@ -41,7 +41,7 @@ export function run(app, callback) {
 
 			context.cwd = cwd;
 			context.port = await ports.find(4000);
-			const handler = sirv(`${cwd}/.svelte-kit/static/build`, {
+			const handler = sirv(`${cwd}/build`, {
 				single: '200.html'
 			});
 			context.server = await create_server(context.port, handler);

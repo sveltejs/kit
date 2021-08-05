@@ -32,10 +32,8 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 ```toml
 [build]
   command = "npm run build"
-  publish = ".svelte-kit/netlify/build/"
+  publish = "build/publish/"
 ```
-
-There should be no need to change the publish location, but if you specify another location, you will probably also want to add it to your `.gitignore`.
 
 ## Netlify alternatives to SvelteKit functionality
 

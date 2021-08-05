@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.39
+
+### Patch Changes
+
+- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit)
+
 ## 1.0.0-next.38
 
 ### Patch Changes

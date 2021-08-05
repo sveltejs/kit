@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.76",
+	"version": "2.0.0-next.77",
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",

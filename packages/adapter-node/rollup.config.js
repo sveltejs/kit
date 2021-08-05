@@ -11,7 +11,7 @@ export default [
 			sourcemap: true
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['../../output/server/app.js', './env.js', ...require('module').builtinModules]
+		external: ['../output/server/app.js', './env.js', ...require('module').builtinModules]
 	},
 	{
 		input: 'src/shims.js',
