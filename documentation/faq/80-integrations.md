@@ -14,7 +14,7 @@ Also see [sveltejs/integrations](https://github.com/sveltejs/integrations#svelte
 
 ### How do I use Firebase?
 
-Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size.
+Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
@@ -23,28 +23,35 @@ Vite will attempt to process all imported libraries and may fail when encounteri
 If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
 
 ```js
-import { browser } from '$app/env';
-
-if (browser) {
-	// client-only code here
-}
-```
-
-You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM. In this case, you may still find a benefit of including a `browser` check as shown below because Vite may otherwise attempt to optimize the dependency and fail on it. [We hope to make this unnecessary in the future](https://github.com/sveltejs/svelte/issues/6372).
-
-```html
 <script>
-	import { onMount } from 'svelte';
 	import { browser } from '$app/env';
 
-	let lib;
-
 	if (browser) {
-		onMount(async () => {
-			lib = (await import('some-browser-only-library')).default;
-		});
+		// client-only code here
 	}
 </script>
+```
+
+You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
+
+```html
+import { onMount } from 'svelte';
+
+onMount(async () => {
+	const { method } = await import('some-browser-only-library');
+	method('hello world');
+});
+```
+
+If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
+
+```html
+import { onMount } from 'svelte';
+import { method } from 'some-browser-only-library');
+
+onMount(async () => {
+	method('hello world');
+});
 ```
 
 ### How do I setup a database?
