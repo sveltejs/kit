@@ -346,7 +346,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						hooks: {
 							getSession: hooks.getSession || (() => ({})),
 							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							externalFetch: hooks.externalFetch || fetch
+							serverFetch: hooks.serverFetch || fetch
 						},
 						hydrate: config.kit.hydrate,
 						paths: config.kit.paths,

@@ -1,6 +1,6 @@
 import { RequestHandler } from './endpoint';
 import { Headers, Location, ParameterizedBody } from './helper';
-import { GetSession, Handle, ServerResponse, externalFetch, StrictBody } from './hooks';
+import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
 import { Load } from './page';
 
 type PageId = string;
@@ -119,7 +119,7 @@ export interface SSRManifest {
 export interface Hooks {
 	getSession: GetSession;
 	handle: Handle;
-	externalFetch: externalFetch;
+	serverFetch: ServerFetch;
 }
 
 export interface SSRNode {
