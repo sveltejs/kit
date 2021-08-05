@@ -47,6 +47,19 @@ You can also run code in `onMount` if you'd like to run it after the component h
 </script>
 ```
 
+If you prefer to use static imports instead, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds.
+
+```html
+<script>
+	import lib from 'some-browser-only-library?client';
+	import { browser } from '$app/env';
+
+	if (browser) {
+		lib.doSomething();
+	}
+</script>
+```
+
 ### How do I setup a database?
 
 Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
