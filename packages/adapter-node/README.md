@@ -14,7 +14,7 @@ export default {
 	kit: {
 		adapter: adapter({
 			// default options are shown
-			out: '.svelte-kit/node/build',
+			out: 'build',
 			precompress: false,
 			env: {
 				host: 'HOST',
@@ -29,7 +29,7 @@ export default {
 
 ### out
 
-The directory to build the server to. It defaults to `.svelte-kit/node/build` — i.e. `node .svelte-kit/node/build` would start the server locally after it has been created.
+The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
 
 ### precompress
 
