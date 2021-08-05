@@ -15,16 +15,16 @@
 		"prettier": "^2.2.1",
 		"prettier-plugin-svelte": "^2.2.0",
 		"sucrase": "^3.18.1",
+		"svelte": "^3.40.0",
 		"svelte-preprocess": "^4.7.3",
-		"tiny-glob": "^0.2.8",
-		"typescript": "^4.3.5"
+		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
 		"build": "npm run format && node scripts/build-templates",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore --ignore-path ../../.gitignore --plugin prettier-plugin-svelte",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte",
+		"format": "npm run check-format -- --write",
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path ../../.gitignore --ignore-path .gitignore --plugin prettier-plugin-svelte --plugin-search-dir=.",
 		"prepublishOnly": "npm run build"
 	},
 	"files": [

@@ -1,15 +1,15 @@
 <script context="module">
 	/** @type {import("@sveltejs/kit").Load} */
 	export async function load({ page, fetch }) {
-		const res = await fetch(`/routing/fallthrough/${page.params.animal}.json`);
+		const res = await fetch(`/routing/fallthrough-advanced/${page.params.vegetable}.json`);
 
 		if (res.ok) {
 			const { type } = await res.json();
 
-			if (type === 'animal') {
+			if (type === 'vegetable') {
 				return {
 					props: {
-						animal: page.params.animal
+						vegetable: page.params.vegetable
 					}
 				};
 			}
@@ -19,7 +19,7 @@
 
 <script>
 	/** @type {string} */
-	export let animal;
+	export let vegetable;
 </script>
 
-<h1>{animal} is an animal</h1>
+<h1>{vegetable} is a vegetable</h1>

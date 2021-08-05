@@ -249,15 +249,16 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
+					const pathname = decodeURI(parsed.pathname);
 
-					const file = parsed.pathname.replace(config.kit.paths.assets, '').slice(1);
+					const file = pathname.replace(config.kit.paths.assets, '').slice(1);
 					if (files.has(file)) continue;
 
 					if (parsed.search) {
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(parsed.pathname.replace(config.kit.paths.base, ''), path);
+					await visit(pathname.replace(config.kit.paths.base, ''), path);
 				}
 			}
 		}

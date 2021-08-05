@@ -1,9 +1,12 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { respond_with_error } from './respond_with_error.js';
-import { coalesce_to_error } from '../utils.js';
+import { coalesce_to_error } from '../../utils.js';
 
-/** @typedef {import('./types.js').Loaded} Loaded */
+/**
+ * @typedef {import('./types.js').Loaded} Loaded
+ * @typedef {import('types/internal').SSRNode} SSRNode
+ */
 
 /**
  * @param {{
@@ -27,10 +30,11 @@ export async function respond({ request, options, state, $session, route }) {
 		params
 	};
 
+	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((id) => options.load_component(id)));
+		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
@@ -46,7 +50,8 @@ export async function respond({ request, options, state, $session, route }) {
 		});
 	}
 
-	const leaf = nodes[nodes.length - 1].module;
+	// the leaf node will be present. only layouts may be undefined
+	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
 
 	const page_config = {
 		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
@@ -127,7 +132,6 @@ export async function respond({ request, options, state, $session, route }) {
 					while (i--) {
 						if (route.b[i]) {
 							const error_node = await options.load_component(route.b[i]);
-							let error_loaded;
 
 							/** @type {Loaded} */
 							let node_loaded;
@@ -136,6 +140,7 @@ export async function respond({ request, options, state, $session, route }) {
 								j -= 1;
 							}
 
+							let error_loaded;
 							try {
 								// there's no fallthough on an error page, so we know it's not undefined
 								error_loaded = /** @type {import('./types').Loaded} */ (await load_node({

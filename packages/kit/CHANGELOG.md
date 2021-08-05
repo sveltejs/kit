@@ -1,5 +1,22 @@
 # @sveltejs/kit
 
+## 1.0.0-next.142
+
+### Patch Changes
+
+- aed1bd07: [fix] fully initialize router before rendering
+- 970bb04c: restore reverted config changes
+
+## 1.0.0-next.141
+
+### Patch Changes
+
+- d109a394: [fix] successfully load nested error pages
+- fab67c94: [fix] successfully handle client errors
+- 943f5288: [fix] solve regression parsing unicode URLs"
+- 4435a659: [fix] allow endpoint shadowing to work
+- ee73a265: [fix] correctly do fallthrough in simple case
+
 ## 1.0.0-next.140
 
 ### Patch Changes
