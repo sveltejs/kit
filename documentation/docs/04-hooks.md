@@ -2,7 +2,7 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — **handle**, **getSession**, and **serverFetch**.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — **handle**, **getSession**, and **externalFetch**.
 
 > The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
 
@@ -92,19 +92,19 @@ export function getSession(request) {
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
 
-### serverFetch
+### externalFetch
 
 This function allows you to modify (or replace) a `fetch` request for an **external resource** that happens inside a `load` function that runs on the server (or during pre-rendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
-type ServerFetch = (req: Request) => Promise<Response>;
+type ExternalFetch = (req: Request) => Promise<Response>;
 ```
 
 ```js
-/** @type {import('@sveltejs/kit').ServerFetch} */
-export async function serverFetch(request) {
+/** @type {import('@sveltejs/kit').ExternalFetch} */
+export async function externalFetch(request) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(

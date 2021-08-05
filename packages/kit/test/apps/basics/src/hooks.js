@@ -23,8 +23,8 @@ export async function handle({ request, resolve }) {
 	};
 }
 
-/** @type {import('@sveltejs/kit').ServerFetch} */
-export async function serverFetch(request) {
+/** @type {import('@sveltejs/kit').ExternalFetch} */
+export async function externalFetch(request) {
 	let newRequest = request;
 	if (request.url.endsWith('/server-fetch-request.json')) {
 		newRequest = new Request(

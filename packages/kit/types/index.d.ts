@@ -9,7 +9,7 @@ export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput, Page } from './
 export {
 	GetSession,
 	Handle,
-	ServerFetch,
+	ExternalFetch,
 	ServerRequest as Request,
 	ServerResponse as Response
 } from './hooks';

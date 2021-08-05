@@ -27,6 +27,6 @@ export interface Handle<Locals = Record<string, any>> {
 	}): MaybePromise<ServerResponse>;
 }
 
-export interface ServerFetch {
+export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }
