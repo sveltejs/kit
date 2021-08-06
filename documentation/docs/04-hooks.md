@@ -125,10 +125,6 @@ For example, you may have a custom logging scheme that you send to an external
 system, and you want to format the error in a manner consistent with your other
 logs.
 
-```ts
-type ServerFetch = (req: Request) => Promise<Response>;
-```
-
 ```js
 /** @type {import('@sveltejs/kit').HandleError} */
 export async function handleError(error) {
