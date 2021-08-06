@@ -47,17 +47,15 @@ You can also run code in `onMount` if you'd like to run it after the component h
 </script>
 ```
 
-If you prefer to use static imports instead, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds.
+Otherwise, if the library has side effects and you'd still prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds.
 
-```html
-<script>
-	import lib from 'some-browser-only-library?client';
-	import { browser } from '$app/env';
+```js
+import { onMount } from 'svelte';
+import { method } from 'some-browser-only-library?client';
 
-	if (browser) {
-		lib.doSomething();
-	}
-</script>
+onMount(() => {
+	method('hello world');
+});
 ```
 
 ### How do I setup a database?
