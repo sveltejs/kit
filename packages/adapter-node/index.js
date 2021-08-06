@@ -32,7 +32,7 @@ const pipe = promisify(pipeline);
  * }} options
  */
 export default function ({
-	out = '.svelte-kit/node/build',
+	out = 'build',
 	precompress,
 	env: { host: host_env = 'HOST', port: port_env = 'PORT' } = {},
 	esbuild: esbuildConfig
@@ -54,16 +54,16 @@ export default function ({
 
 			utils.log.minor('Building server');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
-			utils.copy(files, '.svelte-kit/node/intermediate');
+			utils.copy(files, '.svelte-kit/node');
 			writeFileSync(
-				'.svelte-kit/node/intermediate/env.js',
+				'.svelte-kit/node/env.js',
 				`export const host = process.env[${JSON.stringify(
 					host_env
 				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
 			);
 			/** @type {BuildOptions} */
 			const defaultOptions = {
-				entryPoints: ['.svelte-kit/node/intermediate/index.js'],
+				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
 				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
