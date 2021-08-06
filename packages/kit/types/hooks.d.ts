@@ -27,6 +27,10 @@ export interface Handle<Locals = Record<string, any>> {
 	}): MaybePromise<ServerResponse>;
 }
 
+export interface HandleError<Locals = Record<string, any>> {
+	(error: Error & { frame?: string }): void;
+}
+
 export interface ServerFetch {
 	(req: Request): Promise<Response>;
 }

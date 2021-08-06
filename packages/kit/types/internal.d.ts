@@ -1,6 +1,6 @@
 import { RequestHandler } from './endpoint';
 import { Headers, Location, ParameterizedBody } from './helper';
-import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
+import { GetSession, Handle, HandleError, ServerResponse, ServerFetch, StrictBody } from './hooks';
 import { Load } from './page';
 
 type PageId = string;
@@ -122,6 +122,7 @@ export interface SSRManifest {
 export interface Hooks {
 	getSession: GetSession;
 	handle: Handle;
+	handleError: HandleError;
 	serverFetch: ServerFetch;
 }
 
@@ -143,7 +144,6 @@ export interface SSRRenderOptions {
 	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error: (error: Error) => void;
 	hooks: Hooks;
 	hydrate: boolean;
 	load_component: (id: PageId) => Promise<SSRNode>;

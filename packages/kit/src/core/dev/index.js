@@ -333,19 +333,21 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							vite.ssrFixStacktrace(error);
 							return error.stack;
 						},
-						handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
-							vite.ssrFixStacktrace(error);
-							console.error(colors.bold().red(error.message));
-							if (error.frame) {
-								console.error(colors.gray(error.frame));
-							}
-							if (error.stack) {
-								console.error(colors.gray(error.stack));
-							}
-						},
 						hooks: {
 							getSession: hooks.getSession || (() => ({})),
 							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+							handleError:
+								hooks.handleError ||
+								((error) => {
+									vite.ssrFixStacktrace(error);
+									console.error(colors.bold().red(error.message));
+									if (error.frame) {
+										console.error(colors.gray(error.frame));
+									}
+									if (error.stack) {
+										console.error(colors.gray(error.stack));
+									}
+								}),
 							serverFetch: hooks.serverFetch || fetch
 						},
 						hydrate: config.kit.hydrate,
