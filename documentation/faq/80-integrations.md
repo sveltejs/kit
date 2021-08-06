@@ -45,9 +45,9 @@ If the library you'd like to use is side-effect free you can also statically imp
 
 ```js
 import { onMount } from 'svelte';
-import { method } from 'some-browser-only-library');
+import { method } from 'some-browser-only-library';
 
-onMount(async () => {
+onMount(() => {
 	method('hello world');
 });
 ```
