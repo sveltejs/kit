@@ -11,3 +11,5 @@ You can have Vite process your assets by importing them as shown below:
 
 <img src="{imageSrc}" />
 ```
+
+There is an [open request in `vite-plugin-svelte` to help do this automatically](https://github.com/sveltejs/vite-plugin-svelte/issues/114).

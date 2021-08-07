@@ -17,7 +17,7 @@ export default {
 };
 ```
 
-With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside `.svelte-kit/node/build`. You can pass options to adapters, such as customising the output directory in `adapter-node`:
+With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside `build`. You can pass options to adapters, such as customising the output directory in `adapter-node`:
 
 ```diff
 // svelte.config.js
@@ -42,4 +42,4 @@ A variety of official adapters exist for serverless platforms...
 - [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
 - [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
-As well as [community-provided adapters](https://github.com/sveltejs/integrations#sveltekit-adapters). You may also [write your own adapter](#writing-an-adapter).
+As well as [community-provided adapters](https://sveltesociety.dev/components#category-SvelteKit%20Adapters). You may also [write your own adapter](#writing-an-adapter).

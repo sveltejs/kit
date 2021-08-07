@@ -6,6 +6,18 @@ SvelteKit is still in beta. Expect bugs! Read more [here](https://svelte.dev/blo
 
 Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
 
+## Packages
+
+| Package                                                                     | Changelog                                                     |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [@sveltejs/kit](packages/kit)                                               | [Changelog](packages/kit/CHANGELOG.md)                        |
+| [create-svelte](packages/create-svelte)                                     | [Changelog](packages/create-svelte/CHANGELOG.md)              |
+| [@sveltejs/adapter-node](packages/adapter-node)                             | [Changelog](packages/adapter-node/CHANGELOG.md)               |
+| [@sveltejs/adapter-static](packages/adapter-static)                         | [Changelog](packages/adapter-static/CHANGELOG.md)             |
+| [@sveltejs/adapter-cloudflare-workers](packages/adapter-cloudflare-workers) | [Changelog](packages/adapter-cloudflare-workers/CHANGELOG.md) |
+| [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
+| [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
+
 ## Developing
 
 This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
@@ -36,7 +48,7 @@ To use the git hooks in the repo, which will save you waiting for CI to tell you
 git config core.hookspath .githooks
 ```
 
-### Changelogs
+### Generating changelogs
 
 For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
 
