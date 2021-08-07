@@ -50,6 +50,17 @@ onMount(() => {
 });
 ```
 
+Otherwise, if the library has side effects and you'd still prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
+
+```js
+import { onMount } from 'svelte';
+import { method } from 'some-browser-only-library?client';
+
+onMount(() => {
+	method('hello world');
+});
+```
+
 ### How do I setup a database?
 
 Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
