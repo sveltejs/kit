@@ -18,7 +18,9 @@ import { coalesce_to_error } from '../../utils.js';
  *   status: number;
  *   error: Error;
  * }} opts
+ * @returns {Promise<import('types/hooks').ServerResponse>}
  */
+
 export async function respond_with_error({ request, options, state, $session, status, error }) {
 	const default_layout = await options.load_component(options.manifest.layout);
 	const default_error = await options.load_component(options.manifest.error);
@@ -45,24 +47,32 @@ export async function respond_with_error({ request, options, state, $session, st
 		is_error: false
 	}));
 
-	const branch = [
-		loaded,
-		/** @type {Loaded} */ (await load_node({
-			request,
-			options,
-			state,
-			route: null,
-			page,
-			node: default_error,
-			$session,
-			context: loaded ? loaded.context : {},
-			prerender_enabled: is_prerender_enabled(options, default_error, state),
-			is_leaf: false,
-			is_error: true,
-			status,
-			error
-		}))
-	];
+	const error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
+		request,
+		options,
+		state,
+		route: null,
+		page,
+		node: default_error,
+		$session,
+		context: loaded ? loaded.context : {},
+		prerender_enabled: is_prerender_enabled(options, default_error, state),
+		is_leaf: false,
+		is_error: true,
+		status,
+		error
+	}));
+
+	if (error_loaded.loaded.redirect) {
+		return {
+			status: error_loaded.loaded.status,
+			headers: {
+				location: encodeURI(error_loaded.loaded.redirect)
+			}
+		};
+	}
+
+	const branch = [loaded, error_loaded];
 
 	try {
 		return await render_response({
