@@ -145,6 +145,16 @@ export async function respond(opts) {
 								}
 
 								page_config = get_page_config(error_node.module, options);
+
+								if (error_loaded.loaded.redirect) {
+									return {
+										status: error_loaded.loaded.status,
+										headers: {
+											location: encodeURI(error_loaded.loaded.redirect)
+										}
+									};
+								}
+
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
 							} catch (/** @type {unknown} */ err) {
