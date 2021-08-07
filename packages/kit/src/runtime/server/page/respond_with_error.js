@@ -20,7 +20,6 @@ import { coalesce_to_error } from '../../utils.js';
  * }} opts
  * @returns {Promise<import('types/hooks').ServerResponse>}
  */
-
 export async function respond_with_error({ request, options, state, $session, status, error }) {
 	const default_layout = await options.load_component(options.manifest.layout);
 	const default_error = await options.load_component(options.manifest.error);

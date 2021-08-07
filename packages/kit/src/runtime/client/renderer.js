@@ -661,6 +661,14 @@ export class Renderer {
 								context: node_loaded.context
 							});
 
+							if (error_loaded && error_loaded.loaded && error_loaded.loaded.redirect) {
+								return {
+									redirect: error_loaded.loaded.redirect,
+									props: {},
+									state: this.current
+								};
+							}
+
 							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
 								continue;
 							}
