@@ -31,7 +31,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 		},
 
 		async prerender({ all = false, dest, fallback }) {
-			if (config.kit.prerender.enabled) {
+			if (config.kit.prerender.enabled || fallback) {
 				await prerender({
 					out: dest,
 					all,
