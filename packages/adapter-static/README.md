@@ -65,7 +65,7 @@ When operating in SPA mode, only pages that have the [`prerender`](https://kit.s
 
 When building for Github Pages, make sure to update the [basepaths](https://kit.svelte.dev/docs#configuration) (see `paths.base` and `paths.assets`).
 
-Also note that you will have to prevent github's provided jekyll to manage your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable jekyll, change the kit's `appdir` configuration option to `"app_"` or anything not starting by an underscore. For more information, see github's documentation about [configuring jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
+Also note that you will have to prevent Github's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appdir` configuration option to `"app_"` or anything not starting by an underscore. For more information, see Github's documentation about [configuring jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
 A valid configuration file for Github Pages:
 
