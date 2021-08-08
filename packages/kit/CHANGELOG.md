@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.144
+
+### Patch Changes
+
+- 241dd623: [fix] point at true dev entry point
+
 ## 1.0.0-next.143
 
 ### Patch Changes
