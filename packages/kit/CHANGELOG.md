@@ -1,5 +1,12 @@
 # @sveltejs/kit
 
+## 1.0.0-next.143
+
+### Patch Changes
+
+- 8c0ffb8f: [fix] provide explicit JS entry point for Vite dev mode
+- c3c25ee0: [fix] take into account page-level options on error pages
+
 ## 1.0.0-next.142
 
 ### Patch Changes
