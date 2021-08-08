@@ -133,6 +133,13 @@ class Watcher extends EventEmitter {
 							$lib: this.config.kit.files.lib
 					  }
 			},
+			build: {
+				rollupOptions: {
+					// Vite needs an explicit JS entry point, so we create a root.js
+					// that simply re-exports the root.svelte file
+					input: path.resolve(`${this.dir}/generated/root.js`)
+				}
+			},
 			plugins: [
 				svelte({
 					extensions: this.config.extensions,
