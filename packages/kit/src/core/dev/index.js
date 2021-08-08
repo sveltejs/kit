@@ -136,7 +136,7 @@ class Watcher extends EventEmitter {
 			build: {
 				rollupOptions: {
 					// Vite dependency crawler needs an explicit JS entry point
-					// eventough server otherwise works without it
+					// eventhough server otherwise works without it
 					input: path.resolve(`${this.dir}/runtime/internal/start.js`)
 				}
 			},
