@@ -34,6 +34,13 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 
 	write_if_changed(`${dir}/manifest.js`, generate_client_manifest(manifest_data, base));
 
+	write_if_changed(
+		`${dir}/root.js`,
+		`import root from './root.svelte';
+export default root;
+`
+	);
+
 	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data, base));
 }
 
