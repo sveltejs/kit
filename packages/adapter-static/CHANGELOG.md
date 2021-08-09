@@ -4,33 +4,33 @@
 
 ### Patch Changes
 
-- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit) (#2109)
+- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit) ([#2109](https://github.com/sveltejs/kit/pull/2109))
 
 ## 1.0.0-next.15
 
 ### Patch Changes
 
-- b3e7c8b3: [chore] update build output location (#2082)
+- b3e7c8b3: [chore] update build output location ([#2082](https://github.com/sveltejs/kit/pull/2082))
 
 ## 1.0.0-next.14
 
 ### Patch Changes
 
-- d81de603: revert adapters automatically updating .gitignore (#1924)
+- d81de603: revert adapters automatically updating .gitignore ([#1924](https://github.com/sveltejs/kit/pull/1924))
 
 ## 1.0.0-next.13
 
 ### Patch Changes
 
-- edc307d: Remove peerDependencies due to pnpm bug (#1621)
-- 2636e68: Attempt to fix peerDependencies specification (#1620)
+- edc307d: Remove peerDependencies due to pnpm bug ([#1621](https://github.com/sveltejs/kit/pull/1621))
+- 2636e68: Attempt to fix peerDependencies specification ([#1620](https://github.com/sveltejs/kit/pull/1620))
 
 ## 1.0.0-next.12
 
 ### Patch Changes
 
-- bf77940: bump `polka` and `sirv` dependency versions (#1548)
-- 028abd9: Pass validated svelte config to adapter adapt function (#1559)
+- bf77940: bump `polka` and `sirv` dependency versions ([#1548](https://github.com/sveltejs/kit/pull/1548))
+- 028abd9: Pass validated svelte config to adapter adapt function ([#1559](https://github.com/sveltejs/kit/pull/1559))
 - Updated dependencies [6372690]
 - Updated dependencies [c3d36a3]
 - Updated dependencies [bf77940]
@@ -42,7 +42,7 @@
 
 ### Patch Changes
 
-- dca4946: Make kit a peerDependency of the adapters (#1505)
+- dca4946: Make kit a peerDependency of the adapters ([#1505](https://github.com/sveltejs/kit/pull/1505))
 - Updated dependencies [261ee1c]
 - Updated dependencies [ec156c6]
 - Updated dependencies [586785d]
@@ -52,49 +52,49 @@
 
 ### Patch Changes
 
-- dad93fc: Fix workspace dependencies (#1434)
+- dad93fc: Fix workspace dependencies ([#1434](https://github.com/sveltejs/kit/pull/1434))
 
 ## 1.0.0-next.9
 
 ### Patch Changes
 
-- d871213: Remove Vite dependency from apps (#1374)
+- d871213: Remove Vite dependency from apps ([#1374](https://github.com/sveltejs/kit/pull/1374))
 
 ## 1.0.0-next.8
 
 ### Patch Changes
 
-- c6fde99: Convert to ESM (#1323)
+- c6fde99: Convert to ESM ([#1323](https://github.com/sveltejs/kit/pull/1323))
 
 ## 1.0.0-next.7
 
 ### Patch Changes
 
-- 2e72a94: Add type declarations (#1230)
+- 2e72a94: Add type declarations ([#1230](https://github.com/sveltejs/kit/pull/1230))
 
 ## 1.0.0-next.6
 
 ### Patch Changes
 
-- 6f2b4a6: Remove references to npm start (#1196)
+- 6f2b4a6: Remove references to npm start ([#1196](https://github.com/sveltejs/kit/pull/1196))
 
 ## 1.0.0-next.5
 
 ### Patch Changes
 
-- 4131467: Prerender fallback page for SPAs (#1181)
+- 4131467: Prerender fallback page for SPAs ([#1181](https://github.com/sveltejs/kit/pull/1181))
 
 ## 1.0.0-next.4
 
 ### Patch Changes
 
-- 8805c6d: Pass adapters directly to svelte.config.cjs (#579)
+- 8805c6d: Pass adapters directly to svelte.config.cjs ([#579](https://github.com/sveltejs/kit/pull/579))
 
 ## 1.0.0-next.3
 
 ### Patch Changes
 
-- f35a5cd: Change adapter signature (#505)
+- f35a5cd: Change adapter signature ([#505](https://github.com/sveltejs/kit/pull/505))
 
 ## 1.0.0-next.2
 
@@ -124,7 +124,7 @@
 
 ### Patch Changes
 
-- b475ed4: Overhaul adapter API - fixes #166 (#180)
+- b475ed4: Overhaul adapter API - fixes #166 ([#180](https://github.com/sveltejs/kit/pull/180))
 
 ## 0.0.14
 
