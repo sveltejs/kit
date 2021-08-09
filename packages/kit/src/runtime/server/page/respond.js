@@ -38,7 +38,7 @@ export async function respond({ request, options, state, $session, route }) {
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.hooks.handleError({ error });
+		options.hooks.handleError({ error, request });
 
 		return await respond_with_error({
 			request,
@@ -122,7 +122,7 @@ export async function respond({ request, options, state, $session, route }) {
 				} catch (/** @type {unknown} */ err) {
 					const e = coalesce_to_error(err);
 
-					options.hooks.handleError({ error: e });
+					options.hooks.handleError({ error: e, request });
 
 					status = 500;
 					error = e;
@@ -167,7 +167,7 @@ export async function respond({ request, options, state, $session, route }) {
 							} catch (/** @type {unknown} */ err) {
 								const e = coalesce_to_error(err);
 
-								options.hooks.handleError({ error: e });
+								options.hooks.handleError({ error: e, request });
 
 								continue;
 							}
@@ -211,7 +211,7 @@ export async function respond({ request, options, state, $session, route }) {
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.hooks.handleError({ error });
+		options.hooks.handleError({ error, request });
 
 		return await respond_with_error({
 			request,
