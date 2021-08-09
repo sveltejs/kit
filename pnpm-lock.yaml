@@ -52,12 +52,9 @@ importers:
 
   packages/adapter-begin:
     specifiers:
-      '@architect/parser': ^3.0.1
       '@sveltejs/kit': workspace:*
       rollup: ^2.55.0
       sirv: ^1.0.12
-    dependencies:
-      '@architect/parser': 3.0.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       rollup: 2.55.0
@@ -269,11 +266,6 @@ packages:
   /@actions/core/1.2.7:
     resolution: {integrity: sha512-kzLFD5BgEvq6ubcxdgPbRKGD2Qrgya/5j+wh4LZzqT915I0V3rED+MvjH6NXghbvk1MXknpNNQ3uKjXSEN00Ig==}
     dev: true
-
-  /@architect/parser/3.0.1:
-    resolution: {integrity: sha512-mXn5Ha5a3tEOV5vkGHLdrDinSRfO8g9s72gKuOWA13HJtGcfI+jkYrEdQbLqe63gz0RPQN27h0e1IKc2kSzqHw==}
-    engines: {node: '>=10'}
-    dev: false
 
   /@babel/code-frame/7.12.11:
     resolution: {integrity: sha512-Zt1yodBx1UcyiePMSkWnU4hPqhwq7hGi2nFL1LeA3EUl+q2LQx16MISgJ0+z7dnmgvP9QtIleuETGOiOH1RcIw==}

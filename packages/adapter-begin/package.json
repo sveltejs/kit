@@ -15,9 +15,6 @@
 		"files",
 		"index.d.ts"
 	],
-	"dependencies": {
-		"@architect/parser": "^3.0.1"
-	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"rollup": "^2.55.0",
