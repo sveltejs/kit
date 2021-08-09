@@ -308,9 +308,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 
 				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
 
-				if (paths != null && config.kit.paths != null) {
-					paths.set_paths(config.kit.paths);
-				}
+				paths.set_paths(config.kit.paths);
 
 				let body;
 

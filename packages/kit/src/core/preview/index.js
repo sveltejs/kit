@@ -60,6 +60,10 @@ export async function preview({
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
 
 	const server = await get_server(use_https, vite_config, (req, res) => {
+		if (req.url == null) {
+			throw new Error('Invalid request url');
+		}
+
 		const initial_url = req.url;
 		const { assets } = config.kit.paths;
 
