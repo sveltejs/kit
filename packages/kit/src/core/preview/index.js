@@ -69,9 +69,9 @@ export async function preview({
 
 		// Emulate app.use(`${assets}/`, sirv(...))
 		req.url =
-			assets.length > 1 && assets !== '/.' && req.url.startsWith(`${assets}/`)
-				? req.url.slice(assets.length)
-				: req.url;
+			assets.length > 1 && assets !== '/.' && initial_url.startsWith(`${assets}/`)
+				? initial_url.slice(assets.length)
+				: initial_url;
 
 		assets_handler(req, res, () => {
 			static_handler(req, res, async () => {
@@ -86,7 +86,7 @@ export async function preview({
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const parsed = parse(initial_url || '');
+				const parsed = parse(initial_url);
 
 				const rendered = await app.render({
 					host: /** @type {string} */ (config.kit.host ||
