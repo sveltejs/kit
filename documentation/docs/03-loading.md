@@ -36,7 +36,7 @@ type LoadOutput<
 };
 ```
 
-Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
+Our example blog page might contain a `load` function like the following:
 
 ```html
 <script context="module">
@@ -62,6 +62,7 @@ Our example blog page might contain a `load` function like the following. Note t
 	}
 </script>
 ```
+> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.  
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
