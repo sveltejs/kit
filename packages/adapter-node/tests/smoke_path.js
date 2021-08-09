@@ -11,7 +11,7 @@ const socketPath = path.join(os.tmpdir(), 'mysocket');
 
 const PROXY_PORT = 9090;
 const { SOCKET_PATH = socketPath } = process.env;
-const DEFAULT_SERVER_OPTS = { render: () => { } };
+const DEFAULT_SERVER_OPTS = { render: () => {} };
 
 function cleanupSocketFile() {
 	if (fs.existsSync(SOCKET_PATH)) {

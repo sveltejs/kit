@@ -7,14 +7,9 @@ init();
 
 const instance = createServer({ render });
 
-if (path) {
-	instance.listen(path, () => {
-		console.log(`Listening on ${path}`);
-	});
-} else {
-	instance.listen(port, host, () => {
-		console.log(`Listening on ${host}:${port}`);
-	});
-}
+const listenOpts = { path, host, port };
+instance.listen(listenOpts, () => {
+	console.log(`Listening on ${path ? path : host + ':' + port}`);
+});
 
 export { instance };
