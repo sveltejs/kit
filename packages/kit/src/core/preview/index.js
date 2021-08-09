@@ -65,7 +65,7 @@ export async function preview({
 
 		// Emulate app.use(`${assets}/`, sirv(...))
 		req.url =
-			assets.length > 1 && assets !== '/.' && req.url?.startsWith(`${assets}/`)
+			assets.length > 1 && assets !== '/.' && req.url.startsWith(`${assets}/`)
 				? req.url.slice(assets.length)
 				: req.url;
 
