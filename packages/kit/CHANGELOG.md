@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.146
+
+### Patch Changes
+
+- [fix] enable Vite pre-bundling except for Svelte packages ([#2137](https://github.com/sveltejs/kit/pull/2137))
+
 ## 1.0.0-next.145
 
 ### Patch Changes
