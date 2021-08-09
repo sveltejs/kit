@@ -4,15 +4,15 @@
 
 ### Patch Changes
 
-- edc307d: Remove peerDependencies due to pnpm bug ([https://github.com/sveltejs/kit/pulls/1621](#1621))
-- 2636e68: Attempt to fix peerDependencies specification ([https://github.com/sveltejs/kit/pulls/1620](#1620))
+- edc307d: Remove peerDependencies due to pnpm bug ([https://github.com/sveltejs/kit/pull/1621](#1621))
+- 2636e68: Attempt to fix peerDependencies specification ([https://github.com/sveltejs/kit/pull/1620](#1620))
 
 ## 1.0.0-next.10
 
 ### Patch Changes
 
-- bf77940: bump `polka` and `sirv` dependency versions ([https://github.com/sveltejs/kit/pulls/1548](#1548))
-- 028abd9: Pass validated svelte config to adapter adapt function ([https://github.com/sveltejs/kit/pulls/1559](#1559))
+- bf77940: bump `polka` and `sirv` dependency versions ([https://github.com/sveltejs/kit/pull/1548](#1548))
+- 028abd9: Pass validated svelte config to adapter adapt function ([https://github.com/sveltejs/kit/pull/1559](#1559))
 - Updated dependencies [6372690]
 - Updated dependencies [c3d36a3]
 - Updated dependencies [bf77940]
@@ -24,8 +24,8 @@
 
 ### Patch Changes
 
-- 1ba1784: Prevent adapter from splitting query params if they contain commas ([https://github.com/sveltejs/kit/pulls/1467](#1467))
-- dca4946: Make kit a peerDependency of the adapters ([https://github.com/sveltejs/kit/pulls/1505](#1505))
+- 1ba1784: Prevent adapter from splitting query params if they contain commas ([https://github.com/sveltejs/kit/pull/1467](#1467))
+- dca4946: Make kit a peerDependency of the adapters ([https://github.com/sveltejs/kit/pull/1505](#1505))
 - Updated dependencies [261ee1c]
 - Updated dependencies [ec156c6]
 - Updated dependencies [586785d]
@@ -35,43 +35,43 @@
 
 ### Patch Changes
 
-- dad93fc: Fix workspace dependencies ([https://github.com/sveltejs/kit/pulls/1434](#1434))
+- dad93fc: Fix workspace dependencies ([https://github.com/sveltejs/kit/pull/1434](#1434))
 
 ## 1.0.0-next.7
 
 ### Patch Changes
 
-- c6fde99: Convert to ESM ([https://github.com/sveltejs/kit/pulls/1323](#1323))
+- c6fde99: Convert to ESM ([https://github.com/sveltejs/kit/pull/1323](#1323))
 
 ## 1.0.0-next.6
 
 ### Patch Changes
 
-- 2e72a94: Add type declarations ([https://github.com/sveltejs/kit/pulls/1230](#1230))
+- 2e72a94: Add type declarations ([https://github.com/sveltejs/kit/pull/1230](#1230))
 
 ## 1.0.0-next.5
 
 ### Patch Changes
 
-- 8024178: remove @sveltejs/app-utils ([https://github.com/sveltejs/kit/pulls/600](#600))
+- 8024178: remove @sveltejs/app-utils ([https://github.com/sveltejs/kit/pull/600](#600))
 
 ## 1.0.0-next.4
 
 ### Patch Changes
 
-- 8805c6d: Pass adapters directly to svelte.config.cjs ([https://github.com/sveltejs/kit/pulls/579](#579))
+- 8805c6d: Pass adapters directly to svelte.config.cjs ([https://github.com/sveltejs/kit/pull/579](#579))
 
 ## 1.0.0-next.3
 
 ### Patch Changes
 
-- f35a5cd: Change adapter signature ([https://github.com/sveltejs/kit/pulls/505](#505))
+- f35a5cd: Change adapter signature ([https://github.com/sveltejs/kit/pull/505](#505))
 
 ## 1.0.0-next.2
 
 ### Patch Changes
 
-- c3cf3f3: Bump deps ([https://github.com/sveltejs/kit/pulls/492](#492))
+- c3cf3f3: Bump deps ([https://github.com/sveltejs/kit/pull/492](#492))
 - Updated dependencies [c3cf3f3]
   - @sveltejs/app-utils@1.0.0-next.3
 
