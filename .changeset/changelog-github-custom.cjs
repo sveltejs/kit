@@ -99,8 +99,8 @@ const changelogFunctions = {
 		})();
 
 		const suffix = [
-			links.pull === null ? '' : ` (${links.pull})`,
-			links.commit === null ? '' : ` (${links.commit})`
+			links.pull === null ? '' : ` (${links.pull})`
+			//links.commit === null ? '' : ` (${links.commit})`
 		].join('');
 
 		return `\n\n- ${firstLine}${suffix}\n${futureLines.map((l) => `  ${l}`).join('\n')}`;

@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- Move adapter-begin to architect org ([#1817](https://github.com/sveltejs/kit/pull/1817)) ([`4cb54961`](https://github.com/sveltejs/kit/commit/4cb54961717812cadb4f762276bf3126188c1639))
+- Move adapter-begin to architect org ([#1817](https://github.com/sveltejs/kit/pull/1817))
 
 ## 1.0.0-next.11
 
