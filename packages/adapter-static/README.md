@@ -67,18 +67,14 @@ When building for Github Pages, make sure to update the [basepaths](https://kit.
 
 Also note that you will have to prevent Github's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appdir` configuration option to `"app_"` or anything not starting by an underscore. For more information, see Github's documentation about [configuring jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
-A valid configuration file for Github Pages:
+A config for Github Pages might look like:
 
 ```js
-import preprocess from 'svelte-preprocess';
-import adapter from '@sveltejs/adapter-static';
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	preprocess: preprocess(),
+	...
 	kit: {
-		adapter: adapter(),
-		target: '#svelte',
+		...
 		// Since your Github Pages' default url will be https://your-username.github.io/your-repo-name,
 		// you'll have the change the basepaths.
 		// Note that you may have to comment these in dev mode.
@@ -89,10 +85,8 @@ const config = {
 		// If you are not using a .nojekyll file, change your appDir to something not starting with an underscore.
 		// For example, instead of "_app", use "app_", "internal", etc.
 		appDir: "internal",
-	},
+	}
 };
-
-export default config;
 ```
 
 ## Changelog
