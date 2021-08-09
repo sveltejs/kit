@@ -51,10 +51,7 @@ export async function preview({
 	});
 
 	app.init({
-		paths: {
-			base: '',
-			assets: '/.'
-		},
+		paths: config.kit.paths,
 		prerendering: false,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
@@ -63,7 +60,14 @@ export async function preview({
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
 
 	const server = await get_server(use_https, vite_config, (req, res) => {
-		const parsed = parse(req.url || '');
+		const initial_url = req.url;
+		const { assets } = config.kit.paths;
+
+		// Emulate app.use(`${assets}/`, sirv(...))
+		req.url =
+			assets.length > 1 && assets !== '/.' && req.url?.startsWith(`${assets}/`)
+				? req.url.slice(assets.length)
+				: req.url;
 
 		assets_handler(req, res, () => {
 			static_handler(req, res, async () => {
@@ -77,6 +81,8 @@ export async function preview({
 					res.statusCode = err.status || 400;
 					return res.end(err.reason || 'Invalid request body');
 				}
+
+				const parsed = parse(initial_url || '');
 
 				const rendered = await app.render({
 					host: /** @type {string} */ (config.kit.host ||
