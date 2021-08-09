@@ -121,9 +121,7 @@ export async function serverFetch(request) {
 
 This function allows you to handle errors with your own error handler.
 
-For example, you may have a custom logging scheme that you send to an external
-system, and you want to format the error in a manner consistent with your other
-logs.
+For example, you may have a custom logging scheme that you send to an external system, and you want to format the error in a manner consistent with your other logs.
 
 ```js
 /** @type {import('@sveltejs/kit').HandleError} */
