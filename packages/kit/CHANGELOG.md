@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.145
+
+### Patch Changes
+
+- [feat] detect if app tries to access query with prerender enabled ([#2104](https://github.com/sveltejs/kit/pull/2104)) ([`576ef6fc`](https://github.com/sveltejs/kit/commit/576ef6fc1a8f81c00cd0d240dabf80a48d7c812a))
+
 ## 1.0.0-next.144
 
 ### Patch Changes
