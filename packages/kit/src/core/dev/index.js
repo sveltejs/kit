@@ -11,7 +11,7 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
-import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
+import { copy_assets, get_svelte_packages, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
@@ -112,6 +112,8 @@ class Watcher extends EventEmitter {
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
+		const svelte_packages = get_svelte_packages(this.cwd);
+
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
@@ -140,6 +142,14 @@ class Watcher extends EventEmitter {
 					input: path.resolve(`${this.dir}/runtime/internal/start.js`)
 				}
 			},
+			optimizeDeps: {
+				// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+				// broken packages https://github.com/vitejs/vite/issues/3910
+				exclude: [
+					...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+					...svelte_packages
+				]
+			},
 			plugins: [
 				svelte({
 					extensions: this.config.extensions,
@@ -156,12 +166,9 @@ class Watcher extends EventEmitter {
 					...(this.https ? { server: this.server, port: this.port } : {})
 				}
 			},
-			optimizeDeps: {
-				entries: []
-			},
 			ssr: {
-				// @ts-expect-error ssr is considered in beta, so not exposed by Vite
-				noExternal: get_no_external(this.cwd, vite_config.ssr && vite_config.ssr.noExternal)
+				// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
+				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 			}
 		});
 

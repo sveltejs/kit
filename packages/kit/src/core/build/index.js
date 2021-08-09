@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../filesystem/index.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, get_svelte_packages, posixify, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
@@ -33,6 +33,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	rimraf(build_dir);
 
 	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
+	const svelte_packages = get_svelte_packages(cwd);
 
 	const options = {
 		cwd,
@@ -49,7 +50,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
+		svelte_packages
 	};
 
 	const client_manifest = await build_client(options);
@@ -132,7 +134,7 @@ async function build_client({
 	});
 
 	/** @type {any} */
-	const user_config = config.kit.vite();
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -143,10 +145,10 @@ async function build_client({
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -203,6 +205,7 @@ async function build_client({
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -216,7 +219,8 @@ async function build_server(
 		build_dir,
 		output_dir,
 		client_entry_file,
-		service_worker_entry_file
+		service_worker_entry_file,
+		svelte_packages
 	},
 	client_manifest,
 	runtime
@@ -420,8 +424,8 @@ async function build_server(
 			.trim()
 	);
 
-	/** @type {any} */
-	const user_config = config.kit.vite();
+	/** @type {import('vite').UserConfig} */
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -432,10 +436,10 @@ async function build_server(
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -458,11 +462,13 @@ async function build_server(
 				preserveEntrySignatures: 'strict'
 			}
 		},
-		resolve: {
-			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
-				$lib: config.kit.files.lib
-			}
+		optimizeDeps: {
+			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+			// broken packages https://github.com/vitejs/vite/issues/3910
+			exclude: [
+				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+				...svelte_packages
+			]
 		},
 		plugins: [
 			svelte({
@@ -472,16 +478,17 @@ async function build_server(
 				}
 			})
 		],
-		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
-		// it's not exposed in the typescript definitions as a result
-		// so we need to ignore the fact that it's missing
+		resolve: {
+			alias: {
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
+			}
+		},
 		ssr: {
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok
-			noExternal: get_no_external(cwd, user_config.ssr && user_config.ssr.noExternal)
-		},
-		optimizeDeps: {
-			entries: []
+			// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
+			noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 		}
 	});
 
@@ -500,11 +507,21 @@ async function build_server(
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  */
 async function build_service_worker(
-	{ cwd, base, config, manifest, build_dir, output_dir, service_worker_entry_file },
+	{
+		cwd,
+		base,
+		config,
+		manifest,
+		build_dir,
+		output_dir,
+		service_worker_entry_file,
+		svelte_packages
+	},
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
@@ -541,7 +558,7 @@ async function build_service_worker(
 	);
 
 	/** @type {any} */
-	const user_config = config.kit.vite();
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -552,10 +569,10 @@ async function build_service_worker(
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
 		base,
@@ -573,13 +590,18 @@ async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
+		optimizeDeps: {
+			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+			// broken packages https://github.com/vitejs/vite/issues/3910
+			exclude: [
+				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+				...svelte_packages
+			]
+		},
 		resolve: {
 			alias: {
 				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
 			}
-		},
-		optimizeDeps: {
-			entries: []
 		}
 	});
 

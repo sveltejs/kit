@@ -1,18 +1,18 @@
 <script context="module">
-	let loads = 0;
+	let count = 0;
 
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
 		const res = await fetch('/load/change-detection/data.json');
 		const { type } = await res.json();
 
-		loads += 1;
+		count += 1;
 
 		return {
 			maxage: 5,
 			props: {
 				type,
-				loads
+				loads: count
 			}
 		};
 	}
