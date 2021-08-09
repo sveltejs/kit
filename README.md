@@ -18,6 +18,8 @@ Please see [the documentation](https://kit.svelte.dev/docs) for information abou
 | [@sveltejs/adapter-netlify](packages/adapter-netlify)                       | [Changelog](packages/adapter-netlify/CHANGELOG.md)            |
 | [@sveltejs/adapter-vercel](packages/adapter-vercel)                         | [Changelog](packages/adapter-vercel/CHANGELOG.md)             |
 
+The SvelteKit community also makes additional [SvelteKit adapters available for use](https://sveltesociety.dev/components#category-SvelteKit%20Adapters).
+
 ## Developing
 
 This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
