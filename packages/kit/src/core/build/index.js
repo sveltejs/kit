@@ -340,6 +340,7 @@ async function build_server(
 					load_component,
 					manifest,
 					paths: settings.paths,
+					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
 					root,
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
