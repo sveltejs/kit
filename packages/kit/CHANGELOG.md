@@ -10,25 +10,25 @@
 
 ### Patch Changes
 
-- 8c0ffb8f: [fix] provide explicit JS entry point for Vite dev mode
-- c3c25ee0: [fix] take into account page-level options on error pages
+- 8c0ffb8f: [fix] provide explicit JS entry point for Vite dev mode (#2134)
+- c3c25ee0: [fix] take into account page-level options on error pages (#2117)
 
 ## 1.0.0-next.142
 
 ### Patch Changes
 
-- aed1bd07: [fix] fully initialize router before rendering
-- 970bb04c: restore reverted config changes
+- aed1bd07: [fix] fully initialize router before rendering (#2089)
+- 970bb04c: restore reverted config changes (#2093)
 
 ## 1.0.0-next.141
 
 ### Patch Changes
 
-- d109a394: [fix] successfully load nested error pages
-- fab67c94: [fix] successfully handle client errors
-- 943f5288: [fix] solve regression parsing unicode URLs"
-- 4435a659: [fix] allow endpoint shadowing to work
-- ee73a265: [fix] correctly do fallthrough in simple case
+- d109a394: [fix] successfully load nested error pages (#2076)
+- fab67c94: [fix] successfully handle client errors (#2077)
+- 943f5288: [fix] solve regression parsing unicode URLs (#2078)
+- 4435a659: [fix] allow endpoint shadowing to work (#2074)
+- ee73a265: [fix] correctly do fallthrough in simple case (#2072)
 
 ## 1.0.0-next.140
 
@@ -36,161 +36,161 @@
 
 - e55bc44a: [fix] revert change to rendering options (#2008)
 - d81de603: revert adapters automatically updating .gitignore (#1924)
-- 5911b1c7: [fix] consider protocol-relative URLs as external
+- 5911b1c7: [fix] consider protocol-relative URLs as external (#2062)
 
 ## 1.0.0-next.139
 
 ### Patch Changes
 
-- 883d4b85: Add public API to let adapters update .gitignore
-- 8cbe3b05: Change `force` to `onError` in prerender config options
-- 1b18a844: Don't check external links on prerender
-- 7645399a: [fix] correctly pass Vite options in preview mode
+- 883d4b85: Add public API to let adapters update .gitignore (#1924)
+- 8cbe3b05: Change `force` to `onError` in prerender config options (#2030)
+- 1b18a844: Don't check external links on prerender (#1679)
+- 7645399a: [fix] correctly pass Vite options in preview mode (#2036)
 
 ## 1.0.0-next.138
 
 ### Patch Changes
 
-- d6563169: [chore] prefer interfaces to types
-- b18a45c1: explicitly set compilerOptions.hydratable to config.kit.hydrate
-- 538de3eb: [feat] More powerful and configurable rendering options
-- 20dad18a: Remove the `prerender.force` option in favor of `prerender.onError`
+- d6563169: [chore] prefer interfaces to types (#2010)
+- b18a45c1: explicitly set compilerOptions.hydratable to config.kit.hydrate (#2024)
+- 538de3eb: [feat] More powerful and configurable rendering options (#2008)
+- 20dad18a: Remove the `prerender.force` option in favor of `prerender.onError` (#2007)
 
 ## 1.0.0-next.137
 
 ### Patch Changes
 
-- bce1d76a: [chore] improved typing for runtime and tests
-- 2a1e9795: [chore] enable TypeScript strict mode
+- bce1d76a: [chore] improved typing for runtime and tests (#1995)
+- 2a1e9795: [chore] enable TypeScript strict mode (#1998)
 
 ## 1.0.0-next.136
 
 ### Patch Changes
 
-- 69b92ec1: [chore] improved typing on core library
+- 69b92ec1: [chore] improved typing on core library (#1993)
 
 ## 1.0.0-next.135
 
 ### Patch Changes
 
-- 3b293f2a: update svelte to 3.40 and vite-plugin-svelte to 1.0.0-next.14
-- 34b923d1: [chore] stricter TypeScript checking
+- 3b293f2a: update svelte to 3.40 and vite-plugin-svelte to 1.0.0-next.14 (#1992)
+- 34b923d1: [chore] stricter TypeScript checking (#1989)
 
 ## 1.0.0-next.134
 
 ### Patch Changes
 
-- e1e5920a: [fix] correctly find links during prerendering
-- c7db715e: Handle errors with incorrect type
+- e1e5920a: [fix] correctly find links during prerendering (#1984)
+- c7db715e: Handle errors with incorrect type (#1983)
 
 ## 1.0.0-next.133
 
 ### Patch Changes
 
-- 68190496: chore: Vite to ^2.4.3, vite-plugin-svelte to ^1.0.0-next.13
-- 0cbcd7c3: [fix] correctly detect external fetches
-- 51ec789f: Scrolling to an anchor via a hash now supports `scroll-*` CSS properties
+- 68190496: chore: Vite to ^2.4.3, vite-plugin-svelte to ^1.0.0-next.13 (#1969)
+- 0cbcd7c3: [fix] correctly detect external fetches (#1980)
+- 51ec789f: Scrolling to an anchor via a hash now supports `scroll-*` CSS properties (#1972)
 
 ## 1.0.0-next.132
 
 ### Patch Changes
 
-- 7b440b2b: Fix URL resolution for server-side fetch
+- 7b440b2b: Fix URL resolution for server-side fetch (#1953)
 
 ## 1.0.0-next.131
 
 ### Patch Changes
 
-- 0bc1b309: Minor optimization in parse_body
+- 0bc1b309: Minor optimization in parse_body (#1916)
 
 ## 1.0.0-next.130
 
 ### Patch Changes
 
-- 53e9285d: feat(config): Friendlier error messages for common errors
-- 41da1ebe: Handle 4xx and 5xx statuses without requiring `Error` instance
-- 073fc3b5: feat(cli): respect NODE_ENV when set by user
+- 53e9285d: feat(config): Friendlier error messages for common errors (#1910)
+- 41da1ebe: Handle 4xx and 5xx statuses without requiring `Error` instance (#1811)
+- 073fc3b5: feat(cli): respect NODE_ENV when set by user (#1915)
 
 ## 1.0.0-next.129
 
 ### Patch Changes
 
-- e246455: Passthrough server-side fetch cookies for most same-origin scenarios
+- e246455: Passthrough server-side fetch cookies for most same-origin scenarios (#1847)
 
 ## 1.0.0-next.128
 
 ### Patch Changes
 
-- 27e9067: Better error messages when something goes wrong while emitting types
-- 277029d: Change index.js exports to directory exports when packaging
+- 27e9067: Better error messages when something goes wrong while emitting types (#1903)
+- 277029d: Change index.js exports to directory exports when packaging (#1905)
 
 ## 1.0.0-next.127
 
 ### Patch Changes
 
-- bb3ae21: Fix endpoint validation to allow returning string for all content types
+- bb3ae21: Fix endpoint validation to allow returning string for all content types (#1900)
 
 ## 1.0.0-next.126
 
 ### Patch Changes
 
-- 4720b67: Default body parsing to binary
-- 6da07b8: fix returning null from endpoints
+- 4720b67: Default body parsing to binary (#1890)
+- 6da07b8: fix returning null from endpoints (#1886)
 
 ## 1.0.0-next.125
 
 ### Patch Changes
 
-- 7faf52f: Update and consolidate checks for binary body types
-- f854b89: Replace return type of Buffer with Uint8Array
-- f854b89: Remove Incoming from public types
+- 7faf52f: Update and consolidate checks for binary body types (#1687)
+- f854b89: Replace return type of Buffer with Uint8Array (#1876)
+- f854b89: Remove Incoming from public types (#1876)
 
 ## 1.0.0-next.124
 
 ### Patch Changes
 
-- 34d2049: handle undefined body on endpoint output
-- c826016: add config.kit.package.emitTypes
-- 8854e2f: Bump vite-plugin-svelte to 1.0.0-next.12
-- af1aa54: copy essential root files on `svelte-kit package`
-- 872840a: Pass along custom properties added to Error
-- 868f97a: Preserve README casing and package.json contents on svelte-kit package
+- 34d2049: handle undefined body on endpoint output (#1808)
+- c826016: add config.kit.package.emitTypes (#1852)
+- 8854e2f: Bump vite-plugin-svelte to 1.0.0-next.12 (#1869)
+- af1aa54: copy essential root files on `svelte-kit package` (#1747)
+- 872840a: Pass along custom properties added to Error (#1821)
+- 868f97a: Preserve README casing and package.json contents on svelte-kit package (#1735)
 
 ## 1.0.0-next.123
 
 ### Patch Changes
 
-- 4b25615: Fix ReadOnlyFormData keys and values method implementation
-- 64f749d: ServiceWorker files exclusion support available through svelte.config.js
-- 4d2fec5: Enable Vite's server.fs.strict by default
-- 1ec368a: Expose Vite.js mode from \$app/env
+- 4b25615: Fix ReadOnlyFormData keys and values method implementation (#1837)
+- 64f749d: ServiceWorker files exclusion support available through svelte.config.js (#1645)
+- 4d2fec5: Enable Vite's server.fs.strict by default (#1842)
+- 1ec368a: Expose Vite.js mode from \$app/env (#1789)
 
 ## 1.0.0-next.122
 
 ### Patch Changes
 
-- d09a4e1: Surface Svelte compiler errors
-- 79b4fe2: Update Vite to ^2.4.1
-- 2ac5781: Use esbuild inject API to insert shims
+- d09a4e1: Surface Svelte compiler errors (#1827)
+- 79b4fe2: Update Vite to ^2.4.1 (#1834)
+- 2ac5781: Use esbuild inject API to insert shims (#1822)
 
 ## 1.0.0-next.121
 
 ### Patch Changes
 
-- 939188e: Use UTF-8 encoding for JSON endpoint responses by default
-- 5b3e1e6: Add types generation to svelte-kit package command
-- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops
+- 939188e: Use UTF-8 encoding for JSON endpoint responses by default (#1669)
+- 5b3e1e6: Add types generation to svelte-kit package command (#1646)
+- 8affef2: Fix type errors inside ReadOnlyFormData that didn't allow it to be used inside for..of loops (#1830)
 
 ## 1.0.0-next.120
 
 ### Patch Changes
 
-- 9fbaeda: fix attribute validation in generated script tag
-- 9f0c54a: Externalize app initialization to adapters
-- 0d69e55: Add generic type for session
-- 325c223: Improve RequestHandler and EndpointOutput type declarations.
-- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled
-- ae3ef19: Fail if config.kit.appDir starts or ends with a slash
+- 9fbaeda: fix attribute validation in generated script tag (#1768)
+- 9f0c54a: Externalize app initialization to adapters (#1804)
+- 0d69e55: Add generic type for session (#1791)
+- 325c223: Improve RequestHandler and EndpointOutput type declarations. (#1778)
+- 6ef148d: Generate service worker registration code even with `router` and `hydration` disabled (#1724)
+- ae3ef19: Fail if config.kit.appDir starts or ends with a slash (#1695)
 
 ## 1.0.0-next.119
 
@@ -203,192 +203,192 @@
 
 ### Patch Changes
 
-- 5418254: Fix regex for getting links to crawl during prerendering
+- 5418254: Fix regex for getting links to crawl during prerendering (#1743)
 
 ## 1.0.0-next.117
 
 ### Patch Changes
 
-- 828732c: Specify actual Svelte version requirement
+- 828732c: Specify actual Svelte version requirement (#1751)
 
 ## 1.0.0-next.116
 
 ### Patch Changes
 
-- ea8cd54: chore(kit): correct `engines` constraint
-- aedec24: Ensure router is initialized before parsing location
-- c7d5ce4: update vite to 2.3.8 and unpin
-- d259bca: Stricter regex for getting element attributes during prerendering
+- ea8cd54: chore(kit): correct `engines` constraint (#1696)
+- aedec24: Ensure router is initialized before parsing location (#1691)
+- c7d5ce4: update vite to 2.3.8 and unpin (#1715)
+- d259bca: Stricter regex for getting element attributes during prerendering (#1700)
 
 ## 1.0.0-next.115
 
 ### Patch Changes
 
-- 523c3e2: Allow vite.alias to be an array
-- 6fd46d1: \* update vite-plugin-svelte to 1.0.0-next.11 and use its named export
+- 523c3e2: Allow vite.alias to be an array (#1640)
+- 6fd46d1: \* update vite-plugin-svelte to 1.0.0-next.11 and use its named export (#1673)
   - update vite to 2.3.7
-- dc56d3c: Fix navigation when `base` path is set and validate that option's value
+- dc56d3c: Fix navigation when `base` path is set and validate that option's value (#1666)
 
 ## 1.0.0-next.114
 
 ### Patch Changes
 
-- 5aa64ab: fix: SSL for HMR websockets #844
-- fae75f1: add optional state parameter for goto function
-- fbd5f8a: package command can now transpile TypeScript files
+- 5aa64ab: fix: SSL for HMR websockets #844 (#1517)
+- fae75f1: add optional state parameter for goto function (#1643)
+- fbd5f8a: package command can now transpile TypeScript files (#1633)
 
 ## 1.0.0-next.113
 
 ### Patch Changes
 
-- 045c45c: update vite to 2.3.6
+- 045c45c: update vite to 2.3.6 (#1625)
 
 ## 1.0.0-next.112
 
 ### Patch Changes
 
-- cbe029e: Allow non-lowercase 'content-type' header in ssr fetch requests
-- 1bf1a02: Make it possible to type context, page params and props for LoadInput and LoadOutput
+- cbe029e: Allow non-lowercase 'content-type' header in ssr fetch requests (#1463)
+- 1bf1a02: Make it possible to type context, page params and props for LoadInput and LoadOutput (#1447)
 
 ## 1.0.0-next.111
 
 ### Patch Changes
 
-- eae1b1d: Rename handle's render parameter to resolve
+- eae1b1d: Rename handle's render parameter to resolve (#1566)
 
 ## 1.0.0-next.110
 
 ### Patch Changes
 
-- 6372690: Add svelte-kit package command
-- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s)
-- bf77940: bump `polka` and `sirv` dependency versions
-- 2172469: Upgrade to Vite 2.3.4
-- 028abd9: Pass validated svelte config to adapter adapt function
+- 6372690: Add svelte-kit package command (#1499)
+- c3d36a3: ensure `content-length` limit respected; handle `getRawBody` error(s) (#1528)
+- bf77940: bump `polka` and `sirv` dependency versions (#1548)
+- 2172469: Upgrade to Vite 2.3.4 (#1580)
+- 028abd9: Pass validated svelte config to adapter adapt function (#1559)
 
 ## 1.0.0-next.109
 
 ### Patch Changes
 
-- 261ee1c: Update compatible Node versions
-- ec156c6: let hash only changes be handled by router
-- 586785d: Allow passing HTTPS key pair in Vite section of config
+- 261ee1c: Update compatible Node versions (#1470)
+- ec156c6: let hash only changes be handled by router (#830)
+- 586785d: Allow passing HTTPS key pair in Vite section of config (#1456)
 
 ## 1.0.0-next.108
 
 ### Patch Changes
 
-- dad93fc: Fix workspace dependencies
-- 37fc04f: Ignore URLs that the app does not own
+- dad93fc: Fix workspace dependencies (#1434)
+- 37fc04f: Ignore URLs that the app does not own (#1487)
 
 ## 1.0.0-next.107
 
 ### Patch Changes
 
-- ad83d40: update vite to ^2.3.1
+- ad83d40: update vite to ^2.3.1 (#1429)
 
 ## 1.0.0-next.106
 
 ### Patch Changes
 
-- fe0531d: temporarily pin vite to version 2.2.4 until issues with 2.3.0 are resolved
+- fe0531d: temporarily pin vite to version 2.2.4 until issues with 2.3.0 are resolved (#1423)
 
 ## 1.0.0-next.105
 
 ### Patch Changes
 
-- f3c50a0: Bump Vite to 2.3.0
-- cfd6c3c: Use rendered CSS for AMP pages
-- 9a2cc0a: Add trailingSlash: 'never' | 'always' | 'ignore' option
+- f3c50a0: Bump Vite to 2.3.0 (#1413)
+- cfd6c3c: Use rendered CSS for AMP pages (#1408)
+- 9a2cc0a: Add trailingSlash: 'never' | 'always' | 'ignore' option (#1404)
 
 ## 1.0.0-next.104
 
 ### Patch Changes
 
-- 9b448a6: Rename @sveltejs/kit/http to @sveltejs/kit/node
+- 9b448a6: Rename @sveltejs/kit/http to @sveltejs/kit/node (#1391)
 
 ## 1.0.0-next.103
 
 ### Patch Changes
 
-- 11e7840: Generate ETags for binary response bodies
-- 11e7840: Update request/response body types
-- 9e20873: Allow ServerResponse to have non-static set of headers
-- 2562ca0: Account for POST bodies when serializing fetches
+- 11e7840: Generate ETags for binary response bodies (#1382)
+- 11e7840: Update request/response body types (#1382)
+- 9e20873: Allow ServerResponse to have non-static set of headers (#1375)
+- 2562ca0: Account for POST bodies when serializing fetches (#1385)
 
 ## 1.0.0-next.102
 
 ### Patch Changes
 
-- b5ff7f5: Rename \$layout to \_\_layout etc
-- d871213: Make Vite a prod dep of SvelteKit
+- b5ff7f5: Rename \$layout to \_\_layout etc (#1370)
+- d871213: Make Vite a prod dep of SvelteKit (#1374)
 
 ## 1.0.0-next.101
 
 ### Patch Changes
 
-- f5e626d: Reference Vite/Svelte types inside Kit types
+- f5e626d: Reference Vite/Svelte types inside Kit types (#1319)
 
 ## 1.0.0-next.100
 
 ### Patch Changes
 
-- 9890492: Use TypedArray.set to copy from Uint8Array when getting raw body in core/http
+- 9890492: Use TypedArray.set to copy from Uint8Array when getting raw body in core/http (#1349)
 
 ## 1.0.0-next.99
 
 ### Patch Changes
 
-- 051c026: Remove getContext in favour of request.locals
+- 051c026: Remove getContext in favour of request.locals (#1332)
 
 ## 1.0.0-next.98
 
 ### Patch Changes
 
-- d279e36: Add invalidate(url) API for re-running load functions
+- d279e36: Add invalidate(url) API for re-running load functions (#1303)
 
 ## 1.0.0-next.97
 
 ### Patch Changes
 
-- 694f5de: Fixes `navigating` store type
-- 0befffb: Rename .svelte to .svelte-kit
-- c6fde99: Switch to ESM in config files
+- 694f5de: Fixes `navigating` store type (#1322)
+- 0befffb: Rename .svelte to .svelte-kit (#1321)
+- c6fde99: Switch to ESM in config files (#1323)
 
 ## 1.0.0-next.96
 
 ### Patch Changes
 
-- 63eff1a: Add prerendering to \$app/env typings
+- 63eff1a: Add prerendering to \$app/env typings (#1316)
 
 ## 1.0.0-next.95
 
 ### Patch Changes
 
-- 16cca89: Export AdapterUtils type for use in adapters
-- f3ef93d: Not calling JSON.stringify on endpoint's body if it's a string and the content-type header denotes json
-- 5023e98: Remove 'Navigated to' text from announcer'
+- 16cca89: Export AdapterUtils type for use in adapters (#1300)
+- f3ef93d: Not calling JSON.stringify on endpoint's body if it's a string and the content-type header denotes json (#1272)
+- 5023e98: Remove 'Navigated to' text from announcer' (#1305)
 - b4d0d6c: Normalize keys of headers from server side requests
-- 08ebcb5: Add esm config support
-- 427e8e0: Validate template file on startup
+- 08ebcb5: Add esm config support (#936)
+- 427e8e0: Validate template file on startup (#1304)
 
 ## 1.0.0-next.94
 
 ### Patch Changes
 
-- 72c78a4: Handle URLs that need to be decoded
+- 72c78a4: Handle URLs that need to be decoded (#1273)
 
 ## 1.0.0-next.93
 
 ### Patch Changes
 
-- 353afa1: Disable FLoC by default
+- 353afa1: Disable FLoC by default (#1267)
 
 ## 1.0.0-next.92
 
 ### Patch Changes
 
-- 354e384: Allow FormData to be passed as RequestHandler type Body argument
+- 354e384: Allow FormData to be passed as RequestHandler type Body argument (#1256)
 - b1bfe83: Show error page on unknown initial path. Fixes #1190.
 
 ## 1.0.0-next.91
@@ -401,47 +401,47 @@
 
 ### Patch Changes
 
-- ac60208: Exit process after adapting
+- ac60208: Exit process after adapting (#1212)
 
 ## 1.0.0-next.89
 
 ### Patch Changes
 
-- 927e63c: update the error message of prerender to optionally include the parent variable
+- 927e63c: update the error message of prerender to optionally include the parent variable (#1200)
 
 ## 1.0.0-next.88
 
 ### Patch Changes
 
-- 6f2b4a6: Remove references to npm start
+- 6f2b4a6: Remove references to npm start (#1196)
 
 ## 1.0.0-next.87
 
 ### Patch Changes
 
-- 4131467: Prerender fallback page for SPAs
+- 4131467: Prerender fallback page for SPAs (#1181)
 
 ## 1.0.0-next.86
 
 ### Patch Changes
 
-- 2130087: Support multiple rel values on anchor tag
-- ba732ff: Report errors in hooks.js
+- 2130087: Support multiple rel values on anchor tag (#884)
+- ba732ff: Report errors in hooks.js (#1178)
 - a2f3f4b: Rename `start` to `preview` in the CLI and package scripts
 
 ## 1.0.0-next.85
 
 ### Patch Changes
 
-- 4645ad5: Force Vite to bundle Svelte component libraries in SSR
+- 4645ad5: Force Vite to bundle Svelte component libraries in SSR (#1148)
 - abf0248: Fix \$service-worker types
 
 ## 1.0.0-next.84
 
 ### Patch Changes
 
-- 5c2665f: Prevent ...rest parameters from swallowing earlier characters
-- 4e1c4ea: Omit modulepreload links from pages with no JS
+- 5c2665f: Prevent ...rest parameters from swallowing earlier characters (#1128)
+- 4e1c4ea: Omit modulepreload links from pages with no JS (#1131)
 - 5d864a6: Fix RequestHandler return type
 - e1313d0: Make response.body optional
 
@@ -449,143 +449,143 @@
 
 ### Patch Changes
 
-- a4a1075: Work around apparent Cloudflare Workers platform bugs
+- a4a1075: Work around apparent Cloudflare Workers platform bugs (#1123)
 
 ## 1.0.0-next.82
 
 ### Patch Changes
 
-- 4af45e1: Remove usage of node built-ins from runtime
+- 4af45e1: Remove usage of node built-ins from runtime (#1117)
 
 ## 1.0.0-next.81
 
 ### Patch Changes
 
-- 1237eb3: Expose rawBody on request, and expect rawBody from adapters
-- 1237eb3: Expose getRawBody from kit/http
+- 1237eb3: Expose rawBody on request, and expect rawBody from adapters (#1109)
+- 1237eb3: Expose getRawBody from kit/http (#1109)
 
 ## 1.0.0-next.80
 
 ### Patch Changes
 
-- 7a4b351: Expose install-fetch subpackage for adapters to use
+- 7a4b351: Expose install-fetch subpackage for adapters to use (#1091)
 
 ## 1.0.0-next.79
 
 ### Patch Changes
 
-- d3abd97: Fix Windows build output containing backward slashes
+- d3abd97: Fix Windows build output containing backward slashes (#1096)
 
 ## 1.0.0-next.78
 
 ### Patch Changes
 
-- 6e27880: Move server-side fetch to adapters instead of build step
-- 61d7fa0: Better error logging
-- 041b706: Implement layout resets
-- 148819a: Use latest vite-plugin-svelte
-- 9d54eed: Make sveltekit:prefetch a noop if <a> has no href
+- 6e27880: Move server-side fetch to adapters instead of build step (#1066)
+- 61d7fa0: Better error logging (#1062)
+- 041b706: Implement layout resets (#1061)
+- 148819a: Use latest vite-plugin-svelte (#1057)
+- 9d54eed: Make sveltekit:prefetch a noop if <a> has no href (#1060)
 
 ## 1.0.0-next.77
 
 ### Patch Changes
 
-- fee388a: Include CSS for entry point/generated component
+- fee388a: Include CSS for entry point/generated component (#1053)
 
 ## 1.0.0-next.76
 
 ### Patch Changes
 
-- f870909: Pin vite-plugin-svelte version
-- de2466f: Fix stale prerendering bug
+- f870909: Pin vite-plugin-svelte version (#1026)
+- de2466f: Fix stale prerendering bug (#1040)
 
 ## 1.0.0-next.75
 
 ### Patch Changes
 
-- 0c02dc0: Use global URLSearchParams instead of import from node url
-- 8021d6b: Fix default error page
-- 11ec751: Fix build warnings about missing exports in hooks file
+- 0c02dc0: Use global URLSearchParams instead of import from node url (#1020)
+- 8021d6b: Fix default error page (#1021)
+- 11ec751: Fix build warnings about missing exports in hooks file (#1003)
 
 ## 1.0.0-next.74
 
 ### Patch Changes
 
-- 4c45784: Add ambient types to published files
+- 4c45784: Add ambient types to published files (#980)
 
 ## 1.0.0-next.73
 
 ### Patch Changes
 
-- 1007f67: Allow non-root \$error.svelte components
-- ca108a6: Change `handle` hook from positional arguments to named arguments
+- 1007f67: Allow non-root \$error.svelte components (#901)
+- ca108a6: Change `handle` hook from positional arguments to named arguments (#959)
 
 ## 1.0.0-next.72
 
 ### Patch Changes
 
-- 1d5228c: Make --open option work with --https
-- 39b6967: Add ambient type definitions for \$app imports
-- 1d5228c: Make --open option work on WSL
-- bb2d97d: Fix argument type for RequestHandler
+- 1d5228c: Make --open option work with --https (#921)
+- 39b6967: Add ambient type definitions for \$app imports (#917)
+- 1d5228c: Make --open option work on WSL (#921)
+- bb2d97d: Fix argument type for RequestHandler (#914)
 
 ## 1.0.0-next.71
 
 ### Patch Changes
 
-- 108c26c: Always return a response from render function in handle
+- 108c26c: Always return a response from render function in handle (#847)
 
 ## 1.0.0-next.70
 
 ### Patch Changes
 
-- 6d9f7b1: Only include CSS on an SSR'd page
-- 6ecfa2c: Remove duplicate <style> element
+- 6d9f7b1: Only include CSS on an SSR'd page (#839)
+- 6ecfa2c: Remove duplicate <style> element (#845)
 
 ## 1.0.0-next.69
 
 ### Patch Changes
 
-- 4d2cd62: Add prerendering to \$app/env
-- e2eeeea: Call load when path changes if page.path is used
-- 50b5526: Pass through credentials when fetching in load
-- 6384af6: Only inline data if hydrate=true
+- 4d2cd62: Add prerendering to \$app/env (#833)
+- e2eeeea: Call load when path changes if page.path is used (#838)
+- 50b5526: Pass through credentials when fetching in load (#835)
+- 6384af6: Only inline data if hydrate=true (#837)
 
 ## 1.0.0-next.68
 
 ### Patch Changes
 
-- 24fab19: Add --https flag to dev and start
-- ba4f9b7: Check port, only expose to network with --host flag
+- 24fab19: Add --https flag to dev and start (#462)
+- ba4f9b7: Check port, only expose to network with --host flag (#819)
 
 ## 1.0.0-next.67
 
 ### Patch Changes
 
-- 679e997: Fix client-side redirect loop detection
-- 8d453c8: Specify minimum Node version number in @sveltejs/kit and add .npmrc to enforce it
+- 679e997: Fix client-side redirect loop detection (#811)
+- 8d453c8: Specify minimum Node version number in @sveltejs/kit and add .npmrc to enforce it (#787)
 - 78aec0c: Detect service worker support
-- f33a22c: Make ...rest parameters optional
+- f33a22c: Make ...rest parameters optional (#768)
 
 ## 1.0.0-next.66
 
 ### Patch Changes
 
-- d9ce2a2: Correct response type for fetch
+- d9ce2a2: Correct response type for fetch (#799)
 
 ## 1.0.0-next.65
 
 ### Patch Changes
 
-- c0b9873: Always apply layout props when hydrating
-- b8a8e53: Add type to config.kit.vite
-- 9b09bcc: Prevent XSS when serializing fetch results
+- c0b9873: Always apply layout props when hydrating (#794)
+- b8a8e53: Add type to config.kit.vite (#786)
+- 9b09bcc: Prevent XSS when serializing fetch results (#769)
 
 ## 1.0.0-next.64
 
 ### Patch Changes
 
-- 7f58512: Prevent Vite prebundling from crashing on startup
+- 7f58512: Prevent Vite prebundling from crashing on startup (#759)
 
 ## 1.0.0-next.63
 
@@ -597,7 +597,7 @@
 
 ### Patch Changes
 
-- 864c3d4: Assets imported from css and js/ts files are emitted as files instead of being inlined
+- 864c3d4: Assets imported from css and js/ts files are emitted as files instead of being inlined (#461)
 
 ## 1.0.0-next.61
 
@@ -609,114 +609,114 @@
 
 ### Patch Changes
 
-- 84e9023: Fix host property
-- 272148b: Rename \$service-worker::assets to files, per the docs
-- d5071c5: Hydrate initial page before starting router
-- 4a1c04a: More accurate MODULE_NOT_FOUND errors
-- d881b7e: Replace setup with hooks
+- 84e9023: Fix host property (#657)
+- 272148b: Rename \$service-worker::assets to files, per the docs (#658)
+- d5071c5: Hydrate initial page before starting router (#654)
+- 4a1c04a: More accurate MODULE_NOT_FOUND errors (#665)
+- d881b7e: Replace setup with hooks (#670)
 
 ## 1.0.0-next.59
 
 ### Patch Changes
 
-- 826f39e: Make prefetching work
+- 826f39e: Make prefetching work (#620)
 
 ## 1.0.0-next.58
 
 ### Patch Changes
 
-- 26893b0: Allow first argument to fetch in load to be a request
-- 924db15: Add copy function to Builder.js
+- 26893b0: Allow first argument to fetch in load to be a request (#619)
+- 924db15: Add copy function to Builder.js (#630)
 
 ## 1.0.0-next.57
 
 ### Patch Changes
 
-- 391189f: Check for options.initiator in correct place
+- 391189f: Check for options.initiator in correct place (#615)
 
 ## 1.0.0-next.56
 
 ### Patch Changes
 
-- 82cbe2b: Shrink client manifest
-- 8024178: remove @sveltejs/app-utils
+- 82cbe2b: Shrink client manifest (#593)
+- 8024178: remove @sveltejs/app-utils (#600)
 
 ## 1.0.0-next.55
 
 ### Patch Changes
 
-- d0a7019: switch to @sveltejs/vite-plugin-svelte
-- 8a88fad: Replace regex routes with fallthrough routes
+- d0a7019: switch to @sveltejs/vite-plugin-svelte (#584)
+- 8a88fad: Replace regex routes with fallthrough routes (#583)
 
 ## 1.0.0-next.54
 
 ### Patch Changes
 
-- 3037530: Create history entry for initial route
-- 04f17f5: Prevent erronous <style>undefined</style>
-- 8805c6d: Pass adapters directly to svelte.config.cjs
+- 3037530: Create history entry for initial route (#582)
+- 04f17f5: Prevent erronous <style>undefined</style> (#578)
+- 8805c6d: Pass adapters directly to svelte.config.cjs (#579)
 
 ## 1.0.0-next.53
 
 ### Patch Changes
 
-- 9cf2f21: Only require page components to export prerender
-- e860de0: Invalidate page when query changes
-- 7bb1cf0: Disable vite-plugin-svelte transform cache
+- 9cf2f21: Only require page components to export prerender (#577)
+- e860de0: Invalidate page when query changes (#575)
+- 7bb1cf0: Disable vite-plugin-svelte transform cache (#576)
 
 ## 1.0.0-next.52
 
 ### Patch Changes
 
-- ac3669e: Move Vite config into svelte.config.cjs
+- ac3669e: Move Vite config into svelte.config.cjs (#569)
 
 ## 1.0.0-next.51
 
 ### Patch Changes
 
-- 34a00f9: Bypass router on hydration
+- 34a00f9: Bypass router on hydration (#563)
 
 ## 1.0.0-next.50
 
 ### Patch Changes
 
-- 0512fd1: Remove startGlobal option
-- 9212aa5: Add options to adapter-node, and add adapter types
-- 0512fd1: Fire custom events for start, and navigation start/end
+- 0512fd1: Remove startGlobal option (#559)
+- 9212aa5: Add options to adapter-node, and add adapter types (#531)
+- 0512fd1: Fire custom events for start, and navigation start/end (#559)
 
 ## 1.0.0-next.49
 
 ### Patch Changes
 
-- ab28c0a: kit: include missing types.d.ts
-- c76c9bf: Upgrade Vite
+- ab28c0a: kit: include missing types.d.ts (#538)
+- c76c9bf: Upgrade Vite (#544)
 
 ## 1.0.0-next.48
 
 ### Patch Changes
 
-- e37a302: Make getSession future-proof
+- e37a302: Make getSession future-proof (#524)
 
 ## 1.0.0-next.47
 
 ### Patch Changes
 
-- 5554acc: Add \$lib alias
-- 5cd6f11: bump vite-plugin-svelte to 0.11.0
+- 5554acc: Add \$lib alias (#511)
+- 5cd6f11: bump vite-plugin-svelte to 0.11.0 (#513)
 
 ## 1.0.0-next.46
 
 ### Patch Changes
 
-- f35a5cd: Change adapter signature
+- f35a5cd: Change adapter signature (#505)
 
 ## 1.0.0-next.45
 
 ### Patch Changes
 
-- 925638a: Remove endpoints from the files built for the client
-- c3cf3f3: Bump deps
-- 625747d: kit: bundle @sveltejs/kit into built application
+- 925638a: Remove endpoints from the files built for the client (#490)
+- c3cf3f3: Bump deps (#492)
+- 625747d: kit: bundle @sveltejs/kit into built application (#486)
 - Updated dependencies [c3cf3f3]
   - @sveltejs/vite-plugin-svelte@1.0.0-next.3
 
@@ -724,67 +724,67 @@
 
 ### Patch Changes
 
-- e6449d2: Fix AMP styles for real
+- e6449d2: Fix AMP styles for real (#494)
 
 ## 1.0.0-next.43
 
 ### Patch Changes
 
-- 672e9be: Fix AMP styles, again
+- 672e9be: Fix AMP styles, again (#491)
 
 ## 1.0.0-next.42
 
 ### Patch Changes
 
-- 0f54ebc: Fix AMP styles
+- 0f54ebc: Fix AMP styles (#488)
 
 ## 1.0.0-next.41
 
 ### Patch Changes
 
-- 4aa5a73: Future-proof prepare argument
-- 58dc400: Call correct set_paths function
+- 4aa5a73: Future-proof prepare argument (#471)
+- 58dc400: Call correct set_paths function (#487)
 - 2322291: Update to node-fetch@3
 
 ## 1.0.0-next.40
 
 ### Patch Changes
 
-- 4c5fd3c: Include layout/error styles in SSR
+- 4c5fd3c: Include layout/error styles in SSR (#472)
 
 ## 1.0.0-next.39
 
 ### Patch Changes
 
-- b7fdb0d: Skip pre-bundling
+- b7fdb0d: Skip pre-bundling (#468)
 
 ## 1.0.0-next.38
 
 ### Patch Changes
 
-- 15402b1: Add service worker support
-- 0c630b5: Ignore dynamically imported components when constructing styles in dev mode
-- ac06af5: Fix svelte-kit adapt for Windows
+- 15402b1: Add service worker support (#463)
+- 0c630b5: Ignore dynamically imported components when constructing styles in dev mode (#443)
+- ac06af5: Fix svelte-kit adapt for Windows (#435)
 - 061fa46: Implement improved redirect API
-- b800049: Include type declarations
-- 07c6de4: Use posix paths in manifest even on Windows
-- 27ba872: Error if preload function exists
-- 0c630b5: Add default paths in case singletons module is invalidated
-- 73dd998: Allow custom extensions
+- b800049: Include type declarations (#442)
+- 07c6de4: Use posix paths in manifest even on Windows (#436)
+- 27ba872: Error if preload function exists (#455)
+- 0c630b5: Add default paths in case singletons module is invalidated (#443)
+- 73dd998: Allow custom extensions (#411)
 
 ## 1.0.0-next.37
 
 ### Patch Changes
 
-- 230c6d9: Indicate which request failed, if fetch fails inside load function
-- f1bc218: Run adapt via svelte-kit build
-- 6850ddc: Fix svelte-kit start for Windows
+- 230c6d9: Indicate which request failed, if fetch fails inside load function (#427)
+- f1bc218: Run adapt via svelte-kit build (#430)
+- 6850ddc: Fix svelte-kit start for Windows (#425)
 
 ## 1.0.0-next.36
 
 ### Patch Changes
 
-- 7b70a33: Force version bump so that Kit uses updated vite-plugin-svelte
+- 7b70a33: Force version bump so that Kit uses updated vite-plugin-svelte (#419)
 
 ## 1.0.0-next.35
 
@@ -805,7 +805,7 @@
 
 ### Patch Changes
 
-- 474070e: Better errors when modules cannot be found
+- 474070e: Better errors when modules cannot be found (#381)
 
 ## 1.0.0-next.32
 
@@ -817,26 +817,26 @@
 
 ### Patch Changes
 
-- b6c2434: app.js -> app.cjs
+- b6c2434: app.js -> app.cjs (#362)
 
 ## 1.0.0-next.30
 
 ### Patch Changes
 
-- 00cbaf6: Rename _.config.js to _.config.cjs
+- 00cbaf6: Rename _.config.js to _.config.cjs (#356)
 
 ## 1.0.0-next.29
 
 ### Patch Changes
 
-- 4c0edce: Use addEventListener instead of onload
+- 4c0edce: Use addEventListener instead of onload (#347)
 
 ## 1.0.0-next.28
 
 ### Patch Changes
 
-- 4353025: Prevent infinite loop when fetching bad URLs inside error responses
-- 2860065: Handle assets path when prerendering
+- 4353025: Prevent infinite loop when fetching bad URLs inside error responses (#340)
+- 2860065: Handle assets path when prerendering (#341)
 
 ## 1.0.0-next.27
 
@@ -861,50 +861,50 @@
 
 ### Patch Changes
 
-- 26643df: Account for config.paths when prerendering
+- 26643df: Account for config.paths when prerendering (#322)
 
 ## 1.0.0-next.23
 
 ### Patch Changes
 
-- 9b758aa: Upgrade to Snowpack 3
+- 9b758aa: Upgrade to Snowpack 3 (#321)
 
 ## 1.0.0-next.22
 
 ### Patch Changes
 
-- bb68595: use readFileSync instead of createReadStream
+- bb68595: use readFileSync instead of createReadStream (#320)
 
 ## 1.0.0-next.21
 
 ### Patch Changes
 
-- 217e4cc: Set paths to empty string before prerender
+- 217e4cc: Set paths to empty string before prerender (#317)
 
 ## 1.0.0-next.20
 
 ### Patch Changes
 
-- ccf4aa7: Implement prerender config
+- ccf4aa7: Implement prerender config (#315)
 
 ## 1.0.0-next.19
 
 ### Patch Changes
 
-- deda984: Make navigating store contain from and to properties
+- deda984: Make navigating store contain from and to properties (#313)
 
 ## 1.0.0-next.18
 
 ### Patch Changes
 
-- c29b61e: Announce page changes
-- 72da270: Reset focus properly
+- c29b61e: Announce page changes (#311)
+- 72da270: Reset focus properly (#309)
 
 ## 1.0.0-next.17
 
 ### Patch Changes
 
-- f7dea55: Set process.env.NODE_ENV when invoking via the CLI
+- f7dea55: Set process.env.NODE_ENV when invoking via the CLI (#304)
 
 ## 1.0.0-next.16
 
@@ -917,7 +917,7 @@
 
 ### Patch Changes
 
-- 6d1bb11: Fix AMP CSS
+- 6d1bb11: Fix AMP CSS (#286)
 - d8b53af: Ignore $layout and $error files when finding static paths
 - Better scroll tracking
 
@@ -931,7 +931,7 @@
 
 ### Patch Changes
 
-- 1ea4d6b: More robust CSS extraction
+- 1ea4d6b: More robust CSS extraction (#279)
 
 ## 1.0.0-next.12
 
@@ -943,42 +943,42 @@
 
 ### Patch Changes
 
-- a31f218: Fix SSR loader invalidation
+- a31f218: Fix SSR loader invalidation (#277)
 
 ## 1.0.0-next.10
 
 ### Patch Changes
 
-- 8b14d29: Omit svelte-data scripts from AMP pages
+- 8b14d29: Omit svelte-data scripts from AMP pages (#276)
 
 ## 1.0.0-next.9
 
 ### Patch Changes
 
-- f5fa223: AMP support
-- 47f2ee1: Always remove trailing slashes
+- f5fa223: AMP support (#274)
+- 47f2ee1: Always remove trailing slashes (#267)
 - 1becb94: Replace preload with load
 
 ## 1.0.0-next.8
 
 ### Patch Changes
 
-- 15dd751: Use meta http-equiv=refresh
-- be7e031: Fix handling of static files
-- ed6b8fd: Implement \$app/env
+- 15dd751: Use meta http-equiv=refresh (#256)
+- be7e031: Fix handling of static files (#258)
+- ed6b8fd: Implement \$app/env (#251)
 
 ## 1.0.0-next.7
 
 ### Patch Changes
 
-- 76705b0: make HMR work outside localhost
+- 76705b0: make HMR work outside localhost (#246)
 
 ## 1.0.0-next.6
 
 ### Patch Changes
 
-- 0e45255: Move options behind kit namespace, change paths -> kit.files
-- fa7f2b2: Implement live bindings for SSR code
+- 0e45255: Move options behind kit namespace, change paths -> kit.files (#236)
+- fa7f2b2: Implement live bindings for SSR code (#245)
 
 ## 1.0.0-next.5
 
@@ -1008,14 +1008,14 @@
 
 ### Patch Changes
 
-- a4bc090: Transform exported functions correctly
-- 00bbf98: Fix nested layouts
+- a4bc090: Transform exported functions correctly (#225)
+- 00bbf98: Fix nested layouts (#227)
 
 ## 0.0.31-next.0
 
 ### Patch Changes
 
-- ffd7bba: Fix SSR cache invalidation
+- ffd7bba: Fix SSR cache invalidation (#217)
 
 ## 0.0.30
 
@@ -1029,7 +1029,7 @@
 
 ### Patch Changes
 
-- 10872cc: Normalize request.query
+- 10872cc: Normalize request.query (#196)
 
 ## 0.0.28
 
@@ -1042,7 +1042,7 @@
 ### Patch Changes
 
 - rename CLI to svelte-kit
-- 0904e22: rename svelte CLI to svelte-kit
+- 0904e22: rename svelte CLI to svelte-kit (#186)
 - Validate route responses
 - Make paths and target configurable
 
@@ -1050,7 +1050,7 @@
 
 ### Patch Changes
 
-- b475ed4: Overhaul adapter API - fixes #166
+- b475ed4: Overhaul adapter API - fixes #166 (#180)
 - Updated dependencies [b475ed4]
   - @sveltejs/app-utils@0.0.18
 
@@ -1075,7 +1075,7 @@
 ### Patch Changes
 
 - a163000: Parse body on incoming requests
-- a346eab: Copy over latest Sapper router code
+- a346eab: Copy over latest Sapper router code (#6)
 - Updated dependencies [a163000]
   - @sveltejs/app-utils@0.0.15
 
