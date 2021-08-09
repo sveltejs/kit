@@ -387,7 +387,7 @@ async function build_server(
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
 				handleError:
 					hooks.handleError ||
-					((error) => {
+					(({error}) => {
 						if (error.frame) {
 							console.error(error.frame);
 						}

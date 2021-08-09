@@ -28,7 +28,7 @@ export interface Handle<Locals = Record<string, any>> {
 }
 
 export interface HandleError<Locals = Record<string, any>> {
-	(error: Error & { frame?: string }): void;
+	(input: { error: Error & { frame?: string } }): void;
 }
 
 export interface ServerFetch {

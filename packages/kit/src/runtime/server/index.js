@@ -100,7 +100,7 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.hooks.handleError(e);
+		options.hooks.handleError({ error: e });
 
 		return {
 			status: 500,

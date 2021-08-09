@@ -338,7 +338,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
 							handleError:
 								hooks.handleError ||
-								((error) => {
+								(({ error }) => {
 									vite.ssrFixStacktrace(error);
 									console.error(colors.bold().red(error.message));
 									if (error.frame) {

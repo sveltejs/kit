@@ -125,7 +125,7 @@ For example, you may have a custom logging scheme that you send to an external s
 
 ```js
 /** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError(error) {
+export async function handleError({error}) {
 	console.error(JSON.stringify({"msg": "There was an error processing this page", err: {
 		name: error.name,
 		message: error.message,
