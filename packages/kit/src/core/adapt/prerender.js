@@ -81,7 +81,8 @@ function chooseErrorHandler(log, onError) {
 const OK = 2;
 const REDIRECT = 3;
 
-/** @param {{
+/**
+ * @param {{
  *   cwd: string;
  *   out: string;
  *   log: Logger;
@@ -89,7 +90,8 @@ const REDIRECT = 3;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
- * }} opts */
+ * }} opts
+ */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	__fetch_polyfill();
 
