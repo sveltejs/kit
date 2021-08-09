@@ -62,7 +62,7 @@ Our example blog page might contain a `load` function like the following:
 	}
 </script>
 ```
-> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Your "regular" code should go into a second `<script>` tag.  
+> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.  
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
