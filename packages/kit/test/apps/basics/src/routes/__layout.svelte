@@ -1,4 +1,6 @@
 <script context="module">
+	import { browser } from '$app/env';
+
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load() {
 		return {
@@ -8,6 +10,13 @@
 				}
 			}
 		};
+	}
+
+	if (browser) {
+		let h3 = document.createElement('h3');
+		let text = document.createTextNode('You cannot reset me');
+		h3.appendChild(text);
+		document.getElementById('nested-layout-reset-test')?.appendChild(h3);
 	}
 </script>
 
