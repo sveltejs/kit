@@ -102,7 +102,7 @@ function generate_client_manifest(manifest_data, base) {
 
 		export const routes = ${routes};
 
-		export const fallback = [c[0](), c[1]()];
+		export const fallback = [c[0], c[1]];
 	`);
 }
 

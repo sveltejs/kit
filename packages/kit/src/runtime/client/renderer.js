@@ -60,7 +60,7 @@ function initial_fetch(resource, opts) {
 export class Renderer {
 	/** @param {{
 	 *   Root: CSRComponent;
-	 *   fallback: [CSRComponent, CSRComponent];
+	 *   fallback: [() => CSRComponent, () => CSRComponent];
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
@@ -708,7 +708,7 @@ export class Renderer {
 		};
 
 		const node = await this._load_node({
-			module: await this.fallback[0],
+			module: await this.fallback[0](),
 			page,
 			context: {}
 		});
@@ -718,7 +718,7 @@ export class Renderer {
 			await this._load_node({
 				status,
 				error,
-				module: await this.fallback[1],
+				module: await this.fallback[1](),
 				page,
 				context: (node && node.loaded && node.loaded.context) || {}
 			})
