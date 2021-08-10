@@ -336,10 +336,12 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						hooks: {
 							getSession: hooks.getSession || (() => ({})),
 							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							handleError:
-								hooks.handleError ||
-								(({ error }) => {
-									vite.ssrFixStacktrace(error);
+							handleError: (args) => {
+								const { error } = args;
+								vite.ssrFixStacktrace(error);
+								if (hooks.handleError) {
+									hooks.handleError(args);
+								} else {
 									console.error(colors.bold().red(error.message));
 									if (error.frame) {
 										console.error(colors.gray(error.frame));
@@ -347,7 +349,8 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 									if (error.stack) {
 										console.error(colors.gray(error.stack));
 									}
-								}),
+								}
+							},
 							serverFetch: hooks.serverFetch || fetch
 						},
 						hydrate: config.kit.hydrate,
