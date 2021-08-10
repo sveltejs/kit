@@ -385,15 +385,18 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				handleError:
-					hooks.handleError ||
-					(({error}) => {
+				handleError: ((args) => {
+					const { error } = args;
+					if (hooks.handleError) {
+						hooks.handleError(args);
+					} else {
 						if (error.frame) {
 							console.error(error.frame);
 						}
 						console.error(error.stack);
-						error.stack = options.get_stack(error);
-					}),
+					}
+					error.stack = options.get_stack(error);
+				}),
 				serverFetch: hooks.serverFetch || fetch
 			});
 
