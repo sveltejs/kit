@@ -385,10 +385,10 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				handleError: ((args) => {
-					const { error } = args;
+				handleError: ((opts) => {
+					const { error } = opts;
 					if (hooks.handleError) {
-						hooks.handleError(args);
+						hooks.handleError(opts);
 					} else {
 						if (error.frame) {
 							console.error(error.frame);

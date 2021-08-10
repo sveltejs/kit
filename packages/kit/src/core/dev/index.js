@@ -336,11 +336,11 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						hooks: {
 							getSession: hooks.getSession || (() => ({})),
 							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							handleError: (args) => {
-								const { error } = args;
+							handleError: (opts) => {
+								const { error } = opts;
 								vite.ssrFixStacktrace(error);
 								if (hooks.handleError) {
-									hooks.handleError(args);
+									hooks.handleError(opts);
 								} else {
 									console.error(colors.bold().red(error.message));
 									if (error.frame) {
