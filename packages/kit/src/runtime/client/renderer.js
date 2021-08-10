@@ -724,16 +724,23 @@ export class Renderer {
 			context: {}
 		});
 
-		const branch = [
-			node,
-			await this._load_node({
-				status,
-				error,
-				module: await this.fallback[1],
-				page,
-				context: (node && node.loaded && node.loaded.context) || {}
-			})
-		];
+		const errorNode = await this._load_node({
+			status,
+			error,
+			module: await this.fallback[1],
+			page,
+			context: (node && node.loaded && node.loaded.context) || {}
+		});
+
+		if (errorNode && errorNode.loaded && errorNode.loaded.redirect) {
+			return {
+				redirect: errorNode.loaded.redirect,
+				props: {},
+				state: this.current
+			};
+		}
+
+		const branch = [node, errorNode];
 
 		return await this._get_navigation_result_from_branch({ page, branch });
 	}
