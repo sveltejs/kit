@@ -15,25 +15,25 @@ export interface TestContext {
 		nojs: Page;
 	};
 	response: PlaywrightResponse;
-	clicknav: (selector: string) => Promise<void>;
-	back: () => Promise<void>;
-	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<NodeFetchResponse>;
-	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
-	errors: () => string;
+	clicknav(selector: string): Promise<void>;
+	back(): Promise<void>;
+	fetch(url: RequestInfo, opts?: RequestInit): Promise<NodeFetchResponse>;
+	capture_requests(fn: () => Promise<void>): Promise<string[]>;
+	errors(): string;
 	js: boolean;
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
-		goto: (url: string) => Promise<void>;
-		invalidate: (url: string) => Promise<void>;
-		prefetch: (url: string) => Promise<void>;
-		prefetchRoutes: (urls?: string[]) => Promise<void>;
+		goto(url: string): Promise<void>;
+		invalidate(url: string): Promise<void>;
+		prefetch(url: string): Promise<void>;
+		prefetchRoutes(urls?: string[]): Promise<void>;
 	};
 
 	watcher: any; // watcher type is not exposed
 	server: import('net').Server;
-	reset: () => Promise<void>;
-	unpatch: () => void;
+	reset(): Promise<void>;
+	unpatch(): void;
 }
 
 interface TestOptions {
