@@ -5,7 +5,7 @@ interface ReadOnlyFormData {
 	entries(): Generator<[string, string], void>;
 	keys(): Generator<string, void>;
 	values(): Generator<string, void>;
-	[Symbol.iterator]: () => Generator<[string, string], void>;
+	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
 type BaseBody = string | Uint8Array | ReadOnlyFormData;
