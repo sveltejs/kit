@@ -17,8 +17,8 @@ export default {
 			out: 'build',
 			precompress: false,
 			env: {
-				host: 'HOST',
-				port: 'PORT'
+				host: '0.0.0.0',
+				port: '3000'
 			}
 		})
 	}
