@@ -168,9 +168,9 @@ export class Router {
 	 */
 	parse(url) {
 		if (this.owns(url)) {
-			const path = decodeURIComponent(url.pathname.slice(this.base.length) || '/');
+			const path = url.pathname.slice(this.base.length) || '/';
 
-			const routes = this.routes.filter(([pattern]) => pattern.test(path));
+			const routes = this.routes.filter(([pattern]) => pattern.test(decodeURI(path)));
 
 			const query = new URLSearchParams(url.search);
 			const id = `${path}?${query}`;

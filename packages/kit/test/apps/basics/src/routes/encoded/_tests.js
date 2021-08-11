@@ -5,8 +5,8 @@ export default function (test) {
 	test('visits a route with non-ASCII character', '/encoded', async ({ page, clicknav }) => {
 		await clicknav('[href="/encoded/苗条"]');
 		assert.equal(await page.innerHTML('h1'), 'static');
-		assert.equal(await page.innerHTML('h2'), '/encoded/苗条');
-		assert.equal(await page.innerHTML('h3'), '/encoded/苗条');
+		assert.equal(decodeURI(await page.innerHTML('h2')), '/encoded/苗条');
+		assert.equal(decodeURI(await page.innerHTML('h3')), '/encoded/苗条');
 	});
 
 	test(
@@ -15,8 +15,8 @@ export default function (test) {
 		async ({ page, clicknav }) => {
 			await clicknav('[href="/encoded/土豆"]');
 			assert.equal(await page.innerHTML('h1'), 'dynamic');
-			assert.equal(await page.innerHTML('h2'), '/encoded/土豆: 土豆');
-			assert.equal(await page.innerHTML('h3'), '/encoded/土豆: 土豆');
+			assert.equal(decodeURI(await page.innerHTML('h2')), '/encoded/土豆: 土豆');
+			assert.equal(decodeURI(await page.innerHTML('h3')), '/encoded/土豆: 土豆');
 		}
 	);
 
@@ -24,8 +24,8 @@ export default function (test) {
 		await clicknav('[href="/encoded/反应"]');
 
 		assert.equal(await page.innerHTML('h1'), 'static');
-		assert.equal(await page.innerHTML('h2'), '/encoded/苗条');
-		assert.equal(await page.innerHTML('h3'), '/encoded/苗条');
+		assert.equal(decodeURI(await page.innerHTML('h2')), '/encoded/苗条');
+		assert.equal(decodeURI(await page.innerHTML('h3')), '/encoded/苗条');
 	});
 
 	test('sets charset on JSON Content-Type', null, async ({ fetch }) => {
