@@ -13,10 +13,13 @@
 	}
 
 	if (browser) {
-		let h3 = document.createElement('h3');
-		let text = document.createTextNode('You cannot reset me');
+		const h3 = document.createElement('h3');
+		const text = document.createTextNode('I should not be rendered');
 		h3.appendChild(text);
-		document.getElementById('nested-layout-reset-test')?.appendChild(h3);
+		const parentDiv = document.getElementById('nested-layout-reset-test');
+		if (parentDiv) {
+			parentDiv.appendChild(h3);
+		}
 	}
 </script>
 
@@ -31,7 +34,7 @@
 	export let foo;
 </script>
 
-<slot></slot>
+<slot />
 
 <footer>{foo.bar}</footer>
 
