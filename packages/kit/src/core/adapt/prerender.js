@@ -93,6 +93,10 @@ const REDIRECT = 3;
  * }} opts
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	if (!config.kit.prerender.enabled && !fallback) {
+		return;
+	}
+
 	__fetch_polyfill();
 
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
@@ -266,13 +270,15 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 	}
 
-	for (const entry of config.kit.prerender.pages) {
-		if (entry === '*') {
-			for (const entry of build_data.entries) {
+	if (config.kit.prerender.enabled) {
+		for (const entry of config.kit.prerender.pages) {
+			if (entry === '*') {
+				for (const entry of build_data.entries) {
+					await visit(entry, null);
+				}
+			} else {
 				await visit(entry, null);
 			}
-		} else {
-			await visit(entry, null);
 		}
 	}
 
