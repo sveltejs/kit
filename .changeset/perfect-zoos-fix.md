@@ -1,5 +1,7 @@
 ---
 '@sveltejs/adapter-node': patch
+'@sveltejs/adapter-vercel': patch
+'@sveltejs/adapter-cloudflare-workers': patch
 ---
 
-[fix] routes with umlauts not being found
+[fix] decode path only once to fix loading unicode routes

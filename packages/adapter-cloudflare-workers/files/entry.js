@@ -10,8 +10,9 @@ addEventListener('fetch', (event) => {
 });
 
 async function handle(event) {
+	const { request } = event;
 	// try static files first
-	if (event.request.method == 'GET') {
+	if (request.method == 'GET') {
 		try {
 			// TODO rather than attempting to get an asset,
 			// use the asset manifest to see if it exists
@@ -25,18 +26,19 @@ async function handle(event) {
 		}
 	}
 
-	// fall back to an app route
-	const request = event.request;
-	const request_url = new URL(request.url);
+	const parsedURL = new URL(request.url);
+	const path = decodeURIComponent(parsedURL.pathname);
+	const rawBody = request.body ? await read(request) : null;
+	const headers = Object.fromEntries(request.headers);
 
 	try {
 		const rendered = await render({
-			host: request_url.host,
-			path: request_url.pathname,
-			query: request_url.searchParams,
-			rawBody: request.body ? await read(request) : null,
-			headers: Object.fromEntries(request.headers),
-			method: request.method
+			host: parsedURL.host,
+			query: parsedURL.searchParams,
+			method: request.method,
+			path,
+			rawBody,
+			headers
 		});
 
 		if (rendered) {
