@@ -4,18 +4,18 @@ import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
 	log: Logger;
-	rimraf: (dir: string) => void;
-	mkdirp: (dir: string) => void;
-	copy_client_files: (dest: string) => void;
-	copy_server_files: (dest: string) => void;
-	copy_static_files: (dest: string) => void;
-	copy: (from: string, to: string, filter?: (basename: string) => boolean) => void;
-	prerender: (options: { all?: boolean; dest: string; fallback?: string }) => Promise<void>;
+	rimraf(dir: string): void;
+	mkdirp(dir: string): void;
+	copy_client_files(dest: string): void;
+	copy_server_files(dest: string): void;
+	copy_static_files(dest: string): void;
+	copy(from: string, to: string, filter?: (basename: string) => boolean): void;
+	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
 }
 
 export interface Adapter {
 	name: string;
-	adapt: (context: { utils: AdapterUtils; config: ValidatedConfig }) => Promise<void>;
+	adapt(context: { utils: AdapterUtils; config: ValidatedConfig }): Promise<void>;
 }
 
 export interface PrerenderErrorHandler {
