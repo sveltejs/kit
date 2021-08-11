@@ -2,83 +2,93 @@
 title: Introduction
 ---
 
+SvelteKit is an application framework for building web apps using Svelte components. It's the most modern way to build web apps, with full support for serverless platforms, and a great development experience.
 
 
-SvelteKit allows you to control rendering and routing on a per-app or per-page basis.
 
-client-side router
-static site generator
-
-a development server
-
-The core of SvelteKit provides a highly configurable rendering engine.
+SvelteKit is the future of Svelte apps
+SvelteKit is the most modern way to build web apps.
 
 
-- SSR with hydration
-future navigation uses client-side router which handles the difficult parts
-SSR is enabled by default
+SvelteKit fully embraces the serverless paradigm
+support multiple platforms
+adapters for different serverless platforms
 
-- prefetching pages
-SvelteKit allows to intelligently prefetch pages just before the user initiates navigation.
-no lag as the browser waits for the data to come back from the server.
-Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
-- offline support
-
-Svelte components store some state
-Svelte updates the DOM when the state is updated. 
-
-SvelteKit allows SSR
-hydrates automatically
-all future navigation is CSrouted and CSR
-
-SvelteKit allows to prerender only certain pages (see ?)
-
-
-client-side router by default
-
-////
-
-SvelteKit is a framework for building extremely high-performance web apps with [Svelte](https://svelte.dev/). You're looking at one right now! Building an app with all the modern best practices is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
 ### Features
 
-— code-splitting
-- [offline support](#service-workers)
-- [server-side rendering](#appendix-ssr) with [hydration](#appendix-hydration)
+SvelteKit is a kit of multiple things: a powerful SSR engine, a performant client-side runtime, and a delightful development server.
 
+- [server-side rendering](#appendix-ssr) and [client-side routing](#appendix-routing)
 
-These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
+By default, SvelteKit has the best settings enabled.
 
+SSR for the initial page
+client-side routing and CSR for subsequent pages
 
-SvelteKit runtime
+By default, the initial page is rendered on the server (SSR).
 
-SvelteKit uses code splitting to break your app into small chunks (one per route), ensuring fast startup times.
+By default, pages are rendered on both the client and server
 
+By default, on initial page load, users will be served a server-side rendered version of the page
 
-By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
-
-By default, pages are rendered on both the client and server, though this behaviour is configurable.
-
-By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](#routing) that takes over subsequent navigations.
-
-
-This is what SvelteKit's `adapter-static` does.
-
-SvelteKit was not built to do only static site generation and so may not scale as well to efficiently prerender a very large number of pages as tools built specifically for that purpose. However, in contrast to most purpose-built SSGs, SvelteKit does nicely allow for mixing and matching different rendering types on different pages.
-
-You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
-
-SvelteKit includes a [client-side router](#appendix-routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
+Pages will be server-side rendered so that a user's initial page load is as fast as possible.
 
 Ordinarily, SvelteKit [hydrates](#appendix-hydration) your server-rendered HTML into an interactive page.
 Some pages don't require JavaScript at all — many blog posts and 'about' pages fall into this category.
 
 
+After the initial page load, a client-side runtime takes over. Further navigation is handled by the client-side router, and further pages are rendered on the client (CSR).
 
-It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [_prerendered_](#appendix-prerendering) by your [adapter](#adapters).
+The SvelteKit runtime has a built-in client-side router that takes over after the initial page load of a SSR page.
+
+SvelteKit includes a [client-side router](#appendix-routing)
+
+- [prerendering](#appendix-prerendering)
+
+You can generated at build-time but dynamic ones get rendered at request-time.
+using adaptors
+It's likely that at least some pages of your app can be represented as a simple HTML file generated at build time. These pages can be [prerendered](#appendix-prerendering) by your [adapter](#adapters).
+
+You can specify which pages can be prerendered and which not on a page-by-page basis.
+
+- highly configurable
+
+You can enable or disable SSR, prerendering and client-side routing on a per-page and per-app basis
+SvelteKit allows you to control rendering and routing on a per-app or per-page basis.
+
+- code-splitting for JS and CSS
+
+SvelteKit breaks your app into small chunks (one per route), ensuring fast startup times.
+
+- prefetching pages
+SvelteKit allows to intelligently prefetch pages just before the user initiates navigation.
+no lag as the browser waits for the data to come back from the server.
+Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
+
+- Great developer experience
+
+The integrated development server offers hot module reloading and error overlays. Once you experience this way of working, it will ruin you for anything else.
+
+- [offline support](#service-workers)
+- TypeScript support
 
 
 
+HYDRATION
+It will then render the page again in the browser to make it interactive
+initialise a [**router**](#routing) that takes over subsequent navigations.
+
+CSrouting
+ that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
+
+
+
+
+////////
+
+
+If you want to learn more about where SvelteKit came from, read the introduction blog post [What's the deal with SvelteKit?](https://svelte.dev/blog/whats-the-deal-with-sveltekit).
 
 
 ### Getting started
