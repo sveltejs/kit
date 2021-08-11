@@ -1,34 +1,28 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { respond_with_error } from './respond_with_error.js';
+import { is_prerender_enabled, respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../utils.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
  * @typedef {import('types/internal').SSRNode} SSRNode
+ * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
+ * @typedef {import('types/internal').SSRRenderState} SSRRenderState
  */
 
 /**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
- *   options: import('types/internal').SSRRenderOptions;
- *   state: import('types/internal').SSRRenderState;
+ *   options: SSRRenderOptions;
+ *   state: SSRRenderState;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
+ *   page: import('types/page').Page;
  * }} opts
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function respond({ request, options, state, $session, route }) {
-	const match = route.pattern.exec(request.path);
-	// @ts-expect-error we already know there's a match
-	const params = route.params(match);
-
-	const page = {
-		host: request.host,
-		path: request.path,
-		query: request.query,
-		params
-	};
+export async function respond(opts) {
+	const { request, options, state, $session, route } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
@@ -53,11 +47,7 @@ export async function respond({ request, options, state, $session, route }) {
 	// the leaf node will be present. only layouts may be undefined
 	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
 
-	const page_config = {
-		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
-		router: 'router' in leaf ? !!leaf.router : options.router,
-		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
-	};
+	let page_config = get_page_config(leaf, options);
 
 	if (!leaf.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
@@ -69,8 +59,8 @@ export async function respond({ request, options, state, $session, route }) {
 		};
 	}
 
-	/** @type {Array<Loaded> | undefined} */
-	let branch;
+	/** @type {Array<Loaded>} */
+	let branch = [];
 
 	/** @type {number} */
 	let status = 200;
@@ -80,7 +70,6 @@ export async function respond({ request, options, state, $session, route }) {
 
 	ssr: if (page_config.ssr) {
 		let context = {};
-		branch = [];
 
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
@@ -91,14 +80,10 @@ export async function respond({ request, options, state, $session, route }) {
 			if (node) {
 				try {
 					loaded = await load_node({
-						request,
-						options,
-						state,
-						route,
-						page,
+						...opts,
 						node,
-						$session,
 						context,
+						prerender_enabled: is_prerender_enabled(options, node, state),
 						is_leaf: i === nodes.length - 1,
 						is_error: false
 					});
@@ -116,8 +101,6 @@ export async function respond({ request, options, state, $session, route }) {
 
 					if (loaded.loaded.error) {
 						({ status, error } = loaded.loaded);
-					} else {
-						branch.push(loaded);
 					}
 				} catch (/** @type {unknown} */ err) {
 					const e = coalesce_to_error(err);
@@ -126,6 +109,10 @@ export async function respond({ request, options, state, $session, route }) {
 
 					status = 500;
 					error = e;
+				}
+
+				if (loaded && !error) {
+					branch.push(loaded);
 				}
 
 				if (error) {
@@ -140,18 +127,13 @@ export async function respond({ request, options, state, $session, route }) {
 								j -= 1;
 							}
 
-							let error_loaded;
 							try {
 								// there's no fallthough on an error page, so we know it's not undefined
-								error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
-									request,
-									options,
-									state,
-									route,
-									page,
+								const error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
+									...opts,
 									node: error_node,
-									$session,
 									context: node_loaded.context,
+									prerender_enabled: is_prerender_enabled(options, error_node, state),
 									is_leaf: false,
 									is_error: true,
 									status,
@@ -162,6 +144,7 @@ export async function respond({ request, options, state, $session, route }) {
 									continue;
 								}
 
+								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
 							} catch (/** @type {unknown} */ err) {
@@ -200,13 +183,11 @@ export async function respond({ request, options, state, $session, route }) {
 
 	try {
 		return await render_response({
-			options,
-			$session,
+			...opts,
 			page_config,
 			status,
 			error,
-			branch: branch && branch.filter(Boolean),
-			page
+			branch: branch.filter(Boolean)
 		});
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
@@ -214,12 +195,21 @@ export async function respond({ request, options, state, $session, route }) {
 		options.hooks.handleError({ error, request });
 
 		return await respond_with_error({
-			request,
-			options,
-			state,
-			$session,
+			...opts,
 			status: 500,
 			error
 		});
 	}
+}
+
+/**
+ * @param {import('types/internal').SSRComponent} leaf
+ * @param {SSRRenderOptions} options
+ */
+function get_page_config(leaf, options) {
+	return {
+		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
+		router: 'router' in leaf ? !!leaf.router : options.router,
+		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
+	};
 }

@@ -4,7 +4,6 @@ import { respond } from '../index.js';
 const s = JSON.stringify;
 
 /**
- *
  * @param {{
  *   request: import('types/hooks').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
@@ -14,6 +13,7 @@ const s = JSON.stringify;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   context: Record<string, any>;
+ *   prerender_enabled: boolean;
  *   is_leaf: boolean;
  *   is_error: boolean;
  *   status?: number;
@@ -30,6 +30,7 @@ export async function load_node({
 	node,
 	$session,
 	context,
+	prerender_enabled,
 	is_leaf,
 	is_error,
 	status,
@@ -39,19 +40,30 @@ export async function load_node({
 
 	let uses_credentials = false;
 
-	/** @type {Array<{
+	/**
+	 * @type {Array<{
 	 *   url: string;
 	 *   body: string;
 	 *   json: string;
-	 * }>} */
+	 * }>}
+	 */
 	const fetched = [];
 
 	let loaded;
 
+	const page_proxy = new Proxy(page, {
+		get: (target, prop, receiver) => {
+			if (prop === 'query' && prerender_enabled) {
+				throw new Error('Cannot access query on a page with prerendering enabled');
+			}
+			return Reflect.get(target, prop, receiver);
+		}
+	});
+
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			page,
+			page: page_proxy,
 			get session() {
 				uses_credentials = true;
 				return $session;
