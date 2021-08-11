@@ -6,12 +6,11 @@ import { init, render } from '../output/server/app.js'; // eslint-disable-line i
 init();
 
 export default async (req, res) => {
-	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
-
-	let body;
+	const query = new URLSearchParams(req.query);
+	let rawBody;
 
 	try {
-		body = await getRawBody(req);
+		rawBody = await getRawBody(req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
@@ -20,9 +19,9 @@ export default async (req, res) => {
 	const rendered = await render({
 		method: req.method,
 		headers: req.headers,
-		path: pathname,
-		query: searchParams,
-		rawBody: body
+		path: req.path,
+		query,
+		rawBody
 	});
 
 	if (rendered) {
