@@ -1,6 +1,13 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').ErrorLoad} */
 	export function load({ status, error }) {
+		if (error && error.message.includes('/redirect/nowhere')) {
+			return {
+				status: 307,
+				redirect: '/redirect/c'
+			};
+		}
+
 		return {
 			props: { status, error }
 		};

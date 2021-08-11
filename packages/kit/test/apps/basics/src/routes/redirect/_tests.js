@@ -47,4 +47,32 @@ export default function (test, is_dev) {
 			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
 		);
 	});
+
+	test('serves redirection on error', '/redirect/crashing', async ({ base, page }) => {
+		assert.equal(await page.url(), `${base}/redirect/c`);
+		assert.equal(await page.textContent('h1'), 'c');
+	});
+
+	test('navigates to redirection on error', '/redirect', async ({ base, page, clicknav }) => {
+		await clicknav('[href="/redirect/crashing"]');
+
+		assert.equal(await page.url(), `${base}/redirect/c`);
+		assert.equal(await page.textContent('h1'), 'c');
+	});
+
+	test('serves redirection on missing page', '/redirect/nowhere', async ({ base, page }) => {
+		assert.equal(await page.url(), `${base}/redirect/c`);
+		assert.equal(await page.textContent('h1'), 'c');
+	});
+
+	test(
+		'navigates to redirection on missing page',
+		'/redirect',
+		async ({ base, page, clicknav }) => {
+			await clicknav('[href="/redirect/nowhere"]');
+
+			assert.equal(await page.url(), `${base}/redirect/c`);
+			assert.equal(await page.textContent('h1'), 'c');
+		}
+	);
 }
