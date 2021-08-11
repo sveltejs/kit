@@ -225,7 +225,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				const cleaned = clean_html(/** @type {string} */(rendered.body));
+				const cleaned = clean_html(/** @type {string} */ (rendered.body));
 
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
