@@ -81,7 +81,8 @@ function chooseErrorHandler(log, onError) {
 const OK = 2;
 const REDIRECT = 3;
 
-/** @param {{
+/**
+ * @param {{
  *   cwd: string;
  *   out: string;
  *   log: Logger;
@@ -89,8 +90,13 @@ const REDIRECT = 3;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
- * }} opts */
+ * }} opts
+ */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	if (!config.kit.prerender.enabled && !fallback) {
+		return;
+	}
+
 	__fetch_polyfill();
 
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
@@ -219,7 +225,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				const cleaned = clean_html(/** @type {string} */ (rendered.body));
+				const cleaned = clean_html(/** @type {string} */(rendered.body));
 
 				let match;
 				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
@@ -264,6 +270,18 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 	}
 
+	if (config.kit.prerender.enabled) {
+		for (const entry of config.kit.prerender.pages) {
+			if (entry === '*') {
+				for (const entry of build_data.entries) {
+					await visit(entry, null);
+				}
+			} else {
+				await visit(entry, null);
+			}
+		}
+	}
+
 	if (fallback) {
 		const rendered = await app.render(
 			{
@@ -285,15 +303,5 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
-	} else {
-		for (const entry of config.kit.prerender.pages) {
-			if (entry === '*') {
-				for (const entry of build_data.entries) {
-					await visit(entry, null);
-				}
-			} else {
-				await visit(entry, null);
-			}
-		}
 	}
 }

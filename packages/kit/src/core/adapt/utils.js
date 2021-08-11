@@ -31,17 +31,15 @@ export function get_utils({ cwd, config, build_data, log }) {
 		},
 
 		async prerender({ all = false, dest, fallback }) {
-			if (config.kit.prerender.enabled || fallback) {
-				await prerender({
-					out: dest,
-					all,
-					cwd,
-					config,
-					build_data,
-					fallback,
-					log
-				});
-			}
+			await prerender({
+				out: dest,
+				all,
+				cwd,
+				config,
+				build_data,
+				fallback,
+				log
+			});
 		}
 	};
 }
