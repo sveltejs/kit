@@ -43,12 +43,11 @@ export function createServer({ render }) {
 		assets_handler,
 		prerendered_handler,
 		async (req, res) => {
-			const parsed = new URL(req.url || '', 'http://localhost');
-
-			let body;
+			const query = new URLSearchParams(req.query);
+			let rawBody;
 
 			try {
-				body = await getRawBody(req);
+				rawBody = await getRawBody(req);
 			} catch (err) {
 				res.statusCode = err.status || 400;
 				return res.end(err.reason || 'Invalid request body');
@@ -57,9 +56,9 @@ export function createServer({ render }) {
 			const rendered = await render({
 				method: req.method,
 				headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-				path: parsed.pathname,
-				query: parsed.searchParams,
-				rawBody: body
+				path: req.path,
+				query,
+				rawBody
 			});
 
 			if (rendered) {
