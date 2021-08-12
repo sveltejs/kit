@@ -10,9 +10,9 @@
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"test": ["./test/types"],
-			"types/*": ["./types/*"],
+			"types/*": ["./types/*.d.ts"],
 			"@sveltejs/kit": ["./types/index"]
 		}
 	},
-	"include": ["src/**/*", "test/**/*", "types/**/*", "test/types.d.ts", "test/ambient.d.ts"]
+	"include": ["src/**/*", "test/**/*", "types/**/*.d.ts", "test/types.d.ts", "test/ambient.d.ts"]
 }

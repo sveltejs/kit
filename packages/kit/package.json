@@ -59,7 +59,8 @@
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:integration",
+		"test": "npm run test:unit && npm run test:integration && npm run test:types",
+		"test:types": "tsc -p types/tsconfig.spec.json",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"test:integration": "uvu test test.js"
 	},

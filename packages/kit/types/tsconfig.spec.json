@@ -1,0 +1,8 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "node",
+		"strict": true,
+		"noEmit": true
+	},
+	"include": ["./*.ts", "./*.d.ts"]
+}
