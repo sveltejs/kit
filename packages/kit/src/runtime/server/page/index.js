@@ -18,8 +18,7 @@ export async function render_page(request, route, options, state) {
 	}
 
 	const match = route.pattern.exec(request.path);
-	// @ts-expect-error we already know there's a match
-	const params = route.params(match);
+	const params = route.params(/** @type {RegExpExecArray} */ (match));
 
 	const page = {
 		host: request.host,

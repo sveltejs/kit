@@ -12,21 +12,22 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @returns
  */
 const create = (dir, extensions = ['.svelte']) => {
-	return create_manifest_data({
-		config: {
-			extensions,
-			kit: {
-				// @ts-expect-error
-				files: {
-					assets: path.resolve(cwd, 'static'),
-					routes: path.resolve(cwd, dir)
-				},
-				appDir: '_app',
-				serviceWorker: {
-					exclude: []
-				}
+	const initial = /** @type {import('types/config').Config} */ ({
+		extensions,
+		kit: {
+			files: {
+				assets: path.resolve(cwd, 'static'),
+				routes: path.resolve(cwd, dir)
+			},
+			appDir: '_app',
+			serviceWorker: {
+				exclude: []
 			}
-		},
+		}
+	});
+
+	return create_manifest_data({
+		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
 		cwd,
 		output: cwd
 	});

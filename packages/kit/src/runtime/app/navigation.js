@@ -2,6 +2,10 @@ import { router } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 /**
+ * @typedef {import('../client/router').Router} Router
+ */
+
+/**
  * @param {string} name
  */
 function guard(name) {
@@ -19,8 +23,7 @@ export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : pr
  * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
-	// @ts-expect-error
-	return router.goto(href, opts, []);
+	return /** @type {Router} */ (router).goto(href, opts, []);
 }
 
 /**
@@ -28,16 +31,14 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
-	// @ts-expect-error
-	return router.renderer.invalidate(href);
+	return /** @type {Router} */ (router).renderer.invalidate(href);
 }
 
 /**
  * @type {import('$app/navigation').prefetch}
  */
 function prefetch_(href) {
-	// @ts-expect-error
-	return router.prefetch(new URL(href, get_base_uri(document)));
+	return /** @type {Router} */ (router).prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**
@@ -45,15 +46,16 @@ function prefetch_(href) {
  */
 async function prefetchRoutes_(pathnames) {
 	const matching = pathnames
-		? // @ts-expect-error
-		  router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
-		: // @ts-expect-error
-		  router.routes;
+		? /** @type {Router} */ (router).routes.filter((route) =>
+				pathnames.some((pathname) => route[0].test(pathname))
+		  )
+		: /** @type {Router} */ (router).routes;
 
 	const promises = matching
 		.filter((r) => r && r.length > 1)
-		// @ts-expect-error
-		.map((r) => Promise.all(r[1].map((load) => load())));
+		.map((r) =>
+			Promise.all(/** @type {import('types/internal').CSRPage} */ (r)[1].map((load) => load()))
+		);
 
 	await Promise.all(promises);
 }

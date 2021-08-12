@@ -55,7 +55,12 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
-/** @typedef {import('types/internal').CSRComponent} CSRComponent */
+/**
+ * @typedef {import('types/internal').CSRComponent} CSRComponent
+ *
+ * @typedef {Partial<import('types/page').Page>} Page
+ * @typedef {{ from: Page; to: Page }} Navigating
+ */
 
 export class Renderer {
 	/** @param {{
@@ -83,10 +88,8 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
-			// @ts-expect-error
-			page: null,
-			// @ts-expect-error
-			session_id: null,
+			page: /** @type {import('types/helper').Location} */ ({}),
+			session_id: 0,
 			branch: []
 		};
 
@@ -100,9 +103,9 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: page_store({}),
-			navigating: writable(null),
-			session: writable(session)
+			page: /** @type {typeof import('$app/stores').page} */ page_store({}),
+			navigating: writable(/** @type {Navigating | null} */ (null)),
+			session: /** @type {import('$app/stores').session} */ writable(session)
 		};
 
 		this.$session = null;
@@ -203,7 +206,6 @@ export class Renderer {
 		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 
 		if (this.started) {
-			// @ts-expect-error
 			this.stores.navigating.set({
 				from: {
 					path: this.current.page.path,
@@ -331,8 +333,7 @@ export class Renderer {
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
 	async _get_navigation_result(info, no_cache) {
-		if (this.loading.id === info.id) {
-			// @ts-expect-error if the id is defined then the promise is too
+		if (this.loading.id === info.id && this.loading.promise) {
 			return this.loading.promise;
 		}
 
@@ -549,8 +550,10 @@ export class Renderer {
 		}
 
 		const [pattern, a, b, get_params] = route;
-		// @ts-expect-error - the pattern is for the route which we've already matched to this path
-		const params = get_params ? get_params(pattern.exec(path)) : {};
+		const params = get_params
+			? // the pattern is for the route which we've already matched to this path
+			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
+			: {};
 
 		const changed = this.current.page && {
 			path: path !== this.current.page.path,
