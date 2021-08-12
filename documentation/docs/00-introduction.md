@@ -4,45 +4,45 @@ title: Introduction
 
 SvelteKit is an application framework for building web apps using Svelte components.
 
-Build modern state-of-the-art web apps that fully embrace the serverless paradigm with a great development experience.
+With SvelteKit you can build modern state-of-the-art web apps that fully embrace the serverless paradigm with a great development experience.
 
-Under the hood SvelteKit is made up of multiple things, hence the name "kit". It's a rendering engine for SSR and CSR, a client-side runtime for client-side routing and CSR, and a toolchain for development.
+SvelteKit is made up of parts, hence the name "kit". It contains a rendering engine for SSR and CSR, a client-side runtime for client-side routing and CSR, and a toolchain for development.
 
 (If you need a quick reference on these words, check out the [glossary](#appendix) in the appendix.)
 
 ### Features
 
 - [server-side rendering](#appendix-ssr)
-
-For the initial page, the user is served a server-side rendered version of the page.
+    
+    For the initial page, the user is served a server-side rendered version of the page.
 
 - [prerendering](#appendix-prerendering) or dynamic SSR
 
-The server-side rendered version of a page is prerendered at build-time or rendered dynamically at request-time depending on the [adapter](#adapters) used.
+    The server-side rendered version of a page is prerendered at build-time or rendered dynamically at request-time depending on the [adapter](#adapters) used.
 
 - [client-side routing](#appendix-routing)
 
-After the initial page load of the server-side rendered page, a client-side runtime takes over. Further navigation to subsequent pages is handled by the client-side router serving a client-side rendered version of the pages.
+    After the initial page load of the server-side rendered page, a client-side runtime takes over. Further navigation to subsequent pages is handled by the client-side router serving a client-side rendered version of the pages.
 
 - [highly configurable](#rendering)
 
-Rendering can be configured on a per-page or per-app level.
+    Rendering can be configured on a per-page or per-app level.
 
 - [service workers](#service-workers)
 
-Service workers to make a PWA with offline support.
+    Service workers to make a PWA with offline support.
 
 - code-splitting
 
-Per route code-splitting for JS and CSS.
+    Per route code-splitting for JS and CSS.
 
 - prefetching
 
-Prefetching for pages right before the user initiates navigation.
+    Prefetching for pages right before the user initiates navigation.
 
 - tooling
 
-An integrated development server with built-in hot module reloading and error overlays. TypeScript support.
+    An integrated development server with built-in hot module reloading and error overlays. TypeScript support out of the box.
 
 ### Getting started
 
