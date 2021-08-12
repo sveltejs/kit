@@ -1,18 +1,18 @@
 import { ServerRequest } from './hooks';
 import { Headers, MaybePromise } from './helper';
 
-type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
-
-type JSONResponse =
+type Excluded = Exclude<JSONValue, ToJSON>;
+type ToJSON = { toJSON(...args: unknown[]): Excluded };
+type JSONValue =
 	| string
 	| number
 	| boolean
 	| null
-	| JSONResponse[]
-	| { toJSON(...args: unknown[]): JSONValue }
-	| { [key: string]: JSONResponse };
+	| JSONValue[]
+	| ToJSON
+	| { [key: string]: JSONValue };
 
-type DefaultBody = JSONResponse | Uint8Array;
+type DefaultBody = JSONValue | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
