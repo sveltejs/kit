@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.147
+
+### Patch Changes
+
+- [fix] handle paths consistently between dev and various production adapters ([#2171](https://github.com/sveltejs/kit/pull/2171))
+
+* Replace function properties by methods on type declarations ([#2158](https://github.com/sveltejs/kit/pull/2158))
+
+- [fix] fallback should still be generated when prerender is disabled ([#2128](https://github.com/sveltejs/kit/pull/2128))
+
+* update vite-plugin-svelte to 1.0.0-next.16 ([#2179](https://github.com/sveltejs/kit/pull/2179))
+
+- Set optimizeDeps.entries to [] when building service worker ([#2180](https://github.com/sveltejs/kit/pull/2180))
+
 ## 1.0.0-next.146
 
 ### Patch Changes

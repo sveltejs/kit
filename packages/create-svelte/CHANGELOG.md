@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.78
+
+### Patch Changes
+
+- Disable delete button while waiting for API response ([#2172](https://github.com/sveltejs/kit/pull/2172))
+
 ## 2.0.0-next.77
 
 ### Patch Changes
