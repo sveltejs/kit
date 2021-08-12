@@ -4,13 +4,13 @@ title: Introduction
 
 SvelteKit is an application framework for building web apps using Svelte components.
 
-It's the future of building modern web apps, fully embracing serverless platforms, while providing a great development experience.
+It's allows to build modern state-of-the-art web apps that fully embrace serverless platforms. It provides a great development experience with a growing number of tools.
 
-It's a *kit* of multiple things: a SSR engine, a client-side runtime, and a development toolchain.
+Under the hood it's made up of multiple things, hence the name "kit". It's a rendering engine for SSR and CSR, a client-side runtime for client-side routing and CSR, and a toolchain for development.
+
+(If you need a quick explainer on these words, check out the [glossary](#appendix) in the appendix.)
 
 ### Features
-
-_If you need a quick explainer on those concepts, check out the appendix._
 
 - [server-side rendering](#appendix-ssr)
 
@@ -40,12 +40,13 @@ Pages can be prefetched just before the user initiates navigation.
 
 The integrated development server has built-in hot module reloading and error overlays.
 
-- [offline support](#service-workers)
-- TypeScript support
+- [service workers](#service-workers)
 
+Service workers to make a PWA with offline support.
 
-If you want to learn more about where SvelteKit came from, read the introduction blog post [What's the deal with SvelteKit?](https://svelte.dev/blog/whats-the-deal-with-sveltekit).
+- TypeScript
 
+TypeScript support built-in.
 
 ### Getting started
 
