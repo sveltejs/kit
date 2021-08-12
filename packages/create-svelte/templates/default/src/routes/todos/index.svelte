@@ -59,7 +59,6 @@
 		use:enhance={{
 			result: async (res, form) => {
 				const created = await res.json();
-				created.pending_delete = false;
 				todos = [...todos, created];
 
 				form.reset();
@@ -112,7 +111,7 @@
 					}
 				}}
 			>
-				<button class="delete" aria-label="Delete todo" disabled={todo.pending_delete} />
+				<button class="delete" aria-label="Delete todo" disabled={!!todo.pending_delete} />
 			</form>
 		</div>
 	{/each}
