@@ -1,8 +1,8 @@
 import { ServerRequest } from './hooks';
 import { Headers, MaybePromise } from './helper';
 
-type Excluded = Exclude<JSONValue, ToJSON>;
-type ToJSON = { toJSON(...args: unknown[]): Excluded };
+type PlainJSON = Exclude<JSONValue, ToJSON>;
+type ToJSON = { toJSON(...args: unknown[]): PlainJSON };
 type JSONValue =
 	| string
 	| number
