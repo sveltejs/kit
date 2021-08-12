@@ -7,10 +7,10 @@ export default function (test) {
 
 		const headers = await response.headers();
 		assert.equal(
-			headers['X-Request-Locals'],
+			headers['x-request-locals'],
 			JSON.stringify({ first: true, second: 'str', third: 3 })
 		);
 
-		assert.equal(headers['X-Handle-Header'], 'hello');
+		assert.equal(headers['x-handle-header'], 'hello');
 	});
 }
