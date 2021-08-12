@@ -591,6 +591,7 @@ async function build_service_worker(
 			emptyOutDir: false
 		},
 		optimizeDeps: {
+			entries: [],
 			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
 			// broken packages https://github.com/vitejs/vite/issues/3910
 			exclude: [
