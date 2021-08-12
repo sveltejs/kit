@@ -31,6 +31,7 @@
 		created_at: Date;
 		text: string;
 		done: boolean;
+		pending_delete: boolean;
 	};
 
 	export let todos: Todo[];
@@ -111,7 +112,7 @@
 					}
 				}}
 			>
-				<button class="delete" aria-label="Delete todo" disabled={!!todo.pending_delete} />
+				<button class="delete" aria-label="Delete todo" disabled={todo.pending_delete} />
 			</form>
 		</div>
 	{/each}
