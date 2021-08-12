@@ -185,9 +185,9 @@ export interface PageData {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
-	path: string;
-	a: string[];
-	b: string[];
+	path: string | null;
+	a: Partial<string[]>;
+	b: Partial<string[]>;
 }
 
 export interface EndpointData {

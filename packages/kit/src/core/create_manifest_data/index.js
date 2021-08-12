@@ -247,11 +247,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					type: 'page',
 					pattern,
 					params,
-					// @ts-expect-error
 					path,
-					// @ts-expect-error
 					a,
-					// @ts-expect-error
 					b
 				});
 			} else {
