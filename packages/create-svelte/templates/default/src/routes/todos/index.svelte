@@ -105,7 +105,7 @@
 				action="/todos/{todo.uid}.json?_method=delete"
 				method="post"
 				use:enhance={{
-					pending: () => todo.pending_delete = true,
+					pending: () => (todo.pending_delete = true),
 					result: () => {
 						todos = todos.filter((t) => t.uid !== todo.uid);
 					}
