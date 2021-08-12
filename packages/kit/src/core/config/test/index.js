@@ -15,7 +15,7 @@ async function testLoadDefaultConfig(path) {
 
 	const config = await load_config({ cwd });
 
-	// @ts-expect-error can't test equality of a function
+	// @ts-expect-error - can't test equality of a function
 	delete config.kit.vite;
 
 	assert.equal(config, {
