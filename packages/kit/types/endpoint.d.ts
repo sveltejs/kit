@@ -3,16 +3,16 @@ import { Headers, MaybePromise } from './helper';
 
 type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
-type JSONBody =
+type JSONResponse =
 	| string
 	| number
 	| boolean
 	| null
-	| JSONBody[]
+	| JSONResponse[]
 	| { toJSON(...args: unknown[]): JSONValue }
-	| { [key: string]: JSONBody };
+	| { [key: string]: JSONResponse };
 
-type DefaultBody = JSONBody | Uint8Array;
+type DefaultBody = JSONResponse | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
