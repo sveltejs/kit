@@ -51,10 +51,7 @@ export async function preview({
 	});
 
 	app.init({
-		paths: {
-			base: '',
-			assets: '/.'
-		},
+		paths: config.kit.paths,
 		prerendering: false,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
@@ -63,41 +60,62 @@ export async function preview({
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
 
 	const server = await get_server(use_https, vite_config, (req, res) => {
-		const parsed = parse(req.url || '');
+		if (req.url == null) {
+			throw new Error('Invalid request url');
+		}
 
-		assets_handler(req, res, () => {
-			static_handler(req, res, async () => {
-				if (!req.method) throw new Error('Incomplete request');
+		const initial_url = req.url;
+		const { assets } = config.kit.paths;
 
-				let body;
+		const render_handler = async () => {
+			if (!req.method) throw new Error('Incomplete request');
 
-				try {
-					body = await getRawBody(req);
-				} catch (err) {
-					res.statusCode = err.status || 400;
-					return res.end(err.reason || 'Invalid request body');
-				}
+			let body;
 
-				const rendered = await app.render({
-					host: /** @type {string} */ (config.kit.host ||
-						req.headers[config.kit.hostHeader || 'host']),
-					method: req.method,
-					headers: /** @type {import('types/helper').Headers} */ (req.headers),
-					path: parsed.pathname ? decodeURIComponent(parsed.pathname) : '',
-					query: new URLSearchParams(parsed.query || ''),
-					rawBody: body
-				});
+			try {
+				body = await getRawBody(req);
+			} catch (err) {
+				res.statusCode = err.status || 400;
+				return res.end(err.reason || 'Invalid request body');
+			}
 
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					if (rendered.body) res.write(rendered.body);
-					res.end();
-				} else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
+			const parsed = parse(initial_url);
+
+			const rendered = await app.render({
+				host: /** @type {string} */ (config.kit.host ||
+					req.headers[config.kit.hostHeader || 'host']),
+				method: req.method,
+				headers: /** @type {import('types/helper').Headers} */ (req.headers),
+				path: parsed.pathname ? decodeURIComponent(parsed.pathname) : '',
+				query: new URLSearchParams(parsed.query || ''),
+				rawBody: body
 			});
-		});
+
+			if (rendered) {
+				res.writeHead(rendered.status, rendered.headers);
+				if (rendered.body) res.write(rendered.body);
+				res.end();
+			} else {
+				res.statusCode = 404;
+				res.end('Not found');
+			}
+		};
+
+		if (assets.length > 1 && assets !== '/.') {
+			if (initial_url.startsWith(`${assets}/`)) {
+				// custom assets path
+				req.url = initial_url.slice(assets.length);
+				assets_handler(req, res, () => {
+					static_handler(req, res, render_handler);
+				});
+			} else {
+				render_handler();
+			}
+		} else {
+			assets_handler(req, res, () => {
+				static_handler(req, res, render_handler);
+			});
+		}
 	});
 
 	await server.listen(port, host || '0.0.0.0');

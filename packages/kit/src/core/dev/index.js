@@ -169,7 +169,8 @@ class Watcher extends EventEmitter {
 			ssr: {
 				// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
 				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
-			}
+			},
+			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
 
 		print_config_conflicts(conflicts, 'kit.vite.');
@@ -312,6 +313,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 				}
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
+
+				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+
+				paths.set_paths(config.kit.paths);
 
 				let body;
 
