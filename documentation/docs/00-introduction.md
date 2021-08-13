@@ -2,13 +2,19 @@
 title: Introduction
 ---
 
+### Before we begin
+
+> SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+>
+> See the [migration guides](/migrating) for help upgrading from Sapper.
+
+### What is SvelteKit?
+
 SvelteKit is an application framework for building web apps using Svelte components.
 
 With SvelteKit you can build modern state-of-the-art web apps that fully embrace the serverless paradigm with a great development experience.
 
-SvelteKit is made up of parts, hence the name "kit". It contains a rendering engine for SSR and CSR, a client-side runtime for client-side routing and CSR, and a toolchain for development.
-
-(If you need a quick reference on these words, check out the [glossary](#appendix) in the appendix.)
+SvelteKit provides a rendering engine, a client-side runtime, and a toolchain for development.
 
 ### Features
 
@@ -45,10 +51,6 @@ SvelteKit is made up of parts, hence the name "kit". It contains a rendering eng
     An integrated development server with built-in hot module reloading and error overlays. TypeScript support out of the box.
 
 ### Getting started
-
-> SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
->
-> See the [migration guides](/migrating) for help upgrading from Sapper.
 
 The easiest way to start building a SvelteKit app is to run `npm init`:
 
