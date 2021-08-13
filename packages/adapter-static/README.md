@@ -63,9 +63,9 @@ When operating in SPA mode, only pages that have the [`prerender`](https://kit.s
 
 ## GitHub Pages
 
-When building for GitHub Pages, make sure to update the [basepaths](https://kit.svelte.dev/docs#configuration) (see `paths.base` and `paths.assets`).
+When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs#configuration-paths) to match your repo name, since the site will be served from https://your-username.github.io/your-repo-name rather than from the root.
 
-You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `"app_"` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
+You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `'app_'` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
 A config for GitHub Pages might look like the following:
 
@@ -75,9 +75,6 @@ const config = {
 	...
 	kit: {
 		...
-		// Since your GitHub Pages site will be served at https://your-username.github.io/your-repo-name,
-		// you will need to change the base paths
-		// Note that you may have to comment these in dev mode.
 		paths: {
 			base: '/your-repo-name',
 		},
