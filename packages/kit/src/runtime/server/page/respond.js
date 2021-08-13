@@ -32,7 +32,7 @@ export async function respond(opts) {
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.hooks.handleError({ error, request });
+		options.handle_error(error, request);
 
 		return await respond_with_error({
 			request,
@@ -192,7 +192,7 @@ export async function respond(opts) {
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.hooks.handleError({ error, request });
+		options.handle_error(error, request);
 
 		return await respond_with_error({
 			...opts,
