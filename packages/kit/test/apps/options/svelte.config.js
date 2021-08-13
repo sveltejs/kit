@@ -17,12 +17,7 @@ const config = {
 			build: {
 				minify: false
 			},
-			clearScreen: false,
-			server: {
-				hmr: {
-					port: 3001
-				}
-			}
+			clearScreen: false
 		},
 		paths: {
 			base: '/path-base',
