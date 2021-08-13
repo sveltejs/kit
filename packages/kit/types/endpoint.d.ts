@@ -1,30 +1,18 @@
 import { ServerRequest } from './hooks';
 import { Headers, MaybePromise } from './helper';
 
-/**
- * Represents plain JSON, can be returned from an endpoint
- * or from parsing a JSON string
- */
-type PlainJSON = Exclude<JSONValue, ToJSON>;
-
-/**
- * Type for objects that aren't plain JSON values, but can be converted to one
- */
-type ToJSON = { toJSON(...args: unknown[]): PlainJSON };
-
-/**
- * JSON output that can be retrieved from an endpoint
- */
-type JSONValue =
+type ToJSON = { toJSON(...args: any[]): JSONValue };
+type JSONValue = Exclude<JSONResponse, ToJSON>;
+type JSONResponse =
 	| string
 	| number
 	| boolean
 	| null
-	| JSONValue[]
+	| JSONResponse[]
 	| ToJSON
-	| { [key: string]: JSONValue };
+	| { [key: string]: JSONResponse };
 
-type DefaultBody = JSONValue | Uint8Array;
+type DefaultBody = JSONResponse | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
