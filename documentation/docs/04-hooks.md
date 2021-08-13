@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs on every rendering, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
@@ -60,7 +60,29 @@ export async function handle({ request, resolve }) {
 }
 ```
 
-> `handle` runs when a page is rendered. If a page is prerendered, `handle` will not run again when the user requests the page. If you would like to run some functionality on each request, see the documentation for your [adapter](#adapters).
+### handleError
+
+If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+
+During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
+
+If unimplemented, SvelteKit will log the error with default formatting.
+
+```ts
+type HandleError = HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
+}
+```
+
+```js
+/** @type {import('@sveltejs/kit').HandleError} */
+export async function handleError({ error, request }) {
+	// example integration with https://sentry.io/
+	Sentry.captureException(error, { request });
+}
+```
+
+> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
 
 ### getSession
 
@@ -79,16 +101,18 @@ type GetSession<Locals = Record<string, any>, Session = any> = {
 ```js
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
-	return request.locals.user ? {
-		user: {
-			// only include properties needed client-side —
-			// exclude anything else attached to the user
-			// like access tokens etc
-			name: request.locals.user.name,
-			email: request.locals.user.email,
-			avatar: request.locals.user.avatar
-		}
-	} : {};
+	return request.locals.user
+		? {
+				user: {
+					// only include properties needed client-side —
+					// exclude anything else attached to the user
+					// like access tokens etc
+					name: request.locals.user.name,
+					email: request.locals.user.email,
+					avatar: request.locals.user.avatar
+				}
+		  }
+		: {};
 }
 ```
 

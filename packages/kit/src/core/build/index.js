@@ -39,10 +39,11 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		cwd,
 		config,
 		build_dir,
-		base:
-			config.kit.paths.assets === '/.'
-				? `/${config.kit.appDir}/`
-				: `${config.kit.paths.assets}/${config.kit.appDir}/`,
+		// TODO this is so that Vite's preloading works. Unfortunately, it fails
+		// during `svelte-kit preview`, because we use a local asset path. If Vite
+		// used relative paths, I _think_ this could get fixed. Issue here:
+		// https://github.com/vitejs/vite/issues/2009
+		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
 		manifest: create_manifest_data({
 			config,
 			output: build_dir,
@@ -58,9 +59,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	await build_server(options, client_manifest, runtime);
 
 	if (options.service_worker_entry_file) {
-		const { base, assets } = config.kit.paths;
-
-		if (assets !== base && assets !== '/.') {
+		if (config.kit.paths.assets) {
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
@@ -83,7 +82,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -94,7 +93,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  */
 async function build_client({
 	cwd,
-	base,
+	assets_base,
 	config,
 	manifest,
 	build_dir,
@@ -151,7 +150,7 @@ async function build_client({
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
@@ -198,7 +197,7 @@ async function build_client({
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -213,7 +212,7 @@ async function build_client({
 async function build_server(
 	{
 		cwd,
-		base,
+		assets_base,
 		config,
 		manifest,
 		build_dir,
@@ -239,7 +238,7 @@ async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const prefix = `${config.kit.paths.assets}/${config.kit.appDir}/`;
+	const prefix = `/${config.kit.appDir}/`;
 
 	/**
 	 * @param {string} file
@@ -270,8 +269,8 @@ async function build_server(
 
 		find_deps(file, js_deps, css_deps);
 
-		const js = Array.from(js_deps).map((url) => prefix + url);
-		const css = Array.from(css_deps).map((url) => prefix + url);
+		const js = Array.from(js_deps);
+		const css = Array.from(css_deps);
 
 		const styles = config.kit.amp
 			? Array.from(css_deps).map((url) => {
@@ -281,7 +280,7 @@ async function build_server(
 			: [];
 
 		metadata_lookup[file] = {
-			entry: prefix + client_manifest[file].file,
+			entry: client_manifest[file].file,
 			css,
 			js,
 			styles
@@ -301,7 +300,7 @@ async function build_server(
 		`
 			import { respond } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths } from './runtime/paths.js';
+			import { set_paths, assets } from './runtime/paths.js';
 			import { set_prerendering } from './runtime/env.js';
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
@@ -319,26 +318,25 @@ async function build_server(
 				set_paths(settings.paths);
 				set_prerendering(settings.prerendering || false);
 
+				const hooks = get_hooks(user_hooks);
+
 				options = {
 					amp: ${config.kit.amp},
 					dev: false,
 					entry: {
-						file: ${s(prefix + client_manifest[client_entry_file].file)},
-						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+						file: assets + ${s(prefix + client_manifest[client_entry_file].file)},
+						css: [${Array.from(entry_css).map(dep => 'assets + ' + s(prefix + dep))}],
+						js: [${Array.from(entry_js).map(dep => 'assets + ' + s(prefix + dep))}]
 					},
 					fetched: undefined,
 					floc: ${config.kit.floc},
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
+					get_component_path: id => assets + ${s(prefix)} + entry_lookup[id],
 					get_stack: error => String(error), // for security
-					handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
-						if (error.frame) {
-							console.error(error.frame);
-						}
-						console.error(error.stack);
+					handle_error: (error, request) => {
+						hooks.handleError({ error, request });
 						error.stack = options.get_stack(error);
 					},
-					hooks: get_hooks(user_hooks),
+					hooks,
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
 					load_component,
@@ -397,6 +395,7 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+				handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
 				externalFetch: hooks.externalFetch || fetch
 			});
 
@@ -407,9 +406,13 @@ async function build_server(
 			const metadata_lookup = ${s(metadata_lookup)};
 
 			async function load_component(file) {
+				const { entry, css, js, styles } = metadata_lookup[file];
 				return {
 					module: await module_lookup[file](),
-					...metadata_lookup[file]
+					entry: assets + ${s(prefix)} + entry,
+					css: css.map(dep => assets + ${s(prefix)} + dep),
+					js: js.map(dep => assets + ${s(prefix)} + dep),
+					styles
 				};
 			}
 
@@ -442,7 +445,7 @@ async function build_server(
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			target: 'es2018',
 			ssr: true,
@@ -500,7 +503,7 @@ async function build_server(
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -514,7 +517,7 @@ async function build_server(
 async function build_service_worker(
 	{
 		cwd,
-		base,
+		assets_base,
 		config,
 		manifest,
 		build_dir,
@@ -575,7 +578,7 @@ async function build_service_worker(
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			lib: {
 				entry: service_worker_entry_file,
