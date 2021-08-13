@@ -300,9 +300,27 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 				if (req.url === '/favicon.ico') return;
 
 				/** @type {Partial<import('types/internal').Hooks>} */
-				const hooks = resolve_entry(config.kit.files.hooks)
+				const user_hooks = resolve_entry(config.kit.files.hooks)
 					? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 					: {};
+
+				/** @type {import('types/internal').Hooks} */
+				const hooks = {
+					getSession: user_hooks.getSession || (() => ({})),
+					handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+					handleError:
+						user_hooks.handleError ||
+						(({ /** @type {Error & { frame?: string }} */ error, request }) => {
+							console.error(colors.bold().red(error.message));
+							if (error.frame) {
+								console.error(colors.gray(error.frame));
+							}
+							if (error.stack) {
+								console.error(colors.gray(error.stack));
+							}
+						}),
+					serverFetch: user_hooks.serverFetch || fetch
+				};
 
 				if (/** @type {any} */ (hooks).getContext) {
 					// TODO remove this for 1.0
@@ -347,21 +365,11 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							vite.ssrFixStacktrace(error);
 							return error.stack;
 						},
-						handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
+						handle_error: (error, request) => {
 							vite.ssrFixStacktrace(error);
-							console.error(colors.bold().red(error.message));
-							if (error.frame) {
-								console.error(colors.gray(error.frame));
-							}
-							if (error.stack) {
-								console.error(colors.gray(error.stack));
-							}
+							hooks.handleError({ error, request });
 						},
-						hooks: {
-							getSession: hooks.getSession || (() => ({})),
-							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							serverFetch: hooks.serverFetch || fetch
-						},
+						hooks,
 						hydrate: config.kit.hydrate,
 						paths: config.kit.paths,
 						load_component: async (id) => {
