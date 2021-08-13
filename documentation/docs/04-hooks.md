@@ -60,6 +60,30 @@ export async function handle({ request, resolve }) {
 }
 ```
 
+### handleError
+
+If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+
+During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error. 
+
+If unimplemented, SvelteKit will log the error with default formatting.
+
+```ts
+type HandleError = HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
+}
+```
+
+```js
+/** @type {import('@sveltejs/kit').HandleError} */
+export async function handleError({ error, request }) {
+  // example integration with https://sentry.io/
+  Sentry.captureException(error, { request });
+}
+```
+
+> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
+
 ### getSession
 
 This function takes the `request` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
@@ -114,27 +138,5 @@ export async function serverFetch(request) {
 	}
 
 	return fetch(request);
-}
-```
-
-### handleError
-
-This function allows you to handle errors with your own error handler.
-
-For example, you may have a custom logging scheme that you send to an external system, and you want to format the error in a manner consistent with your other logs.
-
-```js
-/** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({error, request}) {
-	console.error(JSON.stringify({
-		request,
-		msg: "There was an error processing this page",
-		err: {
-			name: error.name,
-			message: error.message,
-			code: error.code,
-			stack: error.stack
-		}
-	}))
 }
 ```
