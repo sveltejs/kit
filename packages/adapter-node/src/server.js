@@ -3,7 +3,6 @@ import compression from 'compression';
 import fs from 'fs';
 import { dirname, join } from 'path';
 import polka from 'polka';
-import { parse } from '@polka/url';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 
