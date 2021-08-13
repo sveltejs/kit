@@ -12,7 +12,7 @@ title: Introduction
 
 SvelteKit is an application framework for building web apps using [Svelte](https://svelte.dev/) components.
 
-With SvelteKit you can build modern state-of-the-art web apps that fully embrace the serverless paradigm with a great development experience.
+With SvelteKit you can build modern state-of-the-art web apps that fully embrace the serverless paradigm with a lightning-fast development experience.
 
 Building an app with all the modern best practices — [server-side rendering](#appendix-ssr) with [client-side hydration](#appendix-hydration), code-splitting, [offline support](#service-workers) — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
@@ -22,36 +22,40 @@ If you're unfamiliar with Svelte read the [introductory blog post](https://svelt
 
 - [server-side rendering](#appendix-ssr)
     
-    For the initial page, the user is served a server-side rendered version of the page.
+    The initial page of your app is as fast as possible by serving a server-side rendered version of the page.
+  
+- [prerendering](#appendix-prerendering) or dynamic server-side rendering
 
-- [prerendering](#appendix-prerendering) or dynamic SSR
-
-    The server-side rendered version of a page is prerendered at build-time or rendered dynamically at request-time depending on the [adapter](#adapters) used.
+    Server-side rendered pages can be generated at build-time or at request-time.
 
 - [client-side routing](#appendix-routing)
 
-    After the initial page load of the server-side rendered page, a client-side runtime takes over. Further navigation to subsequent pages is handled by the client-side router serving a client-side rendered version of the pages.
+    Subsequent pages are client-side rendered for a fast, app-like feel where the common portions of the pages do not need to be rerendered.
 
 - [highly configurable](#ssr-and-javascript)
 
-    Rendering can be configured on a per-page or per-app level.
+    Configurable rendering on a per-page or per-app level.
 
 - [service workers](#service-workers)
 
-    Service workers to make a PWA with offline support.
+    Service workers to make your app work offline or speed up navigation by caching.
 
-- code-splitting
+- code-splitting for JS and CSS
 
-    Per route code-splitting for JS and CSS.
+    Code-splitting so that your app only loads the code needed for a page.
 
 - prefetching
 
-    Prefetching for pages right before the user initiates navigation.
+    Prefetch pages before the user initiates navigation.
 
-- tooling
+- hot module reloading
 
-    An integrated development server with built-in hot module reloading and error overlays. TypeScript support out of the box.
+    The [Vite](https://vitejs.dev/) development server has built-in hot module reloading and error overlays so that updates are instantly visible without reloading the page.
 
+- TypeScript
+
+    TypeScript support is built-in.
+    
 ### Getting started
 
 The easiest way to start building a SvelteKit app is to run `npm init`:
