@@ -43,7 +43,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		// during `svelte-kit preview`, because we use a local asset path. If Vite
 		// used relative paths, I _think_ this could get fixed. Issue here:
 		// https://github.com/vitejs/vite/issues/2009
-		base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
+		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
 		manifest: create_manifest_data({
 			config,
 			output: build_dir,
@@ -82,7 +82,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -93,7 +93,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  */
 async function build_client({
 	cwd,
-	base,
+	assets_base,
 	config,
 	manifest,
 	build_dir,
@@ -150,7 +150,7 @@ async function build_client({
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
@@ -197,7 +197,7 @@ async function build_client({
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -212,7 +212,7 @@ async function build_client({
 async function build_server(
 	{
 		cwd,
-		base,
+		assets_base,
 		config,
 		manifest,
 		build_dir,
@@ -445,7 +445,7 @@ async function build_server(
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			target: 'es2018',
 			ssr: true,
@@ -503,7 +503,7 @@ async function build_server(
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
@@ -517,7 +517,7 @@ async function build_server(
 async function build_service_worker(
 	{
 		cwd,
-		base,
+		assets_base,
 		config,
 		manifest,
 		build_dir,
@@ -578,7 +578,7 @@ async function build_service_worker(
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			lib: {
 				entry: service_worker_entry_file,
