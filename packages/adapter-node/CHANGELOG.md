@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- [fix] handle paths consistently between dev and various production adapters ([#2171](https://github.com/sveltejs/kit/pull/2171))
+
+* [feat] allow node adapter to configure listen path ([#2048](https://github.com/sveltejs/kit/pull/2048))
+
 ## 1.0.0-next.39
 
 ### Patch Changes
