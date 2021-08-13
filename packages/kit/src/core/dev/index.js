@@ -333,117 +333,119 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 				const host = /** @type {string} */ (config.kit.host ||
 					req.headers[config.kit.hostHeader || 'host']);
 
-				const rendered = await respond(
-					{
-						headers: /** @type {import('types/helper').Headers} */ (req.headers),
-						method: req.method,
-						host,
-						path: parsed.pathname,
-						query: parsed.searchParams,
-						rawBody: body
-					},
-					{
-						amp: config.kit.amp,
-						dev: true,
-						entry: {
-							file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
-							css: [],
-							js: []
+				const rendered =
+					parsed.pathname.startsWith(config.kit.paths.base) &&
+					(await respond(
+						{
+							headers: /** @type {import('types/helper').Headers} */ (req.headers),
+							method: req.method,
+							host,
+							path: parsed.pathname.replace(config.kit.paths.base, ''),
+							query: parsed.searchParams,
+							rawBody: body
 						},
-						floc: config.kit.floc,
-						get_stack: (error) => {
-							vite.ssrFixStacktrace(error);
-							return error.stack;
-						},
-						handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
-							vite.ssrFixStacktrace(error);
-							console.error(colors.bold().red(error.message));
-							if (error.frame) {
-								console.error(colors.gray(error.frame));
-							}
-							if (error.stack) {
-								console.error(colors.gray(error.stack));
-							}
-						},
-						hooks: {
-							getSession: hooks.getSession || (() => ({})),
-							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							serverFetch: hooks.serverFetch || fetch
-						},
-						hydrate: config.kit.hydrate,
-						paths: {
-							base: config.kit.paths.base,
-							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-						},
-						load_component: async (id) => {
-							const url = path.resolve(cwd, id);
+						{
+							amp: config.kit.amp,
+							dev: true,
+							entry: {
+								file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+								css: [],
+								js: []
+							},
+							floc: config.kit.floc,
+							get_stack: (error) => {
+								vite.ssrFixStacktrace(error);
+								return error.stack;
+							},
+							handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
+								vite.ssrFixStacktrace(error);
+								console.error(colors.bold().red(error.message));
+								if (error.frame) {
+									console.error(colors.gray(error.frame));
+								}
+								if (error.stack) {
+									console.error(colors.gray(error.stack));
+								}
+							},
+							hooks: {
+								getSession: hooks.getSession || (() => ({})),
+								handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+								serverFetch: hooks.serverFetch || fetch
+							},
+							hydrate: config.kit.hydrate,
+							paths: {
+								base: config.kit.paths.base,
+								assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+							},
+							load_component: async (id) => {
+								const url = path.resolve(cwd, id);
 
-							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
-							const node = await vite.moduleGraph.getModuleByUrl(url);
+								const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
+								const node = await vite.moduleGraph.getModuleByUrl(url);
 
-							if (!node) throw new Error(`Could not find node for ${url}`);
+								if (!node) throw new Error(`Could not find node for ${url}`);
 
-							const deps = new Set();
-							find_deps(node, deps);
+								const deps = new Set();
+								find_deps(node, deps);
 
-							const styles = new Set();
+								const styles = new Set();
 
-							for (const dep of deps) {
-								const parsed = new URL(dep.url, 'http://localhost/');
-								const query = parsed.searchParams;
+								for (const dep of deps) {
+									const parsed = new URL(dep.url, 'http://localhost/');
+									const query = parsed.searchParams;
 
-								// TODO what about .scss files, etc?
-								if (
-									dep.file.endsWith('.css') ||
-									(query.has('svelte') && query.get('type') === 'style')
-								) {
-									try {
-										const mod = await vite.ssrLoadModule(dep.url);
-										styles.add(mod.default);
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
+									// TODO what about .scss files, etc?
+									if (
+										dep.file.endsWith('.css') ||
+										(query.has('svelte') && query.get('type') === 'style')
+									) {
+										try {
+											const mod = await vite.ssrLoadModule(dep.url);
+											styles.add(mod.default);
+										} catch {
+											// this can happen with dynamically imported modules, I think
+											// because the Vite module graph doesn't distinguish between
+											// static and dynamic imports? TODO investigate, submit fix
+										}
 									}
 								}
-							}
 
-							let entry = `/${id}`;
-							if (!entry.endsWith('.svelte')) {
-								entry += '?import';
-							}
-							return {
-								module,
-								entry,
-								css: [],
-								js: [],
-								styles: Array.from(styles)
-							};
-						},
-						manifest,
-						prerender: config.kit.prerender.enabled,
-						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-						root,
-						router: config.kit.router,
-						ssr: config.kit.ssr,
-						target: config.kit.target,
-						template: ({ head, body }) => {
-							let rendered = fs
-								.readFileSync(config.kit.files.template, 'utf8')
-								.replace('%svelte.head%', () => head)
-								.replace('%svelte.body%', () => body);
+								let entry = `/${id}`;
+								if (!entry.endsWith('.svelte')) {
+									entry += '?import';
+								}
+								return {
+									module,
+									entry,
+									css: [],
+									js: [],
+									styles: Array.from(styles)
+								};
+							},
+							manifest,
+							prerender: config.kit.prerender.enabled,
+							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+							root,
+							router: config.kit.router,
+							ssr: config.kit.ssr,
+							target: config.kit.target,
+							template: ({ head, body }) => {
+								let rendered = fs
+									.readFileSync(config.kit.files.template, 'utf8')
+									.replace('%svelte.head%', () => head)
+									.replace('%svelte.body%', () => body);
 
-							if (config.kit.amp && validator) {
-								const result = validator.validateString(rendered);
+								if (config.kit.amp && validator) {
+									const result = validator.validateString(rendered);
 
-								if (result.status !== 'PASS') {
-									const lines = rendered.split('\n');
+									if (result.status !== 'PASS') {
+										const lines = rendered.split('\n');
 
-									/** @param {string} str */
-									const escape = (str) =>
-										str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+										/** @param {string} str */
+										const escape = (str) =>
+											str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-									rendered = `<!doctype html>
+										rendered = `<!doctype html>
 										<head>
 											<meta charset="utf-8" />
 											<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -474,14 +476,14 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 											)
 											.join('\n\n')}
 									`;
+									}
 								}
-							}
 
-							return rendered;
-						},
-						trailing_slash: config.kit.trailingSlash
-					}
-				);
+								return rendered;
+							},
+							trailing_slash: config.kit.trailingSlash
+						}
+					));
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);

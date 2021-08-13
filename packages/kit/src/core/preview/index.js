@@ -83,17 +83,19 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const parsed = parse(initial_url);
+			const parsed = new URL(initial_url, 'http://localhost/');
 
-			const rendered = await app.render({
-				host: /** @type {string} */ (config.kit.host ||
-					req.headers[config.kit.hostHeader || 'host']),
-				method: req.method,
-				headers: /** @type {import('types/helper').Headers} */ (req.headers),
-				path: parsed.pathname ? parsed.pathname : '',
-				query: new URLSearchParams(parsed.query || ''),
-				rawBody: body
-			});
+			const rendered =
+				parsed.pathname.startsWith(config.kit.paths.base) &&
+				(await app.render({
+					host: /** @type {string} */ (config.kit.host ||
+						req.headers[config.kit.hostHeader || 'host']),
+					method: req.method,
+					headers: /** @type {import('types/helper').Headers} */ (req.headers),
+					path: parsed.pathname.replace(config.kit.paths.base, ''),
+					query: parsed.searchParams,
+					rawBody: body
+				}));
 
 			if (rendered) {
 				res.writeHead(rendered.status, rendered.headers);
