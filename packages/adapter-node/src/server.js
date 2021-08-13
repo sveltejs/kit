@@ -3,6 +3,7 @@ import compression from 'compression';
 import fs from 'fs';
 import { dirname, join } from 'path';
 import polka from 'polka';
+import { parse } from '@polka/url';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 
@@ -38,7 +39,14 @@ export function createServer({ render }) {
 		  })
 		: noop_handler;
 
-	const server = polka().use(
+	const server = polka();
+	// Polka has a non-standard behavior of decoding the request path
+	// Disable it so that adapter-node works just like the rest
+	// SvelteKit will handle decoding URI components into req.params
+	server.parse = (req) => {
+		return parse(req, false);
+	};
+	server.use(
 		compression({ threshold: 0 }),
 		assets_handler,
 		prerendered_handler,

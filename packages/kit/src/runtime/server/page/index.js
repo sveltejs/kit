@@ -17,6 +17,17 @@ export async function render_page(request, route, options, state) {
 		};
 	}
 
+	const match = route.pattern.exec(request.path);
+	// @ts-expect-error we already know there's a match
+	const params = route.params(match);
+
+	const page = {
+		host: request.host,
+		path: request.path,
+		query: request.query,
+		params
+	};
+
 	const $session = await options.hooks.getSession(request);
 
 	const response = await respond({
@@ -24,7 +35,8 @@ export async function render_page(request, route, options, state) {
 		options,
 		state,
 		$session,
-		route
+		route,
+		page
 	});
 
 	if (response) {

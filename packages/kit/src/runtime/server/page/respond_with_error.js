@@ -3,10 +3,17 @@ import { load_node } from './load_node.js';
 import { coalesce_to_error } from '../../utils.js';
 
 /**
+ * @typedef {import('./types.js').Loaded} Loaded
+ * @typedef {import('types/internal').SSRNode} SSRNode
+ * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
+ * @typedef {import('types/internal').SSRRenderState} SSRRenderState
+ */
+
+/**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
- *   options: import('types/internal').SSRRenderOptions;
- *   state: import('types/internal').SSRRenderState;
+ *   options: SSRRenderOptions;
+ *   state: SSRRenderState;
  *   $session: any;
  *   status: number;
  *   error: Error;
@@ -24,7 +31,7 @@ export async function respond_with_error({ request, options, state, $session, st
 	};
 
 	// error pages don't fall through, so we know it's not undefined
-	const loaded = /** @type {import('./types').Loaded} */ (await load_node({
+	const loaded = /** @type {Loaded} */ (await load_node({
 		request,
 		options,
 		state,
@@ -33,13 +40,14 @@ export async function respond_with_error({ request, options, state, $session, st
 		node: default_layout,
 		$session,
 		context: {},
+		prerender_enabled: is_prerender_enabled(options, default_error, state),
 		is_leaf: false,
 		is_error: false
 	}));
 
 	const branch = [
 		loaded,
-		/** @type {import('./types').Loaded} */ (await load_node({
+		/** @type {Loaded} */ (await load_node({
 			request,
 			options,
 			state,
@@ -48,6 +56,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			node: default_error,
 			$session,
 			context: loaded ? loaded.context : {},
+			prerender_enabled: is_prerender_enabled(options, default_error, state),
 			is_leaf: false,
 			is_error: true,
 			status,
@@ -80,4 +89,15 @@ export async function respond_with_error({ request, options, state, $session, st
 			body: error.stack
 		};
 	}
+}
+
+/**
+ * @param {SSRRenderOptions} options
+ * @param {SSRNode} node
+ * @param {SSRRenderState} state
+ */
+export function is_prerender_enabled(options, node, state) {
+	return (
+		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
+	);
 }

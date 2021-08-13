@@ -5,12 +5,14 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.16.0
+      '@changesets/get-github-info': ^0.5.0
       '@rollup/plugin-commonjs': ^17.1.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^11.2.1
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.7.0
       '@typescript-eslint/eslint-plugin': ^4.28.4
       '@typescript-eslint/parser': ^4.28.4
+      dotenv: ^10.0.0
       eslint: ^7.31.0
       eslint-plugin-import: ^2.23.4
       eslint-plugin-svelte3: ^3.2.0
@@ -20,12 +22,14 @@ importers:
       typescript: ^4.3.5
     devDependencies:
       '@changesets/cli': 2.16.0
+      '@changesets/get-github-info': 0.5.0
       '@rollup/plugin-commonjs': 17.1.0_rollup@2.55.0
       '@rollup/plugin-json': 4.1.0_rollup@2.55.0
       '@rollup/plugin-node-resolve': 11.2.1_rollup@2.55.0
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_9d3ce2148653bb6cbbfcd9b88d4d1961
       '@typescript-eslint/eslint-plugin': 4.28.4_b1648df9f9ba40bdeef3710a5a5af353
       '@typescript-eslint/parser': 4.28.4_eslint@7.31.0+typescript@4.3.5
+      dotenv: 10.0.0
       eslint: 7.31.0
       eslint-plugin-import: 2.23.4_eslint@7.31.0
       eslint-plugin-svelte3: 3.2.0_eslint@7.31.0
@@ -52,12 +56,9 @@ importers:
 
   packages/adapter-begin:
     specifiers:
-      '@architect/parser': ^3.0.1
       '@sveltejs/kit': workspace:*
       rollup: ^2.55.0
       sirv: ^1.0.12
-    dependencies:
-      '@architect/parser': 3.0.1
     devDependencies:
       '@sveltejs/kit': link:../kit
       rollup: 2.55.0
@@ -87,6 +88,7 @@ importers:
 
   packages/adapter-node:
     specifiers:
+      '@polka/url': ^1.0.0-next.15
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/kit': workspace:*
       c8: ^7.7.2
@@ -102,6 +104,7 @@ importers:
       esbuild: 0.12.5
       tiny-glob: 0.2.9
     devDependencies:
+      '@polka/url': 1.0.0-next.15
       '@rollup/plugin-json': 4.1.0_rollup@2.55.0
       '@sveltejs/kit': link:../kit
       c8: 7.7.2
@@ -196,7 +199,7 @@ importers:
   packages/kit:
     specifiers:
       '@rollup/plugin-replace': ^2.4.2
-      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.14
+      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.16
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
       '@types/globrex': ^0.1.1
@@ -229,7 +232,7 @@ importers:
       uvu: ^0.5.1
       vite: ^2.4.3
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.14_svelte@3.40.0+vite@2.4.3
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.16_svelte@3.40.0+vite@2.4.3
       cheap-watch: 1.0.3
       sade: 1.7.4
       vite: 2.4.3
@@ -269,11 +272,6 @@ packages:
   /@actions/core/1.2.7:
     resolution: {integrity: sha512-kzLFD5BgEvq6ubcxdgPbRKGD2Qrgya/5j+wh4LZzqT915I0V3rED+MvjH6NXghbvk1MXknpNNQ3uKjXSEN00Ig==}
     dev: true
-
-  /@architect/parser/3.0.1:
-    resolution: {integrity: sha512-mXn5Ha5a3tEOV5vkGHLdrDinSRfO8g9s72gKuOWA13HJtGcfI+jkYrEdQbLqe63gz0RPQN27h0e1IKc2kSzqHw==}
-    engines: {node: '>=10'}
-    dev: false
 
   /@babel/code-frame/7.12.11:
     resolution: {integrity: sha512-Zt1yodBx1UcyiePMSkWnU4hPqhwq7hGi2nFL1LeA3EUl+q2LQx16MISgJ0+z7dnmgvP9QtIleuETGOiOH1RcIw==}
@@ -400,6 +398,13 @@ packages:
       chalk: 2.4.2
       fs-extra: 7.0.1
       semver: 5.7.1
+    dev: true
+
+  /@changesets/get-github-info/0.5.0:
+    resolution: {integrity: sha512-vm5VgHwrxkMkUjFyn3UVNKLbDp9YMHd3vMf1IyJoa/7B+6VpqmtAaXyDS0zBLfN5bhzVCHrRnj4GcZXXcqrFTw==}
+    dependencies:
+      dataloader: 1.4.0
+      node-fetch: 2.6.1
     dev: true
 
   /@changesets/get-release-plan/3.0.0:
@@ -667,8 +672,8 @@ packages:
       picomatch: 2.2.3
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.14_svelte@3.40.0+vite@2.4.3:
-    resolution: {integrity: sha512-46IKPtoGcdo6YLyUhvsXyC1Dg3m2HlbgreZqxM/h5DzavgUa75c/WHT5cIxxLppG+gxtct7V08/WNEdpFdmM3Q==}
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.16_svelte@3.40.0+vite@2.4.3:
+    resolution: {integrity: sha512-Zzw5vWJ2PjeAFG04/HQrTHvTd4B+v/pz5hgod7fPMOMXu289ZuHs2DPj68xBmOGlmTq0JyrMfBl+NDGCgaSxzA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       diff-match-patch: ^1.0.5
@@ -1394,6 +1399,10 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
+  /dataloader/1.4.0:
+    resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
+    dev: true
+
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
     dependencies:
@@ -1506,6 +1515,11 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
+    dev: true
+
+  /dotenv/10.0.0:
+    resolution: {integrity: sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==}
+    engines: {node: '>=10'}
     dev: true
 
   /emoji-regex/8.0.0:
@@ -2670,6 +2684,11 @@ packages:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.2.0
+    dev: true
+
+  /node-fetch/2.6.1:
+    resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
+    engines: {node: 4.x || >=6.0.0}
     dev: true
 
   /node-fetch/3.0.0-beta.9:

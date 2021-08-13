@@ -33,7 +33,6 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 	const base = path.relative(cwd, dir);
 
 	write_if_changed(`${dir}/manifest.js`, generate_client_manifest(manifest_data, base));
-
 	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data, base));
 }
 
@@ -103,6 +102,8 @@ function generate_client_manifest(manifest_data, base) {
 
 		export const routes = ${routes};
 
+		// we import the root layout/error components eagerly, so that
+		// connectivity errors after initialisation don't nuke the app
 		export const fallback = [c[0](), c[1]()];
 	`);
 }
