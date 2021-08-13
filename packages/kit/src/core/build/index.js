@@ -331,13 +331,6 @@ async function build_server(
 					floc: ${config.kit.floc},
 					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
 					get_stack: error => String(error), // for security
-					handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
-						if (error.frame) {
-							console.error(error.frame);
-						}
-						console.error(error.stack);
-						error.stack = options.get_stack(error);
-					},
 					hooks: get_hooks(user_hooks),
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
@@ -397,6 +390,18 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+				handleError: ((opts) => {
+					const { error } = opts;
+					if (hooks.handleError) {
+						hooks.handleError(opts);
+					} else {
+						if (error.frame) {
+							console.error(error.frame);
+						}
+						console.error(error.stack);
+					}
+					error.stack = options.get_stack(error);
+				}),
 				serverFetch: hooks.serverFetch || fetch
 			});
 

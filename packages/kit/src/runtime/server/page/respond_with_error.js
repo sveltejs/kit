@@ -81,7 +81,7 @@ export async function respond_with_error({ request, options, state, $session, st
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error);
+		options.hooks.handleError({ error, request });
 
 		return {
 			status: 500,
