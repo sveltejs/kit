@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parse, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
 import sirv from 'sirv';
 import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
