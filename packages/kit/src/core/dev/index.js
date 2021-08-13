@@ -162,7 +162,8 @@ class Watcher extends EventEmitter {
 			ssr: {
 				// @ts-expect-error ssr is considered in beta, so not exposed by Vite
 				noExternal: get_no_external(this.cwd, vite_config.ssr && vite_config.ssr.noExternal)
-			}
+			},
+			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
 
 		print_config_conflicts(conflicts, 'kit.vite.');
