@@ -28,7 +28,7 @@ export async function respond(incoming, options, state = {}) {
 			return {
 				status: 301,
 				headers: {
-					location: encodeURI(path + (q ? `?${q}` : ''))
+					location: path + (q ? `?${q}` : '')
 				}
 			};
 		}
@@ -57,7 +57,7 @@ export async function respond(incoming, options, state = {}) {
 				}
 
 				for (const route of options.manifest.routes) {
-					if (!route.pattern.test(request.path)) continue;
+					if (!route.pattern.test(decodeURI(request.path))) continue;
 
 					const response =
 						route.type === 'endpoint'

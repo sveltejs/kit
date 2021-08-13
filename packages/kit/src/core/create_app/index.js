@@ -106,6 +106,8 @@ function generate_client_manifest(manifest_data, base) {
 
 		export const routes = ${routes};
 
+		// we import the root layout/error components eagerly, so that
+		// connectivity errors after initialisation don't nuke the app
 		export const fallback = [c[0](), c[1]()];
 	`);
 }

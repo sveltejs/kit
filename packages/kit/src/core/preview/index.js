@@ -83,7 +83,7 @@ export async function preview({
 						req.headers[config.kit.hostHeader || 'host']),
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
-					path: parsed.pathname ? decodeURIComponent(parsed.pathname) : '',
+					path: parsed.pathname ? parsed.pathname : '',
 					query: new URLSearchParams(parsed.query || ''),
 					rawBody: body
 				});
