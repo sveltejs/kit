@@ -7,9 +7,9 @@ export { Adapter, AdapterUtils, Config, PrerenderErrorHandler, ValidatedConfig }
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput, Page } from './page';
 export {
+	ExternalFetch,
 	GetSession,
 	Handle,
-	ExternalFetch,
 	ServerRequest as Request,
 	ServerResponse as Response
 } from './hooks';
