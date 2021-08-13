@@ -57,16 +57,7 @@ export function createServer({ render }) {
 		  }
 		: noop_handler;
 
-	const server = polka();
-	// workaround https://github.com/lukeed/polka/issues/142
-	// until https://github.com/lukeed/polka/pull/172 is merged and released
-	// Polka has a non-standard behavior of decoding the request path
-	// Disable it so that adapter-node works just like the rest
-	// SvelteKit will handle decoding URI components into req.params
-	server.parse = (req) => {
-		return parse(req, false);
-	};
-	server.use(
+	const server = polka().use(
 		compression({ threshold: 0 }),
 		sirv_workaround_handler,
 		assets_handler,

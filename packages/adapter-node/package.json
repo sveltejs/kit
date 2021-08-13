@@ -31,7 +31,7 @@
 		"c8": "^7.7.2",
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0-beta.9",
-		"polka": "^1.0.0-next.15",
+		"polka": "^1.0.0-next.16",
 		"rollup": "^2.55.0",
 		"sirv": "^1.0.12",
 		"uvu": "^0.5.1"
