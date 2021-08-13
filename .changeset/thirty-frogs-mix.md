@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Make JSONValue compatible with objects that have a toJSON method
+Allow `EndpointOutput` response body objects to have a `toJSON` property
