@@ -16,7 +16,7 @@ With SvelteKit you can build modern state-of-the-art web apps that fully embrace
 
 Building an app with all the modern best practices — [server-side rendering](#appendix-ssr) with [client-side hydration](#appendix-hydration), code-splitting, [offline support](#service-workers) — is fiendishly complicated. SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
-If you're unfamiliar with Svelte read the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
+If you're unfamiliar with Svelte check out the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
 
 ### Features
 
@@ -36,25 +36,25 @@ If you're unfamiliar with Svelte read the [introductory blog post](https://svelt
 
     Configurable rendering on a per-page or per-app level.
 
+- code-splitting for JS and CSS
+
+    Code-splitting so that your app only loads the code needed for each page.
+
+- prefetching
+
+    Prefetching pages before the user initiates navigation.
+
 - [service workers](#service-workers)
 
     Service workers to make your app work offline or speed up navigation by caching.
 
-- code-splitting for JS and CSS
-
-    Code-splitting so that your app only loads the code needed for a page.
-
-- prefetching
-
-    Prefetch pages before the user initiates navigation.
-
 - hot module reloading
 
-    The [Vite](https://vitejs.dev/) development server has built-in hot module reloading and error overlays so that updates are instantly visible without reloading the page.
+    A [Vite](https://vitejs.dev/) development server with built-in hot module reloading and error overlays so that your updates are instantly visible without reloading the page.
 
 - TypeScript
 
-    TypeScript support is built-in.
+    Built-in TypeScript support.
     
 ### Getting started
 
