@@ -11,7 +11,7 @@ export default function (test) {
 			json,
 			JSON.stringify({
 				base: '',
-				assets: '/.'
+				assets: ''
 			})
 		);
 	});

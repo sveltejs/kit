@@ -16,7 +16,7 @@ import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -169,7 +169,8 @@ class Watcher extends EventEmitter {
 			ssr: {
 				// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
 				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
-			}
+			},
+			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
 
 		print_config_conflicts(conflicts, 'kit.vite.');
@@ -288,16 +289,17 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 	};
 
 	/**
-	 * @param {import("http").IncomingMessage} req
-	 * @param {import("http").ServerResponse} res
+	 * @param {import('http').IncomingMessage} req
+	 * @param {import('http').ServerResponse} res
 	 */
 	return (req, res) => {
 		vite.middlewares(req, res, async () => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
-				const parsed = new URL(req.url, 'http://localhost/');
+				if (req.url === '/favicon.ico') return not_found(res);
 
-				if (req.url === '/favicon.ico') return;
+				const parsed = new URL(req.url, 'http://localhost/');
+				if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
 
 				/** @type {Partial<import('types/internal').Hooks>} */
 				const user_hooks = resolve_entry(config.kit.files.hooks)
@@ -331,6 +333,13 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
 
+				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+
+				paths.set_paths({
+					base: config.kit.paths.base,
+					assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+				});
+
 				let body;
 
 				try {
@@ -348,7 +357,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						headers: /** @type {import('types/helper').Headers} */ (req.headers),
 						method: req.method,
 						host,
-						path: parsed.pathname,
+						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
 						rawBody: body
 					},
@@ -371,7 +380,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
-						paths: config.kit.paths,
+						paths: {
+							base: config.kit.paths.base,
+							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+						},
 						load_component: async (id) => {
 							const url = path.resolve(cwd, id);
 
@@ -485,8 +497,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 					if (rendered.body) res.write(rendered.body);
 					res.end();
 				} else {
-					res.statusCode = 404;
-					res.end('Not found');
+					not_found(res);
 				}
 			} catch (e) {
 				vite.ssrFixStacktrace(e);
@@ -495,4 +506,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 			}
 		});
 	};
+}
+
+/** @param {import('http').ServerResponse} res */
+function not_found(res) {
+	res.statusCode = 404;
+	res.end('Not found');
 }

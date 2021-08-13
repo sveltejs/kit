@@ -28,7 +28,7 @@ export async function respond(incoming, options, state = {}) {
 			return {
 				status: 301,
 				headers: {
-					location: path + (q ? `?${q}` : '')
+					location: options.paths.base + path + (q ? `?${q}` : '')
 				}
 			};
 		}
