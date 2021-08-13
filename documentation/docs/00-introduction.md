@@ -32,7 +32,7 @@ If you're unfamiliar with Svelte read the [introductory blog post](https://svelt
 
     After the initial page load of the server-side rendered page, a client-side runtime takes over. Further navigation to subsequent pages is handled by the client-side router serving a client-side rendered version of the pages.
 
-- [highly configurable](#rendering)
+- [highly configurable](#ssr-and-javascript)
 
     Rendering can be configured on a per-page or per-app level.
 
