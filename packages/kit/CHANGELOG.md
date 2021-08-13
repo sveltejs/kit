@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.148
+
+### Patch Changes
+
+- update svelte peerDependency to 3.39.0 ([#2182](https://github.com/sveltejs/kit/pull/2182))
+
+* Add hook to handle errors ([#2193](https://github.com/sveltejs/kit/pull/2193))
+
+- Use /\_svelte_kit_assets when serving apps with specified paths.assets locally ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+* Serve from basepath in svelte-kit dev/preview ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+- Disallow non-absolute paths.assets option ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+* Allow `EndpointOutput` response body objects to have a `toJSON` property ([#2170](https://github.com/sveltejs/kit/pull/2170))
+
 ## 1.0.0-next.147
 
 ### Patch Changes
