@@ -61,13 +61,13 @@ export default {
 
 When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) option set will be prerendered.
 
-## Github Pages
+## GitHub Pages
 
-When building for Github Pages, make sure to update the [basepaths](https://kit.svelte.dev/docs#configuration) (see `paths.base` and `paths.assets`).
+When building for GitHub Pages, make sure to update the [basepaths](https://kit.svelte.dev/docs#configuration) (see `paths.base` and `paths.assets`).
 
-Also note that you will have to prevent Github's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appdir` configuration option to `"app_"` or anything not starting by an underscore. For more information, see Github's documentation about [configuring jekyll](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
+You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `"app_"` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
 
-A config for Github Pages might look like:
+A config for GitHub Pages might look like the following:
 
 ```js
 /** @type {import('@sveltejs/kit').Config} */
@@ -75,16 +75,15 @@ const config = {
 	...
 	kit: {
 		...
-		// Since your Github Pages' default url will be https://your-username.github.io/your-repo-name,
-		// you'll have the change the basepaths.
+		// Since your GitHub Pages site will be served at https://your-username.github.io/your-repo-name,
+		// you will need to change the base paths
 		// Note that you may have to comment these in dev mode.
 		paths: {
 			base: '/your-repo-name',
-			assets: '/your-repo-name',
 		},
 		// If you are not using a .nojekyll file, change your appDir to something not starting with an underscore.
-		// For example, instead of "_app", use "app_", "internal", etc.
-		appDir: "internal",
+		// For example, instead of '_app', use 'app_', 'internal', etc.
+		appDir: 'internal',
 	}
 };
 ```
