@@ -16,7 +16,7 @@ import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -316,7 +316,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 
 				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
 
-				paths.set_paths(config.kit.paths);
+				paths.set_paths({
+					base: config.kit.paths.base,
+					assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+				});
 
 				let body;
 
@@ -368,7 +371,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							serverFetch: hooks.serverFetch || fetch
 						},
 						hydrate: config.kit.hydrate,
-						paths: config.kit.paths,
+						paths: {
+							base: config.kit.paths.base,
+							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+						},
 						load_component: async (id) => {
 							const url = path.resolve(cwd, id);
 

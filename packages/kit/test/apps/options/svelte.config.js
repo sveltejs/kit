@@ -26,7 +26,7 @@ const config = {
 		},
 		paths: {
 			base: '/path-base',
-			assets: ''
+			assets: 'https://cdn.example.com/stuff'
 		}
 	}
 };

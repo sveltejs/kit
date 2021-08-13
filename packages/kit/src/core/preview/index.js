@@ -5,7 +5,7 @@ import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -50,8 +50,13 @@ export async function preview({
 		immutable: true
 	});
 
+	const has_asset_path = !!config.kit.paths.assets;
+
 	app.init({
-		paths: config.kit.paths,
+		paths: {
+			base: config.kit.paths.base,
+			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
+		},
 		prerendering: false,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
@@ -65,7 +70,6 @@ export async function preview({
 		}
 
 		const initial_url = req.url;
-		const { assets } = config.kit.paths;
 
 		const render_handler = async () => {
 			if (!req.method) throw new Error('Incomplete request');
@@ -101,10 +105,10 @@ export async function preview({
 			}
 		};
 
-		if (assets.length > 1 && assets !== '/.') {
-			if (initial_url.startsWith(`${assets}/`)) {
+		if (has_asset_path) {
+			if (initial_url.startsWith(SVELTE_KIT_ASSETS)) {
 				// custom assets path
-				req.url = initial_url.slice(assets.length);
+				req.url = initial_url.slice(SVELTE_KIT_ASSETS.length);
 				assets_handler(req, res, () => {
 					static_handler(req, res, render_handler);
 				});

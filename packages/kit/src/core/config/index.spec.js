@@ -45,7 +45,7 @@ test('fills in defaults', () => {
 			},
 			paths: {
 				base: '',
-				assets: '/.'
+				assets: ''
 			},
 			prerender: {
 				crawl: true,
@@ -147,7 +147,7 @@ test('fills in partial blanks', () => {
 			},
 			paths: {
 				base: '',
-				assets: '/.'
+				assets: ''
 			},
 			prerender: {
 				crawl: true,
@@ -242,6 +242,18 @@ test('fails if paths.assets is relative', () => {
 	}, /^kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
+test('fails if paths.assets has trailing slash', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					assets: 'https://cdn.example.com/stuff/'
+				}
+			}
+		});
+	}, /^kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+});
+
 test('fails if prerender.pages are invalid', () => {
 	assert.throws(() => {
 		validate_config({
@@ -279,7 +291,7 @@ validate_paths(
 	},
 	{
 		base: '/path/to/base',
-		assets: '/path/to/base'
+		assets: ''
 	}
 );
 

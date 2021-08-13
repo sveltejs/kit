@@ -53,7 +53,7 @@ async function testLoadDefaultConfig(path) {
 			serviceWorker: {
 				exclude: []
 			},
-			paths: { base: '', assets: '/.' },
+			paths: { base: '', assets: '' },
 			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
 			router: true,
 			ssr: true,
