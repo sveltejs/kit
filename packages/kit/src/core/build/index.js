@@ -396,7 +396,7 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				handleError: hooks.handleError || (error => console.error(error.stack)),
+				handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
 				serverFetch: hooks.serverFetch || fetch
 			});
 

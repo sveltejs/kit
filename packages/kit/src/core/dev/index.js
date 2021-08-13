@@ -311,7 +311,6 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 					handleError:
 						user_hooks.handleError ||
 						(({ /** @type {Error & { frame?: string }} */ error, request }) => {
-							console.error(colors.bold().red(request.path));
 							console.error(colors.bold().red(error.message));
 							if (error.frame) {
 								console.error(colors.gray(error.frame));
