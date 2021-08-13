@@ -25,3 +25,10 @@
 <p data-source="assets">{data.assets}</p>
 
 <button on:click={() => n += 1}>clicks: {n}</button>
+
+
+<style>
+	p {
+		color: red;
+	}
+</style>

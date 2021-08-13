@@ -15,4 +15,14 @@ export default function (test) {
 			assert.equal(await page.textContent('button'), 'clicks: 1');
 		}
 	});
+
+	test('loads CSS', '/path-base/base/', async ({ page }) => {
+		assert.equal(
+			await page.evaluate(() => {
+				const el = document.querySelector('p');
+				return el && getComputedStyle(el).color;
+			}),
+			'rgb(255, 0, 0)'
+		);
+	});
 }
