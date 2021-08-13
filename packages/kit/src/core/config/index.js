@@ -153,6 +153,12 @@ export function validate_config(config) {
 		);
 	}
 
+	if (paths.assets && !/^[a-z]+:\/\//.test(paths.assets)) {
+		throw new Error(
+			'kit.paths.assets option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths'
+		);
+	}
+
 	if (appDir.startsWith('/') || appDir.endsWith('/')) {
 		throw new Error(
 			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
