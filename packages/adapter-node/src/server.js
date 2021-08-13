@@ -26,17 +26,6 @@ export function createServer({ render }) {
 		  })
 		: noop_handler;
 
-	// handle static assets with unicode characters
-	// e.g. a route with unicode character will generate a .js file with unicode character
-	// https://github.com/lukeed/sirv/issues/82#issuecomment-898618504
-	const sirv_workaround_handler = fs.existsSync(paths.assets)
-		? (req, _, next) => {
-				req._origPath = req.path;
-				req.path = decodeURI(req.path);
-				next();
-		  }
-		: noop_handler;
-
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
@@ -50,19 +39,10 @@ export function createServer({ render }) {
 		  })
 		: noop_handler;
 
-	const revert_sirv_workaround_handler = fs.existsSync(paths.assets)
-		? (req, _, next) => {
-				req.path = req._origPath;
-				next();
-		  }
-		: noop_handler;
-
 	const server = polka().use(
 		compression({ threshold: 0 }),
-		sirv_workaround_handler,
 		assets_handler,
 		prerendered_handler,
-		revert_sirv_workaround_handler,
 		async (req, res) => {
 			const parsed = new URL(req.url || '', 'http://localhost');
 

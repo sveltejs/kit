@@ -2,4 +2,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-[fix] workaround sirv bug to allow routes with unicode characters
+[fix] upgrade polka and sirv. fixes handling of URLs with unicode characters
