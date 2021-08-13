@@ -10,11 +10,13 @@ title: Introduction
 
 ### What is SvelteKit?
 
-SvelteKit is an application framework for building web apps using Svelte components.
+SvelteKit is an application framework for building web apps using [Svelte](https://svelte.dev/) components.
 
 With SvelteKit you can build modern state-of-the-art web apps that fully embrace the serverless paradigm with a great development experience.
 
 SvelteKit provides a rendering engine, a client-side runtime, and a toolchain for development.
+
+If you're unfamiliar with Svelte read the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
 
 ### Features
 
