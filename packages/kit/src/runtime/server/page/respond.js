@@ -105,7 +105,7 @@ export async function respond(opts) {
 				} catch (/** @type {unknown} */ err) {
 					const e = coalesce_to_error(err);
 
-					options.hooks.handleError({ error: e, request });
+					options.handle_error(e, request);
 
 					status = 500;
 					error = e;
@@ -150,7 +150,7 @@ export async function respond(opts) {
 							} catch (/** @type {unknown} */ err) {
 								const e = coalesce_to_error(err);
 
-								options.hooks.handleError({ error: e, request });
+								options.handle_error(e, request);
 
 								continue;
 							}
