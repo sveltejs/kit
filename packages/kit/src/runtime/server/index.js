@@ -57,8 +57,9 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
+				const decoded = decodeURI(request.path);
 				for (const route of options.manifest.routes) {
-					if (!route.pattern.test(decodeURI(request.path))) continue;
+					if (!route.pattern.test(decoded)) continue;
 
 					const response =
 						route.type === 'endpoint'
