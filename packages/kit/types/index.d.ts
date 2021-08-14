@@ -9,6 +9,7 @@ export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput, Page } from './
 export {
 	GetSession,
 	Handle,
+	HandleError,
 	ServerFetch,
 	ServerRequest as Request,
 	ServerResponse as Response
