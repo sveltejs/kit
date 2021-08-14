@@ -9,7 +9,8 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\""
+		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"preview:docs": "action-deploy-docs --project=kit"
 	},
 	"repository": {
 		"type": "git",
@@ -39,5 +40,8 @@
 		"rollup": "^2.55.0",
 		"typescript": "^4.3.5"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"action-deploy-docs": "github:sveltejs/action-deploy-docs#main"
+	}
 }
