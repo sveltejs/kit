@@ -21,7 +21,6 @@ test('fills in defaults', () => {
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
-				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			floc: false,
@@ -123,7 +122,6 @@ test('fills in partial blanks', () => {
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
-				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			floc: false,
