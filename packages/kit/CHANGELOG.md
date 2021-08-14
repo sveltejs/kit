@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.149
+
+### Patch Changes
+
+- export `HandleError` type ([#2200](https://github.com/sveltejs/kit/pull/2200))
+
+* [fix] match regex against route only once ([#2203](https://github.com/sveltejs/kit/pull/2203))
+
 ## 1.0.0-next.148
 
 ### Patch Changes
