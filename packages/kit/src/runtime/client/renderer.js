@@ -363,8 +363,7 @@ export class Renderer {
 			const result = await this._load(
 				{
 					route,
-					path: info.path,
-					query: info.query
+					info
 				},
 				no_cache
 			);
@@ -540,8 +539,8 @@ export class Renderer {
 	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, path, query }, no_cache) {
-		const key = `${path}?${query}`;
+	async _load({ route, info: { path, decoded_path, query } }, no_cache) {
+		const key = `${decoded_path}?${query}`;
 
 		if (!no_cache) {
 			const cached = this.cache.get(key);
@@ -550,7 +549,7 @@ export class Renderer {
 
 		const [pattern, a, b, get_params] = route;
 		// @ts-expect-error - the pattern is for the route which we've already matched to this path
-		const params = get_params ? get_params(pattern.exec(path)) : {};
+		const params = get_params ? get_params(pattern.exec(decoded_path)) : {};
 
 		const changed = this.current.page && {
 			path: path !== this.current.page.path,

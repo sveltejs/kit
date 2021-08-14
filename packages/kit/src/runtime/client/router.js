@@ -170,13 +170,13 @@ export class Router {
 		if (this.owns(url)) {
 			const path = url.pathname.slice(this.base.length) || '/';
 
-			const decoded = decodeURI(path);
-			const routes = this.routes.filter(([pattern]) => pattern.test(decoded));
+			const decoded_path = decodeURI(path);
+			const routes = this.routes.filter(([pattern]) => pattern.test(decoded_path));
 
 			const query = new URLSearchParams(url.search);
 			const id = `${path}?${query}`;
 
-			return { id, routes, path, query };
+			return { id, routes, path, decoded_path, query };
 		}
 	}
 
