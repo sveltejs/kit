@@ -84,4 +84,4 @@ You may need to install some dependencies first e.g. with `npx playwright instal
 
 All documentation for SvelteKit is in the `documentation` directory, any improvements should be made as a Pull Request to this repository. The documentation is served via and API, the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
 
-If you wish toi preview documentation changes locally, please follow the instructions here: [Previewing local docs changes](https://github.com/sveltejs/sites/blob/master/sites/kit.svelte.dev/README.md#previewing-local-docs-changes).
+If you wish to preview documentation changes locally, please follow the instructions here: [Previewing local docs changes](https://github.com/sveltejs/sites/blob/master/sites/kit.svelte.dev/README.md#previewing-local-docs-changes).
