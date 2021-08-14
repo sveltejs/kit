@@ -1,6 +1,6 @@
 // The following line does not work with vite resolution. Why?
 // import { sequence } from '@sveltejs/kit/hooks';
-import { sequence } from '../../../../dist/hooks';
+import { sequence } from '../../../../src/runtime/hooks';
 
 /** @type {import('@sveltejs/kit').Handle} */
 export const handle = sequence(
