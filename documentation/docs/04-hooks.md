@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs on each endpoint request and page rendering, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
@@ -59,6 +59,8 @@ export async function handle({ request, resolve }) {
 	};
 }
 ```
+
+> `handle` runs when a page is rendered. If a page is prerendered, `handle` will not run again when the user requests the page. If you would like to run some functionality on each request, see the documentation for your [adapter](#adapters).
 
 ### handleError
 
