@@ -103,7 +103,7 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: /** @type {typeof import('$app/stores').page} */ page_store({}),
+			page: /** @type {import('$app/stores').page} */ page_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
 			session: /** @type {import('$app/stores').session} */ writable(session)
 		};
