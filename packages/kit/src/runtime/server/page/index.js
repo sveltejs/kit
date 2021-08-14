@@ -3,11 +3,12 @@ import { respond } from './respond.js';
 /**
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
+ * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_page(request, route, options, state) {
+export async function render_page(request, route, match, options, state) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
@@ -17,8 +18,6 @@ export async function render_page(request, route, options, state) {
 		};
 	}
 
-	const match = route.pattern.exec(request.path);
-	// @ts-expect-error we already know there's a match
 	const params = route.params(match);
 
 	const page = {
