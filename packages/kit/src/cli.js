@@ -200,16 +200,21 @@ prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */
 async function check_port(port) {
-	const n = await ports.blame(port);
-
-	if (n) {
+	if (!(await ports.check(port))) {
 		console.log(colors.bold().red(`Port ${port} is occupied`));
 
-		// prettier-ignore
-		console.log(
-			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
-		);
-
+		const n = await ports.blame(port); // Only works on systems with `lsof`.
+		if (n) {
+			// prettier-ignore
+			console.log(
+				`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
+			);
+		} else {
+			// prettier-ignore
+			console.log(
+				`Terminate the process using it or specify a different port with ${colors.bold('--port')}\n`
+			);
+		}
 		process.exit(1);
 	}
 }
