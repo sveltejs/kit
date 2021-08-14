@@ -93,7 +93,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			path: null,
+			path: '',
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -312,7 +312,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			path: null,
+			path: '',
 			a: [layout, blog_$slug],
 			b: [error]
 		}
