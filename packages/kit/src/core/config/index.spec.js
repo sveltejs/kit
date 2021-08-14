@@ -45,7 +45,7 @@ test('fills in defaults', () => {
 			},
 			paths: {
 				base: '',
-				assets: '/.'
+				assets: ''
 			},
 			prerender: {
 				crawl: true,
@@ -147,7 +147,7 @@ test('fills in partial blanks', () => {
 			},
 			paths: {
 				base: '',
-				assets: '/.'
+				assets: ''
 			},
 			prerender: {
 				crawl: true,
@@ -230,6 +230,30 @@ test("fails if paths.base ends with '/'", () => {
 	}, /^kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
+test('fails if paths.assets is relative', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					assets: 'foo'
+				}
+			}
+		});
+	}, /^kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+});
+
+test('fails if paths.assets has trailing slash', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				paths: {
+					assets: 'https://cdn.example.com/stuff/'
+				}
+			}
+		});
+	}, /^kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+});
+
 test('fails if prerender.pages are invalid', () => {
 	assert.throws(() => {
 		validate_config({
@@ -261,59 +285,13 @@ function validate_paths(name, input, output) {
 }
 
 validate_paths(
-	'assets relative to empty string',
-	{
-		assets: 'path/to/assets'
-	},
-	{
-		base: '',
-		assets: '/path/to/assets'
-	}
-);
-
-validate_paths(
-	'assets relative to base path',
-	{
-		base: '/path/to/base',
-		assets: 'path/to/assets'
-	},
-	{
-		base: '/path/to/base',
-		assets: '/path/to/base/path/to/assets'
-	}
-);
-
-validate_paths(
 	'empty assets relative to base path',
 	{
 		base: '/path/to/base'
 	},
 	{
 		base: '/path/to/base',
-		assets: '/path/to/base'
-	}
-);
-
-validate_paths(
-	'root-relative assets',
-	{
-		assets: '/path/to/assets'
-	},
-	{
-		base: '',
-		assets: '/path/to/assets'
-	}
-);
-
-validate_paths(
-	'root-relative assets with base path',
-	{
-		base: '/path/to/base',
-		assets: '/path/to/assets'
-	},
-	{
-		base: '/path/to/base',
-		assets: '/path/to/assets'
+		assets: ''
 	}
 );
 

@@ -69,30 +69,6 @@ function validate(definition, option, keypath) {
 }
 
 /**
- * @param {string} from
- * @param {string} to
- */
-function resolve(from, to) {
-	// the `/.` is weird, but allows `${assets}/images/blah.jpg` to work
-	// when `assets` is empty
-	return remove_trailing_slash(url.resolve(add_trailing_slash(from), to)) || '/.';
-}
-
-/**
- * @param {string} str
- */
-function add_trailing_slash(str) {
-	return str.endsWith('/') ? str : `${str}/`;
-}
-
-/**
- * @param {string} str
- */
-function remove_trailing_slash(str) {
-	return str.endsWith('/') ? str.slice(0, -1) : str;
-}
-
-/**
  * @param {string} cwd
  * @param {import('types/config').ValidatedConfig} validated
  */
@@ -153,13 +129,25 @@ export function validate_config(config) {
 		);
 	}
 
+	if (paths.assets) {
+		if (!/^[a-z]+:\/\//.test(paths.assets)) {
+			throw new Error(
+				'kit.paths.assets option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths'
+			);
+		}
+
+		if (paths.assets.endsWith('/')) {
+			throw new Error(
+				"kit.paths.assets option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
+			);
+		}
+	}
+
 	if (appDir.startsWith('/') || appDir.endsWith('/')) {
 		throw new Error(
 			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
 		);
 	}
-
-	paths.assets = resolve(paths.base, paths.assets);
 
 	return validated;
 }

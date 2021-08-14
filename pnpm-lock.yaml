@@ -88,31 +88,29 @@ importers:
 
   packages/adapter-node:
     specifiers:
-      '@polka/url': ^1.0.0-next.15
       '@rollup/plugin-json': ^4.1.0
       '@sveltejs/kit': workspace:*
       c8: ^7.7.2
       compression: ^1.7.4
       esbuild: ^0.12.5
       node-fetch: ^3.0.0-beta.9
-      polka: ^1.0.0-next.15
+      polka: ^1.0.0-next.17
       rollup: ^2.55.0
-      sirv: ^1.0.12
+      sirv: ^1.0.14
       tiny-glob: ^0.2.9
       uvu: ^0.5.1
     dependencies:
       esbuild: 0.12.5
       tiny-glob: 0.2.9
     devDependencies:
-      '@polka/url': 1.0.0-next.15
       '@rollup/plugin-json': 4.1.0_rollup@2.55.0
       '@sveltejs/kit': link:../kit
       c8: 7.7.2
       compression: 1.7.4
       node-fetch: 3.0.0-beta.9
-      polka: 1.0.0-next.15
+      polka: 1.0.0-next.17
       rollup: 2.55.0
-      sirv: 1.0.12
+      sirv: 1.0.14
       uvu: 0.5.1
 
   packages/adapter-static:
@@ -600,6 +598,10 @@ packages:
 
   /@polka/url/1.0.0-next.15:
     resolution: {integrity: sha512-15spi3V28QdevleWBNXE4pIls3nFZmBbUGrW9IVPwiQczuSb9n76TCB4bsk8TSel+I1OkHEdPhu5QKMfY6rQHA==}
+    dev: true
+
+  /@polka/url/1.0.0-next.17:
+    resolution: {integrity: sha512-0p1rCgM3LLbAdwBnc7gqgnvjHg9KpbhcSphergHShlkWz8EdPawoMJ3/VbezI0mGC5eKCDzMaPgF9Yca6cKvrg==}
     dev: true
 
   /@rollup/plugin-commonjs/17.1.0_rollup@2.55.0:
@@ -3015,11 +3017,11 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: true
 
-  /polka/1.0.0-next.15:
-    resolution: {integrity: sha512-zBCZO40+USkSj0GDHMqufthqk4TIRc9xVGd50LbMvYNEwGHK8dZczLBQtw9pPHBM+i/Xg7ed7+c+r6J68XkWLg==}
+  /polka/1.0.0-next.17:
+    resolution: {integrity: sha512-hvr+9y895Aa6/Pz3JlF53rgdt4yPzwDc8MsAc8BUAsj2YIfJi9MqGPO9Jie0yF/weehJEow4dy8M+fQ8OU8iVA==}
     engines: {node: '>=8'}
     dependencies:
-      '@polka/url': 1.0.0-next.15
+      '@polka/url': 1.0.0-next.17
       trouter: 3.2.0
     dev: true
 
@@ -3352,6 +3354,15 @@ packages:
     engines: {node: '>= 10'}
     dependencies:
       '@polka/url': 1.0.0-next.15
+      mime: 2.5.2
+      totalist: 1.1.0
+    dev: true
+
+  /sirv/1.0.14:
+    resolution: {integrity: sha512-czTFDFjK9lXj0u9mJ3OmJoXFztoilYS+NdRPcJoT182w44wSEkHSiO7A2517GLJ8wKM4GjCm2OXE66Dhngbzjg==}
+    engines: {node: '>= 10'}
+    dependencies:
+      '@polka/url': 1.0.0-next.17
       mime: 2.5.2
       totalist: 1.1.0
     dev: true

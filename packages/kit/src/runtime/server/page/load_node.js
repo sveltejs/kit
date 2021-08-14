@@ -121,8 +121,8 @@ export async function load_node({
 								`http://${page.host}/${asset.file}`,
 								/** @type {RequestInit} */ (opts)
 						  );
-				} else if (resolved.startsWith(options.paths.base || '/') && !resolved.startsWith('//')) {
-					const relative = resolved.replace(options.paths.base, '');
+				} else if (resolved.startsWith('/') && !resolved.startsWith('//')) {
+					const relative = resolved;
 
 					const headers = /** @type {import('types/helper').Headers} */ ({ ...opts.headers });
 

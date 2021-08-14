@@ -1,11 +1,11 @@
 import fs from 'fs';
-import { parse, pathToFileURL } from 'url';
+import { pathToFileURL } from 'url';
 import sirv from 'sirv';
 import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -50,10 +50,12 @@ export async function preview({
 		immutable: true
 	});
 
+	const has_asset_path = !!config.kit.paths.assets;
+
 	app.init({
 		paths: {
-			base: '',
-			assets: '/.'
+			base: config.kit.paths.base,
+			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
 		},
 		prerendering: false,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
@@ -63,41 +65,63 @@ export async function preview({
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
 
 	const server = await get_server(use_https, vite_config, (req, res) => {
-		const parsed = parse(req.url || '');
+		if (req.url == null) {
+			throw new Error('Invalid request url');
+		}
 
-		assets_handler(req, res, () => {
-			static_handler(req, res, async () => {
-				if (!req.method) throw new Error('Incomplete request');
+		const initial_url = req.url;
 
-				let body;
+		const render_handler = async () => {
+			if (!req.method) throw new Error('Incomplete request');
 
-				try {
-					body = await getRawBody(req);
-				} catch (err) {
-					res.statusCode = err.status || 400;
-					return res.end(err.reason || 'Invalid request body');
-				}
+			let body;
 
-				const rendered = await app.render({
+			try {
+				body = await getRawBody(req);
+			} catch (err) {
+				res.statusCode = err.status || 400;
+				return res.end(err.reason || 'Invalid request body');
+			}
+
+			const parsed = new URL(initial_url, 'http://localhost/');
+
+			const rendered =
+				parsed.pathname.startsWith(config.kit.paths.base) &&
+				(await app.render({
 					host: /** @type {string} */ (config.kit.host ||
 						req.headers[config.kit.hostHeader || 'host']),
 					method: req.method,
 					headers: /** @type {import('types/helper').Headers} */ (req.headers),
-					path: parsed.pathname ? parsed.pathname : '',
-					query: new URLSearchParams(parsed.query || ''),
+					path: parsed.pathname.replace(config.kit.paths.base, ''),
+					query: parsed.searchParams,
 					rawBody: body
-				});
+				}));
 
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					if (rendered.body) res.write(rendered.body);
-					res.end();
-				} else {
-					res.statusCode = 404;
-					res.end('Not found');
-				}
+			if (rendered) {
+				res.writeHead(rendered.status, rendered.headers);
+				if (rendered.body) res.write(rendered.body);
+				res.end();
+			} else {
+				res.statusCode = 404;
+				res.end('Not found');
+			}
+		};
+
+		if (has_asset_path) {
+			if (initial_url.startsWith(SVELTE_KIT_ASSETS)) {
+				// custom assets path
+				req.url = initial_url.slice(SVELTE_KIT_ASSETS.length);
+				assets_handler(req, res, () => {
+					static_handler(req, res, render_handler);
+				});
+			} else {
+				render_handler();
+			}
+		} else {
+			assets_handler(req, res, () => {
+				static_handler(req, res, render_handler);
 			});
-		});
+		}
 	});
 
 	await server.listen(port, host || '0.0.0.0');

@@ -28,23 +28,24 @@ export async function respond(incoming, options, state = {}) {
 			return {
 				status: 301,
 				headers: {
-					location: path + (q ? `?${q}` : '')
+					location: options.paths.base + path + (q ? `?${q}` : '')
 				}
 			};
 		}
 	}
 
-	try {
-		const headers = lowercase_keys(incoming.headers);
+	const headers = lowercase_keys(incoming.headers);
+	const request = {
+		...incoming,
+		headers,
+		body: parse_body(incoming.rawBody, headers),
+		params: {},
+		locals: {}
+	};
 
+	try {
 		return await options.hooks.handle({
-			request: {
-				...incoming,
-				headers,
-				body: parse_body(incoming.rawBody, headers),
-				params: {},
-				locals: {}
-			},
+			request,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -100,7 +101,7 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.handle_error(e);
+		options.handle_error(e, request);
 
 		return {
 			status: 500,
