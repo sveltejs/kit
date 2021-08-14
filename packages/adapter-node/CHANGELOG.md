@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- [fix] bump polka and sirv again to address unicode handling bug
+
 ## 1.0.0-next.41
 
 ### Patch Changes
