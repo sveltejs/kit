@@ -12,7 +12,8 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @returns
  */
 const create = (dir, extensions = ['.svelte']) => {
-	const initial = /** @type {import('types/config').Config} */ ({
+	/** @type {import('types/config').Config} */
+	const initial = {
 		extensions,
 		kit: {
 			files: {
@@ -24,7 +25,7 @@ const create = (dir, extensions = ['.svelte']) => {
 				exclude: []
 			}
 		}
-	});
+	};
 
 	return create_manifest_data({
 		config: /** @type {import('types/config').ValidatedConfig} */ (initial),

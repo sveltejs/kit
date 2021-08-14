@@ -73,9 +73,9 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		client,
 		server,
 		static: options.manifest.assets.map((asset) => posixify(asset.file)),
-		entries: /** @type {string[]} */ (options.manifest.routes
+		entries: options.manifest.routes
 			.map((route) => (route.type === 'page' ? route.path : ''))
-			.filter(Boolean))
+			.filter(Boolean)
 	};
 }
 

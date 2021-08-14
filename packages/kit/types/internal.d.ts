@@ -4,10 +4,10 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
-	ServerResponse,
 	ServerFetch,
-	StrictBody,
-	ServerRequest
+	ServerRequest,
+	ServerResponse,
+	StrictBody
 } from './hooks';
 import { Load } from './page';
 
@@ -194,9 +194,9 @@ export interface PageData {
 	type: 'page';
 	pattern: RegExp;
 	params: string[];
-	path: string | null;
-	a: Partial<string[]>;
-	b: Partial<string[]>;
+	path: string;
+	a: string[];
+	b: string[];
 }
 
 export interface EndpointData {

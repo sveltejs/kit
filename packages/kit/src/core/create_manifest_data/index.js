@@ -219,37 +219,36 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			} else if (item.is_page) {
 				components.push(item.file);
 
-				const a = layout_stack.concat(item.file);
-				const b = error_stack;
+				const concatenated = layout_stack.concat(item.file);
 
 				const pattern = get_pattern(segments, true);
 
-				let i = a.length;
+				let i = concatenated.length;
 				while (i--) {
-					if (!b[i] && !a[i]) {
-						b.splice(i, 1);
-						a.splice(i, 1);
+					if (!error_stack[i] && !concatenated[i]) {
+						error_stack.splice(i, 1);
+						concatenated.splice(i, 1);
 					}
 				}
 
-				i = b.length;
+				i = error_stack.length;
 				while (i--) {
-					if (b[i]) break;
+					if (error_stack[i]) break;
 				}
 
-				b.splice(i + 1);
+				error_stack.splice(i + 1);
 
 				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
 					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: null;
+					: '';
 
 				routes.push({
 					type: 'page',
 					pattern,
 					params,
 					path,
-					a,
-					b
+					a: /** @type {string[]} */ (concatenated),
+					b: /** @type {string[]} */ (error_stack)
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);

@@ -88,7 +88,8 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
-			page: /** @type {import('types/helper').Location} */ ({}),
+			// @ts-ignore - we need the initial value to be null
+			page: null,
 			session_id: 0,
 			branch: []
 		};
