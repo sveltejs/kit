@@ -256,6 +256,7 @@ export default function (test, is_dev) {
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await Promise.resolve();
 			await page.goto(`${base}/routing/${route}`);
 
 			assert.equal(await page.textContent('h1'), content);
