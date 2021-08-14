@@ -9,7 +9,8 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\""
+		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"preview:docs": "action-deploy-docs --project=kit"
 	},
 	"repository": {
 		"type": "git",
@@ -30,6 +31,7 @@
 		"@sveltejs/eslint-config": "github:sveltejs/eslint-config#v5.7.0",
 		"@typescript-eslint/eslint-plugin": "^4.28.4",
 		"@typescript-eslint/parser": "^4.28.4",
+		"action-deploy-docs": "github:sveltejs/action-deploy-docs#main",
 		"dotenv": "^10.0.0",
 		"eslint": "^7.31.0",
 		"eslint-plugin-import": "^2.23.4",
