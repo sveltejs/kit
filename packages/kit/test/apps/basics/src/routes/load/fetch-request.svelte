@@ -6,7 +6,7 @@
 		const url = '/load/fetch-request.json';
 
 		// this is contrived, but saves us faffing about with node-fetch here
-		const resource = browser ? new Request(url) : /** @type {RequestInfo} */ ({ url });
+		const resource = browser ? new Request(url) : url;
 
 		const res = await fetch(resource);
 		const { answer } = await res.json();
