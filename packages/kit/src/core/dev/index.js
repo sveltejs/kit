@@ -179,7 +179,7 @@ class Watcher extends EventEmitter {
 
 		const get_manifest = () => {
 			if (!this.manifest) {
-				throw new Error("Shouldn't clear manifest after server initialized");
+				throw new Error('Manifest is not available');
 			}
 
 			return this.manifest;
