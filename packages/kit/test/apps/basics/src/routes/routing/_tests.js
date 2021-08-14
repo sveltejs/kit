@@ -242,13 +242,13 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test('watch new route in dev', '/routing', async ({ page, base, js }) => {
+	test('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {
 		if (!is_dev || js) {
 			return;
 		}
 
 		// hash the filename so that it won't conflict with
-		// future test file that it has the same name
+		// future test file that has the same name
 		const route = 'bar' + new Date().valueOf();
 		const content = 'Hello new route';
 		const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -256,7 +256,7 @@ export default function (test, is_dev) {
 
 		try {
 			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
-			await Promise.resolve();
+			watcher.update();
 			await page.goto(`${base}/routing/${route}`);
 
 			assert.equal(await page.textContent('h1'), content);
