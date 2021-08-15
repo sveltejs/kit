@@ -252,7 +252,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						referenceType: 'fetched'
 					});
 				}
-				//});
 			}
 
 			if (is_html && config.kit.prerender.crawl) {
