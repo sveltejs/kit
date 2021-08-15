@@ -177,7 +177,15 @@ class Watcher extends EventEmitter {
 
 		this.vite = await vite.createServer(merged_config);
 
-		handler = await create_handler(this.vite, this.config, this.dir, this.cwd, this.manifest);
+		const get_manifest = () => {
+			if (!this.manifest) {
+				throw new Error('Manifest is not available');
+			}
+
+			return this.manifest;
+		};
+
+		handler = await create_handler(this.vite, this.config, this.dir, this.cwd, get_manifest);
 
 		this.server.listen(this.port, this.host || '0.0.0.0');
 	}
@@ -267,9 +275,9 @@ function get_params(array) {
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
  * @param {string} cwd
- * @param {import('types/internal').SSRManifest} manifest
+ * @param {() => import('types/internal').SSRManifest} get_manifest
  */
-async function create_handler(vite, config, dir, cwd, manifest) {
+async function create_handler(vite, config, dir, cwd, get_manifest) {
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
@@ -429,7 +437,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 								styles: Array.from(styles)
 							};
 						},
-						manifest,
+						manifest: get_manifest(),
 						prerender: config.kit.prerender.enabled,
 						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 						root,
