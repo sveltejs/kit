@@ -9,10 +9,10 @@
 		"moduleResolution": "node",
 		"allowSyntheticDefaultImports": true,
 		"paths": {
+			"@sveltejs/kit": ["./types/index"],
 			"test": ["./test/types"],
-			"types/*": ["./types/*"],
-			"@sveltejs/kit": ["./types/index"]
+			"types/*": ["./types/*"]
 		}
 	},
-	"include": ["src/**/*", "test/**/*", "types/**/*", "test/types.d.ts", "test/ambient.d.ts"]
+	"include": ["src/**/*", "test/**/*", "types/**/*"]
 }
