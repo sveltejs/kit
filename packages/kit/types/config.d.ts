@@ -82,6 +82,4 @@ export interface Config {
 	preprocess?: any;
 }
 
-export type ValidatedConfig = RecursiveRequired<Config> & {
-	kit: { files: { setup: string } }; // only for validated
-};
+export type ValidatedConfig = RecursiveRequired<Config>;

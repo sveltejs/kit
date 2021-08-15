@@ -31,7 +31,6 @@ async function testLoadDefaultConfig(path) {
 				lib: join(cwd, 'src/lib'),
 				routes: join(cwd, 'src/routes'),
 				serviceWorker: join(cwd, 'src/service-worker'),
-				setup: join(cwd, 'src/setup'),
 				template: join(cwd, 'src/app.html')
 			},
 			floc: false,
