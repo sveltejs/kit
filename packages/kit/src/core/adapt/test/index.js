@@ -83,7 +83,6 @@ suite('prerender', async () => {
 
 	/** @type {import('types/config').Config} */
 	const mocked = {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			files: {
@@ -95,8 +94,7 @@ suite('prerender', async () => {
 				pages: ['*'],
 				enabled: true
 			}
-		},
-		preprocess: null
+		}
 	};
 
 	/** @type {import('types/internal').BuildData} */

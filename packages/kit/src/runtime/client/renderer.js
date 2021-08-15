@@ -3,6 +3,13 @@ import { hash } from '../hash.js';
 import { normalize } from '../load.js';
 import { coalesce_to_error } from '../utils.js';
 
+/**
+ * @typedef {import('types/internal').CSRComponent} CSRComponent
+ *
+ * @typedef {Partial<import('types/page').Page>} Page
+ * @typedef {{ from: Page; to: Page }} Navigating
+ */
+
 /** @param {any} value */
 function page_store(value) {
 	const store = writable(value);
@@ -55,13 +62,6 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
-/**
- * @typedef {import('types/internal').CSRComponent} CSRComponent
- *
- * @typedef {Partial<import('types/page').Page>} Page
- * @typedef {{ from: Page; to: Page }} Navigating
- */
-
 export class Renderer {
 	/** @param {{
 	 *   Root: CSRComponent;
@@ -104,9 +104,9 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: /** @type {import('$app/stores').page} */ page_store({}),
+			page: page_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: /** @type {import('$app/stores').session} */ writable(session)
+			session: writable(session)
 		};
 
 		this.$session = null;
