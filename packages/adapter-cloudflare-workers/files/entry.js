@@ -52,7 +52,7 @@ async function handle(event) {
 						} else {
 							controller.enqueue(value);
 						}
-					},
+					}
 				});
 				return new Response(body_stream, {
 					status: rendered.status,
