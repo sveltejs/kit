@@ -39,10 +39,31 @@ async function handle(event) {
 		});
 
 		if (rendered) {
-			return new Response(rendered.body, {
-				status: rendered.status,
-				headers: makeHeaders(rendered.headers)
-			});
+			if (
+				rendered.body &&
+				typeof rendered.body === 'object' &&
+				typeof rendered.body[Symbol.asyncIterator] === 'function'
+			) {
+				const body_stream = new ReadableStream({
+					async pull(controller) {
+						const { value, done } = await iterator.next();
+						if (done) {
+							controller.close();
+						} else {
+							controller.enqueue(value);
+						}
+					},
+				});
+				return new Response(body_stream, {
+					status: rendered.status,
+					headers: makeHeaders(rendered.headers)
+				});
+			} else {
+				return new Response(rendered.body, {
+					status: rendered.status,
+					headers: makeHeaders(rendered.headers)
+				});
+			}
 		}
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });

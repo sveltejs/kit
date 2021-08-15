@@ -1,4 +1,6 @@
 import { getRawBody } from '@sveltejs/kit/node';
+import { Readable } from 'stream';
+import compressible from 'compressible';
 
 /**
  * @return {import('polka').Middleware}
@@ -34,10 +36,21 @@ export function create_kit_middleware({ render }) {
 
 		if (rendered) {
 			res.writeHead(rendered.status, rendered.headers);
-			if (rendered.body) {
-				res.write(rendered.body);
+			if (
+				rendered.body &&
+				typeof rendered.body === 'object' &&
+				typeof rendered.body[Symbol.asyncIterator] === 'function'
+			) {
+				const flush = compressible(rendered.headers['content-type']) ? res.flush : null;
+				const data = Readable.from(rendered.body);
+				data.on('error', () => res.end());
+				if (flush) {
+					data.on('data', () => flush());
+				}
+				data.pipe(res);
+			} else {
+				res.end(rendered.body);
 			}
-			res.end();
 		} else {
 			res.statusCode = 404;
 			res.end('Not found');

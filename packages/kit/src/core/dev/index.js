@@ -21,6 +21,7 @@ import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { Readable } from 'stream';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -515,8 +516,17 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);
-					if (rendered.body) res.write(rendered.body);
-					res.end();
+					if (
+						rendered.body &&
+						typeof rendered.body === 'object' &&
+						typeof rendered.body[Symbol.asyncIterator] === 'function'
+					) {
+						const data = Readable.from(rendered.body);
+						data.on('error', () => res.end());
+						data.pipe(res);
+					} else {
+						res.end(rendered.body);
+					}
 				} else {
 					not_found(res);
 				}

@@ -77,7 +77,9 @@ export async function render_endpoint(request, route, match) {
 	let normalized_body;
 
 	// ensure the body is an object
-	if (
+	if (typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function') {
+		normalized_body = /** @type {object} */ (body);
+	} else if (
 		(typeof body === 'object' || typeof body === 'undefined') &&
 		!(body instanceof Uint8Array) &&
 		(!type || type.startsWith('application/json'))
