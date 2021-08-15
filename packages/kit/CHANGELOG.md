@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.151
+
+### Patch Changes
+
+- fix new route discovery in dev server ([#2198](https://github.com/sveltejs/kit/pull/2198))
+
 ## 1.0.0-next.150
 
 ### Patch Changes
