@@ -46,7 +46,7 @@ async function handle(event) {
 			) {
 				const body_stream = new ReadableStream({
 					async pull(controller) {
-						const { value, done } = await iterator.next();
+						const { value, done } = await rendered.body.next();
 						if (done) {
 							controller.close();
 						} else {
