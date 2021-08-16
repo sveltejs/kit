@@ -43,8 +43,8 @@ export type RecursiveRequired<T> = {
 	// with a Function in it, except for the 'vite' key
 	// which we want the end result to be just a function
 	[K in keyof T]-?: Extract<T[K], Function> extends never
-	? RecursiveRequired<T[K]>
-	: K extends 'vite'
-	? Extract<T[K], Function>
-	: T[K];
+		? RecursiveRequired<T[K]>
+		: K extends 'vite'
+		? Extract<T[K], Function>
+		: T[K];
 };

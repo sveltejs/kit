@@ -56,23 +56,6 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.40.0
 
-  examples/i18n:
-    specifiers:
-      '@fontsource/fira-mono': ^4.2.2
-      '@lukeed/uuid': ^2.0.0
-      '@sveltejs/adapter-static': ^1.0.0-next.13
-      '@sveltejs/kit': workspace:*
-      cookie: ^0.4.1
-      svelte: ^3.34.0
-    dependencies:
-      '@fontsource/fira-mono': 4.2.2
-      '@lukeed/uuid': 2.0.0
-      cookie: 0.4.1
-    devDependencies:
-      '@sveltejs/adapter-static': 1.0.0-next.14
-      '@sveltejs/kit': link:../../packages/kit
-      svelte: 3.40.0
-
   packages/adapter-begin:
     specifiers:
       '@sveltejs/kit': workspace:*
@@ -571,6 +554,7 @@ packages:
 
   /@iarna/toml/2.2.5:
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
+    dev: false
 
   /@istanbuljs/schema/0.1.3:
     resolution: {integrity: sha512-ZXRY4jNvVgSVQ8DL3LTcakaAtXwTVUxE81hslsyD2AtoXW/wVob10HkOJ1X/pAlcI7D+2YoZKg5do8G/w6RYgA==}

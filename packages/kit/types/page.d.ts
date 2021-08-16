@@ -4,7 +4,7 @@ export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
 	Context extends Rec = Rec,
 	Session = any
-	> {
+> {
 	page: Page<PageParams>;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
@@ -16,7 +16,7 @@ export interface ErrorLoadInput<
 	PageParams extends Rec<string> = Rec<string>,
 	Context extends Rec = Rec,
 	Session = any
-	> extends LoadInput<PageParams, Context, Session> {
+> extends LoadInput<PageParams, Context, Session> {
 	status?: number;
 	error?: Error;
 }
@@ -44,7 +44,7 @@ interface LoadOutputExtends {
 export interface Load<
 	Input extends LoadInputExtends = Required<LoadInputExtends>,
 	Output extends LoadOutputExtends = Required<LoadOutputExtends>
-	> {
+> {
 	(
 		input: LoadInput<
 			InferValue<Input, 'pageParams', Rec<string>>,
@@ -60,7 +60,7 @@ export interface Load<
 export interface ErrorLoad<
 	Input extends LoadInputExtends = Required<LoadInputExtends>,
 	Output extends LoadOutputExtends = Required<LoadOutputExtends>
-	> {
+> {
 	(
 		input: ErrorLoadInput<
 			InferValue<Input, 'pageParams', Rec<string>>,
