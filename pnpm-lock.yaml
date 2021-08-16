@@ -113,6 +113,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@types/compression': ^1.7.2
       c8: ^7.10.0
+      compressible: ^2.0.18
       compression: ^1.7.4
       esbuild: ^0.13.15
       node-fetch: ^3.1.0
@@ -129,6 +130,7 @@ importers:
       '@sveltejs/kit': link:../kit
       '@types/compression': 1.7.2
       c8: 7.10.0
+      compressible: 2.0.18
       compression: 1.7.4
       node-fetch: 3.1.0
       polka: 1.0.0-next.22
