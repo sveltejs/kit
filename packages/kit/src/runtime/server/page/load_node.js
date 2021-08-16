@@ -110,11 +110,7 @@ export async function load_node({
 				if (asset) {
 					response = options.read
 						? new Response(options.read(asset.file), {
-								headers: asset.type
-									? {
-											'content-type': asset.type
-									  }
-									: {}
+								headers: asset.type ? { 'content-type': asset.type } : {}
 						  })
 						: await fetch(
 								// TODO we need to know what protocol to use

@@ -5,7 +5,7 @@ import { deep_merge, validate_config } from './index.js';
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	// @ts-expect-error
+	// @ts-expect-error - can't test equality of a function
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
@@ -21,7 +21,6 @@ test('fills in defaults', () => {
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
-				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			floc: false,
@@ -68,7 +67,7 @@ test('errors on invalid values', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
-				// @ts-expect-error
+				// @ts-expect-error - given value expected to throw
 				target: 42
 			}
 		});
@@ -80,7 +79,7 @@ test('errors on invalid nested values', () => {
 		validate_config({
 			kit: {
 				files: {
-					// @ts-expect-error
+					// @ts-expect-error - given value expected to throw
 					potato: 'blah'
 				}
 			}
@@ -107,7 +106,7 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.vite(), {});
 
-	// @ts-expect-error
+	// @ts-expect-error - can't test equality of a function
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
@@ -123,7 +122,6 @@ test('fills in partial blanks', () => {
 				lib: 'src/lib',
 				routes: 'src/routes',
 				serviceWorker: 'src/service-worker',
-				setup: 'src/setup',
 				template: 'src/app.html'
 			},
 			floc: false,

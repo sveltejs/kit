@@ -162,24 +162,6 @@ prog
 		}
 	});
 
-// TODO remove this after a few versions
-prog
-	.command('start')
-	.describe('Deprecated — use svelte-kit preview instead')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
-	.action(async () => {
-		console.log(
-			colors
-				.bold()
-				.red(
-					'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
-				)
-		);
-	});
-
 prog
 	.command('package')
 	.describe('Create a package')

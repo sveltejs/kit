@@ -167,7 +167,7 @@ class Watcher extends EventEmitter {
 				}
 			},
 			ssr: {
-				// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
+				// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
 				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 			},
 			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
