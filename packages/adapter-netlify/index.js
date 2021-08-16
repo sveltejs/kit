@@ -32,6 +32,7 @@ export default function (options) {
 			const defaultOptions = {
 				entryPoints: ['.svelte-kit/netlify/entry.js'],
 				// Any functions in ".netlify/functions-internal" are bundled in addition to user-defined Netlify functions.
+				// See https://github.com/netlify/build/pull/3213 for more details
 				outfile: '.netlify/functions-internal/__render.js',
 				bundle: true,
 				inject: [join(files, 'shims.js')],
