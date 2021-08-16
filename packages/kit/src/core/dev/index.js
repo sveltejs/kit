@@ -208,7 +208,6 @@ class Watcher extends EventEmitter {
 			assets: manifest_data.assets,
 			layout: manifest_data.layout,
 			error: manifest_data.error,
-			// TODO: fix type
 			routes: manifest_data.routes.map((route) => {
 				if (route.type === 'page') {
 					return {
