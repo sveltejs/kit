@@ -7,7 +7,3 @@
 
 [[plugins]]
   package = "/.netlify/netlify-plugin-pnpm"
-
-[dev]
-# Disable svelte-kit dev so we can test functions
-framework = "#static"
