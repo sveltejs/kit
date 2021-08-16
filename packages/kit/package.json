@@ -34,7 +34,7 @@
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.12",
 		"svelte": "^3.40.0",
-		"svelte-check": "^2.2.0",
+		"svelte-check": "^2.2.4",
 		"svelte2tsx": "~0.4.1",
 		"tiny-glob": "^0.2.8",
 		"uvu": "^0.5.1"
@@ -70,6 +70,9 @@
 		},
 		"./node": {
 			"import": "./dist/node.js"
+		},
+		"./hooks": {
+			"import": "./dist/hooks.js"
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"

@@ -1,3 +1,4 @@
+import { sequence } from '../../../../src/runtime/hooks';
 import cookie from 'cookie';
 
 /** @type {import('@sveltejs/kit').GetSession} */
@@ -5,23 +6,28 @@ export function getSession(request) {
 	return request.locals;
 }
 
-/** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, resolve }) {
-	const cookies = cookie.parse(request.headers.cookie || '');
+export const handle = sequence(
+	({ request, resolve }) => {
+		request.locals.answer = 42;
+		return resolve(request);
+	},
+	({ request, resolve }) => {
+		const cookies = cookie.parse(request.headers.cookie || '');
+		request.locals.name = cookies.name;
+		return resolve(request);
+	},
+	async ({ request, resolve }) => {
+		const response = await resolve(request);
 
-	request.locals.answer = 42;
-	request.locals.name = cookies.name;
-
-	const response = await resolve(request);
-
-	return {
-		...response,
-		headers: {
-			...response.headers,
-			'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
-		}
-	};
-}
+		return {
+			...response,
+			headers: {
+				...response.headers,
+				'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
+			}
+		};
+	}
+);
 
 /** @type {import('@sveltejs/kit').ServerFetch} */
 export async function serverFetch(request) {
