@@ -281,9 +281,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 								pattern,
 								params,
 								path: `/${locale}${path}`,
-								lang: locale,
 								a: /** @type {string[]} */ (concatenated),
-								b: /** @type {string[]} */ (error_stack)
+								b: /** @type {string[]} */ (error_stack),
+								lang: locale
 							});
 						});
 				}

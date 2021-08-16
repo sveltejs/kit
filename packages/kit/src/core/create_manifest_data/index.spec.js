@@ -9,9 +9,10 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 /**
  * @param {string} dir
  * @param {string[]} [extensions]
+ * @param {boolean} [addI18n]
  * @returns
  */
-const create = (dir, extensions = ['.svelte']) => {
+const create = (dir, extensions = ['.svelte'], addI18n) => {
 	/** @type {import('types/config').Config} */
 	const initial = {
 		extensions,
@@ -26,6 +27,8 @@ const create = (dir, extensions = ['.svelte']) => {
 			}
 		}
 	};
+
+	if (addI18n && initial.kit) initial.kit.i18n = { defaultLocale: 'en', locales: ['de']};
 
 	return create_manifest_data({
 		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
@@ -405,6 +408,113 @@ test('errors on encountering an illegal __file', () => {
 		() => create('samples/illegal-dunder'),
 		/Files and directories prefixed with __ are reserved \(saw samples\/illegal-dunder\/__foo.svelte\)/
 	);
+});
+
+test('creates routes with i18n', () => {
+	const { components, routes } = create('samples/basic', undefined, true);
+
+	const index = 'samples/basic/index.svelte';
+	const about = 'samples/basic/about.svelte';
+	const blog = 'samples/basic/blog/index.svelte';
+	const blog_$slug = 'samples/basic/blog/[slug].svelte';
+
+	assert.equal(components, [layout, error, index, about, blog, blog_$slug]);
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			pattern: /^\/$/,
+			params: [],
+			path: '/',
+			a: [layout, index],
+			b: [error],
+			lang: 'en'
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/de\/?$/,
+			params: [],
+			path: '/de/',
+			a: [layout, index],
+			b: [error],
+			lang: 'de'
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/about\/?$/,
+			params: [],
+			path: '/about',
+			a: [layout, about],
+			b: [error],
+			lang: 'en'
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/de\/about\/?$/,
+			params: [],
+			path: '/de/about',
+			a: [layout, about],
+			b: [error],
+			lang: 'de'
+		},
+
+		{
+			type: 'endpoint',
+			pattern: /^\/blog\.json$/,
+			file: 'samples/basic/blog/index.json.js',
+			params: []
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/blog\/?$/,
+			params: [],
+			path: '/blog',
+			a: [layout, blog],
+			b: [error],
+			lang: 'en'
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/de\/blog\/?$/,
+			params: [],
+			path: '/de/blog',
+			a: [layout, blog],
+			b: [error],
+			lang: 'de'
+		},
+
+		{
+			type: 'endpoint',
+			pattern: /^\/blog\/([^/]+?)\.json$/,
+			file: 'samples/basic/blog/[slug].json.ts',
+			params: ['slug']
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/blog\/([^/]+?)\/?$/,
+			params: ['slug'],
+			path: '',
+			a: [layout, blog_$slug],
+			b: [error],
+			lang: 'en'
+		},
+
+		{
+			type: 'page',
+			pattern: /^\/de\/blog\/([^/]+?)\/?$/,
+			params: ['slug'],
+			path: '/de',
+			a: [layout, blog_$slug],
+			b: [error],
+			lang: 'de'
+		}
+	]);
 });
 
 test.run();
