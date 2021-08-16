@@ -27,6 +27,7 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			package: {
 				dir: 'package',
 				exports: {
@@ -128,6 +129,7 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			package: {
 				dir: 'package',
 				exports: {

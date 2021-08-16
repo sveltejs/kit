@@ -37,6 +37,7 @@ async function testLoadDefaultConfig(path) {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			package: {
 				dir: 'package',
 				exports: {
