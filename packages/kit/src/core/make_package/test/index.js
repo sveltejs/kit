@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
 import { load_config } from '../../config/index.js';
 import { make_package } from '../index.js';
-import { rimraf } from '../../filesystem/index.js';
+import { rimraf } from '../../../utils/filesystem.js';
 import { lstatSync, readdirSync, readFileSync } from 'fs';
 import prettier from 'prettier';
 

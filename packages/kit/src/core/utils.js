@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { copy } from './filesystem/index.js';
+import { copy } from '../utils/filesystem.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
