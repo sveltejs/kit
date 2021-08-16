@@ -129,3 +129,15 @@ declare module '$service-worker' {
 	 */
 	export const timestamp: number;
 }
+
+declare module '@sveltejs/kit/hooks' {
+	type Handle = import('@sveltejs/kit').Handle;
+
+	/**
+	 * Utility function that allows chaining `hooks` `Handle` functions in a
+	 * middleware-like manner.
+	 *
+	 * @param handles The chain of `Handle` functions
+	 */
+	export function sequence(...handles: Handle[]): Handle;
+}
