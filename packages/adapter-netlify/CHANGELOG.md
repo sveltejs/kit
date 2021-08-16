@@ -1,79 +1,85 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- 94b34fa6: [breaking] standardize final output dir as /build (vs /.svelte-kit) ([#2109](https://github.com/sveltejs/kit/pull/2109))
+
 ## 1.0.0-next.26
 
 ### Patch Changes
 
-- 4cb4e749: update build output locations
-- d81de603: revert adapters automatically updating .gitignore (#1924)
+- 4cb4e749: update build output locations ([#2058](https://github.com/sveltejs/kit/pull/2058))
+- d81de603: revert adapters automatically updating .gitignore ([#1924](https://github.com/sveltejs/kit/pull/1924))
 
 ## 1.0.0-next.25
 
 ### Patch Changes
 
-- e9f78999: fix: include esbuild config in adapter type definition
+- e9f78999: fix: include esbuild config in adapter type definition ([#1954](https://github.com/sveltejs/kit/pull/1954))
 
 ## 1.0.0-next.24
 
 ### Patch Changes
 
-- e6995797: feat(adapters): expose esbuild configuration
+- e6995797: feat(adapters): expose esbuild configuration ([#1914](https://github.com/sveltejs/kit/pull/1914))
 
 ## 1.0.0-next.23
 
 ### Patch Changes
 
-- 67ca3a39: return the correct headers
+- 67ca3a39: return the correct headers ([#1913](https://github.com/sveltejs/kit/pull/1913))
 
 ## 1.0.0-next.22
 
 ### Patch Changes
 
-- 9461178: Use multivalue headers to set multiple cookies
+- 9461178: Use multivalue headers to set multiple cookies ([#1906](https://github.com/sveltejs/kit/pull/1906))
 
 ## 1.0.0-next.21
 
 ### Patch Changes
 
-- 4720b67: Default body parsing to binary
+- 4720b67: Default body parsing to binary ([#1890](https://github.com/sveltejs/kit/pull/1890))
 
 ## 1.0.0-next.20
 
 ### Patch Changes
 
-- 7faf52f: Update and consolidate checks for binary body types
+- 7faf52f: Update and consolidate checks for binary body types ([#1687](https://github.com/sveltejs/kit/pull/1687))
 
 ## 1.0.0-next.19
 
 ### Patch Changes
 
-- 2ac5781: Use esbuild inject API to insert shims
+- 2ac5781: Use esbuild inject API to insert shims ([#1822](https://github.com/sveltejs/kit/pull/1822))
 
 ## 1.0.0-next.18
 
 ### Patch Changes
 
-- 9f0c54a: Externalize app initialization to adapters
+- 9f0c54a: Externalize app initialization to adapters ([#1804](https://github.com/sveltejs/kit/pull/1804))
 
 ## 1.0.0-next.17
 
 ### Patch Changes
 
-- c51ab7d: Upgrade esbuild to ^0.12.5
+- c51ab7d: Upgrade esbuild to ^0.12.5 ([#1627](https://github.com/sveltejs/kit/pull/1627))
 
 ## 1.0.0-next.16
 
 ### Patch Changes
 
-- edc307d: Remove peerDependencies due to pnpm bug
-- 2636e68: Attempt to fix peerDependencies specification
-- 3b988a4: Allow `_redirects` to be placed in root directory
+- edc307d: Remove peerDependencies due to pnpm bug ([#1621](https://github.com/sveltejs/kit/pull/1621))
+- 2636e68: Attempt to fix peerDependencies specification ([#1620](https://github.com/sveltejs/kit/pull/1620))
+- 3b988a4: Allow `_redirects` to be placed in root directory ([#1586](https://github.com/sveltejs/kit/pull/1586))
 
 ## 1.0.0-next.15
 
 ### Patch Changes
 
-- 028abd9: Pass validated svelte config to adapter adapt function
+- 028abd9: Pass validated svelte config to adapter adapt function ([#1559](https://github.com/sveltejs/kit/pull/1559))
 - Updated dependencies [6372690]
 - Updated dependencies [c3d36a3]
 - Updated dependencies [bf77940]
@@ -86,9 +92,9 @@
 ### Patch Changes
 
 - f59530f: Allow custom redirects for Netlify Adapter
-- 71e293d: change toml parser to support dotted keys and other language features added after the TOML v0.4.0 spec
-- 1ba1784: Prevent adapter from splitting query params if they contain commas
-- dca4946: Make kit a peerDependency of the adapters
+- 71e293d: change toml parser to support dotted keys and other language features added after the TOML v0.4.0 spec ([#1509](https://github.com/sveltejs/kit/pull/1509))
+- 1ba1784: Prevent adapter from splitting query params if they contain commas ([#1467](https://github.com/sveltejs/kit/pull/1467))
+- dca4946: Make kit a peerDependency of the adapters ([#1505](https://github.com/sveltejs/kit/pull/1505))
 - Updated dependencies [261ee1c]
 - Updated dependencies [ec156c6]
 - Updated dependencies [586785d]
@@ -98,7 +104,7 @@
 
 ### Patch Changes
 
-- dad93fc: Fix workspace dependencies
+- dad93fc: Fix workspace dependencies ([#1434](https://github.com/sveltejs/kit/pull/1434))
 - Updated dependencies [dad93fc]
 - Updated dependencies [37fc04f]
   - @sveltejs/kit@1.0.0-next.108
@@ -107,7 +113,7 @@
 
 ### Patch Changes
 
-- 11e7840: Ensure rawBody is a string or Uint8Array
+- 11e7840: Ensure rawBody is a string or Uint8Array ([#1382](https://github.com/sveltejs/kit/pull/1382))
 - Updated dependencies [11e7840]
 - Updated dependencies [11e7840]
 - Updated dependencies [9e20873]
@@ -118,7 +124,7 @@
 
 ### Patch Changes
 
-- c6fde99: Convert to ESM
+- c6fde99: Convert to ESM ([#1323](https://github.com/sveltejs/kit/pull/1323))
 - Updated dependencies [694f5de]
 - Updated dependencies [0befffb]
 - Updated dependencies [c6fde99]
@@ -128,7 +134,7 @@
 
 ### Patch Changes
 
-- 2e72a94: Add type declarations
+- 2e72a94: Add type declarations ([#1230](https://github.com/sveltejs/kit/pull/1230))
 - Updated dependencies [82955ec]
   - @sveltejs/kit@1.0.0-next.91
 
@@ -136,7 +142,7 @@
 
 ### Patch Changes
 
-- d3cb858: Convert body to string, unless type is octet-stream
+- d3cb858: Convert body to string, unless type is octet-stream ([#1121](https://github.com/sveltejs/kit/pull/1121))
 - Updated dependencies [4af45e1]
   - @sveltejs/kit@1.0.0-next.82
 
@@ -144,8 +150,8 @@
 
 ### Patch Changes
 
-- 1237eb3: Fix dependencies
-- 1237eb3: Pass rawBody from netlify adapter
+- 1237eb3: Fix dependencies ([#1109](https://github.com/sveltejs/kit/pull/1109))
+- 1237eb3: Pass rawBody from netlify adapter ([#1109](https://github.com/sveltejs/kit/pull/1109))
 - Updated dependencies [1237eb3]
 - Updated dependencies [1237eb3]
   - @sveltejs/kit@1.0.0-next.81
@@ -154,37 +160,37 @@
 
 ### Patch Changes
 
-- 0db2cf7: Fix serverless function
+- 0db2cf7: Fix serverless function ([#1102](https://github.com/sveltejs/kit/pull/1102))
 
 ## 1.0.0-next.6
 
 ### Patch Changes
 
-- 7a4b351: Bundle serverless functions with esbuild
+- 7a4b351: Bundle serverless functions with esbuild ([#1091](https://github.com/sveltejs/kit/pull/1091))
 
 ## 1.0.0-next.5
 
 ### Patch Changes
 
-- 6e27880: Move server-side fetch to adapters instead of build step
+- 6e27880: Move server-side fetch to adapters instead of build step ([#1066](https://github.com/sveltejs/kit/pull/1066))
 
 ## 1.0.0-next.4
 
 ### Patch Changes
 
-- 8805c6d: Pass adapters directly to svelte.config.cjs
+- 8805c6d: Pass adapters directly to svelte.config.cjs ([#579](https://github.com/sveltejs/kit/pull/579))
 
 ## 1.0.0-next.3
 
 ### Patch Changes
 
-- f35a5cd: Change adapter signature
+- f35a5cd: Change adapter signature ([#505](https://github.com/sveltejs/kit/pull/505))
 
 ## 1.0.0-next.2
 
 ### Patch Changes
 
-- 512b8c9: adapter-netlify: Use CJS entrypoint
+- 512b8c9: adapter-netlify: Use CJS entrypoint ([#485](https://github.com/sveltejs/kit/pull/485))
 
 ## 1.0.0-next.1
 
@@ -202,7 +208,7 @@
 
 ### Patch Changes
 
-- b475ed4: Overhaul adapter API - fixes #166
+- b475ed4: Overhaul adapter API - fixes #166 ([#180](https://github.com/sveltejs/kit/pull/180))
 
 ## 0.0.11
 

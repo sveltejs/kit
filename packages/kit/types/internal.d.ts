@@ -1,6 +1,14 @@
 import { RequestHandler } from './endpoint';
 import { Headers, Location, ParameterizedBody } from './helper';
-import { GetSession, Handle, ServerResponse, ServerFetch, StrictBody } from './hooks';
+import {
+	GetSession,
+	Handle,
+	HandleError,
+	ServerFetch,
+	ServerRequest,
+	ServerResponse,
+	StrictBody
+} from './hooks';
 import { Load } from './page';
 
 type PageId = string;
@@ -14,15 +22,15 @@ export interface Incoming extends Omit<Location, 'params'> {
 
 export interface Logger {
 	(msg: string): void;
-	success: (msg: string) => void;
-	error: (msg: string) => void;
-	warn: (msg: string) => void;
-	minor: (msg: string) => void;
-	info: (msg: string) => void;
+	success(msg: string): void;
+	error(msg: string): void;
+	warn(msg: string): void;
+	minor(msg: string): void;
+	info(msg: string): void;
 }
 
 export interface App {
-	init: ({
+	init({
 		paths,
 		prerendering,
 		read
@@ -32,9 +40,9 @@ export interface App {
 			assets: string;
 		};
 		prerendering: boolean;
-		read: (file: string) => Buffer;
-	}) => void;
-	render: (
+		read(file: string): Buffer;
+	}): void;
+	render(
 		incoming: Incoming,
 		options?: {
 			prerender: {
@@ -43,7 +51,7 @@ export interface App {
 				dependencies?: Map<string, ServerResponse>;
 			};
 		}
-	) => Promise<ServerResponse>;
+	): Promise<ServerResponse>;
 }
 
 export interface SSRComponent {
@@ -54,9 +62,9 @@ export interface SSRComponent {
 	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
-		render: (
+		render(
 			props: Record<string, any>
-		) => {
+		): {
 			html: string;
 			head: string;
 			css: {
@@ -100,7 +108,7 @@ export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: GetParams;
-	load: () => Promise<{
+	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
 }
@@ -123,6 +131,7 @@ export interface SSRManifest {
 export interface Hooks {
 	getSession: GetSession;
 	handle: Handle;
+	handleError: HandleError;
 	serverFetch: ServerFetch;
 }
 
@@ -144,26 +153,27 @@ export interface SSRRenderOptions {
 	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error: (error: Error) => void;
+	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
 	i18n?: {
 		defaultLocale?: string;
 		locales?: string[];
 	}
-	load_component: (id: PageId) => Promise<SSRNode>;
+	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;
 		assets: string;
 	};
-	read: (file: string) => Buffer;
+	prerender: boolean;
+	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
 	ssr: boolean;
 	target: string;
-	template: ({ head, body }: { head: string; body: string }) => string;
+	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;
 }
 

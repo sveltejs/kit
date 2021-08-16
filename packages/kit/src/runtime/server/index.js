@@ -28,23 +28,24 @@ export async function respond(incoming, options, state = {}) {
 			return {
 				status: 301,
 				headers: {
-					location: encodeURI(path + (q ? `?${q}` : ''))
+					location: options.paths.base + path + (q ? `?${q}` : '')
 				}
 			};
 		}
 	}
 
-	try {
-		const headers = lowercase_keys(incoming.headers);
+	const headers = lowercase_keys(incoming.headers);
+	const request = {
+		...incoming,
+		headers,
+		body: parse_body(incoming.rawBody, headers),
+		params: {},
+		locals: {}
+	};
 
+	try {
 		return await options.hooks.handle({
-			request: {
-				...incoming,
-				headers,
-				body: parse_body(incoming.rawBody, headers),
-				params: {},
-				locals: {}
-			},
+			request,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -56,13 +57,15 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
+				const decoded = decodeURI(request.path);
 				for (const route of options.manifest.routes) {
-					if (!route.pattern.test(request.path)) continue;
+					const match = route.pattern.exec(decoded);
+					if (!match) continue;
 
 					const response =
 						route.type === 'endpoint'
-							? await render_endpoint(request, route)
-							: await render_page(request, route, options, state);
+							? await render_endpoint(request, route, match)
+							: await render_page(request, route, match, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -100,7 +103,7 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.handle_error(e);
+		options.handle_error(e, request);
 
 		return {
 			status: 500,

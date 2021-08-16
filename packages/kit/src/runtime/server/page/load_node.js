@@ -1,11 +1,9 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
-import { resolve } from './resolve.js';
 
 const s = JSON.stringify;
 
 /**
- *
  * @param {{
  *   request: import('types/hooks').ServerRequest;
  *   options: import('types/internal').SSRRenderOptions;
@@ -15,6 +13,7 @@ const s = JSON.stringify;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   context: Record<string, any>;
+ *   prerender_enabled: boolean;
  *   is_leaf: boolean;
  *   is_error: boolean;
  *   status?: number;
@@ -31,6 +30,7 @@ export async function load_node({
 	node,
 	$session,
 	context,
+	prerender_enabled,
 	is_leaf,
 	is_error,
 	status,
@@ -40,19 +40,30 @@ export async function load_node({
 
 	let uses_credentials = false;
 
-	/** @type {Array<{
+	/**
+	 * @type {Array<{
 	 *   url: string;
 	 *   body: string;
 	 *   json: string;
-	 * }>} */
+	 * }>}
+	 */
 	const fetched = [];
 
 	let loaded;
 
+	const page_proxy = new Proxy(page, {
+		get: (target, prop, receiver) => {
+			if (prop === 'query' && prerender_enabled) {
+				throw new Error('Cannot access query on a page with prerendering enabled');
+			}
+			return Reflect.get(target, prop, receiver);
+		}
+	});
+
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			page,
+			page: page_proxy,
 			get session() {
 				uses_credentials = true;
 				return $session;
@@ -99,19 +110,15 @@ export async function load_node({
 				if (asset) {
 					response = options.read
 						? new Response(options.read(asset.file), {
-								headers: asset.type
-									? {
-											'content-type': asset.type
-									  }
-									: {}
+								headers: asset.type ? { 'content-type': asset.type } : {}
 						  })
 						: await fetch(
 								// TODO we need to know what protocol to use
 								`http://${page.host}/${asset.file}`,
 								/** @type {RequestInit} */ (opts)
 						  );
-				} else if (resolved.startsWith(options.paths.base || '/') && !resolved.startsWith('//')) {
-					const relative = resolved.replace(options.paths.base, '');
+				} else if (resolved.startsWith('/') && !resolved.startsWith('//')) {
+					const relative = resolved;
 
 					const headers = /** @type {import('types/helper').Headers} */ ({ ...opts.headers });
 
@@ -325,4 +332,35 @@ function escape(str) {
 
 	result += '"';
 	return result;
+}
+
+const absolute = /^([a-z]+:)?\/?\//;
+
+/**
+ * @param {string} base
+ * @param {string} path
+ */
+export function resolve(base, path) {
+	const base_match = absolute.exec(base);
+	const path_match = absolute.exec(path);
+
+	if (!base_match) {
+		throw new Error(`bad base path: "${base}"`);
+	}
+
+	const baseparts = path_match ? [] : base.slice(base_match[0].length).split('/');
+	const pathparts = path_match ? path.slice(path_match[0].length).split('/') : path.split('/');
+
+	baseparts.pop();
+
+	for (let i = 0; i < pathparts.length; i += 1) {
+		const part = pathparts[i];
+		if (part === '.') continue;
+		else if (part === '..') baseparts.pop();
+		else baseparts.push(part);
+	}
+
+	const prefix = (path_match && path_match[0]) || (base_match && base_match[0]) || '';
+
+	return `${prefix}${baseparts.join('/')}`;
 }

@@ -1,11 +1,11 @@
 interface ReadOnlyFormData {
-	get: (key: string) => string;
-	getAll: (key: string) => string[];
-	has: (key: string) => boolean;
-	entries: () => Generator<[string, string], void>;
-	keys: () => Generator<string, void>;
-	values: () => Generator<string, void>;
-	[Symbol.iterator]: () => Generator<[string, string], void>;
+	get(key: string): string;
+	getAll(key: string): string[];
+	has(key: string): boolean;
+	entries(): Generator<[string, string], void>;
+	keys(): Generator<string, void>;
+	values(): Generator<string, void>;
+	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
 type BaseBody = string | Uint8Array | ReadOnlyFormData;

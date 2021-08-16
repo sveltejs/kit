@@ -2,7 +2,7 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports two functions, both optional, that run on the server — **handle** and **getSession**.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — **handle**, **getSession**, and **serverFetch**.
 
 > The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
 
@@ -60,6 +60,30 @@ export async function handle({ request, resolve }) {
 }
 ```
 
+### handleError
+
+If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+
+During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
+
+If unimplemented, SvelteKit will log the error with default formatting.
+
+```ts
+type HandleError = HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
+}
+```
+
+```js
+/** @type {import('@sveltejs/kit').HandleError} */
+export async function handleError({ error, request }) {
+	// example integration with https://sentry.io/
+	Sentry.captureException(error, { request });
+}
+```
+
+> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
+
 ### getSession
 
 This function takes the `request` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
@@ -77,16 +101,18 @@ type GetSession<Locals = Record<string, any>, Session = any> = {
 ```js
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
-	return request.locals.user ? {
-		user: {
-			// only include properties needed client-side —
-			// exclude anything else attached to the user
-			// like access tokens etc
-			name: request.locals.user.name,
-			email: request.locals.user.email,
-			avatar: request.locals.user.avatar
-		}
-	} : {};
+	return request.locals.user
+		? {
+				user: {
+					// only include properties needed client-side —
+					// exclude anything else attached to the user
+					// like access tokens etc
+					name: request.locals.user.name,
+					email: request.locals.user.email,
+					avatar: request.locals.user.avatar
+				}
+		  }
+		: {};
 }
 ```
 

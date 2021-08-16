@@ -18,25 +18,33 @@ function find_anchor(node) {
 }
 
 export class Router {
-	/** @param {{
+	/**
+	 * @param {{
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 * }} opts */
-	constructor({ base, routes, trailing_slash}) {
+	 *    renderer: import('./renderer').Renderer
+	 * }} opts
+	 */
+	constructor({ base, routes, trailing_slash, renderer }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
-	}
 
-	/** @param {import('./renderer').Renderer} renderer */
-	init(renderer) {
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
 		renderer.router = this;
 
 		this.enabled = true;
 
+		// make it possible to reset focus
+		document.body.setAttribute('tabindex', '-1');
+
+		// create initial history entry, so we can return here
+		history.replaceState(history.state || {}, '', location.href);
+	}
+
+	init_listeners() {
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
 		}
@@ -149,12 +157,6 @@ export class Router {
 			}
 		});
 
-		// make it possible to reset focus
-		document.body.setAttribute('tabindex', '-1');
-
-		// create initial history entry, so we can return here
-		history.replaceState(history.state || {}, '', location.href);
-
 		// inject lang
 		page.subscribe(({lang}) => this._lang = lang);
 		// inject i18n
@@ -175,14 +177,15 @@ export class Router {
 	 */
 	parse(url) {
 		if (this.owns(url)) {
-			const path = decodeURIComponent(url.pathname.slice(this.base.length) || '/');
+			const path = url.pathname.slice(this.base.length) || '/';
 
-			const routes = this.routes.filter(([pattern]) => pattern.test(path));
+			const decoded_path = decodeURI(path);
+			const routes = this.routes.filter(([pattern]) => pattern.test(decoded_path));
 
 			const query = new URLSearchParams(url.search);
 			const id = `${path}?${query}`;
 
-			return { id, routes, path, query };
+			return { id, routes, path, decoded_path, query };
 		}
 	}
 
@@ -230,7 +233,6 @@ export class Router {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		// @ts-expect-error
 		return this.renderer.load(info);
 	}
 
@@ -264,13 +266,11 @@ export class Router {
 			}
 		}
 
-		// @ts-expect-error
 		this.renderer.notify({
 			path: info.path,
 			query: info.query
 		});
 
-		// @ts-expect-error
 		await this.renderer.update(info, chain, false);
 
 		if (!keepfocus) {

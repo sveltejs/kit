@@ -11,12 +11,12 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../filesystem/index.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
-import { copy_assets, get_no_external, resolve_entry } from '../utils.js';
+import { copy_assets, get_svelte_packages, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -112,6 +112,8 @@ class Watcher extends EventEmitter {
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
+		const svelte_packages = get_svelte_packages(this.cwd);
+
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
@@ -133,6 +135,21 @@ class Watcher extends EventEmitter {
 							$lib: this.config.kit.files.lib
 					  }
 			},
+			build: {
+				rollupOptions: {
+					// Vite dependency crawler needs an explicit JS entry point
+					// eventhough server otherwise works without it
+					input: path.resolve(`${this.dir}/runtime/internal/start.js`)
+				}
+			},
+			optimizeDeps: {
+				// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+				// broken packages https://github.com/vitejs/vite/issues/3910
+				exclude: [
+					...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+					...svelte_packages
+				]
+			},
 			plugins: [
 				svelte({
 					extensions: this.config.extensions,
@@ -149,20 +166,26 @@ class Watcher extends EventEmitter {
 					...(this.https ? { server: this.server, port: this.port } : {})
 				}
 			},
-			optimizeDeps: {
-				entries: []
-			},
 			ssr: {
-				// @ts-expect-error ssr is considered in beta, so not exposed by Vite
-				noExternal: get_no_external(this.cwd, vite_config.ssr && vite_config.ssr.noExternal)
-			}
+				// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
+				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
+			},
+			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
 
 		print_config_conflicts(conflicts, 'kit.vite.');
 
 		this.vite = await vite.createServer(merged_config);
 
-		handler = await create_handler(this.vite, this.config, this.dir, this.cwd, this.manifest);
+		const get_manifest = () => {
+			if (!this.manifest) {
+				throw new Error('Manifest is not available');
+			}
+
+			return this.manifest;
+		};
+
+		handler = await create_handler(this.vite, this.config, this.dir, this.cwd, get_manifest);
 
 		this.server.listen(this.port, this.host || '0.0.0.0');
 	}
@@ -254,9 +277,9 @@ function get_params(array) {
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
  * @param {string} cwd
- * @param {import('types/internal').SSRManifest} manifest
+ * @param {() => import('types/internal').SSRManifest} get_manifest
  */
-async function create_handler(vite, config, dir, cwd, manifest) {
+async function create_handler(vite, config, dir, cwd, get_manifest) {
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
@@ -276,21 +299,40 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 	};
 
 	/**
-	 * @param {import("http").IncomingMessage} req
-	 * @param {import("http").ServerResponse} res
+	 * @param {import('http').IncomingMessage} req
+	 * @param {import('http').ServerResponse} res
 	 */
 	return (req, res) => {
 		vite.middlewares(req, res, async () => {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
-				const parsed = new URL(req.url, 'http://localhost/');
+				if (req.url === '/favicon.ico') return not_found(res);
 
-				if (req.url === '/favicon.ico') return;
+				const parsed = new URL(req.url, 'http://localhost/');
+				if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
 
 				/** @type {Partial<import('types/internal').Hooks>} */
-				const hooks = resolve_entry(config.kit.files.hooks)
+				const user_hooks = resolve_entry(config.kit.files.hooks)
 					? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 					: {};
+
+				/** @type {import('types/internal').Hooks} */
+				const hooks = {
+					getSession: user_hooks.getSession || (() => ({})),
+					handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+					handleError:
+						user_hooks.handleError ||
+						(({ /** @type {Error & { frame?: string }} */ error, request }) => {
+							console.error(colors.bold().red(error.message));
+							if (error.frame) {
+								console.error(colors.gray(error.frame));
+							}
+							if (error.stack) {
+								console.error(colors.gray(error.stack));
+							}
+						}),
+					serverFetch: user_hooks.serverFetch || fetch
+				};
 
 				if (/** @type {any} */ (hooks).getContext) {
 					// TODO remove this for 1.0
@@ -300,6 +342,13 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 				}
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
+
+				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+
+				paths.set_paths({
+					base: config.kit.paths.base,
+					assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+				});
 
 				let body;
 
@@ -318,7 +367,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 						headers: /** @type {import('types/helper').Headers} */ (req.headers),
 						method: req.method,
 						host,
-						path: decodeURI(parsed.pathname),
+						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
 						rawBody: body
 					},
@@ -335,23 +384,16 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 							vite.ssrFixStacktrace(error);
 							return error.stack;
 						},
-						handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
+						handle_error: (error, request) => {
 							vite.ssrFixStacktrace(error);
-							console.error(colors.bold().red(error.message));
-							if (error.frame) {
-								console.error(colors.gray(error.frame));
-							}
-							if (error.stack) {
-								console.error(colors.gray(error.stack));
-							}
+							hooks.handleError({ error, request });
 						},
-						hooks: {
-							getSession: hooks.getSession || (() => ({})),
-							handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-							serverFetch: hooks.serverFetch || fetch
-						},
+						hooks,
 						hydrate: config.kit.hydrate,
-						paths: config.kit.paths,
+						paths: {
+							base: config.kit.paths.base,
+							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+						},
 						load_component: async (id) => {
 							const url = path.resolve(cwd, id);
 
@@ -397,7 +439,8 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 								styles: Array.from(styles)
 							};
 						},
-						manifest,
+						manifest: get_manifest(),
+						prerender: config.kit.prerender.enabled,
 						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 						root,
 						router: config.kit.router,
@@ -465,8 +508,7 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 					if (rendered.body) res.write(rendered.body);
 					res.end();
 				} else {
-					res.statusCode = 404;
-					res.end('Not found');
+					not_found(res);
 				}
 			} catch (e) {
 				vite.ssrFixStacktrace(e);
@@ -475,4 +517,10 @@ async function create_handler(vite, config, dir, cwd, manifest) {
 			}
 		});
 	};
+}
+
+/** @param {import('http').ServerResponse} res */
+function not_found(res) {
+	res.statusCode = 404;
+	res.end('Not found');
 }

@@ -8,22 +8,22 @@ const s = JSON.stringify;
 
 /**
  * @param {{
+ *   branch: Array<import('./types').Loaded>;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   branch?: Array<import('./types').Loaded>;
  *   page?: import('types/page').Page
  * }} opts
  */
 export async function render_response({
+	branch,
 	options,
 	$session,
 	page_config,
 	status,
 	error,
-	branch,
 	page
 }) {
 	const css = new Set(options.entry.css);
@@ -42,7 +42,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (branch) {
+	if (page_config.ssr) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));
 			if (node.js) node.js.forEach((url) => js.add(url));

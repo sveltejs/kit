@@ -37,7 +37,7 @@ type LoadOutput<
 };
 ```
 
-Our example blog page might contain a `load` function like the following. Note the `context="module"` — this is necessary because `load` runs before the component is rendered:
+Our example blog page might contain a `load` function like the following:
 
 ```html
 <script context="module">
@@ -63,18 +63,26 @@ Our example blog page might contain a `load` function like the following. Note t
 	}
 </script>
 ```
+> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.  
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-> `load` only applies to [page](#routing-pages) and [layout](#layouts) components, and can run both on the server (unless [ssr](#ssr-and-javascript-ssr) is disabled) and in the browser.
+SvelteKit's `load` receives an implemention of `fetch`, which has the following special properties:
+- it has access to cookies on the server
+- it can make requests against the app's own endpoints without issuing an HTTP call
+- it makes a copy of the response when you use it, and then sends it embedded in the initial page load for hydration
 
-Code called inside `load` blocks:
+`load` only applies to [page](#routing-pages) and [layout](#layouts) components (not components they import), and runs on both the server and in the browser with the default rendering options.
 
-- should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`, which doesn't have access to cookies on the server and cannot make requests against the app's own endpoints
-- should not reference `window`, `document`, or any browser-specific objects
-- should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
+> Code called inside `load` blocks:
+>
+> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`
+> - should not reference `window`, `document`, or any browser-specific objects
+> - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
+
+It is recommended that you not store pre-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
 
 > Mutating any shared state on the server will affect all clients, not just the current one.
 

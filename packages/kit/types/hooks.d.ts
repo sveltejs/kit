@@ -23,8 +23,12 @@ export interface GetSession<Locals = Record<string, any>, Session = any> {
 export interface Handle<Locals = Record<string, any>> {
 	(input: {
 		request: ServerRequest<Locals>;
-		resolve: (request: ServerRequest<Locals>) => MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
+}
+
+export interface HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
 }
 
 export interface ServerFetch {

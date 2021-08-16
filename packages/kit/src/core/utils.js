@@ -82,7 +82,7 @@ export function posixify(str) {
  * @param {string} cwd
  * @returns {string[]}
  */
-function find_svelte_packages(cwd) {
+export function get_svelte_packages(cwd) {
 	const pkg_file = path.join(cwd, 'package.json');
 	if (!fs.existsSync(pkg_file)) return [];
 
@@ -97,12 +97,4 @@ function find_svelte_packages(cwd) {
 		const dep_pkg = JSON.parse(fs.readFileSync(dep_pkg_file, 'utf-8'));
 		return !!dep_pkg.svelte;
 	});
-}
-
-/**
- * @param {string} cwd
- * @param {string[]} [user_specified_deps]
- */
-export function get_no_external(cwd, user_specified_deps = []) {
-	return [...user_specified_deps, ...find_svelte_packages(cwd)];
 }

@@ -1,17 +1,17 @@
-import { Page } from '../../../types/page';
-import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from '../../../types/internal';
+import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from 'types/internal';
+import { Page } from 'types/page';
 
 export type NavigationInfo = {
 	id: string;
 	routes: CSRRoute[];
 	path: string;
+	decoded_path: string;
 	query: URLSearchParams;
 };
 
 export type NavigationCandidate = {
 	route: CSRPage;
-	path: string;
-	query: URLSearchParams;
+	info: NavigationInfo;
 };
 
 export type NavigationResult = {

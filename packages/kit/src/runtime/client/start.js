@@ -1,6 +1,6 @@
-// @ts-expect-error
+// @ts-ignore - value will be replaced on build step
 import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
-// @ts-expect-error
+// @ts-ignore - value will be replaced on build step
 import { routes, fallback } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
@@ -43,14 +43,6 @@ export async function start({
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');
 	}
 
-	const router = route
-		? new Router({
-				base: paths.base,
-				routes,
-				trailing_slash
-		  })
-		: null;
-
 	const renderer = new Renderer({
 		Root,
 		fallback,
@@ -63,13 +55,22 @@ export async function start({
 		}
 	});
 
+	const router = route
+		? new Router({
+				base: paths.base,
+				routes,
+				trailing_slash,
+				renderer
+		  })
+		: null;
+
 	init(router);
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
 	if (router) {
-		router.init(renderer);
 		if (spa) router.goto(location.href, { replaceState: true }, []);
+		router.init_listeners();
 	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));

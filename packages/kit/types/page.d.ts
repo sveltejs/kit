@@ -6,7 +6,7 @@ export interface LoadInput<
 	Session = any
 	> {
 	page: Page<PageParams>;
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	context: Context;
 	lang?: string;

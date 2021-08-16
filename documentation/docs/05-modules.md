@@ -30,10 +30,10 @@ import {
 ```
 
 - `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
-    - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
-    - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
-    - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
-    - `state` (object, default `{}`) The state of the new/updated history entry
+  - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
+  - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
+  - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
+  - `state` (object, default `{}`) The state of the new/updated history entry
 - `invalidate(href)` causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. It returns a `Promise` that resolves when the page is subsequently updated.
 - `i18nRoute(route)` programmatically prefixes a given route with the current lang. If the current lang is the default locale, than it will not be prefixed.
 - `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
@@ -46,8 +46,10 @@ import {
 import { base, assets } from '$app/paths';
 ```
 
-- `base` — a root-relative (i.e. begins with a `/`) string that matches `config.kit.paths.base` in your [project configuration](#configuration)
-- `assets` — a root-relative or absolute path that matches `config.kit.paths.assets` (after it has been resolved against `base`)
+- `base` — a root-relative (i.e. begins with a `/`) string that matches [`config.kit.paths.base`](#configuration-paths), or the empty string if unspecified
+- `assets` — an absolute URL that matches [`config.kit.paths.assets`](#configuration-paths), if specified, otherwise equal to `base`
+
+> If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](#command-line-interface-svelte-kit-dev) or [`svelte-kit preview`](#command-line-interface-svelte-kit-preview), since the assets don't yet live at their eventual URL.
 
 ### $app/stores
 

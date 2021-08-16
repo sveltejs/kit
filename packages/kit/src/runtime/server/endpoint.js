@@ -18,9 +18,10 @@ function is_string(s) {
 /**
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
+ * @param {RegExpExecArray} match
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_endpoint(request, route) {
+export async function render_endpoint(request, route, match) {
 	const mod = await route.load();
 
 	/** @type {import('types/endpoint').RequestHandler} */
@@ -28,11 +29,6 @@ export async function render_endpoint(request, route) {
 
 	if (!handler) {
 		return;
-	}
-
-	const match = route.pattern.exec(request.path);
-	if (!match) {
-		return error('could not parse parameters from request path');
 	}
 
 	const params = route.params(match);

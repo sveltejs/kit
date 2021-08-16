@@ -1,4 +1,4 @@
-// @ts-expect-error
+// @ts-ignore - we don't care about imported declarations
 import { generate } from 'selfsigned';
 
 /**
