@@ -1,7 +1,7 @@
 {
 	"name": "emit-types",
 	"version": "1.0.0",
-	"description": "emitTypes-disabled",
+	"description": "emitTypes settings disabled",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
