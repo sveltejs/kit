@@ -2,7 +2,7 @@ import { read_only_form_data } from './read_only_form_data.js';
 
 /**
  * @param {import('types/hooks.js').RawBody} raw
- * @param {Partial<import('types/helper').Headers>} headers
+ * @param {import('types/helper').Headers} headers
  */
 export function parse_body(raw, headers) {
 	if (!raw) return raw;
