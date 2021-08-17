@@ -242,7 +242,7 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {
+	test.skip('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {
 		if (!is_dev || js) {
 			return;
 		}
