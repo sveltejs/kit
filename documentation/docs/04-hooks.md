@@ -62,7 +62,6 @@ export async function handle({ request, resolve }) {
 }
 ```
 
-
 ### handleError
 
 If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
