@@ -6,8 +6,7 @@ import {
 	HandleError,
 	ServerFetch,
 	ServerRequest,
-	ServerResponse,
-	StrictBody
+	ServerResponse
 } from './hooks';
 import { Load } from './page';
 
@@ -16,7 +15,7 @@ type PageId = string;
 export interface Incoming extends Omit<Location, 'params'> {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody;
+	rawBody: Uint8Array;
 	body?: ParameterizedBody;
 }
 

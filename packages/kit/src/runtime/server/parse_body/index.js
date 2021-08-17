@@ -1,7 +1,7 @@
 import { read_only_form_data } from './read_only_form_data.js';
 
 /**
- * @param {import('types/hooks').StrictBody} raw
+ * @param {Uint8Array} raw
  * @param {Partial<import('types/helper').Headers>} headers
  */
 export function parse_body(raw, headers) {
@@ -10,11 +10,7 @@ export function parse_body(raw, headers) {
 	const content_type = headers['content-type'];
 	const [type, ...directives] = content_type ? content_type.split(/;\s*/) : [];
 
-	const text = () =>
-		typeof raw === 'string'
-			? raw
-			: new TextDecoder(headers['content-encoding'] || 'utf-8').decode(raw);
-	const bytes = () => (typeof raw === 'string' ? new TextEncoder().encode(raw) : raw);
+	const text = () => new TextDecoder(headers['content-encoding'] || 'utf-8').decode(raw);
 
 	switch (type) {
 		case 'text/plain':
@@ -32,7 +28,7 @@ export function parse_body(raw, headers) {
 			return get_multipart(text(), boundary.slice('boundary='.length));
 		}
 		default:
-			return bytes();
+			return raw;
 	}
 }
 
