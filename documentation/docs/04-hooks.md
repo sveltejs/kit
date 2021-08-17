@@ -62,7 +62,7 @@ export async function handle({ request, resolve }) {
 }
 ```
 
-> `handle` runs when a page is rendered. If a page is prerendered, `handle` will not run again when the user requests the page. If you would like to run some functionality on each request, see the documentation for your [adapter](#adapters).
+> `handle` runs when a page is rendered. If a page is prerendered, `handle` will not run again when the user requests the page.
 
 ### handleError
 
