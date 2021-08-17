@@ -206,8 +206,23 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			if (rendered.status === 200) {
-				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, rendered.body || '');
+				log.info(`${rendered.status} ${path}`);
+
+				if (
+					rendered.body &&
+					typeof rendered.body === 'object' &&
+					typeof rendered.body[Symbol.asyncIterator] === 'function'
+				) {
+					let body = '';
+
+					for await (const chunk of rendered.body) {
+						body += chunk;
+					}
+
+					writeFileSync(file, body);
+				} else {
+					writeFileSync(file, rendered.body || '');
+				}
 				written_files.push(file);
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });

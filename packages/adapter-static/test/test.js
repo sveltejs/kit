@@ -11,6 +11,10 @@ run('prerendered', (test) => {
 		await page.goto(base);
 		assert.equal(await page.textContent('h1'), 'This page was prerendered');
 	});
+
+	test('prerenders a streaming CSV file', async ({ cwd }) => {
+		assert.equal(String(fs.readFileSync(`${cwd}/build/test.csv`)), '1,one\n2,two\n');
+	});
 });
 
 run('spa', (test) => {
@@ -34,5 +38,14 @@ run('spa', (test) => {
 	test('renders error page for missing page', async ({ base, page }) => {
 		await page.goto(`${base}/nosuchpage`);
 		assert.equal(await page.textContent('h1'), '404');
+	});
+
+	test('prerenders a streaming text file', async ({ cwd }) => {
+		assert.equal(String(fs.readFileSync(`${cwd}/build/test.txt`)), 'foobar');
+	});
+
+	test('renders a streaming text file', async ({ base, page }) => {
+		const response = await page.goto(`${base}/test.txt`);
+		assert.equal(String(await response.body()), 'foobar');
 	});
 });

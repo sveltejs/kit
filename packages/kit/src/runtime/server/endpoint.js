@@ -15,6 +15,11 @@ function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
 }
 
+/** @param {unknown} s */
+function is_async_iterator(s) {
+	return s && typeof s === 'object' && typeof s[Symbol.asyncIterator] === 'function';
+}
+
 /**
  * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
  *
@@ -28,7 +33,8 @@ function is_content_type_textual(content_type) {
 		type === 'text/plain' ||
 		type === 'application/json' ||
 		type === 'application/x-www-form-urlencoded' ||
-		type === 'multipart/form-data'
+		type === 'multipart/form-data' ||
+		type === 'text/event-stream'
 	);
 }
 
@@ -67,9 +73,9 @@ export async function render_endpoint(request, route, match) {
 
 	const is_type_textual = is_content_type_textual(type);
 
-	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
+	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body) || is_async_iterator(body))) {
 		return error(
-			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
+			`${preface}: body must be an instance of string or Uint8Array or an async iterator if content-type is not a supported textual content-type`
 		);
 	}
 
@@ -77,7 +83,7 @@ export async function render_endpoint(request, route, match) {
 	let normalized_body;
 
 	// ensure the body is an object
-	if (body && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function') {
+	if (is_async_iterator(body)) {
 		normalized_body = /** @type {object} */ (body);
 	} else if (
 		(typeof body === 'object' || typeof body === 'undefined') &&
