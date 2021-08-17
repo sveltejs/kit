@@ -100,15 +100,12 @@ function format(file, content) {
 
 test('create package written in javascript', async () => {
 	// should also preserve filename casing
+	// should also correctly handle nested folders
 	await test_make_package('javascript');
 });
 
-test('create package (typescript)', async () => {
+test('create package written in typescript', async () => {
 	await test_make_package('typescript');
-});
-
-test('create package (nested)', async () => {
-	await test_make_package('nested');
 });
 
 test('create package with user defined settings (exports)', async () => {
