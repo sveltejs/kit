@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.152
+
+### Patch Changes
+
+- Check ports usage in a more cross-platform way in dev server error logging ([#2209](https://github.com/sveltejs/kit/pull/2209))
+
+* Ensure the raw body is an Uint8Array before passing it to request handlers ([#2215](https://github.com/sveltejs/kit/pull/2215))
+
 ## 1.0.0-next.151
 
 ### Patch Changes

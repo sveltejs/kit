@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.19
+
+### Patch Changes
+
+- Ensure the raw body is an Uint8Array before passing it to request handlers ([#2215](https://github.com/sveltejs/kit/pull/2215))
+
 ## 1.0.0-next.18
 
 ### Patch Changes
