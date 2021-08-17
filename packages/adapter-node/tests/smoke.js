@@ -60,4 +60,22 @@ test('passes through umlaut as encoded path', async () => {
 	server.server.close();
 });
 
+test('handles an async iterator body', async () => {
+	const server = await startServer({
+		render: (incoming) => {
+			return {
+				status: 200,
+				body: (async function* () {
+					yield 'foo';
+					yield 'bar';
+				})()
+			};
+		}
+	});
+
+	const res = await fetch(`http://localhost:${PORT}`);
+	assert.equal(await res.text(), 'foobar');
+	server.server.close();
+});
+
 test.run();
