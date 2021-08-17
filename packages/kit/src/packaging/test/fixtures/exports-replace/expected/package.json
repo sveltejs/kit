@@ -1,7 +1,7 @@
 {
-	"name": "exports",
+	"name": "exports-replace",
 	"version": "1.0.0",
-	"description": "package-exports-test",
+	"description": "default exports settings",
 	"exports": {
 		".": {
 			"import": "./index.js"

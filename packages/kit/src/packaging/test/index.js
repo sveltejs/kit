@@ -98,22 +98,22 @@ function format(file, content) {
 	});
 }
 
-test('create package written in javascript', async () => {
+test('create standard package with javascript', async () => {
 	// should also preserve filename casing
 	// should also correctly handle nested folders
 	await test_make_package('javascript');
 });
 
-test('create package written in typescript', async () => {
+test('create standard package with typescript', async () => {
 	await test_make_package('typescript');
-});
-
-test('create package with user defined settings (exports)', async () => {
-	await test_make_package('exports');
 });
 
 test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes');
+});
+
+test('create package with default exports settings (replace)', async () => {
+	await test_make_package('exports-replace');
 });
 
 test.run();
