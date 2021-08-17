@@ -2,10 +2,12 @@ import { Headers, Location, MaybePromise, ParameterizedBody } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
+export type RawBody = null | Uint8Array;
+
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown> extends Location {
 	method: string;
 	headers: Headers;
-	rawBody: Uint8Array;
+	rawBody: RawBody;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 }

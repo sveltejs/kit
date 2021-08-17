@@ -4,6 +4,7 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	RawBody,
 	ServerFetch,
 	ServerRequest,
 	ServerResponse
@@ -15,7 +16,7 @@ type PageId = string;
 export interface Incoming extends Omit<Location, 'params'> {
 	method: string;
 	headers: Headers;
-	rawBody: Uint8Array;
+	rawBody: RawBody;
 	body?: ParameterizedBody;
 }
 

@@ -1,13 +1,13 @@
 /**
  * @param {import('http').IncomingMessage} req
- * @returns {Promise<Uint8Array>}
+ * @returns {Promise<import('types/hooks').RawBody>}
  */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;
 
 		if (!h['content-type']) {
-			return fulfil(new Uint8Array());
+			return fulfil(null);
 		}
 
 		req.on('error', reject);
@@ -16,7 +16,7 @@ export function getRawBody(req) {
 
 		// https://github.com/jshttp/type-is/blob/c1f4388c71c8a01f79934e68f630ca4a15fffcd6/index.js#L81-L95
 		if (isNaN(length) && h['transfer-encoding'] == null) {
-			return fulfil(new Uint8Array());
+			return fulfil(null);
 		}
 
 		let data = new Uint8Array(length || 0);
