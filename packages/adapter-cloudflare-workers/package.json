@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.17",
+	"version": "1.0.0-next.19",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -13,7 +13,7 @@
 	],
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {

@@ -27,29 +27,38 @@ const suite = uvu.suite('adapter utils');
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
 
-	/** @type {import('types/config').ValidatedConfig} */
-	const config = {
+	/** @type {import('types/config').Config} */
+	const mocked = {
+		extensions: ['.svelte'],
 		kit: {
-			// @ts-ignore
+			appDir: '_app',
 			files: {
 				assets: join(__dirname, 'fixtures/basic/static')
-			},
-			appDir: '_app',
-			extensions: ['.svelte']
+			}
 		}
 	};
 
 	/** @type {import('types/internal').BuildData} */
 	const build_data = { client: [], server: [], static: [], entries: [] };
 
-	const utils = get_utils({ cwd, config, build_data, log });
+	const utils = get_utils({
+		cwd,
+		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
+		build_data,
+		log
+	});
 
 	const dest = join(__dirname, 'output');
 
 	rimraf.sync(dest);
 	utils.copy_static_files(dest);
 
-	assert.equal(glob('**', { cwd: config.kit.files.assets }), glob('**', { cwd: dest }));
+	assert.equal(
+		glob('**', {
+			cwd: /** @type {import('types/config').ValidatedConfig} */ (mocked).kit.files.assets
+		}),
+		glob('**', { cwd: dest })
+	);
 
 	rimraf.sync(dest);
 	utils.copy_client_files(dest);
@@ -72,17 +81,15 @@ suite('prerender', async () => {
 	const cwd = join(__dirname, 'fixtures/prerender');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');
 
-	/** @type {import('types/config').ValidatedConfig} */
-	const config = {
+	/** @type {import('types/config').Config} */
+	const mocked = {
 		extensions: ['.svelte'],
 		kit: {
-			// @ts-ignore
 			files: {
 				assets: join(__dirname, 'fixtures/prerender/static'),
 				routes: join(__dirname, 'fixtures/prerender/src/routes')
 			},
 			appDir: '_app',
-			// @ts-ignore
 			prerender: {
 				pages: ['*'],
 				enabled: true
@@ -93,7 +100,12 @@ suite('prerender', async () => {
 	/** @type {import('types/internal').BuildData} */
 	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
 
-	const utils = get_utils({ cwd, config, build_data, log });
+	const utils = get_utils({
+		cwd,
+		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
+		build_data,
+		log
+	});
 
 	const dest = join(__dirname, 'output');
 

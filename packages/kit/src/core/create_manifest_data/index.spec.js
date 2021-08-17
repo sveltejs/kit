@@ -12,21 +12,23 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @returns
  */
 const create = (dir, extensions = ['.svelte']) => {
-	return create_manifest_data({
-		config: {
-			extensions,
-			kit: {
-				// @ts-ignore
-				files: {
-					assets: path.resolve(cwd, 'static'),
-					routes: path.resolve(cwd, dir)
-				},
-				appDir: '_app',
-				serviceWorker: {
-					exclude: []
-				}
+	/** @type {import('types/config').Config} */
+	const initial = {
+		extensions,
+		kit: {
+			files: {
+				assets: path.resolve(cwd, 'static'),
+				routes: path.resolve(cwd, dir)
+			},
+			appDir: '_app',
+			serviceWorker: {
+				exclude: []
 			}
-		},
+		}
+	};
+
+	return create_manifest_data({
+		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
 		cwd,
 		output: cwd
 	});
@@ -91,7 +93,7 @@ test('creates routes', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			path: null,
+			path: '',
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -310,7 +312,7 @@ test('works with custom extensions', () => {
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
-			path: null,
+			path: '',
 			a: [layout, blog_$slug],
 			b: [error]
 		}

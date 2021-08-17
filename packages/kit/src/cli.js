@@ -44,7 +44,9 @@ async function get_config() {
 /** @param {Error} error */
 function handle_error(error) {
 	console.log(colors.bold().red(`> ${error.message}`));
-	console.log(colors.gray(error.stack));
+	if (error.stack) {
+		console.log(colors.gray(error.stack));
+	}
 	process.exit(1);
 }
 
@@ -149,33 +151,15 @@ prog
 		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 		const config = await get_config();
 
-		const { start } = await import('./core/start/index.js');
+		const { preview } = await import('./core/preview/index.js');
 
 		try {
-			await start({ port, host, config, https });
+			await preview({ port, host, config, https });
 
 			welcome({ port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
-	});
-
-// TODO remove this after a few versions
-prog
-	.command('start')
-	.describe('Deprecated — use svelte-kit preview instead')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
-	.action(async () => {
-		console.log(
-			colors
-				.bold()
-				.red(
-					'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
-				)
-		);
 	});
 
 prog
@@ -185,7 +169,7 @@ prog
 	.action(async () => {
 		const config = await get_config();
 
-		const { make_package } = await import('./core/make_package/index.js');
+		const { make_package } = await import('./packaging/index.js');
 
 		try {
 			await make_package(config);
@@ -198,18 +182,23 @@ prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */
 async function check_port(port) {
+	if (await ports.check(port)) {
+		return;
+	}
+	console.log(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
-
 	if (n) {
-		console.log(colors.bold().red(`Port ${port} is occupied`));
-
 		// prettier-ignore
 		console.log(
 			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
 		);
-
-		process.exit(1);
+	} else {
+		// prettier-ignore
+		console.log(
+			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
+		);
 	}
+	process.exit(1);
 }
 
 /**
@@ -229,6 +218,7 @@ function welcome({ port, host, https, open }) {
 	const exposed = host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
+		if (!interfaces) return;
 		interfaces.forEach((details) => {
 			if (details.family !== 'IPv4') return;
 

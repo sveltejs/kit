@@ -1,4 +1,7 @@
-/** @param {import('types/hooks').StrictBody} value */
+/**
+ * Hash using djb2
+ * @param {import('types/hooks').StrictBody} value
+ */
 export function hash(value) {
 	let hash = 5381;
 	let i = value.length;

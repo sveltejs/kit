@@ -18,6 +18,10 @@ const config = {
 				minify: false
 			},
 			clearScreen: false
+		},
+		paths: {
+			base: '/path-base',
+			assets: 'https://cdn.example.com/stuff'
 		}
 	}
 };

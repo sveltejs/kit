@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { rimraf } from '../filesystem/index.js';
+import { rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, get_no_external, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, get_svelte_packages, posixify, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
@@ -33,15 +33,17 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	rimraf(build_dir);
 
 	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
+	const svelte_packages = get_svelte_packages(cwd);
 
 	const options = {
 		cwd,
 		config,
 		build_dir,
-		base:
-			config.kit.paths.assets === '/.'
-				? `/${config.kit.appDir}/`
-				: `${config.kit.paths.assets}/${config.kit.appDir}/`,
+		// TODO this is so that Vite's preloading works. Unfortunately, it fails
+		// during `svelte-kit preview`, because we use a local asset path. If Vite
+		// used relative paths, I _think_ this could get fixed. Issue here:
+		// https://github.com/vitejs/vite/issues/2009
+		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
 		manifest: create_manifest_data({
 			config,
 			output: build_dir,
@@ -49,16 +51,15 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
+		svelte_packages
 	};
 
 	const client_manifest = await build_client(options);
 	await build_server(options, client_manifest, runtime);
 
 	if (options.service_worker_entry_file) {
-		const { base, assets } = config.kit.paths;
-
-		if (assets !== base && assets !== '/.') {
+		if (config.kit.paths.assets) {
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
@@ -73,7 +74,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		server,
 		static: options.manifest.assets.map((asset) => posixify(asset.file)),
 		entries: options.manifest.routes
-			.map((route) => route.type === 'page' && route.path)
+			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean)
 	};
 }
@@ -81,18 +82,18 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
  * }} options
  */
 async function build_client({
 	cwd,
-	base,
+	assets_base,
 	config,
 	manifest,
 	build_dir,
@@ -132,7 +133,7 @@ async function build_client({
 	});
 
 	/** @type {any} */
-	const user_config = config.kit.vite();
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -143,13 +144,13 @@ async function build_client({
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			cssCodeSplit: true,
 			manifest: true,
@@ -174,7 +175,10 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
 			})
 		]
 	});
@@ -193,13 +197,14 @@ async function build_client({
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
+ *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -207,19 +212,20 @@ async function build_client({
 async function build_server(
 	{
 		cwd,
-		base,
+		assets_base,
 		config,
 		manifest,
 		build_dir,
 		output_dir,
 		client_entry_file,
-		service_worker_entry_file
+		service_worker_entry_file,
+		svelte_packages
 	},
 	client_manifest,
 	runtime
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
-	if (!fs.existsSync(hooks_file)) {
+	if (!hooks_file || !fs.existsSync(hooks_file)) {
 		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
 		fs.writeFileSync(hooks_file, '');
 	}
@@ -232,7 +238,7 @@ async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	const prefix = `${config.kit.paths.assets}/${config.kit.appDir}/`;
+	const prefix = `/${config.kit.appDir}/`;
 
 	/**
 	 * @param {string} file
@@ -263,18 +269,18 @@ async function build_server(
 
 		find_deps(file, js_deps, css_deps);
 
-		const js = Array.from(js_deps).map((url) => prefix + url);
-		const css = Array.from(css_deps).map((url) => prefix + url);
+		const js = Array.from(js_deps);
+		const css = Array.from(css_deps);
 
 		const styles = config.kit.amp
 			? Array.from(css_deps).map((url) => {
 					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
 					return fs.readFileSync(resolved, 'utf-8');
 			  })
-			: null;
+			: [];
 
 		metadata_lookup[file] = {
-			entry: prefix + client_manifest[file].file,
+			entry: client_manifest[file].file,
 			css,
 			js,
 			styles
@@ -294,7 +300,7 @@ async function build_server(
 		`
 			import { respond } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths } from './runtime/paths.js';
+			import { set_paths, assets } from './runtime/paths.js';
 			import { set_prerendering } from './runtime/env.js';
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
@@ -312,31 +318,31 @@ async function build_server(
 				set_paths(settings.paths);
 				set_prerendering(settings.prerendering || false);
 
+				const hooks = get_hooks(user_hooks);
+
 				options = {
 					amp: ${config.kit.amp},
 					dev: false,
 					entry: {
-						file: ${s(prefix + client_manifest[client_entry_file].file)},
-						css: ${s(Array.from(entry_css).map(dep => prefix + dep))},
-						js: ${s(Array.from(entry_js).map(dep => prefix + dep))}
+						file: assets + ${s(prefix + client_manifest[client_entry_file].file)},
+						css: [${Array.from(entry_css).map(dep => 'assets + ' + s(prefix + dep))}],
+						js: [${Array.from(entry_js).map(dep => 'assets + ' + s(prefix + dep))}]
 					},
 					fetched: undefined,
 					floc: ${config.kit.floc},
-					get_component_path: id => ${s(`${config.kit.paths.assets}/${config.kit.appDir}/`)} + entry_lookup[id],
+					get_component_path: id => assets + ${s(prefix)} + entry_lookup[id],
 					get_stack: error => String(error), // for security
-					handle_error: /** @param {Error & {frame?: string}} error */ (error) => {
-						if (error.frame) {
-							console.error(error.frame);
-						}
-						console.error(error.stack);
+					handle_error: (error, request) => {
+						hooks.handleError({ error, request });
 						error.stack = options.get_stack(error);
 					},
-					hooks: get_hooks(user_hooks),
+					hooks,
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
 					load_component,
 					manifest,
 					paths: settings.paths,
+					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
 					root,
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
@@ -389,7 +395,8 @@ async function build_server(
 			const get_hooks = hooks => ({
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				serverFetch: hooks.serverFetch || fetch
+				handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
+				externalFetch: hooks.externalFetch || fetch
 			});
 
 			const module_lookup = {
@@ -399,9 +406,13 @@ async function build_server(
 			const metadata_lookup = ${s(metadata_lookup)};
 
 			async function load_component(file) {
+				const { entry, css, js, styles } = metadata_lookup[file];
 				return {
 					module: await module_lookup[file](),
-					...metadata_lookup[file]
+					entry: assets + ${s(prefix)} + entry,
+					css: css.map(dep => assets + ${s(prefix)} + dep),
+					js: js.map(dep => assets + ${s(prefix)} + dep),
+					styles
 				};
 			}
 
@@ -416,8 +427,8 @@ async function build_server(
 			.trim()
 	);
 
-	/** @type {any} */
-	const user_config = config.kit.vite();
+	/** @type {import('vite').UserConfig} */
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -428,13 +439,13 @@ async function build_server(
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			target: 'es2018',
 			ssr: true,
@@ -454,28 +465,33 @@ async function build_server(
 				preserveEntrySignatures: 'strict'
 			}
 		},
+		optimizeDeps: {
+			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+			// broken packages https://github.com/vitejs/vite/issues/3910
+			exclude: [
+				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+				...svelte_packages
+			]
+		},
+		plugins: [
+			svelte({
+				extensions: config.extensions,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
+			})
+		],
 		resolve: {
 			alias: {
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},
-		plugins: [
-			svelte({
-				extensions: config.extensions
-			})
-		],
-		// this API is marked as @alpha https://github.com/vitejs/vite/blob/27785f7fcc5b45987b5f0bf308137ddbdd9f79ea/packages/vite/src/node/config.ts#L129
-		// it's not exposed in the typescript definitions as a result
-		// so we need to ignore the fact that it's missing
-		// @ts-ignore
 		ssr: {
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok
-			noExternal: get_no_external(cwd, user_config.ssr && user_config.ssr.noExternal)
-		},
-		optimizeDeps: {
-			entries: []
+			// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
+			noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 		}
 	});
 
@@ -487,18 +503,28 @@ async function build_server(
 /**
  * @param {{
  *   cwd: string;
- *   base: string;
+ *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string;
+ *   service_worker_entry_file: string | null;
+ *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  */
 async function build_service_worker(
-	{ cwd, base, config, manifest, build_dir, output_dir, service_worker_entry_file },
+	{
+		cwd,
+		assets_base,
+		config,
+		manifest,
+		build_dir,
+		output_dir,
+		service_worker_entry_file,
+		svelte_packages
+	},
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
@@ -535,7 +561,7 @@ async function build_service_worker(
 	);
 
 	/** @type {any} */
-	const user_config = config.kit.vite();
+	const vite_config = config.kit.vite();
 
 	const default_config = {
 		server: {
@@ -546,13 +572,13 @@ async function build_service_worker(
 	};
 
 	// don't warn on overriding defaults
-	const [modified_user_config] = deep_merge(default_config, user_config);
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_user_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
-		base,
+		base: assets_base,
 		build: {
 			lib: {
 				entry: service_worker_entry_file,
@@ -567,13 +593,19 @@ async function build_service_worker(
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
 		},
+		optimizeDeps: {
+			entries: [],
+			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
+			// broken packages https://github.com/vitejs/vite/issues/3910
+			exclude: [
+				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
+				...svelte_packages
+			]
+		},
 		resolve: {
 			alias: {
 				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
 			}
-		},
-		optimizeDeps: {
-			entries: []
 		}
 	});
 

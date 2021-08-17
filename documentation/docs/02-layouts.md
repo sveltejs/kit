@@ -17,9 +17,9 @@ To create a layout component that applies to every page, make a file called `src
 ```html
 <!-- src/routes/__layout.svelte -->
 <nav>
-	<a href=".">Home</a>
-	<a href="about">About</a>
-	<a href="settings">Settings</a>
+	<a href="/">Home</a>
+	<a href="/about">About</a>
+	<a href="/settings">Settings</a>
 </nav>
 
 <slot></slot>

@@ -7,7 +7,7 @@ import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fe
 // seems like that's no longer an issue? in which case we don't need
 // to wrap all these methods
 
-export type TestContext = {
+export interface TestContext {
 	base: string;
 	page: Page;
 	pages: {
@@ -15,39 +15,42 @@ export type TestContext = {
 		nojs: Page;
 	};
 	response: PlaywrightResponse;
-	clicknav: (selector: string) => Promise<void>;
-	back: () => Promise<void>;
-	fetch: (url: RequestInfo, opts?: RequestInit) => Promise<NodeFetchResponse>;
-	capture_requests: (fn: () => Promise<void>) => Promise<string[]>;
-	errors: () => string;
+	clicknav(selector: string): Promise<void>;
+	back(): Promise<void>;
+	fetch(url: RequestInfo, opts?: RequestInit): Promise<NodeFetchResponse>;
+	capture_requests(fn: () => Promise<void>): Promise<string[]>;
+	errors(): string;
 	js: boolean;
 
 	// these are assumed to have been put in the global scope by the layout
 	app: {
-		goto: (url: string) => Promise<void>;
-		invalidate: (resource: string, custom?: boolean) => Promise<void>;
-		prefetch: (url: string) => Promise<void>;
-		prefetchRoutes: (urls?: string[]) => Promise<void>;
+		goto(url: string): Promise<void>;
+		invalidate(url: string): Promise<void>;
+		prefetch(url: string): Promise<void>;
+		prefetchRoutes(urls?: string[]): Promise<void>;
 	};
 
 	watcher: any; // watcher type is not exposed
 	server: import('net').Server;
-	reset: () => Promise<void>;
-	unpatch: () => void;
-};
+	reset(): Promise<void>;
+	unpatch(): void;
+}
 
-type TestOptions = {
+interface TestOptions {
 	js?: boolean;
 	nojs?: boolean;
 	dev?: boolean;
 	build?: boolean;
-};
+}
 
 export interface TestFunctionBase {
 	(
 		name: string,
-		start: string,
-		callback: (context: TestContext) => void,
+		/**
+		 * The first page to load in the browser. May by null for testing endpoints with fetch
+		 */
+		start: string | null,
+		callback: (context: TestContext) => Promise<void>,
 		options?: TestOptions
 	): void;
 }

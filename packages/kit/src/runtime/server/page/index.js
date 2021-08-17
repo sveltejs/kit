@@ -1,14 +1,14 @@
 import { respond } from './respond.js';
-import { respond_with_error } from './respond_with_error.js';
 
 /**
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
+ * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
- * @returns {Promise<import('types/hooks').ServerResponse>}
+ * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export default async function render_page(request, route, options, state) {
+export async function render_page(request, route, match, options, state) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
@@ -18,40 +18,39 @@ export default async function render_page(request, route, options, state) {
 		};
 	}
 
+	const params = route.params(match);
+
+	const page = {
+		host: request.host,
+		path: request.path,
+		query: request.query,
+		params
+	};
+
 	const $session = await options.hooks.getSession(request);
 
-	if (route) {
-		const response = await respond({
-			request,
-			options,
-			state,
-			$session,
-			route
-		});
+	const response = await respond({
+		request,
+		options,
+		state,
+		$session,
+		route,
+		page
+	});
 
-		if (response) {
-			return response;
-		}
+	if (response) {
+		return response;
+	}
 
-		if (state.fetched) {
-			// we came here because of a bad request in a `load` function.
-			// rather than render the error page — which could lead to an
-			// infinite loop, if the `load` belonged to the root layout,
-			// we respond with a bare-bones 500
-			return {
-				status: 500,
-				headers: {},
-				body: `Bad request in load function: failed to fetch ${state.fetched}`
-			};
-		}
-	} else {
-		return await respond_with_error({
-			request,
-			options,
-			state,
-			$session,
-			status: 404,
-			error: new Error(`Not found: ${request.path}`)
-		});
+	if (state.fetched) {
+		// we came here because of a bad request in a `load` function.
+		// rather than render the error page — which could lead to an
+		// infinite loop, if the `load` belonged to the root layout,
+		// we respond with a bare-bones 500
+		return {
+			status: 500,
+			headers: {},
+			body: `Bad request in load function: failed to fetch ${state.fetched}`
+		};
 	}
 }

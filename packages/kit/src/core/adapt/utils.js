@@ -1,5 +1,5 @@
 import { SVELTE_KIT } from '../constants.js';
-import { copy, rimraf, mkdirp } from '../filesystem/index.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender.js';
 
 /**
@@ -31,17 +31,15 @@ export function get_utils({ cwd, config, build_data, log }) {
 		},
 
 		async prerender({ all = false, dest, fallback }) {
-			if (config.kit.prerender.enabled) {
-				await prerender({
-					out: dest,
-					all,
-					cwd,
-					config,
-					build_data,
-					fallback,
-					log
-				});
-			}
+			await prerender({
+				out: dest,
+				all,
+				cwd,
+				config,
+				build_data,
+				fallback,
+				log
+			});
 		}
 	};
 }

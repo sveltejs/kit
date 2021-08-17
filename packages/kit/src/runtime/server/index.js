@@ -1,8 +1,10 @@
-import render_page from './page/index.js';
+import { render_endpoint } from './endpoint.js';
+import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
-import render_endpoint from './endpoint.js';
+import { respond_with_error } from './page/respond_with_error.js';
 import { parse_body } from './parse_body/index.js';
-import { coalesce_to_error, lowercase_keys } from './utils.js';
+import { lowercase_keys } from './utils.js';
+import { coalesce_to_error } from '../utils.js';
 import { hash } from '../hash.js';
 
 /**
@@ -18,7 +20,7 @@ export async function respond(incoming, options, state = {}) {
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!incoming.path.split('/').pop().includes('.'))
+				!(incoming.path.split('/').pop() || '').includes('.'))
 		) {
 			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
 			const q = incoming.query.toString();
@@ -26,23 +28,24 @@ export async function respond(incoming, options, state = {}) {
 			return {
 				status: 301,
 				headers: {
-					location: encodeURI(path + (q ? `?${q}` : ''))
+					location: options.paths.base + path + (q ? `?${q}` : '')
 				}
 			};
 		}
 	}
 
-	try {
-		const headers = lowercase_keys(incoming.headers);
+	const headers = lowercase_keys(incoming.headers);
+	const request = {
+		...incoming,
+		headers,
+		body: parse_body(incoming.rawBody, headers),
+		params: {},
+		locals: {}
+	};
 
+	try {
 		return await options.hooks.handle({
-			request: {
-				...incoming,
-				headers,
-				body: parse_body(incoming.rawBody, headers),
-				params: null,
-				locals: {}
-			},
+			request,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -50,31 +53,31 @@ export async function respond(incoming, options, state = {}) {
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
-						error: null,
-						branch: [],
-						page: null
+						branch: []
 					});
 				}
 
+				const decoded = decodeURI(request.path);
 				for (const route of options.manifest.routes) {
-					if (!route.pattern.test(request.path)) continue;
+					const match = route.pattern.exec(decoded);
+					if (!match) continue;
 
 					const response =
 						route.type === 'endpoint'
-							? await render_endpoint(request, route)
-							: await render_page(request, route, options, state);
+							? await render_endpoint(request, route, match)
+							: await render_page(request, route, match, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses
 						if (response.status === 200) {
 							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
-								const etag = `"${hash(response.body)}"`;
+								const etag = `"${hash(response.body || '')}"`;
 
 								if (request.headers['if-none-match'] === etag) {
 									return {
 										status: 304,
 										headers: {},
-										body: null
+										body: ''
 									};
 								}
 
@@ -86,13 +89,21 @@ export async function respond(incoming, options, state = {}) {
 					}
 				}
 
-				return await render_page(request, null, options, state);
+				const $session = await options.hooks.getSession(request);
+				return await respond_with_error({
+					request,
+					options,
+					state,
+					$session,
+					status: 404,
+					error: new Error(`Not found: ${request.path}`)
+				});
 			}
 		});
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.handle_error(e);
+		options.handle_error(e, request);
 
 		return {
 			status: 500,

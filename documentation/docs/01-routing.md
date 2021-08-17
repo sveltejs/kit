@@ -60,7 +60,7 @@ type Request<Locals = Record<string, any>, Body = unknown> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	rawBody: string | Uint8Array;
+	rawBody: Uint8Array;
 	body: ParameterizedBody<Body>;
 	locals: Locals; // populated by hooks handle
 };
@@ -129,8 +129,6 @@ export function post(request) {...}
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
 
 > We don't interact with the `req`/`res` objects you might be familiar with from Node's `http` module or frameworks like Express, because they're only available on certain platforms. Instead, SvelteKit translates the returned object into whatever's required by the platform you're deploying your app to.
->
-> The `body` property of the request object exists in the case of POST requests. If you're posting form data, it will be a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
 To set multiple cookies in a single set of response headers, you can return an array:
 
@@ -141,6 +139,14 @@ return {
 	}
 };
 ```
+
+#### Body parsing
+
+The `body` property of the request object will be provided in the case of POST requests:
+- Text data (with content-type `text/plain`) will be parsed to a `string`
+- JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
+- Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
+- All other data will be provided as a `Uint8Array`
 
 ### Private modules
 

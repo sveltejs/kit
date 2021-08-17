@@ -11,7 +11,7 @@
 		"@sveltejs/adapter-netlify": "next",
 		"@sveltejs/adapter-vercel": "next",
 		"@sveltejs/kit": "next",
-		"svelte": "^3.34.0",
+		"svelte": "^3.40.0",
 		"svelte-preprocess": "^4.7.3",
 		"typescript": "^4.3.5"
 	},

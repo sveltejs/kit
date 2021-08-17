@@ -1,12 +1,19 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { coalesce_to_error } from '../utils.js';
+import { coalesce_to_error } from '../../utils.js';
+
+/**
+ * @typedef {import('./types.js').Loaded} Loaded
+ * @typedef {import('types/internal').SSRNode} SSRNode
+ * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
+ * @typedef {import('types/internal').SSRRenderState} SSRRenderState
+ */
 
 /**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
- *   options: import('types/internal').SSRRenderOptions;
- *   state: import('types/internal').SSRRenderState;
+ *   options: SSRRenderOptions;
+ *   state: SSRRenderState;
  *   $session: any;
  *   status: number;
  *   error: Error;
@@ -23,7 +30,8 @@ export async function respond_with_error({ request, options, state, $session, st
 		params: {}
 	};
 
-	const loaded = await load_node({
+	// error pages don't fall through, so we know it's not undefined
+	const loaded = /** @type {Loaded} */ (await load_node({
 		request,
 		options,
 		state,
@@ -32,13 +40,14 @@ export async function respond_with_error({ request, options, state, $session, st
 		node: default_layout,
 		$session,
 		context: {},
+		prerender_enabled: is_prerender_enabled(options, default_error, state),
 		is_leaf: false,
 		is_error: false
-	});
+	}));
 
 	const branch = [
 		loaded,
-		await load_node({
+		/** @type {Loaded} */ (await load_node({
 			request,
 			options,
 			state,
@@ -46,12 +55,13 @@ export async function respond_with_error({ request, options, state, $session, st
 			page,
 			node: default_error,
 			$session,
-			context: loaded.context,
+			context: loaded ? loaded.context : {},
+			prerender_enabled: is_prerender_enabled(options, default_error, state),
 			is_leaf: false,
 			is_error: true,
 			status,
 			error
-		})
+		}))
 	];
 
 	try {
@@ -71,7 +81,7 @@ export async function respond_with_error({ request, options, state, $session, st
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error);
+		options.handle_error(error, request);
 
 		return {
 			status: 500,
@@ -79,4 +89,15 @@ export async function respond_with_error({ request, options, state, $session, st
 			body: error.stack
 		};
 	}
+}
+
+/**
+ * @param {SSRRenderOptions} options
+ * @param {SSRNode} node
+ * @param {SSRRenderState} state
+ */
+export function is_prerender_enabled(options, node, state) {
+	return (
+		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
+	);
 }

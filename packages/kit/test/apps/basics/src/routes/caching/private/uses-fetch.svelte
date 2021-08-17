@@ -2,8 +2,7 @@
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ page, fetch }) {
 		const res = await fetch('/caching/private/uses-fetch.json', {
-			// @ts-ignore
-			credentials: page.query.get('credentials')
+			credentials: /** @type {RequestCredentials} */ (page.query.get('credentials'))
 		});
 
 		return {

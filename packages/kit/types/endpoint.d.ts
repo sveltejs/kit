@@ -1,25 +1,29 @@
 import { ServerRequest } from './hooks';
 import { Headers, MaybePromise } from './helper';
 
-type JSONValue =
+type ToJSON = { toJSON(...args: any[]): JSONValue };
+type JSONValue = Exclude<JSONResponse, ToJSON>;
+type JSONResponse =
 	| string
 	| number
 	| boolean
 	| null
-	| Date
-	| JSONValue[]
-	| { [key: string]: JSONValue };
+	| JSONResponse[]
+	| ToJSON
+	| { [key: string]: JSONResponse };
 
-type DefaultBody = JSONValue | Uint8Array;
+type DefaultBody = JSONResponse | Uint8Array;
 
-export type EndpointOutput<Body extends DefaultBody = DefaultBody> = {
+export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
-	headers?: Partial<Headers>;
+	headers?: Headers;
 	body?: Body;
-};
+}
 
-export type RequestHandler<
+export interface RequestHandler<
 	Locals = Record<string, any>,
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
-> = (request: ServerRequest<Locals, Input>) => MaybePromise<void | EndpointOutput<Output>>;
+> {
+	(request: ServerRequest<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
+}

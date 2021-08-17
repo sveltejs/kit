@@ -1,5 +1,7 @@
-import { router } from '../client/singletons.js';
+import { router as router_ } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
+
+const router = /** @type {import('../client/router').Router} */ (router_);
 
 /**
  * @param {string} name
@@ -46,7 +48,9 @@ async function prefetchRoutes_(pathnames) {
 		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
 		: router.routes;
 
-	const promises = matching.map((r) => r.length !== 1 && Promise.all(r[1].map((load) => load())));
+	const promises = matching
+		.filter(/** @returns {r is import('types/internal').CSRPage} */ (r) => r && r.length > 1)
+		.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
 }

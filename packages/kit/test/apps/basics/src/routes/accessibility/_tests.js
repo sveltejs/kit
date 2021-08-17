@@ -2,25 +2,24 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
 export default function (test) {
-	// TODO unskip this
-	test.skip('resets focus', '/accessibility/a', async ({ page, clicknav }) => {
+	test('resets focus', '/accessibility/a', async ({ page, clicknav }) => {
 		await clicknav('[href="/accessibility/b"]');
 		assert.equal(await page.innerHTML('h1'), 'b');
 		await page.waitForTimeout(50);
-		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'BODY');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'BODY');
 		await page.keyboard.press('Tab');
 		await page.waitForTimeout(50);
-		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'A');
-		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'A');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).textContent), 'a');
 
 		await clicknav('[href="/accessibility/a"]');
 		assert.equal(await page.innerHTML('h1'), 'a');
 		await page.waitForTimeout(50);
-		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'BODY');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'BODY');
 		await page.keyboard.press('Tab');
 		await page.waitForTimeout(50);
-		assert.equal(await page.evaluate(() => document.activeElement.nodeName), 'A');
-		assert.equal(await page.evaluate(() => document.activeElement.textContent), 'a');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'A');
+		assert.equal(await page.evaluate(() => (document.activeElement || {}).textContent), 'a');
 	});
 
 	test('announces client-side navigation', '/accessibility/a', async ({ page, clicknav, js }) => {

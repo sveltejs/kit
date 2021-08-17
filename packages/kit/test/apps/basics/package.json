@@ -1,5 +1,5 @@
 {
-	"name": "test/basics",
+	"name": "test-basics",
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.38.3"
+		"svelte": "^3.40.0"
 	},
 	"type": "module"
 }

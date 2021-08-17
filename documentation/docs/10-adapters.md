@@ -4,7 +4,7 @@ title: Adapters
 
 Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment. Many adapters are optimised for a specific hosting provider, and you can generally find information about deployment in your adapter's documentation. However, some adapters, like `adapter-static`, build output that can be hosted on numerous hosting providers, so it may also be helpful to reference the documentation of your hosting provider in these cases.
 
-For example, if you want to run your app as a simple Node server, you would use the `@sveltejs/adapter-node` package:
+For example, if you want to run your app as a simple Node server, you would use the `@sveltejs/adapter-node@next` package:
 
 ```js
 // svelte.config.js
@@ -42,4 +42,4 @@ A variety of official adapters exist for serverless platforms...
 - [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
 - [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
 
-As well as [community-provided adapters](https://github.com/sveltejs/integrations#sveltekit-adapters). You may also [write your own adapter](#writing-an-adapter).
+As well as [community-provided adapters](https://sveltesociety.dev/components#category-SvelteKit%20Adapters). You may also [write your own adapter](#writing-an-adapter).

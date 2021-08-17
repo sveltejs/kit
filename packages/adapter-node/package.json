@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.35",
+	"version": "1.0.0-next.42",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -16,7 +16,7 @@
 		"build": "rollup -c",
 		"test": "c8 uvu tests",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
-		"format": "prettier --write . --config ../../.prettierrc --ignore-path .gitignore",
+		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build"
 	},
@@ -30,10 +30,9 @@
 		"c8": "^7.7.2",
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0-beta.9",
-		"polka": "^1.0.0-next.15",
-		"rollup": "^2.47.0",
-		"sirv": "^1.0.12",
-		"typescript": "^4.3.5",
+		"polka": "^1.0.0-next.17",
+		"rollup": "^2.55.0",
+		"sirv": "^1.0.14",
 		"uvu": "^0.5.1"
 	}
 }
