@@ -39,10 +39,6 @@ export async function respond(incoming, options, state = {}) {
 		...incoming,
 		headers,
 		body: parse_body(incoming.rawBody, headers),
-		rawBody:
-			typeof incoming.rawBody === 'string'
-				? new TextEncoder().encode(incoming.rawBody)
-				: incoming.rawBody,
 		params: {},
 		locals: {}
 	};
