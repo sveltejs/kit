@@ -98,7 +98,8 @@ function format(file, content) {
 	});
 }
 
-test('create package (javascript)', async () => {
+test('create package written in javascript', async () => {
+	// should also preserve filename casing
 	await test_make_package('javascript');
 });
 
@@ -114,12 +115,8 @@ test('create package with user defined settings (exports)', async () => {
 	await test_make_package('exports');
 });
 
-test('create package with preserved files', async () => {
-	await test_make_package('casing');
-});
-
-test('create package (javascript without types)', async () => {
-	await test_make_package('javascript_no_types');
+test('create package without emitted types', async () => {
+	await test_make_package('no_emit');
 });
 
 test.run();
