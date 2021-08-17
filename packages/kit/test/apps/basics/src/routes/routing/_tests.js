@@ -1,7 +1,10 @@
 import * as assert from 'uvu/assert';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 /** @type {import('test').TestMaker} */
-export default function (test) {
+export default function (test, is_dev) {
 	test(
 		'redirects from /routing/ to /routing',
 		'/routing/slashes',
@@ -238,4 +241,28 @@ export default function (test) {
 			assert.equal(await page.url(), 'https://www.google.com/');
 		}
 	);
+
+	// skipping this test because it causes a bunch of failures locally
+	test.skip('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {
+		if (!is_dev || js) {
+			return;
+		}
+
+		// hash the filename so that it won't conflict with
+		// future test file that has the same name
+		const route = 'bar' + new Date().valueOf();
+		const content = 'Hello new route';
+		const __dirname = path.dirname(fileURLToPath(import.meta.url));
+		const filePath = path.join(__dirname, `${route}.svelte`);
+
+		try {
+			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			watcher.update();
+			await page.goto(`${base}/routing/${route}`);
+
+			assert.equal(await page.textContent('h1'), content);
+		} finally {
+			fs.unlinkSync(filePath);
+		}
+	});
 }

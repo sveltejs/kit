@@ -5,9 +5,10 @@ import {
 	GetSession,
 	Handle,
 	HandleError,
+	RawBody,
+	ServerRequest,
 	ServerResponse,
-	StrictBody,
-	ServerRequest
+	StrictBody
 } from './hooks';
 import { Load } from './page';
 
@@ -16,7 +17,7 @@ type PageId = string;
 export interface Incoming extends Omit<Location, 'params'> {
 	method: string;
 	headers: Headers;
-	rawBody: StrictBody;
+	rawBody: RawBody;
 	body?: ParameterizedBody;
 }
 

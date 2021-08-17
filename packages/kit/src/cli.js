@@ -162,24 +162,6 @@ prog
 		}
 	});
 
-// TODO remove this after a few versions
-prog
-	.command('start')
-	.describe('Deprecated — use svelte-kit preview instead')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
-	.action(async () => {
-		console.log(
-			colors
-				.bold()
-				.red(
-					'"svelte-kit preview" will now preview your production build locally. Note: it is not intended for production use'
-				)
-		);
-	});
-
 prog
 	.command('package')
 	.describe('Create a package')
@@ -187,7 +169,7 @@ prog
 	.action(async () => {
 		const config = await get_config();
 
-		const { make_package } = await import('./core/make_package/index.js');
+		const { make_package } = await import('./packaging/index.js');
 
 		try {
 			await make_package(config);
@@ -200,18 +182,23 @@ prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */
 async function check_port(port) {
+	if (await ports.check(port)) {
+		return;
+	}
+	console.log(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
-
 	if (n) {
-		console.log(colors.bold().red(`Port ${port} is occupied`));
-
 		// prettier-ignore
 		console.log(
 			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
 		);
-
-		process.exit(1);
+	} else {
+		// prettier-ignore
+		console.log(
+			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
+		);
 	}
+	process.exit(1);
 }
 
 /**

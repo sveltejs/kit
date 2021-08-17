@@ -1,31 +1,34 @@
 import { read_only_form_data } from './read_only_form_data.js';
 
 /**
- * @param {import('types/hooks').StrictBody} raw
+ * @param {import('types/hooks.js').RawBody} raw
  * @param {import('types/helper').Headers} headers
  */
 export function parse_body(raw, headers) {
-	if (!raw || typeof raw !== 'string') return raw;
+	if (!raw) return raw;
 
-	const [type, ...directives] = headers['content-type'].split(/;\s*/);
+	const content_type = headers['content-type'];
+	const [type, ...directives] = content_type ? content_type.split(/;\s*/) : [];
+
+	const text = () => new TextDecoder(headers['content-encoding'] || 'utf-8').decode(raw);
 
 	switch (type) {
 		case 'text/plain':
-			return raw;
+			return text();
 
 		case 'application/json':
-			return JSON.parse(raw);
+			return JSON.parse(text());
 
 		case 'application/x-www-form-urlencoded':
-			return get_urlencoded(raw);
+			return get_urlencoded(text());
 
 		case 'multipart/form-data': {
 			const boundary = directives.find((directive) => directive.startsWith('boundary='));
 			if (!boundary) throw new Error('Missing boundary');
-			return get_multipart(raw, boundary.slice('boundary='.length));
+			return get_multipart(text(), boundary.slice('boundary='.length));
 		}
 		default:
-			throw new Error(`Invalid Content-Type ${type}`);
+			return raw;
 	}
 }
 

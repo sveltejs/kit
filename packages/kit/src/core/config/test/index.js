@@ -15,8 +15,8 @@ async function testLoadDefaultConfig(path) {
 
 	const config = await load_config({ cwd });
 
-	// @ts-expect-error
-	delete config.kit.vite; // can't test equality of a function
+	// @ts-expect-error - can't test equality of a function
+	delete config.kit.vite;
 
 	assert.equal(config, {
 		compilerOptions: null,
@@ -31,7 +31,6 @@ async function testLoadDefaultConfig(path) {
 				lib: join(cwd, 'src/lib'),
 				routes: join(cwd, 'src/routes'),
 				serviceWorker: join(cwd, 'src/service-worker'),
-				setup: join(cwd, 'src/setup'),
 				template: join(cwd, 'src/app.html')
 			},
 			floc: false,

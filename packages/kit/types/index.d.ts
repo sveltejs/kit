@@ -10,6 +10,7 @@ export {
 	ExternalFetch,
 	GetSession,
 	Handle,
+	HandleError,
 	ServerRequest as Request,
 	ServerResponse as Response
 } from './hooks';

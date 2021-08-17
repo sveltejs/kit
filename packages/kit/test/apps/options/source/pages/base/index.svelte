@@ -2,7 +2,7 @@
 	import { base, assets } from '$app/paths';
 
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch }) {
+	export async function load() {
 		return {
 			props: {
 				data: {

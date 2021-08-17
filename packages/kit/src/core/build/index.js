@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { rimraf } from '../filesystem/index.js';
+import { rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { copy_assets, get_svelte_packages, posixify, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
@@ -490,7 +490,7 @@ async function build_server(
 		ssr: {
 			// note to self: this _might_ need to be ['svelte', '@sveltejs/kit', ...get_no_external()]
 			// but I'm honestly not sure. roll with this for now and see if it's ok
-			// @ts-expect-error ssr is considered in alpha, so not yet exposed by Vite
+			// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
 			noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 		}
 	});

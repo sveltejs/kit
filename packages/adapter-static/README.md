@@ -61,6 +61,30 @@ export default {
 
 When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) option set will be prerendered.
 
+## GitHub Pages
+
+When building for GitHub Pages, make sure to update [`paths.base`](https://kit.svelte.dev/docs#configuration-paths) to match your repo name, since the site will be served from https://your-username.github.io/your-repo-name rather than from the root.
+
+You will have to prevent GitHub's provided Jekyll from managing your site by putting an empty `.nojekyll` file in your static folder. If you do not want to disable Jekyll, change the kit's `appDir` configuration option to `'app_'` or anything not starting with an underscore. For more information, see GitHub's [Jekyll documentation](https://docs.github.com/en/pages/setting-up-a-github-pages-site-with-jekyll/about-github-pages-and-jekyll#configuring-jekyll-in-your-github-pages-site).
+
+A config for GitHub Pages might look like the following:
+
+```js
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	...
+	kit: {
+		...
+		paths: {
+			base: '/your-repo-name',
+		},
+		// If you are not using a .nojekyll file, change your appDir to something not starting with an underscore.
+		// For example, instead of '_app', use 'app_', 'internal', etc.
+		appDir: 'internal',
+	}
+};
+```
+
 ## Changelog
 
 [The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-static/CHANGELOG.md).

@@ -1,4 +1,3 @@
-import { isContentTypeTextual } from '../../core/adapter-utils.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -16,11 +15,29 @@ function is_string(s) {
 }
 
 /**
+ * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
+ *
+ * @param {string | undefined | null} content_type The `content-type` header of a request/response.
+ * @returns {boolean}
+ */
+function is_content_type_textual(content_type) {
+	if (!content_type) return true; // defaults to json
+	const [type] = content_type.split(';'); // get the mime type
+	return (
+		type === 'text/plain' ||
+		type === 'application/json' ||
+		type === 'application/x-www-form-urlencoded' ||
+		type === 'multipart/form-data'
+	);
+}
+
+/**
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
+ * @param {RegExpExecArray} match
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_endpoint(request, route) {
+export async function render_endpoint(request, route, match) {
 	const mod = await route.load();
 
 	/** @type {import('types/endpoint').RequestHandler} */
@@ -28,11 +45,6 @@ export async function render_endpoint(request, route) {
 
 	if (!handler) {
 		return;
-	}
-
-	const match = route.pattern.exec(request.path);
-	if (!match) {
-		return error('could not parse parameters from request path');
 	}
 
 	const params = route.params(match);
@@ -52,7 +64,7 @@ export async function render_endpoint(request, route) {
 	headers = lowercase_keys(headers);
 	const type = headers['content-type'];
 
-	const is_type_textual = isContentTypeTextual(type);
+	const is_type_textual = is_content_type_textual(type);
 
 	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
 		return error(

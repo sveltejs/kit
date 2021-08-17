@@ -1,9 +1,9 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import globrex from 'globrex';
 import { createRequire } from 'module';
-import * as path from 'path';
 import { preprocess } from 'svelte/compiler';
-import { mkdirp, rimraf } from '../filesystem/index.js';
+import { mkdirp, rimraf } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 

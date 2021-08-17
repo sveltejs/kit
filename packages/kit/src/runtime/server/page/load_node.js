@@ -110,11 +110,7 @@ export async function load_node({
 				if (asset) {
 					response = options.read
 						? new Response(options.read(asset.file), {
-								headers: asset.type
-									? {
-											'content-type': asset.type
-									  }
-									: {}
+								headers: asset.type ? { 'content-type': asset.type } : {}
 						  })
 						: await fetch(
 								// TODO we need to know what protocol to use
@@ -153,7 +149,7 @@ export async function load_node({
 							method: opts.method || 'GET',
 							headers,
 							path: relative,
-							rawBody: /** @type {string} */ (opts.body),
+							rawBody: new TextEncoder().encode(/** @type {string} */ (opts.body)),
 							query: new URLSearchParams(search)
 						},
 						options,

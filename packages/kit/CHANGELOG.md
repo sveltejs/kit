@@ -1,5 +1,49 @@
 # @sveltejs/kit
 
+## 1.0.0-next.152
+
+### Patch Changes
+
+- Check ports usage in a more cross-platform way in dev server error logging ([#2209](https://github.com/sveltejs/kit/pull/2209))
+
+* Ensure the raw body is an Uint8Array before passing it to request handlers ([#2215](https://github.com/sveltejs/kit/pull/2215))
+
+## 1.0.0-next.151
+
+### Patch Changes
+
+- fix new route discovery in dev server ([#2198](https://github.com/sveltejs/kit/pull/2198))
+
+## 1.0.0-next.150
+
+### Patch Changes
+
+- [fix] match route against decoded path on client ([#2206](https://github.com/sveltejs/kit/pull/2206))
+
+## 1.0.0-next.149
+
+### Patch Changes
+
+- export `HandleError` type ([#2200](https://github.com/sveltejs/kit/pull/2200))
+
+* [fix] match regex against route only once ([#2203](https://github.com/sveltejs/kit/pull/2203))
+
+## 1.0.0-next.148
+
+### Patch Changes
+
+- update svelte peerDependency to 3.39.0 ([#2182](https://github.com/sveltejs/kit/pull/2182))
+
+* Add hook to handle errors ([#2193](https://github.com/sveltejs/kit/pull/2193))
+
+- Use /\_svelte_kit_assets when serving apps with specified paths.assets locally ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+* Serve from basepath in svelte-kit dev/preview ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+- Disallow non-absolute paths.assets option ([#2189](https://github.com/sveltejs/kit/pull/2189))
+
+* Allow `EndpointOutput` response body objects to have a `toJSON` property ([#2170](https://github.com/sveltejs/kit/pull/2170))
+
 ## 1.0.0-next.147
 
 ### Patch Changes

@@ -57,13 +57,15 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
+				const decoded = decodeURI(request.path);
 				for (const route of options.manifest.routes) {
-					if (!route.pattern.test(decodeURI(request.path))) continue;
+					const match = route.pattern.exec(decoded);
+					if (!match) continue;
 
 					const response =
 						route.type === 'endpoint'
-							? await render_endpoint(request, route)
-							: await render_page(request, route, options, state);
+							? await render_endpoint(request, route, match)
+							: await render_page(request, route, match, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses

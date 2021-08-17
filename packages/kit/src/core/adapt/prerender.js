@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
-import { mkdirp } from '../filesystem/index.js';
+import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
@@ -156,7 +156,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path,
-				rawBody: '',
+				rawBody: null,
 				query: new URLSearchParams()
 			},
 			{
@@ -289,7 +289,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
-				rawBody: '',
+				rawBody: null,
 				query: new URLSearchParams()
 			},
 			{
