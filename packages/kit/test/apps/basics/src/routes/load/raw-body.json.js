@@ -3,7 +3,7 @@ export function post(request) {
 	return {
 		body: {
 			body: /** @type {string} */ (request.body),
-			rawBody: /** @type {string} */ (request.rawBody)
+			rawBody: new TextDecoder().decode(/** @type {Uint8Array} */ (request.rawBody))
 		}
 	};
 }

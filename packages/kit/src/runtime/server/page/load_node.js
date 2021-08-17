@@ -149,7 +149,7 @@ export async function load_node({
 							method: opts.method || 'GET',
 							headers,
 							path: relative,
-							rawBody: /** @type {string} */ (opts.body),
+							rawBody: new TextEncoder().encode(/** @type {string} */ (opts.body)),
 							query: new URLSearchParams(search)
 						},
 						options,

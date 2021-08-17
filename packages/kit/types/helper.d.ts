@@ -1,3 +1,5 @@
+import { RawBody } from './hooks';
+
 interface ReadOnlyFormData {
 	get(key: string): string;
 	getAll(key: string): string[];
@@ -8,7 +10,7 @@ interface ReadOnlyFormData {
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
-type BaseBody = string | Uint8Array | ReadOnlyFormData;
+type BaseBody = string | RawBody | ReadOnlyFormData;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: BaseBody & Body;
