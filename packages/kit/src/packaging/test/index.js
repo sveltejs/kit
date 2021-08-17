@@ -112,8 +112,8 @@ test('create package with user defined settings (exports)', async () => {
 	await test_make_package('exports');
 });
 
-test('create package without emitted types', async () => {
-	await test_make_package('no_emit');
+test('create package with emitTypes settings disabled', async () => {
+	await test_make_package('emitTypes');
 });
 
 test.run();
