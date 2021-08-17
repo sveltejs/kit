@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.153
+
+### Patch Changes
+
+- rename serverFetch to externalFetch ([#2110](https://github.com/sveltejs/kit/pull/2110))
+
 ## 1.0.0-next.152
 
 ### Patch Changes
