@@ -202,7 +202,7 @@ export async function load_node({
 					}
 
 					const external_request = new Request(url, /** @type {RequestInit} */ (opts));
-					response = await options.hooks.serverFetch.call(null, external_request);
+					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
 				if (response) {

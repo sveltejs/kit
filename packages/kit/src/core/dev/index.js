@@ -329,7 +329,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 								console.error(colors.gray(error.stack));
 							}
 						}),
-					serverFetch: user_hooks.serverFetch || fetch
+					externalFetch: user_hooks.externalFetch || fetch
 				};
 
 				if (/** @type {any} */ (hooks).getContext) {
@@ -337,6 +337,11 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 					throw new Error(
 						'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
 					);
+				}
+
+				if (/** @type {any} */ (hooks).serverFetch) {
+					// TODO remove this for 1.0
+					throw new Error('The serverFetch hook has been renamed to externalFetch.');
 				}
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
