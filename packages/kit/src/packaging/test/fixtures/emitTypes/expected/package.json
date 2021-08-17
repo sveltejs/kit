@@ -1,7 +1,7 @@
 {
-	"name": "javascript-no-types",
+	"name": "emit-types",
 	"version": "1.0.0",
-	"description": "package-javascript-no-types-test",
+	"description": "emitTypes-disabled",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
