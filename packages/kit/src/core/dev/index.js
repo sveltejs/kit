@@ -8,7 +8,7 @@ import vite from 'vite';
 import colors from 'kleur';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '../filesystem/index.js';
+import { rimraf } from '../../utils/filesystem.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
 import { copy_assets, get_svelte_packages, resolve_entry } from '../utils.js';

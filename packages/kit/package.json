@@ -54,13 +54,14 @@
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -cw",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/core/make_package/test/**\" \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
-		"check": "tsc && svelte-check --ignore \"src/core/make_package/test\"",
+		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"check": "tsc && svelte-check --ignore \"src/packaging/test\"",
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:integration",
-		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\"",
+		"test": "npm run test:unit && npm run test:packaging && npm run test:integration",
+		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
+		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
 		"test:integration": "uvu test test.js"
 	},
 	"exports": {

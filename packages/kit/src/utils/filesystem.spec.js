@@ -3,11 +3,13 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { copy } from './index.js';
+import { copy } from './filesystem.js';
 
 const suite_copy = suite('#copy()');
 
+/** @type {string} */
 let source_dir;
+/** @type {string} */
 let dest_dir;
 
 suite_copy.before.each(() => {

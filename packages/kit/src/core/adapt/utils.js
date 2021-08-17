@@ -1,5 +1,5 @@
 import { SVELTE_KIT } from '../constants.js';
-import { copy, rimraf, mkdirp } from '../filesystem/index.js';
+import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender.js';
 
 /**

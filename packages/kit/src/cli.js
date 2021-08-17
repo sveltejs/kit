@@ -169,7 +169,7 @@ prog
 	.action(async () => {
 		const config = await get_config();
 
-		const { make_package } = await import('./core/make_package/index.js');
+		const { make_package } = await import('./packaging/index.js');
 
 		try {
 			await make_package(config);

@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
-import { mkdirp } from '../filesystem/index.js';
+import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 
