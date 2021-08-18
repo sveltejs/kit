@@ -62,7 +62,9 @@ export default function ({
 					path_env
 				)}] || false;\nexport const host = process.env[${JSON.stringify(
 					host_env
-				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
+				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(
+					port_env
+				)}] || (!path && 3000);`
 			);
 			/** @type {BuildOptions} */
 			const defaultOptions = {
