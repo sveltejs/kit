@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.43
+
+### Patch Changes
+
+- [fix] provide default port only if path not provided ([#2244](https://github.com/sveltejs/kit/pull/2244))
+
 ## 1.0.0-next.42
 
 ### Patch Changes

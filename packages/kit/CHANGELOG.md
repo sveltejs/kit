@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.154
+
+### Patch Changes
+
+- Upgrade to Vite 2.5.0 ([#2231](https://github.com/sveltejs/kit/pull/2231))
+
 ## 1.0.0-next.153
 
 ### Patch Changes
