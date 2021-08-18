@@ -29,10 +29,9 @@ async function test_make_package(path) {
 		assert.equal(
 			actual_files.length,
 			expected_files.length,
-			'Contains a different number of files. Expected ' +
-				expected_files.join(',') +
-				' , got ' +
-				actual_files.join(',')
+			'Contains a different number of files.' +
+				`\n\t expected: ${JSON.stringify(expected_files)}` +
+				`\n\t actually: ${JSON.stringify(actual_files)}`
 		);
 
 		for (const file of actual_files) {
