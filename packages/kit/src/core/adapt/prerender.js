@@ -143,6 +143,25 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	/**
+	 * @param {string} file
+	 * @param {unknown} body
+	 */
+	async function writeBodyToFile(file, body) {
+		if (
+			body && typeof body === 'object' &&
+			typeof body[Symbol.asyncIterator] === 'function'
+		) {
+			const output_stream = createWriteStream(file);
+			const data = Readable.from(body);
+			data.on('error', () => output_stream.end());
+			data.pipe(output_stream);
+			await new Promise((resolve) => output_stream.on('finish', resolve));
+		} else {
+			writeFileSync(file, body);
+		}
+	}
+
+	/**
 	 * @param {string} decoded_path
 	 * @param {string?} referrer
 	 */
@@ -207,22 +226,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
-
-				if (
-					rendered.body &&
-					typeof rendered.body === 'object' &&
-					typeof rendered.body[Symbol.asyncIterator] === 'function'
-				) {
-					let body = '';
-
-					for await (const chunk of rendered.body) {
-						body += chunk;
-					}
-
-					writeFileSync(file, body);
-				} else {
-					writeFileSync(file, rendered.body || '');
-				}
+				await writeBodyToFile(file, rendered.body || '');
 				written_files.push(file);
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
@@ -242,18 +246,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				if (result.body) {
-					if (
-						typeof result.body === 'object' &&
-						typeof result.body[Symbol.asyncIterator] === 'function'
-					) {
-						const output_stream = createWriteStream(file);
-						const data = Readable.from(result.body);
-						data.on('error', () => output_stream.end());
-						data.pipe(output_stream);
-						await new Promise((resolve) => output_stream.on('finish', resolve));
-					} else {
-						writeFileSync(file, result.body);
-					}
+					await writeBodyToFile(file, result.body);
 					written_files.push(file);
 				}
 
