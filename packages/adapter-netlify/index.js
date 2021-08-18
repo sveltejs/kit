@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
@@ -19,7 +19,10 @@ export default function (options) {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt({ utils }) {
-			const { publish } = validate_config().build;
+			// "build" is the default publish directory when Netlify detects SvelteKit
+			const publish = get_publish_directory(utils) || 'build';
+
+			utils.log.minor(`Publishing to "${publish}"`);
 
 			utils.rimraf(publish);
 
@@ -46,7 +49,7 @@ export default function (options) {
 
 			writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
-			utils.log.info('Prerendering static pages...');
+			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
 				dest: publish
 			});
@@ -65,9 +68,12 @@ export default function (options) {
 
 	return adapter;
 }
-
-function validate_config() {
+/**
+ * @param {import('@sveltejs/kit').AdapterUtils} utils
+ **/
+function get_publish_directory(utils) {
 	if (existsSync('netlify.toml')) {
+		/** @type {{ build?: { publish?: string }} & toml.JsonMap } */
 		let netlify_config;
 
 		try {
@@ -78,9 +84,8 @@ function validate_config() {
 		}
 
 		if (!netlify_config.build || !netlify_config.build.publish) {
-			throw new Error(
-				'You must specify build.publish in netlify.toml. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
-			);
+			utils.log.warn('No publish directory specified in netlify.toml, using default');
+			return;
 		}
 
 		if (netlify_config.redirects) {
@@ -88,12 +93,15 @@ function validate_config() {
 				"Redirects are not supported in netlify.toml. Use _redirects instead. For more details consult the readme's troubleshooting section."
 			);
 		}
-
-		return netlify_config;
+		if (resolve(netlify_config.build.publish) === process.cwd()) {
+			throw new Error(
+				'The publish directory cannot be set to the site root. Please change it to "build" in netlify.toml.'
+			);
+		}
+		return netlify_config.build.publish;
 	}
 
-	// TODO offer to create one?
-	throw new Error(
-		'Missing a netlify.toml file. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration'
+	utils.log.warn(
+		'No netlify.toml found. Using default publish directory. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration for more details '
 	);
 }
