@@ -95,7 +95,7 @@ function get_publish_directory(utils) {
 		}
 		if (resolve(netlify_config.build.publish) === process.cwd()) {
 			throw new Error(
-				'The publish directory cannot be set to the site root. Please change it to "build" in netlify.toml.'
+				'The publish directory cannot be set to the site root. Please change it to another value such as "build" in netlify.toml.'
 			);
 		}
 		return netlify_config.build.publish;
