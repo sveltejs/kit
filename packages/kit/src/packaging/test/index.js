@@ -1,12 +1,14 @@
+import { readFileSync } from 'fs';
 import { join } from 'path';
+import { fileURLToPath } from 'url';
+
+import prettier from 'prettier';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { fileURLToPath } from 'url';
-import { load_config } from '../../core/config/index.js';
+
 import { make_package } from '../index.js';
+import { load_config } from '../../core/config/index.js';
 import { rimraf, walk } from '../../utils/filesystem.js';
-import { lstatSync, readdirSync, readFileSync } from 'fs';
-import prettier from 'prettier';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -33,30 +35,12 @@ async function test_make_package(path) {
 				actual_files.join(',')
 		);
 
-		/**
-		 * @param {string[]} files relative names
-		 * @param {string} path absolute pathnames
-		 */
-		const traverse = (files, path) => {
-			for (const file of files) {
-				const current = join(path, file);
-				if (lstatSync(current).isDirectory()) {
-					traverse(readdirSync(current), current);
-				} else {
-					assert.equal(expected_files.includes(file), true, `Did not expect ${file}`);
-					const expected_path = current.replace(/([/\\]test[/\\].+)package([/\\])/, '$1expected$2');
-					const expected_content = readFileSync(expected_path, 'utf-8');
-					const actual_content = readFileSync(current, 'utf-8');
-					assert.equal(
-						format(file, actual_content),
-						format(file, expected_content),
-						`Expected equal file contents for ${file}`
-					);
-				}
-			}
-		};
-
-		traverse(actual_files, pwd);
+		for (const file of actual_files) {
+			assert.equal(expected_files.includes(file), true, `Did not expect ${file}`);
+			const expected_content = format(file, readFileSync(join(ewd, file), 'utf-8'));
+			const actual_content = format(file, readFileSync(join(pwd, file), 'utf-8'));
+			assert.equal(actual_content, expected_content, `Expected equal file contents for ${file}`);
+		}
 	} finally {
 		rimraf(pwd);
 	}
