@@ -1,6 +1,6 @@
 /**
  * @param {import('http').IncomingMessage} req
- * @returns {Promise<import('types/hooks').RawBody>}
+ * @returns {Promise<import('types/helper').RawBody>}
  */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
