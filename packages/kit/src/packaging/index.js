@@ -3,7 +3,7 @@ import * as path from 'path';
 import globrex from 'globrex';
 import { createRequire } from 'module';
 import { preprocess } from 'svelte/compiler';
-import { mkdirp, rimraf } from '../utils/filesystem.js';
+import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
@@ -178,31 +178,6 @@ function create_filter(options) {
 		!exclude.some((glob) => glob && glob.regex.test(str));
 
 	return filter;
-}
-
-/** @param {string} cwd */
-function walk(cwd) {
-	/** @type {string[]} */
-	const all_files = [];
-
-	/** @param {string} dir */
-	function walk_dir(dir) {
-		const files = fs.readdirSync(path.join(cwd, dir));
-
-		for (const file of files) {
-			const joined = path.join(dir, file);
-			const stats = fs.statSync(path.join(cwd, joined));
-
-			if (stats.isDirectory()) {
-				walk_dir(joined);
-			} else {
-				all_files.push(joined);
-			}
-		}
-	}
-
-	walk_dir('');
-	return all_files;
 }
 
 /**

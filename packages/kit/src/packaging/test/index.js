@@ -4,7 +4,7 @@ import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
 import { load_config } from '../../core/config/index.js';
 import { make_package } from '../index.js';
-import { rimraf } from '../../utils/filesystem.js';
+import { rimraf, walk } from '../../utils/filesystem.js';
 import { lstatSync, readdirSync, readFileSync } from 'fs';
 import prettier from 'prettier';
 
@@ -19,27 +19,11 @@ async function test_make_package(path) {
 	const ewd = join(cwd, 'expected');
 	const pwd = join(cwd, 'package');
 
-	/**
-	 * @param {string} start starting pathname
-	 * @param {string} dir absolute directory
-	 * @returns {string[]} list of complete paths
-	 */
-	const get_complete_list = (start, dir) => {
-		const files = [];
-		for (const name of readdirSync(dir)) {
-			const relative = join(start, name);
-			const current = join(dir, name);
-			if (!lstatSync(current).isDirectory()) files.push(relative);
-			else files.concat(get_complete_list(relative, current));
-		}
-		return files;
-	};
-
 	try {
 		const config = await load_config({ cwd });
 		await make_package(config, cwd);
-		const expected_files = get_complete_list('', ewd);
-		const actual_files = get_complete_list('', pwd);
+		const expected_files = walk(ewd);
+		const actual_files = walk(pwd);
 		assert.equal(
 			actual_files.length,
 			expected_files.length,
@@ -66,7 +50,7 @@ async function test_make_package(path) {
 					assert.equal(
 						format(file, actual_content),
 						format(file, expected_content),
-						'Expected equal file contents'
+						`Expected equal file contents for ${file}`
 					);
 				}
 			}
