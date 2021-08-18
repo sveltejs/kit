@@ -11,3 +11,4 @@ yarn.lock
 .svelte-kit
 .cloudflare
 .pnpm-debug.log
+.netlify

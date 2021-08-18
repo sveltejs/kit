@@ -31,6 +31,6 @@ export interface HandleError<Locals = Record<string, any>> {
 	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
 }
 
-export interface ServerFetch {
+export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }

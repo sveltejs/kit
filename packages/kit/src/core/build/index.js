@@ -396,7 +396,7 @@ async function build_server(
 				getSession: hooks.getSession || (() => ({})),
 				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
 				handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
-				serverFetch: hooks.serverFetch || fetch
+				externalFetch: hooks.externalFetch || fetch
 			});
 
 			const module_lookup = {
