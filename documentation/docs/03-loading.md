@@ -121,7 +121,7 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 
 #### uses
 
-`uses` registers a custom resource identifier that can be used with `invalidate(resource, true)` to re-run the load function that relies on the `resource`. 
+`uses` registers a custom resource identifier that can be used with `invalidate(resource)` to re-run the load function that relies on the `resource`. 
 
 ### Output
 

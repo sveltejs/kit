@@ -16,7 +16,7 @@ declare global {
 		}
 	) => Promise<void>;
 
-	const invalidate: (resource: string, custom?: boolean) => Promise<void>;
+	const invalidate: (resource: string) => Promise<void>;
 	const prefetch: (url: string) => Promise<void>;
 	const prefetchRoutes: (urls?: string[]) => Promise<void>;
 }

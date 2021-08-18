@@ -512,8 +512,7 @@ export class Renderer {
 				},
 				fetch(resource, info) {
 					const url = typeof resource === 'string' ? resource : resource.url;
-					const { href } = new URL(url, new URL(page.path, document.baseURI));
-					node.uses.dependencies.push(href);
+					node.uses.dependencies.push(url);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				},

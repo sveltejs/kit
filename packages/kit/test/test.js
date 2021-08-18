@@ -108,7 +108,6 @@ async function setup({ port }) {
 
 			/**
 			 * @param {string} resource
-			 * @param {boolean=} custom
 			 * @returns {Promise<void>}
 			 */
 			invalidate: (...args) => pages.js.evaluate((args) => invalidate(...args), args),

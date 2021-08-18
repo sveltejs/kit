@@ -125,7 +125,7 @@ export default function (test, is_dev) {
 				assert.equal(await page.textContent('h1'), 'layout loads: 3');
 				assert.equal(await page.textContent('h2'), 'x: b: 2');
 
-				await app.invalidate('change-detection-layout', true);
+				await app.invalidate('change-detection-layout');
 				assert.equal(await page.textContent('h1'), 'layout loads: 4');
 				assert.equal(await page.textContent('h2'), 'x: b: 2');
 			}
