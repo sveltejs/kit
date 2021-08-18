@@ -1,5 +1,3 @@
-import { RawBody } from './hooks';
-
 interface ReadOnlyFormData {
 	get(key: string): string;
 	getAll(key: string): string[];
@@ -10,10 +8,10 @@ interface ReadOnlyFormData {
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
-type BaseBody = string | RawBody | ReadOnlyFormData;
+export type RawBody = null | Uint8Array;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
-	: BaseBody & Body;
+	: (string | RawBody | ReadOnlyFormData) & Body;
 
 // TODO we want to differentiate between request headers, which
 // always follow this type, and response headers, in which
