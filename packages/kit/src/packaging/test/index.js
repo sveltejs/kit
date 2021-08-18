@@ -83,4 +83,8 @@ test('create package with default exports settings (replace)', async () => {
 	await test_make_package('exports-replace');
 });
 
+test.only('create package with files.exclude settings', async () => {
+	await test_make_package('files-exclude');
+});
+
 test.run();

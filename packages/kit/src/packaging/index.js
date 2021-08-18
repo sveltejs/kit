@@ -40,6 +40,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
+		// console.log(file);
 		if (!files_filter(file)) continue;
 
 		const filename = path.join(config.kit.files.lib, file);
@@ -172,6 +173,7 @@ function create_filter(options) {
 	const include = options.include.map((str) => str && globrex(str));
 	const exclude = options.exclude.map((str) => str && globrex(str));
 
+	// console.log({ exclude, include });
 	/** @param {string} str */
 	const filter = (str) =>
 		include.some((glob) => glob && glob.regex.test(str)) &&
