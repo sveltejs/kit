@@ -21,8 +21,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
-		...config.kit.package.exports,
-		exclude: [...config.kit.package.exports.exclude, '*.d.ts']
+		include: config.kit.package.exports.include,
+		exclude: [...config.kit.package.exports.exclude, '**/*.d.ts']
 	});
 
 	const files = walk(config.kit.files.lib);
