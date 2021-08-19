@@ -202,8 +202,8 @@ importers:
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.16
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
-      '@types/globrex': ^0.1.1
       '@types/marked': ^2.0.2
+      '@types/micromatch': ^4.0.2
       '@types/mime': ^2.0.3
       '@types/node': ^14.14.43
       '@types/rimraf': ^3.0.0
@@ -213,10 +213,10 @@ importers:
       cookie: ^0.4.1
       devalue: ^2.0.1
       eslint: ^7.25.0
-      globrex: ^0.1.2
       kleur: ^4.1.4
       locate-character: ^2.0.5
       marked: ^2.0.3
+      micromatch: ^4.0.4
       mime: ^2.5.2
       node-fetch: ^3.0.0-beta.9
       port-authority: ^1.1.2
@@ -240,8 +240,8 @@ importers:
       '@rollup/plugin-replace': 2.4.2_rollup@2.55.0
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.0
-      '@types/globrex': 0.1.1
       '@types/marked': 2.0.2
+      '@types/micromatch': 4.0.2
       '@types/mime': 2.0.3
       '@types/node': 14.14.43
       '@types/rimraf': 3.0.0
@@ -250,10 +250,10 @@ importers:
       cookie: 0.4.1
       devalue: 2.0.1
       eslint: 7.25.0
-      globrex: 0.1.2
       kleur: 4.1.4
       locate-character: 2.0.5
       marked: 2.0.3
+      micromatch: 4.0.4
       mime: 2.5.2
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
@@ -263,7 +263,7 @@ importers:
       sirv: 1.0.12
       svelte: 3.40.0
       svelte-check: 2.2.4_svelte@3.40.0
-      svelte2tsx: 0.4.1_svelte@3.40.0+typescript@4.3.5
+      svelte2tsx: 0.4.1_svelte@3.40.0
       tiny-glob: 0.2.8
       uvu: 0.5.1
 
@@ -807,6 +807,10 @@ packages:
       '@types/node': 14.14.43
     dev: true
 
+  /@types/braces/3.0.1:
+    resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
+    dev: true
+
   /@types/cookie/0.4.0:
     resolution: {integrity: sha512-y7mImlc/rNkvCRmg8gC3/lj87S7pTUIJ6QGjwHR9WQJcFs+ZMTOaoPrkdFA/YdbuqVEmEbb5RdhVxMkAcgOnpg==}
     dev: true
@@ -830,10 +834,6 @@ packages:
       '@types/node': 14.14.43
     dev: true
 
-  /@types/globrex/0.1.1:
-    resolution: {integrity: sha512-bce8X5Yb8l8ou2VDaEG8CYY1p6NynmswkaasO1pdAzFASKJ43sjf9MQdVH6VmKNG2bPEEmvI5onJJSH+1qOMOA==}
-    dev: true
-
   /@types/istanbul-lib-coverage/2.0.3:
     resolution: {integrity: sha512-sz7iLqvVUg1gIedBOvlkxPlc8/uVzyS5OwGz1cKjXzkl3FpL3al0crU8YGU1WoHkxn0Wxbw5tyi6hvzJKNzFsw==}
     dev: true
@@ -848,6 +848,12 @@ packages:
 
   /@types/marked/2.0.2:
     resolution: {integrity: sha512-P4zanhCQKs4tiWPPBGpB7lHflgFCP9DFGNI5YtpW9MALKoy2qs9rHNWJ+z55cegD9uCfnmsKuaosq9FNvbxrOw==}
+    dev: true
+
+  /@types/micromatch/4.0.2:
+    resolution: {integrity: sha512-oqXqVb0ci19GtH0vOA/U2TmHTcRY9kuZl4mqUxe0QmJAlIW13kzhuK5pi1i9+ngav8FjpSb9FVS/GE00GLX1VA==}
+    dependencies:
+      '@types/braces': 3.0.1
     dev: true
 
   /@types/mime/2.0.3:
@@ -3754,7 +3760,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.4.1_svelte@3.40.0+typescript@4.3.5:
+  /svelte2tsx/0.4.1_svelte@3.40.0:
     resolution: {integrity: sha512-qqXWg+wlsYXhtolKI2NGL52rK7ACejNzEKn98qcz2T6Fd1e73+YPZMw/FNeGRSZLCdNxzGf7QJDhzIiK3MXihA==}
     peerDependencies:
       svelte: ^3.24
@@ -3763,7 +3769,6 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.40.0
-      typescript: 4.3.5
     dev: true
 
   /table/6.6.0:

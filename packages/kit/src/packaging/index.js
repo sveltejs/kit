@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import globrex from 'globrex';
+import micromatch from 'micromatch';
 import { createRequire } from 'module';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
@@ -168,21 +168,12 @@ function load_tsconfig(filename, ts) {
 }
 
 /**
- * @param {{
- *   include: string[];
- *   exclude: string[];
- * }} options
+ * @param {{ include: string[]; exclude: string[] }} options
+ * @returns {(str: string) => boolean}
  */
 function create_filter(options) {
-	const include = options.include.map((str) => str && globrex(str));
-	const exclude = options.exclude.map((str) => str && globrex(str));
-
-	/** @param {string} str */
-	const filter = (str) =>
-		include.some((glob) => glob && glob.regex.test(str)) &&
-		!exclude.some((glob) => glob && glob.regex.test(str));
-
-	return filter;
+	return (str) =>
+		micromatch.isMatch(str, options.include) && !micromatch.isMatch(str, options.exclude);
 }
 
 /**
