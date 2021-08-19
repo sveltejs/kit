@@ -40,7 +40,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
-		if (!files_filter(file)) continue;
+		if (!files_filter(file.replace(/\\/g, '/'))) continue;
 
 		const filename = path.join(config.kit.files.lib, file);
 		const source = fs.readFileSync(filename, 'utf8');
