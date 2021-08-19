@@ -6,6 +6,7 @@
 	"exports": {
 		"./package.json": "./package.json",
 		"./internal": "./internal/index.js",
+		"./Test.svelte": "./Test.svelte",
 		".": "./index.js"
 	}
 }
