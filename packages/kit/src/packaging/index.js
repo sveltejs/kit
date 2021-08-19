@@ -40,13 +40,18 @@ export async function make_package(config, cwd = process.cwd()) {
 	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
-		if (!files_filter(file.replace(/\\/g, '/'))) continue;
+		const ext = path.extname(file);
+		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
+
+		if (!files_filter(file.replace(/\\/g, '/'))) {
+			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
+			const dts_path = path.join(cwd, config.kit.package.dir, dts_file);
+			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
+			continue;
+		}
 
 		const filename = path.join(config.kit.files.lib, file);
 		const source = fs.readFileSync(filename, 'utf8');
-
-		const ext = path.extname(file);
-		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
 		/** @type {string} */
 		let out_file;
@@ -195,7 +200,7 @@ function write(file, contents) {
 export async function emit_dts(config) {
 	const require = createRequire(import.meta.url);
 	const emit = await try_load_svelte2tsx();
-	emit({
+	await emit({
 		libRoot: config.kit.files.lib,
 		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
 		declarationDir: config.kit.package.dir
