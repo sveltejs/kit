@@ -1,12 +1,10 @@
 {
-	"name": "javascript",
+	"name": "emit-types",
 	"version": "1.0.0",
-	"description": "standard javascript package",
+	"description": "emitTypes settings disabled",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
-		"./internal": "./internal/index.js",
-		"./internal/Test.svelte": "./internal/Test.svelte",
 		"./Test.svelte": "./Test.svelte",
 		"./Test2.svelte": "./Test2.svelte",
 		".": "./index.js"
