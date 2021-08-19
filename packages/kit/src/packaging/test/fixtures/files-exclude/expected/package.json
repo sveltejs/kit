@@ -1,7 +1,7 @@
 {
-	"name": "javascript",
+	"name": "files-exclude",
 	"version": "1.0.0",
-	"description": "standard javascript package",
+	"description": "files.exclude settings configured",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
