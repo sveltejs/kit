@@ -62,7 +62,7 @@ export async function render_endpoint(request, route, match) {
 	let { status = 200, body, headers = {} } = response;
 
 	headers = lowercase_keys(headers);
-	const type = headers['content-type'];
+	const type = /** @type {string} */ (headers['content-type']);
 
 	const is_type_textual = is_content_type_textual(type);
 

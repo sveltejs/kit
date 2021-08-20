@@ -8,11 +8,10 @@ interface ReadOnlyFormData {
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
-// TODO we want to differentiate between request headers, which
-// always follow this type, and response headers, in which
-// 'set-cookie' is a `string[]` (or at least `string | string[]`)
-// but this can't happen until TypeScript 4.3
-export type Headers = Record<string, string>;
+export type RequestHeaders = Record<string, string>;
+
+/** Only value that can be an array is set-cookie. For everything else we assume string value */
+export type ResponseHeaders = Record<string, string | string[]>;
 
 // Utility Types
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>

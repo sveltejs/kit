@@ -66,7 +66,8 @@ export async function respond(incoming, options, state = {}) {
 					if (response) {
 						// inject ETags for 200 responses
 						if (response.status === 200) {
-							if (!/(no-store|immutable)/.test(response.headers['cache-control'])) {
+							const cache_control = /** @type {string} */ (response.headers['cache-control']);
+							if (!/(no-store|immutable)/.test(cache_control)) {
 								const etag = `"${hash(response.body || '')}"`;
 
 								if (request.headers['if-none-match'] === etag) {

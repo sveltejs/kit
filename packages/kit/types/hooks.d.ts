@@ -1,5 +1,5 @@
 import { IncomingRequest, ParameterizedBody } from './app';
-import { Headers, MaybePromise } from './helper';
+import { ResponseHeaders, MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
@@ -12,7 +12,7 @@ export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 
 export interface ServerResponse {
 	status: number;
-	headers: Headers;
+	headers: ResponseHeaders;
 	body?: StrictBody;
 }
 

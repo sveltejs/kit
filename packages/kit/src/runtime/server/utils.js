@@ -1,6 +1,6 @@
-/** @param {Record<string, string>} obj */
+/** @param {Record<string, any>} obj */
 export function lowercase_keys(obj) {
-	/** @type {Record<string, string>} */
+	/** @type {Record<string, any>} */
 	const clone = {};
 
 	for (const key in obj) {

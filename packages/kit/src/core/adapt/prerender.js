@@ -182,7 +182,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const { location } = headers;
+				const location = /** @type {string} */ (headers.location);
 
 				log.warn(`${rendered.status} ${path} -> ${location}`);
 				writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
