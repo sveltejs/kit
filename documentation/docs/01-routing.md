@@ -14,7 +14,7 @@ Endpoints run only on the server (or when you build your site, if [prerendering]
 
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
+Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page and in the addition some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for performance, app-like feel where the common portions in the layout do not need to be rerendered.
 
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
