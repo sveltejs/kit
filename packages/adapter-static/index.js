@@ -1,13 +1,6 @@
-/**
- * @param {{
- *   pages?: string;
- *   assets?: string;
- *   fallback?: string;
- * }} [opts]
- */
+/** @type {import('.')} */
 export default function ({ pages = 'build', assets = pages, fallback } = {}) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-static',
 
 		async adapt({ utils }) {
@@ -23,6 +16,4 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 			});
 		}
 	};
-
-	return adapter;
 }
