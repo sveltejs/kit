@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 // App is a dynamic file built from the application layer.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+/** @type {import('polka').Middleware} */
 const noop_handler = (_req, _res, next) => next();
 const paths = {
 	assets: join(__dirname, '/assets'),

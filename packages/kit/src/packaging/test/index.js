@@ -76,7 +76,7 @@ test('create standard package with typescript', async () => {
 });
 
 test('create package with emitTypes settings disabled', async () => {
-	await test_make_package('emitTypes');
+	await test_make_package('emitTypes-false');
 });
 
 test('create package with default exports settings (replace)', async () => {
