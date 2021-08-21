@@ -29,8 +29,8 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
-					// @ts-ignore
-					if (pathname.startsWith(APP_DIR)) { // eslint-disable-line no-undef
+					// eslint-disable-next-line no-undef
+					if (pathname.startsWith(APP_DIR)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
 				},
