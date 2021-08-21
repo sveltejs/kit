@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 // App is a dynamic file built from the application layer.
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+/** @type {import('polka').Middleware} */
 const noop_handler = (_req, _res, next) => next();
 const paths = {
 	assets: join(__dirname, '/assets'),
@@ -28,8 +29,8 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname, stats) => {
-					// eslint-disable-next-line no-undef
-					if (pathname.startsWith(APP_DIR)) {
+					// @ts-ignore
+					if (pathname.startsWith(APP_DIR)) { // eslint-disable-line no-undef
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
 				},
