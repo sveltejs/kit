@@ -11,6 +11,7 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 		name: '@sveltejs/adapter-static',
 
 		async adapt({ utils }) {
+			utils.rimraf(pages);
 			utils.copy_static_files(assets);
 			utils.copy_client_files(assets);
 
