@@ -8,14 +8,9 @@ import toml from '@iarna/toml';
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} [options]
- **/
+/** @type {import('.')} */
 export default function (options) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt({ utils }) {
@@ -65,8 +60,6 @@ export default function (options) {
 			appendFileSync(redirectPath, '\n\n/* /.netlify/functions/__render 200');
 		}
 	};
-
-	return adapter;
 }
 /**
  * @param {import('@sveltejs/kit').AdapterUtils} utils

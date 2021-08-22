@@ -8,15 +8,11 @@ import { fileURLToPath } from 'url';
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} [options]
- **/
+/** @type {import('.')} */
 export default function (options) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
+
 		async adapt({ utils }) {
 			const { site } = validate_config(utils);
 
@@ -64,8 +60,6 @@ export default function (options) {
 			utils.copy_client_files(bucket);
 		}
 	};
-
-	return adapter;
 }
 
 function validate_config(utils) {
