@@ -145,7 +145,7 @@ export async function render_response({
 		</script>`;
 	}
 
-	if (options.service_worker && !options.amp) {
+	if (options.service_worker) {
 		init += options.amp ? `<amp-install-serviceworker
 			src="${options.service_worker}"
 			layout="nodisplay"></amp-install-serviceworker>`
