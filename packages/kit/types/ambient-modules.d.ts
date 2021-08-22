@@ -9,3 +9,15 @@ declare module '@sveltejs/kit/hooks' {
 	 */
 	export function sequence(...handlers: Handle[]): Handle;
 }
+
+declare module '@sveltejs/kit/ssr' {
+	type IncomingRequest = import('@sveltejs/kit').IncomingRequest;
+	type Options = import('types/internal').SSRRenderOptions;
+	type State = import('types/internal').SSRRenderState;
+	type ServerResponse = import('@sveltejs/kit').Response;
+
+	export interface Respond {
+		(incoming: IncomingRequest, options: Options, state?: State): ServerResponse;
+	}
+	export const respond: Respond;
+}

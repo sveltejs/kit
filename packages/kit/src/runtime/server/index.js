@@ -7,11 +7,7 @@ import { lowercase_keys } from './utils.js';
 import { coalesce_to_error } from '../utils.js';
 import { hash } from '../hash.js';
 
-/**
- * @param {import('types/app').IncomingRequest} incoming
- * @param {import('types/internal').SSRRenderOptions} options
- * @param {import('types/internal').SSRRenderState} [state]
- */
+/** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
 	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
 		const has_trailing_slash = incoming.path.endsWith('/');
