@@ -1,7 +1,7 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
-import './ambient-modules';
+import './ambient-imports';
 
 export { App, IncomingRequest } from './app';
 export { Adapter, AdapterUtils, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
