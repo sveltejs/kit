@@ -80,7 +80,6 @@ export interface Config {
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
-	[key: string]: any;
 }
 
 export type ValidatedConfig = RecursiveRequired<Config>;

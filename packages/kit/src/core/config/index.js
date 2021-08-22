@@ -31,9 +31,7 @@ function validate(definition, option, keypath) {
 			if (!(key in definition)) {
 				let message = `Unexpected option ${keypath}.${key}`;
 
-				if (keypath === 'config' && key in options.kit) {
-					message += ` (did you mean config.kit.${key}?)`;
-				} else if (keypath === 'config.kit' && key in options) {
+				if (keypath === 'config.kit' && key in options) {
 					message += ` (did you mean config.${key}?)`;
 				}
 

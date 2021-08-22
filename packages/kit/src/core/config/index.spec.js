@@ -90,6 +90,7 @@ test('errors on invalid nested values', () => {
 test('does not error on invalid top-level values', () => {
 	assert.not.throws(() => {
 		validate_config({
+			// @ts-expect-error
 			onwarn: () => {}
 		});
 	});
