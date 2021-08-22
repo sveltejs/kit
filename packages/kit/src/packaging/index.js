@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import globrex from 'globrex';
+import micromatch from 'micromatch';
 import { createRequire } from 'module';
 import { preprocess } from 'svelte/compiler';
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
@@ -21,8 +21,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
-		...config.kit.package.exports,
-		exclude: [...config.kit.package.exports.exclude, '*.d.ts']
+		include: config.kit.package.exports.include,
+		exclude: [...config.kit.package.exports.exclude, '**/*.d.ts']
 	});
 
 	const files = walk(config.kit.files.lib);
@@ -40,13 +40,18 @@ export async function make_package(config, cwd = process.cwd()) {
 	pkg.exports['./package.json'] = './package.json';
 
 	for (const file of files) {
-		if (!files_filter(file)) continue;
+		const ext = path.extname(file);
+		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
+
+		if (!files_filter(file.replace(/\\/g, '/'))) {
+			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
+			const dts_path = path.join(cwd, config.kit.package.dir, dts_file);
+			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
+			continue;
+		}
 
 		const filename = path.join(config.kit.files.lib, file);
 		const source = fs.readFileSync(filename, 'utf8');
-
-		const ext = path.extname(file);
-		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
 		/** @type {string} */
 		let out_file;
@@ -163,21 +168,12 @@ function load_tsconfig(filename, ts) {
 }
 
 /**
- * @param {{
- *   include: string[];
- *   exclude: string[];
- * }} options
+ * @param {{ include: string[]; exclude: string[] }} options
+ * @returns {(str: string) => boolean}
  */
 function create_filter(options) {
-	const include = options.include.map((str) => str && globrex(str));
-	const exclude = options.exclude.map((str) => str && globrex(str));
-
-	/** @param {string} str */
-	const filter = (str) =>
-		include.some((glob) => glob && glob.regex.test(str)) &&
-		!exclude.some((glob) => glob && glob.regex.test(str));
-
-	return filter;
+	return (str) =>
+		micromatch.isMatch(str, options.include) && !micromatch.isMatch(str, options.exclude);
 }
 
 /**
@@ -195,7 +191,7 @@ function write(file, contents) {
 export async function emit_dts(config) {
 	const require = createRequire(import.meta.url);
 	const emit = await try_load_svelte2tsx();
-	emit({
+	await emit({
 		libRoot: config.kit.files.lib,
 		svelteShimsPath: require.resolve('svelte2tsx/svelte-shims.d.ts'),
 		declarationDir: config.kit.package.dir

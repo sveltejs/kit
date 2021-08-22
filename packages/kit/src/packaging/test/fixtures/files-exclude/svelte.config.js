@@ -3,7 +3,7 @@ const config = {
 	kit: {
 		package: {
 			files: {
-				exclude: ['**/exclude.js', '*.mjs']
+				exclude: ['**/*exclude.{js,svelte}', '**/*.mjs']
 			}
 		}
 	}
