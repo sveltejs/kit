@@ -27,7 +27,7 @@ export default function (options) {
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');
 
 			/** @type {BuildOptions} */
-			const defaultOptions = {
+			const default_options = {
 				entryPoints: ['.svelte-kit/netlify/entry.js'],
 				// Any functions in ".netlify/functions-internal" are bundled in addition to user-defined Netlify functions.
 				// See https://github.com/netlify/build/pull/3213 for more details
@@ -37,10 +37,10 @@ export default function (options) {
 				platform: 'node'
 			};
 
-			const buildOptions =
-				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
+			const build_options =
+				options && options.esbuild ? await options.esbuild(default_options) : default_options;
 
-			await esbuild.build(buildOptions);
+			await esbuild.build(build_options);
 
 			writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
