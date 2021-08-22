@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.155
+
+### Patch Changes
+
+- [chore] export App types ([#2259](https://github.com/sveltejs/kit/pull/2259))
+
 ## 1.0.0-next.154
 
 ### Patch Changes
