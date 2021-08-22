@@ -87,6 +87,14 @@ test('errors on invalid nested values', () => {
 	}, /^Unexpected option config\.kit\.files\.potato$/);
 });
 
+test('does not error on invalid top-level values', () => {
+	assert.not.throws(() => {
+		validate_config({
+			onwarn: () => {}
+		});
+	});
+});
+
 test('errors on extension without leading .', () => {
 	assert.throws(() => {
 		validate_config({
