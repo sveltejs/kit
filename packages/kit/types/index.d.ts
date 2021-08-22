@@ -2,6 +2,7 @@
 /// <reference types="vite/client" />
 
 import './ambient-imports';
+import './ambient-modules';
 
 export { App, IncomingRequest } from './app';
 export { Adapter, AdapterUtils, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
