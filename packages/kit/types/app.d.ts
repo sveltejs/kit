@@ -15,7 +15,7 @@ export interface App {
 		paths,
 		prerendering,
 		read
-	}: {
+	}?: {
 		paths: {
 			base: string;
 			assets: string;
