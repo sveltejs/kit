@@ -31,3 +31,13 @@ declare module '@sveltejs/kit/ssr' {
 	}
 	export const respond: Respond;
 }
+
+declare module '@sveltejs/kit/install-fetch' {
+	type Fetch = import('node-fetch');
+	type Headers = import('node-fetch').Headers;
+	type Request = import('node-fetch').Request;
+	type Response = import('node-fetch').Response;
+
+	const fetch: Fetch;
+	export { fetch, Headers, Request, Response };
+}
