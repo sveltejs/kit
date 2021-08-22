@@ -10,6 +10,16 @@ declare module '@sveltejs/kit/hooks' {
 	export function sequence(...handlers: Handle[]): Handle;
 }
 
+declare module '@sveltejs/kit/node' {
+	type IncomingMessage = import('http').IncomingMessage;
+	type RawBody = import('types/helper').RawBody;
+
+	export interface GetRawBody {
+		(request: IncomingMessage): Promise<RawBody>;
+	}
+	export const getRawBody: GetRawBody;
+}
+
 declare module '@sveltejs/kit/ssr' {
 	type IncomingRequest = import('@sveltejs/kit').IncomingRequest;
 	type Options = import('types/internal').SSRRenderOptions;
