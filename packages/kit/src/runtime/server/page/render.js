@@ -149,9 +149,7 @@ export async function render_response({
 
 	if (options.service_worker) {
 		init += options.amp
-			? `<amp-install-serviceworker
-			src="${options.service_worker}"
-			layout="nodisplay"></amp-install-serviceworker>`
+			? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
 			: `<script>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('${options.service_worker}');
