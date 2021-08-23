@@ -68,6 +68,13 @@ During compilation a required "catch all" redirect rule is automatically appende
   node_bundler = "esbuild"
 ```
 
+### Issues with initial CSS load on mobile
+After deploying to Netlify, and opening your site on a mobile browser, you might experience an "unstyled" site. 
+While refreshing fixes things, it's not the ideal solution. Many users deploying Hugo and Gatsby sites on Netlify are seeing the same thing. 
+
+The solution is a small change to your `jsconfig.json` file. On line 3, change `"baseUrl": "."` to `"baseUrl": "/"`. Push up your changes, and redeploy.
+
+
 ## Advanced Configuration
 
 ### esbuild
