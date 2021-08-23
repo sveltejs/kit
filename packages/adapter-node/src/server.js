@@ -31,7 +31,7 @@ export function createServer({ render }) {
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
 				setHeaders: (res, pathname) => {
-					// @ts-ignore - dynamically replaced with define
+					// @ts-expect-error - dynamically replaced with define
 					if (pathname.startsWith(/* eslint-disable-line no-undef */ APP_DIR)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
@@ -42,7 +42,7 @@ export function createServer({ render }) {
 		: noop_handler;
 
 	const server = polka().use(
-		// @ts-ignore - compression return doesn't play well with polka.use
+		// @ts-ignore TODO - compression return doesn't play well with polka.use
 		compression({ threshold: 0 }),
 		assets_handler,
 		prerendered_handler,
