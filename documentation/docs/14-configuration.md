@@ -90,10 +90,7 @@ An object containing zero or more of the following `string` values:
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
-- `serviceWorker` — configuration for your service worker (see [Service workers](#service-workers))
-  -  the service worker `scope`: by default `/`
-  -  remove service worker registration: by default `false`
-  -  the location of your service worker's entry point
+- `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
 - `template` — the location of the template for HTML responses
 
 ### floc
@@ -187,6 +184,8 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 
 An object containing zero or more of the following values:
 
+- `scope` - the service worker `scope`: by default `/`.
+- `register` - register service worker registration: by default `true`.
 - `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### ssr
