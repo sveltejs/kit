@@ -42,7 +42,8 @@ export function createServer({ render }) {
 		: noop_handler;
 
 	const server = polka().use(
-		// @ts-ignore TODO - compression return doesn't play well with polka.use
+		// https://github.com/lukeed/polka/issues/173
+		// @ts-ignore - nothing we can do about so just ignore it
 		compression({ threshold: 0 }),
 		assets_handler,
 		prerendered_handler,

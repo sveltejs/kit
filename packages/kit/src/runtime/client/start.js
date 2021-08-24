@@ -1,6 +1,6 @@
-// @ts-ignore - value will be replaced on build step
+// @ts-expect-error - value will be replaced on build step
 import Root from 'ROOT';
-// @ts-ignore - value will be replaced on build step
+// @ts-expect-error - value will be replaced on build step
 import { routes, fallback } from 'MANIFEST';
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
