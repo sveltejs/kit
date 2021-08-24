@@ -90,10 +90,10 @@ An object containing zero or more of the following `string` values:
 - `hooks` — the location of your hooks module (see [Hooks](#hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
-- `serviceWorker` —
+- `serviceWorker` — configuration for your service worker (see [Service workers](#service-workers))
   -  the service worker `scope`: by default `/`
   -  remove service worker registration: by default `false`
-  -  the location of your service worker's entry point (see [Service workers](#service-workers))
+  -  the location of your service worker's entry point
 - `template` — the location of the template for HTML responses
 
 ### floc
