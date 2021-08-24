@@ -10,7 +10,12 @@ export interface AdapterUtils {
 	copy_server_files(dest: string): void;
 	copy_static_files(dest: string): void;
 	copy(from: string, to: string, filter?: (basename: string) => boolean): void;
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
+	prerender(options: {
+		all?: boolean;
+		dest: string;
+		fallback?: string;
+		output_file_name?: (opts: { path: string, is_html: boolean }) => string;
+	}): Promise<void>;
 }
 
 export interface Adapter {

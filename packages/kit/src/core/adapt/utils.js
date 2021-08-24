@@ -30,7 +30,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 			copy(config.kit.files.assets, dest);
 		},
 
-		async prerender({ all = false, dest, fallback }) {
+		async prerender({ all = false, dest, fallback, output_file_name }) {
 			await prerender({
 				out: dest,
 				all,
@@ -38,7 +38,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 				config,
 				build_data,
 				fallback,
-				log
+				log,
+				output_file_name
 			});
 		}
 	};

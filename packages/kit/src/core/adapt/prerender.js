@@ -78,6 +78,22 @@ function chooseErrorHandler(log, onError) {
 	}
 }
 
+/** @type {(opts: {path: string, is_html: boolean}) => string} */
+function default_output_file_name({ path, is_html }) {
+	if (!is_html) return path;
+
+	const parts = path.split('/');
+	if (parts[parts.length - 1] === 'index.html') return path;
+
+	parts.push('index.html');
+	return parts.join('/');
+}
+
+/** @type {(...parts: string[]) => string} */
+function limitJoin(...parts) {
+	return join(parts[0], join('/', ...parts.slice(1)));
+}
+
 const OK = 2;
 const REDIRECT = 3;
 
@@ -90,9 +106,19 @@ const REDIRECT = 3;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
+ *   output_file_name?: (opts: {path: string, is_html: boolean}) => string
  * }} opts
  */
-export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+export async function prerender({
+	cwd,
+	out,
+	log,
+	config,
+	build_data,
+	fallback,
+	all,
+	output_file_name = default_output_file_name
+}) {
 	if (!config.kit.prerender.enabled && !fallback) {
 		return;
 	}
@@ -172,13 +198,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const headers = rendered.headers;
 			const type = headers && headers['content-type'];
 			const is_html = response_type === REDIRECT || type === 'text/html';
+			const dist = output_file_name({ path, is_html });
 
-			const parts = path.split('/');
-			if (is_html && parts[parts.length - 1] !== 'index.html') {
-				parts.push('index.html');
-			}
-
-			const file = `${out}${parts.join('/')}`;
+			const file = limitJoin(out, dist);
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
@@ -201,13 +223,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const response_type = Math.floor(result.status / 100);
 
 				const is_html = result.headers['content-type'] === 'text/html';
+				const dist = output_file_name({ path: dependency_path, is_html });
 
-				const parts = dependency_path.split('/');
-				if (is_html && parts[parts.length - 1] !== 'index.html') {
-					parts.push('index.html');
-				}
-
-				const file = `${out}${parts.join('/')}`;
+				const file = limitJoin(out, dist);
 				mkdirp(dirname(file));
 
 				if (result.body) writeFileSync(file, result.body);
