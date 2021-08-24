@@ -14,7 +14,7 @@ SvelteKit is a framework for building extremely high-performance web apps. Build
 
 And SvelteKit does this all while providing a lightning-fast development experience where changes to your code show up in your browser automatically. We do this by leveraging [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte), so that [updates are instant and precise without reloading the page or blowing away application state](https://vitejs.dev/guide/features.html#hot-module-replacement).
 
-You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introductory blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [tutorial](https://svelte.dev/tutorial) to learn more.
+You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introduction to Svelte blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [Svelte tutorial](https://svelte.dev/tutorial) to learn more.
 
 ### Getting started
 
