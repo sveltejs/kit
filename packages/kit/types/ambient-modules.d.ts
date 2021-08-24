@@ -1,3 +1,5 @@
+/* eslint-disable import/no-duplicates */
+
 declare module '$app/env' {
 	/**
 	 * Whether or not app is in AMP mode.
@@ -80,7 +82,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	type Page = import('@sveltejs/kit').Page;
+	import { Page } from '@sveltejs/kit';
 	type Navigating = { from: Page; to: Page };
 
 	/**
@@ -131,7 +133,7 @@ declare module '$service-worker' {
 }
 
 declare module '@sveltejs/kit/hooks' {
-	type Handle = import('@sveltejs/kit').Handle;
+	import { Handle } from '@sveltejs/kit';
 
 	/**
 	 * Utility function that allows chaining `handle` functions in a
@@ -143,8 +145,8 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	type IncomingMessage = import('http').IncomingMessage;
-	type RawBody = import('types/helper').RawBody;
+	import { IncomingMessage } from 'http';
+	import { RawBody } from '@sveltejs/kit';
 
 	export interface GetRawBody {
 		(request: IncomingMessage): Promise<RawBody>;
@@ -153,23 +155,19 @@ declare module '@sveltejs/kit/node' {
 }
 
 declare module '@sveltejs/kit/ssr' {
-	type IncomingRequest = import('@sveltejs/kit').IncomingRequest;
-	type Options = import('types/internal').SSRRenderOptions;
-	type State = import('types/internal').SSRRenderState;
-	type ServerResponse = import('@sveltejs/kit').Response;
+	import { IncomingRequest, Response } from '@sveltejs/kit';
+	// TODO import from public types, right now its heavily coupled with internal
+	type Options = import('@sveltejs/kit/types/internal').SSRRenderOptions;
+	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
 
 	export interface Respond {
-		(incoming: IncomingRequest, options: Options, state?: State): ServerResponse;
+		(incoming: IncomingRequest, options: Options, state?: State): Response;
 	}
 	export const respond: Respond;
 }
 
 declare module '@sveltejs/kit/install-fetch' {
-	type Fetch = import('node-fetch');
-	type Headers = import('node-fetch').Headers;
-	type Request = import('node-fetch').Request;
-	type Response = import('node-fetch').Response;
+	import fetch, { Headers, Request, Response } from 'node-fetch';
 
-	const fetch: Fetch;
 	export { fetch, Headers, Request, Response };
 }
