@@ -1,21 +1,8 @@
-import { Headers, RawBody } from './helper';
+import { Headers, ReadOnlyFormData } from './helper';
 import { ServerResponse } from './hooks';
 
-export interface IncomingRequest {
-	method: string;
-	host: string;
-	path: string;
-	query: URLSearchParams;
-	headers: Headers;
-	rawBody: RawBody;
-}
-
 export interface App {
-	init({
-		paths,
-		prerendering,
-		read
-	}?: {
+	init(options?: {
 		paths: {
 			base: string;
 			assets: string;
@@ -33,4 +20,18 @@ export interface App {
 			};
 		}
 	): Promise<ServerResponse>;
+}
+
+export type RawBody = null | Uint8Array;
+export type ParameterizedBody<Body = unknown> = Body extends FormData
+	? ReadOnlyFormData
+	: (string | RawBody | ReadOnlyFormData) & Body;
+
+export interface IncomingRequest {
+	method: string;
+	host: string;
+	path: string;
+	query: URLSearchParams;
+	headers: Headers;
+	rawBody: RawBody;
 }

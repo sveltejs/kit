@@ -1,6 +1,8 @@
 // TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
-import { path, host, port } from './env.js'; // eslint-disable-line import/no-unresolved
+// @ts-ignore
+import { init, render } from '../output/server/app.js';
+// @ts-ignore
+import { path, host, port } from './env.js';
 import { createServer } from './server';
 
 init();

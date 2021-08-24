@@ -1,12 +1,16 @@
-type BuildOptions = import('esbuild').BuildOptions;
-declare function plugin(options?: {
+import { Adapter } from '@sveltejs/kit';
+import { BuildOptions } from 'esbuild';
+
+interface AdapterOptions {
 	out?: string;
 	precompress?: boolean;
 	env?: {
+		path?: string;
 		host?: string;
 		port?: string;
 	};
-	esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
-}): import('@sveltejs/kit').Adapter;
+	esbuild?: (options: BuildOptions) => Promise<BuildOptions> | BuildOptions;
+}
 
+declare function plugin(options?: AdapterOptions): Adapter;
 export = plugin;

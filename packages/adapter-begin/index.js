@@ -3,7 +3,7 @@ export default function () {
 	const adapter = {
 		name: '@sveltejs/adapter-begin',
 
-		async adapt({ utils }) {
+		async adapt() {
 			console.log('@sveltejs/adapter-begin can now be found at architect/sveltekit-adapter.');
 		}
 	};

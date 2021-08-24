@@ -1,4 +1,4 @@
-import { getRawBody } from '@sveltejs/kit/node'; // eslint-disable-line import/no-unresolved
+import { getRawBody } from '@sveltejs/kit/node';
 import compression from 'compression';
 import fs from 'fs';
 import { dirname, join } from 'path';
@@ -16,6 +16,8 @@ const paths = {
 	prerendered: join(__dirname, '/prerendered')
 };
 
+// TODO: type render function from @sveltejs/kit/adapter
+// @ts-ignore
 export function createServer({ render }) {
 	const prerendered_handler = fs.existsSync(paths.prerendered)
 		? sirv(paths.prerendered, {
@@ -28,9 +30,9 @@ export function createServer({ render }) {
 
 	const assets_handler = fs.existsSync(paths.assets)
 		? sirv(paths.assets, {
-				setHeaders: (res, pathname, stats) => {
-					// eslint-disable-next-line no-undef
-					if (pathname.startsWith(APP_DIR)) {
+				setHeaders: (res, pathname) => {
+					// @ts-expect-error - dynamically replaced with define
+					if (pathname.startsWith(/* eslint-disable-line no-undef */ APP_DIR)) {
 						res.setHeader('cache-control', 'public, max-age=31536000, immutable');
 					}
 				},
@@ -40,6 +42,8 @@ export function createServer({ render }) {
 		: noop_handler;
 
 	const server = polka().use(
+		// https://github.com/lukeed/polka/issues/173
+		// @ts-ignore - nothing we can do about so just ignore it
 		compression({ threshold: 0 }),
 		assets_handler,
 		prerendered_handler,

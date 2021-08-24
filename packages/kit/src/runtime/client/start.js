@@ -1,7 +1,7 @@
-// @ts-ignore - value will be replaced on build step
-import Root from 'ROOT'; // eslint-disable-line import/no-unresolved
-// @ts-ignore - value will be replaced on build step
-import { routes, fallback } from 'MANIFEST'; // eslint-disable-line import/no-unresolved
+// @ts-expect-error - value will be replaced on build step
+import Root from 'ROOT';
+// @ts-expect-error - value will be replaced on build step
+import { routes, fallback } from 'MANIFEST';
 import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';

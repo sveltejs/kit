@@ -1,6 +1,6 @@
 // TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
-import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler'; // eslint-disable-line import/no-unresolved
+import { init, render } from '../output/server/app.js';
+import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
 
 init();
 
