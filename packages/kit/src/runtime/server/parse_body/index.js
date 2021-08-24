@@ -1,7 +1,7 @@
 import { read_only_form_data } from './read_only_form_data.js';
 
 /**
- * @param {import('types/helper').RawBody} raw
+ * @param {import('types/app').RawBody} raw
  * @param {import('types/helper').Headers} headers
  */
 export function parse_body(raw, headers) {

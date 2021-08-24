@@ -1,5 +1,5 @@
-import { IncomingRequest } from './app';
-import { Headers, MaybePromise, ParameterizedBody } from './helper';
+import { IncomingRequest, ParameterizedBody } from './app';
+import { Headers, MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
