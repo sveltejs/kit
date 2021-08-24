@@ -6,12 +6,7 @@ Service workers act as proxy servers that handle network requests inside your ap
 
 In SvelteKit, if you have a `src/service-worker.js` file (or `src/service-worker.ts`, or `src/service-worker/index.js`, etc) it will be built with Vite and automatically registered.
 
-> You can change the location of your service worker in your [project configuration](#configuration-files).
-You can also provide the `scope` for the service worker, by default `/`. You **MUST** modify you `manifest.json` file
-to include also the `scope`: if you are using the default `scope` value, then you need to configure `scope: '/'`.
-**REMEMBER**: both, the option and the `manifest.json` entry must be the same.
-You can remove the service worker registration to allow register it on your logic, for example to allow `prompt for update`
-or configure periodic service worker updates.
+> You can change the location of your service worker in your [project configuration](#configuration-files). You can also provide the `scope` for the service worker, by default `/`. You **MUST** modify your `manifest.json` file to include also the `scope`: if you are using the default `scope` value, then you need to configure `scope: '/'`. **REMEMBER**: both, the option and the `manifest.json` entry must be the same. You can remove the service worker registration to allow register it on your logic, for example to allow `prompt for update`, configure periodic service worker updates or some logic that requires using the service worker registration.
 
 Inside the service worker you have access to the [`$service-worker` module](#modules-$service-worker).
 
