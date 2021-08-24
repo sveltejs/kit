@@ -51,10 +51,16 @@ importers:
       '@sveltejs/adapter-netlify': workspace:*
       '@sveltejs/kit': workspace:*
       svelte: ^3.40.0
+      workbox-core: ^6.2.4
+      workbox-precaching: ^6.2.4
+      workbox-routing: ^6.2.4
     devDependencies:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.40.0
+      workbox-core: 6.2.4
+      workbox-precaching: 6.2.4
+      workbox-routing: 6.2.4
 
   packages/adapter-begin:
     specifiers:
@@ -4139,6 +4145,30 @@ packages:
   /word-wrap/1.2.3:
     resolution: {integrity: sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==}
     engines: {node: '>=0.10.0'}
+    dev: true
+
+  /workbox-core/6.2.4:
+    resolution: {integrity: sha512-Nu8X4R4Is3g8uzEJ6qwbW2CGVpzntW/cSf8OfsQGIKQR0nt84FAKzP2cLDaNLp3L/iV9TuhZgCTZzkMiap5/OQ==}
+    dev: true
+
+  /workbox-precaching/6.2.4:
+    resolution: {integrity: sha512-7POznbVc8EG/mkbXzeb94x3B1VJruPgXvXFgS0NJ3GRugkO4ULs/DpIIb+ycs7uJIKY9EzLS7VXvElr3rMSozQ==}
+    dependencies:
+      workbox-core: 6.2.4
+      workbox-routing: 6.2.4
+      workbox-strategies: 6.2.4
+    dev: true
+
+  /workbox-routing/6.2.4:
+    resolution: {integrity: sha512-jHnOmpeH4MOWR4eXv6l608npD2y6IFv7yFJ1bT9/RbB8wq2vXHXJQ0ExTZRTWGbVltSG22wEU+MQ8VebDDwDeg==}
+    dependencies:
+      workbox-core: 6.2.4
+    dev: true
+
+  /workbox-strategies/6.2.4:
+    resolution: {integrity: sha512-DKgGC3ruceDuu2o+Ae5qmJy0p0q21mFP+RrkdqKrjyf2u8cJvvtvt1eIt4nevKc5BESiKxmhC2h+TZpOSzUDvA==}
+    dependencies:
+      workbox-core: 6.2.4
     dev: true
 
   /wrap-ansi/6.2.0:
