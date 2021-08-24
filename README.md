@@ -100,3 +100,5 @@ Please make sure the issue you're reporting involves SvelteKit. Many issues rela
 
 - https://github.com/GrygrFlzr/vite-ssr-d3
 - https://github.com/sveltejs/vite-plugin-svelte/tree/main/packages/e2e-tests/vite-ssr
+
+If an issue is caused by Vite, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
