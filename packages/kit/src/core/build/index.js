@@ -51,6 +51,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
+		service_worker_register: config.kit.serviceWorker?.register === true || true,
+		service_worker_scope: config.kit.serviceWorker?.scope || '/',
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		svelte_packages
 	};
@@ -203,6 +205,8 @@ async function build_client({
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
+ *   service_worker_register: boolean;
+ *   service_worker_scope: string;
  *   service_worker_entry_file: string | null;
  *   svelte_packages: string[];
  * }} options
@@ -218,6 +222,8 @@ async function build_server(
 		build_dir,
 		output_dir,
 		client_entry_file,
+		service_worker_register,
+		service_worker_scope,
 		service_worker_entry_file,
 		svelte_packages
 	},
@@ -345,6 +351,8 @@ async function build_server(
 					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
 					root,
+					service_worker_register: ${service_worker_register},
+					service_worker_scope: ${service_worker_scope ? `'${service_worker_scope}'` : '/'},
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
