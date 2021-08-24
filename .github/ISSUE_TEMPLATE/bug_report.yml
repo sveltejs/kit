@@ -25,7 +25,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Please include browser console and server logs around the time this bug occurred. Optional if provided reproduction. Please try not to insert an image but copy paste the log text."
+      description: "Please include browser console and server logs around the time this bug occurred. Please try not to insert an image but copy paste the log text."
       render: shell
   - type: textarea
     id: system-info
@@ -40,7 +40,6 @@ body:
     id: severity
     attributes:
       label: Severity
-      description: Select the severity of this issue
       options:
         - annoyance
         - serious, but I can work around it
@@ -52,4 +51,3 @@ body:
     id: additional-context
     attributes:
       label: Additional Information
-      description: Add any other context about the issue here.
