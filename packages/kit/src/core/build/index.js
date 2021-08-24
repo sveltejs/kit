@@ -52,8 +52,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
 		service_worker_register:
-			config.kit.serviceWorker?.register === undefined ? true : config.kit.serviceWorker.register,
-		service_worker_scope: config.kit.serviceWorker?.scope || '/',
+			config.kit.serviceWorker.register === undefined ? true : config.kit.serviceWorker.register,
+		service_worker_scope: config.kit.serviceWorker.scope || '/',
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		svelte_packages
 	};
