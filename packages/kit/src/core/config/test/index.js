@@ -50,6 +50,8 @@ async function testLoadDefaultConfig(path) {
 				emitTypes: true
 			},
 			serviceWorker: {
+				register: true,
+				scope: '/',
 				exclude: []
 			},
 			paths: { base: '', assets: '' },
