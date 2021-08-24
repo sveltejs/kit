@@ -54,6 +54,9 @@ importers:
       workbox-core: ^6.2.4
       workbox-precaching: ^6.2.4
       workbox-routing: ^6.2.4
+      workbox-window: ^6.2.4
+    dependencies:
+      workbox-window: 6.2.4
     devDependencies:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
       '@sveltejs/kit': link:../../packages/kit
@@ -993,6 +996,10 @@ packages:
       '@types/mime': 1.3.2
       '@types/node': 15.0.1
     dev: true
+
+  /@types/trusted-types/2.0.2:
+    resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
+    dev: false
 
   /@types/yauzl/2.9.1:
     resolution: {integrity: sha512-A1b8SU4D10uoPjwb0lnHmmu8wZhR9d+9o2PKBQT2jU5YPTKsxac6M2qGAdY7VcL+dHHhARVUDmeg0rOrcd9EjA==}
@@ -4149,7 +4156,6 @@ packages:
 
   /workbox-core/6.2.4:
     resolution: {integrity: sha512-Nu8X4R4Is3g8uzEJ6qwbW2CGVpzntW/cSf8OfsQGIKQR0nt84FAKzP2cLDaNLp3L/iV9TuhZgCTZzkMiap5/OQ==}
-    dev: true
 
   /workbox-precaching/6.2.4:
     resolution: {integrity: sha512-7POznbVc8EG/mkbXzeb94x3B1VJruPgXvXFgS0NJ3GRugkO4ULs/DpIIb+ycs7uJIKY9EzLS7VXvElr3rMSozQ==}
@@ -4170,6 +4176,13 @@ packages:
     dependencies:
       workbox-core: 6.2.4
     dev: true
+
+  /workbox-window/6.2.4:
+    resolution: {integrity: sha512-9jD6THkwGEASj1YP56ZBHYJ147733FoGpJlMamYk38k/EBFE75oc6K3Vs2tGOBx5ZGq54+mHSStnlrtFG3IiOg==}
+    dependencies:
+      '@types/trusted-types': 2.0.2
+      workbox-core: 6.2.4
+    dev: false
 
   /wrap-ansi/6.2.0:
     resolution: {integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==}
