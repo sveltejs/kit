@@ -16,7 +16,7 @@ const paths = {
 	prerendered: join(__dirname, '/prerendered')
 };
 
-/** @param {{ render: import('@sveltejs/kit').App['render'] }} app */
+/** @param {import('@sveltejs/kit').App} app */
 export function createServer({ render }) {
 	const prerendered_handler = fs.existsSync(paths.prerendered)
 		? sirv(paths.prerendered, {
