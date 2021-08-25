@@ -1,8 +1,5 @@
-// TODO hardcoding the relative location makes this brittle
-// @ts-ignore
-import { init, render } from '../output/server/app.js';
-// @ts-ignore
-import { path, host, port } from './env.js';
+import { init, render } from '@sveltejs/kit/adapter';
+import { host, path, port } from './env.js';
 import { createServer } from './server';
 
 init();

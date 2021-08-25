@@ -45,7 +45,7 @@ export default function ({
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
 			writeFileSync(
-				'.svelte-kit/node/env.js',
+				'.svelte-kit/node/env.js', // types pointed in src/env.d.ts
 				`export const path = process.env[${JSON.stringify(
 					path_env
 				)}] || false;\nexport const host = process.env[${JSON.stringify(
