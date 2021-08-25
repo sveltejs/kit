@@ -1,4 +1,4 @@
-import { SVELTE_KIT } from '../constants.js';
+import { CLIENT_OUTPUT, SERVER_OUTPUT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender.js';
 
@@ -19,11 +19,11 @@ export function get_utils({ cwd, config, build_data, log }) {
 		copy,
 
 		copy_client_files(dest) {
-			copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, (file) => file[0] !== '.');
+			copy(`${cwd}/${CLIENT_OUTPUT}`, dest, (file) => file[0] !== '.');
 		},
 
 		copy_server_files(dest) {
-			copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, (file) => file[0] !== '.');
+			copy(`${cwd}/${SERVER_OUTPUT}`, dest, (file) => file[0] !== '.');
 		},
 
 		copy_static_files(dest) {

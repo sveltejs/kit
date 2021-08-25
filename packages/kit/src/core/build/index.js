@@ -8,7 +8,7 @@ import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
-import { SVELTE_KIT } from '../constants.js';
+import { CLIENT_OUTPUT, SERVER_OUTPUT, SVELTE_KIT } from '../constants.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -66,8 +66,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		await build_service_worker(options, client_manifest);
 	}
 
-	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
-	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
+	const client = glob('**', { cwd: CLIENT_OUTPUT, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: SERVER_OUTPUT, filesOnly: true }).map(posixify);
 
 	return {
 		client,
@@ -88,7 +88,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string | null;
  * }} options
  */
 async function build_client({
@@ -98,8 +97,7 @@ async function build_client({
 	manifest,
 	build_dir,
 	output_dir,
-	client_entry_file,
-	service_worker_entry_file
+	client_entry_file
 }) {
 	create_app({
 		manifest_data: manifest,
@@ -111,7 +109,7 @@ async function build_client({
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 
-	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
+	const client_out_dir = `${CLIENT_OUTPUT}/${config.kit.appDir}`;
 	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
 	/** @type {Record<string, string>} */

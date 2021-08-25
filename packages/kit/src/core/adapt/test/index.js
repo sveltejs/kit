@@ -5,7 +5,7 @@ import rimraf from 'rimraf';
 import glob from 'tiny-glob/sync.js';
 import { get_utils } from '../utils.js';
 import { fileURLToPath } from 'url';
-import { SVELTE_KIT } from '../../constants.js';
+import { CLIENT_OUTPUT, SERVER_OUTPUT } from '../../constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
@@ -63,18 +63,12 @@ suite('copy files', () => {
 	rimraf.sync(dest);
 	utils.copy_client_files(dest);
 
-	assert.equal(
-		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
-		glob('**', { cwd: dest })
-	);
+	assert.equal(glob('**', { cwd: `${cwd}/${CLIENT_OUTPUT}` }), glob('**', { cwd: dest }));
 
 	rimraf.sync(dest);
 	utils.copy_server_files(dest);
 
-	assert.equal(
-		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
-		glob('**', { cwd: dest })
-	);
+	assert.equal(glob('**', { cwd: `${cwd}/${SERVER_OUTPUT}` }), glob('**', { cwd: dest }));
 });
 
 suite('prerender', async () => {
