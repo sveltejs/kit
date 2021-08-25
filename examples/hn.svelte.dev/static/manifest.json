@@ -3,8 +3,9 @@
 	"theme_color": "#ff6600",
 	"name": "Svelte Hacker News",
 	"short_name": "Svelte Hacker News",
-	"display": "minimal-ui",
+	"display": "standalone",
 	"start_url": "/",
+	"scope": "/",
 	"icons": [
 		{
 			"src": "logo-192.png",

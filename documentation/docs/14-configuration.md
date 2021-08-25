@@ -53,6 +53,8 @@ const config = {
 		},
 		router: true,
 		serviceWorker: {
+			register: boolean,
+			scope: string,
 			exclude: []
 		},
 		ssr: true,
@@ -182,6 +184,8 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 
 An object containing zero or more of the following values:
 
+- `scope` - the service worker `scope`: by default `/`.
+- `register` - register service worker registration: by default `true`.
 - `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
 
 ### ssr

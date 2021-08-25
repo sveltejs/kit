@@ -144,10 +144,10 @@ export async function render_response({
 		</script>`;
 	}
 
-	if (options.service_worker) {
+	if (options.service_worker && options.service_worker_register) {
 		init += `<script>
 			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('${options.service_worker}');
+				navigator.serviceWorker.register('${options.service_worker}', { scope: '${options.service_worker_scope}' });
 			}
 		</script>`;
 	}

@@ -73,6 +73,8 @@ export interface Config {
 		router?: boolean;
 		serviceWorker?: {
 			exclude?: string[];
+			register?: boolean;
+			scope?: string;
 		};
 		ssr?: boolean;
 		target?: string;

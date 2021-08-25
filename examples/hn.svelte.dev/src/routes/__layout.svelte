@@ -3,6 +3,7 @@
 	import Nav from '$lib/Nav.svelte';
 	import PreloadingIndicator from '$lib/PreloadingIndicator.svelte';
 	import ThemeToggler from '$lib/ThemeToggler.svelte';
+	import SWPrompt from '$lib/SWPrompt.svelte';
 	import '../app.css';
 
 
@@ -20,6 +21,8 @@
 </main>
 
 <ThemeToggler/>
+
+<SWPrompt />
 
 <style>
 	main {

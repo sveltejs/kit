@@ -40,6 +40,8 @@ test('fills in defaults', () => {
 				emitTypes: true
 			},
 			serviceWorker: {
+				register: true,
+				scope: '/',
 				exclude: []
 			},
 			paths: {
@@ -150,6 +152,8 @@ test('fills in partial blanks', () => {
 				emitTypes: true
 			},
 			serviceWorker: {
+				register: true,
+				scope: '/',
 				exclude: []
 			},
 			paths: {

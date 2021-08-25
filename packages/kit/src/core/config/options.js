@@ -80,6 +80,8 @@ const options = {
 			serviceWorker: {
 				type: 'branch',
 				children: {
+					register: expect_boolean(true),
+					scope: expect_string('/', true),
 					exclude: expect_array_of_strings([])
 				}
 			},
