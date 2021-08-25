@@ -131,8 +131,8 @@ export interface SSRRenderOptions {
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
-	service_worker_register: boolean;
-	service_worker_scope: string;
+	service_worker_register?: boolean;
+	service_worker_scope?: string;
 	service_worker?: string;
 	ssr: boolean;
 	target: string;
