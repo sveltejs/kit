@@ -1,5 +1,5 @@
 import { IncomingRequest, ParameterizedBody } from './app';
-import { ResponseHeaders, MaybePromise } from './helper';
+import { MaybePromise, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
