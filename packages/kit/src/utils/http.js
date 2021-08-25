@@ -1,7 +1,7 @@
 /**
- * @param {Record<string,string|string[]>} headers
+ * @param {Record<string, string | string[]>} headers
  * @param {string} key
- * @returns {string|undefined}
+ * @returns {string | undefined}
  */
 export function get_single_valued_header(headers, key) {
 	const value = headers[key];

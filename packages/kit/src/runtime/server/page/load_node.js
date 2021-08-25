@@ -171,7 +171,7 @@ export async function load_node({
 						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
 						response = new Response(rendered.body, {
 							status: rendered.status,
-							headers: /** @type {Record<string,string>} */ (rendered.headers)
+							headers: /** @type {Record<string, string>} */ (rendered.headers)
 						});
 					}
 				} else {
