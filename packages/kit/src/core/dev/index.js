@@ -367,7 +367,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 
 				const rendered = await respond(
 					{
-						headers: /** @type {import('types/helper').Headers} */ (req.headers),
+						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 						method: req.method,
 						host,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),

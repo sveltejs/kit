@@ -23,7 +23,7 @@ export const handle = sequence(
 			...response,
 			headers: {
 				...response.headers,
-				'Set-Cookie': 'name=SvelteKit; path=/; HttpOnly'
+				'set-cookie': 'name=SvelteKit; path=/; HttpOnly'
 			}
 		};
 	}
