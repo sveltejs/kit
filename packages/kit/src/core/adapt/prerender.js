@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, createWriteStream } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
+import { Readable } from 'stream';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -138,6 +139,25 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	/**
+	 * @param {string} file
+	 * @param {unknown} body
+	 */
+	async function writeBodyToFile(file, body) {
+		if (
+			body && typeof body === 'object' &&
+			typeof body[Symbol.asyncIterator] === 'function'
+		) {
+			const output_stream = createWriteStream(file);
+			const data = Readable.from(body);
+			data.on('error', () => output_stream.end());
+			data.pipe(output_stream);
+			await new Promise((resolve) => output_stream.on('finish', resolve));
+		} else {
+			writeFileSync(file, body);
+		}
+	}
+
+	/**
 	 * @param {string} path
 	 * @param {string?} referrer
 	 */
@@ -192,12 +212,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${path}`);
-				writeFileSync(file, rendered.body || '');
-			} else if (response_type !== OK) {
+				await writeBodyToFile(file, rendered.body || '');
+			} else if (response_type !== OK) { 
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
-			dependencies.forEach((result, dependency_path) => {
+			for await (const [dependency_path, result] of dependencies) {
 				const response_type = Math.floor(result.status / 100);
 
 				const is_html = result.headers['content-type'] === 'text/html';
@@ -210,7 +230,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				if (result.body) writeFileSync(file, result.body);
+				if (result.body) {
+					await writeBodyToFile(file, result.body);
+				}
 
 				if (response_type === OK) {
 					log.info(`${result.status} ${dependency_path}`);
@@ -222,7 +244,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						referenceType: 'fetched'
 					});
 				}
-			});
+			}
 
 			if (is_html && config.kit.prerender.crawl) {
 				const cleaned = clean_html(/** @type {string} */ (rendered.body));

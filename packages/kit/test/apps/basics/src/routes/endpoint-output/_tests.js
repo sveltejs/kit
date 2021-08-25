@@ -56,4 +56,10 @@ export default function (test) {
 		assert.equal(res.headers.get('content-type'), 'application/xml');
 		assert.equal(await res.text(), '<foo />');
 	});
+
+	test('gets streaming response from async iterator', null, async ({ fetch }) => {
+		const res = await fetch('/endpoint-output/async-iterator');
+
+		assert.equal(await res.text(), 'foobar');
+	});
 }

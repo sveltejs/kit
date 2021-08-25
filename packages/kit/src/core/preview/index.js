@@ -6,6 +6,7 @@ import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { Readable } from 'stream';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -99,8 +100,17 @@ export async function preview({
 
 			if (rendered) {
 				res.writeHead(rendered.status, rendered.headers);
-				if (rendered.body) res.write(rendered.body);
-				res.end();
+				if (
+					rendered.body &&
+					typeof rendered.body === 'object' &&
+					typeof rendered.body[Symbol.asyncIterator] === 'function'
+				) {
+					const data = Readable.from(rendered.body);
+					data.on('error', () => res.end());
+					data.pipe(res);
+				} else {
+					res.end(rendered.body);
+				}
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');
