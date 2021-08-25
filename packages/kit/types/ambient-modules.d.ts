@@ -132,6 +132,15 @@ declare module '$service-worker' {
 	export const timestamp: number;
 }
 
+declare module '@sveltejs/kit/adapter' {
+	import { App } from '@sveltejs/kit';
+
+	export const init: App['init'];
+	export const render: App['render'];
+	const app: App;
+	export default app;
+}
+
 declare module '@sveltejs/kit/hooks' {
 	import { Handle } from '@sveltejs/kit';
 
