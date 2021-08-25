@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.157
+
+### Patch Changes
+
+- [chore] separate RequestHeaders and ResponseHeaders types ([#2248](https://github.com/sveltejs/kit/pull/2248))
+
+* [fix] don't de-indent user-rendered HTML ([#2292](https://github.com/sveltejs/kit/pull/2292))
+
 ## 1.0.0-next.156
 
 ### Patch Changes
