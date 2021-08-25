@@ -65,7 +65,7 @@ export interface Config {
 			base?: string;
 		};
 		prerender?: {
-			crawl?: boolean;
+			crawl?: string[] | false;
 			enabled?: boolean;
 			onError?: PrerenderOnErrorValue;
 			pages?: string[];

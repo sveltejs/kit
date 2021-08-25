@@ -46,7 +46,7 @@ test('fills in defaults', () => {
 				assets: ''
 			},
 			prerender: {
-				crawl: true,
+				crawl: ['*'],
 				enabled: true,
 				// TODO: remove this for the 1.0 release
 				force: undefined,
@@ -154,7 +154,7 @@ test('fills in partial blanks', () => {
 				assets: ''
 			},
 			prerender: {
-				crawl: true,
+				crawl: ['*'],
 				enabled: true,
 				// TODO: remove this for the 1.0 release
 				force: undefined,

@@ -123,7 +123,28 @@ const options = object(
 			}),
 
 			prerender: object({
-				crawl: boolean(true),
+				crawl: validate(['*'], (input, keypath) => {
+					if (
+						input !== false &&
+						(!Array.isArray(input) || !input.every((page) => typeof page === 'string'))
+					) {
+						throw new Error(`${keypath} must be either an array of strings or false`);
+					}
+
+					if (input === false) return input;
+
+					input.forEach(
+						/** @param {string} page */ (page) => {
+							if (page !== '*' && page[0] !== '/') {
+								throw new Error(
+									`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+								);
+							}
+						}
+					);
+
+					return input;
+				}),
 				enabled: boolean(true),
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {

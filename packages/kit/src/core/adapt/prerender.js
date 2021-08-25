@@ -140,9 +140,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} path
+	 * @param {boolean} crawl
 	 * @param {string?} referrer
 	 */
-	async function visit(path, referrer) {
+	async function visit(path, crawl, referrer) {
 		path = normalize(path);
 
 		if (seen.has(path)) return;
@@ -229,7 +230,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				}
 			});
 
-			if (is_html && config.kit.prerender.crawl) {
+			if (is_html && crawl) {
 				const cleaned = clean_html(/** @type {string} */ (rendered.body));
 
 				let match;
@@ -269,22 +270,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(pathname.replace(config.kit.paths.base, ''), path);
+					await visit(pathname.replace(config.kit.paths.base, ''), true, path);
 				}
 			}
 		}
 	}
 
 	if (config.kit.prerender.enabled) {
-		for (const entry of config.kit.prerender.pages) {
-			if (entry === '*') {
-				for (const entry of build_data.entries) {
-					await visit(entry, null);
-				}
-			} else {
-				await visit(entry, null);
-			}
+		if (config.kit.prerender.crawl) {
+			visit_pages(config.kit.prerender.crawl, true);
 		}
+		visit_pages(config.kit.prerender.pages, false);
 	}
 
 	if (fallback) {
@@ -308,5 +304,21 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
+	}
+
+	/**
+	 * @param {string[]} pages
+	 * @param {boolean} crawl
+	 */
+	async function visit_pages(pages, crawl) {
+		for (const entry of pages) {
+			if (entry === '*') {
+				for (const entry of build_data.entries) {
+					await visit(entry, crawl, null);
+				}
+			} else {
+				await visit(entry, crawl, null);
+			}
+		}
 	}
 }

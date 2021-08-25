@@ -46,10 +46,10 @@ const config = {
 			base: ''
 		},
 		prerender: {
-			crawl: true,
+			crawl: ['*'],
 			enabled: true,
 			onError: 'fail',
-			pages: ['*']
+			pages: []
 		},
 		router: true,
 		serviceWorker: {
@@ -146,7 +146,7 @@ An object containing zero or more of the following `string` values:
 
 See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
 
-- `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
+- `crawl` — a list of seed page(s) to prerender and follow links from to discover additional pages for prerendering. The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `enabled` — set to `false` to disable prerendering altogether
 - `onError`
 
@@ -172,7 +172,7 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     };
     ```
 
-- `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
+- `pages` — an array of pages to prerender. The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
 ### router
 
