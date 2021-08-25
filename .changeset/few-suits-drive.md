@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] don't run replace on user html
+[fix] don't de-indent user-rendered HTML
