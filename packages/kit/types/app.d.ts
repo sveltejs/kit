@@ -1,4 +1,4 @@
-import { Headers, ReadOnlyFormData } from './helper';
+import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
 
 export interface App {
@@ -32,6 +32,6 @@ export interface IncomingRequest {
 	host: string;
 	path: string;
 	query: URLSearchParams;
-	headers: Headers;
+	headers: RequestHeaders;
 	rawBody: RawBody;
 }

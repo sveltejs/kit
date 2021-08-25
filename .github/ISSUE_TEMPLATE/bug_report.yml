@@ -9,7 +9,7 @@ body:
     id: bug-description
     attributes:
       label: Describe the bug
-      description: A clear and concise description of what the bug is. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      description: Bugs related to building may be caused by Vite. See this project's readme for more details. If you intend to submit a PR for this issue, tell us in the description. Thanks!
       placeholder: Bug description
     validations:
       required: true
@@ -17,7 +17,7 @@ body:
     id: reproduction
     attributes:
       label: Reproduction
-      description: Please provide a link to a repo that can reproduce the problem you ran into. If a report is vague (e.g. just a generic error message) and has no reproduction, it will receive a "need reproduction" label. If no reproduction is provided within a reasonable time-frame, the issue will be closed.
+      description: A link to a repository that reproduces the issue. Explaining how to reproduce is generally not enough. It pushes the burden of creating a reproduction project onto a small set of volunteer maintainers and isn't scalable. If no reproduction is provided within a reasonable time-frame, the issue will be closed.
       placeholder: Reproduction
     validations:
       required: true
@@ -25,7 +25,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: "Please include browser console and server logs around the time this bug occurred. Optional if provided reproduction. Please try not to insert an image but copy paste the log text."
+      description: "Please include browser console and server logs around the time this bug occurred. Please try not to insert an image but copy paste the log text."
       render: shell
   - type: textarea
     id: system-info
@@ -40,7 +40,6 @@ body:
     id: severity
     attributes:
       label: Severity
-      description: Select the severity of this issue
       options:
         - annoyance
         - serious, but I can work around it
@@ -52,4 +51,3 @@ body:
     id: additional-context
     attributes:
       label: Additional Information
-      description: Add any other context about the issue here.

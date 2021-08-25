@@ -50,21 +50,17 @@ To use the git hooks in the repo, which will save you waiting for CI to tell you
 git config core.hookspath .githooks
 ```
 
+### Coding style
+
+There are a few guidelines we follow:
+- Internal variables are written with `snake_case` while external APIs are written with `camelCase`
+- Provide a single object as the argument to public APIs. This object can have multiple properties
+- Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
+- Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
+
 ### Generating changelogs
 
 For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
-
-### Releases
-
-The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
-
-> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
-
-New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
-
-```
-npm publish --access=public
-```
 
 ### Testing
 
@@ -85,3 +81,24 @@ You may need to install some dependencies first e.g. with `npx playwright instal
 All documentation for SvelteKit is in the `documentation` directory, any improvements should be made as a Pull Request to this repository. The documentation is served via and API, the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
 
 If you wish to preview documentation changes locally, please follow the instructions here: [Previewing local docs changes](https://github.com/sveltejs/sites/blob/master/sites/kit.svelte.dev/README.md#previewing-local-docs-changes).
+
+### Releases
+
+The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
+
+> It uses `pnpm publish` rather than `pnpx changeset publish` so that we can use the `--filter` and (while in beta) `--tag` flags — though perhaps they work with `pnpx changeset publish`?
+
+New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
+
+```
+npm publish --access=public
+```
+
+## Bug reporting
+
+Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which SvelteKit uses to build a project. It's important to note that new Vite projects don't use SSR by default and so if you create a new Vite project from scratch many issues won't reproduce eventhough they're caused by Vite. You should thus start with a project that utilizes SSR such as:
+
+- https://github.com/GrygrFlzr/vite-ssr-d3
+- https://github.com/sveltejs/vite-plugin-svelte/tree/main/packages/e2e-tests/vite-ssr
+
+If an issue is caused by Vite, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
