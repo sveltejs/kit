@@ -46,6 +46,7 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
+			adapter: 'src/core/adapt/proxy.js',
 			ssr: 'src/runtime/server/index.js',
 			node: 'src/core/node/index.js',
 			hooks: 'src/runtime/hooks.js',
