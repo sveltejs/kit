@@ -1,0 +1,15 @@
+{
+	"name": "~TODO~",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "../../../../kit/svelte-kit.js dev",
+		"build": "../../../../kit/svelte-kit.js build",
+		"start": "../../../../kit/svelte-kit.js start"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-node": "next",
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "^3.40.0"
+	},
+	"type": "module"
+}

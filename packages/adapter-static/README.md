@@ -38,6 +38,25 @@ The directory to write static assets (the contents of `static`, plus client-side
 
 Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.html`.
 
+### outputFileName
+
+A optional function that is called per entry to return the destination to write to.
+
+Default value:
+
+```javascript
+/** @type {(opts: {path: string, is_html: boolean}) => string} */
+function default_output_file_name({ path, is_html }) {
+	if (!is_html) return path;
+
+	const parts = path.split('/');
+	if (parts[parts.length - 1] === 'index.html') return path;
+
+	parts.push('index.html');
+	return parts.join('/');
+}
+```
+
 ## SPA mode
 
 You can use `adapter-static` to create a single-page app or SPA by specifying a **fallback page**.
