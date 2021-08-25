@@ -135,8 +135,8 @@ declare module '$service-worker' {
 declare module '@sveltejs/kit/adapter' {
 	import { App } from '@sveltejs/kit';
 
-	export const init: App['init'];
-	export const render: App['render'];
+	export const init: () => Promise<App['init']>;
+	export const render: () => Promise<App['render']>;
 	const app: App;
 	export default app;
 }
