@@ -66,6 +66,9 @@
 	},
 	"exports": {
 		"./package.json": "./package.json",
+		"./adapter": {
+			"import": "./dist/adapter.js"
+		},
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		},
