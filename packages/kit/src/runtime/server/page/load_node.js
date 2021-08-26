@@ -151,10 +151,7 @@ export async function load_node({
 							method: opts.method || 'GET',
 							headers,
 							path: relative,
-							rawBody:
-								opts.body == null
-									? null
-									: new TextEncoder().encode(/** @type {string} */ (opts.body)),
+							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
 							query: new URLSearchParams(search)
 						},
 						options,
