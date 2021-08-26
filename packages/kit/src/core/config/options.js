@@ -10,7 +10,9 @@ import {
 	deprecated,
 	enums,
 	func,
+	nullable,
 	object,
+	optional,
 	refine,
 	string,
 	type,
@@ -22,13 +24,13 @@ export function options_type({ cwd = process.cwd() } = {}) {
 
 	return type({
 		// common svelte options
-		compilerOptions: _(any(), {}),
+		compilerOptions: _(any(), null),
 		preprocess: _(any(), null),
 		extensions: _(array(svelte_extension()), ['.svelte']),
 
 		// kit options
 		kit: obj({
-			adapter: _(adapter(), null),
+			adapter: _(nullable(adapter()), null),
 			amp: _(boolean(), false),
 			appDir: _(app_dir(), '_app'),
 			files: obj({
@@ -40,11 +42,11 @@ export function options_type({ cwd = process.cwd() } = {}) {
 				template: template_path_string({ cwd, fallback: 'src/app.html', check_exist: true })
 			}),
 			floc: _(boolean(), false),
-			assets: _(string(), null),
-			hostHeader: _(string(), null),
+			host: _(nullable(string()), null),
+			hostHeader: _(nullable(string()), null),
 			hydrate: _(boolean(), true),
 			serviceWorker: obj({
-				exclude: array(string())
+				exclude: _(array(string()), [])
 			}),
 			package: obj({
 				dir: _(string(), 'package'),
@@ -54,7 +56,7 @@ export function options_type({ cwd = process.cwd() } = {}) {
 				}),
 				files: obj({
 					include: _(array(string()), ['**']),
-					exclude: array(string())
+					exclude: _(array(string()), [])
 				}),
 				emitTypes: _(boolean(), true)
 			}),
@@ -66,14 +68,14 @@ export function options_type({ cwd = process.cwd() } = {}) {
 				crawl: _(boolean(), true),
 				enabled: _(boolean(), true),
 				// TODO: remove this for the 1.0 release
-				force: prerender_force()
+				force: prerender_force(),
+				onError: _(on_error(), 'fail'),
+				pages: _(array(page()), ['*'])
 			}),
-			onError: _(on_error(), 'fail'),
-			pages: _(page(), ['*']),
 			router: _(boolean(), true),
 			ssr: _(boolean(), true),
-			target: _(string(), null),
-			trailingSlash: _(enums(['never', 'always', 'ignore']), true),
+			target: _(nullable(string()), null),
+			trailingSlash: _(enums(['never', 'always', 'ignore']), 'never'),
 			vite: _(vite_config(), () => ({}))
 		})
 	});
@@ -147,9 +149,7 @@ function app_dir() {
  * @param {FSPathStringOptions} opts
  */
 function fs_path_string({ cwd = process.cwd(), fallback, check_exist = false } = {}) {
-	const str = fallback ? _(string(), fallback) : string();
-
-	const str_coerce = coerce(string(), str, (value) => {
+	const str_coerce = coerce(string(), optional(string()), (value = fallback || '') => {
 		return path.isAbsolute(value) ? value : path.join(cwd, value);
 	});
 
@@ -186,6 +186,9 @@ function paths_base() {
 
 function paths_assets() {
 	return refine(string(), 'paths_assets', (value) => {
+		// Allow empty string
+		if (!value) return true;
+
 		if (!/^[a-z]+:\/\//.test(value)) {
 			return 'Expected path to be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths';
 		}
