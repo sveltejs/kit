@@ -14,7 +14,7 @@ export interface AdapterUtils {
 		all?: boolean;
 		dest: string;
 		fallback?: string;
-		output_file_name?: (opts: { path: string, is_html: boolean }) => string;
+		output_file_name?: (opts: { path: string; is_html: boolean }) => string;
 	}): Promise<void>;
 }
 

@@ -1,5 +1,5 @@
 /** @type {import('.')} */
-export default function({ pages = 'build', assets = pages, fallback, outputFileName } = {}) {
+export default function ({ pages = 'build', assets = pages, fallback, outputFileName } = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
