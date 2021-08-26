@@ -42,19 +42,29 @@ Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.ht
 
 A optional function that is called per entry to return the destination to write to.
 
-Default value:
+By default, prerendered html pages are output as index.html files in the directory matching the URL path.
+
+| URL       | output file          |
+| --------- | -------------------- |
+| /         | /index.html          |
+| /foo      | /foo/index.html      |
+| /bar.html | /bar.html/index.html |
+| /foo/bar  | /foo/bar/index.html  |
+
+For example, you may prefer `/foo.html` to `/foo/index.html`:
 
 ```javascript
-/** @type {(opts: {path: string, is_html: boolean}) => string} */
-function default_output_file_name({ path, is_html }) {
+import { format, parse } from 'path';
+
+outputFileName: ({ path, is_html }) => {
 	if (!is_html) return path;
 
-	const parts = path.split('/');
-	if (parts[parts.length - 1] === 'index.html') return path;
+	let { root, dir, name, ext } = parse(path);
 
-	parts.push('index.html');
-	return parts.join('/');
-}
+	if (!ext) ext = '.html';
+
+	return format({ root, dir, name, ext });
+};
 ```
 
 ## SPA mode
