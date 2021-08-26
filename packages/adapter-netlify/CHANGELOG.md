@@ -1,5 +1,17 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Deploy generated Netlify entrypoint to the internal functions directory. This allows it to co-exist with other Netlify functions. ([#2113](https://github.com/sveltejs/kit/pull/2113))
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- Ensure the raw body is an Uint8Array before passing it to request handlers ([#2215](https://github.com/sveltejs/kit/pull/2215))
+
 ## 1.0.0-next.27
 
 ### Patch Changes

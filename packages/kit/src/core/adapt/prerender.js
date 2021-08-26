@@ -1,9 +1,10 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
-import { mkdirp } from '../filesystem/index.js';
+import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
+import { get_single_valued_header } from '../../utils/http.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -105,7 +106,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('types/internal').App} */
+	/** @type {import('types/app').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
@@ -156,7 +157,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path,
-				rawBody: '',
+				rawBody: null,
 				query: new URLSearchParams()
 			},
 			{
@@ -182,10 +183,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
-				const { location } = headers;
+				const location = get_single_valued_header(headers, 'location');
 
-				log.warn(`${rendered.status} ${path} -> ${location}`);
-				writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+				if (location) {
+					log.warn(`${rendered.status} ${path} -> ${location}`);
+					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+				} else {
+					log.warn(`location header missing on redirect received from ${path}`);
+				}
 
 				return;
 			}
@@ -289,7 +294,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				method: 'GET',
 				headers: {},
 				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
-				rawBody: '',
+				rawBody: null,
 				query: new URLSearchParams()
 			},
 			{

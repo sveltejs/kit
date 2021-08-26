@@ -1,4 +1,4 @@
-import { isContentTypeTextual } from '../../core/adapter-utils.js';
+import { get_single_valued_header } from '../../utils/http.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -13,6 +13,23 @@ function error(body) {
 /** @param {unknown} s */
 function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
+}
+
+/**
+ * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
+ *
+ * @param {string | undefined | null} content_type The `content-type` header of a request/response.
+ * @returns {boolean}
+ */
+function is_content_type_textual(content_type) {
+	if (!content_type) return true; // defaults to json
+	const [type] = content_type.split(';'); // get the mime type
+	return (
+		type === 'text/plain' ||
+		type === 'application/json' ||
+		type === 'application/x-www-form-urlencoded' ||
+		type === 'multipart/form-data'
+	);
 }
 
 /**
@@ -46,9 +63,9 @@ export async function render_endpoint(request, route, match) {
 	let { status = 200, body, headers = {} } = response;
 
 	headers = lowercase_keys(headers);
-	const type = headers['content-type'];
+	const type = get_single_valued_header(headers, 'content-type');
 
-	const is_type_textual = isContentTypeTextual(type);
+	const is_type_textual = is_content_type_textual(type);
 
 	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
 		return error(

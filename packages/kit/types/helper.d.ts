@@ -8,25 +8,12 @@ interface ReadOnlyFormData {
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
-type BaseBody = string | Uint8Array | ReadOnlyFormData;
-export type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: BaseBody & Body;
+export type RequestHeaders = Record<string, string>;
 
-// TODO we want to differentiate between request headers, which
-// always follow this type, and response headers, in which
-// 'set-cookie' is a `string[]` (or at least `string | string[]`)
-// but this can't happen until TypeScript 4.3
-export type Headers = Record<string, string>;
+/** Only value that can be an array is set-cookie. For everything else we assume string value */
+export type ResponseHeaders = Record<string, string | string[]>;
 
-export type Location<Params extends Record<string, string> = Record<string, string>> = {
-	host: string;
-	path: string;
-	params: Params;
-	query: URLSearchParams;
-	lang?: string;
-};
-
+// Utility Types
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
@@ -43,8 +30,8 @@ export type RecursiveRequired<T> = {
 	// with a Function in it, except for the 'vite' key
 	// which we want the end result to be just a function
 	[K in keyof T]-?: Extract<T[K], Function> extends never
-		? RecursiveRequired<T[K]>
-		: K extends 'vite'
-		? Extract<T[K], Function>
-		: T[K];
+	? RecursiveRequired<T[K]>
+	: K extends 'vite'
+	? Extract<T[K], Function>
+	: T[K];
 };

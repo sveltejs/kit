@@ -1,5 +1,47 @@
 # @sveltejs/kit
 
+## 1.0.0-next.157
+
+### Patch Changes
+
+- [chore] separate RequestHeaders and ResponseHeaders types ([#2248](https://github.com/sveltejs/kit/pull/2248))
+
+* [fix] don't de-indent user-rendered HTML ([#2292](https://github.com/sveltejs/kit/pull/2292))
+
+## 1.0.0-next.156
+
+### Patch Changes
+
+- allow any top-level keys in svelte config ([#2267](https://github.com/sveltejs/kit/pull/2267))
+
+* Exclude emitted declarations on packaging ([#2247](https://github.com/sveltejs/kit/pull/2247))
+
+## 1.0.0-next.155
+
+### Patch Changes
+
+- [chore] export App types ([#2259](https://github.com/sveltejs/kit/pull/2259))
+
+## 1.0.0-next.154
+
+### Patch Changes
+
+- Upgrade to Vite 2.5.0 ([#2231](https://github.com/sveltejs/kit/pull/2231))
+
+## 1.0.0-next.153
+
+### Patch Changes
+
+- rename serverFetch to externalFetch ([#2110](https://github.com/sveltejs/kit/pull/2110))
+
+## 1.0.0-next.152
+
+### Patch Changes
+
+- Check ports usage in a more cross-platform way in dev server error logging ([#2209](https://github.com/sveltejs/kit/pull/2209))
+
+* Ensure the raw body is an Uint8Array before passing it to request handlers ([#2215](https://github.com/sveltejs/kit/pull/2215))
+
 ## 1.0.0-next.151
 
 ### Patch Changes

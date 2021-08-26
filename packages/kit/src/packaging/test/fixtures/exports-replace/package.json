@@ -1,0 +1,10 @@
+{
+	"name": "exports-replace",
+	"version": "1.0.0",
+	"description": "default exports settings",
+	"exports": {
+		".": {
+			"import": "./index.js"
+		}
+	}
+}

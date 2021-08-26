@@ -24,17 +24,19 @@ function validate(definition, option, keypath) {
 			);
 		}
 	}
-	for (const key in option) {
-		if (!(key in definition)) {
-			let message = `Unexpected option ${keypath}.${key}`;
 
-			if (keypath === 'config' && key in options.kit) {
-				message += ` (did you mean config.kit.${key}?)`;
-			} else if (keypath === 'config.kit' && key in options) {
-				message += ` (did you mean config.${key}?)`;
+	// only validate nested key paths
+	if (keypath !== 'config') {
+		for (const key in option) {
+			if (!(key in definition)) {
+				let message = `Unexpected option ${keypath}.${key}`;
+
+				if (keypath === 'config.kit' && key in options) {
+					message += ` (did you mean config.${key}?)`;
+				}
+
+				throw new Error(message);
 			}
-
-			throw new Error(message);
 		}
 	}
 

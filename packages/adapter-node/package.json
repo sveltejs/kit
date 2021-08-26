@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "1.0.0-next.42",
+	"version": "1.0.0-next.43",
 	"type": "module",
 	"exports": {
 		"import": "./index.js"
@@ -27,6 +27,7 @@
 	"devDependencies": {
 		"@rollup/plugin-json": "^4.1.0",
 		"@sveltejs/kit": "workspace:*",
+		"@types/compression": "^1.7.1",
 		"c8": "^7.7.2",
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0-beta.9",

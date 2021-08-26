@@ -20,26 +20,14 @@ const pipe = promisify(pipeline);
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   out?: string;
- *   precompress?: boolean;
- *   env?: {
- *     path?: string;
- *     host?: string;
- *     port?: string;
- *   };
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} options
- */
+/** @type {import('.')} */
 export default function ({
 	out = 'build',
 	precompress,
 	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
 	esbuild: esbuildConfig
 } = {}) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
@@ -62,7 +50,9 @@ export default function ({
 					path_env
 				)}] || false;\nexport const host = process.env[${JSON.stringify(
 					host_env
-				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(port_env)}] || 3000;`
+				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(
+					port_env
+				)}] || (!path && 3000);`
 			);
 			/** @type {BuildOptions} */
 			const defaultOptions = {
@@ -91,8 +81,6 @@ export default function ({
 			}
 		}
 	};
-
-	return adapter;
 }
 
 /**
@@ -125,9 +113,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
 			  })
-			: zlib.createGzip({
-					level: zlib.constants.Z_BEST_COMPRESSION
-			  });
+			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);
 	const destination = createWriteStream(`${file}.${format}`);

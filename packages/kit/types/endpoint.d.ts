@@ -1,5 +1,5 @@
 import { ServerRequest } from './hooks';
-import { Headers, MaybePromise } from './helper';
+import { MaybePromise, ResponseHeaders } from './helper';
 
 type ToJSON = { toJSON(...args: any[]): JSONValue };
 type JSONValue = Exclude<JSONResponse, ToJSON>;
@@ -16,7 +16,7 @@ type DefaultBody = JSONResponse | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
-	headers?: Headers;
+	headers?: ResponseHeaders;
 	body?: Body;
 }
 

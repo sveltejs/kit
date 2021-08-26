@@ -169,7 +169,7 @@ prog
 	.action(async () => {
 		const config = await get_config();
 
-		const { make_package } = await import('./core/make_package/index.js');
+		const { make_package } = await import('./packaging/index.js');
 
 		try {
 			await make_package(config);
@@ -182,18 +182,23 @@ prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */
 async function check_port(port) {
+	if (await ports.check(port)) {
+		return;
+	}
+	console.log(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
-
 	if (n) {
-		console.log(colors.bold().red(`Port ${port} is occupied`));
-
 		// prettier-ignore
 		console.log(
 			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
 		);
-
-		process.exit(1);
+	} else {
+		// prettier-ignore
+		console.log(
+			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
+		);
 	}
+	process.exit(1);
 }
 
 /**

@@ -1,4 +1,11 @@
-import { InferValue, Location as Page, MaybePromise, Rec } from './helper';
+import { InferValue, MaybePromise, Rec } from './helper';
+
+export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	host: string;
+	path: string;
+	params: Params;
+	query: URLSearchParams;
+}
 
 export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
@@ -69,5 +76,3 @@ export interface ErrorLoad<
 		>
 	): MaybePromise<LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'context', Rec>>>;
 }
-
-export { Page };

@@ -120,7 +120,9 @@ export async function load_node({
 				} else if (resolved.startsWith('/') && !resolved.startsWith('//')) {
 					const relative = resolved;
 
-					const headers = /** @type {import('types/helper').Headers} */ ({ ...opts.headers });
+					const headers = /** @type {import('types/helper').RequestHeaders} */ ({
+						...opts.headers
+					});
 
 					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
@@ -149,7 +151,7 @@ export async function load_node({
 							method: opts.method || 'GET',
 							headers,
 							path: relative,
-							rawBody: /** @type {string} */ (opts.body),
+							rawBody: new TextEncoder().encode(/** @type {string} */ (opts.body)),
 							query: new URLSearchParams(search)
 						},
 						options,
@@ -164,9 +166,12 @@ export async function load_node({
 							state.prerender.dependencies.set(relative, rendered);
 						}
 
+						// Set-Cookie not available to be set in `fetch` and that's the only header value that
+						// can be an array so we know we have only simple values
+						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
 						response = new Response(rendered.body, {
 							status: rendered.status,
-							headers: rendered.headers
+							headers: /** @type {Record<string, string>} */ (rendered.headers)
 						});
 					}
 				} else {
@@ -202,7 +207,7 @@ export async function load_node({
 					}
 
 					const external_request = new Request(url, /** @type {RequestInit} */ (opts));
-					response = await options.hooks.serverFetch.call(null, external_request);
+					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
 				if (response) {
@@ -211,7 +216,7 @@ export async function load_node({
 							async function text() {
 								const body = await response.text();
 
-								/** @type {import('types/helper').Headers} */
+								/** @type {import('types/helper').ResponseHeaders} */
 								const headers = {};
 								for (const [key, value] of response.headers) {
 									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;

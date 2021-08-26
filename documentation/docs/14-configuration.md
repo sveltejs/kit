@@ -71,7 +71,7 @@ export default config;
 
 ### adapter
 
-Determines how the output of `svelte-kit build` is converted for different platforms. See [Adapters](#adapters).
+Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](#adapters).
 
 ### amp
 

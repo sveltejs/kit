@@ -2,13 +2,15 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports three functions, all optional, that run on the server — **handle**, **getSession**, and **serverFetch**.
+An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports four functions, all optional, that run on the server — **handle**, **handleError**, **getSession**, and **externalFetch**.
 
 > The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
 
 ### handle
 
-This function runs on every request, for both pages and endpoints, and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#ssr-and-javascript-prerender) — and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+
+> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
@@ -24,7 +26,7 @@ type Request<Locals = Record<string, any>> = {
 	path: string;
 	params: Record<string, string>;
 	query: URLSearchParams;
-	rawBody: string | Uint8Array;
+	rawBody: Uint8Array;
 	body: ParameterizedBody<Body>;
 	locals: Locals; // populated by hooks handle
 };
@@ -118,19 +120,19 @@ export function getSession(request) {
 
 > `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
 
-### serverFetch
+### externalFetch
 
-This function allows you to modify (or replace) a `fetch` request for an **external resource** that happens inside a `load` function that runs on the server (or during pre-rendering).
+This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
-type ServerFetch = (req: Request) => Promise<Response>;
+type ExternalFetch = (req: Request) => Promise<Response>;
 ```
 
 ```js
-/** @type {import('@sveltejs/kit').ServerFetch} */
-export async function serverFetch(request) {
+/** @type {import('@sveltejs/kit').ExternalFetch} */
+export async function externalFetch(request) {
 	if (request.url.startsWith('https://api.yourapp.com/')) {
 		// clone the original request, but change the URL
 		request = new Request(

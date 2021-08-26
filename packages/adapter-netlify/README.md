@@ -27,14 +27,15 @@ export default {
 };
 ```
 
-Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets and functions to based on the `build.publish` and `build.functions` settings, as per this sample configuration:
+Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-builds/file-based-configuration) file in the project root. This will determine where to write static assets based on the `build.publish` settings, as per this sample configuration:
 
 ```toml
 [build]
   command = "npm run build"
-  publish = "build/publish/"
-  functions = "build/functions/"
+  publish = "build"
 ```
+
+If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
 
 ## Netlify alternatives to SvelteKit functionality
 
@@ -52,6 +53,20 @@ During compilation a required "catch all" redirect rule is automatically appende
 1. Create your Netlify HTML form as described [here](https://docs.netlify.com/forms/setup/#html-forms), e.g. as `/routes/contact.svelte`. (Don't forget to add the hidden `form-name` input element!)
 2. Netlify's build bot parses your HTML files at deploy time, which means your form must be [prerendered](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) as HTML. You can either add `export const prerender = true` to your `contact.svelte` to prerender just that page or set the `kit.prerender.force: true` option to prerender all pages.
 3. If your Netlify form has a [custom success message](https://docs.netlify.com/forms/setup/#success-messages) like `<form netlify ... action="/success">` then ensure the corresponding `/routes/success.svelte` exists and is prerendered.
+
+### Using Netlify Functions
+
+[Netlify Functions](https://docs.netlify.com/functions/overview/) can be used alongside your SvelteKit routes. If you would like to add them to your site, you should create a directory for them and add the configuration to your `netlify.toml` file. For example:
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[functions]
+  directory = "functions"
+  node_bundler = "esbuild"
+```
 
 ## Advanced Configuration
 
@@ -77,7 +92,8 @@ The default options for this version are as follows:
 ```js
 {
 	entryPoints: ['.svelte-kit/netlify/entry.js'],
-	outfile: `pathToFunctionsFolder/render/index.js`,
+	// This is Netlify's internal functions directory, not the one for user functions.
+	outfile: '.netlify/functions-internal/__render.js',
 	bundle: true,
 	inject: ['pathTo/shims.js'],
 	platform: 'node'

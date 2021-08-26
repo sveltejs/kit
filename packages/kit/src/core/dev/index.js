@@ -8,7 +8,7 @@ import vite from 'vite';
 import colors from 'kleur';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
 import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '../filesystem/index.js';
+import { rimraf } from '../../utils/filesystem.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
 import { copy_assets, get_svelte_packages, resolve_entry } from '../utils.js';
@@ -330,7 +330,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 								console.error(colors.gray(error.stack));
 							}
 						}),
-					serverFetch: user_hooks.serverFetch || fetch
+					externalFetch: user_hooks.externalFetch || fetch
 				};
 
 				if (/** @type {any} */ (hooks).getContext) {
@@ -338,6 +338,11 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 					throw new Error(
 						'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
 					);
+				}
+
+				if (/** @type {any} */ (hooks).serverFetch) {
+					// TODO remove this for 1.0
+					throw new Error('The serverFetch hook has been renamed to externalFetch.');
 				}
 
 				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
@@ -363,7 +368,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 
 				const rendered = await respond(
 					{
-						headers: /** @type {import('types/helper').Headers} */ (req.headers),
+						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 						method: req.method,
 						host,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
