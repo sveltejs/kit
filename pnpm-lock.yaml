@@ -227,6 +227,7 @@ importers:
       sade: ^1.7.4
       selfsigned: ^1.10.11
       sirv: ^1.0.12
+      superstruct: ^0.15.2
       svelte: ^3.40.0
       svelte-check: ^2.2.4
       svelte2tsx: ~0.4.1
@@ -263,6 +264,7 @@ importers:
       rollup: 2.55.0
       selfsigned: 1.10.11
       sirv: 1.0.12
+      superstruct: 0.15.2
       svelte: 3.40.0
       svelte-check: 2.2.4_svelte@3.40.0
       svelte2tsx: 0.4.1_svelte@3.40.0+typescript@4.3.5
@@ -3710,6 +3712,10 @@ packages:
       mz: 2.7.0
       pirates: 4.0.1
       ts-interface-checker: 0.1.13
+    dev: true
+
+  /superstruct/0.15.2:
+    resolution: {integrity: sha512-OsJI8lv6/PsInwCf4ultejmsJYseYshKhkcbDendqNwj3MeGXENajl3ujMGMU4FDDSSeJTOwFn9T6pnfsS9DYA==}
     dev: true
 
   /supports-color/5.5.0:

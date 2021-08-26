@@ -33,6 +33,7 @@
 		"rollup": "^2.55.0",
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.12",
+		"superstruct": "^0.15.2",
 		"svelte": "^3.40.0",
 		"svelte-check": "^2.2.4",
 		"svelte2tsx": "~0.4.1",
