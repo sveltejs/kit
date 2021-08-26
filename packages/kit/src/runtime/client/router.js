@@ -151,8 +151,7 @@ export class Router {
 			// Ignore if <a> has a target
 			if (svg ? /** @type {SVGAElement} */ (a).target.baseVal : a.target) return;
 
-			const full_href = get_href(/** @type {HTMLAnchorElement | SVGAElement} */ (a));
-			const url = full_href;
+			const url = get_href(/** @type {HTMLAnchorElement | SVGAElement} */ (a));
 
 			if (!this.owns(url)) return;
 
