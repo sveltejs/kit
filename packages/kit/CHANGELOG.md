@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.158
+
+### Patch Changes
+
+- avoid setting rawBody/body to an empty Uint8Array when a load's fetch function is called with no body during SSR ([#2295](https://github.com/sveltejs/kit/pull/2295))
+
 ## 1.0.0-next.157
 
 ### Patch Changes
