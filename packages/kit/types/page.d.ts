@@ -5,6 +5,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	path: string;
 	params: Params;
 	query: URLSearchParams;
+	lang?: string;
 }
 
 export interface LoadInput<
