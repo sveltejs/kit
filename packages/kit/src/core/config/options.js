@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
 	any,
 	array,
@@ -15,63 +17,67 @@ import {
 	union
 } from 'superstruct';
 
-export const options_type = type({
-	// common svelte options
-	compilerOptions: _(any(), null),
-	preprocess: _(any(), null),
-	extensions: _(array(svelte_extension()), ['.svelte']),
+export function options_type({ cwd = process.cwd() } = {}) {
+	const r = (/** @type {string} */ p) => path.resolve(cwd, p);
 
-	// kit options
-	kit: obj({
-		adapter: _(adapter(), null),
-		amp: _(boolean(), false),
-		appDir: _(non_empty_string(), '_app'),
-		files: obj({
-			assets: _(string(), 'static'),
-			hooks: _(string(), 'src/hooks'),
-			lib: _(string(), 'src/lib'),
-			routes: _(string(), 'src/routes'),
-			serviceWorker: _(string(), 'src/service-worker'),
-			template: _(string(), 'src/app.html')
-		}),
-		floc: _(boolean(), false),
-		assets: _(string(), null),
-		hostHeader: _(string(), null),
-		hydrate: _(boolean(), true),
-		serviceWorker: obj({
-			exclude: array(string())
-		}),
-		package: obj({
-			dir: _(string(), 'package'),
-			exports: obj({
-				include: _(array(string()), ['**']),
-				exclude: _(array(string()), ['_*', '**/_*'])
-			}),
+	return type({
+		// common svelte options
+		compilerOptions: _(any(), {}),
+		preprocess: _(any(), null),
+		extensions: _(array(svelte_extension()), ['.svelte']),
+
+		// kit options
+		kit: obj({
+			adapter: _(adapter(), null),
+			amp: _(boolean(), false),
+			appDir: _(app_dir(), '_app'),
 			files: obj({
-				include: _(array(string()), ['**']),
+				assets: fs_path_string({ cwd, fallback: 'static' }),
+				hooks: fs_path_string({ cwd, fallback: 'src/hooks' }),
+				lib: fs_path_string({ cwd, fallback: 'src/lib' }),
+				routes: fs_path_string({ cwd, fallback: 'src/routes' }),
+				serviceWorker: fs_path_string({ cwd, fallback: 'src/service-worker' }),
+				template: template_path_string({ cwd, fallback: 'src/app.html', check_exist: true })
+			}),
+			floc: _(boolean(), false),
+			assets: _(string(), null),
+			hostHeader: _(string(), null),
+			hydrate: _(boolean(), true),
+			serviceWorker: obj({
 				exclude: array(string())
 			}),
-			emitTypes: _(boolean(), true)
-		}),
-		paths: obj({
-			base: _(string(), ''),
-			assets: _(string(), '')
-		}),
-		prerender: obj({
-			crawl: _(boolean(), true),
-			enabled: _(boolean(), true),
-			// TODO: remove this for the 1.0 release
-			force: prerender_force()
-		}),
-		onError: _(on_error(), 'fail'),
-		pages: _(page(), ['*']),
-		router: _(boolean(), true),
-		ssr: _(boolean(), true),
-		target: _(string(), null),
-		trailingSlash: _(enums(['never', 'always', 'ignore']), true),
-		vite: _(vite_config(), () => ({}))
-	})
-});
+			package: obj({
+				dir: _(string(), 'package'),
+				exports: obj({
+					include: _(array(string()), ['**']),
+					exclude: _(array(string()), ['_*', '**/_*'])
+				}),
+				files: obj({
+					include: _(array(string()), ['**']),
+					exclude: array(string())
+				}),
+				emitTypes: _(boolean(), true)
+			}),
+			paths: obj({
+				base: _(paths_base(), ''),
+				assets: _(paths_assets(), '')
+			}),
+			prerender: obj({
+				crawl: _(boolean(), true),
+				enabled: _(boolean(), true),
+				// TODO: remove this for the 1.0 release
+				force: prerender_force()
+			}),
+			onError: _(on_error(), 'fail'),
+			pages: _(page(), ['*']),
+			router: _(boolean(), true),
+			ssr: _(boolean(), true),
+			target: _(string(), null),
+			trailingSlash: _(enums(['never', 'always', 'ignore']), true),
+			vite: _(vite_config(), () => ({}))
+		})
+	});
+}
 
 /**
  * @param {S} schema
@@ -119,6 +125,91 @@ function adapter() {
 	});
 }
 
+function app_dir() {
+	return refine(non_empty_string(), 'app_dir', (value) => {
+		if (value.startsWith('/') || value.endsWith('/')) {
+			return "kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration";
+		}
+
+		return true;
+	});
+}
+
+/**
+ * @typedef {{
+ *   cwd?: string,
+ *   fallback?: string,
+ *   check_exist?: boolean
+ * }} FSPathStringOptions
+ */
+
+/**
+ * @param {FSPathStringOptions} opts
+ */
+function fs_path_string({ cwd = process.cwd(), fallback, check_exist = false } = {}) {
+	const str = fallback ? _(string(), fallback) : string();
+
+	const str_coerce = coerce(string(), str, (value) => {
+		return path.isAbsolute(value) ? value : path.join(cwd, value);
+	});
+
+	return refine(str_coerce, 'fs_path_string', (value) => {
+		return !check_exist || fs.existsSync(value) || `${path.relative(cwd, value)} does not exist`;
+	});
+}
+
+/**
+ * @param {FSPathStringOptions} opts
+ */
+function template_path_string({ cwd = process.cwd(), fallback } = {}) {
+	return refine(fs_path_string({ cwd, fallback }), 'template_path_string', (value) => {
+		const contents = fs.readFileSync(value, 'utf8');
+		const expected_tags = ['%svelte.head%', '%svelte.body%'];
+		expected_tags.forEach((tag) => {
+			if (contents.indexOf(tag) === -1) {
+				return `${path.relative(cwd, value)} is missing ${tag}`;
+			}
+		});
+		return true;
+	});
+}
+
+function paths_base() {
+	return refine(string(), 'paths_base', (value) => {
+		if (value !== '' && (value.endsWith('/') || !value.startsWith('/'))) {
+			return `Expected path to be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths`;
+		}
+
+		return true;
+	});
+}
+
+function paths_assets() {
+	return refine(string(), 'paths_assets', (value) => {
+		if (!/^[a-z]+:\/\//.test(value)) {
+			return 'Expected path to be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths';
+		}
+
+		if (value.endsWith('/')) {
+			return "Expected path tp not end with '/'. See https://kit.svelte.dev/docs#configuration-paths";
+		}
+
+		return true;
+	});
+}
+
+function prerender_force() {
+	return deprecated(string(), (value, ctx) => {
+		const newSetting = value ? 'continue' : 'fail';
+		const needsSetting = newSetting === 'continue';
+		return `${
+			ctx.path
+		} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
+			needsSetting ? '' : ' (or leave it undefined)'
+		} to get the same behavior as you would with \`force: ${print(value)}\``;
+	});
+}
+
 function on_error() {
 	return refine(union([func(), string()]), 'on_error', (value, ctx) => {
 		if (typeof value !== 'function' && !['continue', 'fail'].includes(value)) {
@@ -138,18 +229,6 @@ function page() {
 		}
 
 		return true;
-	});
-}
-
-function prerender_force() {
-	return deprecated(string(), (value, ctx) => {
-		const newSetting = value ? 'continue' : 'fail';
-		const needsSetting = newSetting === 'continue';
-		return `${
-			ctx.path
-		} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
-			needsSetting ? '' : ' (or leave it undefined)'
-		} to get the same behavior as you would with \`force: ${print(value)}\``;
 	});
 }
 
