@@ -263,7 +263,7 @@ export async function load_node({
 			context: { ...context }
 		};
 
-		if (route.lang) load_input.lang = route.lang;
+		if (route?.lang) load_input.lang = route.lang;
 
 		if (is_error) {
 			/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;

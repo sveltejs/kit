@@ -239,12 +239,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				error_stack.splice(i + 1);
 
 				/**
-	 			 * @param {Part[][]} segments
-				 * @returns {string|null}
+				 * @param {Part[][]} segments
+				 * @returns {string}
 				 */
-				const makePathFromSegments = (segments) =>  segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: '';
+				const makePathFromSegments = (segments) =>
+					segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+						? `/${segments.map((segment) => segment[0].content).join('/')}`
+						: '';
 
 				const path = makePathFromSegments(segments);
 
@@ -265,14 +266,16 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				if (i18n) {
 					i18n.locales
-						.filter(locale => locale !== i18n.defaultLocale)
-						.forEach(locale => {
+						.filter((locale) => locale !== i18n.defaultLocale)
+						.forEach((locale) => {
 							const i18nSegments = [
-								[{
-									content: locale,
-									dynamic: false,
-									spread: false
-								}],
+								[
+									{
+										content: locale,
+										dynamic: false,
+										spread: false
+									}
+								],
 								...segments
 							];
 							const pattern = get_pattern(i18nSegments, true);
