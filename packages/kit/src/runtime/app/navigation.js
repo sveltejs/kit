@@ -60,7 +60,6 @@ async function prefetchRoutes_(pathnames) {
  * @type {import('$app/navigation').switchLocalePath}
  */
 function switchLocalePath_(lang) {
-	// @ts-expect-error
 	return router.switchLocalePath(lang);
 }
 
@@ -68,6 +67,5 @@ function switchLocalePath_(lang) {
  * @type {import('$app/navigation').i18nRoute}
  */
 function i18nRoute_(route) {
-	// @ts-expect-error
 	return router.i18nRoute(route);
 }
