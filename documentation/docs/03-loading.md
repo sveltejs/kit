@@ -5,9 +5,10 @@ title: Loading
 A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
 
 ```ts
-// load TypeScript type definitions
+// Declaration types for Loading
+// * declarations that are not exported are for internal use
 
-type LoadInput<
+export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Context extends Record<string, any> = Record<string, any>,
 	Session = any
@@ -18,12 +19,12 @@ type LoadInput<
 		params: PageParams;
 		query: URLSearchParams;
 	};
-	fetch: (info: RequestInfo, init?: RequestInit) => Promise<Response>;
+	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	context: Context;
 };
 
-type LoadOutput<
+export interface LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
 	Context extends Record<string, any> = Record<string, any>
 > = {
@@ -62,13 +63,15 @@ Our example blog page might contain a `load` function like the following:
 	}
 </script>
 ```
-> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.  
+
+> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implemention of `fetch`, which has the following special properties:
+
 - it has access to cookies on the server
 - it can make requests against the app's own endpoints without issuing an HTTP call
 - it makes a copy of the response when you use it, and then sends it embedded in the initial page load for hydration
