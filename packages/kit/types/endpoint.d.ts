@@ -1,4 +1,4 @@
-import { ServerRequest } from './hooks';
+import { Request } from './hooks';
 import { MaybePromise, ResponseHeaders } from './helper';
 
 type ToJSON = { toJSON(...args: any[]): JSONValue };
@@ -25,5 +25,5 @@ export interface RequestHandler<
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: ServerRequest<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
+	(request: Request<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
 }

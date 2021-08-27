@@ -11,8 +11,8 @@ export function sequence(...handlers) {
 
 		/**
 		 * @param {number} i
-		 * @param {import('types/hooks').ServerRequest} request
-		 * @returns {import('types/helper').MaybePromise<import('types/hooks').ServerResponse>}
+		 * @param {import('types/hooks').Request} request
+		 * @returns {import('types/helper').MaybePromise<import('types/hooks').Response>}
 		 */
 		function apply_handle(i, request) {
 			const handle = handlers[i];

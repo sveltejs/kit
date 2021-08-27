@@ -1,5 +1,5 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
-import { ServerResponse } from './hooks';
+import { Response } from './hooks';
 
 export interface App {
 	init(options?: {
@@ -16,10 +16,10 @@ export interface App {
 			prerender: {
 				fallback?: string;
 				all: boolean;
-				dependencies?: Map<string, ServerResponse>;
+				dependencies?: Map<string, Response>;
 			};
 		}
-	): Promise<ServerResponse>;
+	): Promise<Response>;
 }
 
 export type RawBody = null | Uint8Array;

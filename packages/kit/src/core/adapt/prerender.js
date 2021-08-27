@@ -148,7 +148,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types/hooks').ServerResponse>} */
+		/** @type {Map<string, import('types/hooks').Response>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(

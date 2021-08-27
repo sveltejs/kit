@@ -69,8 +69,7 @@ export interface IncomingRequest {
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
+export interface Request<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
@@ -89,7 +88,7 @@ export interface RequestHandler<
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > = (
-	request: ServerRequest<Locals, Input>
+	request: Request<Locals, Input>
 ) => void | EndpointOutput<Output> | Promise<void | EndpointOutput<Output>>;
 ```
 

@@ -36,8 +36,7 @@ export interface IncomingRequest {
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
+export interface Request<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
@@ -45,8 +44,7 @@ export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 }
 
 type StrictBody = string | Uint8Array;
-// ServerResponse is exported as Response
-export interface ServerResponse {
+export interface Response {
 	status: number;
 	headers: ResponseHeaders;
 	body?: StrictBody;
@@ -54,9 +52,9 @@ export interface ServerResponse {
 
 export interface Handle<Locals = Record<string, any>> {
 	(input: {
-		request: ServerRequest<Locals>;
-		resolve(request: ServerRequest<Locals>): ServerResponse | Promise<ServerResponse>;
-	}): ServerResponse | Promise<ServerResponse>;
+		request: Request<Locals>;
+		resolve(request: Request<Locals>): Response | Promise<Response>;
+	}): Response | Promise<Response>;
 }
 ```
 

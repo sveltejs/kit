@@ -5,7 +5,7 @@ const s = JSON.stringify;
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   request: import('types/hooks').Request;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage | null;

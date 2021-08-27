@@ -12,14 +12,14 @@ import { coalesce_to_error } from '../../utils.js';
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   request: import('types/hooks').Request;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   page: import('types/page').Page;
  * }} opts
- * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
+ * @returns {Promise<import('types/hooks').Response | undefined>}
  */
 export async function respond(opts) {
 	const { request, options, state, $session, route } = opts;

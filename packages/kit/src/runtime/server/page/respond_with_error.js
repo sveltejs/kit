@@ -11,7 +11,7 @@ import { coalesce_to_error } from '../../utils.js';
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   request: import('types/hooks').Request;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;

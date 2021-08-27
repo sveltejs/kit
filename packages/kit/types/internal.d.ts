@@ -1,12 +1,5 @@
 import { RequestHandler } from './endpoint';
-import {
-	ExternalFetch,
-	GetSession,
-	Handle,
-	HandleError,
-	ServerRequest,
-	ServerResponse
-} from './hooks';
+import { ExternalFetch, GetSession, Handle, HandleError, Request, Response } from './hooks';
 import { Load } from './page';
 
 type PageId = string;
@@ -118,7 +111,7 @@ export interface SSRRenderOptions {
 	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
+	handle_error(error: Error & { frame?: string }, request: Request<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
 	load_component(id: PageId): Promise<SSRNode>;
@@ -144,7 +137,7 @@ export interface SSRRenderState {
 	prerender?: {
 		fallback: string;
 		all: boolean;
-		dependencies: Map<string, ServerResponse>;
+		dependencies: Map<string, Response>;
 		error: Error;
 	};
 	fallback?: string;

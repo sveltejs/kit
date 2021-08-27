@@ -1,12 +1,12 @@
 import { respond } from './respond.js';
 
 /**
- * @param {import('types/hooks').ServerRequest} request
+ * @param {import('types/hooks').Request} request
  * @param {import('types/internal').SSRPage} route
  * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
- * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
+ * @returns {Promise<import('types/hooks').Response | undefined>}
  */
 export async function render_page(request, route, match, options, state) {
 	if (state.initiator === route) {

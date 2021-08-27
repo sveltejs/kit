@@ -33,10 +33,10 @@ function is_content_type_textual(content_type) {
 }
 
 /**
- * @param {import('types/hooks').ServerRequest} request
+ * @param {import('types/hooks').Request} request
  * @param {import('types/internal').SSREndpoint} route
  * @param {RegExpExecArray} match
- * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
+ * @returns {Promise<import('types/hooks').Response | undefined>}
  */
 export async function render_endpoint(request, route, match) {
 	const mod = await route.load();
