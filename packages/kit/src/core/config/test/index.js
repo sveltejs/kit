@@ -40,6 +40,7 @@ async function testLoadDefaultConfig(path) {
 			package: {
 				dir: 'package',
 				exports: {
+					behavior: 'replace',
 					include: ['**'],
 					exclude: ['_*', '**/_*']
 				},

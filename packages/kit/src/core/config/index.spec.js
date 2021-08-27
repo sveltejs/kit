@@ -30,6 +30,7 @@ test('fills in defaults', () => {
 			package: {
 				dir: 'package',
 				exports: {
+					behavior: 'replace',
 					include: ['**'],
 					exclude: ['_*', '**/_*']
 				},
@@ -140,6 +141,7 @@ test('fills in partial blanks', () => {
 			package: {
 				dir: 'package',
 				exports: {
+					behavior: 'replace',
 					include: ['**'],
 					exclude: ['_*', '**/_*']
 				},

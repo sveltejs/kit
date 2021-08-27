@@ -52,6 +52,7 @@ export interface Config {
 			dir?: string;
 			emitTypes?: boolean;
 			exports?: {
+				behavior?: 'replace' | 'merge';
 				include?: string[];
 				exclude?: string[];
 			};

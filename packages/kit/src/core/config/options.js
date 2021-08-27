@@ -91,6 +91,7 @@ const options = {
 					exports: {
 						type: 'branch',
 						children: {
+							behavior: expect_string('replace'),
 							include: expect_array_of_strings(['**']),
 							exclude: expect_array_of_strings(['_*', '**/_*'])
 						}
