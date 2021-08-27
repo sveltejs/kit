@@ -45,6 +45,34 @@ HOST=127.0.0.1 PORT=4000 node build
 
 You can specify different environment variables if necessary using the `env` option.
 
+## Middleware
+
+The adapter exports a middleware `(req, res, next) => {}` that's compatible with [Express](https://github.com/expressjs/expressjs.com) / [Connect](https://github.com/senchalabs/connect) / [Polka](https://github.com/lukeed/polka). Additionally, it also exports a reference server implementation using this middleware with a plain Node HTTP server.
+
+But you can use your favorite server framework to combine it with other middleware and server logic. You can import `kitMiddleware`, your ready-to-use SvelteKit bundle as middleware, from `./build/middlewares.js`.
+
+```
+import { assetsMiddleware, prerenderedMiddleware, kitMiddleware } from './build/middlewares.js';
+import polka from 'polka';
+
+const app = polka();
+
+const myMiddleware = function(req, res, next) {
+  console.log('Hello world!');
+  next();
+};
+
+app.use(myMiddleware);
+
+app.get('/no-svelte', (req, res) => {
+  res.end('This is not Svelte!')
+});
+
+app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
+
+app.listen(3000)
+```
+
 ## Advanced Configuration
 
 ### esbuild
