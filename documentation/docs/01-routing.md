@@ -88,9 +88,12 @@ export interface RequestHandler<
 	Locals = Record<string, any>,
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
-> = (
-	request: ServerRequest<Locals, Input>
-) => void | EndpointOutput<Output> | Promise<void | EndpointOutput<Output>>;
+> {
+	(request: ServerRequest<Locals, Input>):
+		| void
+		| EndpointOutput<Output>
+		| Promise<void | EndpointOutput<Output>>;
+}
 ```
 
  For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
