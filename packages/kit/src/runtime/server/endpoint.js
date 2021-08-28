@@ -1,3 +1,4 @@
+import { get_single_valued_header } from '../../utils/http.js';
 import { lowercase_keys } from './utils.js';
 
 /** @param {string} body */
@@ -62,7 +63,7 @@ export async function render_endpoint(request, route, match) {
 	let { status = 200, body, headers = {} } = response;
 
 	headers = lowercase_keys(headers);
-	const type = headers['content-type'];
+	const type = get_single_valued_header(headers, 'content-type');
 
 	const is_type_textual = is_content_type_textual(type);
 

@@ -1,6 +1,6 @@
 ---
 title: Appendix
---- 
+---
 
 The core of SvelteKit provides a highly configurable rendering engine. This section describes some of the terms used when discussing rendering. A reference for setting these options is provided in the documentation above.
 

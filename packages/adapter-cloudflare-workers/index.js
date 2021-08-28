@@ -8,15 +8,11 @@ import { fileURLToPath } from 'url';
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} [options]
- **/
+/** @type {import('.')} */
 export default function (options) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
+
 		async adapt({ utils }) {
 			const { site } = validate_config(utils);
 
@@ -39,7 +35,7 @@ export default function (options) {
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
 			/** @type {BuildOptions} */
-			const defaultOptions = {
+			const default_options = {
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
@@ -47,10 +43,10 @@ export default function (options) {
 				platform: 'browser'
 			};
 
-			const buildOptions =
-				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
+			const build_options =
+				options && options.esbuild ? await options.esbuild(default_options) : default_options;
 
-			await esbuild.build(buildOptions);
+			await esbuild.build(build_options);
 
 			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
 
@@ -64,8 +60,6 @@ export default function (options) {
 			utils.copy_client_files(bucket);
 		}
 	};
-
-	return adapter;
 }
 
 function validate_config(utils) {

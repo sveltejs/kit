@@ -1,7 +1,10 @@
-declare function plugin(options?: {
+import { Adapter } from '@sveltejs/kit';
+
+interface AdapterOptions {
 	pages?: string;
 	assets?: string;
 	fallback?: string;
-}): import('@sveltejs/kit').Adapter;
+}
 
+declare function plugin(options?: AdapterOptions): Adapter;
 export = plugin;

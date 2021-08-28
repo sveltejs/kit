@@ -1,7 +1,4 @@
-/**
- * @param {import('http').IncomingMessage} req
- * @returns {Promise<import('types/hooks').RawBody>}
- */
+/** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;

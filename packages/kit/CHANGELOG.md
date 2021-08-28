@@ -1,5 +1,39 @@
 # @sveltejs/kit
 
+## 1.0.0-next.158
+
+### Patch Changes
+
+- avoid setting rawBody/body to an empty Uint8Array when a load's fetch function is called with no body during SSR ([#2295](https://github.com/sveltejs/kit/pull/2295))
+
+## 1.0.0-next.157
+
+### Patch Changes
+
+- [chore] separate RequestHeaders and ResponseHeaders types ([#2248](https://github.com/sveltejs/kit/pull/2248))
+
+* [fix] don't de-indent user-rendered HTML ([#2292](https://github.com/sveltejs/kit/pull/2292))
+
+## 1.0.0-next.156
+
+### Patch Changes
+
+- allow any top-level keys in svelte config ([#2267](https://github.com/sveltejs/kit/pull/2267))
+
+* Exclude emitted declarations on packaging ([#2247](https://github.com/sveltejs/kit/pull/2247))
+
+## 1.0.0-next.155
+
+### Patch Changes
+
+- [chore] export App types ([#2259](https://github.com/sveltejs/kit/pull/2259))
+
+## 1.0.0-next.154
+
+### Patch Changes
+
+- Upgrade to Vite 2.5.0 ([#2231](https://github.com/sveltejs/kit/pull/2231))
+
 ## 1.0.0-next.153
 
 ### Patch Changes

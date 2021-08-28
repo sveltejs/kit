@@ -14,7 +14,7 @@ export default function (test, is_dev) {
 			]);
 		} else {
 			assert.ok(sources[0].startsWith('data:image/png;base64,'));
-			assert.equal(sources[1].replace(base, ''), '/_app/assets/large.3183867c.jpg');
+			assert.equal(sources[1].replace(base, ''), '/_app/assets/large-3183867c.jpg');
 		}
 	});
 }

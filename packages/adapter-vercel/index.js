@@ -7,14 +7,9 @@ import esbuild from 'esbuild';
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} [options]
- **/
+/** @type {import('.')} **/
 export default function (options) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt({ utils }) {
@@ -37,7 +32,7 @@ export default function (options) {
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
 			/** @type {BuildOptions} */
-			const defaultOptions = {
+			const default_options = {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
@@ -45,10 +40,10 @@ export default function (options) {
 				platform: 'node'
 			};
 
-			const buildOptions =
-				options && options.esbuild ? await options.esbuild(defaultOptions) : defaultOptions;
+			const build_options =
+				options && options.esbuild ? await options.esbuild(default_options) : default_options;
 
-			await esbuild.build(buildOptions);
+			await esbuild.build(build_options);
 
 			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
@@ -65,6 +60,4 @@ export default function (options) {
 			utils.copy(join(files, 'routes.json'), join(dir, 'config/routes.json'));
 		}
 	};
-
-	return adapter;
 }
