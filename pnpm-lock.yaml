@@ -30,7 +30,7 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_9d3ce2148653bb6cbbfcd9b88d4d1961
       '@typescript-eslint/eslint-plugin': 4.28.4_b1648df9f9ba40bdeef3710a5a5af353
       '@typescript-eslint/parser': 4.28.4_eslint@7.31.0+typescript@4.3.5
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/09c92b2b876365be1567b05a30a5778755b42c0d
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/321fe3aec0f4484eaa42e32283025106161cc296
       dotenv: 10.0.0
       eslint: 7.31.0
       eslint-plugin-import: 2.23.4_eslint@7.31.0
@@ -232,12 +232,12 @@ importers:
       svelte2tsx: ~0.4.1
       tiny-glob: ^0.2.8
       uvu: ^0.5.1
-      vite: ^2.5.0
+      vite: ^2.5.2
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.16_svelte@3.40.0+vite@2.5.0
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.16_svelte@3.40.0+vite@2.5.2
       cheap-watch: 1.0.3
       sade: 1.7.4
-      vite: 2.5.0
+      vite: 2.5.2
     devDependencies:
       '@rollup/plugin-replace': 2.4.2_rollup@2.55.0
       '@types/amphtml-validator': 1.0.1
@@ -780,7 +780,7 @@ packages:
       picomatch: 2.2.3
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.16_svelte@3.40.0+vite@2.5.0:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.16_svelte@3.40.0+vite@2.5.2:
     resolution: {integrity: sha512-Zzw5vWJ2PjeAFG04/HQrTHvTd4B+v/pz5hgod7fPMOMXu289ZuHs2DPj68xBmOGlmTq0JyrMfBl+NDGCgaSxzA==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
@@ -798,7 +798,7 @@ packages:
       require-relative: 0.8.7
       svelte: 3.40.0
       svelte-hmr: 0.14.7_svelte@3.40.0
-      vite: 2.5.0
+      vite: 2.5.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4073,8 +4073,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/2.5.0:
-    resolution: {integrity: sha512-Dn4B+g54PJsMG5WCc4QeFy1ygMXRdTtFrUPegqfk4+vzVQcbF/DqqmI/1bxezArzbujBJg/67QeT5wz8edfJVQ==}
+  /vite/2.5.2:
+    resolution: {integrity: sha512-JK5uhiVyMqHiAJbgBa8rCvpP8bEhAE9dKDv1gCmP+EUP2FSPmEeW3WXlCXauPB3MDa8behPW+ntyNXqnGaxslg==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     dependencies:
@@ -4248,8 +4248,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/09c92b2b876365be1567b05a30a5778755b42c0d:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/09c92b2b876365be1567b05a30a5778755b42c0d}
+  github.com/sveltejs/action-deploy-docs/321fe3aec0f4484eaa42e32283025106161cc296:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/321fe3aec0f4484eaa42e32283025106161cc296}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true
