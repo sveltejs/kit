@@ -398,7 +398,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 						},
 						load_component: async (id) => {
-							const url = path.resolve(cwd, id);
+							const url = `/${id}`;
 
 							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
 							const node = await vite.moduleGraph.getModuleByUrl(url);
@@ -430,13 +430,9 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 								}
 							}
 
-							let entry = `/${id}`;
-							if (!entry.endsWith('.svelte')) {
-								entry += '?import';
-							}
 							return {
 								module,
-								entry,
+								entry: url.endsWith('.svelte') ? url : url + '?import',
 								css: [],
 								js: [],
 								styles: Array.from(styles)
