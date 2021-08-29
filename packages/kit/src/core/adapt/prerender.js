@@ -256,7 +256,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				for (const href of hrefs) {
 					if (!href) continue;
 
-					const resolved = resolve(path, href);
+					// If server runs on localhost, bundled assets are not put at `kit.paths.base` property's value which is defined at `svelte.config.js`.
+					// But bundle process will not create such base path. (This is correct behavior.)
+					// And all `hrefs` starts with the base path because `kit.paths.base` is set.
+					// In this case, paths between hrefs and actual bundled asserts are not matched.
+					// e.g.) `href` is `/some-basepath/_app/start-8e35c5cf.js`, and actual path is `/_app/start-8e35c5cf.js`
+					// Therefore we need to remove base path from hrefs.
+					// const resolved = resolve(path, href);
+					const resolved = resolve(path, href).replace(config.kit.paths.base, '');
 					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
