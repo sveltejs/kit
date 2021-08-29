@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.159
+
+### Patch Changes
+
+- Add `@sveltejs/kit` to noExternal to resolve hooks module in dev server ([#2306](https://github.com/sveltejs/kit/pull/2306))
+
+* [fix] HMR on Windows ([#2315](https://github.com/sveltejs/kit/pull/2315))
+
 ## 1.0.0-next.158
 
 ### Patch Changes
