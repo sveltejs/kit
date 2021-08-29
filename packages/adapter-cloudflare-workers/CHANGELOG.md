@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- Support assigning multiple values to a header ([#2313](https://github.com/sveltejs/kit/pull/2313))
+
 ## 1.0.0-next.19
 
 ### Patch Changes
