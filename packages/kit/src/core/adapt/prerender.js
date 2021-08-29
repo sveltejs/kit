@@ -262,8 +262,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					// In this case, paths between hrefs and actual bundled asserts are not matched.
 					// e.g.) `href` is `/some-basepath/_app/start-8e35c5cf.js`, and actual path is `/_app/start-8e35c5cf.js`
 					// Therefore we need to remove base path from hrefs.
-					// const resolved = resolve(path, href);
-					const resolved = resolve(path, href).replace(config.kit.paths.base, '');
+					const resolved = (() => {
+						const resolved1 = resolve(path, href);
+						if (resolved1.startsWith(config.kit.paths.base)) {
+							return resolved1.replace(config.kit.paths.base, '');
+						}
+						return resolved1;
+					})();
 					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
