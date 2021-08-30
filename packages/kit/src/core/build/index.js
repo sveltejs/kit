@@ -606,7 +606,8 @@ async function build_service_worker(
 		},
 		resolve: {
 			alias: {
-				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
+				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`),
+				$lib: config.kit.files.lib
 			}
 		}
 	});
