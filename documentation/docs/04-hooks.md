@@ -79,7 +79,7 @@ export async function handle({ request, resolve }) {
 }
 ```
 
-You can add call multiple `handle` functions with [the `sequence` helper function](#modules-@sveltejs/kit/hooks).
+You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
 
 ### handleError
 
