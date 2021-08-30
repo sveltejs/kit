@@ -1,7 +1,7 @@
 {
 	"name": "exports-replace",
 	"version": "1.0.0",
-	"description": "default exports settings",
+	"description": "exports.behavior settings set to replace",
 	"exports": {
 		".": {
 			"import": "./index.js"
