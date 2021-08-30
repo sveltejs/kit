@@ -485,14 +485,20 @@ async function build_server(
 				compilerOptions: {
 					hydratable: !!config.kit.hydrate
 				}
-			})
-		],
-		resolve: {
-			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
-				$lib: config.kit.files.lib
+			}),
+			{
+				name: 'sveltekit:alias',
+				// leverage vite's config merge since alias can be an object or array
+				config: () => ({
+					resolve: {
+						alias: {
+							$app: path.resolve(`${build_dir}/runtime/app`),
+							$lib: config.kit.files.lib
+						}
+					}
+				})
 			}
-		},
+		],
 		ssr: {
 			noExternal: [
 				'@sveltejs/kit', // TODO: see https://github.com/vitejs/vite/issues/3953
