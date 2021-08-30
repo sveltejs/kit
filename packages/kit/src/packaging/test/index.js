@@ -54,9 +54,9 @@ function format(file, content) {
 	if (file.endsWith('package.json')) {
 		// For some reason these are ordered differently in different test environments
 		const json = JSON.parse(content);
-		json.exports = Object.keys(json.exports)
-			.sort()
-			.map((key) => json.exports[key]);
+		json.exports = Object.entries(json.exports).sort(
+			([ak, av], [bk, bv]) => ak.localeCompare(bk) || av.localeCompare(bv)
+		);
 		content = JSON.stringify(json);
 	}
 	return prettier.format(content, {
