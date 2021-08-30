@@ -107,8 +107,6 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, vite_config, (req, res) => handler(req, res));
 
-		const alias = vite_config.resolve && vite_config.resolve.alias;
-
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
@@ -118,23 +116,6 @@ class Watcher extends EventEmitter {
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
 			root: this.cwd,
-			resolve: {
-				alias: Array.isArray(alias)
-					? [
-							{
-								find: '$app',
-								replacement: path.resolve(`${this.dir}/runtime/app`)
-							},
-							{
-								find: '$lib',
-								replacement: this.config.kit.files.lib
-							}
-					  ]
-					: {
-							$app: path.resolve(`${this.dir}/runtime/app`),
-							$lib: this.config.kit.files.lib
-					  }
-			},
 			build: {
 				rollupOptions: {
 					// Vite dependency crawler needs an explicit JS entry point
@@ -157,7 +138,19 @@ class Watcher extends EventEmitter {
 					compilerOptions: {
 						hydratable: !!this.config.kit.hydrate
 					}
-				})
+				}),
+				{
+					name: 'sveltekit:alias',
+					// leverage vite's config merge since alias can be an object or array
+					config: () => ({
+						resolve: {
+							alias: {
+								$app: path.resolve(`${this.dir}/runtime/app`),
+								$lib: this.config.kit.files.lib
+							}
+						}
+					})
+				}
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {

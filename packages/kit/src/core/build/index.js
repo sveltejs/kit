@@ -166,12 +166,6 @@ async function build_client({
 				preserveEntrySignatures: 'strict'
 			}
 		},
-		resolve: {
-			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
-				$lib: config.kit.files.lib
-			}
-		},
 		plugins: [
 			svelte({
 				extensions: config.extensions,
@@ -179,7 +173,19 @@ async function build_client({
 				compilerOptions: {
 					hydratable: !!config.kit.hydrate
 				}
-			})
+			}),
+			{
+				name: 'sveltekit:alias',
+				// leverage vite's config merge since alias can be an object or array
+				config: () => ({
+					resolve: {
+						alias: {
+							$app: path.resolve(`${build_dir}/runtime/app`),
+							$lib: config.kit.files.lib
+						}
+					}
+				})
+			}
 		]
 	});
 
@@ -604,11 +610,19 @@ async function build_service_worker(
 				...svelte_packages
 			]
 		},
-		resolve: {
-			alias: {
-				'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
+		plugins: [
+			{
+				name: 'sveltekit:alias',
+				// leverage vite's config merge since alias can be an object or array
+				config: () => ({
+					resolve: {
+						alias: {
+							'$service-worker': path.resolve(`${build_dir}/runtime/service-worker`)
+						}
+					}
+				})
 			}
-		}
+		]
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
