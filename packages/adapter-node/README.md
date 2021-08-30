@@ -73,6 +73,8 @@ app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
 app.listen(3000)
 ```
 
+For using middleware in dev mode, [see the FAQ](https://kit.svelte.dev/faq#how-do-i-use-x-with-sveltekit-how-do-i-use-middleware).
+
 ## Advanced Configuration
 
 ### esbuild
