@@ -67,7 +67,7 @@ Put the code to query your database in [endpoints](/docs#routing-endpoints) - do
 
 ### How do I use middleware?
 
-`adapter-node` builds a middleware that use can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
 const myPlugin = {
