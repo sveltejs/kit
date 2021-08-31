@@ -11,15 +11,6 @@ const config = {
 				// for CI, we need to explicitly prebundle deps, since
 				// the reload confuses Playwright
 				include: ['cookie', 'marked']
-			},
-			resolve: {
-				// ensure alias array merges properly
-				alias: [
-					{
-						find: /my\-custom\-alias/,
-						replacement: './_foo.js'
-					}
-				]
 			}
 		}
 	}
