@@ -107,8 +107,6 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, vite_config, (req, res) => handler(req, res));
 
-		const alias = vite_config.resolve && vite_config.resolve.alias;
-
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
@@ -119,21 +117,10 @@ class Watcher extends EventEmitter {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
-				alias: Array.isArray(alias)
-					? [
-							{
-								find: '$app',
-								replacement: path.resolve(`${this.dir}/runtime/app`)
-							},
-							{
-								find: '$lib',
-								replacement: this.config.kit.files.lib
-							}
-					  ]
-					: {
-							$app: path.resolve(`${this.dir}/runtime/app`),
-							$lib: this.config.kit.files.lib
-					  }
+				alias: {
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
+				}
 			},
 			build: {
 				rollupOptions: {
