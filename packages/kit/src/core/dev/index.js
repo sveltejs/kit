@@ -131,6 +131,12 @@ class Watcher extends EventEmitter {
 					...svelte_packages
 				]
 			},
+			resolve: {
+				alias: {
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
+				}
+			},
 			plugins: [
 				svelte({
 					extensions: this.config.extensions,
@@ -138,19 +144,7 @@ class Watcher extends EventEmitter {
 					compilerOptions: {
 						hydratable: !!this.config.kit.hydrate
 					}
-				}),
-				{
-					name: 'sveltekit:alias',
-					// leverage vite's config merge since alias can be an object or array
-					config: () => ({
-						resolve: {
-							alias: {
-								$app: path.resolve(`${this.dir}/runtime/app`),
-								$lib: this.config.kit.files.lib
-							}
-						}
-					})
-				}
+				})
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
