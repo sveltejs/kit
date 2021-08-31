@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.160
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.5.2 to fix URL decoding ([#2323](https://github.com/sveltejs/kit/pull/2323))
+
+* Add `@sveltejs/kit` to `noExternal` in dev server as well ([#2332](https://github.com/sveltejs/kit/pull/2332))
+
 ## 1.0.0-next.159
 
 ### Patch Changes
