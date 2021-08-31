@@ -501,4 +501,30 @@ deepMergeSuite('merge including toString', () => {
 	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
 });
 
+deepMergeSuite('merge resolve.alias', () => {
+	const [merged, conflicts] = deep_merge(
+		{
+			resolve: {
+				alias: [{ find: /foo/, replacement: 'bar' }]
+			}
+		},
+		{
+			resolve: {
+				alias: {
+					alpha: 'beta'
+				}
+			}
+		}
+	);
+	assert.equal(conflicts.length, 0);
+	assert.equal(merged, {
+		resolve: {
+			alias: [
+				{ find: /foo/, replacement: 'bar' },
+				{ find: 'alpha', replacement: 'beta' }
+			]
+		}
+	});
+});
+
 deepMergeSuite.run();
