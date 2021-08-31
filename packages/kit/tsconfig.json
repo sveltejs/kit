@@ -10,6 +10,8 @@
 		"allowSyntheticDefaultImports": true,
 		"paths": {
 			"@sveltejs/kit": ["./types/index"],
+			// paths after this are for internal use only
+			"@sveltejs/kit/types/*": ["./types/*"],
 			"test": ["./test/types"],
 			"types/*": ["./types/*"]
 		}

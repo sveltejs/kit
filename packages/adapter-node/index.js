@@ -20,26 +20,14 @@ const pipe = promisify(pipeline);
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
-/**
- * @param {{
- *   out?: string;
- *   precompress?: boolean;
- *   env?: {
- *     path?: string;
- *     host?: string;
- *     port?: string;
- *   };
- *   esbuild?: (defaultOptions: BuildOptions) => Promise<BuildOptions> | BuildOptions;
- * }} options
- */
+/** @type {import('.')} */
 export default function ({
 	out = 'build',
 	precompress,
 	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
 	esbuild: esbuildConfig
 } = {}) {
-	/** @type {import('@sveltejs/kit').Adapter} */
-	const adapter = {
+	return {
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
@@ -53,7 +41,7 @@ export default function ({
 				await compress(static_directory);
 			}
 
-			utils.log.minor('Building server');
+			utils.log.minor('Building SvelteKit middleware');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
 			writeFileSync(
@@ -66,10 +54,11 @@ export default function ({
 					port_env
 				)}] || (!path && 3000);`
 			);
+
 			/** @type {BuildOptions} */
 			const defaultOptions = {
-				entryPoints: ['.svelte-kit/node/index.js'],
-				outfile: join(out, 'index.js'),
+				entryPoints: ['.svelte-kit/node/middlewares.js'],
+				outfile: join(out, 'middlewares.js'),
 				bundle: true,
 				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
 				format: 'esm',
@@ -83,6 +72,32 @@ export default function ({
 			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
 			await esbuild.build(buildOptions);
 
+			utils.log.minor('Building SvelteKit reference server');
+			/** @type {BuildOptions} */
+			const defaultOptionsRefServer = {
+				entryPoints: ['.svelte-kit/node/index.js'],
+				outfile: join(out, 'index.js'),
+				bundle: true,
+				external: ['./middlewares.js'], // does not work, eslint does not exclude middlewares from target
+				format: 'esm',
+				platform: 'node',
+				target: 'node12',
+				// external exclude workaround, see https://github.com/evanw/esbuild/issues/514
+				plugins: [
+					{
+						name: 'fix-middlewares-exclude',
+						setup(build) {
+							// Match an import called "./middlewares.js" and mark it as external
+							build.onResolve({ filter: /^\.\/middlewares\.js$/ }, () => ({ external: true }));
+						}
+					}
+				]
+			};
+			const buildOptionsRefServer = esbuildConfig
+				? await esbuildConfig(defaultOptionsRefServer)
+				: defaultOptionsRefServer;
+			await esbuild.build(buildOptionsRefServer);
+
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({
 				dest: `${out}/prerendered`
@@ -93,8 +108,6 @@ export default function ({
 			}
 		}
 	};
-
-	return adapter;
 }
 
 /**
@@ -127,9 +140,7 @@ async function compress_file(file, format = 'gz') {
 						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
 					}
 			  })
-			: zlib.createGzip({
-					level: zlib.constants.Z_BEST_COMPRESSION
-			  });
+			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
 	const source = createReadStream(file);
 	const destination = createWriteStream(`${file}.${format}`);

@@ -40,3 +40,26 @@ export function copy(from, to, filter = () => true) {
 
 	return files;
 }
+
+/** @param {string} cwd */
+export function walk(cwd) {
+	/** @type {string[]} */
+	const all_files = [];
+
+	/** @param {string} dir */
+	function walk_dir(dir) {
+		const files = fs.readdirSync(path.join(cwd, dir));
+
+		for (const file of files) {
+			const joined = path.join(dir, file);
+			const stats = fs.statSync(path.join(cwd, joined));
+			if (stats.isDirectory()) {
+				walk_dir(joined);
+			} else {
+				all_files.push(joined);
+			}
+		}
+	}
+
+	return walk_dir(''), all_files;
+}

@@ -1,15 +1,22 @@
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js'; // eslint-disable-line import/no-unresolved
-import { path, host, port } from './env.js'; // eslint-disable-line import/no-unresolved
-import { createServer } from './server';
+// @ts-ignore
+import { path, host, port } from './env.js';
+import { assetsMiddleware, kitMiddleware, prerenderedMiddleware } from './middlewares.js';
+import compression from 'compression';
+import polka from 'polka';
 
-init();
-
-const instance = createServer({ render });
+const server = polka().use(
+	// https://github.com/lukeed/polka/issues/173
+	// @ts-ignore - nothing we can do about so just ignore it
+	compression({ threshold: 0 }),
+	assetsMiddleware,
+	kitMiddleware,
+	prerenderedMiddleware
+);
 
 const listenOpts = { path, host, port };
-instance.listen(listenOpts, () => {
+
+server.listen(listenOpts, () => {
 	console.log(`Listening on ${path ? path : host + ':' + port}`);
 });
 
-export { instance };
+export { server };

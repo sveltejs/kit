@@ -1,5 +1,4 @@
 import { RequestHandler } from './endpoint';
-import { Headers, Location, ParameterizedBody, RawBody } from './helper';
 import {
 	ExternalFetch,
 	GetSession,
@@ -12,13 +11,6 @@ import { Load } from './page';
 
 type PageId = string;
 
-export interface Incoming extends Omit<Location, 'params'> {
-	method: string;
-	headers: Headers;
-	rawBody: RawBody;
-	body?: ParameterizedBody;
-}
-
 export interface Logger {
 	(msg: string): void;
 	success(msg: string): void;
@@ -26,31 +18,6 @@ export interface Logger {
 	warn(msg: string): void;
 	minor(msg: string): void;
 	info(msg: string): void;
-}
-
-export interface App {
-	init({
-		paths,
-		prerendering,
-		read
-	}: {
-		paths: {
-			base: string;
-			assets: string;
-		};
-		prerendering: boolean;
-		read(file: string): Buffer;
-	}): void;
-	render(
-		incoming: Incoming,
-		options?: {
-			prerender: {
-				fallback?: string;
-				all: boolean;
-				dependencies?: Map<string, ServerResponse>;
-			};
-		}
-	): Promise<ServerResponse>;
 }
 
 export interface SSRComponent {

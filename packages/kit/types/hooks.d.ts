@@ -1,18 +1,18 @@
-import { Headers, Location, MaybePromise, ParameterizedBody, RawBody } from './helper';
+import { IncomingRequest, ParameterizedBody } from './app';
+import { MaybePromise, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown> extends Location {
-	method: string;
-	headers: Headers;
-	rawBody: RawBody;
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
+	extends IncomingRequest {
+	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 }
 
 export interface ServerResponse {
 	status: number;
-	headers: Headers;
+	headers: ResponseHeaders;
 	body?: StrictBody;
 }
 
