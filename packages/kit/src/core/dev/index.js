@@ -116,6 +116,12 @@ class Watcher extends EventEmitter {
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
 			root: this.cwd,
+			resolve: {
+				alias: {
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
+				}
+			},
 			build: {
 				rollupOptions: {
 					// Vite dependency crawler needs an explicit JS entry point
@@ -130,12 +136,6 @@ class Watcher extends EventEmitter {
 					...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
 					...svelte_packages
 				]
-			},
-			resolve: {
-				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
 			},
 			plugins: [
 				svelte({

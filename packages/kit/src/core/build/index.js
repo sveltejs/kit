@@ -473,12 +473,6 @@ async function build_server(
 				...svelte_packages
 			]
 		},
-		resolve: {
-			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
-				$lib: config.kit.files.lib
-			}
-		},
 		plugins: [
 			svelte({
 				extensions: config.extensions,
@@ -487,6 +481,12 @@ async function build_server(
 				}
 			})
 		],
+		resolve: {
+			alias: {
+				$app: path.resolve(`${build_dir}/runtime/app`),
+				$lib: config.kit.files.lib
+			}
+		},
 		ssr: {
 			noExternal: [
 				'@sveltejs/kit', // TODO: see https://github.com/vitejs/vite/issues/3953
