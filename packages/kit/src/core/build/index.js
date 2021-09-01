@@ -489,7 +489,6 @@ async function build_server(
 		},
 		ssr: {
 			noExternal: [
-				'@sveltejs/kit', // TODO: see https://github.com/vitejs/vite/issues/3953
 				// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
 				...((vite_config.ssr && vite_config.ssr.noExternal) || []),
 				...svelte_packages
