@@ -89,11 +89,16 @@ const options = {
 				children: {
 					dir: expect_string('package'),
 					exports: {
-						type: 'branch',
-						children: {
-							behavior: expect_string('replace'),
-							include: expect_array_of_strings(['**']),
-							exclude: expect_array_of_strings(['_*', '**/_*'])
+						type: 'leaf',
+						default: null,
+						validate: (option, keypath) => {
+							if (typeof option !== 'object') {
+								throw new Error(
+									`${keypath} must be an object. See https://kit.svelte.dev/docs#configuration-package`
+								);
+							}
+
+							return option;
 						}
 					},
 					files: {
