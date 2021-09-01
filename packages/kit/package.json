@@ -3,7 +3,7 @@
 	"version": "1.0.0-next.161",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.16",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.21",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4",
 		"vite": "^2.5.3"
