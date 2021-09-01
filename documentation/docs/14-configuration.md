@@ -32,7 +32,10 @@ const config = {
 		package: {
 			dir: 'package',
 			emitTypes: true,
-			exports: null,
+			exports: {
+				include: ['**'],
+				exclude: ['**/_*']
+			},
 			files: {
 				include: ['**'],
 				exclude: []
@@ -128,8 +131,8 @@ Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with 
 Options related to [creating a package](#packaging).
 
 - `dir` - output directory
-- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead).
-- `exports` - specifies which files to mark as exported from the `exports` field of the `package.json`, can be set to `null` and will use existing `exports` field if available, or an object that contains an `includes` and an `excludes` array and will merge existing `exports`, with the value from `package.json` taking precedence
+- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
+- `exports` - contains an `includes` and an `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`. Will merge existing values if available with values from `package.json` taking precedence
 - `files` - contains an `includes` and an `excludes` array which specifies which files to process and copy over when packaging
 
 ### paths

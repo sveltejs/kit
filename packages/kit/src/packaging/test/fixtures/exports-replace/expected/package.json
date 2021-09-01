@@ -2,11 +2,11 @@
 	"name": "exports-replace",
 	"version": "1.0.0",
 	"description": "exports.behavior settings set to replace",
+	"type": "module",
 	"exports": {
 		".": {
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"
-	},
-	"type": "module"
+	}
 }

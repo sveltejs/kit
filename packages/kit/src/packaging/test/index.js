@@ -79,11 +79,11 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false');
 });
 
-test('create package with merge exports.behavior settings', async () => {
+test('create package and properly merge exports map', async () => {
 	await test_make_package('exports-merge');
 });
 
-test('create package with replace exports.behavior settings', async () => {
+test('create package and properly exclude all exports', async () => {
 	await test_make_package('exports-replace');
 });
 

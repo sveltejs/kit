@@ -2,7 +2,6 @@
 	"name": "exports-replace",
 	"version": "1.0.0",
 	"description": "exports.behavior settings set to merge",
-	"type": "module",
 	"exports": {
 		".": {
 			"import": "./index.js"

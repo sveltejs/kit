@@ -51,7 +51,7 @@ export interface Config {
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
-			exports?: null | {
+			exports?: {
 				include?: string[];
 				exclude?: string[];
 			};

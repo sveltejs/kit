@@ -21,11 +21,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	const files_filter = create_filter(config.kit.package.files);
 	const exports_filter = create_filter({
-		include: (config.kit.package.exports && config.kit.package.exports.include) || ['**'],
-		exclude: [
-			...((config.kit.package.exports && config.kit.package.exports.exclude) || ['**/_*']),
-			'**/*.d.ts'
-		]
+		include: config.kit.package.exports.include,
+		exclude: [...config.kit.package.exports.exclude, '**/*.d.ts']
 	});
 
 	const files = walk(config.kit.files.lib);
@@ -92,13 +89,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 	}
 
-	if (!pkg.exports) {
-		pkg.exports = generated;
-	} else if (!config.kit.package.exports) {
-		pkg.exports['./package.json'] = './package.json';
-	} else {
-		pkg.exports = { ...generated, ...pkg.exports };
-	}
+	pkg.exports = { ...generated, ...pkg.exports };
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
