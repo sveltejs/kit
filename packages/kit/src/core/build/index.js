@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, get_svelte_packages, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, posixify, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { create_app } from '../../core/create_app/index.js';
 import vite from 'vite';
@@ -33,7 +33,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	rimraf(build_dir);
 
 	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
-	const svelte_packages = get_svelte_packages(cwd);
 
 	const options = {
 		cwd,
@@ -51,8 +50,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
-		svelte_packages
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
 	const client_manifest = await build_client(options);
@@ -204,7 +202,6 @@ async function build_client({
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
- *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  * @param {string} runtime
@@ -218,8 +215,7 @@ async function build_server(
 		build_dir,
 		output_dir,
 		client_entry_file,
-		service_worker_entry_file,
-		svelte_packages
+		service_worker_entry_file
 	},
 	client_manifest,
 	runtime
@@ -465,14 +461,6 @@ async function build_server(
 				preserveEntrySignatures: 'strict'
 			}
 		},
-		optimizeDeps: {
-			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
-			// broken packages https://github.com/vitejs/vite/issues/3910
-			exclude: [
-				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
-				...svelte_packages
-			]
-		},
 		plugins: [
 			svelte({
 				extensions: config.extensions,
@@ -486,13 +474,6 @@ async function build_server(
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}
-		},
-		ssr: {
-			noExternal: [
-				// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
-				...((vite_config.ssr && vite_config.ssr.noExternal) || []),
-				...svelte_packages
-			]
 		}
 	});
 
@@ -511,7 +492,6 @@ async function build_server(
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
- *   svelte_packages: string[];
  * }} options
  * @param {ClientManifest} client_manifest
  */
@@ -523,8 +503,7 @@ async function build_service_worker(
 		manifest,
 		build_dir,
 		output_dir,
-		service_worker_entry_file,
-		svelte_packages
+		service_worker_entry_file
 	},
 	client_manifest
 ) {
@@ -593,15 +572,6 @@ async function build_service_worker(
 			},
 			outDir: `${output_dir}/client`,
 			emptyOutDir: false
-		},
-		optimizeDeps: {
-			entries: [],
-			// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
-			// broken packages https://github.com/vitejs/vite/issues/3910
-			exclude: [
-				...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
-				...svelte_packages
-			]
 		},
 		resolve: {
 			alias: {
