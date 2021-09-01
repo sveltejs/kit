@@ -496,15 +496,7 @@ async function build_server(
  * @param {ClientManifest} client_manifest
  */
 async function build_service_worker(
-	{
-		cwd,
-		assets_base,
-		config,
-		manifest,
-		build_dir,
-		output_dir,
-		service_worker_entry_file
-	},
+	{ cwd, assets_base, config, manifest, build_dir, output_dir, service_worker_entry_file },
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
