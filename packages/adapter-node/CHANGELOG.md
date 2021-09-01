@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- [feat] expose handler to allow use in custom server
+
 ## 1.0.0-next.43
 
 ### Patch Changes
