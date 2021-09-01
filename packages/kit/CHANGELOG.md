@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.162
+
+### Patch Changes
+
+- Enable nested dependency optimization by updating to @sveltejs/vite-plugin-svelte@1.0.0-next.21 ([#2343](https://github.com/sveltejs/kit/pull/2343))
+
 ## 1.0.0-next.161
 
 ### Patch Changes
