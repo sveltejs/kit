@@ -3,7 +3,10 @@
 	"version": "1.0.0-next.29",
 	"type": "module",
 	"exports": {
-		"import": "./index.js"
+		".": {
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
 	},
 	"main": "index.js",
 	"types": "index.d.ts",
