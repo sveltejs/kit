@@ -6,7 +6,7 @@ import { __fetch_polyfill } from '../../install-fetch.js';
 import { mkdirp } from '../../utils/filesystem.js';
 import { get_single_valued_header } from '../../utils/http.js';
 
-import { SERVER_OUTPUT } from '../constants.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -102,12 +102,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	__fetch_polyfill();
 
+	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
+
 	const seen = new Set();
 
-	const server_root = resolve_path(cwd, SERVER_OUTPUT);
+	const server_root = resolve_path(dir);
 
 	/** @type {import('types/app').App} */
-	const app = await import(pathToFileURL(`${server_root}/app.js`).href);
+	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
 		paths: config.kit.paths,

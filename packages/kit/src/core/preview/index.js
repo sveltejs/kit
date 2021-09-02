@@ -5,7 +5,7 @@ import { getRawBody } from '../node/index.js';
 import { join, resolve } from 'path';
 import { get_server } from '../server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { CLIENT_OUTPUT, SERVER_OUTPUT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -32,7 +32,7 @@ export async function preview({
 }) {
 	__fetch_polyfill();
 
-	const app_file = resolve(cwd, `${SERVER_OUTPUT}/app.js`);
+	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 
 	/** @type {import('types/app').App} */
 	const app = await import(pathToFileURL(app_file).href);
@@ -45,7 +45,7 @@ export async function preview({
 				return next();
 		  };
 
-	const assets_handler = sirv(resolve(cwd, CLIENT_OUTPUT), {
+	const assets_handler = sirv(resolve(cwd, `${SVELTE_KIT}/output/client`), {
 		maxAge: 31536000,
 		immutable: true
 	});

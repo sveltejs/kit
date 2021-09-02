@@ -4,6 +4,3 @@ export const SVELTE_KIT = '.svelte-kit';
 // asset path so that we can serve local assets while still
 // verifying that requests are correctly prefixed
 export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
-
-export const CLIENT_OUTPUT = `${SVELTE_KIT}/output/client`;
-export const SERVER_OUTPUT = `${SVELTE_KIT}/output/server`;
