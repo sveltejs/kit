@@ -1,11 +1,11 @@
 import { getRawBody } from '@sveltejs/kit/node';
 
 /**
+ * @param {import('@sveltejs/kit').App} app
  * @return {import('polka').Middleware}
  */
-// TODO: type render function from @sveltejs/kit/adapter
-// @ts-ignore
-export function create_kit_middleware({ render }) {
+export function create_kit_middleware({ init, render }) {
+	init();
 	return async (req, res) => {
 		const parsed = new URL(req.url || '', 'http://localhost');
 
