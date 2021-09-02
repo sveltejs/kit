@@ -5,7 +5,7 @@
 		const list = params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
 
 		if (!valid_lists.has(list)) {
-			console.log('invalid');
+			console.log(`invalid list parameter ${list}`);
 			return {
 				status: 404,
 				error: 'Not found'

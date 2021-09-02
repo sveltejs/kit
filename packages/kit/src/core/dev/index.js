@@ -11,7 +11,7 @@ import { create_app } from '../../core/create_app/index.js';
 import { rimraf } from '../../utils/filesystem.js';
 import { respond } from '../../runtime/server/index.js';
 import { getRawBody } from '../node/index.js';
-import { copy_assets, get_svelte_packages, resolve_entry } from '../utils.js';
+import { copy_assets, resolve_entry } from '../utils.js';
 import { deep_merge, print_config_conflicts } from '../config/index.js';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { get_server } from '../server/index.js';
@@ -107,33 +107,18 @@ class Watcher extends EventEmitter {
 
 		this.server = await get_server(this.https, vite_config, (req, res) => handler(req, res));
 
-		const alias = vite_config.resolve && vite_config.resolve.alias;
-
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
-
-		const svelte_packages = get_svelte_packages(this.cwd);
 
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
-				alias: Array.isArray(alias)
-					? [
-							{
-								find: '$app',
-								replacement: path.resolve(`${this.dir}/runtime/app`)
-							},
-							{
-								find: '$lib',
-								replacement: this.config.kit.files.lib
-							}
-					  ]
-					: {
-							$app: path.resolve(`${this.dir}/runtime/app`),
-							$lib: this.config.kit.files.lib
-					  }
+				alias: {
+					$app: path.resolve(`${this.dir}/runtime/app`),
+					$lib: this.config.kit.files.lib
+				}
 			},
 			build: {
 				rollupOptions: {
@@ -141,14 +126,6 @@ class Watcher extends EventEmitter {
 					// eventhough server otherwise works without it
 					input: path.resolve(`${this.dir}/runtime/internal/start.js`)
 				}
-			},
-			optimizeDeps: {
-				// exclude Svelte packages because optimizer skips .svelte files leading to half-bundled
-				// broken packages https://github.com/vitejs/vite/issues/3910
-				exclude: [
-					...((vite_config.optimizeDeps && vite_config.optimizeDeps.exclude) || []),
-					...svelte_packages
-				]
 			},
 			plugins: [
 				svelte({
@@ -165,10 +142,6 @@ class Watcher extends EventEmitter {
 				hmr: {
 					...(this.https ? { server: this.server, port: this.port } : {})
 				}
-			},
-			ssr: {
-				// @ts-expect-error - ssr is considered in alpha, so not yet exposed by Vite
-				noExternal: [...((vite_config.ssr && vite_config.ssr.noExternal) || []), ...svelte_packages]
 			},
 			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
@@ -398,7 +371,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 						},
 						load_component: async (id) => {
-							const url = path.resolve(cwd, id);
+							const url = `/${id}`;
 
 							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
 							const node = await vite.moduleGraph.getModuleByUrl(url);
@@ -430,13 +403,9 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 								}
 							}
 
-							let entry = `/${id}`;
-							if (!entry.endsWith('.svelte')) {
-								entry += '?import';
-							}
 							return {
 								module,
-								entry,
+								entry: url.endsWith('.svelte') ? url : url + '?import',
 								css: [],
 								js: [],
 								styles: Array.from(styles)

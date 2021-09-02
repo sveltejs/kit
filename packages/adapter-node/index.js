@@ -35,7 +35,7 @@ export default function ({
 				await compress(static_directory);
 			}
 
-			utils.log.minor('Building server');
+			utils.log.minor('Building SvelteKit middleware');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
 			fs.writeFileSync(
@@ -48,10 +48,11 @@ export default function ({
 					port_env
 				)}] || (!path && 3000);`
 			);
+
 			/** @type {BuildOptions} */
 			const default_options = {
-				entryPoints: ['.svelte-kit/node/index.js'],
-				outfile: join(out, 'index.js'),
+				entryPoints: ['.svelte-kit/node/middlewares.js'],
+				outfile: join(out, 'middlewares.js'),
 				bundle: true,
 				external: Object.keys(
 					JSON.parse(fs.readFileSync('package.json', 'utf8')).dependencies || {}
@@ -64,8 +65,32 @@ export default function ({
 					APP_DIR: `"/${config.kit.appDir}/"`
 				}
 			};
-			const buildOptions = esbuild_config ? await esbuild_config(default_options) : default_options;
-			await esbuild.build(buildOptions);
+			await esbuild.build(esbuild_config ? await esbuild_config(default_options) : default_options);
+
+			utils.log.minor('Building SvelteKit reference server');
+			/** @type {BuildOptions} */
+			const ref_server_options = {
+				entryPoints: ['.svelte-kit/node/index.js'],
+				outfile: join(out, 'index.js'),
+				bundle: true,
+				external: ['./middlewares.js'], // does not work, eslint does not exclude middlewares from target
+				format: 'esm',
+				platform: 'node',
+				target: 'node12',
+				// external exclude workaround, see https://github.com/evanw/esbuild/issues/514
+				plugins: [
+					{
+						name: 'fix-middlewares-exclude',
+						setup(build) {
+							// Match an import called "./middlewares.js" and mark it as external
+							build.onResolve({ filter: /^\.\/middlewares\.js$/ }, () => ({ external: true }));
+						}
+					}
+				]
+			};
+			await esbuild.build(
+				esbuild_config ? await esbuild_config(ref_server_options) : ref_server_options
+			);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

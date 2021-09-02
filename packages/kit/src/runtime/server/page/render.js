@@ -172,8 +172,8 @@ export async function render_response({
 
 					return `<script ${attributes}>${json}</script>`;
 				})
-				.join('\n\n\t\t\t')}
-		`.replace(/^\t{2}/gm, '');
+				.join('\n\n\t')}
+		`;
 
 	/** @type {import('types/helper').ResponseHeaders} */
 	const headers = {
