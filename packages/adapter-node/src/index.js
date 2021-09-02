@@ -1,4 +1,4 @@
-import app from '@sveltejs/kit/adapter';
+import app from '@sveltejs/kit/app';
 import { host, path, port } from './env.js';
 import { createServer } from './server';
 

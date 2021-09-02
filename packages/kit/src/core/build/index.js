@@ -420,6 +420,9 @@ async function build_server(
 				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
 				return respond({ ...request, host }, options, { prerender });
 			}
+
+			const app = { init, render };
+			export default app;
 		`
 			.replace(/^\t{3}/gm, '')
 			.trim()
