@@ -4,6 +4,7 @@ import { pipeline } from 'stream';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
 
+import { appResolver } from '@sveltejs/kit/adapter';
 import esbuild from 'esbuild';
 import glob from 'tiny-glob';
 import zlib from 'zlib';
@@ -61,6 +62,7 @@ export default function ({
 				platform: 'node',
 				target: 'node12',
 				inject: [join(files, 'shims.js')],
+				plugins: [appResolver()],
 				define: {
 					APP_DIR: `"/${config.kit.appDir}/"`
 				}
