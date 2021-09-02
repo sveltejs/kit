@@ -21,6 +21,7 @@
 		"amphtml-validator": "^1.0.34",
 		"cookie": "^0.4.1",
 		"devalue": "^2.0.1",
+		"esbuild": "^0.12.5",
 		"eslint": "^7.25.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",

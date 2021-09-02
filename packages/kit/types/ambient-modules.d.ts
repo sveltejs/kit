@@ -133,6 +133,15 @@ declare module '$service-worker' {
 }
 
 declare module '@sveltejs/kit/adapter' {
+	import { Plugin } from 'esbuild';
+
+	export interface AppResolver {
+		(): Plugin;
+	}
+	export const appResolver: AppResolver;
+}
+
+declare module '@sveltejs/kit/app' {
 	import { App } from '@sveltejs/kit';
 
 	export function init(): Promise<App['init']>;
