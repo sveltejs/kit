@@ -1,7 +1,7 @@
 {
 	"name": "exports-replace",
 	"version": "1.0.0",
-	"description": "exports.behavior settings set to merge",
+	"description": "merges exports field",
 	"exports": {
 		"./internal/constants.js": "./internal/constants.js",
 		"./internal/Test.svelte": "./internal/Test.svelte",

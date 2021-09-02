@@ -1,7 +1,7 @@
 {
 	"name": "exports-replace",
 	"version": "1.0.0",
-	"description": "exports.behavior settings set to replace",
+	"description": "replaces exports field",
 	"type": "module",
 	"exports": {
 		".": {
