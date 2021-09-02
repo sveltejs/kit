@@ -19,7 +19,8 @@ export function create_kit_middleware({ render }) {
 
 		const rendered = await render({
 			method: req.method,
-			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+			// @ts-expect-error - TODO: what about repeated headers, i.e. string[]
+			headers: req.headers,
 			path: parsed.pathname,
 			query: parsed.searchParams,
 			rawBody: body

@@ -1,8 +1,10 @@
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
+import fs from 'fs';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import esbuild from 'esbuild';
+
 import toml from '@iarna/toml';
+import { appResolver } from '@sveltejs/kit/adapter';
+import esbuild from 'esbuild';
 
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
@@ -34,6 +36,7 @@ export default function (options) {
 				outfile: '.netlify/functions-internal/__render.js',
 				bundle: true,
 				inject: [join(files, 'shims.js')],
+				plugins: [appResolver()],
 				platform: 'node'
 			};
 
@@ -42,7 +45,7 @@ export default function (options) {
 
 			await esbuild.build(build_options);
 
-			writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
+			fs.writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
@@ -57,7 +60,7 @@ export default function (options) {
 
 			const redirectPath = join(publish, '_redirects');
 			utils.copy('_redirects', redirectPath);
-			appendFileSync(redirectPath, '\n\n/* /.netlify/functions/__render 200');
+			fs.appendFileSync(redirectPath, '\n\n/* /.netlify/functions/__render 200');
 		}
 	};
 }
@@ -65,12 +68,12 @@ export default function (options) {
  * @param {import('@sveltejs/kit').AdapterUtils} utils
  **/
 function get_publish_directory(utils) {
-	if (existsSync('netlify.toml')) {
+	if (fs.existsSync('netlify.toml')) {
 		/** @type {{ build?: { publish?: string }} & toml.JsonMap } */
 		let netlify_config;
 
 		try {
-			netlify_config = toml.parse(readFileSync('netlify.toml', 'utf-8'));
+			netlify_config = toml.parse(fs.readFileSync('netlify.toml', 'utf-8'));
 		} catch (err) {
 			err.message = `Error parsing netlify.toml: ${err.message}`;
 			throw err;

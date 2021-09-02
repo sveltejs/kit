@@ -1,5 +1,4 @@
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
+import { init, render } from '@sveltejs/kit/app';
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
 
 init();
