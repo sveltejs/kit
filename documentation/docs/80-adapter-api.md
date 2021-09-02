@@ -23,15 +23,17 @@ export default function (options) {
 
 The types for `Adapter` and its parameters are available in [types/config.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/config.d.ts).
 
-Within the `adapt` method, there are a number of things that an adapter should do:
+Within the `adapt` method, an adapter should
 
 - Clear out the build directory
-- Output code that:
-  - Calls `init`
-  - Converts from the platform's request to a [SvelteKit request](#hooks-handle), calls `render`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
-  - Globally shims `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
+- Import `{ appResolver }` from `@sveltejs/kit/adapter`
+- Pass in `appResolver()` to esbuild plugins for build options
+- Import `app` from `@sveltejs/kit/app`
+- Calls `app.init()`
+- Converts from the platform's request to a [SvelteKit request](#hooks-handle), calls `app.render()`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
+- Globally shims `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if desired
-- Call `utils.prerender`
+- Call `utils.prerender()`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `'.svelte-kit/' + adapterName`.
