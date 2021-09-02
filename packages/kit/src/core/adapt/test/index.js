@@ -76,6 +76,7 @@ suite('copy files', () => {
 		glob('**', { cwd: dest })
 	);
 });
+
 suite('prerender', async () => {
 	const cwd = join(__dirname, 'fixtures/prerender');
 	const prerendered_files = join(__dirname, 'fixtures/prerender/build');

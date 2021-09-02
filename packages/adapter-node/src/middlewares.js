@@ -2,8 +2,8 @@ import fs from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
-import sirv from 'sirv';
 import app from '@sveltejs/kit/app';
+import sirv from 'sirv';
 import { create_kit_middleware } from './kit-middleware.js';
 
 app.init();

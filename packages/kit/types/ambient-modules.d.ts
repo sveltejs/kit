@@ -144,8 +144,8 @@ declare module '@sveltejs/kit/adapter' {
 declare module '@sveltejs/kit/app' {
 	import { App } from '@sveltejs/kit';
 
-	export function init(): App['init'];
-	export function render(): App['render'];
+	export const init: App['init'];
+	export const render: App['render'];
 	const app: {
 		init: typeof init;
 		render: typeof render;
