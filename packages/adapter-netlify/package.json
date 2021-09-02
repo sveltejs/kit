@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.29",
+	"version": "1.0.0-next.30",
 	"type": "module",
 	"exports": {
 		".": {
