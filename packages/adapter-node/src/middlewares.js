@@ -1,10 +1,12 @@
+import fs from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+
+import sirv from 'sirv';
 import app from '@sveltejs/kit/app';
 import { create_kit_middleware } from './kit-middleware.js';
 
-import fs from 'fs';
-import { dirname, join } from 'path';
-import sirv from 'sirv';
-import { fileURLToPath } from 'url';
+app.init();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /** @type {import('polka').Middleware} */
