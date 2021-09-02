@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 1.0.0-next.162
+
+### Patch Changes
+
+- Enable nested dependency optimization by updating to @sveltejs/vite-plugin-svelte@1.0.0-next.21 ([#2343](https://github.com/sveltejs/kit/pull/2343))
+
+## 1.0.0-next.161
+
+### Patch Changes
+
+- Allow service workers to access files using the \$lib alias ([#2326](https://github.com/sveltejs/kit/pull/2326))
+
+* [fix] remove Vite workaround now that dev deps can be bundled ([#2340](https://github.com/sveltejs/kit/pull/2340))
+
+- support using arrays for kit.vite.resolve.alias ([#2328](https://github.com/sveltejs/kit/pull/2328))
+
+## 1.0.0-next.160
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.5.2 to fix URL decoding ([#2323](https://github.com/sveltejs/kit/pull/2323))
+
+* Add `@sveltejs/kit` to `noExternal` in dev server as well ([#2332](https://github.com/sveltejs/kit/pull/2332))
+
+## 1.0.0-next.159
+
+### Patch Changes
+
+- Add `@sveltejs/kit` to noExternal to resolve hooks module in dev server ([#2306](https://github.com/sveltejs/kit/pull/2306))
+
+* [fix] HMR on Windows ([#2315](https://github.com/sveltejs/kit/pull/2315))
+
+## 1.0.0-next.158
+
+### Patch Changes
+
+- avoid setting rawBody/body to an empty Uint8Array when a load's fetch function is called with no body during SSR ([#2295](https://github.com/sveltejs/kit/pull/2295))
+
 ## 1.0.0-next.157
 
 ### Patch Changes

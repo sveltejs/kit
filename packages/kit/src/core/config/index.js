@@ -59,6 +59,12 @@ function merge_into(a, b, conflicts = [], path = []) {
 	const is_plain_object = (x) => typeof x === 'object' && x.constructor === Object;
 
 	for (const prop in b) {
+		// normalize alias objects to array
+		if (prop === 'alias' && path[path.length - 1] === 'resolve') {
+			if (a[prop]) a[prop] = normalize_alias(a[prop]);
+			if (b[prop]) b[prop] = normalize_alias(b[prop]);
+		}
+
 		if (is_plain_object(b[prop])) {
 			if (!is_plain_object(a[prop])) {
 				if (a[prop] !== undefined) {
@@ -121,4 +127,18 @@ export function print_config_conflicts(conflicts, pathPrefix = '', scope) {
 			`${prefix}The value for ${pathPrefix}${conflict} specified in svelte.config.js has been ignored. This option is controlled by SvelteKit.`
 		);
 	});
+}
+
+/**
+ * normalize kit.vite.resolve.alias as an array
+ * @param {import('vite').AliasOptions} o
+ * @returns {import('vite').Alias[]}
+ */
+export function normalize_alias(o) {
+	return Array.isArray(o)
+		? o
+		: Object.entries(o).map(([find, replacement]) => ({
+				find,
+				replacement
+		  }));
 }
