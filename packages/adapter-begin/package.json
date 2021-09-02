@@ -21,7 +21,10 @@
 		"sirv": "^1.0.12"
 	},
 	"exports": {
-		"import": "./index.js",
-		"require": "./index.cjs"
+		".": {
+			"import": "./index.js",
+			"require": "./index.cjs"
+		},
+		"./package.json": "./package.json"
 	}
 }
