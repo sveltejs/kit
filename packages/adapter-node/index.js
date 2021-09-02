@@ -1,17 +1,11 @@
-import esbuild from 'esbuild';
-import {
-	createReadStream,
-	createWriteStream,
-	existsSync,
-	readFileSync,
-	statSync,
-	writeFileSync
-} from 'fs';
+import fs from 'fs';
 import { join } from 'path';
 import { pipeline } from 'stream';
-import glob from 'tiny-glob';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
+
+import esbuild from 'esbuild';
+import glob from 'tiny-glob';
 import zlib from 'zlib';
 
 const pipe = promisify(pipeline);
@@ -25,7 +19,7 @@ export default function ({
 	out = 'build',
 	precompress,
 	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
-	esbuild: esbuildConfig
+	esbuild: esbuild_config
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
@@ -44,7 +38,7 @@ export default function ({
 			utils.log.minor('Building server');
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			utils.copy(files, '.svelte-kit/node');
-			writeFileSync(
+			fs.writeFileSync(
 				'.svelte-kit/node/env.js', // types pointed in src/env.d.ts
 				`export const path = process.env[${JSON.stringify(
 					path_env
@@ -55,11 +49,13 @@ export default function ({
 				)}] || (!path && 3000);`
 			);
 			/** @type {BuildOptions} */
-			const defaultOptions = {
+			const default_options = {
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
-				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
+				external: Object.keys(
+					JSON.parse(fs.readFileSync('package.json', 'utf8')).dependencies || {}
+				),
 				format: 'esm',
 				platform: 'node',
 				target: 'node12',
@@ -68,14 +64,14 @@ export default function ({
 					APP_DIR: `"/${config.kit.appDir}/"`
 				}
 			};
-			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
+			const buildOptions = esbuild_config ? await esbuild_config(default_options) : default_options;
 			await esbuild.build(buildOptions);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({
 				dest: `${out}/prerendered`
 			});
-			if (precompress && existsSync(`${out}/prerendered`)) {
+			if (precompress && fs.existsSync(`${out}/prerendered`)) {
 				utils.log.minor('Compressing prerendered pages');
 				await compress(`${out}/prerendered`);
 			}
@@ -110,13 +106,13 @@ async function compress_file(file, format = 'gz') {
 					params: {
 						[zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
 						[zlib.constants.BROTLI_PARAM_QUALITY]: zlib.constants.BROTLI_MAX_QUALITY,
-						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: statSync(file).size
+						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: fs.statSync(file).size
 					}
 			  })
 			: zlib.createGzip({ level: zlib.constants.Z_BEST_COMPRESSION });
 
-	const source = createReadStream(file);
-	const destination = createWriteStream(`${file}.${format}`);
+	const source = fs.createReadStream(file);
+	const destination = fs.createWriteStream(`${file}.${format}`);
 
 	await pipe(source, compress, destination);
 }
