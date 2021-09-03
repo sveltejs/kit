@@ -22,7 +22,8 @@ export default async (req, res) => {
 		headers: req.headers,
 		path: pathname,
 		query: searchParams,
-		rawBody: body
+		rawBody: body,
+		platformReq: req
 	});
 
 	if (rendered) {

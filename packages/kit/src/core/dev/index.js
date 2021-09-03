@@ -345,7 +345,8 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 						host,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
-						rawBody: body
+						rawBody: body,
+						platformReq: req
 					},
 					{
 						amp: config.kit.amp,

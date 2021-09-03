@@ -23,7 +23,8 @@ export function create_kit_middleware({ render }) {
 			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 			path: parsed.pathname,
 			query: parsed.searchParams,
-			rawBody: body
+			rawBody: body,
+			platformReq: req
 		});
 
 		if (rendered) {

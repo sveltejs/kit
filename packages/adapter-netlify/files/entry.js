@@ -16,7 +16,8 @@ export async function handler(event) {
 		headers,
 		path,
 		query,
-		rawBody
+		rawBody,
+		platformReq: event
 	});
 
 	if (rendered) {

@@ -3,8 +3,8 @@ import { MaybePromise, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown, PlatformRequest = any>
+	extends IncomingRequest<PlatformRequest> {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;

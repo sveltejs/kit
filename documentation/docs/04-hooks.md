@@ -24,24 +24,25 @@ type ResponseHeaders = Record<string, string | string[]>;
 type RequestHeaders = Record<string, string>;
 
 export type RawBody = null | Uint8Array;
-export interface IncomingRequest {
+export interface IncomingRequest<PlatformRequest = any> {
 	method: string;
 	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;
 	rawBody: RawBody;
+	platformReq?: PlatformRequest;
 }
 
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
 // ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown, PlatformRequest = any>
+	extends IncomingRequest<PlatformRequest> {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
-	locals: Locals; // populated by hooks handle
+	locals: Locals; // populated by the handle hook
 }
 
 type StrictBody = string | Uint8Array;
