@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- [feat] expose handler to allow use in custom server
+
 ## 1.0.0-next.43
 
 ### Patch Changes

@@ -67,7 +67,7 @@ Put the code to query your database in [endpoints](/docs#routing-endpoints) - do
 
 ### How do I use middleware?
 
-`adapter-node` builds a middleware that use can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
 const myPlugin = {
@@ -92,6 +92,8 @@ const config = {
 
 export default config;
 ```
+
+See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
 ### Does it work with Yarn 2?
 
