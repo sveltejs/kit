@@ -15,8 +15,8 @@ export type JSONString =
 	| number
 	| boolean
 	| null
-	| JSONString[]
 	| ToJSON
+	| JSONString[]
 	| { [key: string]: JSONString };
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */

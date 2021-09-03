@@ -39,7 +39,8 @@ const config = {
 			files: {
 				include: ['**'],
 				exclude: []
-			}
+			},
+			override: null
 		},
 		paths: {
 			assets: '',
@@ -134,6 +135,7 @@ Options related to [creating a package](#packaging).
 - `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
 - `exports` - contains an `includes` and an `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`. Will merge existing values if available with values from `package.json` taking precedence
 - `files` - contains an `includes` and an `excludes` array which specifies which files to process and copy over when packaging
+- `override` - any object with a key-value pair to merge with the final contents of `package.json` and overwrite anything that overlaps
 
 ### paths
 
