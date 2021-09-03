@@ -6,7 +6,7 @@
 </script>
 
 <script>
-	export let data;
+	export let data = 'undefined';
 </script>
 
 <h3>Index</h3>

@@ -1,5 +1,5 @@
 <script>
-	export let data;
+	export let data = 'undefined';
 </script>
 
 <h3>About</h3>
