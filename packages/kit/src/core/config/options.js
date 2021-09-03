@@ -88,6 +88,7 @@ const options = {
 				type: 'branch',
 				children: {
 					dir: expect_string('package'),
+					emitTypes: expect_boolean(true),
 					exports: {
 						type: 'branch',
 						children: {
@@ -102,7 +103,17 @@ const options = {
 							exclude: expect_array_of_strings([])
 						}
 					},
-					emitTypes: expect_boolean(true)
+					override: {
+						type: 'leaf',
+						default: null,
+						validate: (value, keypath) => {
+							if (typeof value !== 'object') {
+								throw new Error(`${keypath} should be an object.`);
+							}
+
+							return value;
+						}
+					}
 				}
 			},
 

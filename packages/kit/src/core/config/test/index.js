@@ -39,6 +39,7 @@ async function testLoadDefaultConfig(path) {
 			hydrate: true,
 			package: {
 				dir: 'package',
+				emitTypes: true,
 				exports: {
 					include: ['**'],
 					exclude: ['**/_*']
@@ -47,7 +48,7 @@ async function testLoadDefaultConfig(path) {
 					include: ['**'],
 					exclude: []
 				},
-				emitTypes: true
+				override: null
 			},
 			serviceWorker: {
 				exclude: []
