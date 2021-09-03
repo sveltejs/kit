@@ -33,9 +33,7 @@ export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
 	// Will recursively continue until it reaches primitive or union
 	// with a Function in it, except those commented below
-	[K in keyof T]-?: K extends 'override' // If it reaches 'override',
-		? JSONString // stop here to prevent "Type instantiation is excessively deep and possibly infinite".
-		: Extract<T[K], Function> extends never // If it does not have a Function type
+	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
 		? RecursiveRequired<T[K]> // recursively continue through.
 		: K extends 'vite' // If it reaches the 'vite' key
 		? Extract<T[K], Function> // only take the Function type.

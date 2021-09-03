@@ -102,17 +102,6 @@ const options = {
 							include: expect_array_of_strings(['**']),
 							exclude: expect_array_of_strings([])
 						}
-					},
-					override: {
-						type: 'leaf',
-						default: null,
-						validate: (value, keypath) => {
-							if (typeof value !== 'object') {
-								throw new Error(`${keypath} should be an object.`);
-							}
-
-							return value;
-						}
 					}
 				}
 			},

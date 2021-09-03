@@ -37,8 +37,7 @@ test('fills in defaults', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				override: null
+				}
 			},
 			serviceWorker: {
 				exclude: []
@@ -148,8 +147,7 @@ test('fills in partial blanks', () => {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				override: null
+				}
 			},
 			serviceWorker: {
 				exclude: []

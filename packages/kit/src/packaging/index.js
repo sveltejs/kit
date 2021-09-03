@@ -6,7 +6,6 @@ import micromatch from 'micromatch';
 import { preprocess } from 'svelte/compiler';
 
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
-import { deep_merge } from '../utils/object.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
@@ -93,11 +92,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	}
 
 	pkg.exports = { ...generated, ...pkg.exports };
-	const override = config.kit.package.override || {};
-	write(
-		path.join(cwd, config.kit.package.dir, 'package.json'),
-		JSON.stringify(deep_merge(pkg, override)[0], null, 2)
-	);
+	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();

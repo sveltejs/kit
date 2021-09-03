@@ -47,8 +47,7 @@ async function testLoadDefaultConfig(path) {
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				override: null
+				}
 			},
 			serviceWorker: {
 				exclude: []

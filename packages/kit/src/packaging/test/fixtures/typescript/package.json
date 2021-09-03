@@ -1,6 +1,5 @@
 {
 	"name": "typescript",
 	"version": "1.0.0",
-	"description": "standard typescript package",
-	"svelte": "src/lib/index.ts"
+	"description": "standard typescript package"
 }
