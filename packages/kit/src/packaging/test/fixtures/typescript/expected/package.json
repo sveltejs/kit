@@ -2,6 +2,7 @@
 	"name": "typescript",
 	"version": "1.0.0",
 	"description": "standard typescript package",
+	"svelte": "index.js",
 	"type": "module",
 	"exports": {
 		"./package.json": "./package.json",
