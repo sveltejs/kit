@@ -95,6 +95,7 @@ class Watcher extends EventEmitter {
 		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
 		const default_config = {
+			envPrefix: ['VITE_', 'PUBLIC_'],
 			server: {
 				fs: {
 					strict: true

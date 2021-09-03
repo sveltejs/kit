@@ -427,6 +427,7 @@ async function build_server(
 	const vite_config = config.kit.vite();
 
 	const default_config = {
+		envPrefix: ['VITE_', 'PUBLIC_'],
 		server: {
 			fs: {
 				strict: true

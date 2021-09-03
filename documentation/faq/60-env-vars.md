@@ -2,20 +2,20 @@
 question: How do I use environment variables?
 ---
 
-Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. Only environment variables prefixed with `VITE_` are exposed. You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`. We hope to see all environment variables exposed on the server-side [in the future](https://github.com/vitejs/vite/issues/3176).
+Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. By default, Vite only exposes environment variables prefixed with `VITE_`. However, SvelteKit overrides Vite's default `envPrefix` setting to also allow `PUBLIC_` as a prefix. You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`. We hope to see all environment variables exposed on the server-side [in the future](https://github.com/vitejs/vite/issues/3176).
 
 [Environment variables cannot be used directly in Svelte templates](https://github.com/sveltejs/kit/issues/720) due [an issue in the way Vite's define plugin works](https://github.com/vitejs/vite/issues/3176).
 
-For example, you can create a `.env` file in your project root folder with a `VITE_*` variable:
+For example, you can create a `.env` file in your project root folder with a `PUBLIC_*` variable:
 
 ```sh
-VITE_MESSAGE="World"
+PUBLIC_MESSAGE="World"
 ```
 
 Then you can access this variable in a `.js` or `.ts` module:
 
 ```js
-export const MESSAGE = import.meta.env.VITE_MESSAGE;
+export const MESSAGE = import.meta.env.PUBLIC_MESSAGE;
 ```
 
 Then you can pull in the variable in your components from the module:
