@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"description": "merges exports field",
 	"exports": {
-		"./internal/constants.js": "./internal/constants.js",
+		"./internal/constants": "./internal/constants.js",
 		"./internal/Test.svelte": "./internal/Test.svelte",
 		"./Test.svelte": "./Test.svelte",
 		".": {
