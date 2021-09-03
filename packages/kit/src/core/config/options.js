@@ -148,7 +148,7 @@ function adapter() {
 function app_dir() {
 	return refine(non_empty_string(), 'app_dir', (value) => {
 		if (value.startsWith('/') || value.endsWith('/')) {
-			return "kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration";
+			return "Expected string to not start or end with '/'. See https://kit.svelte.dev/docs#configuration";
 		}
 
 		return true;
@@ -171,7 +171,9 @@ function fs_path_string({ cwd = process.cwd(), check_exist = false } = {}) {
 	});
 
 	return refine(str_coerce, 'fs_path_string', (value) => {
-		return !check_exist || fs.existsSync(value) || `${path.relative(cwd, value)} does not exist`;
+		return (
+			!check_exist || fs.existsSync(value) || `Expected file to exist: ${path.relative(cwd, value)}`
+		);
 	});
 }
 
@@ -185,7 +187,7 @@ function template_path_string(opts) {
 		const expected_tags = ['%svelte.head%', '%svelte.body%'];
 		expected_tags.forEach((tag) => {
 			if (contents.indexOf(tag) === -1) {
-				return `${path.relative(cwd, value)} is missing ${tag}`;
+				return `Expected ${path.relative(cwd, value)} to have ${tag}`;
 			}
 		});
 		return true;
@@ -236,9 +238,9 @@ function prerender_force() {
  * @returns {Struct<PrerenderOnErrorValue, null>}
  */
 function prerender_on_error() {
-	return refine(any(), 'on_error', (value, ctx) => {
+	return refine(any(), 'on_error', (value) => {
 		if (typeof value !== 'function' && !['continue', 'fail'].includes(value)) {
-			return `${ctx.path} should be either a custom function or one of "continue" or "fail"`;
+			return `Expected value be either a custom function or one of "continue" or "fail"`;
 		}
 
 		return true;
