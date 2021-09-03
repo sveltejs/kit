@@ -84,7 +84,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		if (exports_filter(file)) {
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
-			const key = entry.replace(/\/index\.js$|(\/\w+)\.js$/, '$1');
+			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
 			generated[key] = entry;
 		}
 	}
