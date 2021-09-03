@@ -1,22 +1,26 @@
+import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
-import { EventEmitter } from 'events';
-import CheapWatch from 'cheap-watch';
-import amp_validator from 'amphtml-validator';
-import vite from 'vite';
-import colors from 'kleur';
-import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { create_app } from '../../core/create_app/index.js';
-import { rimraf } from '../../utils/filesystem.js';
-import { respond } from '../../runtime/server/index.js';
-import { getRawBody } from '../node/index.js';
-import { copy_assets, resolve_entry } from '../utils.js';
-import { deep_merge, print_config_conflicts } from '../config/index.js';
+
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { get_server } from '../server/index.js';
+import amp_validator from 'amphtml-validator';
+import CheapWatch from 'cheap-watch';
+import colors from 'kleur';
+import vite from 'vite';
+
+import { respond } from '../../runtime/server/index.js';
+import { rimraf } from '../../utils/filesystem.js';
+import { deep_merge } from '../../utils/object.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
+
+import { print_config_conflicts } from '../config/index.js';
+import { create_app } from '../create_app/index.js';
+import create_manifest_data from '../create_manifest_data/index.js';
+import { getRawBody } from '../node/index.js';
+import { get_server } from '../server/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { copy_assets, resolve_entry } from '../utils.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
