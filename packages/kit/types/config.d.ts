@@ -1,6 +1,8 @@
 import { UserConfig as ViteConfig } from 'vite';
-import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { Infer } from 'superstruct';
+import { DeepPartial } from './helper';
+import { Logger } from './internal';
+import { options_type } from '../src/core/config/options';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -29,57 +31,10 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
-export interface Config {
-	compilerOptions?: any;
-	extensions?: string[];
-	kit?: {
-		adapter?: Adapter | null;
-		amp?: boolean;
-		appDir?: string;
-		files?: {
-			assets?: string;
-			hooks?: string;
-			lib?: string;
-			routes?: string;
-			serviceWorker?: string;
-			template?: string;
-		};
-		floc?: boolean;
-		host?: string | null;
-		hostHeader?: string | null;
-		hydrate?: boolean;
-		package?: {
-			dir?: string;
-			emitTypes?: boolean;
-			exports?: {
-				include?: string[];
-				exclude?: string[];
-			};
-			files?: {
-				include?: string[];
-				exclude?: string[];
-			};
-		};
-		paths?: {
-			assets?: string;
-			base?: string;
-		};
-		prerender?: {
-			crawl?: boolean;
-			enabled?: boolean;
-			onError?: PrerenderOnErrorValue;
-			pages?: string[];
-		};
-		router?: boolean;
-		serviceWorker?: {
-			exclude?: string[];
-		};
-		ssr?: boolean;
-		target?: string | null;
-		trailingSlash?: TrailingSlash;
-		vite?: ViteConfig | (() => ViteConfig);
-	};
-	preprocess?: any;
-}
+export type ValidatedConfig = Infer<ReturnType<typeof options_type>>;
 
-export type ValidatedConfig = RecursiveRequired<Config>;
+export type Config = PartialConfig<ValidatedConfig>;
+
+type PartialConfig<T> = {
+	[K in keyof T]?: K extends 'vite' ? ViteConfig | (() => ViteConfig) : DeepPartial<T[K]>;
+};

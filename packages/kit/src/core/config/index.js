@@ -25,7 +25,6 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		}
 	}
 
-	/** @type {import('types/config').ValidatedConfig} */
 	const validated = create(config, options_type({ cwd }));
 
 	return validated;

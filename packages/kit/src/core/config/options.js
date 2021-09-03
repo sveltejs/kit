@@ -24,6 +24,7 @@ import {
 /**
  * @typedef {import('types/config').Adapter} Adapter
  * @typedef {import('types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
+ * @typedef {import('types/internal').TrailingSlash} TrailingSlash
  */
 
 export function options_type({ cwd = process.cwd() } = {}) {
@@ -80,7 +81,7 @@ export function options_type({ cwd = process.cwd() } = {}) {
 			router: _(boolean(), true),
 			ssr: _(boolean(), true),
 			target: _(nullable(string()), null),
-			trailingSlash: _(enums(['never', 'always', 'ignore']), 'never'),
+			trailingSlash: _(trailing_slash(), 'never'),
 			vite: _(vite_config(), () => ({}))
 		})
 	});
@@ -93,8 +94,6 @@ export function options_type({ cwd = process.cwd() } = {}) {
 function some() {
 	return define('some', () => true);
 }
-
-require;
 
 /**
  * @param {S} schema
@@ -256,6 +255,13 @@ function page() {
 
 		return true;
 	});
+}
+
+/**
+ * @returns {Struct<TrailingSlash, any>}
+ */
+function trailing_slash() {
+	return enums(['never', 'always', 'ignore']);
 }
 
 function vite_config() {
