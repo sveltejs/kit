@@ -404,7 +404,7 @@ export class Renderer {
 
 		for (let i = 0; i < filtered.length; i += 1) {
 			const loaded = filtered[i].loaded;
-			if (loaded) result.props[`props_${i}`] = await loaded.props;
+			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
 		if (
