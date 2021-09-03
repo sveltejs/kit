@@ -1,5 +1,5 @@
-import { init, render } from '@sveltejs/kit/app';
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
+import { init, render } from '@sveltejs/kit/app';
 
 init();
 
