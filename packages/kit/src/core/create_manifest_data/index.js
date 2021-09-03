@@ -388,13 +388,10 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: part.content
-											.normalize()
-											.replace(/\?/g, '%3F')
-											.replace(/#/g, '%23')
-											.replace(/%5B/g, '[')
-											.replace(/%5D/g, ']')
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+									: encodeURIComponent(part.content.normalize()).replace(
+											/[.*+?^${}()|[\]\\]/g,
+											'\\$&'
+									  );
 							})
 							.join('');
 		})
