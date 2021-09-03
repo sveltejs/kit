@@ -11,7 +11,6 @@ import {
 	enums,
 	nullable,
 	object,
-	optional,
 	refine,
 	string,
 	type
@@ -23,8 +22,8 @@ import {
  */
 
 /**
- * @typedef {import('../../../types/config').Adapter} Adapter
- * @typedef {import('../../../types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
+ * @typedef {import('types/config').Adapter} Adapter
+ * @typedef {import('types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
  */
 
 export function options_type({ cwd = process.cwd() } = {}) {
@@ -40,12 +39,12 @@ export function options_type({ cwd = process.cwd() } = {}) {
 			amp: _(boolean(), false),
 			appDir: _(app_dir(), '_app'),
 			files: obj({
-				assets: fs_path_string({ cwd, fallback: 'static' }),
-				hooks: fs_path_string({ cwd, fallback: 'src/hooks' }),
-				lib: fs_path_string({ cwd, fallback: 'src/lib' }),
-				routes: fs_path_string({ cwd, fallback: 'src/routes' }),
-				serviceWorker: fs_path_string({ cwd, fallback: 'src/service-worker' }),
-				template: template_path_string({ cwd, fallback: 'src/app.html', check_exist: true })
+				assets: _(fs_path_string({ cwd }), 'static'),
+				hooks: _(fs_path_string({ cwd }), 'src/hooks'),
+				lib: _(fs_path_string({ cwd }), 'src/lib'),
+				routes: _(fs_path_string({ cwd }), 'src/routes'),
+				serviceWorker: _(fs_path_string({ cwd }), 'src/service-worker'),
+				template: _(template_path_string({ cwd }), 'src/app.html')
 			}),
 			floc: _(boolean(), false),
 			host: _(nullable(string()), null),
@@ -75,7 +74,7 @@ export function options_type({ cwd = process.cwd() } = {}) {
 				enabled: _(boolean(), true),
 				// TODO: remove this for the 1.0 release
 				force: prerender_force(),
-				onError: _(on_error(), 'fail'),
+				onError: _(prerender_on_error(), 'fail'),
 				pages: _(array(page()), ['*'])
 			}),
 			router: _(boolean(), true),
@@ -160,7 +159,6 @@ function app_dir() {
 /**
  * @typedef {{
  *   cwd?: string,
- *   fallback?: string,
  *   check_exist?: boolean
  * }} FSPathStringOptions
  */
@@ -168,8 +166,8 @@ function app_dir() {
 /**
  * @param {FSPathStringOptions} opts
  */
-function fs_path_string({ cwd = process.cwd(), fallback, check_exist = false } = {}) {
-	const str_coerce = coerce(string(), optional(string()), (value = fallback || '') => {
+function fs_path_string({ cwd = process.cwd(), check_exist = false } = {}) {
+	const str_coerce = coerce(string(), string(), (value) => {
 		return path.isAbsolute(value) ? value : path.join(cwd, value);
 	});
 
@@ -181,8 +179,9 @@ function fs_path_string({ cwd = process.cwd(), fallback, check_exist = false } =
 /**
  * @param {FSPathStringOptions} opts
  */
-function template_path_string({ cwd = process.cwd(), fallback } = {}) {
-	return refine(fs_path_string({ cwd, fallback }), 'template_path_string', (value) => {
+function template_path_string(opts) {
+	const cwd = opts.cwd || process.cwd();
+	return refine(fs_path_string(opts), 'template_path_string', (value) => {
 		const contents = fs.readFileSync(value, 'utf8');
 		const expected_tags = ['%svelte.head%', '%svelte.body%'];
 		expected_tags.forEach((tag) => {
@@ -237,7 +236,7 @@ function prerender_force() {
  *
  * @returns {Struct<PrerenderOnErrorValue, null>}
  */
-function on_error() {
+function prerender_on_error() {
 	return refine(any(), 'on_error', (value, ctx) => {
 		if (typeof value !== 'function' && !['continue', 'fail'].includes(value)) {
 			return `${ctx.path} should be either a custom function or one of "continue" or "fail"`;
