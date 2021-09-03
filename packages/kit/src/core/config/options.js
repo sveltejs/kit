@@ -9,23 +9,29 @@ import {
 	define,
 	deprecated,
 	enums,
-	func,
 	nullable,
 	object,
 	optional,
 	refine,
 	string,
-	type,
-	union
+	type
 } from 'superstruct';
 
-export function options_type({ cwd = process.cwd() } = {}) {
-	const r = (/** @type {string} */ p) => path.resolve(cwd, p);
+/**
+ * @typedef {import('superstruct').Struct<T, S>} Struct
+ * @template T, S
+ */
 
+/**
+ * @typedef {import('../../../types/config').Adapter} Adapter
+ * @typedef {import('../../../types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
+ */
+
+export function options_type({ cwd = process.cwd() } = {}) {
 	return type({
 		// common svelte options
-		compilerOptions: _(any(), null),
-		preprocess: _(any(), null),
+		compilerOptions: _(nullable(some()), null),
+		preprocess: _(nullable(some()), null),
 		extensions: _(array(svelte_extension()), ['.svelte']),
 
 		// kit options
@@ -82,8 +88,18 @@ export function options_type({ cwd = process.cwd() } = {}) {
 }
 
 /**
+ * non-nullable any
+ * @returns {Struct<{}, null>}
+ */
+function some() {
+	return define('some', () => true);
+}
+
+require;
+
+/**
  * @param {S} schema
- * @template {Record<string, import('superstruct').Struct<any, any>>} S
+ * @template {Record<string, Struct<any, any>>} S
  */
 function obj(schema) {
 	return _(object(schema), {});
@@ -107,6 +123,10 @@ function svelte_extension() {
 	});
 }
 
+/**
+ *
+ * @returns {Struct<Adapter, null>}
+ */
 function adapter() {
 	return define('adapter', (value) => {
 		// @ts-expect-error - suppress error when checking value.adapt
@@ -213,8 +233,12 @@ function prerender_force() {
 	});
 }
 
+/**
+ *
+ * @returns {Struct<PrerenderOnErrorValue, null>}
+ */
 function on_error() {
-	return refine(union([func(), string()]), 'on_error', (value, ctx) => {
+	return refine(any(), 'on_error', (value, ctx) => {
 		if (typeof value !== 'function' && !['continue', 'fail'].includes(value)) {
 			return `${ctx.path} should be either a custom function or one of "continue" or "fail"`;
 		}
@@ -236,7 +260,19 @@ function page() {
 }
 
 function vite_config() {
-	return coerce(func(), object(), (value) => () => value);
+	return coerce(vite_config_func(), object(), (value) => () => value);
+}
+
+/**
+ * @returns {Struct<() => import('vite').UserConfig, null>}
+ */
+function vite_config_func() {
+	return define('vite_config_func', (value) => {
+		return (
+			typeof value === 'function' ||
+			`Expected a vite config function, but received: ${print(value)}`
+		);
+	});
 }
 
 /**

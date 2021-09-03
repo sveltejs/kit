@@ -33,7 +33,7 @@ export interface Config {
 	compilerOptions?: any;
 	extensions?: string[];
 	kit?: {
-		adapter?: Adapter;
+		adapter?: Adapter | null;
 		amp?: boolean;
 		appDir?: string;
 		files?: {
@@ -45,8 +45,8 @@ export interface Config {
 			template?: string;
 		};
 		floc?: boolean;
-		host?: string;
-		hostHeader?: string;
+		host?: string | null;
+		hostHeader?: string | null;
 		hydrate?: boolean;
 		package?: {
 			dir?: string;
@@ -75,7 +75,7 @@ export interface Config {
 			exclude?: string[];
 		};
 		ssr?: boolean;
-		target?: string;
+		target?: string | null;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
