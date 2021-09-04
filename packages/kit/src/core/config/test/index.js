@@ -52,7 +52,7 @@ async function testLoadDefaultConfig(path) {
 				dir: 'package',
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],
@@ -190,7 +190,7 @@ test('fills in partial blanks', () => {
 				dir: 'package',
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],

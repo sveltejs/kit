@@ -1,0 +1,17 @@
+{
+	"name": "exports-replace",
+	"version": "1.0.0",
+	"description": "merges exports field",
+	"exports": {
+		"./internal/constants.js": "./internal/constants.js",
+		"./internal/Test.svelte": "./internal/Test.svelte",
+		"./Test.svelte": "./Test.svelte",
+		".": {
+			"import": "./index.js"
+		},
+		"./constants": "./internal/constants.js",
+		"./Test": "./Test.svelte",
+		"./package.json": "./package.json"
+	},
+	"type": "module"
+}

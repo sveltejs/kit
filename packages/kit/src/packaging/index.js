@@ -30,14 +30,10 @@ export async function make_package(config, cwd = process.cwd()) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
 	delete pkg.scripts;
-	pkg.type = 'module'; // type must be 'module'
+	pkg.type = 'module';
 
-	const user_defined_exports = 'exports' in pkg;
-
-	// We still want to always predefine some exports
-	// like package.json that is used by other packages
-	if (!pkg.exports) pkg.exports = {};
-	pkg.exports['./package.json'] = './package.json';
+	/** @type {Record<string, string>} */
+	const generated = { './package.json': './package.json' };
 
 	for (const file of files) {
 		const ext = path.extname(file);
@@ -86,19 +82,14 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		if (!user_defined_exports && exports_filter(file)) {
+		if (exports_filter(file)) {
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
 			const key = entry.endsWith('/index.js') ? entry.slice(0, -'/index.js'.length) : entry;
-			pkg.exports[key] = entry;
+			generated[key] = entry;
 		}
 	}
 
-	const main = pkg.exports['./index.js'] || pkg.exports['./index.svelte'];
-
-	if (!user_defined_exports && main) {
-		pkg.exports['.'] = main;
-	}
-
+	pkg.exports = { ...generated, ...pkg.exports };
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {

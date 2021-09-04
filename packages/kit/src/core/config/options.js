@@ -58,7 +58,7 @@ export function options_type({ cwd = process.cwd() } = {}) {
 				dir: _(string(), 'package'),
 				exports: obj({
 					include: _(array(string()), ['**']),
-					exclude: _(array(string()), ['_*', '**/_*'])
+					exclude: _(array(string()), ['**/_*'])
 				}),
 				files: obj({
 					include: _(array(string()), ['**']),
