@@ -14,6 +14,7 @@ const __dirname = join(__filename, '..');
  * @returns {import('types/config').ValidatedConfig}
  */
 function validate_config(config) {
+	// use `default-esm` to pass validation on kit.files.template (checks fs exist)
 	const cwd = join(__dirname, 'fixtures', 'default-esm');
 	return create(config, options_type({ cwd }));
 }
