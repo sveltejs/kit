@@ -31,17 +31,6 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types/config').Config} config
- * @returns {import('types/config').ValidatedConfig}
- */
-export function validate_config(config) {
-	/** @type {import('types/config').ValidatedConfig} */
-	const validated = create(config, options_type());
-
-	return validated;
-}
-
-/**
  * Merges b into a, recursively, mutating a.
  * @param {Record<string, any>} a
  * @param {Record<string, any>} b
