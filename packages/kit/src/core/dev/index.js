@@ -417,7 +417,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 						root,
 						router: config.kit.router,
 						ssr: config.kit.ssr,
-						target: config.kit.target,
+						target: config.kit.target || '',
 						template: ({ head, body }) => {
 							let rendered = fs
 								.readFileSync(config.kit.files.template, 'utf8')

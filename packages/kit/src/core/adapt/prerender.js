@@ -153,7 +153,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
+				host: config.kit.host || '',
 				method: 'GET',
 				headers: {},
 				path,
@@ -290,7 +290,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	if (fallback) {
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
+				host: config.kit.host || '',
 				method: 'GET',
 				headers: {},
 				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string

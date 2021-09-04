@@ -8,6 +8,8 @@ import { get_utils } from './utils.js';
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
 export async function adapt(config, build_data, { cwd = process.cwd(), verbose }) {
+	if (!config.kit.adapter) return;
+
 	const { name, adapt } = config.kit.adapter;
 
 	console.log(colors.bold().cyan(`\n> Using ${name}`));
