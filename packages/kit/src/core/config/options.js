@@ -105,7 +105,7 @@ function obj(schema) {
 
 function non_empty_string() {
 	return refine(string(), 'non_empty_string', (value) => {
-		return value !== '' || `Expected a non-empty string`;
+		return value !== '' || 'Expected a non-empty string';
 	});
 }
 
@@ -132,14 +132,14 @@ function adapter() {
 			return true;
 		}
 
-		let message = `Expected an object with an "adapt" method`;
+		let message = 'Expected an object with an "adapt" method';
 
 		if (Array.isArray(value) || typeof value === 'string') {
 			// for the early adapter adopters
 			message += ', rather than the name of an adapter';
 		}
 
-		message += `. See https://kit.svelte.dev/docs#adapters`;
+		message += '. See https://kit.svelte.dev/docs#adapters';
 
 		return message;
 	});
@@ -197,7 +197,7 @@ function template_path_string(opts) {
 function paths_base() {
 	return refine(string(), 'paths_base', (value) => {
 		if (value !== '' && (value.endsWith('/') || !value.startsWith('/'))) {
-			return `Expected path to be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths`;
+			return "Expected path to be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths";
 		}
 
 		return true;
@@ -206,7 +206,7 @@ function paths_base() {
 
 function paths_assets() {
 	return refine(string(), 'paths_assets', (value) => {
-		// Allow empty string
+		// allow empty string
 		if (!value) return true;
 
 		if (!/^[a-z]+:\/\//.test(value)) {
@@ -240,7 +240,7 @@ function prerender_force() {
 function prerender_on_error() {
 	return refine(any(), 'on_error', (value) => {
 		if (typeof value !== 'function' && !['continue', 'fail'].includes(value)) {
-			return `Expected value be either a custom function or one of "continue" or "fail"`;
+			return 'Expected value be either a custom function or one of "continue" or "fail"';
 		}
 
 		return true;
