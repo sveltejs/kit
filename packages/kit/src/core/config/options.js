@@ -22,9 +22,9 @@ import {
  */
 
 /**
- * @typedef {import('types/config').Adapter} Adapter
- * @typedef {import('types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
- * @typedef {import('types/internal').TrailingSlash} TrailingSlash
+ * @typedef {import('../../../types/config').Adapter} Adapter
+ * @typedef {import('../../../types/config').PrerenderOnErrorValue} PrerenderOnErrorValue
+ * @typedef {import('../../../types/internal').TrailingSlash} TrailingSlash
  */
 
 export function options_type({ cwd = process.cwd() } = {}) {
