@@ -34,6 +34,27 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		: path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
 
+	const validated = validate_config(config.default);
+
+	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
+	validated.kit.files.hooks = path.resolve(cwd, validated.kit.files.hooks);
+	validated.kit.files.lib = path.resolve(cwd, validated.kit.files.lib);
+	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
+	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
+	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
+
+	validate_template(cwd, validated);
+
+	// TODO check all the `files` exist when the config is loaded?
+
+	return validated;
+}
+
+/**
+ * @param {import('types/config').Config} config
+ * @returns {import('types/config').ValidatedConfig}
+ */
+export function validate_config(config) {
 	const type = typeof config;
 
 	if (type === 'undefined') {
@@ -48,21 +69,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		);
 	}
 
-	/** @type {import('types/config').ValidatedConfig} */
-	const validated = options(config, 'config');
-
-	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
-	validated.kit.files.hooks = path.resolve(cwd, validated.kit.files.hooks);
-	validated.kit.files.lib = path.resolve(cwd, validated.kit.files.lib);
-	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
-	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
-	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
-
-	validate_template(cwd, validated);
-
-	// TODO check all the `files` exist when the config is loaded?
-
-	return validated;
+	return options(config, 'config');
 }
 
 /**
