@@ -4,12 +4,12 @@
 /** @type {Validator} */
 const options = object(
 	{
-		extensions: validate(['.svelte'], (option, keypath) => {
-			if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+		extensions: validate(['.svelte'], (input, keypath) => {
+			if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 				throw new Error(`${keypath} must be an array of strings`);
 			}
 
-			option.forEach((extension) => {
+			input.forEach((extension) => {
 				if (extension[0] !== '.') {
 					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
 				}
@@ -19,15 +19,15 @@ const options = object(
 				}
 			});
 
-			return option;
+			return input;
 		}),
 
 		kit: object({
-			adapter: validate(null, (option, keypath) => {
-				if (typeof option !== 'object' || !option.adapt) {
+			adapter: validate(null, (input, keypath) => {
+				if (typeof input !== 'object' || !input.adapt) {
 					let message = `${keypath} should be an object with an "adapt" method`;
 
-					if (Array.isArray(option) || typeof option === 'string') {
+					if (Array.isArray(input) || typeof input === 'string') {
 						// for the early adapter adopters
 						message += ', rather than the name of an adapter';
 					}
@@ -35,12 +35,26 @@ const options = object(
 					throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
 				}
 
-				return option;
+				return input;
 			}),
 
 			amp: boolean(false),
 
-			appDir: string('_app', false),
+			appDir: validate('_app', (input, keypath) => {
+				assert_string(input, keypath);
+
+				if (input) {
+					if (input.startsWith('/') || input.endsWith('/')) {
+						throw new Error(
+							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
+						);
+					}
+				} else {
+					throw new Error(`${keypath} cannot be empty`);
+				}
+
+				return input;
+			}),
 
 			files: object({
 				assets: string('static'),
@@ -76,38 +90,66 @@ const options = object(
 			}),
 
 			paths: object({
-				base: string(''),
-				assets: string('')
+				base: validate('', (input, keypath) => {
+					assert_string(input, keypath);
+
+					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
+						throw new Error(
+							`${keypath} option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths`
+						);
+					}
+
+					return input;
+				}),
+				assets: validate('', (input, keypath) => {
+					assert_string(input, keypath);
+
+					if (input) {
+						if (!/^[a-z]+:\/\//.test(input)) {
+							throw new Error(
+								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths`
+							);
+						}
+
+						if (input.endsWith('/')) {
+							throw new Error(
+								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths`
+							);
+						}
+					}
+
+					return input;
+				})
 			}),
 
 			prerender: object({
 				crawl: boolean(true),
 				enabled: boolean(true),
 				// TODO: remove this for the 1.0 release
-				force: validate(undefined, (option, keypath) => {
-					if (typeof option !== undefined) {
-						const newSetting = option ? 'continue' : 'fail';
+				force: validate(undefined, (input, keypath) => {
+					if (typeof input !== undefined) {
+						const newSetting = input ? 'continue' : 'fail';
 						const needsSetting = newSetting === 'continue';
 						throw new Error(
 							`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
 								needsSetting ? '' : ' (or leave it undefined)'
-							} to get the same behavior as you would with \`force: ${JSON.stringify(option)}\``
+							} to get the same behavior as you would with \`force: ${JSON.stringify(input)}\``
 						);
 					}
 				}),
-				onError: validate('fail', (option, keypath) => {
-					if (typeof option === 'function') return option;
-					if (['continue', 'fail'].includes(option)) return option;
+				onError: validate('fail', (input, keypath) => {
+					if (typeof input === 'function') return input;
+					if (['continue', 'fail'].includes(input)) return input;
 					throw new Error(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
 				}),
-				pages: validate(['*'], (option, keypath) => {
-					if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+				pages: validate(['*'], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);
 					}
 
-					option.forEach((page) => {
+					input.forEach((page) => {
 						if (page !== '*' && page[0] !== '/') {
 							throw new Error(
 								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
@@ -115,7 +157,7 @@ const options = object(
 						}
 					});
 
-					return option;
+					return input;
 				})
 			}),
 
@@ -129,19 +171,19 @@ const options = object(
 
 			vite: validate(
 				() => ({}),
-				(option, keypath) => {
-					if (typeof option === 'object') {
-						const config = option;
-						option = () => config;
+				(input, keypath) => {
+					if (typeof input === 'object') {
+						const config = input;
+						input = () => config;
 					}
 
-					if (typeof option !== 'function') {
+					if (typeof input !== 'function') {
 						throw new Error(
 							`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
 						);
 					}
 
-					return option;
+					return input;
 				}
 			)
 		})
@@ -206,16 +248,14 @@ function validate(fallback, fn) {
  * @returns {Validator}
  */
 function string(fallback, allow_empty = true) {
-	return validate(fallback, (option, keypath) => {
-		if (typeof option !== 'string') {
-			throw new Error(`${keypath} should be a string, if specified`);
-		}
+	return validate(fallback, (input, keypath) => {
+		assert_string(input, keypath);
 
-		if (!allow_empty && option === '') {
+		if (!allow_empty && input === '') {
 			throw new Error(`${keypath} cannot be empty`);
 		}
 
-		return option;
+		return input;
 	});
 }
 
@@ -224,11 +264,11 @@ function string(fallback, allow_empty = true) {
  * @returns {Validator}
  */
 function array_of_strings(array) {
-	return validate(array, (option, keypath) => {
-		if (!Array.isArray(option) || !option.every((glob) => typeof glob === 'string')) {
+	return validate(array, (input, keypath) => {
+		if (!Array.isArray(input) || !input.every((glob) => typeof glob === 'string')) {
 			throw new Error(`${keypath} must be an array of strings`);
 		}
-		return option;
+		return input;
 	});
 }
 
@@ -237,11 +277,11 @@ function array_of_strings(array) {
  * @returns {Validator}
  */
 function boolean(fallback) {
-	return validate(fallback, (option, keypath) => {
-		if (typeof option !== 'boolean') {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'boolean') {
 			throw new Error(`${keypath} should be true or false, if specified`);
 		}
-		return option;
+		return input;
 	});
 }
 
@@ -250,17 +290,27 @@ function boolean(fallback) {
  * @returns {Validator}
  */
 function list(options, fallback = options[0]) {
-	return validate(fallback, (option, keypath) => {
-		if (!options.includes(option)) {
+	return validate(fallback, (input, keypath) => {
+		if (!options.includes(input)) {
 			// prettier-ignore
 			const msg = options.length > 2
-				? `${keypath} should be one of ${options.slice(0, -1).map(option => `"${option}"`).join(', ')} or "${options[options.length - 1]}"`
+				? `${keypath} should be one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
 				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
 
 			throw new Error(msg);
 		}
-		return option;
+		return input;
 	});
+}
+
+/**
+ * @param {string} input
+ * @param {string} keypath
+ */
+function assert_string(input, keypath) {
+	if (typeof input !== 'string') {
+		throw new Error(`${keypath} should be a string, if specified`);
+	}
 }
 
 export default options;

@@ -33,7 +33,23 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		? config_file_esm
 		: path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
-	const validated = validate_config(config.default);
+
+	const type = typeof config;
+
+	if (type === 'undefined') {
+		throw new Error(
+			'Your config is missing default exports. Make sure to include "export default config;"'
+		);
+	}
+
+	if (type !== 'object') {
+		throw new Error(
+			`Unexpected config type "${type}", make sure your default export is an object.`
+		);
+	}
+
+	/** @type {import('types/config').ValidatedConfig} */
+	const validated = options(config, 'config');
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
 	validated.kit.files.hooks = path.resolve(cwd, validated.kit.files.hooks);
@@ -45,56 +61,6 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	validate_template(cwd, validated);
 
 	// TODO check all the `files` exist when the config is loaded?
-
-	return validated;
-}
-
-/**
- * @param {import('types/config').Config} config
- * @returns {import('types/config').ValidatedConfig}
- */
-export function validate_config(config) {
-	if (typeof config === 'undefined') {
-		throw new Error(
-			'Your config is missing default exports. Make sure to include "export default config;"'
-		);
-	} else if (typeof config !== 'object') {
-		throw new Error(
-			`Unexpected config type "${typeof config}", make sure your default export is an object.`
-		);
-	}
-
-	/** @type {import('types/config').ValidatedConfig} */
-	const validated = options(config, 'config');
-
-	// resolve paths
-	const { paths, appDir } = validated.kit;
-
-	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
-		throw new Error(
-			"kit.paths.base option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
-		);
-	}
-
-	if (paths.assets) {
-		if (!/^[a-z]+:\/\//.test(paths.assets)) {
-			throw new Error(
-				'kit.paths.assets option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths'
-			);
-		}
-
-		if (paths.assets.endsWith('/')) {
-			throw new Error(
-				"kit.paths.assets option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
-			);
-		}
-	}
-
-	if (appDir.startsWith('/') || appDir.endsWith('/')) {
-		throw new Error(
-			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
-		);
-	}
 
 	return validated;
 }
