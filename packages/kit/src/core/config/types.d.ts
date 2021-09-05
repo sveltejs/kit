@@ -1,7 +1,7 @@
 export type ConfigDefinition =
 	| {
 			type: 'leaf';
-			default: any;
+			fallback: any;
 			validate(value: any, keypath: string): any;
 	  }
 	| {

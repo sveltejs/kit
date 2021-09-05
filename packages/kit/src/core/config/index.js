@@ -13,18 +13,6 @@ import options from './options.js';
  * @returns {any}
  */
 function validate(definition, option, keypath) {
-	if (typeof option !== 'object') {
-		if (typeof option === 'undefined') {
-			throw new Error(
-				'Your config is missing default exports. Make sure to include "export default config;"'
-			);
-		} else {
-			throw new Error(
-				`Unexpected config type "${typeof option}", make sure your default export is an object.`
-			);
-		}
-	}
-
 	// only validate nested key paths
 	if (keypath !== 'config') {
 		for (const key in option) {
@@ -63,7 +51,7 @@ function validate(definition, option, keypath) {
 			merged[key] =
 				expected.type === 'branch'
 					? validate(expected.children, {}, child_keypath)
-					: expected.default;
+					: expected.fallback;
 		}
 	}
 
@@ -118,6 +106,16 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('types/config').ValidatedConfig}
  */
 export function validate_config(config) {
+	if (typeof config === 'undefined') {
+		throw new Error(
+			'Your config is missing default exports. Make sure to include "export default config;"'
+		);
+	} else if (typeof config !== 'object') {
+		throw new Error(
+			`Unexpected config type "${typeof config}", make sure your default export is an object.`
+		);
+	}
+
 	/** @type {import('types/config').ValidatedConfig} */
 	const validated = validate(options, config, 'config');
 
