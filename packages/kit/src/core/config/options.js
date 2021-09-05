@@ -122,7 +122,6 @@ function svelte_extension() {
 }
 
 /**
- *
  * @returns {Struct<Adapter, null>}
  */
 function adapter() {
@@ -234,7 +233,6 @@ function prerender_force() {
 }
 
 /**
- *
  * @returns {Struct<PrerenderOnErrorValue, null>}
  */
 function prerender_on_error() {
