@@ -13,6 +13,10 @@ import options from './options.js';
  * @returns {any}
  */
 function validate(definition, option, keypath) {
+	if (typeof option !== 'object' || Array.isArray(option)) {
+		throw new Error(`${keypath} should be an object`);
+	}
+
 	// only validate nested key paths
 	if (keypath !== 'config') {
 		for (const key in option) {
@@ -32,26 +36,15 @@ function validate(definition, option, keypath) {
 	const merged = {};
 
 	for (const key in definition) {
-		const expected = definition[key];
-		const actual = option[key];
+		const node = definition[key];
+		const value = option[key];
 
-		const child_keypath = `${keypath}.${key}`;
+		const path = `${keypath}.${key}`;
 
-		if (key in option) {
-			if (expected.type === 'branch') {
-				if (actual && (typeof actual !== 'object' || Array.isArray(actual))) {
-					throw new Error(`${keypath}.${key} should be an object`);
-				}
-
-				merged[key] = validate(expected.children, actual, child_keypath);
-			} else {
-				merged[key] = expected.validate(actual, child_keypath);
-			}
+		if (node.type === 'branch') {
+			merged[key] = validate(node.children, value || {}, path);
 		} else {
-			merged[key] =
-				expected.type === 'branch'
-					? validate(expected.children, {}, child_keypath)
-					: expected.fallback;
+			merged[key] = key in option ? node.validate(value, path) : node.fallback;
 		}
 	}
 
