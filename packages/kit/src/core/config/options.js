@@ -181,14 +181,14 @@ function fs_path_string({ cwd = process.cwd(), check_exist = false } = {}) {
  */
 function template_path_string(opts) {
 	const cwd = opts.cwd || process.cwd();
-	return refine(fs_path_string(opts), 'template_path_string', (value) => {
+	return refine(fs_path_string({ check_exist: true, ...opts }), 'template_path_string', (value) => {
 		const contents = fs.readFileSync(value, 'utf8');
 		const expected_tags = ['%svelte.head%', '%svelte.body%'];
-		expected_tags.forEach((tag) => {
+		for (const tag of expected_tags) {
 			if (contents.indexOf(tag) === -1) {
 				return `Expected ${path.relative(cwd, value)} to have ${tag}`;
 			}
-		});
+		}
 		return true;
 	});
 }
