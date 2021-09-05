@@ -8,3 +8,5 @@ export type ConfigDefinition =
 			type: 'branch';
 			children: Record<string, ConfigDefinition>;
 	  };
+
+export type Validator<T = any> = (input: T, keypath: string) => T;

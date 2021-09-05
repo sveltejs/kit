@@ -19,7 +19,6 @@ async function testLoadDefaultConfig(path) {
 	delete config.kit.vite;
 
 	assert.equal(config, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -58,8 +57,7 @@ async function testLoadDefaultConfig(path) {
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 }
 

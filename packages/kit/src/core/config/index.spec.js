@@ -9,7 +9,6 @@ test('fills in defaults', () => {
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -58,8 +57,7 @@ test('fills in defaults', () => {
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 });
 
@@ -119,7 +117,6 @@ test('fills in partial blanks', () => {
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -168,8 +165,7 @@ test('fills in partial blanks', () => {
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 });
 

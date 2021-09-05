@@ -7,51 +7,6 @@ import options from './options.js';
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
 /**
- * @param {Record<string, ConfigDefinition>} definition
- * @param {any} option
- * @param {string} keypath
- * @returns {any}
- */
-function validate(definition, option, keypath) {
-	if (typeof option !== 'object' || Array.isArray(option)) {
-		throw new Error(`${keypath} should be an object`);
-	}
-
-	// only validate nested key paths
-	if (keypath !== 'config') {
-		for (const key in option) {
-			if (!(key in definition)) {
-				let message = `Unexpected option ${keypath}.${key}`;
-
-				if (keypath === 'config.kit' && key in options) {
-					message += ` (did you mean config.${key}?)`;
-				}
-
-				throw new Error(message);
-			}
-		}
-	}
-
-	/** @type {Record<string, any>} */
-	const merged = {};
-
-	for (const key in definition) {
-		const node = definition[key];
-		const value = option[key];
-
-		const path = `${keypath}.${key}`;
-
-		if (node.type === 'branch') {
-			merged[key] = validate(node.children, value || {}, path);
-		} else {
-			merged[key] = key in option ? node.validate(value, path) : node.fallback;
-		}
-	}
-
-	return merged;
-}
-
-/**
  * @param {string} cwd
  * @param {import('types/config').ValidatedConfig} validated
  */
@@ -110,7 +65,7 @@ export function validate_config(config) {
 	}
 
 	/** @type {import('types/config').ValidatedConfig} */
-	const validated = validate(options, config, 'config');
+	const validated = options(config, 'config');
 
 	// resolve paths
 	const { paths, appDir } = validated.kit;

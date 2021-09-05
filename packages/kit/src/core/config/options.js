@@ -1,184 +1,209 @@
-const identity = (/** @type {any} */ id) => id;
-
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
+/** @typedef {import('./types').Validator} Validator */
 
-/** @type {Record<string, ConfigDefinition>} */
-const options = {
-	compilerOptions: validate(null, identity),
-
-	extensions: validate(['.svelte'], (option, keypath) => {
-		if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
-			throw new Error(`${keypath} must be an array of strings`);
-		}
-
-		option.forEach((extension) => {
-			if (extension[0] !== '.') {
-				throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
+/** @type {Validator} */
+const options = object(
+	{
+		extensions: validate(['.svelte'], (option, keypath) => {
+			if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+				throw new Error(`${keypath} must be an array of strings`);
 			}
 
-			if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
-				throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
-			}
-		});
-
-		return option;
-	}),
-
-	kit: object({
-		adapter: validate(null, (option, keypath) => {
-			if (typeof option !== 'object' || !option.adapt) {
-				let message = `${keypath} should be an object with an "adapt" method`;
-
-				if (Array.isArray(option) || typeof option === 'string') {
-					// for the early adapter adopters
-					message += ', rather than the name of an adapter';
+			option.forEach((extension) => {
+				if (extension[0] !== '.') {
+					throw new Error(`Each member of ${keypath} must start with '.' — saw '${extension}'`);
 				}
 
-				throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
-			}
+				if (!/^(\.[a-z0-9]+)+$/i.test(extension)) {
+					throw new Error(`File extensions must be alphanumeric — saw '${extension}'`);
+				}
+			});
 
 			return option;
 		}),
 
-		amp: boolean(false),
+		kit: object({
+			adapter: validate(null, (option, keypath) => {
+				if (typeof option !== 'object' || !option.adapt) {
+					let message = `${keypath} should be an object with an "adapt" method`;
 
-		appDir: string('_app', false),
+					if (Array.isArray(option) || typeof option === 'string') {
+						// for the early adapter adopters
+						message += ', rather than the name of an adapter';
+					}
 
-		files: object({
-			assets: string('static'),
-			hooks: string('src/hooks'),
-			lib: string('src/lib'),
-			routes: string('src/routes'),
-			serviceWorker: string('src/service-worker'),
-			template: string('src/app.html')
-		}),
+					throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
+				}
 
-		floc: boolean(false),
-
-		host: string(null),
-
-		hostHeader: string(null),
-
-		hydrate: boolean(true),
-		serviceWorker: object({
-			exclude: array_of_strings([])
-		}),
-
-		package: object({
-			dir: string('package'),
-			exports: object({
-				include: array_of_strings(['**']),
-				exclude: array_of_strings(['**/_*'])
+				return option;
 			}),
+
+			amp: boolean(false),
+
+			appDir: string('_app', false),
+
 			files: object({
-				include: array_of_strings(['**']),
+				assets: string('static'),
+				hooks: string('src/hooks'),
+				lib: string('src/lib'),
+				routes: string('src/routes'),
+				serviceWorker: string('src/service-worker'),
+				template: string('src/app.html')
+			}),
+
+			floc: boolean(false),
+
+			host: string(null),
+
+			hostHeader: string(null),
+
+			hydrate: boolean(true),
+			serviceWorker: object({
 				exclude: array_of_strings([])
 			}),
-			emitTypes: boolean(true)
-		}),
 
-		paths: object({
-			base: string(''),
-			assets: string('')
-		}),
-
-		prerender: object({
-			crawl: boolean(true),
-			enabled: boolean(true),
-			// TODO: remove this for the 1.0 release
-			force: validate(undefined, (option, keypath) => {
-				if (typeof option !== undefined) {
-					const newSetting = option ? 'continue' : 'fail';
-					const needsSetting = newSetting === 'continue';
-					throw new Error(
-						`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
-							needsSetting ? '' : ' (or leave it undefined)'
-						} to get the same behavior as you would with \`force: ${JSON.stringify(option)}\``
-					);
-				}
+			package: object({
+				dir: string('package'),
+				exports: object({
+					include: array_of_strings(['**']),
+					exclude: array_of_strings(['**/_*'])
+				}),
+				files: object({
+					include: array_of_strings(['**']),
+					exclude: array_of_strings([])
+				}),
+				emitTypes: boolean(true)
 			}),
-			onError: validate('fail', (option, keypath) => {
-				if (typeof option === 'function') return option;
-				if (['continue', 'fail'].includes(option)) return option;
-				throw new Error(
-					`${keypath} should be either a custom function or one of "continue" or "fail"`
-				);
-			}),
-			pages: validate(['*'], (option, keypath) => {
-				if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
-					throw new Error(`${keypath} must be an array of strings`);
-				}
 
-				option.forEach((page) => {
-					if (page !== '*' && page[0] !== '/') {
+			paths: object({
+				base: string(''),
+				assets: string('')
+			}),
+
+			prerender: object({
+				crawl: boolean(true),
+				enabled: boolean(true),
+				// TODO: remove this for the 1.0 release
+				force: validate(undefined, (option, keypath) => {
+					if (typeof option !== undefined) {
+						const newSetting = option ? 'continue' : 'fail';
+						const needsSetting = newSetting === 'continue';
 						throw new Error(
-							`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							`${keypath} has been removed in favor of \`onError\`. In your case, set \`onError\` to "${newSetting}"${
+								needsSetting ? '' : ' (or leave it undefined)'
+							} to get the same behavior as you would with \`force: ${JSON.stringify(option)}\``
 						);
 					}
-				});
-
-				return option;
-			})
-		}),
-
-		router: boolean(true),
-
-		ssr: boolean(true),
-
-		target: string(null),
-
-		trailingSlash: list(['never', 'always', 'ignore']),
-
-		vite: validate(
-			() => ({}),
-			(option, keypath) => {
-				if (typeof option === 'object') {
-					const config = option;
-					option = () => config;
-				}
-
-				if (typeof option !== 'function') {
+				}),
+				onError: validate('fail', (option, keypath) => {
+					if (typeof option === 'function') return option;
+					if (['continue', 'fail'].includes(option)) return option;
 					throw new Error(
-						`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
+						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
+				}),
+				pages: validate(['*'], (option, keypath) => {
+					if (!Array.isArray(option) || !option.every((page) => typeof page === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					option.forEach((page) => {
+						if (page !== '*' && page[0] !== '/') {
+							throw new Error(
+								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							);
+						}
+					});
+
+					return option;
+				})
+			}),
+
+			router: boolean(true),
+
+			ssr: boolean(true),
+
+			target: string(null),
+
+			trailingSlash: list(['never', 'always', 'ignore']),
+
+			vite: validate(
+				() => ({}),
+				(option, keypath) => {
+					if (typeof option === 'object') {
+						const config = option;
+						option = () => config;
+					}
+
+					if (typeof option !== 'function') {
+						throw new Error(
+							`${keypath} must be a Vite config object (https://vitejs.dev/config) or a function that returns one`
+						);
+					}
+
+					return option;
 				}
-
-				return option;
-			}
-		)
-	}),
-
-	preprocess: validate(null, identity)
-};
+			)
+		})
+	},
+	true
+);
 
 /**
- * @param {Record<string, ConfigDefinition>} children
- * @returns {ConfigDefinition}
+ * @param {Record<string, Validator>} children
+ * @param {boolean} [allow_unknown]
+ * @returns {Validator}
  */
-function object(children) {
-	return {
-		type: 'branch',
-		children
+function object(children, allow_unknown = false) {
+	return (input, keypath) => {
+		/** @type {Record<string, any>} */
+		const output = {};
+
+		if ((input && typeof input !== 'object') || Array.isArray(input)) {
+			throw new Error(`${keypath} should be an object`);
+		}
+
+		for (const key in input) {
+			if (!(key in children)) {
+				if (allow_unknown) {
+					output[key] = input[key];
+				} else {
+					let message = `Unexpected option ${keypath}.${key}`;
+
+					// special case
+					if (keypath === 'config.kit' && key in options) {
+						message += ` (did you mean config.${key}?)`;
+					}
+
+					throw new Error(message);
+				}
+			}
+		}
+
+		for (const key in children) {
+			const validator = children[key];
+			output[key] = validator(input && input[key], `${keypath}.${key}`);
+		}
+
+		return output;
 	};
 }
 
 /**
  * @param {any} fallback
- * @param {(value: any, keypath: string) => any} validate
- * @returns {ConfigDefinition}
+ * @param {(value: any, keypath: string) => any} fn
+ * @returns {Validator}
  */
-function validate(fallback, validate) {
-	return {
-		type: 'leaf',
-		validate,
-		fallback
+function validate(fallback, fn) {
+	return (input, keypath) => {
+		return input === undefined ? fallback : fn(input, keypath);
 	};
 }
 
 /**
  * @param {string | null} fallback
  * @param {boolean} allow_empty
- * @returns {ConfigDefinition}
+ * @returns {Validator}
  */
 function string(fallback, allow_empty = true) {
 	return validate(fallback, (option, keypath) => {
@@ -196,7 +221,7 @@ function string(fallback, allow_empty = true) {
 
 /**
  * @param {string[]} array
- * @returns {ConfigDefinition}
+ * @returns {Validator}
  */
 function array_of_strings(array) {
 	return validate(array, (option, keypath) => {
@@ -209,7 +234,7 @@ function array_of_strings(array) {
 
 /**
  * @param {boolean} fallback
- * @returns {ConfigDefinition}
+ * @returns {Validator}
  */
 function boolean(fallback) {
 	return validate(fallback, (option, keypath) => {
@@ -222,7 +247,7 @@ function boolean(fallback) {
 
 /**
  * @param {string[]} options
- * @returns {ConfigDefinition}
+ * @returns {Validator}
  */
 function list(options, fallback = options[0]) {
 	return validate(fallback, (option, keypath) => {
