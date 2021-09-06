@@ -1,9 +1,9 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.162",
+	"version": "1.0.0-next.163",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.21",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.22",
 		"cheap-watch": "^1.0.3",
 		"sade": "^1.7.4",
 		"vite": "^2.5.3"
