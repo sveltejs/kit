@@ -21,7 +21,9 @@ function find_anchor(node) {
  * @returns {URL}
  */
 function get_href(node) {
-	return node instanceof SVGAElement ? new URL(node.href.baseVal, document.baseURI) : new URL(node.href);
+	return node instanceof SVGAElement
+		? new URL(node.href.baseVal, document.baseURI)
+		: new URL(node.href);
 }
 
 export class Router {
