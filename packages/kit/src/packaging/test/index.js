@@ -65,7 +65,7 @@ function format(file, content) {
 
 test('standard package errors', async () => {
 	// TODO: refactor and allow this to handle multiple errors
-	const cwd = join(__dirname, 'fixtures', 'errors/duplicate-export');
+	const cwd = join(__dirname, 'errors', 'duplicate-export');
 	const pwd = join(cwd, 'package');
 
 	const config = await load_config({ cwd });
@@ -75,7 +75,7 @@ test('standard package errors', async () => {
 	} catch (/** @type {any} */ e) {
 		assert.equal(
 			e.message,
-			'Duplicate "./utils" export. Please remove or rename either ./utils/index.js or utils.js',
+			'Duplicate "./utils" export. Please remove or rename either utils\\index.js or utils.js',
 			'Duplicate export are not thrown'
 		);
 	} finally {
