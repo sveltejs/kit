@@ -35,6 +35,9 @@ export async function make_package(config, cwd = process.cwd()) {
 	/** @type {Record<string, string>} */
 	const generated = { './package.json': './package.json' };
 
+	/** @type {Record<string, string>} */
+	const clashes = {};
+
 	for (const file of files) {
 		const ext = path.extname(file);
 		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
@@ -83,9 +86,18 @@ export async function make_package(config, cwd = process.cwd()) {
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
 		if (exports_filter(file)) {
+			const original = `$lib/${file.replace(/\\/g, '/')}`;
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
-			const key = entry.endsWith('/index.js') ? entry.slice(0, -'/index.js'.length) : entry;
+			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
+
+			if (clashes[key]) {
+				throw new Error(
+					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
+				);
+			}
+
 			generated[key] = entry;
+			clashes[key] = original;
 		}
 	}
 
