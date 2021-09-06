@@ -566,7 +566,7 @@ export class Renderer {
 		const page = { host: this.host, path, query, params };
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
-		const branch = [];
+		let branch = [];
 
 		/** @type {Record<string, any>} */
 		let context = {};
@@ -665,7 +665,7 @@ export class Renderer {
 								continue;
 							}
 
-							branch.push(error_loaded);
+							branch = branch.slice(0, j + 1).concat(error_loaded);
 							break load;
 						} catch (e) {
 							continue;
