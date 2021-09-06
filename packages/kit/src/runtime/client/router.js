@@ -17,7 +17,7 @@ function find_anchor(node) {
 }
 
 /**
- * @param {HTMLAnchorElement | SVGAElement } node
+ * @param {HTMLAnchorElement | SVGAElement} node
  * @returns {URL}
  */
 function get_href(node) {
