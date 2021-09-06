@@ -231,4 +231,12 @@ export default function (test, is_dev) {
 		assert.equal(await page.innerHTML('.parsed'), '{"oddly":{"formatted":"json"}}');
 		assert.equal(await page.innerHTML('.raw'), '{ "oddly" : { "formatted" : "json" } }');
 	});
+
+	test('does not leak props to other pages', '/load/props/about', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('p'), 'Data: undefined');
+		await clicknav('[href="/load/props/"]');
+		assert.equal(await page.textContent('p'), 'Data: Hello from Index!');
+		await clicknav('[href="/load/props/about"]');
+		assert.equal(await page.textContent('p'), 'Data: undefined');
+	});
 }

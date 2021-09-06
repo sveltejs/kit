@@ -404,7 +404,7 @@ export class Renderer {
 
 		for (let i = 0; i < filtered.length; i += 1) {
 			const loaded = filtered[i].loaded;
-			if (loaded) result.props[`props_${i}`] = await loaded.props;
+			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
 		if (
@@ -541,8 +541,8 @@ export class Renderer {
 	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info: { path, decoded_path, query } }, no_cache) {
-		const key = `${decoded_path}?${query}`;
+	async _load({ route, info: { path, query } }, no_cache) {
+		const key = `${path}?${query}`;
 
 		if (!no_cache) {
 			const cached = this.cache.get(key);
@@ -552,7 +552,7 @@ export class Renderer {
 		const [pattern, a, b, get_params] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(decoded_path)))
+			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
 			: {};
 
 		const changed = this.current.page && {
@@ -566,7 +566,7 @@ export class Renderer {
 		const page = { host: this.host, path, query, params };
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
-		const branch = [];
+		let branch = [];
 
 		/** @type {Record<string, any>} */
 		let context = {};
@@ -665,7 +665,7 @@ export class Renderer {
 								continue;
 							}
 
-							branch.push(error_loaded);
+							branch = branch.slice(0, j + 1).concat(error_loaded);
 							break load;
 						} catch (e) {
 							continue;

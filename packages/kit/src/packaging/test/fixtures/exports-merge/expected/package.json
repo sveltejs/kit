@@ -3,9 +3,12 @@
 	"version": "1.0.0",
 	"description": "merges exports field",
 	"exports": {
-		"./internal/constants.js": "./internal/constants.js",
+		"./internal/constants": "./internal/constants.js",
 		"./internal/Test.svelte": "./internal/Test.svelte",
+		"./hello-world": "./hello-world.js",
+		"./icons123": "./icons123.js",
 		"./Test.svelte": "./Test.svelte",
+		"./why_underscore": "./why_underscore.js",
 		".": {
 			"import": "./index.js"
 		},
