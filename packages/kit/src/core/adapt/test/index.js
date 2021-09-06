@@ -91,8 +91,8 @@ suite('prerender', async () => {
 			},
 			appDir: '_app',
 			prerender: {
-				pages: ['*'],
-				enabled: true
+				enabled: true,
+				entries: ['*']
 			}
 		}
 	};

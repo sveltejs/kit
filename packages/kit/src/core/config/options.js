@@ -122,6 +122,21 @@ const options = object(
 			prerender: object({
 				crawl: boolean(true),
 				enabled: boolean(true),
+				entries: validate(['*'], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					input.forEach((page) => {
+						if (page !== '*' && page[0] !== '/') {
+							throw new Error(
+								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							);
+						}
+					});
+
+					return input;
+				}),
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
@@ -141,20 +156,11 @@ const options = object(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
 				}),
-				pages: validate(['*'], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
+				// TODO: remove this for the 1.0 release
+				pages: validate(undefined, (input, keypath) => {
+					if (typeof input !== undefined) {
+						throw new Error(`${keypath} has been renamed to \`entries\`.`);
 					}
-
-					input.forEach((page) => {
-						if (page !== '*' && page[0] !== '/') {
-							throw new Error(
-								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
-							);
-						}
-					});
-
-					return input;
 				})
 			}),
 
