@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.164
+
+### Patch Changes
+
+- [fix] error components render with correct layout client-side as well as server-side ([#2378](https://github.com/sveltejs/kit/pull/2378))
+
+* refactor `import.meta.env` usage in `$app/stores.js` to use `$app/env.js` to DRY code and make mocking easier ([#2353](https://github.com/sveltejs/kit/pull/2353))
+
+- Trim `.js` extensions in package exports field ([#2345](https://github.com/sveltejs/kit/pull/2345))
+
 ## 1.0.0-next.163
 
 ### Patch Changes
