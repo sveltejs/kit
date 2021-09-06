@@ -72,9 +72,6 @@ const options = object(
 			hostHeader: string(null),
 
 			hydrate: boolean(true),
-			serviceWorker: object({
-				exclude: array_of_strings([])
-			}),
 
 			package: object({
 				dir: string('package'),
@@ -162,6 +159,10 @@ const options = object(
 			}),
 
 			router: boolean(true),
+
+			serviceWorker: object({
+				exclude: array_of_strings([])
+			}),
 
 			ssr: boolean(true),
 

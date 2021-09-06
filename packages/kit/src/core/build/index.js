@@ -1,14 +1,18 @@
 import fs from 'fs';
 import path from 'path';
-import { rimraf } from '../../utils/filesystem.js';
-import create_manifest_data from '../../core/create_manifest_data/index.js';
-import { copy_assets, posixify, resolve_entry } from '../utils.js';
-import { deep_merge, print_config_conflicts } from '../config/index.js';
-import { create_app } from '../../core/create_app/index.js';
-import vite from 'vite';
+
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
+import vite from 'vite';
+
+import { rimraf } from '../../utils/filesystem.js';
+import { deep_merge } from '../../utils/object.js';
+
+import { print_config_conflicts } from '../config/index.js';
+import { create_app } from '../create_app/index.js';
+import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
+import { copy_assets, posixify, resolve_entry } from '../utils.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -96,8 +100,7 @@ async function build_client({
 	manifest,
 	build_dir,
 	output_dir,
-	client_entry_file,
-	service_worker_entry_file
+	client_entry_file
 }) {
 	create_app({
 		manifest_data: manifest,

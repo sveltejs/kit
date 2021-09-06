@@ -1,8 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import micromatch from 'micromatch';
 import { createRequire } from 'module';
+
+import micromatch from 'micromatch';
 import { preprocess } from 'svelte/compiler';
+
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
