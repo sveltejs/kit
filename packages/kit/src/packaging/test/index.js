@@ -63,6 +63,26 @@ function format(file, content) {
 	});
 }
 
+test('standard package errors', async () => {
+	// TODO: refactor and allow this to handle multiple errors
+	const cwd = join(__dirname, 'fixtures', 'errors/duplicate-export');
+	const pwd = join(cwd, 'package');
+
+	const config = await load_config({ cwd });
+	try {
+		// TODO: use assert.throws, does not seem to work with async/await
+		await make_package(config, cwd);
+	} catch (/** @type {any} */ e) {
+		assert.equal(
+			e.message,
+			'Duplicate "./utils" export. Please remove or rename either ./utils/index.js or utils.js',
+			'Duplicate export are not thrown'
+		);
+	} finally {
+		rimraf(pwd);
+	}
+});
+
 test('create standard package with javascript', async () => {
 	// should also preserve filename casing
 	// should also correctly handle nested folders
