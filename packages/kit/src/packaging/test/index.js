@@ -75,7 +75,7 @@ test('standard package errors', async () => {
 	} catch (/** @type {any} */ e) {
 		assert.equal(
 			e.message,
-			'Duplicate "./utils" export. Please remove or rename either utils\\index.js or utils.js',
+			'Duplicate "./utils" export. Please remove or rename either $lib/utils/index.js or $lib/utils.js',
 			'Duplicate export are not thrown'
 		);
 	} finally {
