@@ -87,8 +87,9 @@ export async function make_package(config, cwd = process.cwd()) {
 			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
 
 			if (generated[key]) {
-				const existing = `$lib/${generated[key].slice(2)}`;
-				const duplicate = `$lib/${entry.slice(2)}`;
+				const start = './'.length;
+				const existing = `$lib/${generated[key].slice(start)}`;
+				const duplicate = `$lib/${entry.slice(start)}`;
 				throw new Error(
 					`Duplicate "${key}" export. Please remove or rename either ${existing} or ${duplicate}`
 				);
