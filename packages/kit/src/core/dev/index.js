@@ -18,7 +18,6 @@ import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
-import { get_server } from '../server/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, resolve_entry } from '../utils.js';
 
@@ -106,13 +105,16 @@ class Watcher extends EventEmitter {
 			}
 		};
 
-		/** @type {(req: import("http").IncomingMessage, res: import("http").ServerResponse) => void} */
-		let handler = (req, res) => {};
-
-		this.server = await get_server(this.https, vite_config, (req, res) => handler(req, res));
-
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
+
+		const kit_plugin = await create_plugin(this.config, this.dir, this.cwd, () => {
+			if (!this.manifest) {
+				throw new Error('Manifest is not available');
+			}
+
+			return this.manifest;
+		});
 
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
@@ -138,14 +140,13 @@ class Watcher extends EventEmitter {
 					compilerOptions: {
 						hydratable: !!this.config.kit.hydrate
 					}
-				})
+				}),
+				kit_plugin
 			],
 			publicDir: this.config.kit.files.assets,
 			server: {
-				middlewareMode: true,
-				hmr: {
-					...(this.https ? { server: this.server, port: this.port } : {})
-				}
+				host: this.host,
+				https: this.https
 			},
 			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
@@ -154,17 +155,21 @@ class Watcher extends EventEmitter {
 
 		this.vite = await vite.createServer(merged_config);
 
-		const get_manifest = () => {
-			if (!this.manifest) {
-				throw new Error('Manifest is not available');
+		/**
+		 * @type {import('connect').Server}
+		 */
+		const connect_server = this.vite.middlewares;
+		// TODO: replace index with name after https://github.com/vitejs/vite/pull/4908 is merged and released
+		const spa_fallback_index = 7;
+		const html_middlewares = ['viteIndexHtmlMiddleware', 'vite404Middleware'];
+		for (let i = connect_server.stack.length - 1; i > 0; i--) {
+			// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
+			if (html_middlewares.includes(connect_server.stack[i].name) || i === spa_fallback_index) {
+				connect_server.stack.splice(i, 1);
 			}
+		}
 
-			return this.manifest;
-		};
-
-		handler = await create_handler(this.vite, this.config, this.dir, this.cwd, get_manifest);
-
-		this.server.listen(this.port, this.host || '0.0.0.0');
+		await this.vite.listen(this.port);
 	}
 
 	update() {
@@ -211,7 +216,7 @@ class Watcher extends EventEmitter {
 	}
 
 	close() {
-		if (!this.vite || !this.server || !this.cheapwatch) {
+		if (!this.vite || !this.cheapwatch) {
 			throw new Error('Cannot close server before it is initialized');
 		}
 
@@ -219,7 +224,6 @@ class Watcher extends EventEmitter {
 		this.closed = true;
 
 		this.vite.close();
-		this.server.close();
 		this.cheapwatch.close();
 	}
 }
@@ -248,13 +252,12 @@ function get_params(array) {
 }
 
 /**
- * @param {vite.ViteDevServer} vite
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
  * @param {string} cwd
  * @param {() => import('types/internal').SSRManifest} get_manifest
  */
-async function create_handler(vite, config, dir, cwd, get_manifest) {
+async function create_plugin(config, dir, cwd, get_manifest) {
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
@@ -274,11 +277,14 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 	};
 
 	/**
-	 * @param {import('http').IncomingMessage} req
-	 * @param {import('http').ServerResponse} res
+	 * @param {vite.ViteDevServer} vite
 	 */
-	return (req, res) => {
-		vite.middlewares(req, res, async () => {
+	function create_kit_middleware(vite) {
+		/**
+		 * Use a named function for debugging
+		 * @type {import('connect').NextHandleFunction}
+		 */
+		return async function svelteKitMiddleware(req, res) {
 			try {
 				if (!req.url || !req.method) throw new Error('Incomplete request');
 				if (req.url === '/favicon.ico') return not_found(res);
@@ -490,7 +496,19 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 				res.statusCode = 500;
 				res.end(e.stack);
 			}
-		});
+		};
+	}
+
+	return {
+		name: 'vite-plugin-svelte-kit',
+		/**
+		 * @param {import('vite').ViteDevServer} vite
+		 */
+		configureServer(vite) {
+			return () => {
+				vite.middlewares.use(create_kit_middleware(vite));
+			};
+		}
 	};
 }
 
