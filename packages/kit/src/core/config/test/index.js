@@ -52,7 +52,14 @@ async function testLoadDefaultConfig(path) {
 				exclude: []
 			},
 			paths: { base: '', assets: '' },
-			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
+			prerender: {
+				crawl: true,
+				enabled: true,
+				entries: ['*'],
+				force: undefined,
+				onError: 'fail',
+				pages: undefined
+			},
 			router: true,
 			ssr: true,
 			target: null,

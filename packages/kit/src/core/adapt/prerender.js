@@ -276,7 +276,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (config.kit.prerender.enabled) {
-		for (const entry of config.kit.prerender.pages) {
+		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
 					await visit(entry, null);

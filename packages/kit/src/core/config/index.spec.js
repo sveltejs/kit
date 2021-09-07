@@ -48,10 +48,10 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
@@ -156,10 +156,10 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
@@ -257,16 +257,16 @@ test('fails if paths.assets has trailing slash', () => {
 	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
-test('fails if prerender.pages are invalid', () => {
+test('fails if prerender.entries are invalid', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
-					pages: ['foo']
+					entries: ['foo']
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 /**
