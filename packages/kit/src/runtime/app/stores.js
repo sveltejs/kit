@@ -1,6 +1,7 @@
 import { getContext } from 'svelte';
+import { browser } from './env.js';
 
-const ssr = import.meta.env.SSR;
+const ssr = !browser;
 
 // TODO remove this (for 1.0? after 1.0?)
 let warned = false;

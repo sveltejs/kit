@@ -19,7 +19,6 @@ async function testLoadDefaultConfig(path) {
 	delete config.kit.vite;
 
 	assert.equal(config, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -40,27 +39,33 @@ async function testLoadDefaultConfig(path) {
 			i18n: null,
 			package: {
 				dir: 'package',
+				emitTypes: true,
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				emitTypes: true
+				}
 			},
 			serviceWorker: {
 				exclude: []
 			},
 			paths: { base: '', assets: '' },
-			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
+			prerender: {
+				crawl: true,
+				enabled: true,
+				entries: ['*'],
+				force: undefined,
+				onError: 'fail',
+				pages: undefined
+			},
 			router: true,
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 }
 

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.13
+
+### Patch Changes
+
+- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+
 ## 1.0.0-next.12
 
 ### Patch Changes

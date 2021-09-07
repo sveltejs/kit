@@ -35,7 +35,7 @@ const config = {
 			emitTypes: true,
 			exports: {
 				include: ['**'],
-				exclude: ['_*', '**/_*']
+				exclude: ['**/_*']
 			},
 			files: {
 				include: ['**'],
@@ -49,8 +49,8 @@ const config = {
 		prerender: {
 			crawl: true,
 			enabled: true,
-			onError: 'fail',
-			pages: ['*']
+			entries: ['*'],
+			onError: 'fail'
 		},
 		router: true,
 		serviceWorker: {
@@ -146,9 +146,9 @@ export default {
 Options related to [creating a package](#packaging).
 
 - `dir` - output directory
-- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead).
-- `exports` - contains a `includes` and a `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`
-- `files` - contains a `includes` and a `excludes` array which specifies which files to process and copy over when packaging
+- `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
+- `exports` - contains an `includes` and an `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`. Will merge existing values if available with values from `package.json` taking precedence
+- `files` - contains an `includes` and an `excludes` array which specifies which files to process and copy over when packaging
 
 ### paths
 
@@ -163,6 +163,7 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
+- `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
 
   - `'fail'` — (default) fails the build when a routing error is encountered when following a link
@@ -186,8 +187,6 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     	}
     };
     ```
-
-- `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 
 ### router
 

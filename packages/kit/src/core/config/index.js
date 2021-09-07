@@ -7,70 +7,6 @@ import options from './options.js';
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
 /**
- * @param {Record<string, ConfigDefinition>} definition
- * @param {any} option
- * @param {string} keypath
- * @returns {any}
- */
-function validate(definition, option, keypath) {
-	if (typeof option !== 'object') {
-		if (typeof option === 'undefined') {
-			throw new Error(
-				'Your config is missing default exports. Make sure to include "export default config;"'
-			);
-		} else {
-			throw new Error(
-				`Unexpected config type "${typeof option}", make sure your default export is an object.`
-			);
-		}
-	}
-
-	// only validate nested key paths
-	if (keypath !== 'config') {
-		for (const key in option) {
-			if (!(key in definition)) {
-				let message = `Unexpected option ${keypath}.${key}`;
-
-				if (keypath === 'config.kit' && key in options) {
-					message += ` (did you mean config.${key}?)`;
-				}
-
-				throw new Error(message);
-			}
-		}
-	}
-
-	/** @type {Record<string, any>} */
-	const merged = {};
-
-	for (const key in definition) {
-		const expected = definition[key];
-		const actual = option[key];
-
-		const child_keypath = `${keypath}.${key}`;
-
-		if (key in option) {
-			if (expected.type === 'branch') {
-				if (actual && (typeof actual !== 'object' || Array.isArray(actual))) {
-					throw new Error(`${keypath}.${key} should be an object`);
-				}
-
-				merged[key] = validate(expected.children, actual, child_keypath);
-			} else {
-				merged[key] = expected.validate(actual, child_keypath);
-			}
-		} else {
-			merged[key] =
-				expected.type === 'branch'
-					? validate(expected.children, {}, child_keypath)
-					: expected.default;
-		}
-	}
-
-	return merged;
-}
-
-/**
  * @param {string} cwd
  * @param {import('types/config').ValidatedConfig} validated
  */
@@ -97,6 +33,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		? config_file_esm
 		: path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
+
 	const validated = validate_config(config.default);
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
@@ -118,105 +55,21 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('types/config').ValidatedConfig}
  */
 export function validate_config(config) {
-	/** @type {import('types/config').ValidatedConfig} */
-	const validated = validate(options, config, 'config');
+	const type = typeof config;
 
-	// resolve paths
-	const { paths, appDir } = validated.kit;
-
-	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
+	if (type === 'undefined') {
 		throw new Error(
-			"kit.paths.base option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
+			'Your config is missing default exports. Make sure to include "export default config;"'
 		);
 	}
 
-	if (paths.assets) {
-		if (!/^[a-z]+:\/\//.test(paths.assets)) {
-			throw new Error(
-				'kit.paths.assets option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths'
-			);
-		}
-
-		if (paths.assets.endsWith('/')) {
-			throw new Error(
-				"kit.paths.assets option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
-			);
-		}
-	}
-
-	if (appDir.startsWith('/') || appDir.endsWith('/')) {
+	if (type !== 'object') {
 		throw new Error(
-			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
+			`Unexpected config type "${type}", make sure your default export is an object.`
 		);
 	}
 
-	return validated;
-}
-
-/**
- * Merges b into a, recursively, mutating a.
- * @param {Record<string, any>} a
- * @param {Record<string, any>} b
- * @param {string[]} conflicts array to accumulate conflicts in
- * @param {string[]} path array of property names representing the current
- *     location in the tree
- */
-function merge_into(a, b, conflicts = [], path = []) {
-	/**
-	 * Checks for "plain old Javascript object", typically made as an object
-	 * literal. Excludes Arrays and built-in types like Buffer.
-	 * @param {any} x
-	 */
-	const is_plain_object = (x) => typeof x === 'object' && x.constructor === Object;
-
-	for (const prop in b) {
-		if (is_plain_object(b[prop])) {
-			if (!is_plain_object(a[prop])) {
-				if (a[prop] !== undefined) {
-					conflicts.push([...path, prop].join('.'));
-				}
-				a[prop] = {};
-			}
-			merge_into(a[prop], b[prop], conflicts, [...path, prop]);
-		} else if (Array.isArray(b[prop])) {
-			if (!Array.isArray(a[prop])) {
-				if (a[prop] !== undefined) {
-					conflicts.push([...path, prop].join('.'));
-				}
-				a[prop] = [];
-			}
-			a[prop].push(...b[prop]);
-		} else {
-			// Since we're inside a for/in loop which loops over enumerable
-			// properties only, we want parity here and to check if 'a' has
-			// enumerable-only property 'prop'. Using 'hasOwnProperty' to
-			// exclude inherited properties is close enough. It is possible
-			// that someone uses Object.defineProperty to create a direct,
-			// non-enumerable property but let's not worry about that.
-			if (Object.prototype.hasOwnProperty.call(a, prop)) {
-				conflicts.push([...path, prop].join('.'));
-			}
-			a[prop] = b[prop];
-		}
-	}
-}
-
-/**
- * Takes zero or more objects and returns a new object that has all the values
- * deeply merged together. None of the original objects will be mutated at any
- * level, and the returned object will have no references to the original
- * objects at any depth. If there's a conflict the last one wins, except for
- * arrays which will be combined.
- * @param {...Object} objects
- * @returns {[Record<string, any>, string[]]} a 2-tuple with the merged object,
- *     and a list of merge conflicts if there were any, in dotted notation
- */
-export function deep_merge(...objects) {
-	const result = {};
-	/** @type {string[]} */
-	const conflicts = [];
-	objects.forEach((o) => merge_into(result, o, conflicts));
-	return [result, conflicts];
+	return options(config, 'config');
 }
 
 /**

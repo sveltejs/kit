@@ -15,15 +15,15 @@ This function runs every time SvelteKit receives a request — whether that happ
 If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 
 ```ts
-// handle TypeScript type definitions
+// Declaration types for Hooks
+// * declarations that are not exported are for internal use
 
-export type RequestHeaders = Record<string, string>;
-
-/** Only value that can be an array is set-cookie. For everything else we assume string value */
-export type ResponseHeaders = Record<string, string | string[]>;
+// type of string[] is only for set-cookie
+// everything else must be a type of string
+type ResponseHeaders = Record<string, string | string[]>;
+type RequestHeaders = Record<string, string>;
 
 export type RawBody = null | Uint8Array;
-
 export interface IncomingRequest {
 	method: string;
 	host: string;
@@ -33,19 +33,19 @@ export interface IncomingRequest {
 	rawBody: RawBody;
 }
 
-export type ParameterizedBody<Body = unknown> = Body extends FormData
+type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-
+// ServerRequest is exported as Request
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
-	locals: Locals;
+	locals: Locals; // populated by hooks handle
 }
 
-export type StrictBody = string | Uint8Array;
-
+type StrictBody = string | Uint8Array;
+// ServerResponse is exported as Response
 export interface ServerResponse {
 	status: number;
 	headers: ResponseHeaders;
@@ -55,8 +55,8 @@ export interface ServerResponse {
 export interface Handle<Locals = Record<string, any>> {
 	(input: {
 		request: ServerRequest<Locals>;
-		resolve(request: ServerRequest<Locals>): MaybePromise<ServerResponse>;
-	}): MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals>): ServerResponse | Promise<ServerResponse>;
+	}): ServerResponse | Promise<ServerResponse>;
 }
 ```
 
@@ -79,6 +79,8 @@ export async function handle({ request, resolve }) {
 }
 ```
 
+You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
+
 ### handleError
 
 If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
@@ -88,6 +90,8 @@ During development, if an error occurs because of a syntax error in your Svelte 
 If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
+// Declaration types for handleError hook
+
 export interface HandleError<Locals = Record<string, any>> {
 	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
 }
@@ -110,10 +114,10 @@ This function takes the `request` object and returns a `session` object that is 
 If unimplemented, session is `{}`.
 
 ```ts
-// getSession TypeScript type definition
+// Declaration types for getSession hook
 
 export interface GetSession<Locals = Record<string, any>, Session = any> {
-	(request: ServerRequest<Locals>): MaybePromise<Session>;
+	(request: ServerRequest<Locals>): Session | Promise<Session>;
 }
 ```
 
@@ -144,6 +148,8 @@ This function allows you to modify (or replace) a `fetch` request for an externa
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
+// Declaration types for externalFetch hook
+
 export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }

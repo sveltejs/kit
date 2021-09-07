@@ -1,0 +1,12 @@
+{
+	"name": "exports-replace",
+	"version": "1.0.0",
+	"description": "merges exports field",
+	"exports": {
+		".": {
+			"import": "./index.js"
+		},
+		"./constants": "./internal/constants.js",
+		"./Test": "./Test.svelte"
+	}
+}

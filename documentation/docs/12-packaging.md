@@ -31,10 +31,10 @@ import Foo from 'your-library/Foo.svelte';
 To publish the generated package:
 
 ```sh
-npm publish package
+npm publish ./package
 ```
 
-The `package` above is referring to the directory name generated, change accordingly if you configure a custom [`package.dir`](#configuration-package). If you're having problems publishing a package that is not yours, add a trailing slash at the end (e.g. `package/`).
+The `./package` above is referring to the directory name generated, change accordingly if you configure a custom [`package.dir`](#configuration-package).
 
 ### Caveats
 

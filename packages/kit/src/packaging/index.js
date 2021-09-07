@@ -1,8 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import micromatch from 'micromatch';
 import { createRequire } from 'module';
+
+import micromatch from 'micromatch';
 import { preprocess } from 'svelte/compiler';
+
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -30,14 +32,13 @@ export async function make_package(config, cwd = process.cwd()) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
 
 	delete pkg.scripts;
-	pkg.type = 'module'; // type must be 'module'
+	pkg.type = 'module';
 
-	const user_defined_exports = 'exports' in pkg;
+	/** @type {Record<string, string>} */
+	const generated = { './package.json': './package.json' };
 
-	// We still want to always predefine some exports
-	// like package.json that is used by other packages
-	if (!pkg.exports) pkg.exports = {};
-	pkg.exports['./package.json'] = './package.json';
+	/** @type {Record<string, string>} */
+	const clashes = {};
 
 	for (const file of files) {
 		const ext = path.extname(file);
@@ -86,19 +87,23 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		if (!user_defined_exports && exports_filter(file)) {
+		if (exports_filter(file)) {
+			const original = `$lib/${file.replace(/\\/g, '/')}`;
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
-			const key = entry.endsWith('/index.js') ? entry.slice(0, -'/index.js'.length) : entry;
-			pkg.exports[key] = entry;
+			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
+
+			if (clashes[key]) {
+				throw new Error(
+					`Duplicate "${key}" export. Please remove or rename either ${clashes[key]} or ${original}`
+				);
+			}
+
+			generated[key] = entry;
+			clashes[key] = original;
 		}
 	}
 
-	const main = pkg.exports['./index.js'] || pkg.exports['./index.svelte'];
-
-	if (!user_defined_exports && main) {
-		pkg.exports['.'] = main;
-	}
-
+	pkg.exports = { ...generated, ...pkg.exports };
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {

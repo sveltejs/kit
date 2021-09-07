@@ -1,5 +1,59 @@
 # @sveltejs/kit
 
+## 1.0.0-next.164
+
+### Patch Changes
+
+- [fix] error components render with correct layout client-side as well as server-side ([#2378](https://github.com/sveltejs/kit/pull/2378))
+
+* refactor `import.meta.env` usage in `$app/stores.js` to use `$app/env.js` to DRY code and make mocking easier ([#2353](https://github.com/sveltejs/kit/pull/2353))
+
+- Trim `.js` extensions in package exports field ([#2345](https://github.com/sveltejs/kit/pull/2345))
+
+## 1.0.0-next.163
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.22 ([#2370](https://github.com/sveltejs/kit/pull/2370))
+
+* [fix] load function should not leak props to other components ([#2356](https://github.com/sveltejs/kit/pull/2356))
+
+- packaging merge exports field by default ([#2327](https://github.com/sveltejs/kit/pull/2327))
+
+* [fix] don't decode URL when finding matching route ([#2354](https://github.com/sveltejs/kit/pull/2354))
+
+## 1.0.0-next.162
+
+### Patch Changes
+
+- Enable nested dependency optimization by updating to @sveltejs/vite-plugin-svelte@1.0.0-next.21 ([#2343](https://github.com/sveltejs/kit/pull/2343))
+
+## 1.0.0-next.161
+
+### Patch Changes
+
+- Allow service workers to access files using the \$lib alias ([#2326](https://github.com/sveltejs/kit/pull/2326))
+
+* [fix] remove Vite workaround now that dev deps can be bundled ([#2340](https://github.com/sveltejs/kit/pull/2340))
+
+- support using arrays for kit.vite.resolve.alias ([#2328](https://github.com/sveltejs/kit/pull/2328))
+
+## 1.0.0-next.160
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.5.2 to fix URL decoding ([#2323](https://github.com/sveltejs/kit/pull/2323))
+
+* Add `@sveltejs/kit` to `noExternal` in dev server as well ([#2332](https://github.com/sveltejs/kit/pull/2332))
+
+## 1.0.0-next.159
+
+### Patch Changes
+
+- Add `@sveltejs/kit` to noExternal to resolve hooks module in dev server ([#2306](https://github.com/sveltejs/kit/pull/2306))
+
+* [fix] HMR on Windows ([#2315](https://github.com/sveltejs/kit/pull/2315))
+
 ## 1.0.0-next.158
 
 ### Patch Changes

@@ -9,6 +9,16 @@ export default function (test) {
 		assert.equal(decodeURI(await page.innerHTML('h3')), '/encoded/苗条');
 	});
 
+	test('visits a route with a doubly encoded space', '/encoded/test%2520me', async ({ page }) => {
+		assert.equal(await page.innerHTML('h2'), '/encoded/test%2520me: test%20me');
+		assert.equal(await page.innerHTML('h3'), '/encoded/test%2520me: test%20me');
+	});
+
+	test('visits a route with an encoded slash', '/encoded/AC%2fDC', async ({ page }) => {
+		assert.equal(await page.innerHTML('h2'), '/encoded/AC%2fDC: AC/DC');
+		assert.equal(await page.innerHTML('h3'), '/encoded/AC%2fDC: AC/DC');
+	});
+
 	test(
 		'visits a dynamic route with non-ASCII character',
 		'/encoded',
