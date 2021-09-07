@@ -7,70 +7,6 @@ import options from './options.js';
 /** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 
 /**
- * @param {Record<string, ConfigDefinition>} definition
- * @param {any} option
- * @param {string} keypath
- * @returns {any}
- */
-function validate(definition, option, keypath) {
-	if (typeof option !== 'object') {
-		if (typeof option === 'undefined') {
-			throw new Error(
-				'Your config is missing default exports. Make sure to include "export default config;"'
-			);
-		} else {
-			throw new Error(
-				`Unexpected config type "${typeof option}", make sure your default export is an object.`
-			);
-		}
-	}
-
-	// only validate nested key paths
-	if (keypath !== 'config') {
-		for (const key in option) {
-			if (!(key in definition)) {
-				let message = `Unexpected option ${keypath}.${key}`;
-
-				if (keypath === 'config.kit' && key in options) {
-					message += ` (did you mean config.${key}?)`;
-				}
-
-				throw new Error(message);
-			}
-		}
-	}
-
-	/** @type {Record<string, any>} */
-	const merged = {};
-
-	for (const key in definition) {
-		const expected = definition[key];
-		const actual = option[key];
-
-		const child_keypath = `${keypath}.${key}`;
-
-		if (key in option) {
-			if (expected.type === 'branch') {
-				if (actual && (typeof actual !== 'object' || Array.isArray(actual))) {
-					throw new Error(`${keypath}.${key} should be an object`);
-				}
-
-				merged[key] = validate(expected.children, actual, child_keypath);
-			} else {
-				merged[key] = expected.validate(actual, child_keypath);
-			}
-		} else {
-			merged[key] =
-				expected.type === 'branch'
-					? validate(expected.children, {}, child_keypath)
-					: expected.default;
-		}
-	}
-
-	return merged;
-}
-
-/**
  * @param {string} cwd
  * @param {import('types/config').ValidatedConfig} validated
  */
@@ -97,6 +33,7 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 		? config_file_esm
 		: path.join(cwd, 'svelte.config.cjs');
 	const config = await import(url.pathToFileURL(config_file).href);
+
 	const validated = validate_config(config.default);
 
 	validated.kit.files.assets = path.resolve(cwd, validated.kit.files.assets);
@@ -118,39 +55,21 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('types/config').ValidatedConfig}
  */
 export function validate_config(config) {
-	/** @type {import('types/config').ValidatedConfig} */
-	const validated = validate(options, config, 'config');
+	const type = typeof config;
 
-	// resolve paths
-	const { paths, appDir } = validated.kit;
-
-	if (paths.base !== '' && (paths.base.endsWith('/') || !paths.base.startsWith('/'))) {
+	if (type === 'undefined') {
 		throw new Error(
-			"kit.paths.base option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
+			'Your config is missing default exports. Make sure to include "export default config;"'
 		);
 	}
 
-	if (paths.assets) {
-		if (!/^[a-z]+:\/\//.test(paths.assets)) {
-			throw new Error(
-				'kit.paths.assets option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths'
-			);
-		}
-
-		if (paths.assets.endsWith('/')) {
-			throw new Error(
-				"kit.paths.assets option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths"
-			);
-		}
-	}
-
-	if (appDir.startsWith('/') || appDir.endsWith('/')) {
+	if (type !== 'object') {
 		throw new Error(
-			"kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
+			`Unexpected config type "${type}", make sure your default export is an object.`
 		);
 	}
 
-	return validated;
+	return options(config, 'config');
 }
 
 /**

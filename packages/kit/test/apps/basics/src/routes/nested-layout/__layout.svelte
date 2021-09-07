@@ -1,2 +1,2 @@
 <slot></slot>
-<p>This is a nested layout component</p>
+<p id="nested">This is a nested layout component</p>

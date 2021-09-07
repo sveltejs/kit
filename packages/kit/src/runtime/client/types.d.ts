@@ -5,7 +5,6 @@ export type NavigationInfo = {
 	id: string;
 	routes: CSRRoute[];
 	path: string;
-	decoded_path: string;
 	query: URLSearchParams;
 };
 

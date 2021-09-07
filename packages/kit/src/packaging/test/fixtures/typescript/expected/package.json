@@ -8,6 +8,7 @@
 		"./package.json": "./package.json",
 		"./Test.svelte": "./Test.svelte",
 		"./Test2.svelte": "./Test2.svelte",
+		"./utils": "./utils.js",
 		".": "./index.js"
 	}
 }
