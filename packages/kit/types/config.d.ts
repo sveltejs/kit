@@ -78,6 +78,7 @@ export interface Config {
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
+		noncePlaceholders?: boolean;
 	};
 	preprocess?: any;
 }

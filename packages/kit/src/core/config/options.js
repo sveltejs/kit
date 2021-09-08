@@ -192,7 +192,9 @@ const options = object(
 
 					return input;
 				}
-			)
+			),
+
+			noncePlaceholders: boolean(false)
 		})
 	},
 	true

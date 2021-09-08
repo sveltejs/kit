@@ -474,7 +474,8 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 
 							return rendered;
 						},
-						trailing_slash: config.kit.trailingSlash
+						trailing_slash: config.kit.trailingSlash,
+						noncePlaceholders: config.kit.noncePlaceholders
 					}
 				);
 
