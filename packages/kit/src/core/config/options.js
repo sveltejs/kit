@@ -83,6 +83,13 @@ const options = object(
 				files: object({
 					include: array_of_strings(['**']),
 					exclude: array_of_strings([])
+				}),
+				override: validate(null, (input, keypath) => {
+					if (typeof input !== 'object') {
+						throw new Error(`${keypath} should be an object.`);
+					}
+
+					return input;
 				})
 			}),
 
