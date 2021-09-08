@@ -56,7 +56,8 @@ test('fills in defaults', () => {
 			router: true,
 			ssr: true,
 			target: null,
-			trailingSlash: 'never'
+			trailingSlash: 'never',
+			noncePlaceholders: false
 		}
 	});
 });
@@ -164,7 +165,8 @@ test('fills in partial blanks', () => {
 			router: true,
 			ssr: true,
 			target: null,
-			trailingSlash: 'never'
+			trailingSlash: 'never',
+			noncePlaceholders: false
 		}
 	});
 });

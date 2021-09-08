@@ -63,7 +63,8 @@ async function testLoadDefaultConfig(path) {
 			router: true,
 			ssr: true,
 			target: null,
-			trailingSlash: 'never'
+			trailingSlash: 'never',
+			noncePlaceholders: false
 		}
 	});
 }
