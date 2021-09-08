@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.165
+
+### Patch Changes
+
+- [chore] upgrade Vite
+
+* [breaking] rename prerender.pages config option to prerender.entries ([#2380](https://github.com/sveltejs/kit/pull/2380))
+
+- [fix] anchor tag inside svg ([#2286](https://github.com/sveltejs/kit/pull/2286))
+
 ## 1.0.0-next.164
 
 ### Patch Changes
