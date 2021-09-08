@@ -4,9 +4,7 @@
 	"type": "module",
 	"main": "index.js",
 	"exports": {
-		".": {
-			"import": "./index.js"
-		},
+		".": "./index.js",
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
