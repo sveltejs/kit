@@ -349,7 +349,8 @@ async function build_server(
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
 					template,
-					trailing_slash: ${s(config.kit.trailingSlash)}
+					trailing_slash: ${s(config.kit.trailingSlash)},
+					cspNonce: ${s(config.kit.cspNonce)}
 				};
 			}
 
@@ -475,7 +476,8 @@ async function build_server(
 					assetFileNames: 'assets/[name]-[hash][extname]',
 					inlineDynamicImports: true
 				},
-				preserveEntrySignatures: 'strict'
+				preserveEntrySignatures: 'strict',
+				external: ['node:crypto']
 			}
 		},
 		plugins: [

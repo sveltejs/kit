@@ -176,6 +176,8 @@ const options = object(
 
 			trailingSlash: list(['never', 'always', 'ignore']),
 
+			cspNonce: boolean(false),
+
 			vite: validate(
 				() => ({}),
 				(input, keypath) => {
