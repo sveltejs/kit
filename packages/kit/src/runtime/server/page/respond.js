@@ -200,7 +200,8 @@ export async function respond(opts) {
 				page_config,
 				status,
 				error,
-				branch: branch.filter(Boolean)
+				branch: branch.filter(Boolean),
+				nonce: request.locals.nonce
 			}),
 			set_cookie_headers
 		);

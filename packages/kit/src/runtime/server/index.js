@@ -7,6 +7,7 @@ import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { randomBytes } from 'node:crypto';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
@@ -32,12 +33,15 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	const headers = lowercase_keys(incoming.headers);
+	const nonce = randomBytes(32).toString('base64');
 	const request = {
 		...incoming,
 		headers,
 		body: parse_body(incoming.rawBody, headers),
 		params: {},
-		locals: {}
+		locals: {
+			nonce
+		}
 	};
 
 	try {
@@ -50,7 +54,8 @@ export async function respond(incoming, options, state = {}) {
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
-						branch: []
+						branch: [],
+						nonce
 					});
 				}
 

@@ -88,6 +88,7 @@ export interface Config {
 		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
+		cspNonce?: boolean;
 		vite?: ViteConfig | (() => ViteConfig);
 	};
 	preprocess?: any;
