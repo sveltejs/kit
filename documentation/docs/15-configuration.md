@@ -53,6 +53,7 @@ const config = {
 		ssr: true,
 		target: null,
 		trailingSlash: 'never',
+		cspNonce: false,
 		vite: () => ({})
 	},
 	
@@ -218,6 +219,10 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
+
+### cspNonce
+
+Enables or disables automatically adding [CSP Nonces](#content-security-policy) to your script and style tags.
 
 ### vite
 
