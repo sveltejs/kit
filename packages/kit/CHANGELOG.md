@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.166
+
+### Patch Changes
+
+- [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+* [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
+
+## 1.0.0-next.165
+
+### Patch Changes
+
+- [chore] upgrade Vite
+
+* [breaking] rename prerender.pages config option to prerender.entries ([#2380](https://github.com/sveltejs/kit/pull/2380))
+
+- [fix] anchor tag inside svg ([#2286](https://github.com/sveltejs/kit/pull/2286))
+
 ## 1.0.0-next.164
 
 ### Patch Changes

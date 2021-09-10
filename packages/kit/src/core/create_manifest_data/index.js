@@ -220,23 +220,24 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				components.push(item.file);
 
 				const concatenated = layout_stack.concat(item.file);
+				const errors = error_stack.slice();
 
 				const pattern = get_pattern(segments, true);
 
 				let i = concatenated.length;
 				while (i--) {
-					if (!error_stack[i] && !concatenated[i]) {
-						error_stack.splice(i, 1);
+					if (!errors[i] && !concatenated[i]) {
+						errors.splice(i, 1);
 						concatenated.splice(i, 1);
 					}
 				}
 
-				i = error_stack.length;
+				i = errors.length;
 				while (i--) {
-					if (error_stack[i]) break;
+					if (errors[i]) break;
 				}
 
-				error_stack.splice(i + 1);
+				errors.splice(i + 1);
 
 				/**
 				 * @param {Part[][]} segments
@@ -256,7 +257,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					params,
 					path,
 					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (error_stack)
+					b: /** @type {string[]} */ (errors)
 				};
 				const i18n = config.kit.i18n;
 				// @ts-ignore
@@ -285,7 +286,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 								params,
 								path: `/${locale}${path}`,
 								a: /** @type {string[]} */ (concatenated),
-								b: /** @type {string[]} */ (error_stack),
+								b: /** @type {string[]} */ (errors),
 								lang: locale
 							});
 						});
