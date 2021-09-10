@@ -101,13 +101,13 @@ export async function render_response({
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? styles.size > 0 || rendered.css.code.length > 0
-			? `<style ${nonce} amp-custom>${Array.from(styles)
+			? `<style amp-custom>${Array.from(styles)
 					.concat(rendered.css.code)
 					.join('\n')}</style>`
 			: ''
 		: [
 				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}" ${nonce}>`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}" ${nonce}>`)
 		  ].join('\n\t\t');
 
 	/** @type {string} */
@@ -115,7 +115,7 @@ export async function render_response({
 
 	if (options.amp) {
 		init = `
-		<style ${nonce} amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
+		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
 		init += options.service_worker
