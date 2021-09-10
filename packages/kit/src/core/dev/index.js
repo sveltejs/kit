@@ -20,6 +20,7 @@ import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, resolve_entry } from '../utils.js';
+import { randomBytes } from 'crypto';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -28,6 +29,13 @@ import { coalesce_to_error } from '../../utils/error.js';
 /** @param {Options} opts */
 export function dev(opts) {
 	__fetch_polyfill();
+
+	Object.defineProperties(globalThis, {
+		generateCspNonce: {
+			value: () => randomBytes(16).toString('base64'),
+			enumerable: true
+		}
+	});
 
 	return new Watcher(opts).init();
 }
