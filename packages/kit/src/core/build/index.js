@@ -476,8 +476,7 @@ async function build_server(
 					assetFileNames: 'assets/[name]-[hash][extname]',
 					inlineDynamicImports: true
 				},
-				preserveEntrySignatures: 'strict',
-				external: ['node:crypto']
+				preserveEntrySignatures: 'strict'
 			}
 		},
 		plugins: [

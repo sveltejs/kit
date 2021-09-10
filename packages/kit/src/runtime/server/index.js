@@ -1,3 +1,4 @@
+/* global generateCspNonce */
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -7,7 +8,6 @@ import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { randomBytes } from 'node:crypto';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
@@ -33,7 +33,16 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	const headers = lowercase_keys(incoming.headers);
-	const nonce = randomBytes(32).toString('base64');
+	let nonce;
+	try {
+		// generateCspNonce is not defined during prerender, only at runtime.
+		// TODO: We should probably differentiate between "missing because this is prerender" and "missing because the adapter is faulty".
+		nonce = options.cspNonce ? generateCspNonce() : undefined;
+	} catch (e) {
+		if (!(e instanceof ReferenceError)) {
+			throw e;
+		}
+	}
 	const request = {
 		...incoming,
 		headers,
