@@ -30,11 +30,9 @@ import { coalesce_to_error } from '../../utils/error.js';
 export function dev(opts) {
 	__fetch_polyfill();
 
-	Object.defineProperties(globalThis, {
-		generateCspNonce: {
-			value: () => randomBytes(16).toString('base64'),
-			enumerable: true
-		}
+	Object.defineProperty(globalThis, 'generateCspNonce', {
+		value: () => randomBytes(16).toString('base64'),
+		configurable: true
 	});
 
 	return new Watcher(opts).init();
