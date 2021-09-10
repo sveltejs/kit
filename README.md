@@ -31,30 +31,43 @@ If an issue is caused by Vite, please report in the [Vite issue tracker](https:/
 
 ## Developing
 
-This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
-
+1. First of all, you need to install [`pnpm`](https://pnpm.js.org/en/). You can't use any other package managers like: `npm` or `yarn`.
 ```bash
 npm i -g pnpm
 ```
 
-...then install this repo's dependencies...
+2. Now clone the repo:
+```bash
+git clone https://github.com/sveltejs/kit.git
+```
 
+3. After its done, open the cloned folder(`kit`) in a fresh new editor.
+
+4. Install the dependencies:
 ```bash
 pnpm i
 ```
 
-...then build SvelteKit and the other packages:
-
+5. Build SvelteKit and the other packages:
 ```bash
 pnpm build
 ```
 
-You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
+6. In the same workspace, cd to one of the [example apps](examples):
+```bash
+cd examples/hn.svelte.dev
+pnpm dev
+```
 
-Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
+7. cd to `packages/kit`, to continually rebuild it as you make changes. Restarting the example app will cause the newly built version to be used.
+```bash
+cd packages/kit
+pnpm dev
+```
+
+You don't need to install the dependencies in [example apps](examples) and `packages/kit`. You just need to open the `kit` folder that you added it by cloning this repo. Make sure that in the editor, you directly opened the `kit` folder, not its parent folder.
 
 To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
-
 ```bash
 git config core.hookspath .githooks
 ```
