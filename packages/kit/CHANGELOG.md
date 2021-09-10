@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.166
+
+### Patch Changes
+
+- [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+* [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
+
 ## 1.0.0-next.165
 
 ### Patch Changes
