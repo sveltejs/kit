@@ -33,6 +33,9 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	const headers = lowercase_keys(incoming.headers);
+	/**
+	 * @type {string | undefined}
+	 */
 	let nonce;
 	try {
 		// generateCspNonce is not defined during prerender, only at runtime.
