@@ -43,23 +43,19 @@ git clone https://github.com/sveltejs/kit.git
 
 3. After its done, open the cloned folder(`kit`) in a fresh new editor.
 
-4. Install the dependencies:
+4. Install the dependencies and build:
 ```bash
 pnpm i
-```
-
-5. Build SvelteKit and the other packages:
-```bash
 pnpm build
 ```
 
-6. In the same workspace, cd to one of the [example apps](examples):
+5. In the same workspace, cd to one of the [example apps](examples):
 ```bash
 cd examples/hn.svelte.dev
 pnpm dev
 ```
 
-7. cd to `packages/kit`, to continually rebuild it as you make changes. Restarting the example app will cause the newly built version to be used.
+6. cd to `packages/kit`, to continually rebuild it as you make changes. Restarting the example app will cause the newly built version to be used.
 ```bash
 cd packages/kit
 pnpm dev
