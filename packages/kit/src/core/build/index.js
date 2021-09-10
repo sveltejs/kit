@@ -471,8 +471,7 @@ async function build_server(
 					chunkFileNames: 'chunks/[name]-[hash].js',
 					assetFileNames: 'assets/[name]-[hash][extname]'
 				},
-				preserveEntrySignatures: 'strict',
-				external: ['node:crypto']
+				preserveEntrySignatures: 'strict'
 			}
 		},
 		plugins: [
