@@ -101,9 +101,7 @@ export async function render_response({
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? styles.size > 0 || rendered.css.code.length > 0
-			? `<style amp-custom>${Array.from(styles)
-					.concat(rendered.css.code)
-					.join('\n')}</style>`
+			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
 				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}" ${nonce}>`),
