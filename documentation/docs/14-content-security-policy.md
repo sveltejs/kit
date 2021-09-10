@@ -9,7 +9,7 @@ However, SvelteKit also requires some small pieces of inline JavaScript in order
 The nonce value is availiable to hooks as `request.locals.nonce`. A basic CSP handler hook might then look like this:
 
 ```javascript
-export async function handle ({ request, resolve }) => {
+export async function handle ({ request, resolve }) {
   const directives = {
     'default-src': ["'self'", 'static.someotherdomain.com'],
     'script-src': ["'strict-dynamic'"],
