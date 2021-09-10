@@ -37,15 +37,20 @@ export async function respond(incoming, options, state = {}) {
 	 * @type {string | undefined}
 	 */
 	let nonce;
-	try {
-		// generateCspNonce is not defined during prerender, only at runtime.
-		// TODO: We should probably differentiate between "missing because this is prerender" and "missing because the adapter is faulty".
-		nonce = options.cspNonce ? generateCspNonce() : undefined;
-	} catch (e) {
-		if (!(e instanceof ReferenceError)) {
-			throw e;
+	if (!state.prerender && options.cspNonce) {
+		try {
+			nonce = generateCspNonce();
+		} catch (e) {
+			if (e instanceof ReferenceError) {
+				console.warn(
+					"`kit.cspNonce` is active, but this adapter doesn't seem to support it. Nonces will not be inserted."
+				);
+			} else {
+				throw e;
+			}
 		}
 	}
+
 	const request = {
 		...incoming,
 		headers,
