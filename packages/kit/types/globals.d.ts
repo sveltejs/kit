@@ -1,1 +1,1 @@
-declare const generateCspNonce: () => string;
+declare const generateRandomString: (bytes: number) => string;
