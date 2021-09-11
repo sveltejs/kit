@@ -201,7 +201,7 @@ importers:
   packages/kit:
     specifiers:
       '@rollup/plugin-replace': ^2.4.2
-      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.22
+      '@sveltejs/vite-plugin-svelte': ^1.0.0-next.23
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.0
       '@types/marked': ^2.0.2
@@ -234,7 +234,7 @@ importers:
       uvu: ^0.5.1
       vite: ^2.5.6
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.22_svelte@3.42.4+vite@2.5.6
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.23_svelte@3.42.4+vite@2.5.6
       cheap-watch: 1.0.3
       sade: 1.7.4
       vite: 2.5.6
@@ -780,8 +780,8 @@ packages:
       picomatch: 2.2.3
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.22_svelte@3.42.4+vite@2.5.6:
-    resolution: {integrity: sha512-B1O/GMIxpE4iJ3/FBUJ3oYGKHhJ99G9uFARsb8kVeReLDPhtZGXTM+7brLDefJuedbKkRkGEEkbGOVuEuEBo3g==}
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.23_svelte@3.42.4+vite@2.5.6:
+    resolution: {integrity: sha512-zmguJ9OYYsvZUhzPA3ZeYana2qx/ORadI0LVjzDIuXEXcR7AKj9qJgGCWe5Wi2Z/xg9PsKMHTTCHgiiplphIYg==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
       diff-match-patch: ^1.0.5
