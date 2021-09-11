@@ -1,4 +1,4 @@
-/* global generateCspNonce */
+/* global generateRandomString */
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -39,7 +39,7 @@ export async function respond(incoming, options, state = {}) {
 	let nonce;
 	if (!state.prerender && options.cspNonce) {
 		try {
-			nonce = generateCspNonce();
+			nonce = generateRandomString(16);
 		} catch (e) {
 			if (e instanceof ReferenceError) {
 				console.warn(

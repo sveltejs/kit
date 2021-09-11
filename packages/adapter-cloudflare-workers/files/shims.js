@@ -1,1 +1,1 @@
-export const generateCspNonce = () => btoa(crypto.getRandomValues(new Uint32Array(4)));
+export const generateRandomString = (bytes) => btoa(crypto.getRandomValues(new Uint8Array(bytes)));
