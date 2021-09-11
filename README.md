@@ -30,40 +30,41 @@ Please make sure the issue you're reporting involves SvelteKit. Many issues rela
 If an issue is caused by Vite, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
 
 ## Developing
+This description guides you on how to get started developing SvelteKit itself.
 
-1. First of all, you need to install [`pnpm`](https://pnpm.js.org/en/). You can't use any other package managers like: `npm` or `yarn`.
+1. First of all, you need to install [`pnpm`](https://pnpm.js.org/en/). You can't use any other package managers like `npm` or `yarn`.
 ```bash
 npm i -g pnpm
 ```
 
-2. Now clone the repo:
+2. Now, clone the repo and open it in a new workspace, instead of doing `cd kit`.
 ```bash
 git clone https://github.com/sveltejs/kit.git
 ```
 
-3. After its done, open the cloned folder(`kit`) in a fresh new editor.
-
-4. Install the dependencies and build:
+3. Install the dependencies and build them:
 ```bash
 pnpm i
 pnpm build
 ```
 
-5. In the same workspace, cd to one of the [example apps](examples):
+4. (In the same workspace) `cd` to one of the [example apps](examples) and run it:
 ```bash
 cd examples/hn.svelte.dev
+# You don't need to do `pnpm i`
 pnpm dev
 ```
 
-6. cd to `packages/kit`, to continually rebuild it as you make changes. Restarting the example app will cause the newly built version to be used.
+5. (Again in the same workspace, open a new terminal window and) `cd` to `packages/kit` and run the `dev` script to build it continuously as you make changes to SvelteKit. Restarting the example app will cause the newly built version to be used.
 ```bash
 cd packages/kit
+# You don't need to do `pnpm i`
 pnpm dev
 ```
 
-You don't need to install the dependencies in [example apps](examples) and `packages/kit`. You just need to open the `kit` folder that you added it by cloning this repo. Make sure that in the editor, you directly opened the `kit` folder, not its parent folder.
+### Git hooks, how to use them
 
-To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
+Run this, it will save you waiting for CI to tell you that you forgot to lint:
 ```bash
 git config core.hookspath .githooks
 ```
