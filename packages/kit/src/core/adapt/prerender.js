@@ -262,7 +262,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					const parsed = new URL(resolved, 'http://localhost');
 					const pathname = decodeURI(parsed.pathname);
 
-					const file = pathname.replace(config.kit.paths.assets, '').slice(1);
+					const file = pathname.replace(config.kit.paths.base, '').slice(1);
 					if (files.has(file)) continue;
 
 					if (parsed.search) {
