@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
+import { join } from 'path';
 
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
