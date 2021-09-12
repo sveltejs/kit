@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
+import { join } from 'path';
 
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
@@ -39,6 +40,7 @@ export default function (options) {
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
+				inject: [join(files, 'shims.js')],
 				target: 'es2020',
 				platform: 'browser'
 			};
