@@ -46,7 +46,11 @@ pnpm install
 pnpm build
 ```
 
-You should now be able to run the [examples](examples) by navigating to one of the directories and doing `pnpm dev`.
+You should now be able to run [the example](examples/hn.svelte.dev) with:
+```bash
+cd examples/hn.svelte.dev
+pnpm dev
+```
 
 Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
 
