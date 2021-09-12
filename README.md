@@ -31,21 +31,18 @@ If an issue is caused by Vite, please report in the [Vite issue tracker](https:/
 
 ## Developing
 
-This monorepo uses [pnpm](https://pnpm.js.org/en/). Install it...
+This is a monorepo meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
 ```bash
 npm i -g pnpm
 ```
 
-...then install this repo's dependencies...
+`pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and build all sub-projects with:
 
 ```bash
-pnpm i
-```
-
-...then build SvelteKit and the other packages:
-
-```bash
+git@github.com:sveltejs/kit.git
+cd kit
+pnpm install
 pnpm build
 ```
 
