@@ -20,7 +20,7 @@
 		"tiny-glob": "^0.2.8"
 	},
 	"scripts": {
-		"build": "npm run format && node scripts/build-templates",
+		"build": "node scripts/build-templates",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",
