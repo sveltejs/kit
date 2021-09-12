@@ -92,6 +92,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
   - Imports `init` and `render` from `.svelte-kit/output/server/app.js`
   - Calls `init`, which configures the app
   - Listens for requests from the platform, converts them to a a [SvelteKit request](#hooks-handle), calls the `render` function to generate a [SvelteKit response](#hooks-handle) and responds with it
+    - If config.kit.cspNonce is set, it should also generate a base64 cryptographically secure random string with at least 128 bits of entropy for use as a nonce and supply it in the render call. This must be unique for every request. Most platforms support either Node's crypto module or the Web Crypto API.
   - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if desired
 - Call `utils.prerender`
