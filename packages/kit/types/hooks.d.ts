@@ -16,19 +16,19 @@ export interface ServerResponse {
 	body?: StrictBody;
 }
 
-export interface GetSession<Locals = Record<string, any>, Session = any> {
-	(request: ServerRequest<Locals>): MaybePromise<Session>;
+export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
+	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
 }
 
-export interface Handle<Locals = Record<string, any>> {
+export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
-		request: ServerRequest<Locals>;
-		resolve(request: ServerRequest<Locals>): MaybePromise<ServerResponse>;
+		request: ServerRequest<Locals, Body>;
+		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
 }
 
-export interface HandleError<Locals = Record<string, any>> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
+export interface HandleError<Locals = Record<string, any>, Body = unknown> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
 }
 
 export interface ExternalFetch {
