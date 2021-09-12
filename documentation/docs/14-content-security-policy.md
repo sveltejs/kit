@@ -17,6 +17,10 @@ export async function handle ({ request, resolve }) {
   };
   const response = await resolve(request);
 
+  if (response.headers['content-type'] !== 'text/html') {
+  	return response
+	}
+
   const nonce = request.locals.nonce;
 
   directives['script-src'].push(`'nonce-${nonce}'`);
