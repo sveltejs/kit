@@ -86,18 +86,16 @@ export async function preview({
 
 			const parsed = new URL(initial_url, 'http://localhost/');
 
-			const rendered =
-				parsed.pathname.startsWith(config.kit.paths.base) &&
-				(await app.render({
-					host: /** @type {string} */ (
-						config.kit.host || req.headers[config.kit.hostHeader || 'host']
-					),
-					method: req.method,
-					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					path: parsed.pathname.replace(config.kit.paths.base, ''),
-					query: parsed.searchParams,
-					rawBody: body
-				}));
+			const rendered = await app.render({
+				host: /** @type {string} */ (
+					config.kit.host || req.headers[config.kit.hostHeader || 'host']
+				),
+				method: req.method,
+				headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
+				path: parsed.pathname.replace(config.kit.paths.base, ''),
+				query: parsed.searchParams,
+				rawBody: body
+			});
 
 			if (rendered) {
 				res.writeHead(rendered.status, rendered.headers);
@@ -120,6 +118,9 @@ export async function preview({
 				render_handler();
 			}
 		} else {
+			if (initial_url.startsWith(config.kit.paths.base)) {
+				req.url = initial_url.slice(config.kit.paths.base.length);
+			}
 			assets_handler(req, res, () => {
 				static_handler(req, res, render_handler);
 			});
