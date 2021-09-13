@@ -1,9 +1,10 @@
 import fs from 'fs';
-import { pathToFileURL } from 'url';
-import sirv from 'sirv';
-import { getRawBody } from '../node/index.js';
+import http from 'http';
+import https from 'https';
 import { join, resolve } from 'path';
-import { get_server } from '../server/index.js';
+import sirv from 'sirv';
+import { pathToFileURL } from 'url';
+import { getRawBody } from '../node/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
@@ -127,4 +128,34 @@ export async function preview({
 	await server.listen(port, host || '0.0.0.0');
 
 	return Promise.resolve(server);
+}
+
+/**
+ * @param {boolean} use_https
+ * @param {import('vite').UserConfig} user_config
+ * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
+ * @returns {Promise<import('net').Server>}
+ */
+async function get_server(use_https, user_config, handler) {
+	/** @type {https.ServerOptions} */
+	const https_options = {};
+
+	if (use_https) {
+		const secure_opts = user_config.server
+			? /** @type {import('tls').SecureContextOptions} */ (user_config.server.https)
+			: {};
+
+		if (secure_opts.key && secure_opts.cert) {
+			https_options.key = secure_opts.key.toString();
+			https_options.cert = secure_opts.cert.toString();
+		} else {
+			https_options.key = https_options.cert = (await import('./cert')).createCertificate();
+		}
+	}
+
+	return Promise.resolve(
+		use_https
+			? https.createServer(/** @type {https.ServerOptions} */ (https_options), handler)
+			: http.createServer(handler)
+	);
 }
