@@ -18,4 +18,5 @@ export interface IncomingRequest {
 	query: URLSearchParams;
 	headers: RequestHeaders;
 	rawBody: RawBody;
+	nonce?: string | false;
 }

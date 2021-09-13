@@ -1,4 +1,6 @@
+/* global GENERATE_NONCES */
 import { getRawBody } from '@sveltejs/kit/node';
+import { randomBytes } from 'crypto';
 
 /**
  * @return {import('polka').Middleware}
@@ -29,7 +31,9 @@ export function create_kit_middleware({ render }) {
 			headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 			path: parsed.pathname,
 			query: parsed.searchParams,
-			rawBody: body
+			rawBody: body,
+			// @ts-ignore
+			nonce: GENERATE_NONCES && randomBytes(16).toString('base64')
 		});
 
 		if (rendered) {

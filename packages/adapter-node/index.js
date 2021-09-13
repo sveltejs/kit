@@ -69,7 +69,8 @@ export default function ({
 				target: 'node14',
 				inject: [join(files, 'shims.js')],
 				define: {
-					APP_DIR: `"/${config.kit.appDir}/"`
+					APP_DIR: `"/${config.kit.appDir}/"`,
+					GENERATE_NONCES: config.kit.cspNonce.toString() // gets turned back into a boolean by esbuild
 				}
 			};
 			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;

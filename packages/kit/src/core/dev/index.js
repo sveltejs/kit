@@ -30,11 +30,6 @@ import { coalesce_to_error } from '../../utils/error.js';
 export function dev(opts) {
 	__fetch_polyfill();
 
-	Object.defineProperty(globalThis, 'generateCspNonce', {
-		value: () => randomBytes(16).toString('base64'),
-		configurable: true
-	});
-
 	return new Watcher(opts).init();
 }
 
@@ -391,7 +386,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						host,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
-						rawBody: body
+						rawBody: body,
+						nonce: config.kit.cspNonce && randomBytes(16).toString('base64')
 					},
 					{
 						amp: config.kit.amp,

@@ -1,3 +1,4 @@
+/* global GENERATE_NONCES */
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js';
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
@@ -35,7 +36,8 @@ async function handle(event) {
 			query: request_url.searchParams,
 			rawBody: await read(request),
 			headers: Object.fromEntries(request.headers),
-			method: request.method
+			method: request.method,
+			nonce: GENERATE_NONCES && btoa(crypto.getRandomValues(new Uint32Array(2)))
 		});
 
 		if (rendered) {
