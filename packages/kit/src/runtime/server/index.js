@@ -1,4 +1,3 @@
-/* global generateRandomString */
 import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
@@ -38,17 +37,11 @@ export async function respond(incoming, options, state = {}) {
 	 */
 	let nonce;
 	if (!state.prerender && options.cspNonce) {
-		try {
-			nonce = generateRandomString(16);
-		} catch (e) {
-			if (e instanceof ReferenceError) {
-				console.warn(
-					"`kit.cspNonce` is active, but this adapter doesn't seem to support it. Nonces will not be inserted."
-				);
-			} else {
-				throw e;
-			}
-		}
+		incoming.nonce
+			? (nonce = incoming.nonce)
+			: console.warn(
+					'`kit.cspNonce` is active, but the adapter did not provide one. Nonces will not be inserted.'
+			  );
 	}
 
 	const request = {

@@ -1,4 +1,6 @@
+/* global GENERATE_NONCES */
 import { getRawBody } from '@sveltejs/kit/node';
+import { randomBytes } from 'crypto';
 
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js';
@@ -22,7 +24,8 @@ export default async (req, res) => {
 		headers: req.headers,
 		path: pathname,
 		query: searchParams,
-		rawBody: body
+		rawBody: body,
+		nonce: GENERATE_NONCES && randomBytes(16).toString('hex')
 	});
 
 	if (rendered) {

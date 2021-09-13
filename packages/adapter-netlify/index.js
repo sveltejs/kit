@@ -13,7 +13,7 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
-		async adapt({ utils }) {
+		async adapt({ utils, config }) {
 			// "build" is the default publish directory when Netlify detects SvelteKit
 			const publish = get_publish_directory(utils) || 'build';
 
@@ -34,6 +34,9 @@ export default function (options) {
 				outfile: '.netlify/functions-internal/__render.js',
 				bundle: true,
 				inject: [join(files, 'shims.js')],
+				define: {
+					GENERATE_NONCES: config.kit.cspNonce.toString() // gets turned back into a boolean by esbuild
+				},
 				platform: 'node'
 			};
 
