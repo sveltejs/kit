@@ -40,7 +40,7 @@ npm i -g pnpm
 `pnpm` commands run in the project's root directory will run on all sub-projects. You can checkout the code and build all sub-projects with:
 
 ```bash
-git@github.com:sveltejs/kit.git
+git clone git@github.com:sveltejs/kit.git
 cd kit
 pnpm install
 pnpm build
