@@ -7,6 +7,7 @@ import { pathToFileURL } from 'url';
 import { getRawBody } from '../node/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { randomBytes } from 'crypto';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -96,7 +97,8 @@ export async function preview({
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 					path: parsed.pathname.replace(config.kit.paths.base, ''),
 					query: parsed.searchParams,
-					rawBody: body
+					rawBody: body,
+					nonce: config.kit.cspNonce && randomBytes(16).toString('base64')
 				}));
 
 			if (rendered) {
