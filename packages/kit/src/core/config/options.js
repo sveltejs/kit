@@ -73,6 +73,40 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			i18n: validate(null, (input, keypath) => {
+				if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+					throw new Error(`${keypath} should be an Object. See https://kit.svelte.dev/docs#i18n`);
+				}
+
+				const keys = Object.keys(input);
+				['defaultLocale', 'locales'].forEach((key) => {
+					if (!keys.includes(key)) {
+						throw new Error(
+							`${keypath} should have the property ${key}. See https://kit.svelte.dev/docs#i18n`
+						);
+					}
+				});
+
+				if (typeof input.defaultLocale !== 'string' || !input.defaultLocale.length) {
+					throw new Error(
+						`${keypath}.defaultLocale should be a none empty string. See https://kit.svelte.dev/docs#i18n`
+					);
+				}
+
+				const locales = input.locales;
+				if (
+					!Array.isArray(locales) ||
+					!locales.length ||
+					locales.some((locale) => typeof locale !== 'string' || !locale.length)
+				) {
+					throw new Error(
+						`${keypath}.locales should be an array of none empty strings. See https://kit.svelte.dev/docs#i18n`
+					);
+				}
+
+				return input;
+			}),
+
 			package: object({
 				dir: string('package'),
 				exports: object({
@@ -225,36 +259,6 @@ function object(children, allow_unknown = false) {
 					}
 
 					throw new Error(message);
-				}
-			},
-
-			i18n: {
-				type: 'leaf',
-				default: null,
-				validate: (option, keypath) => {
-					if (typeof option !== 'object' || option === null || Array.isArray(option)) {
-						throw new Error(`${keypath} should be an Object. See https://kit.svelte.dev/docs#i18n`);
-					}
-
-					const keys = Object.keys(option);
-					['defaultLocale', 'locales'].forEach((key) => {
-						if (!keys.includes(key)) {
-							throw new Error(`${keypath} should have the property ${key}. See https://kit.svelte.dev/docs#i18n`);
-						}
-					});
-
-					if (typeof option.defaultLocale !== 'string' || !option.defaultLocale.length) {
-						
-						throw new Error(`${keypath}.defaultLocale should be a none empty string. See https://kit.svelte.dev/docs#i18n`);
-					}
-
-					const locales = options.locales;
-					if (!Array.isArray(locales) || !locales.length || locales.some(locale => typeof locale !== 'string' || !locale.length)) {
-						
-						throw new Error(`${keypath}.locales should be an array of none empty strings. See https://kit.svelte.dev/docs#i18n`);
-					}
-
-					return option;
 				}
 			}
 		}
