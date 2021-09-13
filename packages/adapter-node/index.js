@@ -22,6 +22,7 @@ const pipe = promisify(pipeline);
 
 /** @type {import('.')} */
 export default function ({
+	entryPoint = '.svelte-kit/node/index.js',
 	out = 'build',
 	precompress,
 	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
@@ -74,10 +75,10 @@ export default function ({
 			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;
 			await esbuild.build(build_options);
 
-			utils.log.minor('Building SvelteKit reference server');
+			utils.log.minor('Building SvelteKit server');
 			/** @type {BuildOptions} */
 			const default_options_ref_server = {
-				entryPoints: ['.svelte-kit/node/index.js'],
+				entryPoints: [entryPoint],
 				outfile: join(out, 'index.js'),
 				bundle: true,
 				external: ['./middlewares.js'], // does not work, eslint does not exclude middlewares from target

@@ -2,6 +2,7 @@ import { Adapter } from '@sveltejs/kit';
 import { BuildOptions } from 'esbuild';
 
 interface AdapterOptions {
+	entryPoint?: string,
 	out?: string;
 	precompress?: boolean;
 	env?: {

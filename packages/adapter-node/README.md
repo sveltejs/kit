@@ -27,6 +27,10 @@ export default {
 
 ## Options
 
+### entryPoint
+
+The server entry point. Allows you to provide a [custom server implementation](#middleware). Defaults to the provided reference server.
+
 ### out
 
 The directory to build the server to. It defaults to `build` — i.e. `node build` would start the server locally after it has been created.
@@ -49,10 +53,11 @@ You can specify different environment variables if necessary using the `env` opt
 
 The adapter exports a middleware `(req, res, next) => {}` that's compatible with [Express](https://github.com/expressjs/expressjs.com) / [Connect](https://github.com/senchalabs/connect) / [Polka](https://github.com/lukeed/polka). Additionally, it also exports a reference server implementation using this middleware with a plain Node HTTP server.
 
-But you can use your favorite server framework to combine it with other middleware and server logic. You can import `kitMiddleware`, your ready-to-use SvelteKit bundle as middleware, from `./build/middlewares.js`.
+But you can use your favorite server framework to combine it with other middleware and server logic. You can import `kitMiddleware`, your ready-to-use SvelteKit middleware from the `build` directory. You can use [the `entryPoint` option](#entryPoint) to bundle your custom server entry point.
 
-```
-import { assetsMiddleware, prerenderedMiddleware, kitMiddleware } from './build/middlewares.js';
+```js
+// src/server.js
+import { assetsMiddleware, prerenderedMiddleware, kitMiddleware } from '../build/middlewares.js';
 import polka from 'polka';
 
 const app = polka();
