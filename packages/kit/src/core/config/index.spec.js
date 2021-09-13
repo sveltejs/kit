@@ -1,6 +1,6 @@
-import { suite, test } from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { deep_merge, validate_config } from './index.js';
+import { validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
@@ -9,7 +9,6 @@ test('fills in defaults', () => {
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -29,15 +28,15 @@ test('fills in defaults', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
+				emitTypes: true,
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				emitTypes: true
+				}
 			},
 			serviceWorker: {
 				exclude: []
@@ -49,17 +48,16 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 });
 
@@ -119,7 +117,6 @@ test('fills in partial blanks', () => {
 	delete validated.kit.vite;
 
 	assert.equal(validated, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -139,15 +136,15 @@ test('fills in partial blanks', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
+				emitTypes: true,
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				emitTypes: true
+				}
 			},
 			serviceWorker: {
 				exclude: []
@@ -159,17 +156,16 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 });
 
@@ -190,7 +186,7 @@ test('fails if kit.appDir is only slash', () => {
 				appDir: '/'
 			}
 		});
-	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
 });
 
 test('fails if kit.appDir starts with slash', () => {
@@ -200,7 +196,7 @@ test('fails if kit.appDir starts with slash', () => {
 				appDir: '/_app'
 			}
 		});
-	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
 });
 
 test('fails if kit.appDir ends with slash', () => {
@@ -210,7 +206,7 @@ test('fails if kit.appDir ends with slash', () => {
 				appDir: '_app/'
 			}
 		});
-	}, /^kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
+	}, /^config\.kit\.appDir cannot start or end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration$/);
 });
 
 test('fails if paths.base is not root-relative', () => {
@@ -222,7 +218,7 @@ test('fails if paths.base is not root-relative', () => {
 				}
 			}
 		});
-	}, /^kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^config\.kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test("fails if paths.base ends with '/'", () => {
@@ -234,7 +230,7 @@ test("fails if paths.base ends with '/'", () => {
 				}
 			}
 		});
-	}, /^kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^config\.kit\.paths\.base option must be a root-relative path that starts but doesn't end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test('fails if paths.assets is relative', () => {
@@ -246,7 +242,7 @@ test('fails if paths.assets is relative', () => {
 				}
 			}
 		});
-	}, /^kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^config\.kit\.paths\.assets option must be an absolute path, if specified. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
 test('fails if paths.assets has trailing slash', () => {
@@ -258,19 +254,19 @@ test('fails if paths.assets has trailing slash', () => {
 				}
 			}
 		});
-	}, /^kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
+	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
-test('fails if prerender.pages are invalid', () => {
+test('fails if prerender.entries are invalid', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
-					pages: ['foo']
+					entries: ['foo']
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 /**
@@ -326,205 +322,3 @@ validate_paths(
 );
 
 test.run();
-
-const deepMergeSuite = suite('deep_merge');
-
-deepMergeSuite('basic test no conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			version: 1,
-			animalSounds: {
-				cow: 'moo'
-			}
-		},
-		{
-			animalSounds: {
-				duck: 'quack'
-			},
-			locale: 'en_US'
-		}
-	);
-	assert.equal(merged, {
-		version: 1,
-		locale: 'en_US',
-		animalSounds: {
-			cow: 'moo',
-			duck: 'quack'
-		}
-	});
-	assert.equal(conflicts, []);
-});
-
-deepMergeSuite('three way merge no conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			animalSounds: {
-				cow: 'moo'
-			}
-		},
-		{
-			animalSounds: {
-				duck: 'quack'
-			}
-		},
-		{
-			animalSounds: {
-				dog: {
-					singular: 'bark',
-					plural: 'barks'
-				}
-			}
-		}
-	);
-	assert.equal(merged, {
-		animalSounds: {
-			cow: 'moo',
-			duck: 'quack',
-			dog: {
-				singular: 'bark',
-				plural: 'barks'
-			}
-		}
-	});
-	assert.equal(conflicts, []);
-});
-
-deepMergeSuite('merge with conflicts', async () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			person: {
-				firstName: 'John',
-				lastName: 'Doe',
-				address: {
-					line1: '123 Main St',
-					city: 'Seattle',
-					state: 'WA'
-				}
-			}
-		},
-		{
-			person: {
-				middleInitial: 'Q',
-				address: '123 Main St, Seattle, WA'
-			}
-		}
-	);
-	assert.equal(merged, {
-		person: {
-			firstName: 'John',
-			middleInitial: 'Q',
-			lastName: 'Doe',
-			address: '123 Main St, Seattle, WA'
-		}
-	});
-	assert.equal(conflicts, ['person.address']);
-});
-
-deepMergeSuite('merge with arrays', async () => {
-	const [merged] = deep_merge(
-		{
-			paths: ['/foo', '/bar']
-		},
-		{
-			paths: ['/alpha', '/beta']
-		}
-	);
-	assert.equal(merged, {
-		paths: ['/foo', '/bar', '/alpha', '/beta']
-	});
-});
-
-deepMergeSuite('empty', async () => {
-	const [merged] = deep_merge();
-	assert.equal(merged, {});
-});
-
-deepMergeSuite('mutability safety', () => {
-	const input1 = {
-		person: {
-			firstName: 'John',
-			lastName: 'Doe',
-			address: {
-				line1: '123 Main St',
-				city: 'Seattle'
-			}
-		}
-	};
-	const input2 = {
-		person: {
-			middleInitial: 'L',
-			lastName: 'Smith',
-			address: {
-				state: 'WA'
-			}
-		}
-	};
-	const snapshot1 = JSON.stringify(input1);
-	const snapshot2 = JSON.stringify(input2);
-
-	const [merged] = deep_merge(input1, input2);
-
-	// Mess with the result
-	merged.person.middleInitial = 'Z';
-	merged.person.address.zipCode = '98103';
-	merged.person = {};
-
-	// Make sure nothing in the inputs changed
-	assert.snapshot(snapshot1, JSON.stringify(input1));
-	assert.snapshot(snapshot2, JSON.stringify(input2));
-});
-
-deepMergeSuite('merge buffer', () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			x: Buffer.from('foo', 'utf-8')
-		},
-		{
-			y: 12345
-		}
-	);
-	assert.equal(Object.keys(merged), ['x', 'y']);
-	assert.equal(conflicts.length, 0);
-});
-
-deepMergeSuite('merge including toString', () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			toString: () => '',
-			constructor: () => ''
-		},
-		{
-			y: 12345
-		}
-	);
-	assert.equal(conflicts.length, 0);
-	assert.equal(Object.keys(merged), ['toString', 'constructor', 'y']);
-});
-
-deepMergeSuite('merge resolve.alias', () => {
-	const [merged, conflicts] = deep_merge(
-		{
-			resolve: {
-				alias: [{ find: /foo/, replacement: 'bar' }]
-			}
-		},
-		{
-			resolve: {
-				alias: {
-					alpha: 'beta'
-				}
-			}
-		}
-	);
-	assert.equal(conflicts.length, 0);
-	assert.equal(merged, {
-		resolve: {
-			alias: [
-				{ find: /foo/, replacement: 'bar' },
-				{ find: 'alpha', replacement: 'beta' }
-			]
-		}
-	});
-});
-
-deepMergeSuite.run();

@@ -26,6 +26,8 @@ export default function ({
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
+			utils.rimraf(out);
+
 			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
@@ -67,11 +69,13 @@ export default function ({
 					APP_DIR: `"/${config.kit.appDir}/"`
 				}
 			};
-			await esbuild.build(esbuild_config ? await esbuild_config(default_options) : default_options);
+
+			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;
+			await esbuild.build(build_options);
 
 			utils.log.minor('Building SvelteKit reference server');
 			/** @type {BuildOptions} */
-			const ref_server_options = {
+			const default_options_ref_server = {
 				entryPoints: ['.svelte-kit/node/index.js'],
 				outfile: join(out, 'index.js'),
 				bundle: true,
@@ -90,9 +94,11 @@ export default function ({
 					}
 				]
 			};
-			await esbuild.build(
-				esbuild_config ? await esbuild_config(ref_server_options) : ref_server_options
-			);
+
+			const build_options_ref_server = esbuild_config
+				? await esbuild_config(default_options_ref_server)
+				: default_options_ref_server;
+			await esbuild.build(build_options_ref_server);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

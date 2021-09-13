@@ -67,8 +67,8 @@ export interface Config {
 		prerender?: {
 			crawl?: boolean;
 			enabled?: boolean;
+			entries?: string[];
 			onError?: PrerenderOnErrorValue;
-			pages?: string[];
 		};
 		router?: boolean;
 		serviceWorker?: {

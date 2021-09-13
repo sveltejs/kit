@@ -10,14 +10,14 @@ export default function (test, is_dev) {
 		'/routing/slashes',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/"]');
-			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(page.url(), `${base}/routing`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/');
-				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(page.url(), `${base}/routing`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
@@ -28,14 +28,14 @@ export default function (test, is_dev) {
 		'/routing/slashes',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/?"]');
-			assert.equal(await page.url(), `${base}/routing`);
+			assert.equal(page.url(), `${base}/routing`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/?');
-				assert.equal(await page.url(), `${base}/routing`);
+				assert.equal(page.url(), `${base}/routing`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
@@ -46,14 +46,14 @@ export default function (test, is_dev) {
 		'/routing/slashes',
 		async ({ base, page, clicknav, app, js }) => {
 			await clicknav('a[href="/routing/?foo=bar"]');
-			assert.equal(await page.url(), `${base}/routing?foo=bar`);
+			assert.equal(page.url(), `${base}/routing?foo=bar`);
 			assert.equal(await page.textContent('h1'), 'Great success!');
 
 			if (js) {
 				await page.goto(`${base}/routing/slashes`);
 				await page.evaluate(() => window.started);
 				await app.goto('/routing/?foo=bar');
-				assert.equal(await page.url(), `${base}/routing?foo=bar`);
+				assert.equal(page.url(), `${base}/routing?foo=bar`);
 				assert.equal(await page.textContent('h1'), 'Great success!');
 			}
 		}
@@ -238,7 +238,7 @@ export default function (test, is_dev) {
 		'/routing',
 		async ({ page, clicknav }) => {
 			await clicknav('[href="https://www.google.com"]');
-			assert.equal(await page.url(), 'https://www.google.com/');
+			assert.equal(page.url(), 'https://www.google.com/');
 		}
 	);
 

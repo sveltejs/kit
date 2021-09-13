@@ -10,7 +10,8 @@
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
 		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"preview:docs": "action-deploy-docs --project=kit"
+		"preview:docs": "action-deploy-docs --project=kit",
+		"changeset:version": "changeset version && pnpm i --lockfile-only"
 	},
 	"repository": {
 		"type": "git",

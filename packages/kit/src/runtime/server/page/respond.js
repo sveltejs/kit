@@ -5,6 +5,7 @@ import { coalesce_to_error } from '../../utils.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
+ * @typedef {import('types/hooks').ServerResponse} ServerResponse
  * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
@@ -19,7 +20,7 @@ import { coalesce_to_error } from '../../utils.js';
  *   route: import('types/internal').SSRPage;
  *   page: import('types/page').Page;
  * }} opts
- * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
+ * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
 	const { request, options, state, $session, route } = opts;
@@ -68,6 +69,9 @@ export async function respond(opts) {
 	/** @type {Error|undefined} */
 	let error;
 
+	/** @type {string[]} */
+	let set_cookie_headers = [];
+
 	ssr: if (page_config.ssr) {
 		let context = {};
 
@@ -90,13 +94,18 @@ export async function respond(opts) {
 
 					if (!loaded) return;
 
+					set_cookie_headers = set_cookie_headers.concat(loaded.set_cookie_headers);
+
 					if (loaded.loaded.redirect) {
-						return {
-							status: loaded.loaded.status,
-							headers: {
-								location: encodeURI(loaded.loaded.redirect)
-							}
-						};
+						return with_cookies(
+							{
+								status: loaded.loaded.status,
+								headers: {
+									location: encodeURI(loaded.loaded.redirect)
+								}
+							},
+							set_cookie_headers
+						);
 					}
 
 					if (loaded.loaded.error) {
@@ -160,14 +169,17 @@ export async function respond(opts) {
 					// TODO backtrack until we find an __error.svelte component
 					// that we can use as the leaf node
 					// for now just return regular error page
-					return await respond_with_error({
-						request,
-						options,
-						state,
-						$session,
-						status,
-						error
-					});
+					return with_cookies(
+						await respond_with_error({
+							request,
+							options,
+							state,
+							$session,
+							status,
+							error
+						}),
+						set_cookie_headers
+					);
 				}
 			}
 
@@ -182,23 +194,29 @@ export async function respond(opts) {
 	}
 
 	try {
-		return await render_response({
-			...opts,
-			page_config,
-			status,
-			error,
-			branch: branch.filter(Boolean)
-		});
+		return with_cookies(
+			await render_response({
+				...opts,
+				page_config,
+				status,
+				error,
+				branch: branch.filter(Boolean)
+			}),
+			set_cookie_headers
+		);
 	} catch (/** @type {unknown} */ err) {
 		const error = coalesce_to_error(err);
 
 		options.handle_error(error, request);
 
-		return await respond_with_error({
-			...opts,
-			status: 500,
-			error
-		});
+		return with_cookies(
+			await respond_with_error({
+				...opts,
+				status: 500,
+				error
+			}),
+			set_cookie_headers
+		);
 	}
 }
 
@@ -212,4 +230,15 @@ function get_page_config(leaf, options) {
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};
+}
+
+/**
+ * @param {ServerResponse} response
+ * @param {string[]} set_cookie_headers
+ */
+function with_cookies(response, set_cookie_headers) {
+	if (set_cookie_headers.length) {
+		response.headers['set-cookie'] = set_cookie_headers;
+	}
+	return response;
 }

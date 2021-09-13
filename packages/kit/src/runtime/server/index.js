@@ -54,9 +54,8 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.path);
 				for (const route of options.manifest.routes) {
-					const match = route.pattern.exec(decoded);
+					const match = route.pattern.exec(request.path);
 					if (!match) continue;
 
 					const response =

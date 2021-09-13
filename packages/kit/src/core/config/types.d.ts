@@ -1,10 +1,12 @@
 export type ConfigDefinition =
 	| {
 			type: 'leaf';
-			default: any;
+			fallback: any;
 			validate(value: any, keypath: string): any;
 	  }
 	| {
 			type: 'branch';
 			children: Record<string, ConfigDefinition>;
 	  };
+
+export type Validator<T = any> = (input: T, keypath: string) => T;

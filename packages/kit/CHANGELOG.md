@@ -1,5 +1,45 @@
 # @sveltejs/kit
 
+## 1.0.0-next.166
+
+### Patch Changes
+
+- [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+* [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
+
+## 1.0.0-next.165
+
+### Patch Changes
+
+- [chore] upgrade Vite
+
+* [breaking] rename prerender.pages config option to prerender.entries ([#2380](https://github.com/sveltejs/kit/pull/2380))
+
+- [fix] anchor tag inside svg ([#2286](https://github.com/sveltejs/kit/pull/2286))
+
+## 1.0.0-next.164
+
+### Patch Changes
+
+- [fix] error components render with correct layout client-side as well as server-side ([#2378](https://github.com/sveltejs/kit/pull/2378))
+
+* refactor `import.meta.env` usage in `$app/stores.js` to use `$app/env.js` to DRY code and make mocking easier ([#2353](https://github.com/sveltejs/kit/pull/2353))
+
+- Trim `.js` extensions in package exports field ([#2345](https://github.com/sveltejs/kit/pull/2345))
+
+## 1.0.0-next.163
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.22 ([#2370](https://github.com/sveltejs/kit/pull/2370))
+
+* [fix] load function should not leak props to other components ([#2356](https://github.com/sveltejs/kit/pull/2356))
+
+- packaging merge exports field by default ([#2327](https://github.com/sveltejs/kit/pull/2327))
+
+* [fix] don't decode URL when finding matching route ([#2354](https://github.com/sveltejs/kit/pull/2354))
+
 ## 1.0.0-next.162
 
 ### Patch Changes

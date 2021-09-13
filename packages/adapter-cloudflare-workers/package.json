@@ -1,9 +1,12 @@
 {
 	"name": "@sveltejs/adapter-cloudflare-workers",
-	"version": "1.0.0-next.20",
+	"version": "1.0.0-next.21",
 	"type": "module",
 	"exports": {
-		"import": "./index.js"
+		".": {
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
 	},
 	"main": "index.js",
 	"types": "index.d.ts",

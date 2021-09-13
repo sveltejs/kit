@@ -220,23 +220,24 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				components.push(item.file);
 
 				const concatenated = layout_stack.concat(item.file);
+				const errors = error_stack.slice();
 
 				const pattern = get_pattern(segments, true);
 
 				let i = concatenated.length;
 				while (i--) {
-					if (!error_stack[i] && !concatenated[i]) {
-						error_stack.splice(i, 1);
+					if (!errors[i] && !concatenated[i]) {
+						errors.splice(i, 1);
 						concatenated.splice(i, 1);
 					}
 				}
 
-				i = error_stack.length;
+				i = errors.length;
 				while (i--) {
-					if (error_stack[i]) break;
+					if (errors[i]) break;
 				}
 
-				error_stack.splice(i + 1);
+				errors.splice(i + 1);
 
 				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
 					? `/${segments.map((segment) => segment[0].content).join('/')}`
@@ -248,7 +249,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					params,
 					path,
 					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (error_stack)
+					b: /** @type {string[]} */ (errors)
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
@@ -388,13 +389,10 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: part.content
-											.normalize()
-											.replace(/\?/g, '%3F')
-											.replace(/#/g, '%23')
-											.replace(/%5B/g, '[')
-											.replace(/%5D/g, ']')
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+									: encodeURIComponent(part.content.normalize()).replace(
+											/[.*+?^${}()|[\]\\]/g,
+											'\\$&'
+									  );
 							})
 							.join('');
 		})
