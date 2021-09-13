@@ -29,8 +29,8 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Output code that:
   - Calls `init`
   - Converts from the platform's request to a [SvelteKit request](#hooks-handle), calls `render`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
+    - If `config.kit.cspNonce` is set, it should also generate a base64 cryptographically secure random string with at least 128 bits of entropy for use as a nonce and supply it in the `render` call. This _must_ be unique for every request. Most platforms support either Node's `crypto` module or the Web Crypto API.
   - Globally shims `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
-  - Globally shims a function `generateRandomString(bytes: number)`, which returns a base64-encoded cryptographically-secure random string (suitable, for instance, for use in a CSP nonce), with a length given by the `bytes` parameter. Usually this is done with either Node's `crypto` module or the WebCrypto API.
 - Bundle the output to avoid needing to install dependencies on the target platform, if desired
 - Call `utils.prerender`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
