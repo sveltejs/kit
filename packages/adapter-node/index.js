@@ -70,7 +70,9 @@ export default function ({
 				}
 			};
 
-			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;
+			const build_options = esbuild_config
+				? await esbuild_config(default_options)
+				: default_options;
 			await esbuild.build(build_options);
 
 			utils.log.minor('Building SvelteKit reference server');
