@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.166
+
+### Patch Changes
+
+- [chore] upgrade Vite to 2.5.7
+
+* [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+- Update vite-plugin-svelte to 1.0.0-next.23 ([#2402](https://github.com/sveltejs/kit/pull/2402))
+
+* [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
+
 ## 1.0.0-next.165
 
 ### Patch Changes
