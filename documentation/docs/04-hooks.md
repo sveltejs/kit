@@ -55,8 +55,8 @@ export interface ServerResponse {
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
-	}): MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals, Body>): ServerResponse | Promise<ServerResponse>;
+	}): ServerResponse | Promise<ServerResponse>;
 }
 ```
 
@@ -117,7 +117,7 @@ If unimplemented, session is `{}`.
 // Declaration types for getSession hook
 
 export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
-	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
+	(request: ServerRequest<Locals, Body>): Session | Promise<Session>;
 }
 ```
 
