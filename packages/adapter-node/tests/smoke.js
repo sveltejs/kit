@@ -6,6 +6,7 @@ import polka from 'polka';
 
 const { PORT = 3000 } = process.env;
 const DEFAULT_SERVER_OPTS = { render: () => {} };
+globalThis.GENERATE_NONCES = true; // mock. Esbuild inserts this, but we don't esbuild before tests
 
 async function startServer(opts = DEFAULT_SERVER_OPTS) {
 	return new Promise((fulfil, reject) => {
