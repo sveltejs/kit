@@ -62,20 +62,20 @@ import polka from 'polka';
 
 const app = polka();
 
-const myMiddleware = function(req, res, next) {
-  console.log('Hello world!');
-  next();
+const myMiddleware = function (req, res, next) {
+	console.log('Hello world!');
+	next();
 };
 
 app.use(myMiddleware);
 
 app.get('/no-svelte', (req, res) => {
-  res.end('This is not Svelte!')
+	res.end('This is not Svelte!');
 });
 
 app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
 
-app.listen(3000)
+app.listen(3000);
 ```
 
 For using middleware in dev mode, [see the FAQ](https://kit.svelte.dev/faq#how-do-i-use-x-with-sveltekit-how-do-i-use-middleware).
