@@ -154,21 +154,7 @@ class Watcher extends EventEmitter {
 		print_config_conflicts(conflicts, 'kit.vite.');
 
 		this.vite = await vite.createServer(merged_config);
-
-		/**
-		 * @type {import('connect').Server}
-		 */
-		const connect_server = this.vite.middlewares;
-		// TODO: replace index with name after https://github.com/vitejs/vite/pull/4908 is merged and released
-		const spa_fallback_index = 7;
-		const html_middlewares = ['viteIndexHtmlMiddleware', 'vite404Middleware'];
-		for (let i = connect_server.stack.length - 1; i > 0; i--) {
-			// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
-			if (html_middlewares.includes(connect_server.stack[i].name) || i === spa_fallback_index) {
-				connect_server.stack.splice(i, 1);
-			}
-		}
-
+		remove_html_middlewares(this.vite.middlewares);
 		await this.vite.listen(this.port);
 	}
 
@@ -516,4 +502,21 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 function not_found(res) {
 	res.statusCode = 404;
 	res.end('Not found');
+}
+
+/**
+ * @param {import('connect').Server} server
+ */
+function remove_html_middlewares(server) {
+	const html_middlewares = [
+		'viteIndexHtmlMiddleware',
+		'vite404Middleware',
+		'viteSpaFallbackMiddleware'
+	];
+	for (let i = server.stack.length - 1; i > 0; i--) {
+		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
+		if (html_middlewares.includes(server.stack[i].handle.name)) {
+			server.stack.splice(i, 1);
+		}
+	}
 }
