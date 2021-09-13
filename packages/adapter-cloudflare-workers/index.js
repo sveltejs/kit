@@ -1,9 +1,8 @@
-import fs from 'fs';
+import fs, { writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
-import { join } from 'path';
 
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
@@ -34,6 +33,8 @@ export default function (options) {
 
 			utils.log.minor('Generating worker...');
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
+
+			writeFileSync('${files}/nofig.js', `export const generateNonces = ${config.kit.cspNonce}`);
 
 			/** @type {BuildOptions} */
 			const default_options = {
