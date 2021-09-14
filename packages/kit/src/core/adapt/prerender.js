@@ -139,11 +139,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	/**
-	 * @param {string} path
+	 * @param {string} decoded_path
 	 * @param {string?} referrer
 	 */
-	async function visit(path, referrer) {
-		path = normalize(path);
+	async function visit(decoded_path, referrer) {
+		const path = encodeURI(normalize(decoded_path));
 
 		if (seen.has(path)) return;
 		seen.add(path);
@@ -174,7 +174,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const type = headers && headers['content-type'];
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
-			const parts = path.split('/');
+			const parts = decoded_path.split('/');
 			if (is_html && parts[parts.length - 1] !== 'index.html') {
 				parts.push('index.html');
 			}
@@ -186,17 +186,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const location = get_single_valued_header(headers, 'location');
 
 				if (location) {
-					log.warn(`${rendered.status} ${path} -> ${location}`);
+					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
 				} else {
-					log.warn(`location header missing on redirect received from ${path}`);
+					log.warn(`location header missing on redirect received from ${decoded_path}`);
 				}
 
 				return;
 			}
 
 			if (rendered.status === 200) {
-				log.info(`${rendered.status} ${path}`);
+				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
