@@ -1,7 +1,11 @@
 {
 	"name": "@sveltejs/kit",
 	"version": "1.0.0-next.166",
-  "homepage": "https://github.com/sveltejs/kit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sveltejs/kit"
+  },
+	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.23",
