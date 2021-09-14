@@ -52,10 +52,10 @@ export interface ServerResponse {
 	body?: StrictBody;
 }
 
-export interface Handle<Locals = Record<string, any>> {
+export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
-		request: ServerRequest<Locals>;
-		resolve(request: ServerRequest<Locals>): ServerResponse | Promise<ServerResponse>;
+		request: ServerRequest<Locals, Body>;
+		resolve(request: ServerRequest<Locals, Body>): ServerResponse | Promise<ServerResponse>;
 	}): ServerResponse | Promise<ServerResponse>;
 }
 ```
@@ -92,8 +92,8 @@ If unimplemented, SvelteKit will log the error with default formatting.
 ```ts
 // Declaration types for handleError hook
 
-export interface HandleError<Locals = Record<string, any>> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals> }): void;
+export interface HandleError<Locals = Record<string, any>, Body = unknown> {
+	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
 }
 ```
 
@@ -116,8 +116,8 @@ If unimplemented, session is `{}`.
 ```ts
 // Declaration types for getSession hook
 
-export interface GetSession<Locals = Record<string, any>, Session = any> {
-	(request: ServerRequest<Locals>): Session | Promise<Session>;
+export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
+	(request: ServerRequest<Locals, Body>): Session | Promise<Session>;
 }
 ```
 
