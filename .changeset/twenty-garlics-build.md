@@ -5,4 +5,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-Add generateCspNonce shim.
+Add support for generating CSP nonces when `kit.cspNonce` is set.
