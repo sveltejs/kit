@@ -1,4 +1,3 @@
-// @ts-ignore
 import { path, host, port } from './env.js';
 import { assetsMiddleware, kitMiddleware, prerenderedMiddleware } from './middlewares.js';
 import compression from 'compression';

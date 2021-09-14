@@ -1,6 +1,8 @@
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
+
+import { appResolver } from '@sveltejs/kit/adapter';
 import esbuild from 'esbuild';
 
 /**
@@ -37,6 +39,7 @@ export default function (options) {
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				inject: [join(files, 'shims.js')],
+				plugins: [appResolver()],
 				platform: 'node'
 			};
 

@@ -90,7 +90,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
- *   service_worker_entry_file: string | null;
  * }} options
  */
 async function build_client({
@@ -421,6 +420,9 @@ async function build_server(
 				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
 				return respond({ ...request, host }, options, { prerender });
 			}
+
+			const app = { init, render };
+			export default app;
 		`
 			.replace(/^\t{3}/gm, '')
 			.trim()

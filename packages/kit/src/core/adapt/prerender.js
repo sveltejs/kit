@@ -1,10 +1,12 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
-import { mkdirp } from '../../utils/filesystem.js';
+
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { mkdirp } from '../../utils/filesystem.js';
 import { get_single_valued_header } from '../../utils/http.js';
+
+import { SVELTE_KIT } from '../constants.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler

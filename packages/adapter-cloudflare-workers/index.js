@@ -1,8 +1,10 @@
-import fs from 'fs';
 import { execSync } from 'child_process';
-import esbuild from 'esbuild';
-import toml from '@iarna/toml';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
+
+import toml from '@iarna/toml';
+import { appResolver } from '@sveltejs/kit/adapter';
+import esbuild from 'esbuild';
 
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
@@ -40,7 +42,8 @@ export default function (options) {
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',
-				platform: 'browser'
+				platform: 'browser',
+				plugins: [appResolver()]
 			};
 
 			const build_options =

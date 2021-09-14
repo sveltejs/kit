@@ -1,7 +1,5 @@
+import { init, render } from '@sveltejs/kit/app';
 import { getRawBody } from '@sveltejs/kit/node';
-
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
 
 init();
 
