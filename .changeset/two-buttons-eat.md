@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add Body generic to hooks
+Add a generic argument to allow typing Body from hooks
