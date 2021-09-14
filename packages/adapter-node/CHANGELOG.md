@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- [feat] add entryPoint option for custom servers ([#2414](https://github.com/sveltejs/kit/pull/2414))
+
 ## 1.0.0-next.46
 
 ### Patch Changes
