@@ -218,7 +218,6 @@ importers:
       kleur: ^4.1.4
       locate-character: ^2.0.5
       marked: ^2.0.3
-      micromatch: ^4.0.4
       mime: ^2.5.2
       node-fetch: ^3.0.0-beta.9
       port-authority: ^1.1.2
@@ -255,7 +254,6 @@ importers:
       kleur: 4.1.4
       locate-character: 2.0.5
       marked: 2.0.3
-      micromatch: 4.0.4
       mime: 2.5.2
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
@@ -265,7 +263,7 @@ importers:
       sirv: 1.0.12
       svelte: 3.42.4
       svelte-check: 2.2.4_svelte@3.42.4
-      svelte2tsx: 0.4.1_svelte@3.42.4+typescript@4.3.5
+      svelte2tsx: 0.4.1_svelte@3.42.4
       tiny-glob: 0.2.8
       uvu: 0.5.1
 
@@ -3817,7 +3815,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.4.1_svelte@3.42.4+typescript@4.3.5:
+  /svelte2tsx/0.4.1_svelte@3.42.4:
     resolution: {integrity: sha512-qqXWg+wlsYXhtolKI2NGL52rK7ACejNzEKn98qcz2T6Fd1e73+YPZMw/FNeGRSZLCdNxzGf7QJDhzIiK3MXihA==}
     peerDependencies:
       svelte: ^3.24
@@ -3826,7 +3824,6 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.42.4
-      typescript: 4.3.5
     dev: true
 
   /table/6.6.0:
