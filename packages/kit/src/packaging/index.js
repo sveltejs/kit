@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
 
-import micromatch from 'micromatch';
 import { preprocess } from 'svelte/compiler';
 
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
@@ -21,12 +20,6 @@ export async function make_package(config, cwd = process.cwd()) {
 		await emit_dts(config);
 	}
 
-	const files_filter = create_filter(config.kit.package.files);
-	const exports_filter = create_filter({
-		include: config.kit.package.exports.include,
-		exclude: [...config.kit.package.exports.exclude, '**/*.d.ts']
-	});
-
 	const files = walk(config.kit.files.lib);
 
 	const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
@@ -42,9 +35,10 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	for (const file of files) {
 		const ext = path.extname(file);
+		const normalized = file.replace(/\\/g, '/');
 		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
-		if (!files_filter(file.replace(/\\/g, '/'))) {
+		if (!config.kit.package.files(normalized)) {
 			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
 			const dts_path = path.join(cwd, config.kit.package.dir, dts_file);
 			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
@@ -87,8 +81,8 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
 
-		if (exports_filter(file)) {
-			const original = `$lib/${file.replace(/\\/g, '/')}`;
+		if (config.kit.package.exports(normalized)) {
+			const original = `$lib/${normalized}`;
 			const entry = `./${out_file.replace(/\\/g, '/')}`;
 			const key = entry.replace(/\/index\.js$|(\/[^/]+)\.js$/, '$1');
 
@@ -170,15 +164,6 @@ function load_tsconfig(filename, ts) {
 		tsconfig_filename
 	);
 	return options;
-}
-
-/**
- * @param {{ include: string[]; exclude: string[] }} options
- * @returns {(str: string) => boolean}
- */
-function create_filter(options) {
-	return (str) =>
-		micromatch.isMatch(str, options.include) && !micromatch.isMatch(str, options.exclude);
 }
 
 /**

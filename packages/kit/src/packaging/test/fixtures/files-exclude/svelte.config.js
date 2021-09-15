@@ -2,8 +2,10 @@
 const config = {
 	kit: {
 		package: {
-			files: {
-				exclude: ['**/*exclude.{js,svelte}', '**/*.mjs']
+			files(filepath) {
+				const ext = filepath.slice(filepath.lastIndexOf('.') + 1);
+				if (ext === 'js' || ext === 'svelte') return !filepath.includes('exclude');
+				return ext !== 'mjs';
 			}
 		}
 	}
