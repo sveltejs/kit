@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.31
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
 ## 1.0.0-next.30
 
 ### Patch Changes

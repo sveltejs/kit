@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.48
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
 ## 1.0.0-next.47
 
 ### Patch Changes
