@@ -353,7 +353,21 @@ async function build_server(
 				};
 			}
 
-			const d = decodeURIComponent;
+			// input has already been decoded by decodeURI
+			// now handle the rest that decodeURIComponent would do
+			const d = s => s
+				.replace(/%23/g, '#')
+				.replace(/%3[Bb]/g, ';')
+				.replace(/%2[Cc]/g, ',')
+				.replace(/%2[Ff]/g, '/')
+				.replace(/%3[Ff]/g, '?')
+				.replace(/%3[Aa]/g, ':')
+				.replace(/%40/g, '@')
+				.replace(/%26/g, '&')
+				.replace(/%3[Dd]/g, '=')
+				.replace(/%2[Bb]/g, '+')
+				.replace(/%24/g, '$');
+
 			const empty = () => ({});
 
 			const manifest = {
