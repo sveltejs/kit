@@ -403,7 +403,7 @@ function get_pattern(segments, add_trailing_slash) {
 												.normalize()
 												.replace(/#/g, '%23')
 												.replace(/\?/g, '%3F')
-										// escape characters that have special meaning in regex
+											// escape characters that have special meaning in regex
 									  ).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 							})
 							.join('');
