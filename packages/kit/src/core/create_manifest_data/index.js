@@ -4,13 +4,15 @@ import mime from 'mime';
 import { posixify } from '../utils.js';
 import glob from 'tiny-glob/sync.js';
 
-/** @typedef {{
+/**
+ * A portion of a file or directory name where the name has been split into
+ * static and dynamic parts
+ * @typedef {{
  *   content: string;
  *   dynamic: boolean;
  *   spread: boolean;
- * }} Part */
-
-/** @typedef {{
+ * }} Part
+ * @typedef {{
  *   basename: string;
  *   ext: string;
  *   parts: Part[],
@@ -19,7 +21,8 @@ import glob from 'tiny-glob/sync.js';
  *   is_index: boolean;
  *   is_page: boolean;
  *   route_suffix: string
- * }} Item */
+ * }} Item
+ */
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
 
@@ -389,13 +392,19 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: part.content
-											.normalize()
-											.replace(/#/g, '%23')
-											.replace(/\?/g, '%3F')
-											.replace(/%5B/g, '[')
-											.replace(/%5D/g, ']')
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+									: // allow users to specify characters on the file system in an encoded manner
+									  // we use [ and ] to denote parameters, so users must encode these on the file
+									  // system to match against them
+									  decodeURI(
+											part.content
+												// # / ? can only appear in URLs in an encoded manner
+												// they will not be decoded by decodeURI
+												// we skip / since you can't create a file with it on any OS
+												.normalize()
+												.replace(/#/g, '%23')
+												.replace(/\?/g, '%3F')
+										// escape characters that have special meaning in regex
+									  ).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 							})
 							.join('');
 		})
