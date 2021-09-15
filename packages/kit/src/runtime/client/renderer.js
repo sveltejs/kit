@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
+import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
-import { coalesce_to_error } from '../utils.js';
 
 /**
  * @typedef {import('types/internal').CSRComponent} CSRComponent
@@ -181,7 +181,7 @@ export class Renderer {
 			result = error_args
 				? await this._load_error(error_args)
 				: await this._get_navigation_result_from_branch({ page, branch });
-		} catch (/** @type {unknown} */ e) {
+		} catch (e) {
 			if (error) throw e;
 
 			result = await this._load_error({
@@ -637,7 +637,7 @@ export class Renderer {
 				}
 			} catch (e) {
 				status = 500;
-				error = e;
+				error = coalesce_to_error(e);
 			}
 
 			if (error) {

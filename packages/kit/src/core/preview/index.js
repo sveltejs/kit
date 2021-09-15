@@ -78,7 +78,7 @@ export async function preview({
 
 			try {
 				body = await getRawBody(req);
-			} catch (err) {
+			} catch (/** @type {any} */ err) {
 				res.statusCode = err.status || 400;
 				return res.end(err.reason || 'Invalid request body');
 			}

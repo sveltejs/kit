@@ -128,7 +128,7 @@ export default function (test, is_dev) {
 			try {
 				await app.prefetch('https://example.com');
 				throw new Error('Error was not thrown');
-			} catch (e) {
+			} catch (/** @type {any} */ e) {
 				assert.ok(
 					e.message.includes('Attempted to prefetch a URL that does not belong to this app')
 				);

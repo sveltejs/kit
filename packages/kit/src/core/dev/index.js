@@ -21,6 +21,7 @@ import { getRawBody } from '../node/index.js';
 import { get_server } from '../server/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, resolve_entry } from '../utils.js';
+import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -334,7 +335,7 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 
 				try {
 					body = await getRawBody(req);
-				} catch (err) {
+				} catch (/** @type {any} */ err) {
 					res.statusCode = err.status || 400;
 					return res.end(err.reason || 'Invalid request body');
 				}
@@ -486,9 +487,10 @@ async function create_handler(vite, config, dir, cwd, get_manifest) {
 					not_found(res);
 				}
 			} catch (e) {
-				vite.ssrFixStacktrace(e);
+				const error = coalesce_to_error(e);
+				vite.ssrFixStacktrace(error);
 				res.statusCode = 500;
-				res.end(e.stack);
+				res.end(error.stack);
 			}
 		});
 	};
