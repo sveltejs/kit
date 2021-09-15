@@ -132,20 +132,18 @@ test('creates routes with layout', () => {
 	]);
 });
 
-test('encoding of characters', () => {
+test('encodes invalid characters', () => {
 	const { components, routes } = create('samples/encoding');
 
 	// had to remove ? and " because windows
 
 	// const quote = 'samples/encoding/".svelte';
 	const hash = 'samples/encoding/#.svelte';
-	const potato = 'samples/encoding/土豆.svelte';
 	// const question_mark = 'samples/encoding/?.svelte';
 
 	assert.equal(components, [
 		layout,
 		error,
-		potato,
 		// quote,
 		hash
 		// question_mark
@@ -154,7 +152,6 @@ test('encoding of characters', () => {
 	assert.equal(
 		routes.map((p) => p.pattern),
 		[
-			/^\/%E5%9C%9F%E8%B1%86\/?$/,
 			// /^\/%22\/?$/,
 			/^\/%23\/?$/
 			// /^\/%3F\/?$/
