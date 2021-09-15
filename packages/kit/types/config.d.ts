@@ -51,14 +51,8 @@ export interface Config {
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
-			exports?: {
-				include?: string[];
-				exclude?: string[];
-			};
-			files?: {
-				include?: string[];
-				exclude?: string[];
-			};
+			exports?(filepath: string): boolean;
+			files?(filepath: string): boolean;
 		};
 		paths?: {
 			assets?: string;
@@ -72,7 +66,7 @@ export interface Config {
 		};
 		router?: boolean;
 		serviceWorker?: {
-			exclude?: string[];
+			files?(filepath: string): boolean;
 		};
 		ssr?: boolean;
 		target?: string;
