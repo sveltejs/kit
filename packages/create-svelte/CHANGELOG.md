@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.80
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
 ## 2.0.0-next.79
 
 ### Patch Changes
