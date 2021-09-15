@@ -1,5 +1,4 @@
 import { get_base_uri } from './utils';
-import { i18n, page } from '$app/stores';
 
 function scroll_state() {
 	return {
@@ -33,13 +32,14 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    renderer: import('./renderer').Renderer;
 	 * }} opts
 	 */
 	constructor({ base, routes, trailing_slash, renderer }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
+		this.i18n = renderer.i18n;
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -159,14 +159,6 @@ export class Router {
 				const url = new URL(location.href);
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
-		});
-
-		// inject lang
-		page.subscribe(({lang}) => this._lang = lang);
-		// inject i18n
-		i18n.subscribe(({defaultLocale, locales}) => {
-			this.defaultLocale = defaultLocale;
-			this.locales = locales;
 		});
 	}
 
@@ -298,28 +290,27 @@ export class Router {
 	 */
 	switchLocalePath(lang) {
 		let url = `${location.pathname}${location.search}`;
-		if (this.defaultLocale
-			&& this.locales?.find(locale => locale === lang)) {
+		if (this.i18n.defaultLocale && this.i18n.locales?.find((locale) => locale === lang)) {
 			// remove locales prefix
-			this.locales.forEach(locale => {
+			this.i18n.locales.forEach((locale) => {
 				url = url.replace(`/${locale}`, '');
 			});
 			// !defaultLocale => prefix
-			url = this.defaultLocale === lang
-				? url
-				: `/${lang}${url}`;
+			url = this.i18n.defaultLocale === lang ? `/${url}` : `/${lang}${url}`;
+			url = url.replace('//', '/');
 		}
 
 		return this.goto(url, {}, []);
 	}
 
 	/**
+	 * @param {string} lang
 	 * @param {string} route
 	 * @returns {string}
 	 */
-	i18nRoute(route) {
-		return this._lang === this.defaultLocale
-			? route
-			: `${this._lang}/${route}`;
+	i18nRoute(lang, route) {
+		// For some reason access through page store is no longer possible
+		// lang currently needs to be passed in
+		return lang === this.i18n.defaultLocale ? route : `/${lang}${route}`;
 	}
 }

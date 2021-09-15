@@ -75,6 +75,7 @@ export class Renderer {
 		this.Root = Root;
 		this.fallback = fallback;
 		this.host = host;
+		this.i18n = i18n;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;

@@ -78,7 +78,7 @@ declare module '$app/navigation' {
 	/**
 	 * Returns the route prefixed with current lang
 	 */
-	export function i18nRoute(route: string): string;
+	export function i18nRoute(lang: string, route: string): string;
 }
 
 declare module '$app/paths' {

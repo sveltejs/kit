@@ -17,7 +17,7 @@ export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
 export const switchLocalePath = import.meta.env.SSR ? guard('switchLocalePath') : switchLocalePath_;
-export const i18nRoute = import.meta.env.SSR ? guard('i18nRoute') : i18nRoute_;
+export const i18nRoute = import.meta.env.SSR ? () => '' : i18nRoute_;
 
 /**
  * @type {import('$app/navigation').goto}
@@ -66,6 +66,6 @@ function switchLocalePath_(lang) {
 /**
  * @type {import('$app/navigation').i18nRoute}
  */
-function i18nRoute_(route) {
-	return router.i18nRoute(route);
+function i18nRoute_(lang, route) {
+	return router.i18nRoute(lang, route);
 }
