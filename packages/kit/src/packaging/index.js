@@ -104,6 +104,27 @@ export async function make_package(config, cwd = process.cwd()) {
 	}
 
 	pkg.exports = { ...generated, ...pkg.exports };
+
+	// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
+	// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
+	// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
+	if (pkg.exports['.']) {
+		const svelte_export = typeof pkg.exports['.'] === 'string' ? pkg.exports['.'] : undefined;
+		if (svelte_export) {
+			pkg.svelte = svelte_export;
+		} else {
+			console.warn(
+				'The "." entry in "exports" is not a string. ' +
+					'If you set it by hand, please also set one of the options as a "svelte" entry point'
+			);
+		}
+	} else {
+		console.warn(
+			'The "." entry in "exports" is not a string. ' +
+				'If you set it by hand, please also set one of the options as a "svelte" entry point'
+		);
+	}
+
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
