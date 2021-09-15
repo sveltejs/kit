@@ -13,7 +13,6 @@
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.0",
 		"@types/marked": "^2.0.2",
-		"@types/micromatch": "^4.0.2",
 		"@types/mime": "^2.0.3",
 		"@types/node": "^14.14.43",
 		"@types/rimraf": "^3.0.0",
