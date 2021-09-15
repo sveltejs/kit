@@ -275,7 +275,7 @@ async function main() {
 			try {
 				context.watcher = await dev({ cwd, port, config, host: undefined, https: false });
 				Object.assign(context, await setup({ port }));
-			} catch (e) {
+			} catch (/** @type {any} */ e) {
 				console.log(e.stack);
 				throw e;
 			}

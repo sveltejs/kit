@@ -4,9 +4,9 @@ import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { parse_body } from './parse_body/index.js';
 import { lowercase_keys } from './utils.js';
-import { coalesce_to_error } from '../utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
+import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {

@@ -81,7 +81,7 @@ test('errors on loading config with incorrect default export', async () => {
 	try {
 		const cwd = join(__dirname, 'fixtures', 'export-string');
 		await load_config({ cwd });
-	} catch (e) {
+	} catch (/** @type {any} */ e) {
 		errorMessage = e.message;
 	}
 

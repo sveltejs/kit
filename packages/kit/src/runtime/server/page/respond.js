@@ -1,7 +1,7 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { is_prerender_enabled, respond_with_error } from './respond_with_error.js';
-import { coalesce_to_error } from '../../utils.js';
+import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -30,7 +30,7 @@ export async function respond(opts) {
 
 	try {
 		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
-	} catch (/** @type {unknown} */ err) {
+	} catch (err) {
 		const error = coalesce_to_error(err);
 
 		options.handle_error(error, request);
@@ -111,7 +111,7 @@ export async function respond(opts) {
 					if (loaded.loaded.error) {
 						({ status, error } = loaded.loaded);
 					}
-				} catch (/** @type {unknown} */ err) {
+				} catch (err) {
 					const e = coalesce_to_error(err);
 
 					options.handle_error(e, request);
@@ -156,7 +156,7 @@ export async function respond(opts) {
 								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
-							} catch (/** @type {unknown} */ err) {
+							} catch (err) {
 								const e = coalesce_to_error(err);
 
 								options.handle_error(e, request);
@@ -204,7 +204,7 @@ export async function respond(opts) {
 			}),
 			set_cookie_headers
 		);
-	} catch (/** @type {unknown} */ err) {
+	} catch (err) {
 		const error = coalesce_to_error(err);
 
 		options.handle_error(error, request);
