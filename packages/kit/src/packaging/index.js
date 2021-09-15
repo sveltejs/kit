@@ -107,7 +107,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	pkg.exports = { ...generated, ...pkg.exports };
 
-	if (contains_svelte_files) {
+	if (!pkg.svelte && contains_svelte_files) {
 		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
 		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
 		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
