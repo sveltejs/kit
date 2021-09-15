@@ -27,6 +27,21 @@ export function normalize_alias(o) {
 }
 
 /**
+ * mutates and remove keys from an object when check callback returns true
+ * @param {Record<string, any>} o any object
+ * @param {([key, value]: [string, any]) => boolean} check callback with access
+ * 		to the key-value pair and returns a boolean that decides the deletion of key
+ */
+export function remove_keys(o, check) {
+	for (const key in o) {
+		if (!Object.hasOwnProperty.call(o, key)) continue;
+		if (check([key, o[key]])) delete o[key];
+		const nested = typeof o[key] === 'object' && !Array.isArray(o[key]);
+		if (nested) remove_keys(o[key], check);
+	}
+}
+
+/**
  * Merges b into a, recursively, mutating a.
  * @param {Record<string, any>} a
  * @param {Record<string, any>} b
