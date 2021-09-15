@@ -1,7 +1,8 @@
 {
 	"name": "exports-replace",
 	"version": "1.0.0",
-	"description": "default exports settings",
+	"description": "replaces exports field",
+	"type": "module",
 	"exports": {
 		".": {
 			"import": "./index.js"

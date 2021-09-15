@@ -8,6 +8,17 @@ interface ReadOnlyFormData {
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
 
+type ToJSON = { toJSON(...args: any[]): JSONValue };
+type JSONValue = Exclude<JSONString, ToJSON>;
+export type JSONString =
+	| string
+	| number
+	| boolean
+	| null
+	| ToJSON
+	| JSONString[]
+	| { [key: string]: JSONString };
+
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | string[]>;
 export type RequestHeaders = Record<string, string>;
@@ -20,12 +31,11 @@ export type MaybePromise<T> = T | Promise<T>;
 export type Rec<T = any> = Record<string, T>;
 export type RecursiveRequired<T> = {
 	// Recursive implementation of TypeScript's Required utility type.
-	// will continue until it reaches a primitive or union
-	// with a Function in it, except for the 'vite' key
-	// which we want the end result to be just a function
-	[K in keyof T]-?: Extract<T[K], Function> extends never
-		? RecursiveRequired<T[K]>
-		: K extends 'vite'
-		? Extract<T[K], Function>
-		: T[K];
+	// Will recursively continue until it reaches primitive or union
+	// with a Function in it, except those commented below
+	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+		? RecursiveRequired<T[K]> // recursively continue through.
+		: K extends 'vite' // If it reaches the 'vite' key
+		? Extract<T[K], Function> // only take the Function type.
+		: T[K]; // Use the exact type for everything else
 };

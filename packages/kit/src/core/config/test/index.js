@@ -19,7 +19,6 @@ async function testLoadDefaultConfig(path) {
 	delete config.kit.vite;
 
 	assert.equal(config, {
-		compilerOptions: null,
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
@@ -39,27 +38,33 @@ async function testLoadDefaultConfig(path) {
 			hydrate: true,
 			package: {
 				dir: 'package',
+				emitTypes: true,
 				exports: {
 					include: ['**'],
-					exclude: ['_*', '**/_*']
+					exclude: ['**/_*']
 				},
 				files: {
 					include: ['**'],
 					exclude: []
-				},
-				emitTypes: true
+				}
 			},
 			serviceWorker: {
 				exclude: []
 			},
 			paths: { base: '', assets: '' },
-			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
+			prerender: {
+				crawl: true,
+				enabled: true,
+				entries: ['*'],
+				force: undefined,
+				onError: 'fail',
+				pages: undefined
+			},
 			router: true,
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
-		},
-		preprocess: null
+		}
 	});
 }
 
@@ -76,7 +81,7 @@ test('errors on loading config with incorrect default export', async () => {
 	try {
 		const cwd = join(__dirname, 'fixtures', 'export-string');
 		await load_config({ cwd });
-	} catch (e) {
+	} catch (/** @type {any} */ e) {
 		errorMessage = e.message;
 	}
 

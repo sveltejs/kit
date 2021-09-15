@@ -10,7 +10,8 @@
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
 		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"preview:docs": "action-deploy-docs --project=kit"
+		"preview:docs": "action-deploy-docs --project=kit",
+		"changeset:version": "changeset version && pnpm i --lockfile-only"
 	},
 	"repository": {
 		"type": "git",
@@ -39,7 +40,7 @@
 		"playwright-chromium": "^1.10.0",
 		"prettier": "2.2.1",
 		"rollup": "^2.55.0",
-		"typescript": "^4.3.5"
+		"typescript": "^4.4.3"
 	},
 	"type": "module"
 }

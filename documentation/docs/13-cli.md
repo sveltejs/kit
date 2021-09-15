@@ -16,7 +16,7 @@ Starts a development server. It accepts the following options:
 
 - `-p`/`--port` — which port to start the server on
 - `-o`/`--open` — open a browser tab once the server starts
-- `-h`/`--host` — expose the server to the network. This will allow people using the same coffee shop WiFi as you to see files on your computer due to an [issue in Vite](https://github.com/vitejs/vite/issues/2820); use it with care
+- `-h`/`--host` — expose the server to the network.
 - `-H`/`--https` — launch an HTTPS server using a self-signed certificate. Useful for testing HTTPS-only features on an external device
 
 ### svelte-kit build
@@ -35,7 +35,7 @@ Like `svelte-kit dev`, it accepts the following options:
 
 - `-p`/`--port`
 - `-o`/`--open`
-- `-h`/`--host` (note the security caveat [above](#command-line-interface-svelte-kit-dev))
+- `-h`/`--host`
 - `-H`/`--https`
 
 ### svelte-kit package

@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { coalesce_to_error } from '../../utils.js';
+import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -78,7 +78,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			branch,
 			page
 		});
-	} catch (/** @type {unknown} */ err) {
+	} catch (err) {
 		const error = coalesce_to_error(err);
 
 		options.handle_error(error, request);

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 1.0.0-next.13
+
+### Patch Changes
+
+- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+
 ## 1.0.0-next.12
 
 ### Patch Changes

@@ -1,10 +1,19 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.17",
+	"version": "1.0.0-next.19",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/adapter-static"
+	},
+	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"main": "index.js",
 	"exports": {
-		"import": "./index.js"
+		".": {
+			"import": "./index.js"
+		},
+		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
 	"scripts": {
@@ -19,7 +28,7 @@
 		"playwright-chromium": "^1.10.0",
 		"port-authority": "^1.1.2",
 		"sirv": "^1.0.12",
-		"svelte": "^3.40.0",
+		"svelte": "^3.42.4",
 		"uvu": "^0.5.1"
 	}
 }

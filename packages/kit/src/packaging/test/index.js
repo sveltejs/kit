@@ -54,9 +54,7 @@ function format(file, content) {
 	if (file.endsWith('package.json')) {
 		// For some reason these are ordered differently in different test environments
 		const json = JSON.parse(content);
-		json.exports = Object.keys(json.exports)
-			.sort()
-			.map((key) => json.exports[key]);
+		json.exports = Object.entries(json.exports).sort(([ak], [bk]) => ak.localeCompare(bk));
 		content = JSON.stringify(json);
 	}
 	return prettier.format(content, {
@@ -64,6 +62,26 @@ function format(file, content) {
 		plugins: ['prettier-plugin-svelte']
 	});
 }
+
+test('standard package errors', async () => {
+	// TODO: refactor and allow this to handle multiple errors
+	const cwd = join(__dirname, 'errors', 'duplicate-export');
+	const pwd = join(cwd, 'package');
+
+	const config = await load_config({ cwd });
+	try {
+		// TODO: use assert.throws, does not seem to work with async/await
+		await make_package(config, cwd);
+	} catch (/** @type {any} */ e) {
+		assert.equal(
+			e.message,
+			'Duplicate "./utils" export. Please remove or rename either $lib/utils/index.js or $lib/utils.ts',
+			'Duplicate export are not thrown'
+		);
+	} finally {
+		rimraf(pwd);
+	}
+});
 
 test('create standard package with javascript', async () => {
 	// should also preserve filename casing
@@ -79,7 +97,11 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false');
 });
 
-test('create package with default exports settings (replace)', async () => {
+test('create package and properly merge exports map', async () => {
+	await test_make_package('exports-merge');
+});
+
+test('create package and properly exclude all exports', async () => {
 	await test_make_package('exports-replace');
 });
 

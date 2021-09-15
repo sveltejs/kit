@@ -1,5 +1,35 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.48
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- [feat] add entryPoint option for custom servers ([#2414](https://github.com/sveltejs/kit/pull/2414))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Clear output directory before adapting ([#2388](https://github.com/sveltejs/kit/pull/2388))
+
+## 1.0.0-next.45
+
+### Patch Changes
+
+- [chore] export package.json from adapters ([#2351](https://github.com/sveltejs/kit/pull/2351))
+
+## 1.0.0-next.44
+
+### Patch Changes
+
+- [feat] expose handler to allow use in custom server
+
 ## 1.0.0-next.43
 
 ### Patch Changes

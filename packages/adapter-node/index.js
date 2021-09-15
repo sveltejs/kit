@@ -22,15 +22,18 @@ const pipe = promisify(pipeline);
 
 /** @type {import('.')} */
 export default function ({
+	entryPoint = '.svelte-kit/node/index.js',
 	out = 'build',
 	precompress,
 	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
-	esbuild: esbuildConfig
+	esbuild: esbuild_config
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 
 		async adapt({ utils, config }) {
+			utils.rimraf(out);
+
 			utils.log.minor('Copying assets');
 			const static_directory = join(out, 'assets');
 			utils.copy_client_files(static_directory);
@@ -69,13 +72,13 @@ export default function ({
 					APP_DIR: `"/${config.kit.appDir}/"`
 				}
 			};
-			const buildOptions = esbuildConfig ? await esbuildConfig(defaultOptions) : defaultOptions;
-			await esbuild.build(buildOptions);
+			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;
+			await esbuild.build(build_options);
 
-			utils.log.minor('Building SvelteKit reference server');
+			utils.log.minor('Building SvelteKit server');
 			/** @type {BuildOptions} */
-			const defaultOptionsRefServer = {
-				entryPoints: ['.svelte-kit/node/index.js'],
+			const default_options_ref_server = {
+				entryPoints: [entryPoint],
 				outfile: join(out, 'index.js'),
 				bundle: true,
 				external: ['./middlewares.js'], // does not work, eslint does not exclude middlewares from target
@@ -93,10 +96,10 @@ export default function ({
 					}
 				]
 			};
-			const buildOptionsRefServer = esbuildConfig
-				? await esbuildConfig(defaultOptionsRefServer)
-				: defaultOptionsRefServer;
-			await esbuild.build(buildOptionsRefServer);
+			const build_options_ref_server = esbuild_config
+				? await esbuild_config(default_options_ref_server)
+				: default_options_ref_server;
+			await esbuild.build(build_options_ref_server);
 
 			utils.log.minor('Prerendering static pages');
 			await utils.prerender({

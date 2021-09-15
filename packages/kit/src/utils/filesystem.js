@@ -5,7 +5,7 @@ import path from 'path';
 export function mkdirp(dir) {
 	try {
 		fs.mkdirSync(dir, { recursive: true });
-	} catch (e) {
+	} catch (/** @type {any} */ e) {
 		if (e.code === 'EEXIST') return;
 		throw e;
 	}
