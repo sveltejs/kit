@@ -73,7 +73,7 @@ export async function respond(opts) {
 	let set_cookie_headers = [];
 
 	ssr: if (page_config.ssr) {
-		let context = {};
+		let stuff = {};
 
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
@@ -86,7 +86,7 @@ export async function respond(opts) {
 					loaded = await load_node({
 						...opts,
 						node,
-						context,
+						stuff,
 						prerender_enabled: is_prerender_enabled(options, node, state),
 						is_leaf: i === nodes.length - 1,
 						is_error: false
@@ -141,7 +141,7 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
 									...opts,
 									node: error_node,
-									context: node_loaded.context,
+									stuff: node_loaded.stuff,
 									prerender_enabled: is_prerender_enabled(options, error_node, state),
 									is_leaf: false,
 									is_error: true,
@@ -183,11 +183,11 @@ export async function respond(opts) {
 				}
 			}
 
-			if (loaded && loaded.loaded.context) {
+			if (loaded && loaded.loaded.stuff) {
 				// TODO come up with better names for stuff
-				context = {
-					...context,
-					...loaded.loaded.context
+				stuff = {
+					...stuff,
+					...loaded.loaded.stuff
 				};
 			}
 		}
