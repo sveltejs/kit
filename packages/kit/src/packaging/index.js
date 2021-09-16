@@ -39,6 +39,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 	/** @type {Record<string, string>} */
 	const clashes = {};
+	let contains_svelte_files = false;
 
 	for (const file of files) {
 		const ext = path.extname(file);
@@ -66,6 +67,7 @@ export async function make_package(config, cwd = process.cwd()) {
 			out_contents = config.preprocess
 				? (await preprocess(source, config.preprocess, { filename })).code
 				: source;
+			contains_svelte_files = true;
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
@@ -104,6 +106,34 @@ export async function make_package(config, cwd = process.cwd()) {
 	}
 
 	pkg.exports = { ...generated, ...pkg.exports };
+
+	if (!pkg.svelte && contains_svelte_files) {
+		// Several heuristics in Kit/vite-plugin-svelte to tell Vite to mark Svelte packages
+		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
+		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
+		if (pkg.exports['.']) {
+			const svelte_export =
+				typeof pkg.exports['.'] === 'string'
+					? pkg.exports['.']
+					: pkg.exports['.'].import || pkg.exports['.'].default;
+			if (svelte_export) {
+				pkg.svelte = svelte_export;
+			} else {
+				console.warn(
+					'Cannot generate a "svelte" entry point because ' +
+						'the "." entry in "exports" is not a string. ' +
+						'If you set it by hand, please also set one of the options as a "svelte" entry point'
+				);
+			}
+		} else {
+			console.warn(
+				'Cannot generate a "svelte" entry point because ' +
+					'the "." entry in "exports" is missing. ' +
+					'Please specify one or set a "svelte" entry point yourself'
+			);
+		}
+	}
+
 	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {

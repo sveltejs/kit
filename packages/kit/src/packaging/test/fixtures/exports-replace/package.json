@@ -7,5 +7,6 @@
 		".": {
 			"import": "./index.js"
 		}
-	}
+	},
+	"svelte": "./Test.svelte"
 }
