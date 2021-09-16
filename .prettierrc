@@ -11,6 +11,14 @@
 			"options": {
 				"svelteBracketNewLine": true
 			}
+		},
+		{
+			"files": [
+				"packages/kit/src/packaging/test/fixtures/**/expected/**/*"
+			],
+			"options": {
+				requirePragma: true
+			}
 		}
 	]
 }

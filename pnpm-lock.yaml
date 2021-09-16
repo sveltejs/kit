@@ -18,7 +18,7 @@ importers:
       eslint-plugin-import: ^2.24.2
       eslint-plugin-svelte3: ^3.2.1
       playwright-chromium: ^1.14.1
-      prettier: 2.2.1
+      prettier: ^2.4.1
       rollup: ^2.56.3
       typescript: ^4.4.3
     devDependencies:
@@ -36,7 +36,7 @@ importers:
       eslint-plugin-import: 2.24.2_eslint@7.32.0
       eslint-plugin-svelte3: 3.2.1_eslint@7.32.0
       playwright-chromium: 1.14.1
-      prettier: 2.2.1
+      prettier: 2.4.1
       rollup: 2.56.3
       typescript: 4.4.3
 
@@ -150,7 +150,7 @@ importers:
       '@types/prompts': ^2.0.14
       gitignore-parser: ^0.0.2
       kleur: ^4.1.4
-      prettier: ^2.4.0
+      prettier: ^2.4.1
       prettier-plugin-svelte: ^2.4.0
       prompts: ^2.4.1
       sucrase: ^3.20.1
@@ -166,8 +166,8 @@ importers:
       '@types/prettier': 2.3.2
       '@types/prompts': 2.0.14
       gitignore-parser: 0.0.2
-      prettier: 2.4.0
-      prettier-plugin-svelte: 2.4.0_prettier@2.4.0+svelte@3.42.6
+      prettier: 2.4.1
+      prettier-plugin-svelte: 2.4.0_prettier@2.4.1+svelte@3.42.6
       sucrase: 3.20.1
       svelte: 3.42.6
       svelte-preprocess: 4.9.4_svelte@3.42.6+typescript@4.4.3
@@ -3217,13 +3217,13 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prettier-plugin-svelte/2.4.0_prettier@2.4.0+svelte@3.42.6:
+  /prettier-plugin-svelte/2.4.0_prettier@2.4.1+svelte@3.42.6:
     resolution: {integrity: sha512-JwJ9bOz4XHLQtiLnX4mTSSDUdhu12WH8sTwy/XTDCSyPlah6IcV7NWeYBZscPEcceu2YnW8Y9sJCP40Z2UH9GA==}
     peerDependencies:
       prettier: ^1.16.4 || ^2.0.0
       svelte: ^3.2.0
     dependencies:
-      prettier: 2.4.0
+      prettier: 2.4.1
       svelte: 3.42.6
     dev: true
 
@@ -3233,14 +3233,8 @@ packages:
     hasBin: true
     dev: true
 
-  /prettier/2.2.1:
-    resolution: {integrity: sha512-PqyhM2yCjg/oKkFPtTGUojv7gnZAoG80ttl45O6x2Ug/rMJw4wcc9k6aaf2hibP7BGVCCM33gZoGjyvt9mm16Q==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-    dev: true
-
-  /prettier/2.4.0:
-    resolution: {integrity: sha512-DsEPLY1dE5HF3BxCRBmD4uYZ+5DCbvatnolqTqcxEgKVZnL2kUfyu7b8pPQ5+hTBkdhU9SLUmK0/pHb07RE4WQ==}
+  /prettier/2.4.1:
+    resolution: {integrity: sha512-9fbDAXSBcc6Bs1mZrDYb3XKzDLm4EXXL9sC1LqKP5rZkT6KRr/rf9amVUcODVXgguK/isJz0d0hP72WeaKWsvA==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
