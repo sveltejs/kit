@@ -112,19 +112,24 @@ export async function make_package(config, cwd = process.cwd()) {
 		// rely on the "svelte" property. Vite/Rollup/Webpack plugin can all deal with it.
 		// See https://github.com/sveltejs/kit/issues/1959 for more info and related threads.
 		if (pkg.exports['.']) {
-			const svelte_export = typeof pkg.exports['.'] === 'string' ? pkg.exports['.'] : undefined;
+			const svelte_export =
+				typeof pkg.exports['.'] === 'string'
+					? pkg.exports['.']
+					: pkg.exports['.'].import || pkg.exports['.'].default;
 			if (svelte_export) {
 				pkg.svelte = svelte_export;
 			} else {
 				console.warn(
-					'The "." entry in "exports" is not a string. ' +
+					'Cannot generate a "svelte" entry point because ' +
+						'the "." entry in "exports" is not a string. ' +
 						'If you set it by hand, please also set one of the options as a "svelte" entry point'
 				);
 			}
 		} else {
 			console.warn(
-				'The "." entry in "exports" is not a string. ' +
-					'If you set it by hand, please also set one of the options as a "svelte" entry point'
+				'Cannot generate a "svelte" entry point because ' +
+					'the "." entry in "exports" is missing. ' +
+					'Please specify one or set a "svelte" entry point yourself'
 			);
 		}
 	}
