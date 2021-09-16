@@ -468,7 +468,7 @@ export class Renderer {
 				dependencies: []
 			},
 			loaded: null,
-			stuff: stuff
+			stuff
 		};
 
 		/** @type {Record<string, string>} */
