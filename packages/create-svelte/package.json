@@ -18,7 +18,7 @@
 		"@types/prettier": "^2.3.2",
 		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.4.0",
+		"prettier": "^2.4.1",
 		"prettier-plugin-svelte": "^2.4.0",
 		"sucrase": "^3.20.1",
 		"svelte": "^3.42.6",
