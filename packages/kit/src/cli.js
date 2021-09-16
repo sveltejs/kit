@@ -5,6 +5,7 @@ import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error, has_error_code } from './utils/error.js';
+import { getPortPromise } from 'portfinder';
 
 async function get_config() {
 	// TODO this is temporary, for the benefit of early adopters
@@ -76,15 +77,17 @@ async function launch(port, https) {
 
 const prog = sade('svelte-kit').version('__VERSION__');
 
+const default_port = 3000;
+
 prog
 	.command('dev')
 	.describe('Start a development server')
-	.option('-p, --port', 'Port', 3000)
+	.option('-p, --port', 'Port', default_port)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
+		port = await get_usable_port(port);
 
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
@@ -146,12 +149,12 @@ prog
 prog
 	.command('preview')
 	.describe('Serve an already-built app')
-	.option('-p, --port', 'Port', 3000)
+	.option('-p, --port', 'Port', default_port)
 	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
+		port = await get_usable_port(port);
 
 		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 		const config = await get_config();
@@ -186,9 +189,12 @@ prog
 prog.parse(process.argv, { unknown: (arg) => `Unknown option: ${arg}` });
 
 /** @param {number} port */
-async function check_port(port) {
-	if (await ports.check(port)) {
-		return;
+async function get_usable_port(port) {
+	// If port is deafult (3000), try to find a free port.
+	const usable_port = port === default_port ? await getPortPromise({ port }) : port;
+
+	if (await ports.check(usable_port)) {
+		return usable_port;
 	}
 	console.log(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
