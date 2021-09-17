@@ -1,3 +1,5 @@
+import { dev } from './app/env';
+
 /**
  * @param {import('types/page').LoadOutput} loaded
  * @returns {import('types/internal').NormalizedLoadOutput}
@@ -50,6 +52,13 @@ export function normalize(loaded) {
 				error: new Error('"redirect" property returned from load() must be a string')
 			};
 		}
+	}
+
+	if (dev && /** @type {any} */ (loaded).context) {
+		console.warn(
+			'You are returning "context" from a load function. ' +
+				'"context" was renamed to "stuff", please adjust your code accordingly.'
+		);
 	}
 
 	return /** @type {import('types/internal').NormalizedLoadOutput} */ (loaded);
