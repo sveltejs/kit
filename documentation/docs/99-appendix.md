@@ -22,7 +22,7 @@ Pre-rendered pages are not limited to static content. You can build personalized
 
 ### SSG
 
-Static Site Generation (SSG) is a term that refers to a site where every page is prerendered. This is what SvelteKit's `adapter-static` does. SvelteKit was not built to do only static site generation like some tools and so may not scale as well to efficiently render a very large number of pages as tools built specifically for that purpose. However, in contrast to most purpose-built SSGs, SvelteKit does nicely allow for mixing and matching different rendering types on different pages. One benefit of fully prerendering a site is that you do not need to maintain or pay for servers to perform SSR. Once generated, the site can be served from CDNs, leading to great "time to first byte" performance. This delivery model is often referred to as JAMstack.
+Static Site Generation (SSG) is a term that refers to a site where every page is prerendered. This is what SvelteKit's `adapter-static` does. SvelteKit was not built to do only static site generation like some tools and so may not scale as well to efficiently render a very large number of pages as tools built specifically for that purpose. However, in contrast to most purpose-built SSGs, SvelteKit does nicely allow for mixing and matching different rendering types on different pages. One benefit of fully prerendering a site is that you do not need to maintain or pay for servers to perform SSG. Once generated, the site can be served from CDNs, leading to great "time to first byte" performance. This delivery model is often referred to as JAMstack.
 
 ### Hydration
 
