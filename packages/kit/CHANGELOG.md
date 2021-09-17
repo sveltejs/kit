@@ -1,10 +1,30 @@
 # @sveltejs/kit
 
+## 1.0.0-next.168
+
+### Patch Changes
+
+- [fix] encodeURI during prerender ([#2427](https://github.com/sveltejs/kit/pull/2427))
+
+* [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 1.0.0-next.167
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.24 ([#2423](https://github.com/sveltejs/kit/pull/2423))
+
+* Add a generic argument to allow typing Body from hooks ([#2413](https://github.com/sveltejs/kit/pull/2413))
+
 ## 1.0.0-next.166
 
 ### Patch Changes
 
-- [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+- [chore] upgrade Vite to 2.5.7
+
+* [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+- Update vite-plugin-svelte to 1.0.0-next.23 ([#2402](https://github.com/sveltejs/kit/pull/2402))
 
 * [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
 
