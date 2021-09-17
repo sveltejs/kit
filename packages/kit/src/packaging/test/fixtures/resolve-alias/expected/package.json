@@ -10,5 +10,6 @@
 		"./baz": "./baz.js",
 		"./sub/bar": "./sub/bar.js",
 		"./sub/foo": "./sub/foo.js"
-	}
+	},
+	"svelte": "./index.js"
 }
