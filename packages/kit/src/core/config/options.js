@@ -75,6 +75,7 @@ const options = object(
 
 			package: object({
 				dir: string('package'),
+				// excludes all .d.ts and filename starting with _
 				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
 				files: fun(() => true),
 				emitTypes: boolean(true)
