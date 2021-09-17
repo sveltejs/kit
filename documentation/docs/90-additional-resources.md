@@ -10,7 +10,7 @@ The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://
 
 ### Integrations
 
-[Svelte Adders](https://sveltesociety.dev/templates#category-Svelte%20Add) allow you to setup many different integrations with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit. The SvelteKit FAQ also has a [section on integrations](faq#integrations), which may be helpful if you run into any issues.
+[Svelte Adders](https://sveltesociety.dev/templates#category-Svelte%20Add) allow you to setup many different integrations with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit. The SvelteKit FAQ also has a [section on integrations](/faq#integrations), which may be helpful if you run into any issues.
 
 ### Support
 
