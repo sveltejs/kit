@@ -1,4 +1,4 @@
-import { dev } from './app/env';
+import { dev } from './app/env.js';
 
 /**
  * @param {import('types/page').LoadOutput} loaded
