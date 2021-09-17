@@ -2,6 +2,7 @@ import devalue from 'devalue';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
+import { create_page_proxy } from './load_node.js';
 
 const s = JSON.stringify;
 
@@ -13,6 +14,7 @@ const s = JSON.stringify;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
+ *   prerender_enabled: boolean,
  *   status: number;
  *   error?: Error,
  *   page?: import('types/page').Page
@@ -23,6 +25,7 @@ export async function render_response({
 	options,
 	$session,
 	page_config,
+	prerender_enabled,
 	status,
 	error,
 	page
@@ -43,6 +46,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
+	const query = page ? s(page.query.toString()) : '';
 	if (page_config.ssr) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));
@@ -66,7 +70,7 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page,
+			page: prerender_enabled && page ? create_page_proxy(page) : page,
 			components: branch.map(({ node }) => node.module.default)
 		};
 
@@ -137,7 +141,7 @@ export async function render_response({
 					page: {
 						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
 						path: ${s(page && page.path)},
-						query: new URLSearchParams(${page ? s(page.query.toString()) : ''}),
+						query: new URLSearchParams(${query}),
 						params: ${page && s(page.params)}
 					}
 				}` : 'null'}

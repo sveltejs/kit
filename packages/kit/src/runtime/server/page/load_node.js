@@ -56,19 +56,10 @@ export async function load_node({
 
 	let loaded;
 
-	const page_proxy = new Proxy(page, {
-		get: (target, prop, receiver) => {
-			if (prop === 'query' && prerender_enabled) {
-				throw new Error('Cannot access query on a page with prerendering enabled');
-			}
-			return Reflect.get(target, prop, receiver);
-		}
-	});
-
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			page: page_proxy,
+			page: prerender_enabled ? create_page_proxy(page) : page,
 			get session() {
 				uses_credentials = true;
 				return $session;
@@ -376,4 +367,19 @@ export function resolve(base, path) {
 	const prefix = (path_match && path_match[0]) || (base_match && base_match[0]) || '';
 
 	return `${prefix}${baseparts.join('/')}`;
+}
+
+/**
+ * @param {import('types/page').Page} page
+ * @returns
+ */
+export function create_page_proxy(page) {
+	return new Proxy(page, {
+		get: (target, prop, receiver) => {
+			if (prop === 'query') {
+				throw new Error('Cannot access query on a page with prerendering enabled');
+			}
+			return Reflect.get(target, prop, receiver);
+		}
+	});
 }

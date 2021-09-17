@@ -46,11 +46,12 @@ export async function respond(opts) {
 	}
 
 	// the leaf node will be present. only layouts may be undefined
-	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
+	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]);
+	const prerender_enabled = is_prerender_enabled(options, leaf, state);
 
-	let page_config = get_page_config(leaf, options);
+	let page_config = get_page_config(leaf.module, options);
 
-	if (!leaf.prerender && state.prerender && !state.prerender.all) {
+	if (!leaf.module.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
 		return {
@@ -87,7 +88,7 @@ export async function respond(opts) {
 						...opts,
 						node,
 						context,
-						prerender_enabled: is_prerender_enabled(options, node, state),
+						prerender_enabled,
 						is_leaf: i === nodes.length - 1,
 						is_error: false
 					});
@@ -198,6 +199,7 @@ export async function respond(opts) {
 			await render_response({
 				...opts,
 				page_config,
+				prerender_enabled,
 				status,
 				error,
 				branch: branch.filter(Boolean)

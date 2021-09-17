@@ -30,6 +30,8 @@ export async function respond_with_error({ request, options, state, $session, st
 		params: {}
 	};
 
+	const prerender_enabled = is_prerender_enabled(options, default_error, state);
+
 	// error pages don't fall through, so we know it's not undefined
 	const loaded = /** @type {Loaded} */ (await load_node({
 		request,
@@ -40,7 +42,7 @@ export async function respond_with_error({ request, options, state, $session, st
 		node: default_layout,
 		$session,
 		context: {},
-		prerender_enabled: is_prerender_enabled(options, default_error, state),
+		prerender_enabled,
 		is_leaf: false,
 		is_error: false
 	}));
@@ -56,7 +58,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			node: default_error,
 			$session,
 			context: loaded ? loaded.context : {},
-			prerender_enabled: is_prerender_enabled(options, default_error, state),
+			prerender_enabled,
 			is_leaf: false,
 			is_error: true,
 			status,
@@ -73,6 +75,7 @@ export async function respond_with_error({ request, options, state, $session, st
 				router: options.router,
 				ssr: options.ssr
 			},
+			prerender_enabled,
 			status,
 			error,
 			branch,

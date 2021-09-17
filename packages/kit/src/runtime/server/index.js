@@ -49,6 +49,7 @@ export async function respond(incoming, options, state = {}) {
 						options,
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
+						prerender_enabled: true,
 						status: 200,
 						branch: []
 					});
