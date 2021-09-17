@@ -2,9 +2,41 @@
 question: How do I use X with SvelteKit?
 ---
 
-### How do I use Firebase?
+Make sure you've read the [documentation section on integrations](/docs#additional-resources-integrations). If you're still having trouble, solutions to common issues are listed below.
 
-Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
+### How do I setup a database?
+
+Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+
+### How do I use middleware?
+
+`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
+
+```js
+const myPlugin = {
+  name: 'log-request-middleware',
+  configureServer(server) {
+    server.middlewares.use((req, res, next) => {
+      console.log(`Got request ${req.url}`);
+      next();
+    })
+  }
+}
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		target: '#svelte',
+		vite: {
+			plugins: [ myPlugin ]
+		}
+	}
+};
+
+export default config;
+```
+
+See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
@@ -53,39 +85,9 @@ onMount(() => {
 });
 ```
 
-### How do I setup a database?
+### How do I use Firebase?
 
-Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
-
-### How do I use middleware?
-
-`adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
-
-```js
-const myPlugin = {
-  name: 'log-request-middleware',
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
-      console.log(`Got request ${req.url}`);
-      next();
-    })
-  }
-}
-
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-	kit: {
-		target: '#svelte',
-		vite: {
-			plugins: [ myPlugin ]
-		}
-	}
-};
-
-export default config;
-```
-
-See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
+Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
 
 ### Does it work with Yarn 2?
 
