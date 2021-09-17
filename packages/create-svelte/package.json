@@ -15,15 +15,15 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.2.3",
-		"@types/prompts": "^2.0.11",
+		"@types/prettier": "^2.3.2",
+		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.2.1",
-		"prettier-plugin-svelte": "^2.2.0",
-		"sucrase": "^3.18.1",
-		"svelte": "^3.42.4",
-		"svelte-preprocess": "^4.9.0",
-		"tiny-glob": "^0.2.8"
+		"prettier": "^2.4.1",
+		"prettier-plugin-svelte": "^2.4.0",
+		"sucrase": "^3.20.1",
+		"svelte": "^3.42.6",
+		"svelte-preprocess": "^4.9.4",
+		"tiny-glob": "^0.2.9"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",

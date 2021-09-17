@@ -11,13 +11,13 @@
 		"@sveltejs/adapter-netlify": "next",
 		"@sveltejs/adapter-vercel": "next",
 		"@sveltejs/kit": "next",
-		"svelte": "^3.42.4",
-		"svelte-preprocess": "^4.9.0",
-		"typescript": "^4.4.0"
+		"svelte": "^3.42.6",
+		"svelte-preprocess": "^4.9.4",
+		"typescript": "^4.4.3"
 	},
 	"type": "module",
 	"dependencies": {
-		"@fontsource/fira-mono": "^4.2.2",
+		"@fontsource/fira-mono": "^4.5.0",
 		"@lukeed/uuid": "^2.0.0",
 		"cookie": "^0.4.1"
 	}

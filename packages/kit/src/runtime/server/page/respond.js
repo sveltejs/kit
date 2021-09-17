@@ -138,16 +138,18 @@ export async function respond(opts) {
 
 							try {
 								// there's no fallthough on an error page, so we know it's not undefined
-								const error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
-									...opts,
-									node: error_node,
-									context: node_loaded.context,
-									prerender_enabled: is_prerender_enabled(options, error_node, state),
-									is_leaf: false,
-									is_error: true,
-									status,
-									error
-								}));
+								const error_loaded = /** @type {import('./types').Loaded} */ (
+									await load_node({
+										...opts,
+										node: error_node,
+										context: node_loaded.context,
+										prerender_enabled: is_prerender_enabled(options, error_node, state),
+										is_leaf: false,
+										is_error: true,
+										status,
+										error
+									})
+								);
 
 								if (error_loaded.loaded.error) {
 									continue;

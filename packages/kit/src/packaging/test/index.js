@@ -35,10 +35,14 @@ async function test_make_package(path) {
 		);
 
 		for (const file of actual_files) {
-			assert.equal(expected_files.includes(file), true, `Did not expect ${file}`);
+			assert.equal(expected_files.includes(file), true, `Did not expect ${file} in ${path}`);
 			const expected_content = format(file, readFileSync(join(ewd, file), 'utf-8'));
 			const actual_content = format(file, readFileSync(join(pwd, file), 'utf-8'));
-			assert.equal(actual_content, expected_content, `Expected equal file contents for ${file}`);
+			assert.fixture(
+				actual_content,
+				expected_content,
+				`Expected equal file contents for ${file} in ${path}`
+			);
 		}
 	} finally {
 		rimraf(pwd);

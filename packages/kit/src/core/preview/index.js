@@ -89,8 +89,9 @@ export async function preview({
 			const rendered =
 				parsed.pathname.startsWith(config.kit.paths.base) &&
 				(await app.render({
-					host: /** @type {string} */ (config.kit.host ||
-						req.headers[config.kit.hostHeader || 'host']),
+					host: /** @type {string} */ (
+						config.kit.host || req.headers[config.kit.hostHeader || 'host']
+					),
 					method: req.method,
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 					path: parsed.pathname.replace(config.kit.paths.base, ''),
