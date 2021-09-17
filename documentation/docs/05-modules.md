@@ -78,7 +78,7 @@ import { build, files, timestamp } from '$service-worker';
 
 ### @sveltejs/kit/hooks
 
-This modules provides a helper function to sequence multiple `handle` calls.
+This module provides a helper function to sequence multiple `handle` calls.
 
 ```js
 import { sequence } from '@sveltejs/kit/hooks';

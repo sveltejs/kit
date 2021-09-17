@@ -4,13 +4,15 @@ import mime from 'mime';
 import { posixify } from '../utils.js';
 import glob from 'tiny-glob/sync.js';
 
-/** @typedef {{
+/**
+ * A portion of a file or directory name where the name has been split into
+ * static and dynamic parts
+ * @typedef {{
  *   content: string;
  *   dynamic: boolean;
  *   spread: boolean;
- * }} Part */
-
-/** @typedef {{
+ * }} Part
+ * @typedef {{
  *   basename: string;
  *   ext: string;
  *   parts: Part[],
@@ -19,7 +21,8 @@ import glob from 'tiny-glob/sync.js';
  *   is_index: boolean;
  *   is_page: boolean;
  *   route_suffix: string
- * }} Item */
+ * }} Item
+ */
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
 
@@ -389,10 +392,22 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: encodeURIComponent(part.content.normalize()).replace(
-											/[.*+?^${}()|[\]\\]/g,
-											'\\$&'
-									  );
+									: // allow users to specify characters on the file system in an encoded manner
+									  part.content
+											.normalize()
+											// We use [ and ] to denote parameters, so users must encode these on the file
+											// system to match against them. We don't decode all characters since others
+											// can already be epressed and so that '%' can be easily used directly in filenames
+											.replace(/%5[Bb]/g, '[')
+											.replace(/%5[Dd]/g, ']')
+											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
+											// They will not be touched by decodeURI so need to be encoded here, so
+											// that we can match against them.
+											// We skip '/' since you can't create a file with it on any OS
+											.replace(/#/g, '%23')
+											.replace(/\?/g, '%3F')
+											// escape characters that have special meaning in regex
+											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 							})
 							.join('');
 		})
