@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.169
+
+### Patch Changes
+
+- Add "svelte" field to package.json when running package command ([#2431](https://github.com/sveltejs/kit/pull/2431))
+
+* [fix] revert #2354 and fix double character decoding a different way ([#2435](https://github.com/sveltejs/kit/pull/2435))
+
+- [feat] use the Vite server options in dev mode ([#2232](https://github.com/sveltejs/kit/pull/2232))
+
+* update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+
 ## 1.0.0-next.168
 
 ### Patch Changes

@@ -28,9 +28,7 @@ export interface SSRComponent {
 	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
-		render(
-			props: Record<string, any>
-		): {
+		render(props: Record<string, any>): {
 			html: string;
 			head: string;
 			css: {

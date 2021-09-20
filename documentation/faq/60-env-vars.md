@@ -2,7 +2,7 @@
 question: How do I use environment variables?
 ---
 
-Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. Only environment variables prefixed with `VITE_` are exposed. You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`. We hope to see all environment variables exposed on the server-side [in the future](https://github.com/vitejs/vite/issues/3176).
+Vite uses [dotenv](https://github.com/motdotla/dotenv) to load environment variables from a file named `.env` or similar. Only environment variables prefixed with `VITE_` are exposed ([you can set `envPrefix` to change this](https://vitejs.dev/config/#envprefix)). You would need to instantiate dotenv yourself if you want all environment variables exposed in `process.env['YOUR_ENV_VAR']`. We hope to see all environment variables exposed on the server-side [in the future](https://github.com/vitejs/vite/issues/3176).
 
 [Environment variables cannot be used directly in Svelte templates](https://github.com/sveltejs/kit/issues/720) due [an issue in the way Vite's define plugin works](https://github.com/vitejs/vite/issues/3176).
 
