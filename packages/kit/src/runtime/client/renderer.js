@@ -392,6 +392,7 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
+			redirect: branch.find((b) => b?.loaded?.redirect)?.loaded?.redirect,
 			state: {
 				page,
 				branch,
