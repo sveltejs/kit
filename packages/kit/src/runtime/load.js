@@ -1,5 +1,3 @@
-import { dev } from './app/env.js';
-
 /**
  * @param {import('types/page').LoadOutput} loaded
  * @returns {import('types/internal').NormalizedLoadOutput}
@@ -54,8 +52,9 @@ export function normalize(loaded) {
 		}
 	}
 
-	if (dev && /** @type {any} */ (loaded).context) {
-		console.warn(
+	// TODO remove before 1.0
+	if (/** @type {any} */ (loaded).context) {
+		throw new Error(
 			'You are returning "context" from a load function. ' +
 				'"context" was renamed to "stuff", please adjust your code accordingly.'
 		);
