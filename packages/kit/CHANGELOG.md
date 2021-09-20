@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.170
+
+### Patch Changes
+
+- Fix prerendering/adapter-static failing when `kit.paths.base` was set. ([#2407](https://github.com/sveltejs/kit/pull/2407))
+
 ## 1.0.0-next.169
 
 ### Patch Changes
