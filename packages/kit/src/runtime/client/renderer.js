@@ -393,7 +393,7 @@ export class Renderer {
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
-			redirect: (redirect && redirect.loaded) ? redirect.loaded.redirect : undefined,
+			redirect: redirect && redirect.loaded ? redirect.loaded.redirect : undefined,
 			state: {
 				page,
 				branch,
