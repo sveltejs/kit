@@ -1,9 +1,15 @@
 <script context="module">
+	import { browser } from '$app/env';
+
 	export async function load() {
-		return {
-			status: 303,
-			redirect: '/redirect-on-load/redirected'
-		};
+		if (browser) {
+			return {
+				status: 303,
+				redirect: '/redirect-on-load/redirected'
+			};
+		}
+
+		return {};
 	}
 </script>
 
