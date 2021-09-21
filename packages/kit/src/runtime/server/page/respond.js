@@ -186,7 +186,6 @@ export async function respond(opts) {
 			}
 
 			if (loaded && loaded.loaded.stuff) {
-				// TODO come up with better names for stuff
 				stuff = {
 					...stuff,
 					...loaded.loaded.stuff
