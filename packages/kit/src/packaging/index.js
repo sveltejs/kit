@@ -14,11 +14,19 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
-	rimraf(path.join(cwd, config.kit.package.dir));
+	const abs_package_dir = path.join(cwd, config.kit.package.dir);
+	rimraf(abs_package_dir);
 
 	if (config.kit.package.emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
 		await emit_dts(config);
+		// Resolve aliases, TS leaves them as-is
+		const files = walk(abs_package_dir);
+		for (const file of files) {
+			const filename = path.join(abs_package_dir, file);
+			const source = fs.readFileSync(filename, 'utf8');
+			fs.writeFileSync(filename, resolve_$lib_alias(file, source, config));
+		}
 	}
 
 	const files_filter = create_filter(config.kit.package.files);
@@ -47,7 +55,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		if (!files_filter(file.replace(/\\/g, '/'))) {
 			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
-			const dts_path = path.join(cwd, config.kit.package.dir, dts_file);
+			const dts_path = path.join(abs_package_dir, dts_file);
 			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
 			continue;
 		}
@@ -72,7 +80,7 @@ export async function make_package(config, cwd = process.cwd()) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
 			out_contents = source;
-			if (fs.existsSync(path.join(cwd, config.kit.package.dir, out_file))) {
+			if (fs.existsSync(path.join(abs_package_dir, out_file))) {
 				console.warn(
 					'Found already existing file from d.ts generation for ' +
 						out_file +
@@ -86,8 +94,9 @@ export async function make_package(config, cwd = process.cwd()) {
 			out_file = file;
 			out_contents = source;
 		}
+		out_contents = resolve_$lib_alias(out_file, out_contents, config);
 
-		write(path.join(cwd, config.kit.package.dir, out_file), out_contents);
+		write(path.join(abs_package_dir, out_file), out_contents);
 
 		if (exports_filter(file)) {
 			const original = `$lib/${file.replace(/\\/g, '/')}`;
@@ -134,7 +143,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 	}
 
-	write(path.join(cwd, config.kit.package.dir, 'package.json'), JSON.stringify(pkg, null, '  '));
+	write(path.join(abs_package_dir, 'package.json'), JSON.stringify(pkg, null, '  '));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
@@ -144,9 +153,44 @@ export async function make_package(config, cwd = process.cwd()) {
 		const full_path = path.join(cwd, pathname);
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
-		const package_path = path.join(cwd, config.kit.package.dir, pathname);
+		const package_path = path.join(abs_package_dir, pathname);
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
+}
+
+/**
+ * Resolves the `$lib` alias.
+ *
+ * TODO: make this more generic to also handle other aliases the user could have defined
+ * via `kit.vite.resolve.alias`. Also investage how to do this in a more robust way
+ * (right now regex string replacement is used).
+ * For more discussion see https://github.com/sveltejs/kit/pull/2453
+ *
+ * @param {string} file Relative to the lib root
+ * @param {string} content
+ * @param {import('types/config').ValidatedConfig} config
+ * @returns {string}
+ */
+function resolve_$lib_alias(file, content, config) {
+	/**
+	 * @param {string} match
+	 * @param {string} _
+	 * @param {string} import_path
+	 */
+	const replace_import_path = (match, _, import_path) => {
+		if (!import_path.startsWith('$lib/')) {
+			return match;
+		}
+
+		const full_path = path.join(config.kit.files.lib, file);
+		const full_import_path = path.join(config.kit.files.lib, import_path.slice('$lib/'.length));
+		let resolved = path.relative(path.dirname(full_path), full_import_path).replace(/\\/g, '/');
+		resolved = resolved.startsWith('.') ? resolved : './' + resolved;
+		return match.replace(import_path, resolved);
+	};
+	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
+	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
+	return content;
 }
 
 /**
