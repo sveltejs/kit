@@ -40,7 +40,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			page,
 			node: default_layout,
 			$session,
-			context: {},
+			stuff: {},
 			prerender_enabled: is_prerender_enabled(options, default_error, state),
 			is_leaf: false,
 			is_error: false
@@ -58,7 +58,7 @@ export async function respond_with_error({ request, options, state, $session, st
 				page,
 				node: default_error,
 				$session,
-				context: loaded ? loaded.context : {},
+				stuff: loaded ? loaded.stuff : {},
 				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_leaf: false,
 				is_error: true,

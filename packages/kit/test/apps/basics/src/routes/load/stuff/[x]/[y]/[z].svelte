@@ -1,9 +1,9 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, context }) {
+	export async function load({ page, stuff }) {
 		return {
 			props: {
-				...context,
+				...stuff,
 				z: page.params.z
 			}
 		};

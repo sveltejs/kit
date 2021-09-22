@@ -139,7 +139,7 @@ export class Renderer {
 		const branch = [];
 
 		/** @type {Record<string, any>} */
-		let context = {};
+		let stuff = {};
 
 		/** @type {import('./types').NavigationResult | undefined} */
 		let result;
@@ -153,7 +153,7 @@ export class Renderer {
 				const node = await this._load_node({
 					module: await nodes[i],
 					page,
-					context,
+					stuff,
 					status: is_leaf ? status : undefined,
 					error: is_leaf ? error : undefined
 				});
@@ -169,10 +169,10 @@ export class Renderer {
 							path: page.path,
 							query: page.query
 						};
-					} else if (node.loaded.context) {
-						context = {
-							...context,
-							...node.loaded.context
+					} else if (node.loaded.stuff) {
+						stuff = {
+							...stuff,
+							...node.loaded.stuff
 						};
 					}
 				}
@@ -451,11 +451,11 @@ export class Renderer {
 	 *   error?: Error;
 	 *   module: CSRComponent;
 	 *   page: import('types/page').Page;
-	 *   context: Record<string, any>;
+	 *   stuff: Record<string, any>;
 	 * }} options
 	 * @returns
 	 */
-	async _load_node({ status, error, module, page, context }) {
+	async _load_node({ status, error, module, page, stuff }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -464,11 +464,11 @@ export class Renderer {
 				path: false,
 				query: false,
 				session: false,
-				context: false,
+				stuff: false,
 				dependencies: []
 			},
 			loaded: null,
-			context
+			stuff
 		};
 
 		/** @type {Record<string, string>} */
@@ -506,9 +506,9 @@ export class Renderer {
 					node.uses.session = true;
 					return session;
 				},
-				get context() {
-					node.uses.context = true;
-					return { ...context };
+				get stuff() {
+					node.uses.stuff = true;
+					return { ...stuff };
 				},
 				fetch(resource, info) {
 					const url = typeof resource === 'string' ? resource : resource.url;
@@ -530,7 +530,7 @@ export class Renderer {
 			if (!loaded) return;
 
 			node.loaded = normalize(loaded);
-			if (node.loaded.context) node.context = node.loaded.context;
+			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 		}
 
 		return node;
@@ -569,8 +569,8 @@ export class Renderer {
 		let branch = [];
 
 		/** @type {Record<string, any>} */
-		let context = {};
-		let context_changed = false;
+		let stuff = {};
+		let stuff_changed = false;
 
 		/** @type {number | undefined} */
 		let status = 200;
@@ -599,13 +599,13 @@ export class Renderer {
 					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
 					previous.uses.dependencies.some((dep) => this.invalid.has(dep)) ||
-					(context_changed && previous.uses.context);
+					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
 					node = await this._load_node({
 						module,
 						page,
-						context
+						stuff
 					});
 
 					const is_leaf = i === a.length - 1;
@@ -624,8 +624,8 @@ export class Renderer {
 							};
 						}
 
-						if (node.loaded.context) {
-							context_changed = true;
+						if (node.loaded.stuff) {
+							stuff_changed = true;
 						}
 					} else if (is_leaf && module.load) {
 						// if the leaf node has a `load` function
@@ -658,7 +658,7 @@ export class Renderer {
 								error,
 								module: await b[i](),
 								page,
-								context: node_loaded.context
+								stuff: node_loaded.stuff
 							});
 
 							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
@@ -680,10 +680,10 @@ export class Renderer {
 					query
 				});
 			} else {
-				if (node && node.loaded && node.loaded.context) {
-					context = {
-						...context,
-						...node.loaded.context
+				if (node && node.loaded && node.loaded.stuff) {
+					stuff = {
+						...stuff,
+						...node.loaded.stuff
 					};
 				}
 
@@ -713,7 +713,7 @@ export class Renderer {
 		const node = await this._load_node({
 			module: await this.fallback[0],
 			page,
-			context: {}
+			stuff: {}
 		});
 
 		const branch = [
@@ -723,7 +723,7 @@ export class Renderer {
 				error,
 				module: await this.fallback[1],
 				page,
-				context: (node && node.loaded && node.loaded.context) || {}
+				stuff: (node && node.loaded && node.loaded.stuff) || {}
 			})
 		];
 

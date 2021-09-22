@@ -29,10 +29,10 @@ export type BranchNode = {
 		path: boolean;
 		query: boolean;
 		session: boolean;
-		context: boolean;
+		stuff: boolean;
 		dependencies: string[];
 	};
-	context: Record<string, any>;
+	stuff: Record<string, any>;
 };
 
 export type NavigationState = {
