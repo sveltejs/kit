@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.171
+
+### Patch Changes
+
+- Fix preview when `kit.paths.base` is set. ([#2409](https://github.com/sveltejs/kit/pull/2409))
+
+* Resolve \$lib alias when packaging ([#2453](https://github.com/sveltejs/kit/pull/2453))
+
 ## 1.0.0-next.170
 
 ### Patch Changes
