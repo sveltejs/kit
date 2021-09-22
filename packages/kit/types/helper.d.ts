@@ -27,6 +27,11 @@ export type RequestHeaders = Record<string, string>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
+
+export type I18n = {
+	locales: string[];
+	defaultLocale: string;
+}
 export type MaybePromise<T> = T | Promise<T>;
 export type Rec<T = any> = Record<string, T>;
 export type RecursiveRequired<T> = {

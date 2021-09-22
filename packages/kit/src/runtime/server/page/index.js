@@ -24,6 +24,7 @@ export async function render_page(request, route, match, options, state) {
 		host: request.host,
 		path: request.path,
 		query: request.query,
+		lang: route.lang,
 		params
 	};
 

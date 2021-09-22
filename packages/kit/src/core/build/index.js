@@ -351,6 +351,9 @@ async function build_server(
 					template,
 					trailing_slash: ${s(config.kit.trailingSlash)}
 				};
+				${config.kit.i18n
+					? `options.i18n = ${s(config.kit.i18n)};`
+					: ''}
 			}
 
 			// input has already been decoded by decodeURI
@@ -384,6 +387,7 @@ async function build_server(
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
+									lang: '${route.lang}',
 									a: [${route.a.map(file => file && s(file)).join(', ')}],
 									b: [${route.b.map(file => file && s(file)).join(', ')}]
 								}`;

@@ -67,6 +67,18 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
+	/**
+	 * Programmatically switches locale to the specified lang.
+	 *
+	 * 1. locales will be removed from current URL
+	 * 2. url will be prefixed if lang is not defaultLocale
+	 * 3. will call goto
+	 */
+	export function switchLocalePath(lang: string): Promise<any>;
+	/**
+	 * Returns the route prefixed with current lang
+	 */
+	export function i18nRoute(lang: string, route: string): string;
 }
 
 declare module '$app/paths' {
@@ -84,15 +96,17 @@ declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
 	import { Page } from '@sveltejs/kit';
 	type Navigating = { from: Page; to: Page };
+	type I18n = import('@sveltejs/kit').I18n;
 
 	/**
-	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
+	 * A convenience function around `getContext` that returns `{ navigating, page, session, i18n? }`.
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
 		session: Writable<Session>;
+		i18n: Readable<I18n>;
 	};
 	/**
 	 * A readable store whose value reflects the object passed to load functions.
@@ -109,6 +123,11 @@ declare module '$app/stores' {
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<any>;
+	/**
+	 * A readable store.
+	 * Can retrieve defaultLocale and locales from settings
+	 */
+	export const i18n: Readable<I18n>;
 }
 
 declare module '$service-worker' {

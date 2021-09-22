@@ -242,18 +242,58 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				errors.splice(i + 1);
 
-				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: '';
+				/**
+				 * @param {Part[][]} segments
+				 * @returns {string}
+				 */
+				const makePathFromSegments = (segments) =>
+					segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+						? `/${segments.map((segment) => segment[0].content).join('/')}`
+						: '';
 
-				routes.push({
+				const path = makePathFromSegments(segments);
+
+				/** @type {import('types/internal').RouteData} */
+				const baseRoute = {
 					type: 'page',
 					pattern,
 					params,
 					path,
 					a: /** @type {string[]} */ (concatenated),
 					b: /** @type {string[]} */ (errors)
-				});
+				};
+				const i18n = config.kit.i18n;
+				// @ts-ignore
+				if (i18n) baseRoute.lang = i18n.defaultLocale;
+
+				routes.push(baseRoute);
+
+				if (i18n) {
+					i18n.locales
+						.filter((locale) => locale !== i18n.defaultLocale)
+						.forEach((locale) => {
+							const i18nSegments = [
+								[
+									{
+										content: locale,
+										dynamic: false,
+										spread: false
+									}
+								],
+								...segments
+							];
+							const pattern = get_pattern(i18nSegments, true);
+							routes.push({
+								type: 'page',
+								pattern,
+								params,
+								path: `/${locale}${path}`,
+								a: /** @type {string[]} */ (concatenated),
+								b: /** @type {string[]} */ (errors),
+								lang: locale
+							});
+						});
+				}
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
 

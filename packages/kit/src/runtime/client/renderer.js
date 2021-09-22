@@ -69,11 +69,13 @@ export class Renderer {
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
+	 *   i18n: {defaultLocale?: string, locales?: string[]}
 	 * }} opts */
-	constructor({ Root, fallback, target, session, host }) {
+	constructor({ Root, fallback, target, session, host, i18n }) {
 		this.Root = Root;
 		this.fallback = fallback;
 		this.host = host;
+		this.i18n = i18n;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
@@ -106,7 +108,8 @@ export class Renderer {
 		this.stores = {
 			page: page_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: writable(session)
+			session: writable(session),
+			i18n: writable(i18n)
 		};
 
 		this.$session = null;
@@ -516,7 +519,8 @@ export class Renderer {
 					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				}
+				},
+				lang: page.lang
 			};
 
 			if (error) {
@@ -549,7 +553,7 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params] = route;
+		const [pattern, a, b, get_params, lang] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(decoded_path)))
@@ -564,6 +568,7 @@ export class Renderer {
 
 		/** @type {import('types/page').Page} */
 		const page = { host: this.host, path, query, params };
+		if (lang) page.lang = lang;
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		let branch = [];

@@ -183,6 +183,7 @@ class Watcher extends EventEmitter {
 						type: 'page',
 						pattern: route.pattern,
 						params: get_params(route.params),
+						lang: route.lang,
 						a: route.a,
 						b: route.b
 					};
@@ -484,7 +485,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 
 							return rendered;
 						},
-						trailing_slash: config.kit.trailingSlash
+						trailing_slash: config.kit.trailingSlash,
+						i18n: config.kit.i18n
 					}
 				);
 

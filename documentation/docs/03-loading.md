@@ -22,6 +22,7 @@ export interface LoadInput<
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	context: Context;
+	lang: string;
 }
 
 export interface LoadOutput<

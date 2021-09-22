@@ -5,6 +5,7 @@ import './ambient-modules';
 
 export { App, IncomingRequest, RawBody } from './app';
 export { Adapter, AdapterUtils, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
+export { I18n } from './helper';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput, Page } from './page';
 export {

@@ -65,6 +65,7 @@ export interface SSRPage {
 	 * the nearest error component.
 	 */
 	b: PageId[];
+	lang?: string;
 }
 
 export interface SSREndpoint {
@@ -78,7 +79,7 @@ export interface SSREndpoint {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
+export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, string?];
 
 export type CSREndpoint = [RegExp];
 
@@ -119,6 +120,10 @@ export interface SSRRenderOptions {
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
+	i18n?: {
+		defaultLocale?: string;
+		locales?: string[];
+	}
 	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
@@ -159,6 +164,7 @@ export interface PageData {
 	pattern: RegExp;
 	params: string[];
 	path: string;
+	lang?: string;
 	a: string[];
 	b: string[];
 }

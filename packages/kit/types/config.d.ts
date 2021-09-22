@@ -1,5 +1,5 @@
 import { UserConfig as ViteConfig } from 'vite';
-import { RecursiveRequired } from './helper';
+import { I18n, RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
@@ -78,6 +78,7 @@ export interface Config {
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
+		i18n?: I18n;
 	};
 	preprocess?: any;
 }

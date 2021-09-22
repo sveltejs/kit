@@ -5,6 +5,7 @@ export interface Page<Params extends Record<string, string> = Record<string, str
 	path: string;
 	params: Params;
 	query: URLSearchParams;
+	lang?: string;
 }
 
 export interface LoadInput<
@@ -16,6 +17,7 @@ export interface LoadInput<
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	context: Context;
+	lang?: string;
 }
 
 export interface ErrorLoadInput<

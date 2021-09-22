@@ -26,6 +26,7 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			package: {
 				dir: 'package',
 				emitTypes: true,
@@ -134,6 +135,7 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			i18n: null,
 			package: {
 				dir: 'package',
 				emitTypes: true,
@@ -267,6 +269,32 @@ test('fails if prerender.entries are invalid', () => {
 			}
 		});
 	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+});
+
+test('fails if i18n.defaultLocale is an empty string', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				i18n: {
+					defaultLocale: '',
+					locales: []
+				}
+			}
+		});
+	}, /^config\.kit\.i18n\.defaultLocale should be a none empty string. See https:\/\/kit\.svelte\.dev\/docs#i18n$/);
+});
+
+test('fails if any of i18n.locales is an empty string', () => {
+	assert.throws(() => {
+		validate_config({
+			kit: {
+				i18n: {
+					defaultLocale: 'default',
+					locales: ['other', '']
+				}
+			}
+		});
+	}, /^config\.kit\.i18n\.locales should be an array of none empty strings. See https:\/\/kit\.svelte\.dev\/docs#i18n$/);
 });
 
 /**

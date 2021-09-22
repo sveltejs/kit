@@ -32,13 +32,14 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    renderer: import('./renderer').Renderer;
 	 * }} opts
 	 */
 	constructor({ base, routes, trailing_slash, renderer }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
+		this.i18n = renderer.i18n;
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -283,5 +284,34 @@ export class Router {
 		} else {
 			scrollTo(0, 0);
 		}
+	}
+
+	/**
+	 * @param {string} lang
+	 */
+	switchLocalePath(lang) {
+		let url = `${location.pathname}${location.search}`;
+		if (this.i18n.defaultLocale && this.i18n.locales?.find((locale) => locale === lang)) {
+			// remove locales prefix
+			this.i18n.locales.forEach((locale) => {
+				url = url.replace(`/${locale}`, '');
+			});
+			// !defaultLocale => prefix
+			url = this.i18n.defaultLocale === lang ? `/${url}` : `/${lang}${url}`;
+			url = url.replace('//', '/');
+		}
+
+		return this.goto(url, {}, []);
+	}
+
+	/**
+	 * @param {string} lang
+	 * @param {string} route
+	 * @returns {string}
+	 */
+	i18nRoute(lang, route) {
+		// For some reason access through page store is no longer possible
+		// lang currently needs to be passed in
+		return lang === this.i18n.defaultLocale ? route : `/${lang}${route}`;
 	}
 }

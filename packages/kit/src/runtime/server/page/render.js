@@ -64,7 +64,8 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				i18n: writable(null)
 			},
 			page,
 			components: branch.map(({ node }) => node.module.default)
@@ -138,9 +139,15 @@ export async function render_response({
 						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
 						path: ${s(page && page.path)},
 						query: new URLSearchParams(${page ? s(page.query.toString()) : ''}),
-						params: ${page && s(page.params)}
+						params: ${page && s(page.params)},
+						lang: ${page?.lang && s(page.lang)}
 					}
 				}` : 'null'}
+				${options.i18n
+					? `,
+					defaultLocale: '${options.i18n.defaultLocale}',
+					locales: ${s(options.i18n.locales)}`
+					: ''}
 			});
 		</script>`;
 	}
