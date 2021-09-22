@@ -120,6 +120,9 @@ export async function preview({
 				render_handler();
 			}
 		} else {
+			if (initial_url.startsWith(config.kit.paths.base)) {
+				req.url = initial_url.slice(config.kit.paths.base.length);
+			}
 			assets_handler(req, res, () => {
 				static_handler(req, res, render_handler);
 			});
