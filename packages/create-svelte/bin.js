@@ -87,7 +87,9 @@ async function main() {
 				message: 'Add an adapter',
 				choices: [
 					{
-						title: "I'll add it later or use a community-provided adapter (https://bit.ly/3kvqIRy)",
+						title: "I'll add it later or use a community-provided adapter",
+						description:
+							'Community provided adapters: https://sveltesociety.dev/components/#category-SvelteKit%20Adapters',
 						value: null
 					},
 					...adapters.map((adapter) => ({ title: adapter.name, value: adapter }))
