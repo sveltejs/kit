@@ -232,7 +232,7 @@ function write_common_files(cwd, options, name) {
 	});
 
 	if (options.adapter) {
-		pkg.devDependencies[options.adapter.npm] = 'next';
+		pkg.devDependencies[options.adapter.npm] = '^1.0.0-next.1';
 	}
 	pkg.dependencies = sort_keys(pkg.dependencies);
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
