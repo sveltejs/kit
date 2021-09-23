@@ -39,14 +39,14 @@
 		"rollup": "^2.56.3",
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.17",
-		"svelte": "^3.42.6",
+		"svelte": "^3.43.0",
 		"svelte-check": "^2.2.6",
 		"svelte2tsx": "~0.4.6",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.1"
 	},
 	"peerDependencies": {
-		"svelte": "^3.39.0"
+		"svelte": "^3.43.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
