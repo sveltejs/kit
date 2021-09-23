@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts';
 import { mkdirp, copy } from './utils.js';
+import adapters from './adapters.js';
 
 // prettier-ignore
 const disclaimer = `
@@ -79,6 +80,18 @@ async function main() {
 				initial: false,
 				active: 'Yes',
 				inactive: 'No'
+			},
+			{
+				type: 'select',
+				name: 'adapter',
+				message: 'Add an adapter',
+				choices: [
+					{
+						title: "I'll add it later or use a community-provided adapter (https://bit.ly/3kvqIRy)",
+						value: null
+					},
+					...adapters.map((adapter) => ({ title: adapter.name, value: adapter }))
+				]
 			}
 		])
 	);
@@ -121,6 +134,12 @@ async function main() {
 						'Svelte-specific formatting options: https://github.com/sveltejs/prettier-plugin-svelte#options'
 				)
 			)
+		);
+	}
+
+	if (options.adapter) {
+		console.log(
+			bold(green(`✔ Added ${options.adapter.name}.\n` + `Documentation: ${options.adapter.url}`))
 		);
 	}
 
@@ -196,12 +215,23 @@ function write_common_files(cwd, options, name) {
 			const new_pkg = JSON.parse(file.contents);
 			merge(pkg, new_pkg);
 		} else {
+			if (file.name === 'svelte.config.js') {
+				file.contents = file.contents
+					.replace(
+						'// insert:adapter-import\n',
+						options.adapter ? `import adapter from '${options.adapter.npm}';\n` : ''
+					)
+					.replace(/\t+\/\/ insert:adapter/, options.adapter ? '\t\tadapter: adapter(),' : '');
+			}
 			const dest = path.join(cwd, file.name);
 			mkdirp(path.dirname(dest));
 			fs.writeFileSync(dest, file.contents);
 		}
 	});
 
+	if (options.adapter) {
+		pkg.devDependencies[options.adapter.npm] = 'next';
+	}
 	pkg.dependencies = sort_keys(pkg.dependencies);
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
 	pkg.name = toValidPackageName(name);

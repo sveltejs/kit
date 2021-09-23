@@ -3,6 +3,7 @@ export type Options = {
 	typescript: boolean;
 	prettier: boolean;
 	eslint: boolean;
+	adapter: { name: string; npm: string; url: string };
 };
 
 export type File = {
