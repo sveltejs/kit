@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.173
+
+### Patch Changes
+
+- Exports and files property in config.kit.package now accepts a function rather than an object ([#2430](https://github.com/sveltejs/kit/pull/2430))
+
+* Renamed property exclude to files in config.kit.serviceWorker and now accepts a function instead ([#2430](https://github.com/sveltejs/kit/pull/2430))
+
+- Remove lang tag when packaging ([#2486](https://github.com/sveltejs/kit/pull/2486))
+
 ## 1.0.0-next.172
 
 ### Patch Changes
