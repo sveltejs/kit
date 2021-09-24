@@ -165,6 +165,34 @@ function duplicate(test_fn, config, is_build) {
 			if (!dev) return;
 		}
 
+		/**
+		 * As default, it doesn't return matched elements from iframe due to performance.
+		 * If want to find elements from iframe also, set `true` to `contains_iframe`.
+		 *
+		 * @param {import('playwright-chromium').Page} page
+		 * @param {string} selector
+		 * @param {boolean} contains_iframe
+		 * @returns {Array<import('playwright-chromium').ElementHandle<SVGElement | HTMLElement>>}
+		 */
+		async function get_elements(page, selector, contains_iframe = false) {
+			const until = new Date().getTime() + 2000;
+			while (until > new Date().getTime()) {
+				if (contains_iframe) {
+					/** @type {Array<import('playwright-chromium').ElementHandle<SVGElement | HTMLElement>>} */
+					const elements = [];
+					for (const frame of page.frames()) {
+						(await frame.$$(selector)).forEach((element) => elements.push(element));
+					}
+					if (elements.length) return elements;
+				} else {
+					const elements = await page.$$(selector);
+					if (elements.length) return elements;
+				}
+				await new Promise((resolve) => setTimeout(resolve, 10));
+			}
+			throw new Error('Timed out');
+		}
+
 		if (nojs) {
 			const specific_name = `${name} [no js]`;
 			if (process.env.FILTER && !specific_name.includes(process.env.FILTER)) return;
@@ -181,6 +209,7 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
+					get_elements: (selector, is_iframe = false) => get_elements(context.pages.nojs, selector, is_iframe),
 					// @ts-expect-error
 					response,
 					js: false
@@ -246,6 +275,7 @@ function duplicate(test_fn, config, is_build) {
 						await context.pages.js.goBack();
 						await context.pages.js.evaluate(() => window.navigated);
 					},
+					get_elements: (selector, is_iframe = false) => get_elements(context.pages.js, selector, is_iframe),
 					js: true,
 					// @ts-expect-error
 					response
