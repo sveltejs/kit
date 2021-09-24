@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.51
+
+### Patch Changes
+
+- [fix] regression where builds not using `entryPoint` stopped having `middlewares.js` external ([#2484](https://github.com/sveltejs/kit/pull/2484))
+
 ## 1.0.0-next.50
 
 ### Patch Changes
