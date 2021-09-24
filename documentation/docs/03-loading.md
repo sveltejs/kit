@@ -10,7 +10,7 @@ A component that defines a page or a layout can export a `load` function that ru
 
 export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
-	Context extends Record<string, any> = Record<string, any>,
+	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > {
 	page: {
@@ -21,18 +21,18 @@ export interface LoadInput<
 	};
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
-	context: Context;
+	stuff: Stuff;
 }
 
 export interface LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
-	Context extends Record<string, any> = Record<string, any>
+	Stuff extends Record<string, any> = Record<string, any>
 > {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
 	props?: Props;
-	context?: Context;
+	stuff?: Stuff;
 	maxage?: number;
 }
 ```
@@ -44,7 +44,7 @@ Our example blog page might contain a `load` function like the following:
 	/**
 	 * @type {import('@sveltejs/kit').Load}
 	 */
-	export async function load({ page, fetch, session, context }) {
+	export async function load({ page, fetch, session, stuff }) {
 		const url = `/blog/${page.params.slug}.json`;
 		const res = await fetch(url);
 
@@ -90,7 +90,7 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `context`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `context` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, context })` function will re-run every time `session` or `context` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
+The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `stuff` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, stuff })` function will re-run every time `session` or `stuff` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
 
 #### page
 
@@ -117,9 +117,9 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 
 `session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [`getSession`](#hooks-getsession) to learn how to use it.
 
-#### context
+#### stuff
 
-`context` is passed from layout components to child layouts and page components. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `context` property, it will be available to subsequent `load` functions.
+`stuff` is passed from layout components to child layouts and page components and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
 
 ### Output
 
@@ -147,8 +147,8 @@ This only applies to page components, _not_ layout components.
 
 If the `load` function returns a `props` object, the props will be passed to the component when it is rendered.
 
-#### context
+#### stuff
 
-This will be merged with any existing `context` and passed to the `load` functions of subsequent layout and page components.
+This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
 This only applies to layout components, _not_ page components.
