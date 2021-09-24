@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.172
+
+### Patch Changes
+
+- [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
+
+* **breaking change** the "context" parameter of the load function was renamed to "stuff" ([#2439](https://github.com/sveltejs/kit/pull/2439))
+
 ## 1.0.0-next.171
 
 ### Patch Changes
