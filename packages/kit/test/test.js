@@ -172,7 +172,7 @@ function duplicate(test_fn, config, is_build) {
 		 * @param {import('playwright-chromium').Page} page
 		 * @param {string} selector
 		 * @param {boolean} contains_iframe
-		 * @returns {Array<import('playwright-chromium').ElementHandle<SVGElement | HTMLElement>>}
+		 * @returns {Promise<Array<import('playwright-chromium').ElementHandle<SVGElement | HTMLElement>>>}
 		 */
 		async function get_elements(page, selector, contains_iframe = false) {
 			const until = new Date().getTime() + 2000;
@@ -209,7 +209,8 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
-					get_elements: (selector, is_iframe = false) => get_elements(context.pages.nojs, selector, is_iframe),
+					get_elements: (selector, is_iframe = false) =>
+						get_elements(context.pages.nojs, selector, is_iframe),
 					// @ts-expect-error
 					response,
 					js: false
@@ -275,7 +276,8 @@ function duplicate(test_fn, config, is_build) {
 						await context.pages.js.goBack();
 						await context.pages.js.evaluate(() => window.navigated);
 					},
-					get_elements: (selector, is_iframe = false) => get_elements(context.pages.js, selector, is_iframe),
+					get_elements: (selector, is_iframe = false) =>
+						get_elements(context.pages.js, selector, is_iframe),
 					js: true,
 					// @ts-expect-error
 					response

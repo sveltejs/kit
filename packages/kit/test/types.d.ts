@@ -17,7 +17,10 @@ export interface TestContext {
 	response: PlaywrightResponse;
 	clicknav(selector: string): Promise<void>;
 	back(): Promise<void>;
-	get_elements(selector: string, contains_iframe?: boolean): Promise<Array<ElementHandle<SVGElement | HTMLElement>>>;
+	get_elements(
+		selector: string,
+		contains_iframe?: boolean
+	): Promise<Array<ElementHandle<SVGElement | HTMLElement>>>;
 	fetch(url: RequestInfo, opts?: RequestInit): Promise<NodeFetchResponse>;
 	capture_requests(fn: () => Promise<void>): Promise<string[]>;
 	errors(): string;
