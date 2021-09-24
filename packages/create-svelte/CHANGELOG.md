@@ -1,5 +1,19 @@
 # create-svelte
 
+## 2.0.0-next.82
+
+### Patch Changes
+
+- [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
+
+## 2.0.0-next.81
+
+### Patch Changes
+
+- [fix] provide valid value for `letter-spacing` CSS property ([#2437](https://github.com/sveltejs/kit/pull/2437))
+
+* update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+
 ## 2.0.0-next.80
 
 ### Patch Changes

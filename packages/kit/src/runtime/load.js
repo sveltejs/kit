@@ -52,5 +52,13 @@ export function normalize(loaded) {
 		}
 	}
 
+	// TODO remove before 1.0
+	if (/** @type {any} */ (loaded).context) {
+		throw new Error(
+			'You are returning "context" from a load function. ' +
+				'"context" was renamed to "stuff", please adjust your code accordingly.'
+		);
+	}
+
 	return /** @type {import('types/internal').NormalizedLoadOutput} */ (loaded);
 }

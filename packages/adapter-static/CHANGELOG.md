@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
+
 ## 1.0.0-next.19
 
 ### Patch Changes

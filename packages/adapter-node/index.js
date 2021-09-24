@@ -7,7 +7,7 @@ import {
 	statSync,
 	writeFileSync
 } from 'fs';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { fileURLToPath } from 'url';
@@ -81,7 +81,6 @@ export default function ({
 				entryPoints: [entryPoint],
 				outfile: join(out, 'index.js'),
 				bundle: true,
-				external: ['./middlewares.js'], // does not work, eslint does not exclude middlewares from target
 				format: 'esm',
 				platform: 'node',
 				target: 'node12',
@@ -90,8 +89,15 @@ export default function ({
 					{
 						name: 'fix-middlewares-exclude',
 						setup(build) {
-							// Match an import called "./middlewares.js" and mark it as external
-							build.onResolve({ filter: /^\.\/middlewares\.js$/ }, () => ({ external: true }));
+							// Match an import of "middlewares.js" and mark it as external
+							const internal_middlewares_path = resolve('.svelte-kit/node/middlewares.js');
+							const build_middlewares_path = resolve(out, 'middlewares.js');
+							build.onResolve({ filter: /\/middlewares\.js$/ }, ({ path, resolveDir }) => {
+								const resolved = resolve(resolveDir, path);
+								if (resolved === internal_middlewares_path || resolved === build_middlewares_path) {
+									return { path: './middlewares.js', external: true };
+								}
+							});
 						}
 					}
 				]

@@ -8,5 +8,6 @@
 			"import": "./index.js"
 		},
 		"./package.json": "./package.json"
-	}
+	},
+	"svelte": "./Test.svelte"
 }

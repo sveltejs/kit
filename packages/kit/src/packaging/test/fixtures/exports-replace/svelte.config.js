@@ -2,9 +2,7 @@
 const config = {
 	kit: {
 		package: {
-			exports: {
-				exclude: ['**']
-			}
+			exports: () => false
 		}
 	}
 };

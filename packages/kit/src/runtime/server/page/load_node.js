@@ -1,4 +1,4 @@
-import { normalize } from '../../load.js';
+import { normalize } from '../../load.js';,
 import { respond } from '../index.js';
 
 const s = JSON.stringify;
@@ -12,7 +12,7 @@ const s = JSON.stringify;
  *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
- *   context: Record<string, any>;
+ *   stuff: Record<string, any>;
  *   prerender_enabled: boolean;
  *   is_leaf: boolean;
  *   is_error: boolean;
@@ -29,14 +29,14 @@ export async function load_node({
 	page,
 	node,
 	$session,
-	context,
+	stuff,
 	prerender_enabled,
 	is_leaf,
 	is_error,
 	status,
 	error
 }) {
-	const { module } = node;
+	const { module } = node;,
 
 	let uses_credentials = false;
 
@@ -269,7 +269,7 @@ export async function load_node({
 					})
 				);
 			},
-			context: { ...context },
+			stuff: { ...stuff },
 			uses() {}
 		};
 
@@ -294,7 +294,7 @@ export async function load_node({
 	return {
 		node,
 		loaded: normalize(loaded),
-		context: loaded.context || context,
+		stuff: loaded.stuff || stuff,
 		fetched,
 		set_cookie_headers,
 		uses_credentials
