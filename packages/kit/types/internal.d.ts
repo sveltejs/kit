@@ -134,6 +134,7 @@ export interface SSRRenderOptions {
 	target: string;
 	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;
+	cspNonce: boolean;
 }
 
 export interface SSRRenderState {

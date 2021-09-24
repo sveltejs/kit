@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { writeFileSync } from 'fs';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
@@ -13,7 +13,7 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
-		async adapt({ utils }) {
+		async adapt({ utils, config }) {
 			const { site } = validate_config(utils);
 
 			const bucket = site.bucket;
@@ -34,11 +34,16 @@ export default function (options) {
 			utils.log.minor('Generating worker...');
 			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
+			writeFileSync('${files}/nofig.js', `export const generateNonces = ${config.kit.cspNonce}`);
+
 			/** @type {BuildOptions} */
 			const default_options = {
 				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
+				define: {
+					GENERATE_NONCES: config.kit.cspNonce.toString() // gets turned back into a boolean by esbuild
+				},
 				target: 'es2020',
 				platform: 'browser'
 			};

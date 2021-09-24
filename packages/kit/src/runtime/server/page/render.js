@@ -15,7 +15,8 @@ const s = JSON.stringify;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   page?: import('types/page').Page
+ *   page?: import('types/page').Page,
+ *   nonce?: string
  * }} opts
  */
 export async function render_response({
@@ -25,11 +26,13 @@ export async function render_response({
 	page_config,
 	status,
 	error,
-	page
+	page,
+	nonce
 }) {
 	const css = new Set(options.entry.css);
 	const js = new Set(options.entry.js);
 	const styles = new Set();
+	nonce = options.cspNonce && nonce ? `nonce="${nonce}"` : '';
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];
@@ -100,8 +103,8 @@ export async function render_response({
 			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
-				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}" ${nonce}>`),
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}" ${nonce}>`)
 		  ].join('\n\t\t');
 
 	/** @type {string} */
@@ -114,7 +117,7 @@ export async function render_response({
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
 	} else if (include_js) {
 		// prettier-ignore
-		init = `<script type="module">
+		init = `<script type="module" ${nonce}>
 			import { start } from ${s(options.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
@@ -146,7 +149,7 @@ export async function render_response({
 	}
 
 	if (options.service_worker) {
-		init += `<script>
+		init += `<script ${nonce}>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('${options.service_worker}');
 			}
@@ -156,7 +159,7 @@ export async function render_response({
 	const head = [
 		rendered.head,
 		styles.size && !options.amp
-			? `<style data-svelte>${Array.from(styles).join('\n')}</style>`
+			? `<style ${nonce} data-svelte>${Array.from(styles).join('\n')}</style>`
 			: '',
 		links,
 		init
@@ -171,7 +174,7 @@ export async function render_response({
 					let attributes = `type="application/json" data-type="svelte-data" data-url="${url}"`;
 					if (body) attributes += ` data-body="${hash(body)}"`;
 
-					return `<script ${attributes}>${json}</script>`;
+					return `<script ${nonce} ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t')}
 		`;

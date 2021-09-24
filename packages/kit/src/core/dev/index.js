@@ -20,6 +20,7 @@ import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, resolve_entry } from '../utils.js';
+import { randomBytes } from 'crypto';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -359,7 +360,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						host,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
-						rawBody: body
+						rawBody: body,
+						nonce: config.kit.cspNonce && randomBytes(16).toString('base64')
 					},
 					{
 						amp: config.kit.amp,
@@ -484,7 +486,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 
 							return rendered;
 						},
-						trailing_slash: config.kit.trailingSlash
+						trailing_slash: config.kit.trailingSlash,
+						cspNonce: config.kit.cspNonce
 					}
 				);
 

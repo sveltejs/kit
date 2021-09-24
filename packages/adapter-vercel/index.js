@@ -12,7 +12,7 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
-		async adapt({ utils }) {
+		async adapt({ utils, config }) {
 			const dir = '.vercel_build_output';
 			utils.rimraf(dir);
 
@@ -37,7 +37,10 @@ export default function (options) {
 				outfile: join(dirs.lambda, 'index.js'),
 				bundle: true,
 				inject: [join(files, 'shims.js')],
-				platform: 'node'
+				platform: 'node',
+				define: {
+					GENERATE_NONCES: config.kit.cspNonce.toString() // gets turned back into a boolean by esbuild
+				}
 			};
 
 			const build_options =

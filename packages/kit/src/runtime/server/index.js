@@ -32,12 +32,26 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	const headers = lowercase_keys(incoming.headers);
+	/**
+	 * @type {string | undefined}
+	 */
+	let nonce;
+	if (!state.prerender && options.cspNonce) {
+		incoming.nonce
+			? (nonce = incoming.nonce)
+			: console.warn(
+					'`kit.cspNonce` is active, but the adapter did not provide one. Nonces will not be inserted.'
+			  );
+	}
+
 	const request = {
 		...incoming,
 		headers,
 		body: parse_body(incoming.rawBody, headers),
 		params: {},
-		locals: {}
+		locals: {
+			nonce
+		}
 	};
 
 	try {
@@ -50,7 +64,8 @@ export async function respond(incoming, options, state = {}) {
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
 						status: 200,
-						branch: []
+						branch: [],
+						nonce
 					});
 				}
 
