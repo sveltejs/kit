@@ -17,7 +17,7 @@ importers:
       eslint: ^7.32.0
       eslint-plugin-import: ^2.24.2
       eslint-plugin-svelte3: ^3.2.1
-      playwright-chromium: ^1.14.1
+      playwright-chromium: ^1.15.0
       prettier: ^2.4.1
       rollup: ^2.56.3
       typescript: ^4.4.3
@@ -35,7 +35,7 @@ importers:
       eslint: 7.32.0
       eslint-plugin-import: 2.24.2_eslint@7.32.0
       eslint-plugin-svelte3: 3.2.1_eslint@7.32.0
-      playwright-chromium: 1.14.1
+      playwright-chromium: 1.15.0
       prettier: 2.4.1
       rollup: 2.56.3
       typescript: 4.4.3
@@ -120,14 +120,14 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
-      playwright-chromium: ^1.14.1
+      playwright-chromium: ^1.15.0
       port-authority: ^1.1.2
       sirv: ^1.0.17
       svelte: ^3.43.0
       uvu: ^0.5.1
     devDependencies:
       '@sveltejs/kit': link:../kit
-      playwright-chromium: 1.14.1
+      playwright-chromium: 1.15.0
       port-authority: 1.1.2
       sirv: 1.0.17
       svelte: 3.43.0
@@ -261,7 +261,7 @@ importers:
       sirv: 1.0.17
       svelte: 3.43.0
       svelte-check: 2.2.6_svelte@3.43.0
-      svelte2tsx: 0.4.6_svelte@3.43.0
+      svelte2tsx: 0.4.6_svelte@3.43.0+typescript@4.4.3
       tiny-glob: 0.2.9
       uvu: 0.5.1
 
@@ -3136,8 +3136,8 @@ packages:
       find-up: 2.1.0
     dev: true
 
-  /playwright-chromium/1.14.1:
-    resolution: {integrity: sha512-gAHDcrBKrl1Az6TuzC4T013Nl+qKVZeblc2VkElHqEuNQHPKW7840cQBZavFz38xJshC993iClVc6Y+bLgF8FA==}
+  /playwright-chromium/1.15.0:
+    resolution: {integrity: sha512-bp+x7THqk11JoFglUiujOaRtxvK1/MrDe1pAzVTvWOSOky89v9gd5w/USmOgTZyo6bYPIWnPIQjnrk4qRUr0rg==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
@@ -3827,7 +3827,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.4.6_svelte@3.43.0:
+  /svelte2tsx/0.4.6_svelte@3.43.0+typescript@4.4.3:
     resolution: {integrity: sha512-flljgh/MbJDijo6Z1HhCfyzdRgn1Nd7QTuuxk9Oq5CzyBXZl/NJYh4otZZwUHnx5poy8k7Oxr2CBE3IBh89tmQ==}
     peerDependencies:
       svelte: ^3.24
@@ -3836,6 +3836,7 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.43.0
+      typescript: 4.4.3
     dev: true
 
   /table/6.7.1:
