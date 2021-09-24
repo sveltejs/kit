@@ -55,11 +55,10 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/**
 	 * @param {string} dir
 	 * @param {Part[][]} parent_segments
-	 * @param {string[]} parent_params
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
+	function walk(dir, parent_segments, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 		fs.readdirSync(dir).forEach((basename) => {
@@ -157,9 +156,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				segments.push(item.parts);
 			}
 
-			const params = parent_params.slice();
-			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
-
 			if (item.is_dir) {
 				const layout_reset = find_layout('__layout.reset', item.file);
 				const layout = find_layout('__layout', item.file);
@@ -176,54 +172,71 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				walk(
 					path.join(dir, item.basename),
 					segments,
-					params,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
 					layout_reset ? [error] : error_stack.concat(error)
 				);
-			} else if (item.is_page) {
-				components.push(item.file);
-
-				const concatenated = layout_stack.concat(item.file);
-				const errors = error_stack.slice();
-
-				const pattern = get_pattern(segments, true);
-
-				let i = concatenated.length;
-				while (i--) {
-					if (!errors[i] && !concatenated[i]) {
-						errors.splice(i, 1);
-						concatenated.splice(i, 1);
-					}
-				}
-
-				i = errors.length;
-				while (i--) {
-					if (errors[i]) break;
-				}
-
-				errors.splice(i + 1);
-
-				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: '';
-
-				routes.push({
-					type: 'page',
-					pattern,
-					params,
-					path,
-					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (errors)
-				});
 			} else {
-				const pattern = get_pattern(segments, !item.route_suffix);
+				const alternates = config.kit.alternateRoutes
+					? config.kit.alternateRoutes(segments, item.is_page ? 'page' : 'endpoint')
+					: [segments];
 
-				routes.push({
-					type: 'endpoint',
-					pattern,
-					file: item.file,
-					params
-				});
+				if (item.is_page) {
+					const id = components.length.toString();
+					components.push(item.file);
+
+					const concatenated = layout_stack.concat(item.file);
+					const errors = error_stack.slice();
+
+					alternates.forEach((segments) => {
+						const pattern = get_pattern(segments, true);
+						const params = segments.flatMap((parts) =>
+							parts.filter((p) => p.dynamic).map((p) => p.content)
+						);
+
+						let i = concatenated.length;
+						while (i--) {
+							if (!errors[i] && !concatenated[i]) {
+								errors.splice(i, 1);
+								concatenated.splice(i, 1);
+							}
+						}
+
+						i = errors.length;
+						while (i--) {
+							if (errors[i]) break;
+						}
+
+						errors.splice(i + 1);
+
+						const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+							? `/${segments.map((segment) => segment[0].content).join('/')}`
+							: '';
+
+						routes.push({
+							id,
+							type: 'page',
+							pattern,
+							params,
+							path,
+							a: /** @type {string[]} */ (concatenated),
+							b: /** @type {string[]} */ (errors)
+						});
+					});
+				} else {
+					alternates.forEach((segments) => {
+						const pattern = get_pattern(segments, !item.route_suffix);
+						const params = segments.flatMap((parts) =>
+							parts.filter((p) => p.dynamic).map((p) => p.content)
+						);
+
+						routes.push({
+							type: 'endpoint',
+							pattern,
+							file: item.file,
+							params
+						});
+					});
+				}
 			}
 		});
 	}
@@ -235,7 +248,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [layout], [error]);
+	walk(config.kit.files.routes, [], [layout], [error]);
 
 	const assets = fs.existsSync(config.kit.files.assets)
 		? list_files({ config, dir: config.kit.files.assets, path: '' })

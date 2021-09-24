@@ -18,6 +18,7 @@ test('fills in defaults', () => {
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
+			alternateRoutes: null,
 			amp: false,
 			appDir: '_app',
 			files: {
@@ -118,6 +119,7 @@ test('fills in partial blanks', () => {
 		extensions: ['.svelte'],
 		kit: {
 			adapter: null,
+			alternateRoutes: null,
 			amp: false,
 			appDir: '_app',
 			files: {
