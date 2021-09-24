@@ -67,7 +67,7 @@ export async function make_package(config, cwd = process.cwd()) {
 			// it's a Svelte component
 			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
 			out_contents = config.preprocess
-				? (await preprocess(source, config.preprocess, { filename })).code
+				? strip_lang_tags((await preprocess(source, config.preprocess, { filename })).code)
 				: source;
 			contains_svelte_files = true;
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
@@ -185,6 +185,36 @@ function resolve_$lib_alias(file, content, config) {
 	content = content.replace(/from\s+('|")([^"';,]+?)\1/g, replace_import_path);
 	content = content.replace(/import\s*\(\s*('|")([^"';,]+?)\1\s*\)/g, replace_import_path);
 	return content;
+}
+
+/**
+ * Strip out lang="X" or type="text/X" tags. Doing it here is only a temporary solution.
+ * See https://github.com/sveltejs/kit/issues/2450 for ideas for places where it's handled better.
+ *
+ * @param {string} content
+ */
+function strip_lang_tags(content) {
+	strip_lang_tag('script');
+	strip_lang_tag('style');
+	return content;
+
+	/**
+	 * @param {string} tagname
+	 */
+	function strip_lang_tag(tagname) {
+		const regexp = new RegExp(
+			`/<!--[^]*?-->|<${tagname}(\\s[^]*?)?(?:>([^]*?)<\\/${tagname}>|\\/>)`,
+			'g'
+		);
+		content = content.replace(regexp, (tag, attributes) => {
+			const idx = tag.indexOf(attributes);
+			return (
+				tag.substring(0, idx) +
+				attributes.replace(/\s(type|lang)=(["']).*?\2/, ' ') +
+				tag.substring(idx + attributes.length)
+			);
+		});
+	}
 }
 
 /**
