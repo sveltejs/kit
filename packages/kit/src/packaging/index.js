@@ -194,14 +194,14 @@ function resolve_$lib_alias(file, content, config) {
  * @param {string} content
  */
 function strip_lang_tags(content) {
-	replace_lang_tags('script');
-	replace_lang_tags('style');
+	strip_lang_tag('script');
+	strip_lang_tag('style');
 	return content;
 
 	/**
 	 * @param {string} tagname
 	 */
-	function replace_lang_tags(tagname) {
+	function strip_lang_tag(tagname) {
 		const regexp = new RegExp(
 			`/<!--[^]*?-->|<${tagname}(\\s[^]*?)?(?:>([^]*?)<\\/${tagname}>|\\/>)`,
 			'g'
