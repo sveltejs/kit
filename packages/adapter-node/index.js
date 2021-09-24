@@ -90,8 +90,11 @@ export default function ({
 						name: 'fix-middlewares-exclude',
 						setup(build) {
 							// Match an import of "middlewares.js" and mark it as external
+							const internal_middlewares_path = resolve('.svelte-kit/node/middlewares.js');
+							const build_middlewares_path = resolve(out, 'middlewares.js');
 							build.onResolve({ filter: /\/middlewares\.js$/ }, ({ path, resolveDir }) => {
-								if (resolve(resolveDir, path) === resolve(out, 'middlewares.js')) {
+								const resolved = resolve(resolveDir, path);
+								if (resolved === internal_middlewares_path || resolved === build_middlewares_path) {
 									return { path: './middlewares.js', external: true };
 								}
 							});
