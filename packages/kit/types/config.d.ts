@@ -1,6 +1,7 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
+import { Part } from '../src/core/create_manifest_data';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -34,6 +35,7 @@ export interface Config {
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
+		alternateRoutes?: (segments: Part[][], type: 'page' | 'endpoint') => Part[][][];
 		amp?: boolean;
 		appDir?: string;
 		files?: {

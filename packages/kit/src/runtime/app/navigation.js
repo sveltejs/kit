@@ -1,5 +1,6 @@
 import { router as router_ } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
+import { getContext } from 'svelte';
 
 const router = /** @type {import('../client/router').Router} */ (router_);
 
@@ -52,4 +53,47 @@ async function prefetchRoutes_(pathnames) {
 		.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
+}
+
+/**
+ * @param {RegExp} pattern
+ * @param {string[]} params
+ * @returns {string}
+ */
+function pathFromPattern(pattern, params) {
+	let index = 0;
+	return pattern.source
+		.slice(1, -1)
+		.replace(/\\\//g, '/')
+		.replace(/\(\[\^\/\]\+\?\)/g, () => params[index++])
+		.replace(/\/\?$/, '');
+}
+
+/**
+ * @param {any} value
+ * @return {value is import('types/internal').SSRPage}
+ */
+function isSSRPage(value) {
+	return typeof value === 'object' && value.type === 'page';
+}
+
+/**
+ * @type {import('$app/navigation').alternates}
+ */
+export function alternates(href) {
+	if (!import.meta.env.SSR) {
+		const hrefRoute = router?.routes?.find((route) => route[0].test(href));
+		if (!hrefRoute) return null;
+		const [, ...params] = href.match(hrefRoute[0]);
+		const alternates = router.routes.filter((route) => route[4] === hrefRoute[4]);
+		return alternates.map((route) => pathFromPattern(route[0], params));
+	} else {
+		/** @type {import('types/internal').SSRRoute[]} */
+		const routes = getContext('__svelte_routes__');
+		const hrefRoute = routes.find((route) => route.pattern.test(href));
+		if (!hrefRoute || !isSSRPage(hrefRoute)) return null;
+		const [, ...params] = href.match(hrefRoute.pattern);
+		const alternates = routes.filter((route) => isSSRPage(route) && route.id === hrefRoute.id);
+		return alternates.map((route) => pathFromPattern(route.pattern, params));
+	}
 }

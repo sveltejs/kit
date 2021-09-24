@@ -85,7 +85,8 @@ function generate_client_manifest(manifest_data, base) {
 							'})';
 
 					const tuple = [route.pattern, get_indices(route.a), get_indices(route.b)];
-					if (params) tuple.push(params);
+					tuple.push(params);
+					tuple.push(route.id);
 
 					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
 				} else {
@@ -150,6 +151,7 @@ function generate_app(manifest_data, base) {
 			// stores
 			export let stores;
 			export let page;
+			export let routes;
 
 			export let components;
 			${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
@@ -158,6 +160,8 @@ function generate_app(manifest_data, base) {
 
 			$: stores.page.set(page);
 			afterUpdate(stores.page.notify);
+
+			if (routes) setContext('__svelte_routes__', routes);
 
 			let mounted = false;
 			let navigated = false;

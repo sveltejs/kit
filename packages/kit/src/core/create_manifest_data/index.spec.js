@@ -49,6 +49,7 @@ test('creates routes', () => {
 
 	assert.equal(routes, [
 		{
+			id: '2',
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
@@ -58,6 +59,7 @@ test('creates routes', () => {
 		},
 
 		{
+			id: '3',
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
@@ -74,6 +76,7 @@ test('creates routes', () => {
 		},
 
 		{
+			id: '4',
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
@@ -90,6 +93,7 @@ test('creates routes', () => {
 		},
 
 		{
+			id: '5',
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
@@ -113,6 +117,7 @@ test('creates routes with layout', () => {
 
 	assert.equal(routes, [
 		{
+			id: '2',
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
@@ -122,6 +127,7 @@ test('creates routes with layout', () => {
 		},
 
 		{
+			id: '4',
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
@@ -268,6 +274,7 @@ test('works with custom extensions', () => {
 
 	assert.equal(routes, [
 		{
+			id: '2',
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
@@ -277,6 +284,7 @@ test('works with custom extensions', () => {
 		},
 
 		{
+			id: '3',
 			type: 'page',
 			pattern: /^\/about\/?$/,
 			params: [],
@@ -293,6 +301,7 @@ test('works with custom extensions', () => {
 		},
 
 		{
+			id: '4',
 			type: 'page',
 			pattern: /^\/blog\/?$/,
 			params: [],
@@ -309,6 +318,7 @@ test('works with custom extensions', () => {
 		},
 
 		{
+			id: '5',
 			type: 'page',
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
@@ -341,6 +351,7 @@ test('includes nested error components', () => {
 
 	assert.equal(routes, [
 		{
+			id: '6',
 			type: 'page',
 			pattern: /^\/foo\/bar\/baz\/?$/,
 			params: [],
@@ -367,6 +378,7 @@ test('resets layout', () => {
 
 	assert.equal(routes, [
 		{
+			id: '2',
 			type: 'page',
 			pattern: /^\/$/,
 			params: [],
@@ -375,6 +387,7 @@ test('resets layout', () => {
 			b: [error]
 		},
 		{
+			id: '4',
 			type: 'page',
 			pattern: /^\/foo\/?$/,
 			params: [],
@@ -387,6 +400,7 @@ test('resets layout', () => {
 			b: [error]
 		},
 		{
+			id: '7',
 			type: 'page',
 			pattern: /^\/foo\/bar\/?$/,
 			params: [],

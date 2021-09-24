@@ -67,7 +67,8 @@ export async function render_response({
 				session
 			},
 			page,
-			components: branch.map(({ node }) => node.module.default)
+			components: branch.map(({ node }) => node.module.default),
+			routes: options.manifest.routes
 		};
 
 		// props_n (instead of props[n]) makes it easy to avoid

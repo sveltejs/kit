@@ -67,6 +67,10 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
+	/**
+	 * Returns alternate routes for the given page
+	 */
+	export function alternates(href: string): string[];
 }
 
 declare module '$app/paths' {

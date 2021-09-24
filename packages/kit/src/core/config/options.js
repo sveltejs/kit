@@ -38,6 +38,14 @@ const options = object(
 				return input;
 			}),
 
+			alternateRoutes: validate(null, (option, keypath) => {
+				if (typeof option !== 'function') {
+					throw new Error(`${keypath} must be a function that processes route segments`);
+				}
+
+				return option;
+			}),
+
 			amp: boolean(false),
 
 			appDir: validate('_app', (input, keypath) => {

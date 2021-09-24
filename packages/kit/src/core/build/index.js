@@ -381,6 +381,7 @@ async function build_server(
 						const params = get_params(route.params);
 
 						return `{
+									id: ${s(route.id)},
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
