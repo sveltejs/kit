@@ -195,7 +195,7 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 
 An object containing zero or more of the following values:
 
-- `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the following file will be available in `$service-worker.files`, otherwise it will be excluded.
+- `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
 
 ### ssr
 
