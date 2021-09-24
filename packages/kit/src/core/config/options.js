@@ -75,14 +75,9 @@ const options = object(
 
 			package: object({
 				dir: string('package'),
-				exports: object({
-					include: array_of_strings(['**']),
-					exclude: array_of_strings(['**/_*'])
-				}),
-				files: object({
-					include: array_of_strings(['**']),
-					exclude: array_of_strings([])
-				}),
+				// excludes all .d.ts and filename starting with _
+				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
+				files: fun(() => true),
 				emitTypes: boolean(true)
 			}),
 
@@ -167,7 +162,7 @@ const options = object(
 			router: boolean(true),
 
 			serviceWorker: object({
-				exclude: array_of_strings([])
+				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
 			ssr: boolean(true),
@@ -267,19 +262,6 @@ function string(fallback, allow_empty = true) {
 }
 
 /**
- * @param {string[]} array
- * @returns {Validator}
- */
-function array_of_strings(array) {
-	return validate(array, (input, keypath) => {
-		if (!Array.isArray(input) || !input.every((glob) => typeof glob === 'string')) {
-			throw new Error(`${keypath} must be an array of strings`);
-		}
-		return input;
-	});
-}
-
-/**
  * @param {boolean} fallback
  * @returns {Validator}
  */
@@ -305,6 +287,19 @@ function list(options, fallback = options[0]) {
 				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
 
 			throw new Error(msg);
+		}
+		return input;
+	});
+}
+
+/**
+ * @param {(filename: string) => boolean} fallback
+ * @returns {Validator}
+ */
+function fun(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'function') {
+			throw new Error(`${keypath} should be a function, if specified`);
 		}
 		return input;
 	});

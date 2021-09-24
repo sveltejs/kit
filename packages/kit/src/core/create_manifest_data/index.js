@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
-import glob from 'tiny-glob/sync.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -25,44 +24,6 @@ import glob from 'tiny-glob/sync.js';
  */
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
-
-/**
- *
- * @param {import('types/config').ValidatedConfig} config
- * @returns {import('types/internal').ManifestData['assets']}
- */
-function get_assets_list(config) {
-	const assets_dir = config.kit.files.assets;
-	/**
-	 * @type {import('types/internal').Asset[]}
-	 */
-	let assets = [];
-	if (fs.existsSync(assets_dir)) {
-		/**
-		 * @type {string[]}
-		 */
-		const exclusions = config.kit.serviceWorker.exclude || [];
-
-		exclusions.push('**/.DS_STORE');
-
-		/**
-		 * @type {string[]}
-		 */
-		let excluded_paths = [];
-
-		exclusions.forEach((exclusion) => {
-			excluded_paths = [
-				...excluded_paths,
-				...glob(exclusion, {
-					cwd: assets_dir,
-					dot: true
-				})
-			];
-		});
-		assets = list_files(assets_dir, '', [], excluded_paths);
-	}
-	return assets;
-}
 
 /**
  * @param {{
@@ -276,8 +237,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	walk(config.kit.files.routes, [], [], [layout], [error]);
 
+	const assets = fs.existsSync(config.kit.files.assets)
+		? list_files({ config, dir: config.kit.files.assets, path: '' })
+		: [];
+
 	return {
-		assets: get_assets_list(config),
+		assets,
 		layout,
 		error,
 		components,
@@ -419,12 +384,14 @@ function get_pattern(segments, add_trailing_slash) {
 }
 
 /**
- * @param {string} dir
- * @param {string} path
- * @param {import('types/internal').Asset[]} files
- * @param {string[]} excluded_paths Paths relative to dir which should be excluded from files list.
+ * @param {{
+ *  config: import('types/config').ValidatedConfig;
+ * 	dir: string;
+ * 	path: string;
+ * 	files?: import('types/internal').Asset[]
+ * }} args
  */
-function list_files(dir, path, files = [], excluded_paths = []) {
+function list_files({ config, dir, path, files = [] }) {
 	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;
 
@@ -432,11 +399,8 @@ function list_files(dir, path, files = [], excluded_paths = []) {
 		const joined = path ? `${path}/${file}` : file;
 
 		if (stats.isDirectory()) {
-			list_files(full, joined, files, excluded_paths);
-		} else {
-			if (excluded_paths.includes(joined)) {
-				return;
-			}
+			list_files({ config, dir: full, path: joined, files });
+		} else if (config.kit.serviceWorker.files(joined)) {
 			files.push({
 				file: joined,
 				size: stats.size,

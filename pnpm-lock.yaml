@@ -205,7 +205,6 @@ importers:
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.1
       '@types/marked': ^3.0.1
-      '@types/micromatch': ^4.0.2
       '@types/mime': ^2.0.3
       '@types/node': ^16.9.1
       '@types/rimraf': ^3.0.2
@@ -218,7 +217,6 @@ importers:
       kleur: ^4.1.4
       locate-character: ^2.0.5
       marked: ^3.0.4
-      micromatch: ^4.0.4
       mime: ^2.5.2
       node-fetch: 3.0.0-beta.9
       port-authority: ^1.1.2
@@ -243,7 +241,6 @@ importers:
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.1
       '@types/marked': 3.0.1
-      '@types/micromatch': 4.0.2
       '@types/mime': 2.0.3
       '@types/node': 16.9.1
       '@types/rimraf': 3.0.2
@@ -255,7 +252,6 @@ importers:
       kleur: 4.1.4
       locate-character: 2.0.5
       marked: 3.0.4
-      micromatch: 4.0.4
       mime: 2.5.2
       node-fetch: 3.0.0-beta.9
       port-authority: 1.1.2
@@ -265,7 +261,7 @@ importers:
       sirv: 1.0.17
       svelte: 3.43.0
       svelte-check: 2.2.6_svelte@3.43.0
-      svelte2tsx: 0.4.6_svelte@3.43.0+typescript@4.4.3
+      svelte2tsx: 0.4.6_svelte@3.43.0
       tiny-glob: 0.2.9
       uvu: 0.5.1
 
@@ -799,10 +795,6 @@ packages:
       '@types/node': 16.9.1
     dev: true
 
-  /@types/braces/3.0.1:
-    resolution: {integrity: sha512-+euflG6ygo4bn0JHtn4pYqcXwRtLvElQ7/nnjDu7iYG56H0+OhCd7d6Ug0IE3WcFpZozBKW2+80FUbv5QGk5AQ==}
-    dev: true
-
   /@types/compression/1.7.2:
     resolution: {integrity: sha512-lwEL4M/uAGWngWFLSG87ZDr2kLrbuR8p7X+QZB1OQlT+qkHsCPDVFnHPyXf4Vyl4yDDorNY+mAhosxkCvppatg==}
     dependencies:
@@ -869,12 +861,6 @@ packages:
 
   /@types/marked/3.0.1:
     resolution: {integrity: sha512-jry/WUAC511P2NBCeiCkfTRCN2VXobeeQa8p8gImOYsRfnuIVfeEsqOJ1pk+CzCwfMCdv3dkTQRCYaNkkFGtxw==}
-    dev: true
-
-  /@types/micromatch/4.0.2:
-    resolution: {integrity: sha512-oqXqVb0ci19GtH0vOA/U2TmHTcRY9kuZl4mqUxe0QmJAlIW13kzhuK5pi1i9+ngav8FjpSb9FVS/GE00GLX1VA==}
-    dependencies:
-      '@types/braces': 3.0.1
     dev: true
 
   /@types/mime/1.3.2:
@@ -3841,7 +3827,7 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
-  /svelte2tsx/0.4.6_svelte@3.43.0+typescript@4.4.3:
+  /svelte2tsx/0.4.6_svelte@3.43.0:
     resolution: {integrity: sha512-flljgh/MbJDijo6Z1HhCfyzdRgn1Nd7QTuuxk9Oq5CzyBXZl/NJYh4otZZwUHnx5poy8k7Oxr2CBE3IBh89tmQ==}
     peerDependencies:
       svelte: ^3.24
@@ -3850,7 +3836,6 @@ packages:
       dedent-js: 1.0.1
       pascal-case: 3.1.2
       svelte: 3.43.0
-      typescript: 4.4.3
     dev: true
 
   /table/6.7.1:

@@ -1,12 +1,18 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+
+import { remove_keys } from '../../utils/object.js';
 import { validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	// @ts-expect-error - can't test equality of a function
-	delete validated.kit.vite;
+	assert.equal(validated.kit.package.exports(''), true);
+	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.serviceWorker.files(''), true);
+	assert.equal(validated.kit.vite(), {});
+
+	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	assert.equal(validated, {
 		extensions: ['.svelte'],
@@ -28,19 +34,9 @@ test('fills in defaults', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				emitTypes: true,
-				exports: {
-					include: ['**'],
-					exclude: ['**/_*']
-				},
-				files: {
-					include: ['**'],
-					exclude: []
-				}
+				emitTypes: true
 			},
-			serviceWorker: {
-				exclude: []
-			},
+			serviceWorker: {},
 			paths: {
 				base: '',
 				assets: ''
@@ -111,10 +107,12 @@ test('fills in partial blanks', () => {
 		}
 	});
 
+	assert.equal(validated.kit.package.exports(''), true);
+	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.serviceWorker.files(''), true);
 	assert.equal(validated.kit.vite(), {});
 
-	// @ts-expect-error - can't test equality of a function
-	delete validated.kit.vite;
+	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	assert.equal(validated, {
 		extensions: ['.svelte'],
@@ -136,19 +134,9 @@ test('fills in partial blanks', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				emitTypes: true,
-				exports: {
-					include: ['**'],
-					exclude: ['**/_*']
-				},
-				files: {
-					include: ['**'],
-					exclude: []
-				}
+				emitTypes: true
 			},
-			serviceWorker: {
-				exclude: []
-			},
+			serviceWorker: {},
 			paths: {
 				base: '',
 				assets: ''

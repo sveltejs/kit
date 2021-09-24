@@ -22,7 +22,7 @@ const create = (dir, extensions = ['.svelte']) => {
 			},
 			appDir: '_app',
 			serviceWorker: {
-				exclude: []
+				files: (filepath) => !/\.DS_STORE/.test(filepath)
 			}
 		}
 	};
