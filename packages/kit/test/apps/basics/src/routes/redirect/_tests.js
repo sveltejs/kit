@@ -9,17 +9,16 @@ export default function (test, is_dev) {
 		assert.equal(await page.textContent('h1'), 'c');
 	});
 
-	test('prevents redirect loops', '/redirect', async ({ base, page, js }) => {
+	test('prevents redirect loops', '/redirect', async ({ base, page, js, get_elements }) => {
 		await page.click('[href="/redirect/loopy/a"]');
 
 		if (js) {
-			await page.waitForTimeout(100);
-			assert.equal(page.url(), `${base}/redirect/loopy/a`);
-			assert.equal(await page.textContent('h1'), '500');
 			assert.equal(
-				await page.textContent('#message'),
+				await (await get_elements('#message'))[0].innerText(),
 				'This is your custom error page saying: "Redirect loop"'
 			);
+			assert.equal(page.url(), `${base}/redirect/loopy/a`);
+			assert.equal(await page.textContent('h1'), '500');
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
 			assert.equal(page.url(), 'chrome-error://chromewebdata/');
