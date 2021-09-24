@@ -130,9 +130,10 @@ Options related to [creating a package](#packaging).
 - `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
 
+For advanced `filepath` matching, you can use `exports` and `files` options in conjunction with a globbing library:
+
 ```js
 // svelte.config.js
-// example usage with a globbing library
 import mm from 'micromatch';
 
 export default {
