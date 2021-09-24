@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.50
+
+### Patch Changes
+
+- [fix] Correctly treat `middlewares.js` as external when using `entryPoint` option ([#2482](https://github.com/sveltejs/kit/pull/2482))
+
 ## 1.0.0-next.49
 
 ### Patch Changes
