@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('redirect-on-load', '/redirect-on-load', async ({ base, page, js }) => {
 		if (js) {
 			assert.equal(page.url(), `${base}/redirect-on-load/redirected`);
