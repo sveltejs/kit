@@ -1,5 +1,5 @@
 import { UserConfig as ViteConfig } from 'vite';
-import { RecursiveRequired } from './helper';
+import { JSONString, Rec, RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
@@ -53,6 +53,7 @@ export interface Config {
 			emitTypes?: boolean;
 			exports?(filepath: string): boolean;
 			files?(filepath: string): boolean;
+			override?(pkg: Rec<JSONString>): Rec<JSONString>;
 		};
 		paths?: {
 			assets?: string;

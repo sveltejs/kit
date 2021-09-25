@@ -9,6 +9,7 @@ test('fills in defaults', () => {
 
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.package.override({}), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 	assert.equal(validated.kit.vite(), {});
 
@@ -109,6 +110,7 @@ test('fills in partial blanks', () => {
 
 	assert.equal(validated.kit.package.exports(''), true);
 	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.package.override({}), true);
 	assert.equal(validated.kit.serviceWorker.files(''), true);
 	assert.equal(validated.kit.vite(), {});
 

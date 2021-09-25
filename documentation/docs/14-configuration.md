@@ -35,7 +35,7 @@ const config = {
 			// excludes all .d.ts and files starting with _ as the name
 			exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
 			files: () => true,
-			override: null
+			override: (pkg) => pkg
 		},
 		paths: {
 			assets: '',
@@ -130,7 +130,7 @@ Options related to [creating a package](#packaging).
 - `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
 - `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
-- `override` - any object with a key-value pair to merge with the final contents of `package.json` and overwrite anything that overlaps
+- `override` - a function with the final `package.json` object passed in as the argument of the first parameter, everything excluding `scripts` field are available, including all of the generated `exports`
 
 For advanced `filepath` matching, you can use `exports` and `files` options in conjunction with a globbing library:
 
