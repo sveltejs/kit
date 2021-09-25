@@ -17,6 +17,7 @@ $ wrangler init --site my-site-name
 ```
 
 Add the adapter to your `svelte.config.js`:
+
 ```js
 // Import the adapter
 import adapter from '@sveltejs/adapter-cloudflare-workers';
@@ -30,13 +31,13 @@ const config = {
 };
 ...
 ```
+
 Now you should get some details from Cloudflare. You should get your:
+
 1. Account ID
 2. And your Zone-ID (Optional)
 
 Get them by visiting your Cloudflare-Dashboard and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
-
-
 
 Then configure your sites build directory and your account-details in the config file:
 
@@ -49,13 +50,17 @@ site = {bucket = "./build", entry-point = "./workers-site"}
 It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
 
 Now, log in with wrangler:
+
 ```sh
 $ wrangler login
 ```
+
 Build your project and publish it:
+
 ```sh
 $ npm run build && wrangler publish
 ```
+
 **You are done!**
 
 Credits to [Scien.cx](https://www.scien.cx/2021/06/21/deploying-sveltekit-using-cloudflare-workers/)
