@@ -207,6 +207,7 @@ function strip_lang_tags(content) {
 			'g'
 		);
 		content = content.replace(regexp, (tag, attributes) => {
+			if (!attributes) return tag;
 			const idx = tag.indexOf(attributes);
 			return (
 				tag.substring(0, idx) +
