@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.174
+
+### Patch Changes
+
+- Fix script and style tags without attributes crashing svelte-kit package ([#2492](https://github.com/sveltejs/kit/pull/2492))
+
 ## 1.0.0-next.173
 
 ### Patch Changes
