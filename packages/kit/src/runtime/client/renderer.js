@@ -224,8 +224,9 @@ export class Renderer {
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async update(info, chain, no_cache) {
+	async update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
@@ -263,12 +264,31 @@ export class Renderer {
 
 			this.root.$set(navigation_result.props);
 			this.stores.navigating.set(null);
-
-			await 0;
 		} else {
 			this._init(navigation_result);
 		}
 
+		if (opts) {
+			const { hash, scroll, keepfocus } = opts;
+
+			if (!keepfocus) {
+				document.body.focus();
+			}
+
+			const deep_linked = hash && document.getElementById(hash.slice(1));
+			if (scroll) {
+				scrollTo(scroll.x, scroll.y);
+			} else if (deep_linked) {
+				// Here we use `scrollIntoView` on the element instead of `scrollTo`
+				// because it natively supports the `scroll-margin` and `scroll-behavior`
+				// CSS properties.
+				deep_linked.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
+			}
+		}
+
+		await 0;
 		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 		this.loading.promise = null;
 		this.loading.id = null;
