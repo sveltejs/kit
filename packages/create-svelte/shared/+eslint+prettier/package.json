@@ -1,9 +1,9 @@
 {
 	"devDependencies": {
-		"eslint-config-prettier": "^8.1.0"
+		"eslint-config-prettier": "^8.3.0"
 	},
 	"scripts": {
-		"lint": "prettier --ignore-path .gitignore  --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
+		"lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
 		"format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
 	}
 }

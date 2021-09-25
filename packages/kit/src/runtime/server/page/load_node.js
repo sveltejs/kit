@@ -12,7 +12,7 @@ const s = JSON.stringify;
  *   page: import('types/page').Page;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
- *   context: Record<string, any>;
+ *   stuff: Record<string, any>;
  *   prerender_enabled: boolean;
  *   is_leaf: boolean;
  *   is_error: boolean;
@@ -29,7 +29,7 @@ export async function load_node({
 	page,
 	node,
 	$session,
-	context,
+	stuff,
 	prerender_enabled,
 	is_leaf,
 	is_error,
@@ -48,6 +48,11 @@ export async function load_node({
 	 * }>}
 	 */
 	const fetched = [];
+
+	/**
+	 * @type {string[]}
+	 */
+	let set_cookie_headers = [];
 
 	let loaded;
 
@@ -166,7 +171,7 @@ export async function load_node({
 							state.prerender.dependencies.set(relative, rendered);
 						}
 
-						// Set-Cookie not available to be set in `fetch` and that's the only header value that
+						// Set-Cookie must be filtered out (done below) and that's the only header value that
 						// can be an array so we know we have only simple values
 						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
 						response = new Response(rendered.body, {
@@ -219,7 +224,11 @@ export async function load_node({
 								/** @type {import('types/helper').ResponseHeaders} */
 								const headers = {};
 								for (const [key, value] of response.headers) {
-									if (key !== 'etag' && key !== 'set-cookie') headers[key] = value;
+									if (key === 'set-cookie') {
+										set_cookie_headers = set_cookie_headers.concat(value);
+									} else if (key !== 'etag') {
+										headers[key] = value;
+									}
 								}
 
 								if (!opts.body || typeof opts.body === 'string') {
@@ -260,7 +269,7 @@ export async function load_node({
 					})
 				);
 			},
-			context: { ...context }
+			stuff: { ...stuff }
 		};
 
 		if (is_error) {
@@ -284,8 +293,9 @@ export async function load_node({
 	return {
 		node,
 		loaded: normalize(loaded),
-		context: loaded.context || context,
+		stuff: loaded.stuff || stuff,
 		fetched,
+		set_cookie_headers,
 		uses_credentials
 	};
 }

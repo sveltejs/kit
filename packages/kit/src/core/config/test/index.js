@@ -1,7 +1,10 @@
 import { join } from 'path';
-import { test } from 'uvu';
-import * as assert from 'uvu/assert';
 import { fileURLToPath } from 'url';
+
+import * as assert from 'uvu/assert';
+import { test } from 'uvu';
+
+import { remove_keys } from '../../../utils/object.js';
 import { load_config } from '../index.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,9 +17,7 @@ async function testLoadDefaultConfig(path) {
 	const cwd = join(__dirname, 'fixtures', path);
 
 	const config = await load_config({ cwd });
-
-	// @ts-expect-error - can't test equality of a function
-	delete config.kit.vite;
+	remove_keys(config, ([, v]) => typeof v === 'function');
 
 	assert.equal(config, {
 		extensions: ['.svelte'],
@@ -38,22 +39,18 @@ async function testLoadDefaultConfig(path) {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				emitTypes: true,
-				exports: {
-					include: ['**'],
-					exclude: ['**/_*']
-				},
-				files: {
-					include: ['**'],
-					exclude: []
-				},
-				override: null
+				emitTypes: true
 			},
-			serviceWorker: {
-				exclude: []
-			},
+			serviceWorker: {},
 			paths: { base: '', assets: '' },
-			prerender: { crawl: true, enabled: true, force: undefined, onError: 'fail', pages: ['*'] },
+			prerender: {
+				crawl: true,
+				enabled: true,
+				entries: ['*'],
+				force: undefined,
+				onError: 'fail',
+				pages: undefined
+			},
 			router: true,
 			ssr: true,
 			target: null,
@@ -75,7 +72,7 @@ test('errors on loading config with incorrect default export', async () => {
 	try {
 		const cwd = join(__dirname, 'fixtures', 'export-string');
 		await load_config({ cwd });
-	} catch (e) {
+	} catch (/** @type {any} */ e) {
 		errorMessage = e.message;
 	}
 

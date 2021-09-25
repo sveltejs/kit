@@ -1,6 +1,12 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.78",
+	"version": "2.0.0-next.82",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/sveltejs/kit",
+		"directory": "packages/create-svelte"
+	},
+	"homepage": "https://kit.svelte.dev",
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
@@ -9,18 +15,18 @@
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.2.3",
-		"@types/prompts": "^2.0.11",
+		"@types/prettier": "^2.3.2",
+		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.2.1",
-		"prettier-plugin-svelte": "^2.2.0",
-		"sucrase": "^3.18.1",
-		"svelte": "^3.42.4",
-		"svelte-preprocess": "^4.7.3",
-		"tiny-glob": "^0.2.8"
+		"prettier": "^2.4.1",
+		"prettier-plugin-svelte": "^2.4.0",
+		"sucrase": "^3.20.1",
+		"svelte": "^3.43.0",
+		"svelte-preprocess": "^4.9.4",
+		"tiny-glob": "^0.2.9"
 	},
 	"scripts": {
-		"build": "npm run format && node scripts/build-templates",
+		"build": "node scripts/build-templates",
 		"check": "tsc",
 		"lint": "eslint --ignore-path .gitignore --ignore-path ../../.gitignore \"./*.js\" && npm run check-format",
 		"format": "npm run check-format -- --write",

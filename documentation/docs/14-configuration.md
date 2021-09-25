@@ -32,14 +32,9 @@ const config = {
 		package: {
 			dir: 'package',
 			emitTypes: true,
-			exports: {
-				include: ['**'],
-				exclude: ['**/_*']
-			},
-			files: {
-				include: ['**'],
-				exclude: []
-			},
+			// excludes all .d.ts and files starting with _ as the name
+			exports: (filepath) => !/^_|\/_|\.d\.ts$/.test(filepath),
+			files: () => true,
 			override: null
 		},
 		paths: {
@@ -49,12 +44,12 @@ const config = {
 		prerender: {
 			crawl: true,
 			enabled: true,
-			onError: 'fail',
-			pages: ['*']
+			entries: ['*'],
+			onError: 'fail'
 		},
 		router: true,
 		serviceWorker: {
-			exclude: []
+			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
 		ssr: true,
 		target: null,
@@ -133,9 +128,28 @@ Options related to [creating a package](#packaging).
 
 - `dir` - output directory
 - `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `d.ts.` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
-- `exports` - contains an `includes` and an `excludes` array which specifies which files to mark as exported from the `exports` field of the `package.json`. Will merge existing values if available with values from `package.json` taking precedence
-- `files` - contains an `includes` and an `excludes` array which specifies which files to process and copy over when packaging
+- `exports` - a function with the type of `(filepath: string) => boolean`. When `true`, the filepath will be included in the `exports` field of the `package.json`. Any existing values in the `package.json` source will be merged with values from the original `exports` field taking precedence
+- `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the file will be processed and copied over to the final output folder, specified in `dir`
 - `override` - any object with a key-value pair to merge with the final contents of `package.json` and overwrite anything that overlaps
+
+For advanced `filepath` matching, you can use `exports` and `files` options in conjunction with a globbing library:
+
+```js
+// svelte.config.js
+import mm from 'micromatch';
+
+export default {
+	kit: {
+		package: {
+			exports: (filepath) => {
+				if (filepath.endsWith('.d.ts')) return false;
+				return mm.isMatch(filepath, ['!**/_*', '!**/internal/**'])
+			},
+			files: mm.matcher('!**/build.*')
+		}
+	}
+};
+```
 
 ### paths
 
@@ -150,6 +164,7 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
+- `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
 
   - `'fail'` — (default) fails the build when a routing error is encountered when following a link
@@ -174,8 +189,6 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     };
     ```
 
-- `pages` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
-
 ### router
 
 Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
@@ -184,7 +197,7 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 
 An object containing zero or more of the following values:
 
-- `exclude` - an array of glob patterns relative to `files.assets` dir. Files matching any of these would not be available in `$service-worker.files` e.g. if `files.assets` has value `static` then ['og-tags-images/**/*'] would match all files under `static/og-tags-images` dir.
+- `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
 
 ### ssr
 

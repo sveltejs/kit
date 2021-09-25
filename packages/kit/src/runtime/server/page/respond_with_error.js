@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { coalesce_to_error } from '../../utils.js';
+import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -31,37 +31,41 @@ export async function respond_with_error({ request, options, state, $session, st
 	};
 
 	// error pages don't fall through, so we know it's not undefined
-	const loaded = /** @type {Loaded} */ (await load_node({
-		request,
-		options,
-		state,
-		route: null,
-		page,
-		node: default_layout,
-		$session,
-		context: {},
-		prerender_enabled: is_prerender_enabled(options, default_error, state),
-		is_leaf: false,
-		is_error: false
-	}));
-
-	const branch = [
-		loaded,
-		/** @type {Loaded} */ (await load_node({
+	const loaded = /** @type {Loaded} */ (
+		await load_node({
 			request,
 			options,
 			state,
 			route: null,
 			page,
-			node: default_error,
+			node: default_layout,
 			$session,
-			context: loaded ? loaded.context : {},
+			stuff: {},
 			prerender_enabled: is_prerender_enabled(options, default_error, state),
 			is_leaf: false,
-			is_error: true,
-			status,
-			error
-		}))
+			is_error: false
+		})
+	);
+
+	const branch = [
+		loaded,
+		/** @type {Loaded} */ (
+			await load_node({
+				request,
+				options,
+				state,
+				route: null,
+				page,
+				node: default_error,
+				$session,
+				stuff: loaded ? loaded.stuff : {},
+				prerender_enabled: is_prerender_enabled(options, default_error, state),
+				is_leaf: false,
+				is_error: true,
+				status,
+				error
+			})
+		)
 	];
 
 	try {
@@ -78,7 +82,7 @@ export async function respond_with_error({ request, options, state, $session, st
 			branch,
 			page
 		});
-	} catch (/** @type {unknown} */ err) {
+	} catch (err) {
 		const error = coalesce_to_error(err);
 
 		options.handle_error(error, request);

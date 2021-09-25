@@ -9,7 +9,7 @@ export default function (test, is_dev) {
 				try {
 					// ???
 					// await visit('/errors/clientside');
-				} catch (error) {
+				} catch (/** @type {any} */ error) {
 					assert.ok(/Crashing now/.test(error.message));
 				} finally {
 					// this is the Snowpack error overlay

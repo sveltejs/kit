@@ -1,5 +1,31 @@
 # create-svelte
 
+## 2.0.0-next.82
+
+### Patch Changes
+
+- [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
+
+## 2.0.0-next.81
+
+### Patch Changes
+
+- [fix] provide valid value for `letter-spacing` CSS property ([#2437](https://github.com/sveltejs/kit/pull/2437))
+
+* update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+
+## 2.0.0-next.80
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 2.0.0-next.79
+
+### Patch Changes
+
+- Use the name of folder as name in package.json ([#2415](https://github.com/sveltejs/kit/pull/2415))
+
 ## 2.0.0-next.78
 
 ### Patch Changes

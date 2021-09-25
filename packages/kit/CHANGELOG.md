@@ -1,5 +1,87 @@
 # @sveltejs/kit
 
+## 1.0.0-next.173
+
+### Patch Changes
+
+- Exports and files property in config.kit.package now accepts a function rather than an object ([#2430](https://github.com/sveltejs/kit/pull/2430))
+
+* Renamed property exclude to files in config.kit.serviceWorker and now accepts a function instead ([#2430](https://github.com/sveltejs/kit/pull/2430))
+
+- Remove lang tag when packaging ([#2486](https://github.com/sveltejs/kit/pull/2486))
+
+## 1.0.0-next.172
+
+### Patch Changes
+
+- [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
+
+* **breaking change** the "context" parameter of the load function was renamed to "stuff" ([#2439](https://github.com/sveltejs/kit/pull/2439))
+
+## 1.0.0-next.171
+
+### Patch Changes
+
+- Fix preview when `kit.paths.base` is set. ([#2409](https://github.com/sveltejs/kit/pull/2409))
+
+* Resolve \$lib alias when packaging ([#2453](https://github.com/sveltejs/kit/pull/2453))
+
+## 1.0.0-next.170
+
+### Patch Changes
+
+- Fix prerendering/adapter-static failing when `kit.paths.base` was set. ([#2407](https://github.com/sveltejs/kit/pull/2407))
+
+## 1.0.0-next.169
+
+### Patch Changes
+
+- Add "svelte" field to package.json when running package command ([#2431](https://github.com/sveltejs/kit/pull/2431))
+
+* [fix] revert #2354 and fix double character decoding a different way ([#2435](https://github.com/sveltejs/kit/pull/2435))
+
+- [feat] use the Vite server options in dev mode ([#2232](https://github.com/sveltejs/kit/pull/2232))
+
+* update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+
+## 1.0.0-next.168
+
+### Patch Changes
+
+- [fix] encodeURI during prerender ([#2427](https://github.com/sveltejs/kit/pull/2427))
+
+* [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 1.0.0-next.167
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.24 ([#2423](https://github.com/sveltejs/kit/pull/2423))
+
+* Add a generic argument to allow typing Body from hooks ([#2413](https://github.com/sveltejs/kit/pull/2413))
+
+## 1.0.0-next.166
+
+### Patch Changes
+
+- [chore] upgrade Vite to 2.5.7
+
+* [fix] deeply-nested error components render with correct layout ([#2389](https://github.com/sveltejs/kit/pull/2389))
+
+- Update vite-plugin-svelte to 1.0.0-next.23 ([#2402](https://github.com/sveltejs/kit/pull/2402))
+
+* [fix] pass along set-cookie headers during SSR ([#2362](https://github.com/sveltejs/kit/pull/2362))
+
+## 1.0.0-next.165
+
+### Patch Changes
+
+- [chore] upgrade Vite
+
+* [breaking] rename prerender.pages config option to prerender.entries ([#2380](https://github.com/sveltejs/kit/pull/2380))
+
+- [fix] anchor tag inside svg ([#2286](https://github.com/sveltejs/kit/pull/2286))
+
 ## 1.0.0-next.164
 
 ### Patch Changes

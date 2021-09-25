@@ -40,51 +40,53 @@ async function main() {
 		mkdirp(cwd);
 	}
 
-	const options = /** @type {import('./types/internal').Options} */ (await prompts([
-		{
-			type: 'select',
-			name: 'template',
-			message: 'Which Svelte app template?',
-			choices: fs.readdirSync(dist('templates')).map((dir) => {
-				const meta_file = dist(`templates/${dir}/meta.json`);
-				const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+	const options = /** @type {import('./types/internal').Options} */ (
+		await prompts([
+			{
+				type: 'select',
+				name: 'template',
+				message: 'Which Svelte app template?',
+				choices: fs.readdirSync(dist('templates')).map((dir) => {
+					const meta_file = dist(`templates/${dir}/meta.json`);
+					const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
 
-				return {
-					title: meta.description,
-					value: dir
-				};
-			})
-		},
-		{
-			type: 'toggle',
-			name: 'typescript',
-			message: 'Use TypeScript?',
-			initial: false,
-			active: 'Yes',
-			inactive: 'No'
-		},
-		{
-			type: 'toggle',
-			name: 'eslint',
-			message: 'Add ESLint for code linting?',
-			initial: false,
-			active: 'Yes',
-			inactive: 'No'
-		},
-		{
-			type: 'toggle',
-			name: 'prettier',
-			message: 'Add Prettier for code formatting?',
-			initial: false,
-			active: 'Yes',
-			inactive: 'No'
-		}
-	]));
+					return {
+						title: meta.description,
+						value: dir
+					};
+				})
+			},
+			{
+				type: 'toggle',
+				name: 'typescript',
+				message: 'Use TypeScript?',
+				initial: false,
+				active: 'Yes',
+				inactive: 'No'
+			},
+			{
+				type: 'toggle',
+				name: 'eslint',
+				message: 'Add ESLint for code linting?',
+				initial: false,
+				active: 'Yes',
+				inactive: 'No'
+			},
+			{
+				type: 'toggle',
+				name: 'prettier',
+				message: 'Add Prettier for code formatting?',
+				initial: false,
+				active: 'Yes',
+				inactive: 'No'
+			}
+		])
+	);
 
 	const name = path.basename(path.resolve(cwd));
 
 	write_template_files(options.template, options.typescript, name, cwd);
-	write_common_files(cwd, options);
+	write_common_files(cwd, options, name);
 
 	console.log(bold(green('✔ Copied project files')));
 
@@ -157,9 +159,9 @@ function write_template_files(template, typescript, name, cwd) {
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
 	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;
-	const files = /** @type {import('./types/internal').File[]} */ (JSON.parse(
-		fs.readFileSync(manifest, 'utf-8')
-	));
+	const files = /** @type {import('./types/internal').File[]} */ (
+		JSON.parse(fs.readFileSync(manifest, 'utf-8'))
+	);
 
 	files.forEach((file) => {
 		const dest = path.join(cwd, file.name);
@@ -173,12 +175,13 @@ function write_template_files(template, typescript, name, cwd) {
  *
  * @param {string} cwd
  * @param {import('./types/internal').Options} options
+ * @param {string} name
  */
-function write_common_files(cwd, options) {
+function write_common_files(cwd, options, name) {
 	const shared = dist('shared.json');
-	const { files } = /** @type {import('./types/internal').Common} */ (JSON.parse(
-		fs.readFileSync(shared, 'utf-8')
-	));
+	const { files } = /** @type {import('./types/internal').Common} */ (
+		JSON.parse(fs.readFileSync(shared, 'utf-8'))
+	);
 
 	const pkg_file = path.join(cwd, 'package.json');
 	const pkg = /** @type {any} */ (JSON.parse(fs.readFileSync(pkg_file, 'utf-8')));
@@ -201,6 +204,7 @@ function write_common_files(cwd, options) {
 
 	pkg.dependencies = sort_keys(pkg.dependencies);
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
+	pkg.name = toValidPackageName(name);
 
 	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
 }
@@ -258,6 +262,16 @@ function sort_keys(obj) {
 /** @param {string} path */
 function dist(path) {
 	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
+}
+
+/** @param {string} name */
+function toValidPackageName(name) {
+	return name
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/^[._]/, '')
+		.replace(/[^a-z0-9~.-]+/g, '-');
 }
 
 main();

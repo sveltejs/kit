@@ -75,22 +75,10 @@ const options = object(
 
 			package: object({
 				dir: string('package'),
-				emitTypes: boolean(true),
-				exports: object({
-					include: array_of_strings(['**']),
-					exclude: array_of_strings(['**/_*'])
-				}),
-				files: object({
-					include: array_of_strings(['**']),
-					exclude: array_of_strings([])
-				}),
-				override: validate(null, (input, keypath) => {
-					if (typeof input !== 'object') {
-						throw new Error(`${keypath} should be an object.`);
-					}
-
-					return input;
-				})
+				// excludes all .d.ts and filename starting with _
+				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
+				files: fun(() => true),
+				emitTypes: boolean(true)
 			}),
 
 			paths: object({
@@ -129,6 +117,21 @@ const options = object(
 			prerender: object({
 				crawl: boolean(true),
 				enabled: boolean(true),
+				entries: validate(['*'], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					input.forEach((page) => {
+						if (page !== '*' && page[0] !== '/') {
+							throw new Error(
+								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
+							);
+						}
+					});
+
+					return input;
+				}),
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
@@ -148,27 +151,18 @@ const options = object(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
 				}),
-				pages: validate(['*'], (input, keypath) => {
-					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
-						throw new Error(`${keypath} must be an array of strings`);
+				// TODO: remove this for the 1.0 release
+				pages: validate(undefined, (input, keypath) => {
+					if (typeof input !== undefined) {
+						throw new Error(`${keypath} has been renamed to \`entries\`.`);
 					}
-
-					input.forEach((page) => {
-						if (page !== '*' && page[0] !== '/') {
-							throw new Error(
-								`Each member of ${keypath} must be either '*' or an absolute path beginning with '/' — saw '${page}'`
-							);
-						}
-					});
-
-					return input;
 				})
 			}),
 
 			router: boolean(true),
 
 			serviceWorker: object({
-				exclude: array_of_strings([])
+				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
 			ssr: boolean(true),
@@ -268,19 +262,6 @@ function string(fallback, allow_empty = true) {
 }
 
 /**
- * @param {string[]} array
- * @returns {Validator}
- */
-function array_of_strings(array) {
-	return validate(array, (input, keypath) => {
-		if (!Array.isArray(input) || !input.every((glob) => typeof glob === 'string')) {
-			throw new Error(`${keypath} must be an array of strings`);
-		}
-		return input;
-	});
-}
-
-/**
  * @param {boolean} fallback
  * @returns {Validator}
  */
@@ -306,6 +287,19 @@ function list(options, fallback = options[0]) {
 				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
 
 			throw new Error(msg);
+		}
+		return input;
+	});
+}
+
+/**
+ * @param {(filename: string) => boolean} fallback
+ * @returns {Validator}
+ */
+function fun(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'function') {
+			throw new Error(`${keypath} should be a function, if specified`);
 		}
 		return input;
 	});

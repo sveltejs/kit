@@ -2,15 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
-import glob from 'tiny-glob/sync.js';
 
-/** @typedef {{
+/**
+ * A portion of a file or directory name where the name has been split into
+ * static and dynamic parts
+ * @typedef {{
  *   content: string;
  *   dynamic: boolean;
  *   spread: boolean;
- * }} Part */
-
-/** @typedef {{
+ * }} Part
+ * @typedef {{
  *   basename: string;
  *   ext: string;
  *   parts: Part[],
@@ -19,47 +20,10 @@ import glob from 'tiny-glob/sync.js';
  *   is_index: boolean;
  *   is_page: boolean;
  *   route_suffix: string
- * }} Item */
+ * }} Item
+ */
 
 const specials = new Set(['__layout', '__layout.reset', '__error']);
-
-/**
- *
- * @param {import('types/config').ValidatedConfig} config
- * @returns {import('types/internal').ManifestData['assets']}
- */
-function get_assets_list(config) {
-	const assets_dir = config.kit.files.assets;
-	/**
-	 * @type {import('types/internal').Asset[]}
-	 */
-	let assets = [];
-	if (fs.existsSync(assets_dir)) {
-		/**
-		 * @type {string[]}
-		 */
-		const exclusions = config.kit.serviceWorker.exclude || [];
-
-		exclusions.push('**/.DS_STORE');
-
-		/**
-		 * @type {string[]}
-		 */
-		let excluded_paths = [];
-
-		exclusions.forEach((exclusion) => {
-			excluded_paths = [
-				...excluded_paths,
-				...glob(exclusion, {
-					cwd: assets_dir,
-					dot: true
-				})
-			];
-		});
-		assets = list_files(assets_dir, '', [], excluded_paths);
-	}
-	return assets;
-}
 
 /**
  * @param {{
@@ -220,23 +184,24 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				components.push(item.file);
 
 				const concatenated = layout_stack.concat(item.file);
+				const errors = error_stack.slice();
 
 				const pattern = get_pattern(segments, true);
 
 				let i = concatenated.length;
 				while (i--) {
-					if (!error_stack[i] && !concatenated[i]) {
-						error_stack.splice(i, 1);
+					if (!errors[i] && !concatenated[i]) {
+						errors.splice(i, 1);
 						concatenated.splice(i, 1);
 					}
 				}
 
-				i = error_stack.length;
+				i = errors.length;
 				while (i--) {
-					if (error_stack[i]) break;
+					if (errors[i]) break;
 				}
 
-				error_stack.splice(i + 1);
+				errors.splice(i + 1);
 
 				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
 					? `/${segments.map((segment) => segment[0].content).join('/')}`
@@ -248,7 +213,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					params,
 					path,
 					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (error_stack)
+					b: /** @type {string[]} */ (errors)
 				});
 			} else {
 				const pattern = get_pattern(segments, !item.route_suffix);
@@ -272,8 +237,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 	walk(config.kit.files.routes, [], [], [layout], [error]);
 
+	const assets = fs.existsSync(config.kit.files.assets)
+		? list_files({ config, dir: config.kit.files.assets, path: '' })
+		: [];
+
 	return {
-		assets: get_assets_list(config),
+		assets,
 		layout,
 		error,
 		components,
@@ -388,10 +357,22 @@ function get_pattern(segments, add_trailing_slash) {
 							.map((part) => {
 								return part.dynamic
 									? '([^/]+?)'
-									: encodeURIComponent(part.content.normalize()).replace(
-											/[.*+?^${}()|[\]\\]/g,
-											'\\$&'
-									  );
+									: // allow users to specify characters on the file system in an encoded manner
+									  part.content
+											.normalize()
+											// We use [ and ] to denote parameters, so users must encode these on the file
+											// system to match against them. We don't decode all characters since others
+											// can already be epressed and so that '%' can be easily used directly in filenames
+											.replace(/%5[Bb]/g, '[')
+											.replace(/%5[Dd]/g, ']')
+											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
+											// They will not be touched by decodeURI so need to be encoded here, so
+											// that we can match against them.
+											// We skip '/' since you can't create a file with it on any OS
+											.replace(/#/g, '%23')
+											.replace(/\?/g, '%3F')
+											// escape characters that have special meaning in regex
+											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 							})
 							.join('');
 		})
@@ -403,12 +384,14 @@ function get_pattern(segments, add_trailing_slash) {
 }
 
 /**
- * @param {string} dir
- * @param {string} path
- * @param {import('types/internal').Asset[]} files
- * @param {string[]} excluded_paths Paths relative to dir which should be excluded from files list.
+ * @param {{
+ *  config: import('types/config').ValidatedConfig;
+ * 	dir: string;
+ * 	path: string;
+ * 	files?: import('types/internal').Asset[]
+ * }} args
  */
-function list_files(dir, path, files = [], excluded_paths = []) {
+function list_files({ config, dir, path, files = [] }) {
 	fs.readdirSync(dir).forEach((file) => {
 		const full = `${dir}/${file}`;
 
@@ -416,11 +399,8 @@ function list_files(dir, path, files = [], excluded_paths = []) {
 		const joined = path ? `${path}/${file}` : file;
 
 		if (stats.isDirectory()) {
-			list_files(full, joined, files, excluded_paths);
-		} else {
-			if (excluded_paths.includes(joined)) {
-				return;
-			}
+			list_files({ config, dir: full, path: joined, files });
+		} else if (config.kit.serviceWorker.files(joined)) {
 			files.push({
 				file: joined,
 				size: stats.size,

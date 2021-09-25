@@ -1,5 +1,41 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.51
+
+### Patch Changes
+
+- [fix] regression where builds not using `entryPoint` stopped having `middlewares.js` external ([#2484](https://github.com/sveltejs/kit/pull/2484))
+
+## 1.0.0-next.50
+
+### Patch Changes
+
+- [fix] Correctly treat `middlewares.js` as external when using `entryPoint` option ([#2482](https://github.com/sveltejs/kit/pull/2482))
+
+## 1.0.0-next.49
+
+### Patch Changes
+
+- update dependencies ([#2447](https://github.com/sveltejs/kit/pull/2447))
+
+## 1.0.0-next.48
+
+### Patch Changes
+
+- [chore] add links to repository and homepage to package.json ([#2425](https://github.com/sveltejs/kit/pull/2425))
+
+## 1.0.0-next.47
+
+### Patch Changes
+
+- [feat] add entryPoint option for custom servers ([#2414](https://github.com/sveltejs/kit/pull/2414))
+
+## 1.0.0-next.46
+
+### Patch Changes
+
+- Clear output directory before adapting ([#2388](https://github.com/sveltejs/kit/pull/2388))
+
 ## 1.0.0-next.45
 
 ### Patch Changes

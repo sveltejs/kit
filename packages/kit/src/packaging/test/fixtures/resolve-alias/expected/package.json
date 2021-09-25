@@ -1,0 +1,15 @@
+{
+	"name": "resolve-alias",
+	"version": "1.0.0",
+	"description": "package using $lib alias",
+	"type": "module",
+	"exports": {
+		"./package.json": "./package.json",
+		"./Test.svelte": "./Test.svelte",
+		".": "./index.js",
+		"./baz": "./baz.js",
+		"./sub/bar": "./sub/bar.js",
+		"./sub/foo": "./sub/foo.js"
+	},
+	"svelte": "./index.js"
+}

@@ -1,9 +1,9 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, context }) {
+	export async function load({ page, stuff }) {
 		return {
-			context: {
-				message: `${context.message} + new`,
+			stuff: {
+				message: `${stuff.message} + new`,
 				x: page.params.x
 			}
 		};

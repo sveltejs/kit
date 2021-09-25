@@ -1,12 +1,18 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
+
+import { remove_keys } from '../../utils/object.js';
 import { validate_config } from './index.js';
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
 
-	// @ts-expect-error - can't test equality of a function
-	delete validated.kit.vite;
+	assert.equal(validated.kit.package.exports(''), true);
+	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.serviceWorker.files(''), true);
+	assert.equal(validated.kit.vite(), {});
+
+	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	assert.equal(validated, {
 		extensions: ['.svelte'],
@@ -28,20 +34,9 @@ test('fills in defaults', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				emitTypes: true,
-				exports: {
-					include: ['**'],
-					exclude: ['**/_*']
-				},
-				files: {
-					include: ['**'],
-					exclude: []
-				},
-				override: null
+				emitTypes: true
 			},
-			serviceWorker: {
-				exclude: []
-			},
+			serviceWorker: {},
 			paths: {
 				base: '',
 				assets: ''
@@ -49,10 +44,10 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
@@ -112,10 +107,12 @@ test('fills in partial blanks', () => {
 		}
 	});
 
+	assert.equal(validated.kit.package.exports(''), true);
+	assert.equal(validated.kit.package.files(''), true);
+	assert.equal(validated.kit.serviceWorker.files(''), true);
 	assert.equal(validated.kit.vite(), {});
 
-	// @ts-expect-error - can't test equality of a function
-	delete validated.kit.vite;
+	remove_keys(validated, ([, v]) => typeof v === 'function');
 
 	assert.equal(validated, {
 		extensions: ['.svelte'],
@@ -137,20 +134,9 @@ test('fills in partial blanks', () => {
 			hydrate: true,
 			package: {
 				dir: 'package',
-				emitTypes: true,
-				exports: {
-					include: ['**'],
-					exclude: ['**/_*']
-				},
-				files: {
-					include: ['**'],
-					exclude: []
-				},
-				override: null
+				emitTypes: true
 			},
-			serviceWorker: {
-				exclude: []
-			},
+			serviceWorker: {},
 			paths: {
 				base: '',
 				assets: ''
@@ -158,10 +144,10 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
-				// TODO: remove this for the 1.0 release
+				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
-				pages: ['*']
+				pages: undefined
 			},
 			router: true,
 			ssr: true,
@@ -259,16 +245,16 @@ test('fails if paths.assets has trailing slash', () => {
 	}, /^config\.kit\.paths\.assets option must not end with '\/'. See https:\/\/kit\.svelte\.dev\/docs#configuration-paths$/);
 });
 
-test('fails if prerender.pages are invalid', () => {
+test('fails if prerender.entries are invalid', () => {
 	assert.throws(() => {
 		validate_config({
 			kit: {
 				prerender: {
-					pages: ['foo']
+					entries: ['foo']
 				}
 			}
 		});
-	}, /^Each member of config\.kit.prerender.pages must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
+	}, /^Each member of config\.kit.prerender.entries must be either '\*' or an absolute path beginning with '\/' — saw 'foo'$/);
 });
 
 /**

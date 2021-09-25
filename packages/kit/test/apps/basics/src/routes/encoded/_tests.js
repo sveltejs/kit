@@ -19,6 +19,16 @@ export default function (test) {
 		assert.equal(await page.innerHTML('h3'), '/encoded/AC%2fDC: AC/DC');
 	});
 
+	test('visits a route with an encoded bracket', '/encoded/%5b', async ({ page }) => {
+		assert.equal(await page.innerHTML('h2'), '/encoded/%5b: [');
+		assert.equal(await page.innerHTML('h3'), '/encoded/%5b: [');
+	});
+
+	test('visits a route with an encoded question mark', '/encoded/%3f', async ({ page }) => {
+		assert.equal(await page.innerHTML('h2'), '/encoded/%3f: ?');
+		assert.equal(await page.innerHTML('h3'), '/encoded/%3f: ?');
+	});
+
 	test(
 		'visits a dynamic route with non-ASCII character',
 		'/encoded',
