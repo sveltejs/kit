@@ -197,7 +197,20 @@ function duplicate(test_fn, config, is_build) {
 
 				if (start) {
 					response = await context.pages.js.goto(context.base + start);
-					await context.pages.js.evaluate(() => window.started);
+
+					// If redirecting, sometimes below error comes. Therefore wait until redirect.
+					// "page.evaluate: Execution context was destroyed, most likely because of a navigation."
+					// MOTE: waitForNavigation is extremely slow so doesn't use.
+					const max = 100;
+					for (let i = 0; i <= max; i++) {
+						try {
+							await context.pages.js.evaluate(() => window.started);
+							break;
+						} catch (e) {
+							if (!(e instanceof Error) || i === max) throw e;
+							await new Promise((resolve) => setTimeout(resolve, 10));
+						}
+					}
 				}
 
 				await callback({
