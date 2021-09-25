@@ -6,7 +6,7 @@
 
 		return {
 			props: { user }
-		}
+		};
 	}
 </script>
 

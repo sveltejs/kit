@@ -4,7 +4,7 @@
 		const res = await fetch(`/load/${page.params.dynamic}.json`);
 		return {
 			props: await res.json()
-		}
+		};
 	}
 </script>
 

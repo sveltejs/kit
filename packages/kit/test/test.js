@@ -1,6 +1,6 @@
 import fs from 'fs';
 import glob from 'tiny-glob/sync.js';
-import ports from 'port-authority';
+import { find } from 'port-authority';
 import fetch from 'node-fetch';
 import { chromium } from 'playwright-chromium';
 import { dev } from '../src/core/dev/index.js';
@@ -270,7 +270,7 @@ async function main() {
 		const suite = uvu.suite(name);
 
 		suite.before(async (context) => {
-			const port = await ports.find(3000);
+			const port = await find(3000);
 
 			try {
 				context.watcher = await dev({ cwd, port, config, host: undefined, https: false });
@@ -329,7 +329,7 @@ async function main() {
 
 		suite.before(async (context) => {
 			try {
-				const port = await ports.find(3000);
+				const port = await find(3000);
 
 				await build(config, {
 					cwd,
