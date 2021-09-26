@@ -75,10 +75,11 @@ const options = object(
 
 			package: object({
 				dir: string('package'),
+				emitTypes: boolean(true),
 				// excludes all .d.ts and filename starting with _
 				exports: fun((filepath) => !/^_|\/_|\.d\.ts$/.test(filepath)),
 				files: fun(() => true),
-				emitTypes: boolean(true)
+				override: fun((pkg) => pkg)
 			}),
 
 			paths: object({
@@ -293,7 +294,7 @@ function list(options, fallback = options[0]) {
 }
 
 /**
- * @param {(filename: string) => boolean} fallback
+ * @param {(param: any) => any} fallback
  * @returns {Validator}
  */
 function fun(fallback) {

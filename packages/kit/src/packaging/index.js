@@ -137,7 +137,10 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 	}
 
-	write(path.join(abs_package_dir, 'package.json'), JSON.stringify(pkg, null, '  '));
+	write(
+		path.join(abs_package_dir, 'package.json'),
+		JSON.stringify(config.kit.package.override(pkg), null, 2)
+	);
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
