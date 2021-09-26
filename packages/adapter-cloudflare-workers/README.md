@@ -19,12 +19,9 @@ $ wrangler init --site my-site-name
 Add the adapter to your `svelte.config.js`:
 
 ```js
-// Import the adapter
 import adapter from '@sveltejs/adapter-cloudflare-workers';
-// Here the config-block
 const config = {
     kit: {
-        // hydrate the <div id="svelte"> element in src/app.html
         target: '#svelte',
         adapter: adapter()
     }
@@ -63,7 +60,6 @@ $ npm run build && wrangler publish
 
 **You are done!**
 
-Credits to [Scien.cx](https://www.scien.cx/2021/06/21/deploying-sveltekit-using-cloudflare-workers/)
 
 More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
 
