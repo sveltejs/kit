@@ -107,10 +107,10 @@ async function setup({ port }) {
 			goto: (url) => pages.js.evaluate((url) => goto(url), url),
 
 			/**
-			 * @param {string} url
+			 * @param {string} resource
 			 * @returns {Promise<void>}
 			 */
-			invalidate: (url) => pages.js.evaluate((url) => invalidate(url), url),
+			invalidate: (...args) => pages.js.evaluate((args) => invalidate(...args), args),
 
 			/**
 			 * @param {string} url

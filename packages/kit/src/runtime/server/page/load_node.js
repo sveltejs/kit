@@ -1,4 +1,4 @@
-import { normalize } from '../../load.js';
+import { normalize } from '../../load.js';,
 import { respond } from '../index.js';
 
 const s = JSON.stringify;
@@ -36,7 +36,7 @@ export async function load_node({
 	status,
 	error
 }) {
-	const { module } = node;
+	const { module } = node;,
 
 	let uses_credentials = false;
 
@@ -269,7 +269,8 @@ export async function load_node({
 					})
 				);
 			},
-			stuff: { ...stuff }
+			stuff: { ...stuff },
+			uses() {}
 		};
 
 		if (is_error) {

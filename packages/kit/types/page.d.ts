@@ -16,6 +16,7 @@ export interface LoadInput<
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	stuff: Stuff;
+	uses: (resource: string) => void;
 }
 
 export interface ErrorLoadInput<

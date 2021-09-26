@@ -28,8 +28,7 @@ async function goto_(href, opts) {
  * @type {import('$app/navigation').invalidate}
  */
 async function invalidate_(resource) {
-	const { href } = new URL(resource, location.href);
-	return router.renderer.invalidate(href);
+	return router.renderer.invalidate(resource);
 }
 
 /**
