@@ -1,6 +1,6 @@
 /// <reference types="../types/index.js" />
 
-import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
+import { Page, Response as PlaywrightResponse, ElementHandle } from 'playwright-chromium';
 import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
@@ -17,6 +17,10 @@ export interface TestContext {
 	response: PlaywrightResponse;
 	clicknav(selector: string): Promise<void>;
 	back(): Promise<void>;
+	get_elements(
+		selector: string,
+		contains_iframe?: boolean
+	): Promise<Array<ElementHandle<SVGElement | HTMLElement>>>;
 	fetch(url: RequestInfo, opts?: RequestInit): Promise<NodeFetchResponse>;
 	capture_requests(fn: () => Promise<void>): Promise<string[]>;
 	errors(): string;

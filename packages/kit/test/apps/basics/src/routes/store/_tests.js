@@ -17,7 +17,7 @@ export default function (test) {
 	test(
 		'navigating store contains from and to',
 		'/store/navigating/a',
-		async ({ app, page, js }) => {
+		async ({ app, page, js, get_elements }) => {
 			assert.equal(await page.textContent('#navigating'), 'not currently navigating');
 
 			if (js) {
@@ -28,9 +28,10 @@ export default function (test) {
 					await page.textContent('#navigating'),
 					'navigating from /store/navigating/a to /store/navigating/b'
 				);
-
-				await page.waitForTimeout(100);
-				assert.equal(await page.textContent('#navigating'), 'not currently navigating');
+				assert.equal(
+					await (await get_elements('#not-currently-navigating'))[0].innerText(),
+					'not currently navigating'
+				);
 			}
 		}
 	);
