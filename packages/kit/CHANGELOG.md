@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.175
+
+### Patch Changes
+
+- [chore] upgrade node-fetch to 3.0.0 final ([#2422](https://github.com/sveltejs/kit/pull/2422))
+
+* [fix] don't override application focus and scroll ([#2489](https://github.com/sveltejs/kit/pull/2489))
+
 ## 1.0.0-next.174
 
 ### Patch Changes
