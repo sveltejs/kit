@@ -10,7 +10,7 @@ The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://
 
 ### Examples
 
-We've written an published a few different SvelteKit sites as examples:
+We've written and published a few different SvelteKit sites as examples:
 
 - The [examples directory](https://github.com/sveltejs/kit/tree/master/examples) in the GitHub repo contains a HackerNews clone
 - [sveltejs/realworld](https://github.com/sveltejs/realworld) contains an example blog site
