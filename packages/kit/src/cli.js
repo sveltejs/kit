@@ -84,8 +84,6 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
 
@@ -102,7 +100,15 @@ prog
 				process.stderr.write(data);
 			});
 
-			welcome({ port, host, https, open });
+			if (!watcher.vite || !watcher.vite.httpServer) {
+				throw Error('Could not find server');
+			}
+			// we never start the server on a socket path, so address will be of type AddressInfo
+			const chosen_port = /** @type {import('net').AddressInfo} */ (
+				watcher.vite.httpServer.address()
+			).port;
+
+			welcome({ port: chosen_port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
