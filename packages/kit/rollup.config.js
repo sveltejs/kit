@@ -69,7 +69,11 @@ export default [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
 			}),
-			commonjs()
+			commonjs({
+				// Fix for https://github.com/node-fetch/fetch-blob/issues/117
+				// Can be removed if https://github.com/rollup/plugins/pull/1005 is merged
+				ignoreTryCatch: true
+			})
 		],
 		preserveEntrySignatures: true
 	}
