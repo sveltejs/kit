@@ -8,6 +8,14 @@ Please see the [SvelteKit FAQ](/faq) for solutions to common issues and helpful 
 
 The [Svelte FAQ](https://svelte.dev/faq) and [`vite-plugin-svelte` FAQ](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/faq.md) may also be helpful for questions deriving from those libraries.
 
+### Examples
+
+We've written and published a few different SvelteKit sites as examples:
+
+- The [examples directory](https://github.com/sveltejs/kit/tree/master/examples) in the GitHub repo contains a HackerNews clone
+- [sveltejs/realworld](https://github.com/sveltejs/realworld) contains an example blog site
+- [sveltejs/sites](https://github.com/sveltejs/sites) contains the code for this site
+
 ### Integrations
 
 [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) allows you to automatically transform the code in your Svelte templates provides support for TypeScript, PostCSS, scss/sass, Less, and many other technologies. The first step of setting it up is to add `svelte-preprocess` to your [`svelte.config.js`](#configuration). It is provided by the template if you're using TypeScript whereas JavaScript users will need to add it. After that, you will often only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) docs for more details.
