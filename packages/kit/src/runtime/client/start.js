@@ -7,7 +7,8 @@ import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
 import { set_paths } from '../paths.js';
 
-/** @param {{
+/**
+ * @param {{
  *   paths: {
  *     assets: string;
  *     base: string;
@@ -24,7 +25,8 @@ import { set_paths } from '../paths.js';
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
  *     page: import('types/page').Page;
  *   };
- * }} opts */
+ * }} opts
+ */
 export async function start({ paths, target, session, host, route, spa, trailing_slash, hydrate }) {
 	if (import.meta.env.DEV && !target) {
 		throw new Error('Missing target element. See https://kit.svelte.dev/docs#configuration-target');

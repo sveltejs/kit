@@ -63,13 +63,15 @@ function initial_fetch(resource, opts) {
 }
 
 export class Renderer {
-	/** @param {{
+	/**
+	 * @param {{
 	 *   Root: CSRComponent;
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
-	 * }} opts */
+	 * }} opts
+	 */
 	constructor({ Root, fallback, target, session, host }) {
 		this.Root = Root;
 		this.fallback = fallback;
