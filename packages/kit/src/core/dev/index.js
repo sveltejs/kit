@@ -102,7 +102,8 @@ class Watcher extends EventEmitter {
 			server: {
 				fs: {
 					strict: true
-				}
+				},
+				strictPort: true
 			}
 		};
 
