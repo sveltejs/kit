@@ -95,10 +95,6 @@ export default function (test, is_dev) {
 					if (!e.message.includes('Crashing now')) throw e;
 				});
 
-				// // weird flakiness — without this, some requests are
-				// // reported after prefetchRoutes has finished
-				// await page.waitForTimeout(500);
-
 				const requests = await capture_requests(async () => {
 					await clicknav('a[href="/routing/a"]');
 					assert.equal(await page.textContent('h1'), 'a');
