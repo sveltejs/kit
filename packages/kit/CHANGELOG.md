@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.176
+
+### Patch Changes
+
+- [feat] allow using Vite's `strict.port: false` option ([#2507](https://github.com/sveltejs/kit/pull/2507))
+
+* [fix] allow passing in https certs again' ([#2512](https://github.com/sveltejs/kit/pull/2512))
+
 ## 1.0.0-next.175
 
 ### Patch Changes
