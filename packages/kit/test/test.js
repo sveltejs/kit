@@ -197,7 +197,18 @@ function duplicate(test_fn, config, is_build) {
 
 				if (start) {
 					response = await context.pages.js.goto(context.base + start);
-					await context.pages.js.evaluate(() => window.started);
+					// Evaluate will throw an exception if the page is navigated away from while the
+					// script is executing, which may happen during redirect tests. In that case, the
+					// start event will be fired after the redirect
+					for (let i = 0; i <= 9; i++) {
+						try {
+							await context.pages.js.evaluate(() => window.started);
+							break;
+						} catch (e) {
+							if (i === 9) throw e;
+							await context.pages.js.waitForNavigation();
+						}
+					}
 				}
 
 				await callback({
