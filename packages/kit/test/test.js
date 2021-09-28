@@ -200,7 +200,7 @@ function duplicate(test_fn, config, is_build) {
 
 					// If redirecting, sometimes below error comes. Therefore wait until redirect.
 					// "page.evaluate: Execution context was destroyed, most likely because of a navigation."
-					// MOTE: waitForNavigation is extremely slow so doesn't use.
+					// NOTE: waitForNavigation is extremely slow so doesn't use.
 					const max = 100;
 					for (let i = 0; i <= max; i++) {
 						try {
