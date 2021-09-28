@@ -119,7 +119,7 @@ class Watcher extends EventEmitter {
 		});
 
 		/** @type {[any, string[]]} */
-		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
+		let [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
@@ -146,14 +146,24 @@ class Watcher extends EventEmitter {
 				kit_plugin
 			],
 			publicDir: this.config.kit.files.assets,
-			server: {
-				host: this.host,
-				https: this.https
-			},
 			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
 		});
 
 		print_config_conflicts(conflicts, 'kit.vite.');
+
+		// optional config from command-line flags
+		// these should take precedence, but not print conflict warnings
+		const cli_opts = {};
+		if (this.host || this.https) {
+			cli_opts.server = {};
+		}
+		if (this.host) {
+			cli_opts.server.host = this.host;
+		}
+		if (this.https) {
+			cli_opts.server.https = this.https;
+		}
+		[merged_config] = deep_merge(merged_config, cli_opts);
 
 		this.vite = await vite.createServer(merged_config);
 		remove_html_middlewares(this.vite.middlewares);
