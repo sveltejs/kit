@@ -4,7 +4,7 @@ title: Content Security Policy
 
 At the moment, SvelteKit supports adding Content Security Policy via hooks. In environments with a server-side runtime, HTTP headers can be added to the response object.
 
-However, SvelteKit also requires some small pieces of inline JavaScript in order for hydration to work. To avoid using `'unsafe-inline'` (which, as the name suggests, should be avoided), SvelteKit can be configured to inject CSP nonces into the HTML it generates.
+However, SvelteKit also requires some small pieces of inline JavaScript for hydration. To avoid using `'unsafe-inline'` (which, as the name suggests, should be avoided), SvelteKit can be configured to inject CSP nonces into the HTML it generates.
 
 The nonce value is available to hooks as `request.locals.nonce`. A basic CSP handler hook might then look like this:
 
@@ -13,8 +13,8 @@ export async function handle ({ request, resolve }) {
   const response = await resolve(request);
 
   if (response.headers['content-type'] !== 'text/html') {
-  	return response
-  }
+  	return response;
+	}
 
   const nonce = request.locals.nonce;
 
