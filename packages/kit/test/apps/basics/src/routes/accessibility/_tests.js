@@ -5,19 +5,15 @@ export default function (test) {
 	test('resets focus', '/accessibility/a', async ({ page, clicknav }) => {
 		await clicknav('[href="/accessibility/b"]');
 		assert.equal(await page.innerHTML('h1'), 'b');
-		await page.waitForTimeout(50);
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'BODY');
 		await page.keyboard.press('Tab');
-		await page.waitForTimeout(50);
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'A');
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).textContent), 'a');
 
 		await clicknav('[href="/accessibility/a"]');
 		assert.equal(await page.innerHTML('h1'), 'a');
-		await page.waitForTimeout(50);
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'BODY');
 		await page.keyboard.press('Tab');
-		await page.waitForTimeout(50);
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).nodeName), 'A');
 		assert.equal(await page.evaluate(() => (document.activeElement || {}).textContent), 'a');
 	});
