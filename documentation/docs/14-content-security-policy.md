@@ -2,7 +2,7 @@
 title: Content Security Policy
 ---
 
-At the moment, SvelteKit supports adding Content Security Policy via hooks. In environments with a runtime, HTTP headers can be added to the response object.
+At the moment, SvelteKit supports adding Content Security Policy via hooks. In environments with a server-side runtime, HTTP headers can be added to the response object.
 
 However, SvelteKit also requires some small pieces of inline JavaScript in order for hydration to work. To avoid using `'unsafe-inline'` (which, as the name suggests, should be avoided), SvelteKit can be configured to inject CSP nonces into the HTML it generates.
 
