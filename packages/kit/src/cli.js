@@ -79,10 +79,10 @@ const prog = sade('svelte-kit').version('__VERSION__');
 prog
 	.command('dev')
 	.describe('Start a development server')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
+	.option('-p, --port', 'Port')
+	.option('-h, --host', 'Host (only use this on trusted networks)')
+	.option('-H, --https', 'Use self-signed HTTPS certificate')
+	.option('-o, --open', 'Open a browser tab')
 	.action(async ({ port, host, https, open }) => {
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
@@ -226,7 +226,7 @@ function welcome({ port, host, https, open }) {
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
 	const protocol = https ? 'https:' : 'http:';
-	const exposed = host !== 'localhost' && host !== '127.0.0.1';
+	const exposed = typeof host !== 'undefined' && host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
 		if (!interfaces) return;

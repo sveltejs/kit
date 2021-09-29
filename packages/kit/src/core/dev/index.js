@@ -153,17 +153,13 @@ class Watcher extends EventEmitter {
 
 		// optional config from command-line flags
 		// these should take precedence, but not print conflict warnings
-		const cli_opts = {};
-		if (this.host || this.https) {
-			cli_opts.server = {};
-		}
-		if (this.host) {
-			cli_opts.server.host = this.host;
-		}
-		if (this.https) {
-			cli_opts.server.https = this.https;
-		}
-		[merged_config] = deep_merge(merged_config, cli_opts);
+		[merged_config] = deep_merge(merged_config, {
+			server: {
+				host: this.host,
+				https: this.https,
+				port: this.port
+			}
+		});
 
 		this.vite = await vite.createServer(merged_config);
 		remove_html_middlewares(this.vite.middlewares);
