@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.177
+
+### Patch Changes
+
+- update to vite 2.6.0 and esbuild 0.13 ([#2522](https://github.com/sveltejs/kit/pull/2522))
+
+* fix browser-only redirect during load. ([#2462](https://github.com/sveltejs/kit/pull/2462))
+
 ## 1.0.0-next.176
 
 ### Patch Changes

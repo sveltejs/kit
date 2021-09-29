@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.52
+
+### Patch Changes
+
+- update to vite 2.6.0 and esbuild 0.13 ([#2522](https://github.com/sveltejs/kit/pull/2522))
+
 ## 1.0.0-next.51
 
 ### Patch Changes
