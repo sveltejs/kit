@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.178
+
+### Patch Changes
+
+- [fix] restore functioning of --host CLI flag with no arg ([#2525](https://github.com/sveltejs/kit/pull/2525))
+
 ## 1.0.0-next.177
 
 ### Patch Changes
