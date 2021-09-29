@@ -27,7 +27,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.12.28"
+		"esbuild": "^0.13.3"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"

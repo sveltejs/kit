@@ -9,10 +9,10 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.24",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.26",
 		"cheap-watch": "^1.0.4",
 		"sade": "^1.7.4",
-		"vite": "^2.5.7"
+		"vite": "^2.6.0"
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^3.0.0",
