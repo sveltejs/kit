@@ -20,13 +20,12 @@ Add the adapter to your `svelte.config.js`:
 
 ```js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
-const config = {
+export default = {
     kit: {
         target: '#svelte',
         adapter: adapter()
     }
 };
-...
 ```
 
 Now you should get some details from Cloudflare. You should get your:
