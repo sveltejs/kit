@@ -85,7 +85,7 @@ export async function respond(opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	ssr: if (page_config.ssr === true) {
+	ssr: if (page_config.ssr) {
 		let stuff = {};
 
 		for (let i = 0; i < nodes.length; i += 1) {
