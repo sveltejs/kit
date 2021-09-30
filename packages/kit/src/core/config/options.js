@@ -165,7 +165,7 @@ const options = object(
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
-			ssr: boolean(true),
+			ssr: list([true, false, 'never']),
 
 			target: string(null),
 
@@ -275,16 +275,21 @@ function boolean(fallback) {
 }
 
 /**
- * @param {string[]} options
+ * @param {unknown[]} options
  * @returns {Validator}
  */
 function list(options, fallback = options[0]) {
 	return validate(fallback, (input, keypath) => {
+		/** @param  {unknown} i */
+		const stringify = (i) => (typeof i === 'string' ? `"${i}"` : `${i}`);
 		if (!options.includes(input)) {
-			// prettier-ignore
-			const msg = options.length > 2
-				? `${keypath} should be one of ${options.slice(0, -1).map(input => `"${input}"`).join(', ')} or "${options[options.length - 1]}"`
-				: `${keypath} should be either "${options[0]}" or "${options[1]}"`;
+			const msg =
+				options.length > 2
+					? `${keypath} should be one of ${options
+							.slice(0, -1)
+							.map(stringify)
+							.join(', ')} or ${stringify(options[options.length - 1])}`
+					: `${keypath} should be either ${stringify(options[0])} or ${stringify(options[1])}`;
 
 			throw new Error(msg);
 		}
