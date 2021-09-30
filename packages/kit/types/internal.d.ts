@@ -20,6 +20,8 @@ export interface Logger {
 	info(msg: string): void;
 }
 
+export type SSROption = boolean | 'never';
+
 export interface SSRComponent {
 	ssr?: boolean;
 	router?: boolean;
@@ -28,7 +30,9 @@ export interface SSRComponent {
 	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
-		render(props: Record<string, any>): {
+		render(
+			props: Record<string, any>
+		): {
 			html: string;
 			head: string;
 			css: {
@@ -130,7 +134,7 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
+	ssr: SSROption;
 	target: string;
 	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;

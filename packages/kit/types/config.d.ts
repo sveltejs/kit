@@ -1,6 +1,6 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { Logger, SSROption, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -68,7 +68,7 @@ export interface Config {
 		serviceWorker?: {
 			files?(filepath: string): boolean;
 		};
-		ssr?: boolean;
+		ssr?: SSROption;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
