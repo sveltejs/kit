@@ -29,7 +29,11 @@ export async function respond(opts) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
+		const ssr = options.ssr !== 'never';
+
+		nodes = await Promise.all(
+			route.a.map((id) => (id && ssr ? options.load_component(id) : undefined))
+		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
@@ -72,7 +76,7 @@ export async function respond(opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	ssr: if (page_config.ssr) {
+	ssr: if (page_config.ssr === true) {
 		let stuff = {};
 
 		for (let i = 0; i < nodes.length; i += 1) {
@@ -138,18 +142,16 @@ export async function respond(opts) {
 
 							try {
 								// there's no fallthough on an error page, so we know it's not undefined
-								const error_loaded = /** @type {import('./types').Loaded} */ (
-									await load_node({
-										...opts,
-										node: error_node,
-										stuff: node_loaded.stuff,
-										prerender_enabled: is_prerender_enabled(options, error_node, state),
-										is_leaf: false,
-										is_error: true,
-										status,
-										error
-									})
-								);
+								const error_loaded = /** @type {import('./types').Loaded} */ (await load_node({
+									...opts,
+									node: error_node,
+									stuff: node_loaded.stuff,
+									prerender_enabled: is_prerender_enabled(options, error_node, state),
+									is_leaf: false,
+									is_error: true,
+									status,
+									error
+								}));
 
 								if (error_loaded.loaded.error) {
 									continue;

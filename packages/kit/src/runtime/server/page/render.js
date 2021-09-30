@@ -12,7 +12,11 @@ const s = JSON.stringify;
  *   branch: Array<import('./types').Loaded>;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
- *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
+ *   page_config: {
+ * 	 		hydrate: boolean,
+ * 			router: boolean,
+ * 			ssr: import('types/internal').SSROption
+ * 	 };
  *   status: number;
  *   error?: Error,
  *   page?: import('types/page').Page
@@ -43,7 +47,8 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (page_config.ssr) {
+	// excludes false and 'never'
+	if (page_config.ssr === true) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));
 			if (node.js) node.js.forEach((url) => js.add(url));
@@ -124,9 +129,9 @@ export async function render_response({
 				})},
 				host: ${page && page.host ? s(page.host) : 'location.host'},
 				route: ${!!page_config.router},
-				spa: ${!page_config.ssr},
+				spa: ${page_config.ssr === 'never' || !page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
-				hydrate: ${page_config.ssr && page_config.hydrate ? `{
+				hydrate: ${page_config.ssr === true && page_config.hydrate ? `{
 					status: ${status},
 					error: ${serialize_error(error)},
 					nodes: [
