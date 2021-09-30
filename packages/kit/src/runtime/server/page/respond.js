@@ -24,16 +24,25 @@ import { coalesce_to_error } from '../../../utils/error.js';
  */
 export async function respond(opts) {
 	const { request, options, state, $session, route } = opts;
+	if (options.ssr === 'never') {
+		return await render_response({
+			branch: [],
+			$session,
+			options,
+			page_config: {
+				hydrate: true,
+				router: true,
+				ssr: false
+			},
+			status: 200
+		});
+	}
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
 	try {
-		const ssr = options.ssr !== 'never';
-
-		nodes = await Promise.all(
-			route.a.map((id) => (id && ssr ? options.load_component(id) : undefined))
-		);
+		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
