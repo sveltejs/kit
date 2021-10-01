@@ -1,4 +1,5 @@
 import { RequestHandler } from './endpoint';
+import { App as PublicApp, IncomingRequest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -10,6 +11,19 @@ import {
 import { Load } from './page';
 
 type PageId = string;
+
+export interface App extends PublicApp {
+	render(
+		incoming: IncomingRequest,
+		options?: {
+			prerender: {
+				fallback?: string;
+				all: boolean;
+				dependencies?: Map<string, ServerResponse>;
+			};
+		}
+	): Promise<ServerResponse>;
+}
 
 export interface Logger {
 	(msg: string): void;

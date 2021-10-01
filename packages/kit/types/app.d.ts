@@ -10,16 +10,7 @@ export interface App {
 		prerendering: boolean;
 		read(file: string): Buffer;
 	}): void;
-	render(
-		incoming: IncomingRequest,
-		options?: {
-			prerender: {
-				fallback?: string;
-				all: boolean;
-				dependencies?: Map<string, ServerResponse>;
-			};
-		}
-	): Promise<ServerResponse>;
+	render(incoming: IncomingRequest): Promise<ServerResponse>;
 }
 
 export type RawBody = null | Uint8Array;
