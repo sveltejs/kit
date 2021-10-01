@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.179
+
+### Patch Changes
+
+- Fix escaping of URLs of endpoint responses serialized into SSR response ([#2534](https://github.com/sveltejs/kit/pull/2534))
+
 ## 1.0.0-next.178
 
 ### Patch Changes
