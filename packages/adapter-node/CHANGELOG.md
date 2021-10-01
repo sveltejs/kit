@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.53
+
+### Patch Changes
+
+- Don't crash when receiving malformed URLs ([#2533](https://github.com/sveltejs/kit/pull/2533))
+
 ## 1.0.0-next.52
 
 ### Patch Changes
