@@ -1,5 +1,5 @@
 /** @type {Record<string, string>} */
-const escaped_in_json_html_string = {
+const escape_json_string_in_html_dict = {
 	'"': '\\"',
 	'<': '\\u003C',
 	'>': '\\u003E',
@@ -19,13 +19,13 @@ const escaped_in_json_html_string = {
 export function escape_json_string_in_html(str) {
 	return escape(
 		str,
-		escaped_in_json_html_string,
+		escape_json_string_in_html_dict,
 		(code) => `\\u${code.toString(16).toUpperCase()}`
 	);
 }
 
 /** @type {Record<string, string>} */
-const escaped_in_html_attr = {
+const escape_html_attr_dict = {
 	'<': '&lt;',
 	'>': '&gt;',
 	'"': '&quot;'
@@ -36,23 +36,21 @@ const escaped_in_html_attr = {
  * e.g.
  * <script data-url="here">
  *
- * only works for quoted values, do not use unqouted
- *
  * @param {string} str
  * @returns string escaped string
  */
 export function escape_html_attr(str) {
-	return escape(str, escaped_in_html_attr, (code) => `&#${code};`);
+	return '"' + escape(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
 }
 
 /**
  *
  * @param str {string} string to escape
  * @param dict {Record<string, string>} dictionary of character replacements
- * @param unicodeEncoder {function(number): string} encoder for unicode strings
+ * @param unicode_encoder {function(number): string} encoder to use for high unicode characters
  * @returns {string}
  */
-function escape(str, dict, unicodeEncoder) {
+function escape(str, dict, unicode_encoder) {
 	let result = '';
 
 	for (let i = 0; i < str.length; i += 1) {
@@ -69,7 +67,7 @@ function escape(str, dict, unicodeEncoder) {
 			if (code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
 				result += char + str[++i];
 			} else {
-				result += unicodeEncoder(code);
+				result += unicode_encoder(code);
 			}
 		} else {
 			result += char;
