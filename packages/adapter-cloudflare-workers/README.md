@@ -20,7 +20,7 @@ Add the adapter to your `svelte.config.js`:
 
 ```js
 import adapter from '@sveltejs/adapter-cloudflare-workers';
-export default = {
+export default {
     kit: {
         target: '#svelte',
         adapter: adapter()
