@@ -12,15 +12,17 @@ import { Load } from './page';
 
 type PageId = string;
 
+export interface PrerenderOptions {
+	fallback?: string;
+	all: boolean;
+	dependencies: Map<string, ServerResponse>;
+}
+
 export interface App extends PublicApp {
 	render(
 		incoming: IncomingRequest,
 		options?: {
-			prerender: {
-				fallback?: string;
-				all: boolean;
-				dependencies?: Map<string, ServerResponse>;
-			};
+			prerender: PrerenderOptions;
 		}
 	): Promise<ServerResponse>;
 }
@@ -153,12 +155,7 @@ export interface SSRRenderOptions {
 export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
-	prerender?: {
-		fallback: string;
-		all: boolean;
-		dependencies: Map<string, ServerResponse>;
-		error: Error;
-	};
+	prerender?: PrerenderOptions;
 	fallback?: string;
 }
 
