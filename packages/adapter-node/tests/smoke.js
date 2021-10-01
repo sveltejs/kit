@@ -61,4 +61,11 @@ test('passes through umlaut as encoded path', async () => {
 	server.server.close();
 });
 
+test('serve a 400 when we have a malformed url', async () => {
+	const server = await startServer();
+	const res = await fetch(`http://localhost:${PORT}//`);
+	assert.equal(res.status, 400);
+	server.server.close();
+});
+
 test.run();
