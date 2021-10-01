@@ -29,7 +29,7 @@ export default function (test) {
 					'navigating from /store/navigating/a to /store/navigating/b'
 				);
 
-				await page.waitForSelector('#no-navigating');
+				await page.waitForSelector('#not-navigating');
 				assert.equal(await page.textContent('#navigating'), 'not currently navigating');
 			}
 		}
