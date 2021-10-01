@@ -2,7 +2,7 @@ import devalue from 'devalue';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
-import { escape_html_attr, escape_json_literal_in_html } from '../../../utils/escape.js';
+import { escape_html_attr } from '../../../utils/escape.js';
 
 const s = JSON.stringify;
 
@@ -174,7 +174,7 @@ export async function render_response({
 					)}"`;
 					if (body) attributes += ` data-body="${hash(body)}"`;
 
-					return `<script ${attributes}>${escape_json_literal_in_html(json)}</script>`;
+					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t')}
 		`;

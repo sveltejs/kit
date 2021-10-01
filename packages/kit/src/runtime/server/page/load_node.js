@@ -1,6 +1,6 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
-import { escape_json_in_html } from '../../../utils/escape.js';
+import { escape_json_string_in_html } from '../../../utils/escape.js';
 
 const s = JSON.stringify;
 
@@ -237,7 +237,7 @@ export async function load_node({
 									fetched.push({
 										url,
 										body: /** @type {string} */ (opts.body),
-										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_in_html(body)}"}`
+										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_string_in_html(body)}"}`
 									});
 								}
 
