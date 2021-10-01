@@ -192,11 +192,11 @@ export default function (test, is_dev) {
 	test(
 		'back button returns to previous route when previous route has been navigated to via hash anchor',
 		'/routing/hashes/a',
-		async ({ page, clicknav }) => {
+		async ({ page, clicknav, back }) => {
 			await clicknav('[href="#hash-target"]');
 			await clicknav('[href="/routing/hashes/b"]');
 
-			await page.goBack();
+			await back();
 			assert.equal(await page.textContent('h1'), 'a');
 		}
 	);
