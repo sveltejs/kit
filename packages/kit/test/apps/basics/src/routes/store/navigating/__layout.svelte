@@ -8,7 +8,7 @@
 	{#if $navigating}
 		<p>navigating from {$navigating.from.path} to {$navigating.to.path}</p>
 	{:else}
-		<p id="no-navigating">not currently navigating</p>
+		<p id="not-navigating">not currently navigating</p>
 	{/if}
 </div>
 
