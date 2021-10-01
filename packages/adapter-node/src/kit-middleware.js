@@ -7,7 +7,13 @@ import { getRawBody } from '@sveltejs/kit/node';
 // @ts-ignore
 export function create_kit_middleware({ render }) {
 	return async (req, res) => {
-		const parsed = new URL(req.url || '', 'http://localhost');
+		let parsed;
+		try {
+			parsed = new URL(req.url || '', 'http://localhost');
+		} catch (e) {
+			res.statusCode = 400;
+			return res.end('Invalid URL');
+		}
 
 		let body;
 

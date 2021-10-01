@@ -6,23 +6,58 @@ This is very experimental; the adapter API isn't at all fleshed out, and things 
 
 ## Basic Configuration
 
+**You will need [Wrangler](https://developers.cloudflare.com/workers/cli-wrangler/install-update) installed on your system**
+
 This adapter expects to find a [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) file in the project root. It will determine where to write static assets and the worker based on the `site.bucket` and `site.entry-point` settings.
 
 Generate this file using `wrangler` from your project directory
 
 ```sh
-$ wrangler init --site my-site-name
+wrangler init --site my-site-name
 ```
 
-Then configure your sites build directory in the config file:
+Add the adapter to your `svelte.config.js`:
+
+```js
+import adapter from '@sveltejs/adapter-cloudflare-workers';
+export default {
+	kit: {
+		target: '#svelte',
+		adapter: adapter()
+	}
+};
+```
+
+Now you should get some details from Cloudflare. You should get your:
+
+1. Account ID
+2. And your Zone-ID (Optional)
+
+Get them by visiting your Cloudflare-Dashboard and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
+
+Then configure your sites build directory and your account-details in the config file:
 
 ```toml
-[site]
-bucket = "./build"
-entry-point = "./workers-site"
+account_id = 'YOUR ACCOUNT_ID'
+zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev subdomain will be used.
+site = {bucket = "./build", entry-point = "./workers-site"}
 ```
 
 It's recommended that you add the `build` and `workers-site` folders (or whichever other folders you specify) to your `.gitignore`.
+
+Now, log in with wrangler:
+
+```sh
+wrangler login
+```
+
+Build your project and publish it:
+
+```sh
+npm run build && wrangler publish
+```
+
+**You are done!**
 
 More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
 
@@ -36,9 +71,9 @@ For example, you may wish to add a plugin:
 
 ```js
 adapterCfw({
-	esbuild(defaultOptions) {
+	esbuild(options) {
 		return {
-			...defaultOptions,
+			...options,
 			plugins: []
 		};
 	}
@@ -48,13 +83,13 @@ adapterCfw({
 The default options for this version are as follows:
 
 ```js
-{
-    entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
-    outfile: `${entrypoint}/index.js`,
-    bundle: true,
-    target: 'es2020',
-    platform: 'browser'
-}
+const options = {
+	entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
+	outfile: `${entrypoint}/index.js`,
+	bundle: true,
+	target: 'es2020',
+	platform: 'browser'
+};
 ```
 
 ## Changelog
