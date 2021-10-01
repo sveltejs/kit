@@ -2,6 +2,7 @@ import devalue from 'devalue';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
+import { escape_html_attr } from '../../../utils/escape.js';
 
 const s = JSON.stringify;
 
@@ -168,7 +169,9 @@ export async function render_response({
 
 			${serialized_data
 				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url="${url}"`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
+						url
+					)}`;
 					if (body) attributes += ` data-body="${hash(body)}"`;
 
 					return `<script ${attributes}>${json}</script>`;
