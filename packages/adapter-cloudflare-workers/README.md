@@ -59,7 +59,6 @@ $ npm run build && wrangler publish
 
 **You are done!**
 
-
 More info on configuring a cloudflare worker site can be found [here](https://developers.cloudflare.com/workers/platform/sites/start-from-existing)
 
 ## Advanced Configuration
