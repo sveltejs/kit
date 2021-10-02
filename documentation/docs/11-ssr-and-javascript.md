@@ -22,6 +22,8 @@ You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr),
 </script>
 ```
 
+Note: `"never"` is not supported on page level `ssr` exports.
+
 ### router
 
 SvelteKit includes a [client-side router](#appendix-routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
