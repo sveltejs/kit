@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('redirect', '/redirect', async ({ base, page, clicknav }) => {
 		await clicknav('[href="/redirect/a"]');
 

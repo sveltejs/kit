@@ -3,7 +3,7 @@ import * as ports from 'port-authority';
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('loads', '/load', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'bar == bar?');
 	});

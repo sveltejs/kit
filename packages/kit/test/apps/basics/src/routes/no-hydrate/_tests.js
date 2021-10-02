@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('does not hydrate page with hydrate=false', '/no-hydrate', async ({ page, js }) => {
 		await page.click('button');
 		assert.equal(await page.textContent('button'), 'clicks: 0');

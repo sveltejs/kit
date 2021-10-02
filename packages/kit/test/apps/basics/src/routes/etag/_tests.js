@@ -5,7 +5,7 @@ export default function (test) {
 	test(
 		'generates etag/304 for text body',
 		null,
-		async ({ response, fetch }) => {
+		async ({ fetch }) => {
 			const r1 = await fetch('/etag/text');
 			const etag = r1.headers.get('etag');
 			assert.ok(!!etag);

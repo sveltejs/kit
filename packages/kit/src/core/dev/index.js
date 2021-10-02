@@ -313,7 +313,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
 					handleError:
 						user_hooks.handleError ||
-						(({ /** @type {Error & { frame?: string }} */ error, request }) => {
+						(({ /** @type {Error & { frame?: string }} */ error }) => {
 							console.error(colors.bold().red(error.message));
 							if (error.frame) {
 								console.error(colors.gray(error.frame));
