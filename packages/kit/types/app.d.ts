@@ -1,16 +1,17 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
 
+export interface Init {
+	(): void;
+}
+
+export interface Render {
+	(incoming: IncomingRequest): Promise<ServerResponse>;
+}
+
 export interface App {
-	init(options?: {
-		paths: {
-			base: string;
-			assets: string;
-		};
-		prerendering: boolean;
-		read(file: string): Buffer;
-	}): void;
-	render(incoming: IncomingRequest): Promise<ServerResponse>;
+	init: Init;
+	render: Render;
 }
 
 export type RawBody = null | Uint8Array;

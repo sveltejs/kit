@@ -19,6 +19,15 @@ export interface PrerenderOptions {
 }
 
 export interface App extends PublicApp {
+	init(options?: {
+		paths: {
+			base: string;
+			assets: string;
+		};
+		prerendering: boolean;
+		read(file: string): Buffer;
+	}): void;
+
 	render(
 		incoming: IncomingRequest,
 		options?: {
