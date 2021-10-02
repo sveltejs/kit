@@ -240,7 +240,7 @@ export async function respond(opts) {
  */
 function get_page_config(leaf, options) {
 	return {
-		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
+		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr === true,
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};
