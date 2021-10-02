@@ -106,7 +106,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('types/app').App} */
+	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	app.init({
@@ -300,7 +300,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			{
 				prerender: {
 					fallback,
-					all: false
+					all: false,
+					dependencies: new Map()
 				}
 			}
 		);
