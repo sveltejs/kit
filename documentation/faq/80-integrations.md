@@ -85,6 +85,24 @@ onMount(() => {
 });
 ```
 
+But if your app doesn't use SSR, you can set the `ssr` option to `'never'`:
+
+```js
+export default {
+	kit: {
+		// ...
+		ssr: 'never'
+		// ...
+	}
+}
+```
+
+```js
+import { method } from 'some-browser-only-library';
+
+method('hello world!');
+
+```
 ### How do I use Firebase?
 
 Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
