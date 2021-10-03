@@ -3,6 +3,8 @@ export type Options = {
 	typescript: boolean;
 	prettier: boolean;
 	eslint: boolean;
+	docker: boolean;
+	kubernetes: boolean;
 };
 
 export type File = {

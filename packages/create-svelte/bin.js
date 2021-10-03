@@ -79,13 +79,36 @@ async function main() {
 				initial: false,
 				active: 'Yes',
 				inactive: 'No'
+			},
+			{
+				type: 'toggle',
+				name: 'docker',
+				message: 'Generate Dockerfile?',
+				initial: false,
+				active: 'Yes',
+				inactive: 'No'
+			},
+			{
+				type: 'toggle',
+				name: 'kubernetes',
+				message: 'Generate Kubernetes resource specs?',
+				initial: false,
+				active: 'Yes',
+				inactive: 'No'
 			}
 		])
 	);
 
 	const name = path.basename(path.resolve(cwd));
 
-	write_template_files(options.template, options.typescript, name, cwd);
+	write_template_files(
+		options.template,
+		options.typescript,
+		options.docker,
+		options.kubernetes,
+		name,
+		cwd
+	);
 	write_common_files(cwd, options, name);
 
 	console.log(bold(green('✔ Copied project files')));
@@ -124,6 +147,16 @@ async function main() {
 		);
 	}
 
+	if (options.docker) {
+		console.log(bold(green('✔ Added Dockerfile.\n' + `Build using: docker build -t ${name} .`)));
+	}
+
+	if (options.kubernetes) {
+		console.log(
+			bold(green('✔ Added Kubernetes specification.\n' + 'Deploy using: kubectl apply -f k8s.yaml'))
+		);
+	}
+
 	console.log(
 		'\nWant to add other parts to your code base? ' +
 			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
@@ -150,13 +183,29 @@ async function main() {
 /**
  * @param {string} template
  * @param {boolean} typescript
+ * @param {boolean} docker
+ * @param {boolean} kubernetes
  * @param {string} name
  * @param {string} cwd
  */
-function write_template_files(template, typescript, name, cwd) {
+function write_template_files(template, typescript, docker, kubernetes, name, cwd) {
 	const dir = dist(`templates/${template}`);
 	copy(`${dir}/assets`, cwd, (name) => name.replace('gitignore', '.gitignore'));
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
+
+	if (docker) {
+		const dockerFileContents = fs.readFileSync(path.join(dir, 'assets', 'Dockerfile'), 'utf-8');
+		const dest = path.join(cwd, 'Dockerfile');
+		fs.writeFileSync(dest, dockerFileContents.replace(/~TODO~/g, name));
+
+		copy(`${dir}/.dockerignore`, `${cwd}/.dockerignore`);
+	}
+
+	if (kubernetes) {
+		const k8syamlContents = fs.readFileSync(path.join(dir, 'assets', 'k8s.yaml'), 'utf-8');
+		const dest = path.join(cwd, 'k8s.yaml');
+		fs.writeFileSync(dest, k8syamlContents.replace(/~TODO~/g, name));
+	}
 
 	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;
 	const files = /** @type {import('./types/internal').File[]} */ (

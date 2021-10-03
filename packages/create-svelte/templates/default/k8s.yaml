@@ -1,0 +1,31 @@
+# prettier-ignore
+apiVersion: v1
+kind: Service
+metadata:
+  name: ~TODO~-service
+spec:
+  selector:
+    app: ~TODO~-deployment
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+---
+# prettier-ignore
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ~TODO~-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ~TODO~-deployment
+  template:
+    spec:
+      containers:
+        - name: ~TODO~-container
+          image: "~TODO~"
+          ports:
+            - containerPort: 3000
+              hostPort: 3000
