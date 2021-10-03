@@ -259,32 +259,35 @@ async function build_server(
 		}
 	}
 
+	const allow_ssr = config.kit.ssr !== 'never';
+
 	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
 	const metadata_lookup = {};
+	if (allow_ssr) {
+		manifest.components.forEach((file) => {
+			const js_deps = new Set();
+			const css_deps = new Set();
 
-	manifest.components.forEach((file) => {
-		const js_deps = new Set();
-		const css_deps = new Set();
+			find_deps(file, js_deps, css_deps);
 
-		find_deps(file, js_deps, css_deps);
+			const js = Array.from(js_deps);
+			const css = Array.from(css_deps);
 
-		const js = Array.from(js_deps);
-		const css = Array.from(css_deps);
+			const styles = config.kit.amp
+				? Array.from(css_deps).map((url) => {
+						const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
+						return fs.readFileSync(resolved, 'utf-8');
+				  })
+				: [];
 
-		const styles = config.kit.amp
-			? Array.from(css_deps).map((url) => {
-					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
-					return fs.readFileSync(resolved, 'utf-8');
-			  })
-			: [];
-
-		metadata_lookup[file] = {
-			entry: client_manifest[file].file,
-			css,
-			js,
-			styles
-		};
-	});
+			metadata_lookup[file] = {
+				entry: client_manifest[file].file,
+				css,
+				js,
+				styles
+			};
+		});
+	}
 
 	/** @type {Set<string>} */
 	const entry_js = new Set();
@@ -412,21 +415,23 @@ async function build_server(
 				externalFetch: hooks.externalFetch || fetch
 			});
 
-			const module_lookup = {
-				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
-			};
+			${allow_ssr ?
+			`const module_lookup = {
+				${manifest.components.map((file) => `${s(file)}: () => import(${s(app_relative(file))})`)}
+			};` : ''}
 
-			const metadata_lookup = ${s(metadata_lookup)};
+			${allow_ssr ? `const metadata_lookup = ${s(metadata_lookup)};` : ''}
 
 			async function load_component(file) {
-				const { entry, css, js, styles } = metadata_lookup[file];
+				${allow_ssr ?
+				`const { entry, css, js, styles } = metadata_lookup[file];
 				return {
 					module: await module_lookup[file](),
 					entry: assets + ${s(prefix)} + entry,
 					css: css.map(dep => assets + ${s(prefix)} + dep),
 					js: js.map(dep => assets + ${s(prefix)} + dep),
 					styles
-				};
+				};` : 'throw new Error(\'Cannot use ssr when config.kit.ssr is "never"\')'}
 			}
 
 			export function render(request, {
