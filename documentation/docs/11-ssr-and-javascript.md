@@ -14,7 +14,7 @@ Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKi
 
 > In most situations this is not recommended: see [the discussion in the appendix](#appendix-ssr). Consider whether it's truly appropriate to disable and don't simply disable SSR because you've hit an issue with it.
 
-You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr), or a page-level `ssr` export:
+You can disable SSR on a page-level with a `ssr` export. Page-level `ssr` exports must be boolean values, if another value is provided it will be cast into a boolean.
 
 ```html
 <script context="module">
@@ -22,7 +22,7 @@ You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr),
 </script>
 ```
 
-Note: `"never"` is not supported on page level `ssr` exports.
+You can also disable SSR app-wide with the [`ssr` config option](#configuration-ssr), using a boolean or `"never"`. In case you use `"never"`, all page-level `ssr` exports will be completely ignored regardless of their value.
 
 ### router
 
