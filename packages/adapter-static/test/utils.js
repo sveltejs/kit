@@ -79,7 +79,7 @@ function spawn(str, opts) {
 
 		child.on('error', reject);
 
-		child.on('exit', (code) => {
+		child.on('exit', () => {
 			fulfil();
 		});
 	});

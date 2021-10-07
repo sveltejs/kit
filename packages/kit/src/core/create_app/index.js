@@ -33,7 +33,7 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 	const base = path.relative(cwd, dir);
 
 	write_if_changed(`${dir}/manifest.js`, generate_client_manifest(manifest_data, base));
-	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data, base));
+	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data));
 }
 
 /**
@@ -110,9 +110,8 @@ function generate_client_manifest(manifest_data, base) {
 
 /**
  * @param {ManifestData} manifest_data
- * @param {string} base
  */
-function generate_app(manifest_data, base) {
+function generate_app(manifest_data) {
 	// TODO remove default layout altogether
 
 	const max_depth = Math.max(

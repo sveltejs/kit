@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('only includes CSS for rendered components', '/styles', async ({ page }) => {
 		const style = await page.innerHTML('style[amp-custom]');
 

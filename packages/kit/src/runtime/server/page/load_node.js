@@ -218,7 +218,7 @@ export async function load_node({
 
 				if (response) {
 					const proxy = new Proxy(response, {
-						get(response, key, receiver) {
+						get(response, key, _receiver) {
 							async function text() {
 								const body = await response.text();
 

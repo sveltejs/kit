@@ -205,7 +205,7 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test('fallthrough', '/routing/fallthrough-simple/invalid', async ({ page, clicknav }) => {
+	test('fallthrough', '/routing/fallthrough-simple/invalid', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'Page');
 	});
 

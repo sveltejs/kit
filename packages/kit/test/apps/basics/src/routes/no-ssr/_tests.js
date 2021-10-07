@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('does not SSR page with ssr=false', '/no-ssr', async ({ page, js }) => {
 		if (js) {
 			assert.equal(await page.textContent('h1'), 'content was rendered');
