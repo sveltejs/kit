@@ -2,14 +2,7 @@ import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
 
 export interface App {
-	init(options?: {
-		paths: {
-			base: string;
-			assets: string;
-		};
-		prerendering: boolean;
-		read(file: string): Buffer;
-	}): void;
+	init(): void;
 	render(incoming: IncomingRequest): Promise<ServerResponse>;
 }
 
