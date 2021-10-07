@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] expose init and render for adapters
+[fix] improve type of `init`

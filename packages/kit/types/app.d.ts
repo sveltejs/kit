@@ -1,17 +1,9 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
 
-export interface Init {
-	(): void;
-}
-
-export interface Render {
-	(incoming: IncomingRequest): Promise<ServerResponse>;
-}
-
 export interface App {
-	init: Init;
-	render: Render;
+	init(): void;
+	render(incoming: IncomingRequest): Promise<ServerResponse>;
 }
 
 export type RawBody = null | Uint8Array;
