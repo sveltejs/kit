@@ -9,7 +9,7 @@ importers:
       '@rollup/plugin-commonjs': ^21.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.4
-      '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.7.0
+      '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
       '@typescript-eslint/eslint-plugin': ^4.31.1
       '@typescript-eslint/parser': ^4.31.1
       action-deploy-docs: github:sveltejs/action-deploy-docs#main
@@ -27,7 +27,7 @@ importers:
       '@rollup/plugin-commonjs': 21.0.0_rollup@2.56.3
       '@rollup/plugin-json': 4.1.0_rollup@2.56.3
       '@rollup/plugin-node-resolve': 13.0.4_rollup@2.56.3
-      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_0ff5ca0dc9831885f24fefccb1057b10
+      '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_0ff5ca0dc9831885f24fefccb1057b10
       '@typescript-eslint/eslint-plugin': 4.31.1_e2d3c88d378335c4183365c112128ce9
       '@typescript-eslint/parser': 4.31.1_eslint@7.32.0+typescript@4.4.3
       action-deploy-docs: github.com/sveltejs/action-deploy-docs/321fe3aec0f4484eaa42e32283025106161cc296
@@ -4444,11 +4444,11 @@ packages:
       httpie: 1.1.2
     dev: true
 
-  github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322_0ff5ca0dc9831885f24fefccb1057b10:
-    resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/885b062904591606c030b4e8eb9160c63f16b322}
-    id: github.com/sveltejs/eslint-config/885b062904591606c030b4e8eb9160c63f16b322
+  github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_0ff5ca0dc9831885f24fefccb1057b10:
+    resolution: {tarball: https://codeload.github.com/sveltejs/eslint-config/tar.gz/9a7d728e03ac433e5856a6e06775c17ee986d641}
+    id: github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641
     name: '@sveltejs/eslint-config'
-    version: 5.7.0
+    version: 5.8.0
     peerDependencies:
       '@typescript-eslint/eslint-plugin': '>= 3'
       '@typescript-eslint/parser': '>= 3'
