@@ -9,10 +9,10 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.26",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.27",
 		"cheap-watch": "^1.0.4",
 		"sade": "^1.7.4",
-		"vite": "^2.6.3"
+		"vite": "^2.6.5"
 	},
 	"devDependencies": {
 		"@rollup/plugin-replace": "^3.0.0",
@@ -20,7 +20,7 @@
 		"@types/cookie": "^0.4.1",
 		"@types/marked": "^3.0.1",
 		"@types/mime": "^2.0.3",
-		"@types/node": "^16.9.1",
+		"@types/node": "^16.10.3",
 		"@types/rimraf": "^3.0.2",
 		"@types/sade": "^1.7.3",
 		"amphtml-validator": "^1.0.35",
@@ -29,19 +29,19 @@
 		"eslint": "^7.32.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
-		"marked": "^3.0.4",
+		"marked": "^3.0.7",
 		"mime": "^2.5.2",
 		"node-fetch": "^3.0.0",
 		"port-authority": "^1.1.2",
 		"rimraf": "^3.0.2",
-		"rollup": "^2.56.3",
+		"rollup": "^2.58.0",
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.17",
-		"svelte": "^3.43.0",
-		"svelte-check": "^2.2.6",
-		"svelte2tsx": "~0.4.6",
+		"svelte": "^3.43.1",
+		"svelte-check": "^2.2.7",
+		"svelte2tsx": "~0.4.7",
 		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.1"
+		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {
 		"svelte": "^3.43.0"

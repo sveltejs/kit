@@ -10,19 +10,19 @@
 	"bin": "./bin.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
-		"prompts": "^2.4.1"
+		"prompts": "^2.4.2"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
 		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.3.2",
+		"@types/prettier": "^2.4.1",
 		"@types/prompts": "^2.0.14",
 		"gitignore-parser": "^0.0.2",
 		"prettier": "^2.4.1",
 		"prettier-plugin-svelte": "^2.4.0",
-		"sucrase": "^3.20.1",
-		"svelte": "^3.43.0",
-		"svelte-preprocess": "^4.9.4",
+		"sucrase": "^3.20.2",
+		"svelte": "^3.43.1",
+		"svelte-preprocess": "^4.9.8",
 		"tiny-glob": "^0.2.9"
 	},
 	"scripts": {
