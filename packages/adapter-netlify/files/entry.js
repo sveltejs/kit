@@ -1,5 +1,6 @@
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
+// @sveltejs/kit-app doesn't exist until the app is built
+// @ts-ignore
+import { init, render } from '@sveltejs/kit-app';
 
 init();
 

@@ -17,11 +17,13 @@ import { copy_assets, posixify, resolve_entry } from '../utils.js';
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
 
-/** @typedef {Record<string, {
+/**
+ * @typedef {Record<string, {
  *   file: string;
  *   css: string[];
  *   imports: string[];
- * }>} ClientManifest */
+ * }>} ClientManifest
+ */
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -32,7 +34,8 @@ const s = (value) => JSON.stringify(value);
  * @returns {Promise<import('types/internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
-	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
+	const raw_build_dir = `${SVELTE_KIT}/node_modules/@sveltejs/kit-app`;
+	const build_dir = path.resolve(cwd, raw_build_dir);
 
 	rimraf(build_dir);
 
@@ -53,7 +56,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			cwd
 		}),
 		output_dir,
-		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
+		client_entry_file: `${raw_build_dir}/runtime/internal/start.js`,
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
@@ -225,11 +228,9 @@ async function build_server(
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
+		hooks_file = path.resolve(build_dir, 'hooks.js');
 		fs.writeFileSync(hooks_file, '');
 	}
-
-	const app_file = `${build_dir}/app.js`;
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
@@ -292,6 +293,19 @@ async function build_server(
 	const entry_css = new Set();
 
 	find_deps(client_entry_file, entry_js, entry_css);
+
+	fs.writeFileSync(
+		`${build_dir}/package.json`,
+		`{
+			"name": "@sveltejs/kit-app",
+			"version": "0.0.1",
+			"private": true,
+			"type": "module",
+			"main": "app.js"
+		}`
+	);
+
+	const app_file = `${build_dir}/app.js`;
 
 	// prettier-ignore
 	fs.writeFileSync(

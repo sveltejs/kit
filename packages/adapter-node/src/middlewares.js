@@ -1,8 +1,6 @@
-// TODO hardcoding the relative location makes this brittle
-// Also, we need most of the logic in another file for testing because
-// ../output/server/app.js doesn't exist when we run the tests
+// @sveltejs/kit-app doesn't exist until the app is built
 // @ts-ignore
-import { init, render } from '../output/server/app.js';
+import { init, render } from '@sveltejs/kit-app';
 import { create_kit_middleware } from './kit-middleware.js';
 
 import fs from 'fs';
