@@ -141,7 +141,7 @@ export default {
 		package: {
 			exports: (filepath) => {
 				if (filepath.endsWith('.d.ts')) return false;
-				return mm.isMatch(filepath, ['!**/_*', '!**/internal/**'])
+				return mm.isMatch(filepath, ['!**/_*', '!**/internal/**']);
 			},
 			files: mm.matcher('!**/build.*')
 		}
@@ -175,10 +175,11 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
     	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
     };
+    import adapter from '@sveltejs/adapter-static';
 
     export default {
     	kit: {
-    		adapter: static(),
+    		adapter: adapter(),
     		target: '#svelte',
     		prerender: {
     			onError: handleError
