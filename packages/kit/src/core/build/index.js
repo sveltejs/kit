@@ -72,7 +72,9 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	}
 
 	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
-	const server = glob('**', { cwd: SVELTE_KIT_MODULE, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: path.resolve(cwd, SVELTE_KIT_MODULE), filesOnly: true }).map(
+		posixify
+	);
 
 	return {
 		client,
@@ -457,6 +459,8 @@ async function build_server(
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
+	const out_dir = path.resolve(cwd, SVELTE_KIT_MODULE);
+
 	/** @type {[any, string[]]} */
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
@@ -465,7 +469,7 @@ async function build_server(
 		build: {
 			target: 'es2018',
 			ssr: true,
-			outDir: SVELTE_KIT_MODULE,
+			outDir: out_dir,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input: {
@@ -502,9 +506,9 @@ async function build_server(
 	await vite.build(merged_config);
 
 	fs.writeFileSync(
-		`${SVELTE_KIT_MODULE}/package.json`,
+		`${out_dir}/package.json`,
 		`{
-			"name": "@sveltejs/kit-app",
+			"name": "@sveltejs/kit-server",
 			"version": "0.0.1",
 			"private": true,
 			"type": "module",

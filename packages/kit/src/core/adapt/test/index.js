@@ -67,14 +67,6 @@ suite('copy files', () => {
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
 		glob('**', { cwd: dest })
 	);
-
-	rimraf.sync(dest);
-	utils.copy_server_files(dest);
-
-	assert.equal(
-		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
-		glob('**', { cwd: dest })
-	);
 });
 
 suite('prerender', async () => {

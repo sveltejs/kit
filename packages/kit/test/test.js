@@ -344,7 +344,7 @@ async function main() {
 
 				await build(config, {
 					cwd,
-					runtime: '../../../../../../../src/runtime/server/index.js'
+					runtime: '../../../../../src/runtime/server/index.js'
 				});
 
 				context.server = await preview({ port, config, cwd, host: undefined, https: false });
