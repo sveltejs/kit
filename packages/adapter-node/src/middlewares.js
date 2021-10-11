@@ -1,6 +1,6 @@
-// @sveltejs/kit-app doesn't exist until the app is built
+// @sveltejs/kit-server doesn't exist until the app is built
 // @ts-ignore
-import { init, render } from '@sveltejs/kit-app';
+import { init, render } from '@sveltejs/kit-server';
 import { create_kit_middleware } from './kit-middleware.js';
 
 import fs from 'fs';

@@ -11,7 +11,7 @@ import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT, SVELTE_KIT_MODULE } from '../constants.js';
 import { copy_assets, posixify, resolve_entry } from '../utils.js';
 
 /** @param {any} value */
@@ -34,7 +34,7 @@ const s = (value) => JSON.stringify(value);
  * @returns {Promise<import('types/internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
-	const raw_build_dir = `${SVELTE_KIT}/node_modules/@sveltejs/kit-app`;
+	const raw_build_dir = `${SVELTE_KIT}/build`;
 	const build_dir = path.resolve(cwd, raw_build_dir);
 
 	rimraf(build_dir);
@@ -72,7 +72,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	}
 
 	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
-	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
+	const server = glob('**', { cwd: SVELTE_KIT_MODULE, filesOnly: true }).map(posixify);
 
 	return {
 		client,
@@ -294,17 +294,6 @@ async function build_server(
 
 	find_deps(client_entry_file, entry_js, entry_css);
 
-	fs.writeFileSync(
-		`${build_dir}/package.json`,
-		`{
-			"name": "@sveltejs/kit-app",
-			"version": "0.0.1",
-			"private": true,
-			"type": "module",
-			"main": "app.js"
-		}`
-	);
-
 	const app_file = `${build_dir}/app.js`;
 
 	// prettier-ignore
@@ -476,7 +465,7 @@ async function build_server(
 		build: {
 			target: 'es2018',
 			ssr: true,
-			outDir: `${output_dir}/server`,
+			outDir: SVELTE_KIT_MODULE,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input: {
@@ -511,6 +500,17 @@ async function build_server(
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
 	await vite.build(merged_config);
+
+	fs.writeFileSync(
+		`${SVELTE_KIT_MODULE}/package.json`,
+		`{
+			"name": "@sveltejs/kit-app",
+			"version": "0.0.1",
+			"private": true,
+			"type": "module",
+			"main": "app.js"
+		}`
+	);
 }
 
 /**

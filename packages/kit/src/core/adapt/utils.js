@@ -23,7 +23,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 		},
 
 		copy_server_files(dest) {
-			copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, (file) => file[0] !== '.');
+			copy(`${cwd}/node_modules/@sveltejs/kit-app`, dest, (file) => file[0] !== '.');
 		},
 
 		copy_static_files(dest) {

@@ -3,7 +3,7 @@ import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, resolve, URL } from 'url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
+import { SVELTE_KIT_MODULE } from '../constants.js';
 import { get_single_valued_header } from '../../utils/http.js';
 
 /**
@@ -100,14 +100,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	__fetch_polyfill();
 
-	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
+	const dir = resolve_path(cwd, SVELTE_KIT_MODULE);
 
 	const seen = new Set();
 
 	const server_root = resolve_path(dir);
 
 	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	const app = await import(pathToFileURL(`${server_root}/app.js`).href);
 
 	app.init({
 		paths: config.kit.paths,
