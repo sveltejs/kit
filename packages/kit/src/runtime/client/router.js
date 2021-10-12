@@ -151,10 +151,12 @@ export class Router {
 
 			const i1 = url_string.indexOf('#');
 			const i2 = location.href.indexOf('#');
-			if (i1 > 0 && i2 > 0 && url_string.substring(0, i1) === location.href.substring(0, i2)) {
+			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
+			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
+			history.pushState({}, '', url.href);
+			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
-			history.pushState({}, '', url.href);
 			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
 		});
