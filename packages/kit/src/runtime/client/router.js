@@ -127,7 +127,8 @@ export class Router {
 			if (!a.href) return;
 
 			const url = get_href(a);
-			if (url.toString() === location.href) {
+			const url_string = url.toString();
+			if (url_string === location.href) {
 				if (!location.hash) event.preventDefault();
 				return;
 			}
@@ -148,6 +149,11 @@ export class Router {
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
 
+			const i1 = url_string.indexOf('#');
+			const i2 = location.href.indexOf('#');
+			if (i1 > 0 && i2 > 0 && url_string.substring(0, i1) === location.href.substring(0, i2)) {
+				window.dispatchEvent(new HashChangeEvent('hashchange'));
+			}
 			history.pushState({}, '', url.href);
 			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
