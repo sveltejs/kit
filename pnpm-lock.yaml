@@ -230,12 +230,12 @@ importers:
       svelte2tsx: ~0.4.7
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
-      vite: ^2.6.5
+      vite: ^2.6.7
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 1.0.0-next.27_svelte@3.43.1+vite@2.6.5
+      '@sveltejs/vite-plugin-svelte': 1.0.0-next.27_svelte@3.43.1+vite@2.6.7
       cheap-watch: 1.0.4
       sade: 1.7.4
-      vite: 2.6.5
+      vite: 2.6.7
     devDependencies:
       '@rollup/plugin-replace': 3.0.0_rollup@2.58.0
       '@types/amphtml-validator': 1.0.1
@@ -761,7 +761,7 @@ packages:
       picomatch: 2.3.0
     dev: false
 
-  /@sveltejs/vite-plugin-svelte/1.0.0-next.27_svelte@3.43.1+vite@2.6.5:
+  /@sveltejs/vite-plugin-svelte/1.0.0-next.27_svelte@3.43.1+vite@2.6.7:
     resolution: {integrity: sha512-hiau09LA/5eGGFTxXtRPIxKmWw8By8t+Vw+uvgKYeUf+4zJLe/Q5yX3Przf2CmW0J6fPi4NWWIeYsLrOd78a2w==}
     engines: {node: ^12.20 || ^14.13.1 || >= 16}
     peerDependencies:
@@ -779,7 +779,7 @@ packages:
       require-relative: 0.8.7
       svelte: 3.43.1
       svelte-hmr: 0.14.7_svelte@3.43.1
-      vite: 2.6.5
+      vite: 2.6.7
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -4194,8 +4194,8 @@ packages:
     engines: {node: '>= 0.8'}
     dev: true
 
-  /vite/2.6.5:
-    resolution: {integrity: sha512-vavXMChDUb4Oh4YunrK9BrH5Ox74cu0eOp0VuyI/iqFz1FqbWD72So2c9I87lLL2n0+6tFPV5ijow60KrtxuZg==}
+  /vite/2.6.7:
+    resolution: {integrity: sha512-ewk//jve9k6vlU8PfJmWUHN8k0YYdw4VaKOMvoQ3nT2Pb6k5OSMKQi4jPOzVH/TlUqMsCrq7IJ80xcuDDVyigg==}
     engines: {node: '>=12.2.0'}
     hasBin: true
     peerDependencies:
