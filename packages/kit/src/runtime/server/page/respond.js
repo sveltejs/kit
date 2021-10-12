@@ -167,9 +167,6 @@ export async function respond(opts) {
 						}
 					}
 
-					// TODO backtrack until we find an __error.svelte component
-					// that we can use as the leaf node
-					// for now just return regular error page
 					return with_cookies(
 						await respond_with_error({
 							request,
