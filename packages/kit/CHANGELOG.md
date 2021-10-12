@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.182
+
+### Patch Changes
+
+- [fix] fixes for firing of hashchange event ([#2591](https://github.com/sveltejs/kit/pull/2591))
+
 ## 1.0.0-next.181
 
 ### Patch Changes
