@@ -152,7 +152,7 @@ export class Router {
 			const i1 = url_string.indexOf('#');
 			const i2 = location.href.indexOf('#');
 			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
-			const u2 = i2 >= 0 ? location.href.substring(0, i1) : location.href;
+			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
 			history.pushState({}, '', url.href);
 			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
