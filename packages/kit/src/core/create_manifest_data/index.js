@@ -49,6 +49,9 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
+		/** @type {import('types/internal').Fallback[]} */
+	let fallbacks = [];
+
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
 	const default_error = posixify(path.relative(cwd, `${output}/components/error.svelte`));
 
@@ -186,7 +189,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const concatenated = layout_stack.concat(item.file);
 				const errors = error_stack.slice();
 
-				const pattern = get_pattern(segments, true);
+				const pattern = get_pattern(segments, true, false);
+
 
 				let i = concatenated.length;
 				while (i--) {
@@ -215,8 +219,20 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 					a: /** @type {string[]} */ (concatenated),
 					b: /** @type {string[]} */ (errors)
 				});
+
+				fallbacks.push({
+					pattern: get_pattern(segments, true, true),
+					layout: concatenated
+						.slice()
+						.reverse()
+						.find((c) => c && c.endsWith('__layout.svelte')),
+					error: errors
+						.slice()
+						.reverse()
+						.find((e) => e)
+				});
 			} else {
-				const pattern = get_pattern(segments, !item.route_suffix);
+				const pattern = get_pattern(segments, !item.route_suffix, false);
 
 				routes.push({
 					type: 'endpoint',
@@ -241,10 +257,22 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		? list_files({ config, dir: config.kit.files.assets, path: '' })
 		: [];
 
+	fallbacks = fallbacks.filter((fallback) => {
+		return fallback && (fallback.layout !== layout || fallback.error !== error);
+	});
+	fallbacks.sort((a, b) => {
+		const a_length = a ? a.pattern.toString().length : 0;
+		const b_length = b ? b.pattern.toString().length : 0;
+		if (a_length < b_length) return 1;
+		if (a_length > b_length) return -1;
+		return 0;
+	});
+
 	return {
 		assets,
 		layout,
 		error,
+		fallbacks,
 		components,
 		routes
 	};
@@ -346,8 +374,9 @@ function get_parts(part, file) {
 /**
  * @param {Part[][]} segments
  * @param {boolean} add_trailing_slash
+ * @param {boolean} is_fallback_pattern
  */
-function get_pattern(segments, add_trailing_slash) {
+function get_pattern(segments, add_trailing_slash, is_fallback_pattern) {
 	const path = segments
 		.map((segment) => {
 			return segment[0].spread
@@ -378,7 +407,9 @@ function get_pattern(segments, add_trailing_slash) {
 		})
 		.join('');
 
-	const trailing = add_trailing_slash && segments.length ? '\\/?$' : '$';
+	const trailing = is_fallback_pattern
+		? segments.length ? '\\/.+$' : '.*$'
+		: add_trailing_slash && segments.length ? '\\/?$' : '$';
 
 	return new RegExp(`^${path || '\\/'}${trailing}`);
 }

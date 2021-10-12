@@ -93,6 +93,24 @@ function generate_client_manifest(manifest_data, base) {
 			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
 
+	/** @type {[RegExp, string, string][]} */
+	const fallbacks_tuple = [];
+	manifest_data.fallbacks.forEach((fallback) => {
+		const layout_fallback_index = fallback.layout ? component_indexes[fallback.layout] : 0;
+		const error_fallback_index = fallback.error ? component_indexes[fallback.error] : 1;
+		fallbacks_tuple.push([
+			fallback.pattern,
+			`c[${layout_fallback_index}]()`,
+			`c[${error_fallback_index}]()`
+		]);
+	});
+
+	const fallbacks = `[
+		${fallbacks_tuple
+			.map((tuple) => `[${tuple.join(', ')}]`)
+			.join(',\n\t\t')},\n\t\t[/^.*$/, c[0](), c[1]()]
+	]`.replace(/^\t/gm, '');
+
 	return trim(`
 		const c = ${components};
 
@@ -102,7 +120,7 @@ function generate_client_manifest(manifest_data, base) {
 
 		// we import the root layout/error components eagerly, so that
 		// connectivity errors after initialisation don't nuke the app
-		export const fallback = [c[0](), c[1]()];
+		export const fallbacks = ${fallbacks};
 	`);
 }
 

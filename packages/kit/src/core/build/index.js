@@ -394,6 +394,15 @@ async function build_server(
 					}
 				})
 				.join(',\n\t\t\t\t\t')}
+				],
+				fallbacks: [
+					${manifest.fallbacks.map((fallback) => {
+						return `{
+							pattern: ${fallback.pattern},
+							layout: ${s(fallback.layout)},
+							error: ${s(fallback.error)}
+						}`;
+					}).join(',\n\t\t\t\t\t')}
 				]
 			};
 

@@ -66,15 +66,15 @@ export class Renderer {
 	/**
 	 * @param {{
 	 *   Root: CSRComponent;
-	 *   fallback: [CSRComponent, CSRComponent];
+	 *   fallbacks: [RegExp, CSRComponent, CSRComponent][];
 	 *   target: Node;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts
 	 */
-	constructor({ Root, fallback, target, session, host }) {
+	constructor({ Root, fallbacks, target, session, host }) {
 		this.Root = Root;
-		this.fallback = fallback;
+		this.fallbacks = fallbacks;
 		this.host = host;
 
 		/** @type {import('./router').Router | undefined} */
@@ -756,8 +756,12 @@ export class Renderer {
 			params: {}
 		};
 
+		const fallback =
+			this.fallbacks.find((fallback) => {
+				return fallback && fallback[0].test(path);
+			}) || this.fallbacks[this.fallbacks.length - 1];
 		const node = await this._load_node({
-			module: await this.fallback[0],
+			module: await fallback[1],
 			page,
 			stuff: {}
 		});
@@ -767,7 +771,7 @@ export class Renderer {
 			await this._load_node({
 				status,
 				error,
-				module: await this.fallback[1],
+				module: await fallback[2],
 				page,
 				stuff: (node && node.loaded && node.loaded.stuff) || {}
 			})

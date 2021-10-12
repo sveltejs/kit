@@ -20,8 +20,15 @@ import { coalesce_to_error } from '../../../utils/error.js';
  * }} opts
  */
 export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.load_component(options.manifest.layout);
-	const default_error = await options.load_component(options.manifest.error);
+	const fallback = options.manifest.fallbacks.find((fallback) => {
+		return fallback && fallback.pattern.test(request.path);
+	});
+	const default_layout = await options.load_component(
+		fallback && fallback.layout ? fallback.layout : options.manifest.layout
+	);
+	const default_error = await options.load_component(
+		fallback && fallback.error ? fallback.error : options.manifest.error
+	);
 
 	const page = {
 		host: request.host,

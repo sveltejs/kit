@@ -107,6 +107,7 @@ export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetP
 
 export interface SSRManifest {
 	assets: Asset[];
+	fallbacks: Fallback[];
 	layout: string;
 	error: string;
 	routes: SSRRoute[];
@@ -192,10 +193,17 @@ export interface EndpointData {
 
 export type RouteData = PageData | EndpointData;
 
+export interface Fallback {
+	pattern: RegExp;
+	layout?: string;
+	error?: string;
+}
+
 export interface ManifestData {
 	assets: Asset[];
 	layout: string;
 	error: string;
+	fallbacks: Fallback[];
 	components: string[];
 	routes: RouteData[];
 }

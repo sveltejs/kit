@@ -224,7 +224,8 @@ class Watcher extends EventEmitter {
 						return await this.vite.ssrLoadModule(url);
 					}
 				};
-			})
+			}),
+			fallbacks: manifest_data.fallbacks
 		};
 	}
 
