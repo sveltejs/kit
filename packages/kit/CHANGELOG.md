@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.181
+
+### Patch Changes
+
+- [fix] improve type of `init` ([#2544](https://github.com/sveltejs/kit/pull/2544))
+
+* update dependencies ([#2574](https://github.com/sveltejs/kit/pull/2574))
+
+- [fix] implement support for hashchange event ([#2590](https://github.com/sveltejs/kit/pull/2590))
+
+* [chore] upgrade to Vite 2.6.7 ([#2586](https://github.com/sveltejs/kit/pull/2586))
+
 ## 1.0.0-next.180
 
 ### Patch Changes
