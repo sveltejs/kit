@@ -49,7 +49,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
-		/** @type {import('types/internal').Fallback[]} */
+	/** @type {import('types/internal').Fallback[]} */
 	let fallbacks = [];
 
 	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
@@ -190,7 +190,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				const errors = error_stack.slice();
 
 				const pattern = get_pattern(segments, true, false);
-
 
 				let i = concatenated.length;
 				while (i--) {
@@ -408,8 +407,12 @@ function get_pattern(segments, add_trailing_slash, is_fallback_pattern) {
 		.join('');
 
 	const trailing = is_fallback_pattern
-		? segments.length ? '\\/.+$' : '.*$'
-		: add_trailing_slash && segments.length ? '\\/?$' : '$';
+		? segments.length
+			? '\\/.+$'
+			: '.*$'
+		: add_trailing_slash && segments.length
+		? '\\/?$'
+		: '$';
 
 	return new RegExp(`^${path || '\\/'}${trailing}`);
 }
