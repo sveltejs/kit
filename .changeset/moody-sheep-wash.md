@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix xss issue with dynamic route paths
+fix XSS vulnerability in `page.path` and `page.params` during SSR
