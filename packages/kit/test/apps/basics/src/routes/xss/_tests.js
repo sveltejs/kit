@@ -20,7 +20,7 @@ export default function (test) {
 		assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
 	});
 
-	test('no xss via query param', `/xss/query/echo?key=${uri_xss_payload}`, async ({ page }) => {
+	test('no xss via query param', `/xss/query?key=${uri_xss_payload}`, async ({ page }) => {
 		// @ts-expect-error - check global injected variable
 		assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
 	});
