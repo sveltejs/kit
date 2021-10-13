@@ -137,11 +137,11 @@ export async function render_response({
 					],
 					page: {
 						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-						path: ${page && page.path ? try_serialize(page.path,error => {
+						path: ${page && page.path ? try_serialize(page.path, error => {
 							throw new Error(`Failed to serialize page.path: ${error.message}`);
 						}) : null},
 						query: new URLSearchParams(${page && page.query ? s(page.query.toString()) : ''}),
-						params: ${page && page.params ? try_serialize(page.params,error => {
+						params: ${page && page.params ? try_serialize(page.params, error => {
 							throw new Error(`Failed to serialize page.params: ${error.message}`);
 						}) : null}
 					}
