@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.183
+
+### Patch Changes
+
+- fix XSS vulnerability in `page.path` and `page.params` during SSR ([#2597](https://github.com/sveltejs/kit/pull/2597))
+
 ## 1.0.0-next.182
 
 ### Patch Changes
