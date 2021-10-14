@@ -86,6 +86,6 @@
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": "^12.20 || >=14.13"
+		"node": ">=14.13"
 	}
 }

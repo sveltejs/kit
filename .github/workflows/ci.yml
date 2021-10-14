@@ -38,8 +38,6 @@ jobs:
         node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         include:
-          - node-version: 12
-            os: ubuntu-latest
           - node-version: 16
             os: ubuntu-latest
     steps:
@@ -79,8 +77,6 @@ jobs:
         node-version: [14]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         include:
-          - node-version: 12
-            os: ubuntu-latest
           - node-version: 16
             os: ubuntu-latest
     steps:
