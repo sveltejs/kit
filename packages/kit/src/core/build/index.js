@@ -460,7 +460,7 @@ async function build_server(
 		root: cwd,
 		base: assets_base,
 		build: {
-			target: 'es2018',
+			target: 'es2020',
 			ssr: true,
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,

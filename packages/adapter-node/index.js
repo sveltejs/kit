@@ -66,7 +66,7 @@ export default function ({
 				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
 				format: 'esm',
 				platform: 'node',
-				target: 'node12',
+				target: 'node14',
 				inject: [join(files, 'shims.js')],
 				define: {
 					APP_DIR: `"/${config.kit.appDir}/"`
@@ -83,7 +83,7 @@ export default function ({
 				bundle: true,
 				format: 'esm',
 				platform: 'node',
-				target: 'node12',
+				target: 'node14',
 				// external exclude workaround, see https://github.com/evanw/esbuild/issues/514
 				plugins: [
 					{

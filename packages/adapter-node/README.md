@@ -109,7 +109,7 @@ The default options for this version are as follows:
 	external: allProductionDependencies, // from package.json
 	format: 'esm',
 	platform: 'node',
-	target: 'node12',
+	target: 'node14',
 	inject: ['pathTo/shims.js'],
 	define: {
 		esbuild_app_dir: `"${config.kit.appDir}"`
