@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.55
+
+### Patch Changes
+
+- [breaking] drop Node 12 support ([#2604](https://github.com/sveltejs/kit/pull/2604))
+
 ## 1.0.0-next.54
 
 ### Patch Changes
