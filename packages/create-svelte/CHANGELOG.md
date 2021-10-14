@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.83
+
+### Patch Changes
+
+- [breaking] drop Node 12 support ([#2604](https://github.com/sveltejs/kit/pull/2604))
+
 ## 2.0.0-next.82
 
 ### Patch Changes
