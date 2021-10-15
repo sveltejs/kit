@@ -170,8 +170,8 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
   - `function` — custom error handler allowing you to log, `throw` and fail the build, or take other action of your choosing based on the details of the crawl
 
     ```ts
-    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
     import adapter from '@sveltejs/adapter-static';
+    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
     const handleError = ({ status, path, referrer, referenceType }) => {
     	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
     	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
