@@ -171,11 +171,11 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
     ```ts
     /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
+    import adapter from '@sveltejs/adapter-static';
     const handleError = ({ status, path, referrer, referenceType }) => {
     	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
     	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
     };
-    import adapter from '@sveltejs/adapter-static';
 
     export default {
     	kit: {
