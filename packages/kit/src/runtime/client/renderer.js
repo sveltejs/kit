@@ -322,6 +322,7 @@ export class Renderer {
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
 				const info = this.router && this.router.parse(new URL(location.href));
+				if (info) this.notify({ path: info.path, query: info.query });
 				if (info) await this.update(info, [], true);
 
 				this.invalidating = null;
