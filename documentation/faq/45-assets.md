@@ -14,6 +14,18 @@ You can have Vite process your assets by importing them as shown below:
 
 If you prefer to directly import in the markup, try [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets) and you can write this instead:
 
+```js
+// svelte.config.js
+import importAssets from 'svelte-preprocess-import-assets'
+const config = {
+    preprocess: [importAssets()],
+    kit: {
+        // ...
+    }
+    // ...
+};
+```
+
 ```html
 <img src="$lib/assets/image.png" />
 ```
