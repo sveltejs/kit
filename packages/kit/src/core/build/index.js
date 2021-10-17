@@ -446,8 +446,7 @@ async function build_server(
 	const default_config = {
 		server: {
 			build: {
-				// set minimum target as es2020, yet allow users to override it with
-				// any target satisfying the constraints of the es2020
+				// set minimum target as es2020, yet allow users to override
 				target: 'es2020'
 			},
 			fs: {
@@ -459,10 +458,8 @@ async function build_server(
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
-	const adjusted_vite_config = ensure_minimum_target(modified_vite_config, default_config.server.build.target);
-
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(adjusted_vite_config, {
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 		configFile: false,
 		root: cwd,
 		base: assets_base,
@@ -617,37 +614,4 @@ function get_params(array) {
 					.join(', ') +
 				'})'
 		: 'empty';
-}
-
-/**
- * @param {Record<string, any>} config
- * @param {string} minimum
- */
-export function ensure_minimum_target(config, minimum) {
-	const esVersionPattern = /^es(\d{4})$/;
-	const target = config.server.build.target;
-	const targets = Array.isArray(target) ? target : [target];
-
-	// remove old ES versions
-	const targetsWithoutOldEs = targets.filter(t => t === 'esnext' || t === minimum || !t.match(esVersionPattern));
-
-	// check if we need to add the minimum target
-	const hasMinimum = targetsWithoutOldEs.filter(t => {
-		// esnext is always supported
-		if (t === 'esnext') return true;
-
-		// check if the target matches with the pattern "es\d\d\d\d"
-		const m = t.match(esVersionPattern);
-		if (!m) return false;
-
-		// check if the target version is greater than or equal to the minimum version
-		const version = +m[1];
-		const minimumVersion = +(minimum.match(esVersionPattern) || [])[1];
-		return version >= minimumVersion;
-	}).length > 0;
-
-	// inject minimum target if the current value doesn't contain the minimum
-	// so that esbuild can check the constraints
-	const ensuredTargets = hasMinimum ? targetsWithoutOldEs : [...targetsWithoutOldEs, minimum];
-	return { ...config, server: { ...config.server, build: { ...config.server.build, target: ensuredTargets } } };
 }
