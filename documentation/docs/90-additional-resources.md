@@ -20,7 +20,7 @@ We've written and published a few different SvelteKit sites as examples:
 
 [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) allows you to automatically transform the code in your Svelte templates provides support for TypeScript, PostCSS, scss/sass, Less, and many other technologies. The first step of setting it up is to add `svelte-preprocess` to your [`svelte.config.js`](#configuration). It is provided by the template if you're using TypeScript whereas JavaScript users will need to add it. After that, you will often only need to install the corresponding library such as `npm install -D sass`or `npm install -D less`. See the [svelte-preprocess](https://github.com/sveltejs/svelte-preprocess) docs for more details.
 
-[Svelte Adders](https://sveltesociety.dev/templates#category-Svelte%20Add) allow you to setup many different complex integrations like Tailwind, PostCSS, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
+[Svelte Adders](https://sveltesociety.dev/templates#adders) allow you to setup many different complex integrations like Tailwind, PostCSS, Firebase, GraphQL, mdsvex, and more with a single command. Please see [sveltesociety.dev](https://sveltesociety.dev/) for a full listing of templates, components, and tools available for use with Svelte and SvelteKit.
 
 The SvelteKit FAQ also has a [section on integrations](/faq#integrations), which may be helpful if you run into any issues.
 
