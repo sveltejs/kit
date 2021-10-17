@@ -444,11 +444,11 @@ async function build_server(
 	const vite_config = config.kit.vite();
 
 	const default_config = {
+		build: {
+			// set default target as es2020, yet allow users to override
+			target: 'es2020'
+		},
 		server: {
-			build: {
-				// set minimum target as es2020, yet allow users to override
-				target: 'es2020'
-			},
 			fs: {
 				strict: true
 			}
