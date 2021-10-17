@@ -445,6 +445,11 @@ async function build_server(
 
 	const default_config = {
 		server: {
+			build: {
+				// set minimum target as es2020, yet allow users to override it with
+				// any target satisfying the constraints of the es2020
+				target: 'es2020'
+			},
 			fs: {
 				strict: true
 			}
@@ -454,13 +459,14 @@ async function build_server(
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
 
+	const adjusted_vite_config = ensure_minimum_target(modified_vite_config, default_config.server.build.target);
+
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
+	const [merged_config, conflicts] = deep_merge(adjusted_vite_config, {
 		configFile: false,
 		root: cwd,
 		base: assets_base,
 		build: {
-			target: 'es2020',
 			ssr: true,
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,
@@ -611,4 +617,32 @@ function get_params(array) {
 					.join(', ') +
 				'})'
 		: 'empty';
+}
+
+/**
+ * @param {Record<string, any>} config
+ * @param {string} minimum
+ */
+function ensure_minimum_target(config, minimum) {
+	const target = config.server.build.target;
+	const targets = Array.isArray(target) ? target : [target];
+	const hasMinimum = targets.filter(t => {
+		// esnext is always supported
+		if (t === 'esnext') return true;
+
+		// check if the target matches with the pattern "es\d\d\d\d"
+		const p = /^es(\d{4})$/;
+		const m = t.match(p);
+		if (!m) return false;
+
+		// check if the target version is greater than or equal to the minimum version
+		const version = +m[1];
+		const minimumVersion = +(minimum.match(p) || [])[1];
+		return version >= minimumVersion;
+	}).length > 0;
+
+	// inject minimum target if the current value doesn't contain the minimum
+	// so that esbuild can check the constraints
+	const ensuredTargets = hasMinimum ? targets : [...targets, minimum];
+	return { ...config, server: { ...config.server, build: { ...config.server.build, target: ensuredTargets } } };
 }
