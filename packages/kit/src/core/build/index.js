@@ -623,26 +623,31 @@ function get_params(array) {
  * @param {Record<string, any>} config
  * @param {string} minimum
  */
-function ensure_minimum_target(config, minimum) {
+export function ensure_minimum_target(config, minimum) {
+	const esVersionPattern = /^es(\d{4})$/;
 	const target = config.server.build.target;
 	const targets = Array.isArray(target) ? target : [target];
-	const hasMinimum = targets.filter(t => {
+
+	// remove old ES versions
+	const targetsWithoutOldEs = targets.filter(t => t === 'esnext' || t === minimum || !t.match(esVersionPattern));
+
+	// check if we need to add the minimum target
+	const hasMinimum = targetsWithoutOldEs.filter(t => {
 		// esnext is always supported
 		if (t === 'esnext') return true;
 
 		// check if the target matches with the pattern "es\d\d\d\d"
-		const p = /^es(\d{4})$/;
-		const m = t.match(p);
+		const m = t.match(esVersionPattern);
 		if (!m) return false;
 
 		// check if the target version is greater than or equal to the minimum version
 		const version = +m[1];
-		const minimumVersion = +(minimum.match(p) || [])[1];
+		const minimumVersion = +(minimum.match(esVersionPattern) || [])[1];
 		return version >= minimumVersion;
 	}).length > 0;
 
 	// inject minimum target if the current value doesn't contain the minimum
 	// so that esbuild can check the constraints
-	const ensuredTargets = hasMinimum ? targets : [...targets, minimum];
+	const ensuredTargets = hasMinimum ? targetsWithoutOldEs : [...targetsWithoutOldEs, minimum];
 	return { ...config, server: { ...config.server, build: { ...config.server.build, target: ensuredTargets } } };
 }
