@@ -133,7 +133,7 @@ async function build_client({
 		input[name] = resolved;
 	});
 
-	/** @type {any} */
+	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();
 
 	const default_config = {
@@ -549,7 +549,7 @@ async function build_service_worker(
 			.trim()
 	);
 
-	/** @type {any} */
+	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();
 
 	const default_config = {
