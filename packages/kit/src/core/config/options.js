@@ -73,6 +73,8 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			inlineCss: boolean(false),
+
 			package: object({
 				dir: string('package'),
 				// excludes all .d.ts and filename starting with _

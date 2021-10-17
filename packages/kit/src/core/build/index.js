@@ -176,7 +176,7 @@ async function build_client({
 		plugins: [
 			svelte({
 				extensions: config.extensions,
-				emitCss: !config.kit.amp,
+				emitCss: !config.kit.amp && !config.kit.inlineCss,
 				compilerOptions: {
 					hydratable: !!config.kit.hydrate
 				}
@@ -271,12 +271,13 @@ async function build_server(
 		const js = Array.from(js_deps);
 		const css = Array.from(css_deps);
 
-		const styles = config.kit.amp
-			? Array.from(css_deps).map((url) => {
-					const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
-					return fs.readFileSync(resolved, 'utf-8');
-			  })
-			: [];
+		const styles =
+			config.kit.amp || config.kit.inlineCss
+				? Array.from(css_deps).map((url) => {
+						const resolved = `${output_dir}/client/${config.kit.appDir}/${url}`;
+						return fs.readFileSync(resolved, 'utf-8');
+				  })
+				: [];
 
 		metadata_lookup[file] = {
 			entry: client_manifest[file].file,
@@ -338,6 +339,7 @@ async function build_server(
 					hooks,
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
+					inline_css: ${s(config.kit.inlineCss)},
 					load_component,
 					manifest,
 					paths: settings.paths,

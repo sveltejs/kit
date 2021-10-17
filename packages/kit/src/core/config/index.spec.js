@@ -32,6 +32,7 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			inlineCss: false,
 			package: {
 				dir: 'package',
 				emitTypes: true
@@ -132,6 +133,7 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			inlineCss: false,
 			package: {
 				dir: 'package',
 				emitTypes: true

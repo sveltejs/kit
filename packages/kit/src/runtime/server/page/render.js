@@ -96,14 +96,20 @@ export async function render_response({
 	if (!include_js) js.clear();
 
 	// TODO strip the AMP stuff out of the build if not relevant
-	const links = options.amp
-		? styles.size > 0 || rendered.css.code.length > 0
-			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
-			: ''
-		: [
-				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
-		  ].join('\n\t\t');
+	const links = `${
+		options.amp
+			? ''
+			: Array.from(js)
+					.map((dep) => `<link rel="modulepreload" href="${dep}">`)
+					.join('\n\t\t')
+	}
+		${
+			options.amp || options.inline_css
+				? ''
+				: Array.from(css)
+						.map((dep) => `<link rel="stylesheet" href="${dep}">`)
+						.join('\n\t\t')
+		}`;
 
 	/** @type {string} */
 	let init = '';
@@ -158,10 +164,14 @@ export async function render_response({
 		</script>`;
 	}
 
+	const inlined_style = `
+		${Array.from(styles).join('\n')}
+		${options.amp || options.inline_css ? rendered.css.code : ''}
+	`.trim();
 	const head = [
 		rendered.head,
-		styles.size && !options.amp
-			? `<style data-svelte>${Array.from(styles).join('\n')}</style>`
+		inlined_style
+			? `<style ${options.amp ? 'amp-custom' : 'data-svelte'}>${inlined_style}</style>`
 			: '',
 		links,
 		init

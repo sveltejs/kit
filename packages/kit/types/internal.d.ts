@@ -144,6 +144,7 @@ export interface SSRRenderOptions {
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
+	inline_css: boolean;
 	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {

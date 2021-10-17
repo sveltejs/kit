@@ -12,6 +12,7 @@ const config = {
 		floc: true,
 		target: '#content-goes-here',
 		host: 'example.com',
+		inlineCss: true,
 		trailingSlash: 'always',
 		vite: {
 			build: {

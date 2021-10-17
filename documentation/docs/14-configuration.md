@@ -29,6 +29,7 @@ const config = {
 		host: null,
 		hostHeader: null,
 		hydrate: true,
+		inlineCss: false,
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -120,6 +121,10 @@ export default {
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### inlineCss
+
+Inline all css files.
 
 ### package
 

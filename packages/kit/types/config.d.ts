@@ -48,6 +48,7 @@ export interface Config {
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
+		inlineCss?: boolean;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;

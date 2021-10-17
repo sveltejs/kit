@@ -25,4 +25,8 @@ export default function (test) {
 			'rgb(255, 0, 0)'
 		);
 	});
+
+	test('inlines CSS', '/path-base/base/', async ({ page }) => {
+		assert.ok(await page.evaluate(() => document.querySelector('link[rel="stylesheet"]') === null));
+	});
 }
