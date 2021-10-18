@@ -444,6 +444,9 @@ async function build_server(
 	const vite_config = config.kit.vite();
 
 	const default_config = {
+		build: {
+			target: 'es2020'
+		},
 		server: {
 			fs: {
 				strict: true
@@ -460,7 +463,6 @@ async function build_server(
 		root: cwd,
 		base: assets_base,
 		build: {
-			target: 'es2020',
 			ssr: true,
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,
