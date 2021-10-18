@@ -104,11 +104,14 @@ prog
 				throw Error('Could not find server');
 			}
 			// we never start the server on a socket path, so address will be of type AddressInfo
-			const chosen_port = /** @type {import('net').AddressInfo} */ (
+			const address_info = /** @type {import('net').AddressInfo} */ (
 				watcher.vite.httpServer.address()
-			).port;
+			);
 
-			welcome({ port: chosen_port, host, https, open });
+			https = https || !!config.kit.vite().server?.https;
+			open = open || !!config.kit.vite().server?.open;
+
+			welcome({ port: address_info.port, host: address_info.address, https, open });
 		} catch (error) {
 			handle_error(error);
 		}

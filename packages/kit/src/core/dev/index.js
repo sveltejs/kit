@@ -119,7 +119,7 @@ class Watcher extends EventEmitter {
 		});
 
 		/** @type {[any, string[]]} */
-		let [merged_config, conflicts] = deep_merge(modified_vite_config, {
+		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
 			configFile: false,
 			root: this.cwd,
 			resolve: {
@@ -153,13 +153,17 @@ class Watcher extends EventEmitter {
 
 		// optional config from command-line flags
 		// these should take precedence, but not print conflict warnings
-		[merged_config] = deep_merge(merged_config, {
-			server: {
-				host: this.host,
-				https: this.https,
-				port: this.port
-			}
-		});
+		if (this.host) {
+			merged_config.server.host = this.host;
+		}
+		// https is already enabled then do nothing. it could be an object and we
+		// don't want to overwrite with a boolean
+		if (this.https && !merged_config.server.https) {
+			merged_config.server.https = this.https;
+		}
+		if (this.port) {
+			merged_config.server.port = this.port;
+		}
 
 		this.vite = await vite.createServer(merged_config);
 		remove_html_middlewares(this.vite.middlewares);
