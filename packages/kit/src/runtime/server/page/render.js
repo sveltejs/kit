@@ -33,7 +33,7 @@ export async function render_response({
 	const css = new Set(options.entry.css);
 	const js = new Set(options.entry.js);
 	const styles = new Set();
-	nonce = options.cspNonce && nonce ? `nonce="${nonce}"` : '';
+	nonce = options.csp_nonce && nonce ? `nonce="${nonce}"` : '';
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];

@@ -1,4 +1,3 @@
-/* global GENERATE_NONCES */
 import { randomBytes } from 'crypto';
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js';
@@ -19,7 +18,7 @@ export async function handler(event) {
 		path,
 		query,
 		rawBody,
-		nonce: GENERATE_NONCES && randomBytes(16).toString('base64')
+		nonce: globalThis.GENERATE_NONCES && randomBytes(16).toString('base64')
 	});
 
 	if (!rendered) {

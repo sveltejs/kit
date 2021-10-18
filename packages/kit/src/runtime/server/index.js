@@ -32,11 +32,9 @@ export async function respond(incoming, options, state = {}) {
 	}
 
 	const headers = lowercase_keys(incoming.headers);
-	/**
-	 * @type {string | undefined}
-	 */
+	/** @type {string | undefined} */
 	let nonce;
-	if (!state.prerender && options.cspNonce) {
+	if (!state.prerender && options.csp_nonce) {
 		incoming.nonce
 			? (nonce = incoming.nonce)
 			: console.warn(

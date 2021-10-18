@@ -1,4 +1,3 @@
-/* global GENERATE_NONCES */
 import { getRawBody } from '@sveltejs/kit/node';
 import { randomBytes } from 'crypto';
 
@@ -33,7 +32,7 @@ export function create_kit_middleware({ render }) {
 			query: parsed.searchParams,
 			rawBody: body,
 			// @ts-ignore
-			nonce: GENERATE_NONCES && randomBytes(16).toString('base64')
+			nonce: globalThis.GENERATE_NONCES && randomBytes(16).toString('base64')
 		});
 
 		if (rendered) {

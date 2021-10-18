@@ -344,7 +344,7 @@ async function build_server(
 					target: ${s(config.kit.target)},
 					template,
 					trailing_slash: ${s(config.kit.trailingSlash)},
-					cspNonce: ${s(config.kit.cspNonce)}
+					csp_nonce: ${s(config.kit.cspNonce)}
 				};
 			}
 
