@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.186
+
+### Patch Changes
+
+- [chore] upgrade to Vite 2.6.10 ([#2634](https://github.com/sveltejs/kit/pull/2634))
+
 ## 1.0.0-next.185
 
 ### Patch Changes
