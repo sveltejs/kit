@@ -4,6 +4,21 @@ SvelteKit adapter that creates a Cloudflare Workers site using a function for dy
 
 This is very experimental; the adapter API isn't at all fleshed out, and things will definitely change.
 
+## Usage
+
+Install with `npm i -D @sveltejs/adapter-cloudflare-workers@next`, then add the adapter to your `svelte.config.js`:
+
+```js
+import adapter from '@sveltejs/adapter-cloudflare-workers';
+
+export default {
+	kit: {
+		target: '#svelte',
+		adapter: adapter()
+	}
+};
+```
+
 ## Basic Configuration
 
 **You will need [Wrangler](https://developers.cloudflare.com/workers/cli-wrangler/install-update) installed on your system**
@@ -14,18 +29,6 @@ Generate this file using `wrangler` from your project directory
 
 ```sh
 wrangler init --site my-site-name
-```
-
-Add the adapter to your `svelte.config.js`:
-
-```js
-import adapter from '@sveltejs/adapter-cloudflare-workers';
-export default {
-	kit: {
-		target: '#svelte',
-		adapter: adapter()
-	}
-};
 ```
 
 Now you should get some details from Cloudflare. You should get your:
