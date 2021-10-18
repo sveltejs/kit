@@ -445,7 +445,6 @@ async function build_server(
 
 	const default_config = {
 		build: {
-			// set default target as es2020, yet allow users to override
 			target: 'es2020'
 		},
 		server: {
