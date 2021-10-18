@@ -112,6 +112,25 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	const q = queue(config.kit.prerender.concurrency);
 
 	/**
+	 * @param {string} path
+	 * @param {boolean} is_html
+	 */
+	function output_filename(path, is_html) {
+		if (path === '/') {
+			return '/index.html';
+		}
+		const parts = path.split('/');
+		if (is_html && parts[parts.length - 1] !== 'index.html') {
+			if (config.kit.prerender.subfolders) {
+				parts.push('index.html');
+			} else {
+				parts[parts.length - 1] += '.html';
+			}
+		}
+		return parts.join('/');
+	}
+
+	/**
 	 * @param {string} decoded_path
 	 * @param {string?} referrer
 	 */
@@ -154,12 +173,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const type = headers && headers['content-type'];
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
-			const parts = decoded_path.split('/');
-			if (is_html && parts[parts.length - 1] !== 'index.html') {
-				parts.push('index.html');
-			}
-
-			const file = `${out}${parts.join('/')}`;
+			const file = `${out}${output_filename(decoded_path, is_html)}`;
 
 			if (response_type === REDIRECT) {
 				const location = get_single_valued_header(headers, 'location');
@@ -196,12 +210,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				const is_html = result.headers['content-type'] === 'text/html';
 
-				const parts = dependency_path.split('/');
-				if (is_html && parts[parts.length - 1] !== 'index.html') {
-					parts.push('index.html');
-				}
-
-				const file = `${out}${parts.join('/')}`;
+				const file = `${out}${output_filename(dependency_path, is_html)}`;
 				mkdirp(dirname(file));
 
 				if (result.body) {

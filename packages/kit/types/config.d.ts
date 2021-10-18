@@ -150,6 +150,7 @@ export interface Config {
 			concurrency?: number;
 			crawl?: boolean;
 			enabled?: boolean;
+			subfolders?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
 		};

@@ -54,6 +54,7 @@ test('load default config (esm)', async () => {
 				concurrency: 1,
 				crawl: true,
 				enabled: true,
+				subfolders: true,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',

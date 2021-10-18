@@ -100,6 +100,7 @@ suite('prerender', async () => {
 			prerender: {
 				concurrency: 1,
 				enabled: true,
+				subfolders: true,
 				entries: ['*']
 			}
 		}
@@ -123,6 +124,58 @@ suite('prerender', async () => {
 	});
 
 	const dest = join(__dirname, 'output');
+
+	rmSync(dest, { recursive: true, force: true });
+	await builder.prerender({
+		all: true,
+		dest
+	});
+
+	assert.equal(glob('**', { cwd: prerendered_files }), glob('**', { cwd: dest }));
+
+	rmSync(dest, { recursive: true, force: true });
+});
+
+suite('prerender without subfolders', async () => {
+	const cwd = join(__dirname, 'fixtures/prerender');
+	const prerendered_files = join(__dirname, 'fixtures/prerender/build-without-subfolders');
+
+	/** @type {import('types/config').Config} */
+	const mocked = {
+		extensions: ['.svelte'],
+		kit: {
+			files: {
+				assets: join(__dirname, 'fixtures/prerender-without-subfolders/static'),
+				routes: join(__dirname, 'fixtures/prerender/src/routes')
+			},
+			appDir: '_app',
+			prerender: {
+				concurrency: 1,
+				enabled: true,
+				subfolders: false,
+				entries: ['*']
+			}
+		}
+	};
+
+	/** @type {import('types/internal').BuildData} */
+	const build_data = {
+		// @ts-expect-error
+		client: { assets: [], chunks: [] },
+		// @ts-expect-error
+		server: { chunks: [] },
+		static: [],
+		entries: ['/nested']
+	};
+
+	const builder = create_builder({
+		cwd,
+		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
+		build_data,
+		log
+	});
+
+	const dest = join(__dirname, 'output-without-subfolders');
 
 	rmSync(dest, { recursive: true, force: true });
 	await builder.prerender({

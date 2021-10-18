@@ -52,6 +52,7 @@ const config = {
 			concurrency: 1,
 			crawl: true,
 			enabled: true,
+			subfolders: true,
 			entries: ['*'],
 			onError: 'fail'
 		},
@@ -195,6 +196,7 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
+- `subfolders` - set to `false` to disable subfolders for routes: instead of `about/index.html` render `about.html`
 - `onError`
 
   - `'fail'` — (default) fails the build when a routing error is encountered when following a link
