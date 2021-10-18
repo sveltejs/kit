@@ -9,7 +9,7 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.27",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.30",
 		"cheap-watch": "^1.0.4",
 		"sade": "^1.7.4",
 		"vite": "^2.6.7"
@@ -37,14 +37,14 @@
 		"rollup": "^2.58.0",
 		"selfsigned": "^1.10.11",
 		"sirv": "^1.0.17",
-		"svelte": "^3.43.1",
+		"svelte": "^3.44.0",
 		"svelte-check": "^2.2.7",
 		"svelte2tsx": "~0.4.7",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {
-		"svelte": "^3.43.0"
+		"svelte": "^3.44.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
