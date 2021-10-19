@@ -513,7 +513,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 							return rendered;
 						},
 						trailing_slash: config.kit.trailingSlash,
-						cspNonce: config.kit.cspNonce
+						csp_nonce: config.kit.cspNonce
 					}
 				);
 
