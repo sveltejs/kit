@@ -28,7 +28,7 @@ export async function handler(event) {
 
 	const partial_response = {
 		statusCode: rendered.status,
-		...splitHeaders(rendered.headers)
+		...split_headers(rendered.headers)
 	};
 
 	if (typeof rendered.body === 'string') {
@@ -56,7 +56,7 @@ export async function handler(event) {
  * multiValueHeaders: Record<string, string[]>
  * }}
  */
-function splitHeaders(headers) {
+function split_headers(headers) {
 	const h = {};
 	const m = {};
 	for (const key in headers) {
