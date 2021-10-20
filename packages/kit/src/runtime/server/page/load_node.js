@@ -108,9 +108,8 @@ export async function load_node({
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = options.paths.assets || options.paths.base;
-				const filename = (resolved.startsWith(prefix)
-					? resolved.slice(prefix.length)
-					: resolved
+				const filename = (
+					resolved.startsWith(prefix) ? resolved.slice(prefix.length) : resolved
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
 				const asset = options.manifest.assets.find(
