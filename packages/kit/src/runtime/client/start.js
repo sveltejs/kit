@@ -49,13 +49,13 @@ export async function start({ paths, target, session, host, route, spa, trailing
 			base: paths.base,
 			routes,
 			trailing_slash,
-			renderer
+			handle_nav: renderer.handle_navigation
 		});
 		renderer.router = router;
-		prefetcher = new Prefetcher({ renderer, router });
+		prefetcher = new Prefetcher({ router, handle_prefetch: renderer.load });
 	}
 
-	init(router, prefetcher);
+	init(renderer, router, prefetcher);
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);

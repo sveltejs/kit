@@ -1,4 +1,4 @@
-import { router as router_, prefetcher as prefetcher_ } from '../client/singletons.js';
+import { router as router_, prefetcher as prefetcher_, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/router.js';
 
 const router = /** @type {import('../client/router').Router} */ (router_);
@@ -30,7 +30,7 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
-	return router.renderer.invalidate(href);
+	return renderer.invalidate(href);
 }
 
 /**

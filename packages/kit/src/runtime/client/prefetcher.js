@@ -5,12 +5,12 @@ export class Prefetcher {
 	/**
 	 * @param {{
 	 *    router: import('./router').Router
-	 *    renderer: import('./renderer').Renderer
+	 *    handle_prefetch: import('./types').PrefetchHandler
 	 * }} opts
 	 */
-	constructor({ router, renderer }) {
+	constructor({ router, handle_prefetch }) {
 		this.router = router;
-		this.renderer = renderer;
+		this.handle_prefetch = handle_prefetch;
 	}
 
 	init_listeners() {
@@ -48,6 +48,6 @@ export class Prefetcher {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		return this.renderer.load(info);
+		return this.handle_prefetch(info);
 	}
 }

@@ -1,3 +1,6 @@
+/** @type {import('./renderer').Renderer} */
+export let renderer;
+
 /** @type {import('./router').Router?} */
 export let router;
 
@@ -5,10 +8,12 @@ export let router;
 export let prefetcher;
 
 /**
- * @param {import('./router').Router?} r
- * @param {import('./prefetcher').Prefetcher?} p
+ * @param {import('./renderer').Renderer} render
+ * @param {import('./router').Router?} route
+ * @param {import('./prefetcher').Prefetcher?} prefetch
  */
-export function init(r, p) {
-	router = r;
-	prefetcher = p;
+export function init(render, route, prefetch) {
+	renderer = render;
+	router = route;
+	prefetcher = prefetch;
 }

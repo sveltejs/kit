@@ -1,27 +1,27 @@
 import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from 'types/internal';
 import { Page } from 'types/page';
 
-export type NavigationInfo = {
+export interface NavigationInfo {
 	id: string;
 	routes: CSRRoute[];
 	path: string;
 	decoded_path: string;
 	query: URLSearchParams;
-};
+}
 
-export type NavigationCandidate = {
+export interface NavigationCandidate {
 	route: CSRPage;
 	info: NavigationInfo;
-};
+}
 
-export type NavigationResult = {
+export interface NavigationResult {
 	reload?: boolean;
 	redirect?: string;
 	state: NavigationState;
 	props: Record<string, any>;
-};
+}
 
-export type BranchNode = {
+export interface BranchNode {
 	module: CSRComponent;
 	loaded: NormalizedLoadOutput | null;
 	uses: {
@@ -33,10 +33,23 @@ export type BranchNode = {
 		dependencies: string[];
 	};
 	stuff: Record<string, any>;
-};
+}
 
-export type NavigationState = {
+export interface NavigationState {
 	page: Page;
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
-};
+}
+
+export interface NavigationHandler {
+	(
+		info: NavigationInfo,
+		chain: string[],
+		no_cache: boolean,
+		opts?: {hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}
+	): Promise<void>;
+}
+
+export interface PrefetchHandler {
+	(info: NavigationInfo): Promise<NavigationResult>;
+}

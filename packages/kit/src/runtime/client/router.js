@@ -47,18 +47,17 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types/internal').CSRRoute[];
 	 *    trailing_slash: import('types/internal').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    handle_nav: import('./types').NavigationHandler
 	 * }} opts
 	 */
-	constructor({ base, routes, trailing_slash, renderer }) {
+	constructor({ base, routes, trailing_slash, handle_nav }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
 
-		/** @type {import('./renderer').Renderer} */
-		this.renderer = renderer;
+		this.handle_nav = handle_nav;
 
 		this.enabled = true;
 
@@ -254,7 +253,7 @@ export class Router {
 			}
 		}
 
-		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
+		await this.handle_nav(info, chain, false, { hash, scroll, keepfocus });
 
 		this.navigating--;
 		if (!this.navigating) {
