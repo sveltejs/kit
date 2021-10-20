@@ -1,5 +1,3 @@
-import { get_base_uri } from './utils';
-
 function scroll_state() {
 	return {
 		x: pageXOffset,
@@ -8,19 +6,36 @@ function scroll_state() {
 }
 
 /**
+ * Returns the base URI of the document.
+ * @param {Document} doc
+ */
+export function get_base_uri(doc) {
+	let baseURI = doc.baseURI;
+
+	if (!baseURI) {
+		const baseTags = doc.getElementsByTagName('base');
+		baseURI = baseTags.length ? baseTags[0].href : doc.URL;
+	}
+
+	return baseURI;
+}
+
+/**
+ * Returns the first parent node that is an anchor element (i.e. "a" html tag).
  * @param {Node | null} node
  * @returns {HTMLAnchorElement | SVGAElement | null}
  */
-function find_anchor(node) {
+export function get_anchor(node) {
 	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
 	return /** @type {HTMLAnchorElement | SVGAElement} */ (node);
 }
 
 /**
+ * Returns the location the given element is linking to.
  * @param {HTMLAnchorElement | SVGAElement} node
  * @returns {URL}
  */
-function get_href(node) {
+export function get_href(node) {
 	return node instanceof SVGAElement
 		? new URL(node.href.baseVal, document.baseURI)
 		: new URL(node.href);
@@ -44,7 +59,6 @@ export class Router {
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
-		renderer.router = this;
 
 		this.enabled = true;
 
@@ -91,28 +105,6 @@ export class Router {
 			}, 50);
 		});
 
-		/** @param {MouseEvent|TouchEvent} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(/** @type {Node} */ (event.target));
-			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(get_href(a));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				trigger_prefetch(event);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
 			if (!this.enabled) return;
@@ -123,7 +115,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			const a = find_anchor(/** @type {Node} */ (event.target));
+			const a = get_anchor(/** @type {Node} */ (event.target));
 			if (!a) return;
 
 			if (!a.href) return;
@@ -225,20 +217,6 @@ export class Router {
 
 	disable() {
 		this.enabled = false;
-	}
-
-	/**
-	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult>}
-	 */
-	async prefetch(url) {
-		const info = this.parse(url);
-
-		if (!info) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
-		}
-
-		return this.renderer.load(info);
 	}
 
 	/**

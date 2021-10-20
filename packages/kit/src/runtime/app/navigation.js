@@ -1,7 +1,8 @@
-import { router as router_ } from '../client/singletons.js';
-import { get_base_uri } from '../client/utils.js';
+import { router as router_, prefetcher as prefetcher_ } from '../client/singletons.js';
+import { get_base_uri } from '../client/router.js';
 
 const router = /** @type {import('../client/router').Router} */ (router_);
+const prefetcher = /** @type {import('../client/prefetcher').Prefetcher} */ (prefetcher_);
 
 /**
  * @param {string} name
@@ -36,7 +37,7 @@ async function invalidate_(resource) {
  * @type {import('$app/navigation').prefetch}
  */
 function prefetch_(href) {
-	return router.prefetch(new URL(href, get_base_uri(document)));
+	return prefetcher.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**

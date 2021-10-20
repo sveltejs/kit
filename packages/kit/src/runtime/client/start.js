@@ -6,6 +6,7 @@ import { Router } from './router.js';
 import { Renderer } from './renderer.js';
 import { init } from './singletons.js';
 import { set_paths } from '../paths.js';
+import { Prefetcher } from './prefetcher.js';
 
 /**
  * @param {{
@@ -40,22 +41,28 @@ export async function start({ paths, target, session, host, route, spa, trailing
 		host
 	});
 
-	const router = route
-		? new Router({
-				base: paths.base,
-				routes,
-				trailing_slash,
-				renderer
-		  })
-		: null;
+	let router = null;
+	let prefetcher = null;
 
-	init(router);
+	if (route) {
+		router = new Router({
+			base: paths.base,
+			routes,
+			trailing_slash,
+			renderer
+		});
+		renderer.router = router;
+		prefetcher = new Prefetcher({ renderer, router });
+	}
+
+	init(router, prefetcher);
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
 	if (router) {
 		if (spa) router.goto(location.href, { replaceState: true }, []);
 		router.init_listeners();
+		prefetcher?.init_listeners();
 	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
