@@ -39,6 +39,8 @@ export class Router {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
+		/** Keeps tracks of multiple navigations caused by redirects during rendering */
+		this.navigating = 0;
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -253,6 +255,11 @@ export class Router {
 			throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		}
 
+		if (!this.navigating) {
+			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
+		}
+		this.navigating++;
+
 		// remove trailing slashes
 		if (info.path !== '/') {
 			const has_trailing_slash = info.path.endsWith('/');
@@ -269,11 +276,11 @@ export class Router {
 			}
 		}
 
-		this.renderer.notify({
-			path: info.path,
-			query: info.query
-		});
+		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
-		await this.renderer.update(info, chain, false, { hash, scroll, keepfocus });
+		this.navigating--;
+		if (!this.navigating) {
+			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+		}
 	}
 }
