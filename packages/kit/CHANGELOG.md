@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.187
+
+### Patch Changes
+
+- Fix prerendering when paths.base but not paths.assets is specified ([#2643](https://github.com/sveltejs/kit/pull/2643))
+
 ## 1.0.0-next.186
 
 ### Patch Changes
