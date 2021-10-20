@@ -233,14 +233,10 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test(
-		'ignores navigation to URLs the app does not own',
-		'/routing',
-		async ({ page, clicknav }) => {
-			await clicknav('[href="https://www.google.com"]');
-			assert.equal(page.url(), 'https://www.google.com/');
-		}
-	);
+	test('ignores navigation to URLs the app does not own', '/routing', async ({ page }) => {
+		await page.click('[href="https://www.google.com"]');
+		assert.equal(page.url(), 'https://www.google.com/');
+	});
 
 	// skipping this test because it causes a bunch of failures locally
 	test.skip('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {

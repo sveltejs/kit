@@ -5,7 +5,7 @@ export default function (test) {
 	test('redirect', '/redirect', async ({ base, page, clicknav }) => {
 		await clicknav('[href="/redirect/a"]');
 
-		assert.equal(page.url(), `${base}/redirect/c`);
+		await page.waitForURL(`${base}/redirect/c`);
 		assert.equal(await page.textContent('h1'), 'c');
 	});
 

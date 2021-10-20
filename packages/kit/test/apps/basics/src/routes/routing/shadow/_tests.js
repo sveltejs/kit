@@ -2,7 +2,7 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
 export default function (test) {
-	test('endpoints can shadow pages', '/routing/shadow', async ({ page, clicknav }) => {
+	test('endpoints can shadow pages', '/routing/shadow', async ({ page }) => {
 		const random = String(Math.random());
 
 		await page.evaluate((random) => {
@@ -11,7 +11,7 @@ export default function (test) {
 			el.value = random;
 		}, random);
 
-		await clicknav('button');
+		await page.click('button');
 
 		assert.equal(await page.textContent('h1'), random);
 	});

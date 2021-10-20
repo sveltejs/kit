@@ -204,10 +204,13 @@ export class Renderer {
 		this._init(result);
 	}
 
-	/** @param {{ path: string, query: URLSearchParams }} destination */
-	notify({ path, query }) {
-		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
-
+	/**
+	 * @param {import('./types').NavigationInfo} info
+	 * @param {string[]} chain
+	 * @param {boolean} no_cache
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 */
+	async handle_navigation(info, chain, no_cache, opts) {
 		if (this.started) {
 			this.stores.navigating.set({
 				from: {
@@ -215,11 +218,13 @@ export class Renderer {
 					query: this.current.page.query
 				},
 				to: {
-					path,
-					query
+					path: info.path,
+					query: info.query
 				}
 			});
 		}
+
+		await this.update(info, chain, no_cache, opts);
 	}
 
 	/**
@@ -291,11 +296,12 @@ export class Renderer {
 		}
 
 		await 0;
-		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+
 		this.loading.promise = null;
 		this.loading.id = null;
 
 		if (!this.router) return;
+
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
