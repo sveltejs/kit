@@ -1,7 +1,6 @@
 import { get_anchor, get_href } from './router';
 
 export class Prefetcher {
-
 	/**
 	 * @param {{
 	 *    router: import('./router').Router
@@ -41,7 +40,7 @@ export class Prefetcher {
 	 * @param {URL} url
 	 * @returns {Promise<import('./types').NavigationResult>}
 	 */
-	 async prefetch(url) {
+	async prefetch(url) {
 		const info = this.router.parse(url);
 
 		if (!info) {

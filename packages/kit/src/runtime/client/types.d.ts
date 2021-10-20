@@ -46,7 +46,7 @@ export interface NavigationHandler {
 		info: NavigationInfo,
 		chain: string[],
 		no_cache: boolean,
-		opts?: {hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}
+		opts?: { hash?: string; scroll: { x: number; y: number } | null; keepfocus: boolean }
 	): Promise<void>;
 }
 
