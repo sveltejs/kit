@@ -49,10 +49,10 @@ export async function start({ paths, target, session, host, route, spa, trailing
 			base: paths.base,
 			routes,
 			trailing_slash,
-			handle_nav: renderer.handle_navigation
+			handle_nav: renderer.handle_navigation.bind(renderer)
 		});
 		renderer.router = router;
-		prefetcher = new Prefetcher({ router, handle_prefetch: renderer.load });
+		prefetcher = new Prefetcher({ router, handle_prefetch: renderer.load.bind(renderer) });
 	}
 
 	init(renderer, router, prefetcher);
