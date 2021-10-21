@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.34
+
+### Patch Changes
+
+- [fix] encode UInt8Array response bodies as base64 ([#2630](https://github.com/sveltejs/kit/pull/2630))
+
 ## 1.0.0-next.33
 
 ### Patch Changes
