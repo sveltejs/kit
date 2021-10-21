@@ -1,7 +1,10 @@
 import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from 'types/internal';
 import { Page } from 'types/page';
 
+// Router types
+
 export interface NavigationInfo {
+	/** an ID to uniquely identify the request */
 	id: string;
 	routes: CSRRoute[];
 	path: string;
@@ -9,16 +12,33 @@ export interface NavigationInfo {
 	query: URLSearchParams;
 }
 
-export interface NavigationCandidate {
-	route: CSRPage;
-	info: NavigationInfo;
+export interface NavigationHandler {
+	(
+		info: NavigationInfo,
+		chain: string[],
+		no_cache: boolean,
+		opts?: { hash?: string; scroll: { x: number; y: number } | null; keepfocus: boolean }
+	): Promise<void>;
 }
+
+// Prefetcher types
 
 export interface NavigationResult {
 	reload?: boolean;
 	redirect?: string;
 	state: NavigationState;
 	props: Record<string, any>;
+}
+
+export interface PrefetchHandler {
+	(info: NavigationInfo): Promise<NavigationResult>;
+}
+
+// Renderer types
+
+export interface NavigationCandidate {
+	route: CSRPage;
+	info: NavigationInfo;
 }
 
 export interface BranchNode {
@@ -39,17 +59,4 @@ export interface NavigationState {
 	page: Page;
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
-}
-
-export interface NavigationHandler {
-	(
-		info: NavigationInfo,
-		chain: string[],
-		no_cache: boolean,
-		opts?: { hash?: string; scroll: { x: number; y: number } | null; keepfocus: boolean }
-	): Promise<void>;
-}
-
-export interface PrefetchHandler {
-	(info: NavigationInfo): Promise<NavigationResult>;
 }
