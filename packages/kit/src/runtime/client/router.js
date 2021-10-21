@@ -140,7 +140,11 @@ export class Router {
 			// 2. 'rel' attribute includes external
 			const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
+			if (
+				a.hasAttribute('sveltekit:external') ||
+				a.hasAttribute('download') ||
+				(rel && rel.includes('external'))
+			) {
 				return;
 			}
 
