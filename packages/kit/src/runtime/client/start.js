@@ -44,6 +44,12 @@ export async function start({ paths, target, session, host, route, spa, trailing
 	let router = null;
 	let prefetcher = null;
 
+	// I don't love having a cycle between renderer and router and I wonder if we couldn't clean it up over time
+	// The router no longer directly has a reference to the renderer, but takes a callback which invokes the renderer
+	// The renderer needs the router for:
+	//   reacting to changes in the stores and invalidations (which perhaps don't need to live in the renderer)
+	//   handling redirects (perhaps rather than redirecting in the renderer it could return a redirect result)
+	//   handling "export const router" turning the router on and off on individual pages (maybe could be replaced by route guards?)
 	if (route) {
 		router = new Router({
 			base: paths.base,
