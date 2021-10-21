@@ -32,14 +32,14 @@ In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:no
 
 ...will prevent scrolling after the link is clicked.
 
-### sveltekit:external
+### rel=external
 
 By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation.
 
-Adding a `sveltekit:external` attribute to a link...
+Adding a `rel=external` attribute to a link...
 
 ```html
-<a sveltekit:external href="path">Path</a>
+<a rel="external" href="path">Path</a>
 ```
 
-...will trigger a browser navigation when the link is clicked. `rel=external` and `download` will also trigger this same behavior.
+...will trigger a browser navigation when the link is clicked.
