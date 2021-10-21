@@ -14,7 +14,10 @@ import type { Locals } from '$lib/types';
 
 const base = 'https://api.svelte.dev';
 
+// unwrap possible handlers from RequestHandler return types
 type MaybeHandle = Exclude<ReturnType<RequestHandler>, Promise<unknown>>;
+// remove void since api will always return a handler
+// re-promisify to satisfy async function constraints
 type Handler = Promise<Exclude<MaybeHandle, void>>;
 
 export async function api(
