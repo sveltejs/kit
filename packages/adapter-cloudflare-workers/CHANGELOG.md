@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.25
+
+### Patch Changes
+
+- [chore] upgrade `@cloudflare/kv-asset-handler` ([#2650](https://github.com/sveltejs/kit/pull/2650))
+
 ## 1.0.0-next.24
 
 ### Patch Changes
