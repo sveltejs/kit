@@ -14,13 +14,14 @@ import type { Locals } from '$lib/types';
 
 const base = 'https://api.svelte.dev';
 
-type Fulfil<P> = P extends Promise<infer T> ? T : P;
+type MaybeHandle = Exclude<ReturnType<RequestHandler>, Promise<unknown>>;
+type Handler = Promise<Exclude<MaybeHandle, void>>;
 
 export async function api(
 	request: Request<Locals>,
 	resource: string,
 	data?: Record<string, unknown>
-): Promise<Exclude<Fulfil<ReturnType<RequestHandler>>, void>> {
+): Handler {
 	// user must have a cookie set
 	if (!request.locals.userid) {
 		return { status: 401 };
