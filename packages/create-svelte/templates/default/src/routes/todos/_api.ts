@@ -1,4 +1,4 @@
-import type { Request } from '@sveltejs/kit';
+import type { Request, RequestHandler } from '@sveltejs/kit';
 import type { Locals } from '$lib/types';
 
 /*
@@ -14,7 +14,13 @@ import type { Locals } from '$lib/types';
 
 const base = 'https://api.svelte.dev';
 
-export async function api(request: Request<Locals>, resource: string, data?: {}) {
+type Fulfil<P> = P extends Promise<infer T> ? T : P;
+
+export async function api(
+	request: Request<Locals>,
+	resource: string,
+	data?: Record<string, unknown>
+): Promise<Exclude<Fulfil<ReturnType<RequestHandler>>, void>> {
 	// user must have a cookie set
 	if (!request.locals.userid) {
 		return { status: 401 };
