@@ -68,7 +68,10 @@ export interface Config {
 		serviceWorker?: {
 			files?(filepath: string): boolean;
 		};
-		ssr?: boolean;
+		ssr?: {
+			enabled?: boolean;
+			overridable?: boolean;
+		};
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);

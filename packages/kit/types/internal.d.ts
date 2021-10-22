@@ -155,7 +155,10 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
+	ssr: {
+		enabled: boolean;
+		overridable: boolean;
+	};
 	target: string;
 	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;
