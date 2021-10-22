@@ -25,6 +25,20 @@ import { coalesce_to_error } from '../../../utils/error.js';
 export async function respond(opts) {
 	const { request, options, state, $session, route } = opts;
 
+	if (!options.ssr.enabled && !options.ssr.overridable) {
+		return await render_response({
+			branch: [],
+			$session,
+			options,
+			page_config: {
+				hydrate: true,
+				router: true,
+				ssr: false
+			},
+			status: 200
+		});
+	}
+
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
@@ -227,7 +241,7 @@ export async function respond(opts) {
  */
 function get_page_config(leaf, options) {
 	return {
-		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
+		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr.enabled,
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};
