@@ -94,7 +94,10 @@ const REDIRECT = 3;
  * }} opts
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
-	if (!config.kit.prerender.enabled && !fallback) {
+	if (
+		(!config.kit.ssr.enabled && !config.kit.ssr.overridable) ||
+		(!config.kit.prerender.enabled && !fallback)
+	) {
 		return;
 	}
 
