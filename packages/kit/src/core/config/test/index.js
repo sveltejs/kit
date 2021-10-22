@@ -52,7 +52,10 @@ async function testLoadDefaultConfig(path) {
 				pages: undefined
 			},
 			router: true,
-			ssr: true,
+			ssr: {
+				enabled: true,
+				overridable: true
+			},
 			target: null,
 			trailingSlash: 'never'
 		}
