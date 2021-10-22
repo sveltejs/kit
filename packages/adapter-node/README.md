@@ -55,8 +55,6 @@ The adapter exports a middleware `(req, res, next) => {}` that's compatible with
 
 But you can use your favorite server framework to combine it with other middleware and server logic. You can import `kitMiddleware`, your ready-to-use SvelteKit middleware from the `build` directory. You can use [the `entryPoint` option](#entryPoint) to bundle your custom server entry point.
 
-If you use `polka`, example is:
-
 ```js
 // src/server.js
 import { assetsMiddleware, prerenderedMiddleware, kitMiddleware } from '../build/middlewares.js';
@@ -75,32 +73,11 @@ app.get('/no-svelte', (req, res) => {
 	res.end('This is not Svelte!');
 });
 
-app.all('*', assetsMiddleware, prerenderedMiddleware, kitMiddleware);
+app.all('*', assetsMiddleware, prerenderedMiddleware, kitMiddleware);.
 
-app.listen(3000);
-```
-
-If you use `express`, example is:
-
-```js
-// src/server.js
-import { assetsMiddleware, prerenderedMiddleware, kitMiddleware } from '../build/middlewares.js';
-const express = require('express');
-
-const app = express();
-
-const myMiddleware = function (req, res, next) {
-	console.log('Hello world!');
-	next();
-};
-
-app.use(myMiddleware);
-
-app.get('/no-svelte', (req, res) => {
-	res.end('This is not Svelte!');
-});
-
-app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
+// For Express.
+// (Middleware sequence is incompatible between Polka and Express.)
+// app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
 
 app.listen(3000);
 ```
