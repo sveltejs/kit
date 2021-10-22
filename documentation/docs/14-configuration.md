@@ -56,7 +56,7 @@ const config = {
 		vite: () => ({})
 	},
 	
-	// option passed to rollup.onwarn (https://rollupjs.org/guide/en/#onwarn)
+	// option passed to vite-svelte-plugin (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#onwarn)
 	onwarn: () => {},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
