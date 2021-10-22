@@ -282,16 +282,20 @@ export class Renderer {
 				document.body.focus();
 			}
 
-			const deep_linked = hash && document.getElementById(hash.slice(1));
 			if (scroll) {
 				scrollTo(scroll.x, scroll.y);
-			} else if (deep_linked) {
+			} else {
+				scrollTo(0, 0);
+			}
+
+			// Required so that getElementById() returns the element if it exists in the DOM
+			await 0;
+			const deep_linked = hash && document.getElementById(hash.slice(1));
+			if (!scroll && deep_linked) {
 				// Here we use `scrollIntoView` on the element instead of `scrollTo`
 				// because it natively supports the `scroll-margin` and `scroll-behavior`
 				// CSS properties.
 				deep_linked.scrollIntoView();
-			} else {
-				scrollTo(0, 0);
 			}
 		}
 
