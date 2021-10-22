@@ -1,5 +1,6 @@
 import { IncomingRequest, ParameterizedBody } from './app';
 import { MaybePromise, ResponseHeaders } from './helper';
+import { ComponentLoader } from './internal';
 
 export type StrictBody = string | Uint8Array;
 
@@ -23,6 +24,7 @@ export interface GetSession<Locals = Record<string, any>, Body = unknown, Sessio
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
+		loader: ComponentLoader;
 		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
 }

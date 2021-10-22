@@ -326,6 +326,53 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 					: {};
 
+				/** @type {import('types/internal').ComponentLoader} */
+				const loader = {
+					fixStackTrace: ({ error }) => {
+						vite.ssrFixStacktrace(error);
+					},
+					loadComponent: async ({ id }) => {
+						const url = `/${id}`;
+
+						const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
+						const node = await vite.moduleGraph.getModuleByUrl(url);
+
+						if (!node) throw new Error(`Could not find node for ${url}`);
+
+						const deps = new Set();
+						find_deps(node, deps);
+
+						const styles = new Set();
+
+						for (const dep of deps) {
+							const query = new URL(dep.url, 'http://localhost/').searchParams;
+
+							// TODO what about .scss files, etc?
+							if (
+								dep.file.endsWith('.css') ||
+								(query.has('svelte') && query.get('type') === 'style')
+							) {
+								try {
+									const mod = await vite.ssrLoadModule(dep.url);
+									styles.add(mod.default);
+								} catch {
+									// this can happen with dynamically imported modules, I think
+									// because the Vite module graph doesn't distinguish between
+									// static and dynamic imports? TODO investigate, submit fix
+								}
+							}
+						}
+
+						return {
+							module,
+							entry: url.endsWith('.svelte') ? url : url + '?import',
+							css: [],
+							js: [],
+							styles: Array.from(styles)
+						};
+					}
+				};
+
 				/** @type {import('types/internal').Hooks} */
 				const hooks = {
 					getSession: user_hooks.getSession || (() => ({})),
@@ -387,6 +434,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						query: parsed.searchParams,
 						rawBody: body
 					},
+					loader,
 					{
 						amp: config.kit.amp,
 						dev: true,
@@ -396,12 +444,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 							js: []
 						},
 						floc: config.kit.floc,
-						get_stack: (error) => {
-							vite.ssrFixStacktrace(error);
-							return error.stack;
-						},
 						handle_error: (error, request) => {
-							vite.ssrFixStacktrace(error);
+							loader.fixStackTrace({ error });
 							hooks.handleError({ error, request });
 						},
 						hooks,
@@ -409,47 +453,6 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-						},
-						load_component: async (id) => {
-							const url = `/${id}`;
-
-							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
-							const node = await vite.moduleGraph.getModuleByUrl(url);
-
-							if (!node) throw new Error(`Could not find node for ${url}`);
-
-							const deps = new Set();
-							find_deps(node, deps);
-
-							const styles = new Set();
-
-							for (const dep of deps) {
-								const parsed = new URL(dep.url, 'http://localhost/');
-								const query = parsed.searchParams;
-
-								// TODO what about .scss files, etc?
-								if (
-									dep.file.endsWith('.css') ||
-									(query.has('svelte') && query.get('type') === 'style')
-								) {
-									try {
-										const mod = await vite.ssrLoadModule(dep.url);
-										styles.add(mod.default);
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
-									}
-								}
-							}
-
-							return {
-								module,
-								entry: url.endsWith('.svelte') ? url : url + '?import',
-								css: [],
-								js: [],
-								styles: Array.from(styles)
-							};
 						},
 						manifest: get_manifest(),
 						prerender: config.kit.prerender.enabled,

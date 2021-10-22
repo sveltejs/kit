@@ -4,11 +4,12 @@ import { respond } from './respond.js';
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSRPage} route
  * @param {RegExpExecArray} match
+ * @param {import('types/internal').ComponentLoader} loader
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_page(request, route, match, options, state) {
+export async function render_page(request, route, match, loader, options, state) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
@@ -31,6 +32,7 @@ export async function render_page(request, route, match, options, state) {
 
 	const response = await respond({
 		request,
+		loader,
 		options,
 		state,
 		$session,

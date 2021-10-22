@@ -11,6 +11,7 @@ const s = JSON.stringify;
 /**
  * @param {{
  *   branch: Array<import('./types').Loaded>;
+ *   loader: import('types/internal').ComponentLoader;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
@@ -21,6 +22,7 @@ const s = JSON.stringify;
  */
 export async function render_response({
 	branch,
+	loader,
 	options,
 	$session,
 	page_config,
@@ -41,7 +43,7 @@ export async function render_response({
 	let maxage;
 
 	if (error) {
-		error.stack = options.get_stack(error);
+		loader.fixStackTrace({ error });
 	}
 
 	if (page_config.ssr) {

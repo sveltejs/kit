@@ -14,6 +14,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 /**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
+ *   loader: import('types/internal').ComponentLoader;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
@@ -23,13 +24,13 @@ import { coalesce_to_error } from '../../../utils/error.js';
  * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route } = opts;
+	const { request, loader, options, state, $session, route } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
+		nodes = await Promise.all(route.a.map((id) => (id ? loader.loadComponent({ id }) : undefined)));
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
@@ -37,6 +38,7 @@ export async function respond(opts) {
 
 		return await respond_with_error({
 			request,
+			loader,
 			options,
 			state,
 			$session,
@@ -46,7 +48,9 @@ export async function respond(opts) {
 	}
 
 	// the leaf node will be present. only layouts may be undefined
-	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
+	const leaf_node = /** @type {SSRNode} */ (nodes[nodes.length - 1]);
+	// cast to instance of module specific to the SvelteKit router
+	const leaf = /** @type {import('types/internal').SSRComponent} */ (leaf_node.module);
 
 	let page_config = get_page_config(leaf, options);
 
@@ -126,7 +130,7 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.load_component(route.b[i]);
+							const error_node = await loader.loadComponent({ id: route.b[i] });
 
 							/** @type {Loaded} */
 							let node_loaded;
@@ -154,14 +158,14 @@ export async function respond(opts) {
 									continue;
 								}
 
-								page_config = get_page_config(error_node.module, options);
+								const error_module = /** @type import('types/internal').SSRComponent */ (
+									error_node.module
+								);
+								page_config = get_page_config(error_module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								break ssr;
 							} catch (err) {
-								const e = coalesce_to_error(err);
-
-								options.handle_error(e, request);
-
+								options.handle_error(coalesce_to_error(err), request);
 								continue;
 							}
 						}
@@ -173,6 +177,7 @@ export async function respond(opts) {
 					return with_cookies(
 						await respond_with_error({
 							request,
+							loader,
 							options,
 							state,
 							$session,

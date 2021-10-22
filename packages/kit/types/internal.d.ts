@@ -45,13 +45,26 @@ export interface Logger {
 	info(msg: string): void;
 }
 
-export interface SSRComponent {
+export interface SSRComponent extends GenericSSRComponent {
 	ssr?: boolean;
 	router?: boolean;
 	hydrate?: boolean;
 	prerender?: boolean;
 	preload?: any; // TODO remove for 1.0
 	load: Load;
+	default: {
+		render(props: Record<string, any>): {
+			html: string;
+			head: string;
+			css: {
+				code: string;
+				map: any; // TODO
+			};
+		};
+	};
+}
+
+export interface GenericSSRComponent {
 	default: {
 		render(props: Record<string, any>): {
 			html: string;
@@ -120,7 +133,7 @@ export interface Hooks {
 }
 
 export interface SSRNode {
-	module: SSRComponent;
+	module: GenericSSRComponent;
 	/** client-side module URL for this component */
 	entry: string;
 	/** external CSS files */
@@ -129,6 +142,12 @@ export interface SSRNode {
 	js: string[];
 	/** inlined styles */
 	styles: string[];
+}
+
+// TODO: expose this after experimental period
+export interface ComponentLoader {
+	fixStackTrace: ({ error }: { error: Error }) => void;
+	loadComponent({ id }: { id: PageId }): Promise<SSRNode>;
 }
 
 export interface SSRRenderOptions {
@@ -140,11 +159,9 @@ export interface SSRRenderOptions {
 		js: string[];
 	};
 	floc: boolean;
-	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
-	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;

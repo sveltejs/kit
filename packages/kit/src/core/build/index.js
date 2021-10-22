@@ -301,6 +301,11 @@ async function build_server(
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
+			const loader = {
+				fixStackTrace: ({ error }) => {},
+				loadComponent
+			};
+
 			let options = null;
 
 			const default_settings = { paths: ${s(config.kit.paths)} };
@@ -324,15 +329,13 @@ async function build_server(
 					fetched: undefined,
 					floc: ${config.kit.floc},
 					get_component_path: id => assets + ${s(prefix)} + entry_lookup[id],
-					get_stack: error => String(error), // for security
 					handle_error: (error, request) => {
+						loader.fixStackTrace({ error });
 						hooks.handleError({ error, request });
-						error.stack = options.get_stack(error);
 					},
 					hooks,
 					hydrate: ${s(config.kit.hydrate)},
 					initiator: undefined,
-					load_component,
 					manifest,
 					paths: settings.paths,
 					prerender: ${config.kit.prerender.enabled},
@@ -412,10 +415,10 @@ async function build_server(
 
 			const metadata_lookup = ${s(metadata_lookup)};
 
-			async function load_component(file) {
-				const { entry, css, js, styles } = metadata_lookup[file];
+			async function loadComponent({ id }) {
+				const { entry, css, js, styles } = metadata_lookup[id];
 				return {
-					module: await module_lookup[file](),
+					module: await module_lookup[id](),
 					entry: assets + ${s(prefix)} + entry,
 					css: css.map(dep => assets + ${s(prefix)} + dep),
 					js: js.map(dep => assets + ${s(prefix)} + dep),
@@ -427,7 +430,7 @@ async function build_server(
 				prerender
 			} = {}) {
 				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
-				return respond({ ...request, host }, options, { prerender });
+				return respond({ ...request, host }, loader, options, { prerender });
 			}
 		`
 			.replace(/^\t{3}/gm, '')

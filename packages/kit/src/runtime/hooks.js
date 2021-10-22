@@ -6,7 +6,7 @@ export function sequence(...handlers) {
 	const length = handlers.length;
 	if (!length) return ({ request, resolve }) => resolve(request);
 
-	return ({ request, resolve }) => {
+	return ({ request, loader, resolve }) => {
 		return apply_handle(0, request);
 
 		/**
@@ -19,6 +19,7 @@ export function sequence(...handlers) {
 
 			return handle({
 				request,
+				loader,
 				resolve: i < length - 1 ? (request) => apply_handle(i + 1, request) : resolve
 			});
 		}

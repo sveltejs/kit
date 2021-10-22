@@ -12,6 +12,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 /**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
+ *   loader: import('types/internal').ComponentLoader;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
@@ -19,9 +20,17 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   error: Error;
  * }} opts
  */
-export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.load_component(options.manifest.layout);
-	const default_error = await options.load_component(options.manifest.error);
+export async function respond_with_error({
+	request,
+	loader,
+	options,
+	state,
+	$session,
+	status,
+	error
+}) {
+	const default_layout = await loader.loadComponent({ id: options.manifest.layout });
+	const default_error = await loader.loadComponent({ id: options.manifest.error });
 
 	const page = {
 		host: request.host,
@@ -34,6 +43,7 @@ export async function respond_with_error({ request, options, state, $session, st
 	const loaded = /** @type {Loaded} */ (
 		await load_node({
 			request,
+			loader,
 			options,
 			state,
 			route: null,
@@ -52,6 +62,7 @@ export async function respond_with_error({ request, options, state, $session, st
 		/** @type {Loaded} */ (
 			await load_node({
 				request,
+				loader,
 				options,
 				state,
 				route: null,
@@ -70,6 +81,7 @@ export async function respond_with_error({ request, options, state, $session, st
 
 	try {
 		return await render_response({
+			loader,
 			options,
 			$session,
 			page_config: {
@@ -101,7 +113,9 @@ export async function respond_with_error({ request, options, state, $session, st
  * @param {SSRRenderState} state
  */
 export function is_prerender_enabled(options, node, state) {
-	return (
-		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
-	);
+	if (!options.prerender) {
+		return false;
+	}
+	const module = /** @type {import('types/internal').SSRComponent} */ (node.module);
+	return !!module.prerender || (!!state.prerender && state.prerender.all);
 }

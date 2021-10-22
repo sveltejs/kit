@@ -7,6 +7,7 @@ const s = JSON.stringify;
 /**
  * @param {{
  *   request: import('types/hooks').ServerRequest;
+ *   loader: import('types/internal').ComponentLoader;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage | null;
@@ -24,6 +25,7 @@ const s = JSON.stringify;
  */
 export async function load_node({
 	request,
+	loader,
 	options,
 	state,
 	route,
@@ -37,7 +39,7 @@ export async function load_node({
 	status,
 	error
 }) {
-	const { module } = node;
+	const module = /** @type import('types/internal').SSRComponent */ (node.module);
 
 	let uses_credentials = false;
 
@@ -163,6 +165,7 @@ export async function load_node({
 							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
 							query: new URLSearchParams(search)
 						},
+						loader,
 						options,
 						{
 							fetched: url,

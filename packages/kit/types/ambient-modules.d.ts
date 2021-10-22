@@ -157,11 +157,12 @@ declare module '@sveltejs/kit/node' {
 declare module '@sveltejs/kit/ssr' {
 	import { IncomingRequest, Response } from '@sveltejs/kit';
 	// TODO import from public types, right now its heavily coupled with internal
+	type Loader = import('@sveltejs/kit/types/internal').ComponentLoader;
 	type Options = import('@sveltejs/kit/types/internal').SSRRenderOptions;
 	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
 
 	export interface Respond {
-		(incoming: IncomingRequest, options: Options, state?: State): Promise<Response>;
+		(incoming: IncomingRequest, loader: Loader, options: Options, state?: State): Promise<Response>;
 	}
 	export const respond: Respond;
 }

@@ -9,7 +9,7 @@ import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
-export async function respond(incoming, options, state = {}) {
+export async function respond(incoming, loader, options, state = {}) {
 	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
 		const has_trailing_slash = incoming.path.endsWith('/');
 
@@ -43,9 +43,11 @@ export async function respond(incoming, options, state = {}) {
 	try {
 		return await options.hooks.handle({
 			request,
+			loader,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
+						loader,
 						options,
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
@@ -62,7 +64,7 @@ export async function respond(incoming, options, state = {}) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route, match)
-							: await render_page(request, route, match, options, state);
+							: await render_page(request, route, match, loader, options, state);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -89,6 +91,7 @@ export async function respond(incoming, options, state = {}) {
 				const $session = await options.hooks.getSession(request);
 				return await respond_with_error({
 					request,
+					loader,
 					options,
 					state,
 					$session,
