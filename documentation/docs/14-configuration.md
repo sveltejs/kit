@@ -55,6 +55,9 @@ const config = {
 		trailingSlash: 'never',
 		vite: () => ({})
 	},
+	
+	// option passed to rollup.onwarn (https://rollupjs.org/guide/en/#onwarn)
+	onwarn: () => {},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
