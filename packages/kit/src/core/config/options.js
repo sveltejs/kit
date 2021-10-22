@@ -165,7 +165,10 @@ const options = object(
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
-			ssr: boolean(true),
+			ssr: object({
+				enabled: boolean(true),
+				overridable: boolean(true)
+			}),
 
 			target: string(null),
 
