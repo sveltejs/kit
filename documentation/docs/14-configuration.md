@@ -56,7 +56,7 @@ const config = {
 		vite: () => ({})
 	},
 	
-	// passed to vite-plugin-svelte https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#onwarn
+	// passed to vite-plugin-svelte (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#onwarn)
 	onwarn: () => {},
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
