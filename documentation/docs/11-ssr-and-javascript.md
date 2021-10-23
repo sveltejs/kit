@@ -22,7 +22,7 @@ You can disable SSR on a page-level with a `ssr` export. Page-level `ssr` export
 </script>
 ```
 
-You can also disable SSR app-wide with the [`ssr` config option](#configuration-ssr), using a boolean or `"never"`. In case you use `"never"`, all page-level `ssr` exports will be completely ignored regardless of their value.
+You can also disable SSR app-wide with the [`ssr` config option](#configuration-ssr), using a boolean or `"never"`. In case you use `"never"`, all page-level `ssr` exports will be completely ignored regardless of their value, only consider using this if you are sure you don't need SSR.
 
 ### router
 

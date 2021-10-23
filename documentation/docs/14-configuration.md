@@ -200,7 +200,7 @@ An object containing zero or more of the following values:
 ### ssr
 
 - `true` or `false` — Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide and allows pages to override it locally.
-- `"never"` — Prevents all pages from being evaluated on the server, on both [server-side rendering](#ssr-and-javascript-ssr) and [prerendering](#ssr-and-javascript-prerender), can't be overriden by page-level exports. Using this option is recommended when building an SPA.
+- `"never"` — Prevents all pages from being evaluated on the server, on both [server-side rendering](#ssr-and-javascript-ssr) and [prerendering](#ssr-and-javascript-prerender), can't be overriden by page-level exports. Only consider using this option if you don't need SSR (like when building an SPA).
 
 ### target
 
