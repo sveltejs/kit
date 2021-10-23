@@ -10,18 +10,18 @@ export default function (test) {
 
 		if (!js) {
 			// @ts-expect-error - check global injected variable
-			assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
+			assert.ok(!(await page.evaluate(() => window.pwned)), 'pwned');
 		}
 	});
 
 	const uri_xss_payload = encodeURIComponent('</script><script>window.pwned=1</script>');
 	test('no xss via dynamic route path', `/xss/${uri_xss_payload}`, async ({ page }) => {
 		// @ts-expect-error - check global injected variable
-		assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
+		assert.ok(!(await page.evaluate(() => window.pwned)), 'pwned');
 	});
 
 	test('no xss via query param', `/xss/query?key=${uri_xss_payload}`, async ({ page }) => {
 		// @ts-expect-error - check global injected variable
-		assert.ok(!(await page.evaluate(() => window.pnwed)), 'pwned');
+		assert.ok(!(await page.evaluate(() => window.pwned)), 'pwned');
 	});
 }
