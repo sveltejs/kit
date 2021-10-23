@@ -50,7 +50,10 @@ const config = {
 		serviceWorker: {
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		ssr: true,
+		ssr: {
+			enabled: true,
+			overridable: true
+		},
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -200,7 +203,9 @@ An object containing zero or more of the following values:
 
 ### ssr
 
-Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
+An object any of the following:
+- `enabled` — Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
+- `overridable` — Prevents the previous option to be overriden by pages and disables prerendering (SSR at build time). Setting both of these options to `false` turns your app into an [SPA](#appendix-csr-and-spa).
 
 ### target
 
