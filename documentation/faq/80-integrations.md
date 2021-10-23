@@ -85,9 +85,10 @@ onMount(() => {
 });
 ```
 
-But if your app doesn't need SSR, you can completely disable it with the `ssr` option:
+But if your app doesn't need SSR, you can completely disable it with the `ssr` option, and consume the library as usual:
 
 ```js
+// svelte.config.js
 export default {
 	kit: {
 		// ...
@@ -98,14 +99,12 @@ export default {
 		// ...
 	}
 };
-```
 
-And consume the library as usual.
-
-```js
+// path/to/page.svelte
 import { method } from 'some-browser-only-library';
 
 method('hello world!');
+
 ```
 
 ### How do I use Firebase?
