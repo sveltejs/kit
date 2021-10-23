@@ -50,7 +50,10 @@ test('fills in defaults', () => {
 				pages: undefined
 			},
 			router: true,
-			ssr: true,
+			ssr: {
+				enabled: true,
+				overridable: true
+			},
 			target: null,
 			trailingSlash: 'never'
 		}
@@ -150,7 +153,10 @@ test('fills in partial blanks', () => {
 				pages: undefined
 			},
 			router: true,
-			ssr: true,
+			ssr: {
+				enabled: true,
+				overridable: true
+			},
 			target: null,
 			trailingSlash: 'never'
 		}
