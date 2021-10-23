@@ -75,7 +75,7 @@ app.get('/no-svelte', (req, res) => {
 
 app.all('*', assetsMiddleware, prerenderedMiddleware, kitMiddleware);.
 
-// For Express.
+// Express users can also write in a second way:
 // (Middleware sequence is incompatible between Polka and Express.)
 // app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
 
