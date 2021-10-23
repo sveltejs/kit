@@ -90,6 +90,10 @@ suite('prerender', async () => {
 				routes: join(__dirname, 'fixtures/prerender/src/routes')
 			},
 			appDir: '_app',
+			ssr: {
+				enabled: true,
+				overridable: true
+			},
 			prerender: {
 				enabled: true,
 				entries: ['*']
