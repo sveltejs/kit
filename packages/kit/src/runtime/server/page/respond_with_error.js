@@ -20,9 +20,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
  * }} opts
  */
 export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.load_component(options.manifest.layout);
-	const default_error = await options.load_component(options.manifest.error);
-
 	const page = {
 		host: request.host,
 		path: request.path,
@@ -30,43 +27,51 @@ export async function respond_with_error({ request, options, state, $session, st
 		params: {}
 	};
 
-	// error pages don't fall through, so we know it's not undefined
-	const loaded = /** @type {Loaded} */ (
-		await load_node({
-			request,
-			options,
-			state,
-			route: null,
-			page,
-			node: default_layout,
-			$session,
-			stuff: {},
-			prerender_enabled: is_prerender_enabled(options, default_error, state),
-			is_leaf: false,
-			is_error: false
-		})
-	);
+	/** @type {Loaded[]} */
+	let branch = [];
 
-	const branch = [
-		loaded,
-		/** @type {Loaded} */ (
+	if (options.ssr !== 'never') {
+		const default_layout = await options.load_component(options.manifest.layout);
+		const default_error = await options.load_component(options.manifest.error);
+
+		// error pages don't fall through, so we know it's not undefined
+		const loaded = /** @type {Loaded} */ (
 			await load_node({
 				request,
 				options,
 				state,
 				route: null,
 				page,
-				node: default_error,
+				node: default_layout,
 				$session,
-				stuff: loaded ? loaded.stuff : {},
+				stuff: {},
 				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_leaf: false,
-				is_error: true,
-				status,
-				error
+				is_error: false
 			})
-		)
-	];
+		);
+
+		branch = [
+			loaded,
+			/** @type {Loaded} */ (
+				await load_node({
+					request,
+					options,
+					state,
+					route: null,
+					page,
+					node: default_error,
+					$session,
+					stuff: loaded ? loaded.stuff : {},
+					prerender_enabled: is_prerender_enabled(options, default_error, state),
+					is_leaf: false,
+					is_error: true,
+					status,
+					error
+				})
+			)
+		];
+	}
 
 	try {
 		return await render_response({
