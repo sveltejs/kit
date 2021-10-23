@@ -73,7 +73,10 @@ app.get('/no-svelte', (req, res) => {
 	res.end('This is not Svelte!');
 });
 
-app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
+app.all('*', assetsMiddleware, prerenderedMiddleware, kitMiddleware);.
+
+// Express users can also write in a second way:
+// app.use(assetsMiddleware, prerenderedMiddleware, kitMiddleware);
 
 app.listen(3000);
 ```
