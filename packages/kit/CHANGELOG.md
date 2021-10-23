@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.189
+
+### Patch Changes
+
+- [breaking] only route pages on the client-side ([#2656](https://github.com/sveltejs/kit/pull/2656))
+
 ## 1.0.0-next.188
 
 ### Patch Changes
