@@ -136,14 +136,10 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test(
-		'does not attempt client-side navigation to server routes',
-		'/routing',
-		async ({ page, clicknav }) => {
-			await clicknav('[href="/routing/ambiguous/ok.json"]');
-			assert.equal(await page.textContent('body'), 'ok');
-		}
-	);
+	test('does not attempt client-side navigation to server routes', '/routing', async ({ page }) => {
+		await page.click('[href="/routing/ambiguous/ok.json"]');
+		assert.equal(await page.textContent('body'), 'ok');
+	});
 
 	test('allows reserved words as route names', '/routing/const', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'reserved words are okay as routes');

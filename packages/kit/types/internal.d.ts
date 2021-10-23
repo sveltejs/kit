@@ -103,11 +103,7 @@ export interface SSREndpoint {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
-
-export type CSREndpoint = [RegExp];
-
-export type CSRRoute = CSREndpoint | CSRPage;
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
 export interface SSRManifest {
 	assets: Asset[];

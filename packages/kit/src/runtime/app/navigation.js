@@ -47,9 +47,7 @@ async function prefetchRoutes_(pathnames) {
 		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
 		: router.routes;
 
-	const promises = matching
-		.filter(/** @returns {r is import('types/internal').CSRPage} */ (r) => r && r.length > 1)
-		.map((r) => Promise.all(r[1].map((load) => load())));
+	const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
 }

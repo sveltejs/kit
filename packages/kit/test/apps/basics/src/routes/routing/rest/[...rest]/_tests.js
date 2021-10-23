@@ -25,7 +25,7 @@ export default function (test) {
 		assert.equal(await page.textContent('h1'), 'xyz/abc');
 		assert.equal(await page.textContent('h2'), 'xyz/abc');
 
-		await clicknav('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
+		await page.click('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
 		assert.equal(await page.textContent('body'), 'xyz/abc/qwe');
 	});
 }
