@@ -1,1 +1,1 @@
-export const root = /** @type {HTMLElement}*/ (document.getElementById('svelte'));
+export const root = /** @type {HTMLElement} */ (document.getElementById('svelte'));
