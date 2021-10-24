@@ -83,7 +83,7 @@ const OK = 2;
 const REDIRECT = 3;
 
 /**
- * @type {(opts: {
+ * @param {{
  *   cwd: string;
  *   out: string;
  *   log: Logger;
@@ -91,7 +91,8 @@ const REDIRECT = 3;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
- * }) => Promise<Array<string> | void>}
+ * }} opts
+ * @returns { Promise<(void | Array<string>)>}
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
