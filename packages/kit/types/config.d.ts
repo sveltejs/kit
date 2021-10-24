@@ -6,9 +6,9 @@ export interface AdapterUtils {
 	log: Logger;
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
-	copy_client_files(dest: string): void;
-	copy_server_files(dest: string): void;
-	copy_static_files(dest: string): void;
+	copy_client_files(dest: string): string[];
+	copy_server_files(dest: string): string[];
+	copy_static_files(dest: string): string[];
 	copy(from: string, to: string, filter?: (basename: string) => boolean): void;
 	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
 }
