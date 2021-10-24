@@ -418,9 +418,8 @@ async function build_server(
 			${allow_ssr ?
 			`const module_lookup = {
 				${manifest.components.map((file) => `${s(file)}: () => import(${s(app_relative(file))})`)}
-			};` : ''}
-
-			${allow_ssr ? `const metadata_lookup = ${s(metadata_lookup)};` : ''}
+			};
+			const metadata_lookup = ${s(metadata_lookup)};` : ''}
 
 			async function load_component(file) {
 				${allow_ssr ?
