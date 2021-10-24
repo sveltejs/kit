@@ -129,7 +129,7 @@ export async function render_response({
 				})},
 				host: ${page && page.host ? s(page.host) : 'location.host'},
 				route: ${!!page_config.router},
-				spa: ${page_config.ssr === 'never' || !page_config.ssr},
+				spa: ${page_config.ssr !== true},
 				trailing_slash: ${s(options.trailing_slash)},
 				hydrate: ${page_config.ssr === true && page_config.hydrate ? `{
 					status: ${status},
