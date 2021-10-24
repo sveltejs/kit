@@ -287,19 +287,22 @@ export class Renderer {
 			} else {
 				scrollTo(0, 0);
 			}
+		}
 
-			// Required so that getElementById() returns the element if it exists in the DOM
-			await 0;
-			const deep_linked = hash && document.getElementById(hash.slice(1));
-			if (!scroll && deep_linked) {
+		await 0;
+
+		// After `await 0`, the onMount() function in the component executed.
+		// If there was no manual scrolling happening, let's apply the browser behavior
+		// if a hash is present in the URL.
+		if (scrollY === 0 && opts?.hash) {
+			const deep_linked = opts.hash && document.getElementById(opts.hash.slice(1));
+			if (deep_linked) {
 				// Here we use `scrollIntoView` on the element instead of `scrollTo`
 				// because it natively supports the `scroll-margin` and `scroll-behavior`
 				// CSS properties.
 				deep_linked.scrollIntoView();
-			}
+			}	
 		}
-
-		await 0;
 
 		this.loading.promise = null;
 		this.loading.id = null;
