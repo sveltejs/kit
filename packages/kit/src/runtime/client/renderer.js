@@ -276,7 +276,7 @@ export class Renderer {
 		}
 
 		if (opts) {
-			const { hash, scroll, keepfocus } = opts;
+			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
 				document.body.focus();
@@ -301,7 +301,7 @@ export class Renderer {
 				// because it natively supports the `scroll-margin` and `scroll-behavior`
 				// CSS properties.
 				deep_linked.scrollIntoView();
-			}	
+			}
 		}
 
 		this.loading.promise = null;
