@@ -17,7 +17,7 @@ export const handle: Handle = async ({ request, resolve }) => {
 		// if this is the first time the user has visited this app,
 		// set a cookie so that we recognise them when they return
 		response.headers['set-cookie'] = cookie.serialize('userid', request.locals.userid, {
-			path: '/',
+	path: '/',
 			httpOnly: true
 		});
 	}
