@@ -6,10 +6,32 @@ export interface AdapterUtils {
 	log: Logger;
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
+	/**
+	 * @param dest
+	 * The destination folder to which files should be copied
+	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 */
 	copy_client_files(dest: string): string[];
+	/**
+	 * @param dest
+	 * The destination folder to which files should be copied
+	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 */
 	copy_server_files(dest: string): string[];
+	/**
+	 * @param dest
+	 * The destination folder to which files should be copied
+	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 */
 	copy_static_files(dest: string): string[];
-	copy(from: string, to: string, filter?: (basename: string) => boolean): void;
+	/**
+	 * @param from
+	 * The source folder from which files should be copied
+	 * @param to
+	 * The destination folder to which files should be copied
+	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 */
+	copy(from: string, to: string, filter?: (basename: string) => boolean): string[];
 	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
 }
 
