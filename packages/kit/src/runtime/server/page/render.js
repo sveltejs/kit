@@ -13,9 +13,9 @@ const s = JSON.stringify;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
  *   page_config: {
- * 	 		hydrate: boolean,
- * 			router: boolean,
- * 			ssr: import('types/internal').SSROption
+ *      hydrate: boolean,
+ *      router: boolean,
+ *      ssr: import('types/internal').SSROption
  * 	 };
  *   status: number;
  *   error?: Error,
