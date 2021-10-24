@@ -92,7 +92,7 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns { Promise<(void | Array<string>)>}
+ * @returns {Promise<(void | Array<string>)>}
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
