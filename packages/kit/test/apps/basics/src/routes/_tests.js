@@ -8,10 +8,10 @@ export default function (test) {
 	test('prerender encoding data uri', '/', async ({ page }) => {
 		assert.equal(
 			await page.getAttribute('link', 'href'),
-			'data:image/svg+xml,\
-<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>\
-<text y=%22.9em%22 font-size=%2290%22>\
-💥</text></svg>'
+			'data:image/svg+xml,\n\
+			<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22>\n\
+			<text y=%22.9em%22 font-size=%2290%22>💥</text>\n\
+			</svg>'
 		);
 	});
 }
