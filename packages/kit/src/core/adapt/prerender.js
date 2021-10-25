@@ -92,10 +92,11 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
+ * @returns {Promise<Array<string>>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
-		return;
+		return [];
 	}
 
 	__fetch_polyfill();
@@ -118,6 +119,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
 	const files = new Set([...build_data.static, ...build_data.client]);
+	const written_files = [];
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -188,6 +190,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				if (location) {
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+					written_files.push(file);
 				} else {
 					log.warn(`location header missing on redirect received from ${decoded_path}`);
 				}
@@ -198,6 +201,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			if (rendered.status === 200) {
 				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
+				written_files.push(file);
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
@@ -215,7 +219,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				if (result.body) writeFileSync(file, result.body);
+				if (result.body) {
+					writeFileSync(file, result.body);
+					written_files.push(file);
+				}
 
 				if (response_type === OK) {
 					log.info(`${result.status} ${dependency_path}`);
@@ -309,5 +316,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
+		written_files.push(file);
 	}
+
+	return written_files;
 }
