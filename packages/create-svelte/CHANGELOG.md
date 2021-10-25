@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.84
+
+### Patch Changes
+
+- Add explicit types in `_api.ts` and `form.ts` for TypeScript and ESLint integration example ([#2657](https://github.com/sveltejs/kit/pull/2657))
+
 ## 2.0.0-next.83
 
 ### Patch Changes

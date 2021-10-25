@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.189
+
+### Patch Changes
+
+- [breaking] only route pages on the client-side ([#2656](https://github.com/sveltejs/kit/pull/2656))
+
+## 1.0.0-next.188
+
+### Patch Changes
+
+- [fix] fire navigation-end event only at end of navigation ([#2649](https://github.com/sveltejs/kit/pull/2649))
+
+* [fix] allow passing certificates via config ([#2622](https://github.com/sveltejs/kit/pull/2622))
+
 ## 1.0.0-next.187
 
 ### Patch Changes

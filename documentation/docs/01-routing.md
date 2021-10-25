@@ -130,8 +130,6 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-> For successful responses, SvelteKit will generate 304s automatically.
-
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 
 > Returning nothing is equivalent to an explicit 404 response.
