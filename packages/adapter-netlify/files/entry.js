@@ -31,20 +31,20 @@ export async function handler(event) {
 		...split_headers(rendered.headers)
 	};
 
-	if (typeof rendered.body === 'string') {
+	if (rendered.body instanceof Uint8Array) {
+		// Function responses should always be strings, and responses with binary
+		// content should be base64 encoded and set isBase64Encoded to true.
+		// https://github.com/netlify/functions/blob/main/src/function/response.d.ts
 		return {
 			...partial_response,
-			body: rendered.body
+			isBase64Encoded: true,
+			body: Buffer.from(rendered.body).toString('base64')
 		};
 	}
 
-	// Function responses should always be strings, and responses with binary
-	// content should be base64 encoded and set isBase64Encoded to true.
-	// https://github.com/netlify/functions/blob/main/src/function/response.d.ts
 	return {
 		...partial_response,
-		isBase64Encoded: true,
-		body: Buffer.from(rendered.body).toString('base64')
+		body: rendered.body
 	};
 }
 
