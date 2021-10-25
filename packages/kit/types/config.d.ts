@@ -7,29 +7,24 @@ export interface AdapterUtils {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 	/**
-	 * @param dest
-	 * The destination folder to which files should be copied
-	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	copy_client_files(dest: string): string[];
 	/**
-	 * @param dest
-	 * The destination folder to which files should be copied
-	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	copy_server_files(dest: string): string[];
 	/**
-	 * @param dest
-	 * The destination folder to which files should be copied
-	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 * @param dest the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	copy_static_files(dest: string): string[];
 	/**
-	 * @param from
-	 * The source folder from which files should be copied
-	 * @param to
-	 * The destination folder to which files should be copied
-	 * @returns An array of paths corresponding to the files that have been created by the copy.
+	 * @param from the source folder from which files should be copied
+	 * @param to the destination folder to which files should be copied
+	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	copy(from: string, to: string, filter?: (basename: string) => boolean): string[];
 	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
