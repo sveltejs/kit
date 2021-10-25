@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [fix] adapter-netlify: handle undefined body ([#2682](https://github.com/sveltejs/kit/pull/2682))
+
 ## 1.0.0-next.34
 
 ### Patch Changes
