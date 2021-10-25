@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.190
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.6.11 ([#2683](https://github.com/sveltejs/kit/pull/2683))
+
+* Return an array of written files when prerendering. ([#2675](https://github.com/sveltejs/kit/pull/2675))
+
 ## 1.0.0-next.189
 
 ### Patch Changes
