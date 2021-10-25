@@ -234,6 +234,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				let match;
 				const pattern = /<(a|img|link|source)\s+([a-zA-Z]+="[a-zA-Z]+"[^"]*"[^"]*")>/gm;
+				
 				const hrefs = [];
 
 				while ((match = pattern.exec(cleaned))) {
