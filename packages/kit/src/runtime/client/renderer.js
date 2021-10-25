@@ -294,7 +294,7 @@ export class Renderer {
 		// After `await 0`, the onMount() function in the component executed.
 		// If there was no manual scrolling happening, let's apply the browser behavior
 		// if a hash is present in the URL.
-		if (scrollY === 0 && opts?.hash) {
+		if (pageYOffset === 0 && opts?.hash) {
 			const deep_linked = document.getElementById(opts.hash.slice(1));
 			if (deep_linked) {
 				// Here we use `scrollIntoView` on the element instead of `scrollTo`
