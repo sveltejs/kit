@@ -369,21 +369,13 @@ export class Renderer {
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
-			// check if endpoint route
-			if (route.length === 1) {
-				return { reload: true, props: {}, state: this.current };
-			}
-
 			// load code for subsequent routes immediately, if they are as
 			// likely to match the current path/query as the current one
 			let j = i + 1;
 			while (j < info.routes.length) {
 				const next = info.routes[j];
 				if (next[0].toString() === route[0].toString()) {
-					// if it's a page route
-					if (next.length !== 1) {
-						next[1].forEach((loader) => loader());
-					}
+					next[1].forEach((loader) => loader());
 					j += 1;
 				} else {
 					break;

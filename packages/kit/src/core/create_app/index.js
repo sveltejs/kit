@@ -88,8 +88,6 @@ function generate_client_manifest(manifest_data, base) {
 					if (params) tuple.push(params);
 
 					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
-				} else {
-					return `// ${route.file}\n\t\t[${route.pattern}]`;
 				}
 			})
 			.join(',\n\n\t\t')}

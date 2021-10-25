@@ -22,7 +22,7 @@ This file also has no direct equivalent, since SvelteKit apps can run in serverl
 
 ### src/service-worker.js
 
-Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](/docs#modules-service-worker):
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`](/docs#modules-$service-worker):
 
 - `timestamp` is unchanged
 - `files` is unchanged
@@ -39,4 +39,4 @@ The `<div id="sapper">` is no longer necessary, though you can continue mounting
 
 ### src/node_modules
 
-A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`](/docs#modules-lib) instead.
+A common pattern in Sapper apps is to put your internal library in a directory inside `src/node_modules`. This doesn't work with Vite, so we use [`src/lib`](/docs#modules-$lib) instead.

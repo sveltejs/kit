@@ -1,4 +1,4 @@
-import { CSRComponent, CSRPage, CSRRoute, NormalizedLoadOutput } from 'types/internal';
+import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types/internal';
 import { Page } from 'types/page';
 
 export type NavigationInfo = {
@@ -10,7 +10,7 @@ export type NavigationInfo = {
 };
 
 export type NavigationCandidate = {
-	route: CSRPage;
+	route: CSRRoute;
 	info: NavigationInfo;
 };
 
