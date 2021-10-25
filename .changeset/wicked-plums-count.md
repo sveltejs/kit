@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Scroll to elements provided via URL hash.
+[fix] scroll to elements provided via URL hash
