@@ -19,15 +19,15 @@ export function get_utils({ cwd, config, build_data, log }) {
 		copy,
 
 		copy_client_files(dest) {
-			copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, (file) => file[0] !== '.');
+			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, (file) => file[0] !== '.');
 		},
 
 		copy_server_files(dest) {
-			copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, (file) => file[0] !== '.');
+			return copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, (file) => file[0] !== '.');
 		},
 
 		copy_static_files(dest) {
-			copy(config.kit.files.assets, dest);
+			return copy(config.kit.files.assets, dest);
 		},
 
 		async prerender({ all = false, dest, fallback }) {
