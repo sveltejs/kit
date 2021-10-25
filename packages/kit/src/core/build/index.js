@@ -17,12 +17,6 @@ import { copy_assets, posixify, resolve_entry } from '../utils.js';
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
 
-/** @typedef {Record<string, {
- *   file: string;
- *   css: string[];
- *   imports: string[];
- * }>} ClientManifest */
-
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {{
@@ -113,7 +107,6 @@ async function build_client({
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 
 	const client_out_dir = `${output_dir}/client/${config.kit.appDir}`;
-	const client_manifest_file = `${client_out_dir}/manifest.json`;
 
 	/** @type {Record<string, string>} */
 	const input = {
@@ -188,7 +181,8 @@ async function build_client({
 
 	await vite.build(merged_config);
 
-	/** @type {ClientManifest} */
+	const client_manifest_file = `${client_out_dir}/manifest.json`;
+	/** @type {import('vite').Manifest} */
 	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
 	fs.renameSync(client_manifest_file, `${output_dir}/manifest.json`); // inspectable but not shipped
 
@@ -206,7 +200,7 @@ async function build_client({
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
  * }} options
- * @param {ClientManifest} client_manifest
+ * @param {import('vite').Manifest} client_manifest
  * @param {string} runtime
  */
 async function build_server(
@@ -512,7 +506,7 @@ async function build_server(
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
  * }} options
- * @param {ClientManifest} client_manifest
+ * @param {import('vite').Manifest} client_manifest
  */
 async function build_service_worker(
 	{ cwd, assets_base, config, manifest, build_dir, output_dir, service_worker_entry_file },

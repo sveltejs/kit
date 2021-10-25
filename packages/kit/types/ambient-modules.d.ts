@@ -161,7 +161,7 @@ declare module '@sveltejs/kit/ssr' {
 	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
 
 	export interface Respond {
-		(incoming: IncomingRequest, options: Options, state?: State): Response;
+		(incoming: IncomingRequest, options: Options, state?: State): Promise<Response>;
 	}
 	export const respond: Respond;
 }

@@ -121,9 +121,13 @@ export interface Hooks {
 
 export interface SSRNode {
 	module: SSRComponent;
-	entry: string; // client-side module corresponding to this component
+	/** client-side module URL for this component */
+	entry: string;
+	/** external CSS files */
 	css: string[];
+	/** external JS files */
 	js: string[];
+	/** inlined styles */
 	styles: string[];
 }
 
