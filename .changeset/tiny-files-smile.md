@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Inline CSS option
+[feat] inlineCSS option
