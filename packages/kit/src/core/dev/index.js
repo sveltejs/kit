@@ -92,6 +92,15 @@ class Watcher extends EventEmitter {
 		});
 	}
 
+	allowed_directories() {
+		return [
+			this.config.kit.files.assets,
+			path.resolve(this.cwd, 'src'),
+			path.resolve(this.cwd, 'node_modules'),
+			path.resolve(this.cwd, '.svelte-kit')
+		];
+	}
+
 	async init_server() {
 		if (!this.manifest) throw new Error('Must call init() before init_server()');
 
@@ -101,7 +110,8 @@ class Watcher extends EventEmitter {
 		const default_config = {
 			server: {
 				fs: {
-					strict: true
+					strict: true,
+					allow: this.allowed_directories()
 				},
 				strictPort: true
 			}
