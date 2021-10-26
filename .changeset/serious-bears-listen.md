@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-throw error if index.svelte not found in dev / build command.
+[fix] avoid infinite loop and log warning if no routes found
