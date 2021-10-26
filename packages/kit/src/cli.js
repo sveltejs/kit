@@ -254,7 +254,7 @@ function welcome({ port, host, https, open, allow, cwd }) {
 
 				if (exposed) {
 					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
-					if (allow && allow.length) {
+					if (allow?.length && cwd) {
 						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
 					}
 				} else {
