@@ -93,7 +93,7 @@ prog
 			const watcher = await dev({ port, host, https, config });
 
 			if (!watcher.manifest || !watcher.manifest.routes.length) {
-				console.log(colors.bold().yellow('\nRoute component not found'));
+				console.log(colors.bold().yellow('\nNo route components found'));
 			}
 
 			watcher.on('stdout', (data) => {
@@ -131,7 +131,7 @@ prog
 			const build_data = await build(config);
 
 			if (!build_data.entries.length) {
-				console.log(colors.bold().yellow('\nRoute component not found'));
+				console.log(colors.bold().yellow('\nNo route components found'));
 			}
 
 			console.log(
