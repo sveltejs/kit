@@ -430,7 +430,7 @@ async function build_server(
 					css: css.map(dep => assets + ${s(prefix)} + dep),
 					js: js.map(dep => assets + ${s(prefix)} + dep),
 					styles
-				};` : 'throw new Error(\'Cannot use ssr when config.kit.ssr is "never"\')'}
+				};` : 'throw new Error(`Cannot evaluate pages on the server when config.kit.ssr is "never". (${file})`)'}
 			}
 
 			export function render(request, {
