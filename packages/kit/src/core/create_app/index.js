@@ -115,7 +115,8 @@ function generate_app(manifest_data) {
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
 			route.type === 'page' ? route.a.filter(Boolean).length : 0
-		)
+		),
+		1
 	);
 
 	const levels = [];
