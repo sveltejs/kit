@@ -225,5 +225,5 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
 
-### vite-plugin-svelte
+### vite_plugin_svelte_options
 A [vite-plugin-svelte config object](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), or a function that returns one. Options must be in root scope of config object in svelte.config.js file.
