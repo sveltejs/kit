@@ -56,12 +56,14 @@ const config = {
 		vite: () => ({})
 	},
 	
-	// passed to vite-plugin-svelte, (for docs, see: https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#onwarn)
-	onwarn: (warning, defaultHandler) => defaultHandler(warning),
+	...vite_plugin_svelte_options
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
 };
+
+// options passed to vite-plugin-svelte, (for docs, see: https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
+const vite_plugin_svelte_options = {};
 
 export default config;
 ```
@@ -222,3 +224,6 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 ### vite
 
 A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
+
+### vite-plugin-svelte
+A [vite-plugin-svelte config object](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md), or a function that returns one. Options must be in root scope of config object in svelte.config.js file.
