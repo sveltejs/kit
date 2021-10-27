@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] avoid infinite loop and log warning if no routes found
+[fix] avoid infinite loop if no routes found

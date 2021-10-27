@@ -118,7 +118,7 @@ function generate_app(manifest_data) {
 		...manifest_data.routes.map((route) =>
 			route.type === 'page' ? route.a.filter(Boolean).length : 0
 		),
-		0
+		1
 	);
 
 	const levels = [];

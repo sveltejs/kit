@@ -92,10 +92,6 @@ prog
 		try {
 			const watcher = await dev({ port, host, https, config });
 
-			if (!watcher.manifest || !watcher.manifest.routes.length) {
-				console.log(colors.bold().yellow('No route components found'));
-			}
-
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
 			});
@@ -129,10 +125,6 @@ prog
 		try {
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
-
-			if (!build_data.entries.length) {
-				console.log(colors.bold().yellow('No route components found'));
-			}
 
 			console.log(
 				`\nRun ${colors.bold().cyan('npm run preview')} to preview your production build locally.`
