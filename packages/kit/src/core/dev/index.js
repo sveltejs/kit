@@ -93,13 +93,11 @@ class Watcher extends EventEmitter {
 	}
 
 	allowed_directories() {
-		const template = this.config.kit.files.template;
 		return [
 			...new Set([
 				this.config.kit.files.assets,
 				this.config.kit.files.lib,
 				this.config.kit.files.routes,
-				template.substring(0, Math.max(template.lastIndexOf('/'), template.lastIndexOf('\\'))),
 				path.resolve(this.cwd, '.svelte-kit'),
 				path.resolve(this.cwd, 'node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
