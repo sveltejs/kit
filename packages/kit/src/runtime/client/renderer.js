@@ -275,32 +275,28 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		if (opts) {
-			const { scroll, keepfocus } = opts;
-
-			if (!keepfocus) {
-				document.body.focus();
-			}
-
-			if (scroll) {
-				scrollTo(scroll.x, scroll.y);
-			} else {
-				scrollTo(0, 0);
-			}
+		if (!opts?.keepfocus) {
+			document.body.focus();
 		}
 
 		await 0;
 
 		// After `await 0`, the onMount() function in the component executed.
-		// If there was no manual scrolling happening, let's apply the browser behavior
-		// if a hash is present in the URL.
-		if (pageYOffset === 0 && opts?.hash) {
-			const deep_linked = document.getElementById(opts.hash.slice(1));
-			if (deep_linked) {
+		// If there was no manual scrolling happening (checked via pageYOffset),
+		// continue on our custom scroll handling
+		if (pageYOffset === 0 && opts) {
+			const { hash, scroll } = opts;
+
+			const deep_linked = hash && document.getElementById(hash.slice(1));
+			if (scroll) {
+				scrollTo(scroll.x, scroll.y);
+			} else if (deep_linked) {
 				// Here we use `scrollIntoView` on the element instead of `scrollTo`
 				// because it natively supports the `scroll-margin` and `scroll-behavior`
 				// CSS properties.
 				deep_linked.scrollIntoView();
+			} else {
+				scrollTo(0, 0);
 			}
 		}
 
