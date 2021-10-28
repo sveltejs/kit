@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.191
+
+### Patch Changes
+
+- Return the copied files from the adapter's copy\_ utils. ([#2674](https://github.com/sveltejs/kit/pull/2674))
+
+* [fix] avoid infinite loop if no routes found ([#2614](https://github.com/sveltejs/kit/pull/2614))
+
+- [security] upgrade to Vite 2.6.12, specify allow list, and print warning ([#2691](https://github.com/sveltejs/kit/pull/2691))
+
 ## 1.0.0-next.190
 
 ### Patch Changes
