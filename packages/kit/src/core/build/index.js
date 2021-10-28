@@ -439,7 +439,12 @@ async function build_server(
 
 	const default_config = {
 		build: {
-			target: 'es2020'
+			target: 'es2020',
+			rollupOptions: {
+				output: {
+					inlineDynamicImports: true
+				}
+			}
 		},
 		server: {
 			fs: {
@@ -468,8 +473,7 @@ async function build_server(
 					format: 'esm',
 					entryFileNames: '[name].js',
 					chunkFileNames: 'chunks/[name]-[hash].js',
-					assetFileNames: 'assets/[name]-[hash][extname]',
-					inlineDynamicImports: true
+					assetFileNames: 'assets/[name]-[hash][extname]'
 				},
 				preserveEntrySignatures: 'strict'
 			}
