@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
@@ -111,7 +112,14 @@ prog
 			https = https || !!config.kit.vite().server?.https;
 			open = open || !!config.kit.vite().server?.open;
 
-			welcome({ port: address_info.port, host: address_info.address, https, open });
+			welcome({
+				port: address_info.port,
+				host: address_info.address,
+				https,
+				open,
+				allow: watcher.allowed_directories(),
+				cwd: watcher.cwd
+			});
 		} catch (error) {
 			handle_error(error);
 		}
@@ -221,9 +229,11 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   allow?: string[];
+ *   cwd?: string;
  * }} param0
  */
-function welcome({ port, host, https, open }) {
+function welcome({ port, host, https, open, allow, cwd }) {
 	if (open) launch(port, https);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
@@ -244,6 +254,9 @@ function welcome({ port, host, https, open }) {
 
 				if (exposed) {
 					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
+					if (allow?.length && cwd) {
+						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
+					}
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}
