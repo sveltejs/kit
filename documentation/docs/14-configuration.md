@@ -5,6 +5,9 @@ title: Configuration
 Your project's configuration lives in a `svelte.config.js` file. All values are optional. The complete list of options, with defaults, is shown here:
 
 ```js
+// used by vite-plugin-svelte (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
+const vitePluginSvelteConfig = {};
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// options passed to svelte.compile (https://svelte.dev/docs#svelte_compile)
@@ -61,9 +64,6 @@ const config = {
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
 };
-
-// used by vite-plugin-svelte (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
-const vitePluginSvelteConfig = {};
 
 export default config;
 ```
