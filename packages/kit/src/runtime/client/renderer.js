@@ -282,7 +282,7 @@ export class Renderer {
 		await 0;
 
 		// After `await 0`, the onMount() function in the component executed.
-		// If there was no manual scrolling happening (checked via pageYOffset),
+		// If there was no scrolling happening (checked via pageYOffset),
 		// continue on our custom scroll handling
 		if (pageYOffset === 0 && opts) {
 			const { hash, scroll } = opts;
