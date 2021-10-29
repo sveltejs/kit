@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.192
+
+### Patch Changes
+
+- [fix] allow overriding inlineDynamicImports ([#2702](https://github.com/sveltejs/kit/pull/2702))
+
 ## 1.0.0-next.191
 
 ### Patch Changes
