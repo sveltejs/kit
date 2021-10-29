@@ -62,7 +62,7 @@ const config = {
 	preprocess: null
 };
 
-// passed to vite-plugin-svelte, (for docs, see: https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
+// used by vite-plugin-svelte (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
 const vite_plugin_svelte_config = {};
 
 export default config;
