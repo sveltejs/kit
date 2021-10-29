@@ -55,8 +55,7 @@ export async function respond(opts) {
 		// otherwise bail out at this point
 		return {
 			status: 204,
-			headers: {},
-			body: ''
+			headers: {}
 		};
 	}
 
