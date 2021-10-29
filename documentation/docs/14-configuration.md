@@ -56,7 +56,7 @@ const config = {
 		vite: () => ({})
 	},
 	
-	...vitePluginSvelteConfig
+	...vitePluginSvelteConfig,
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
