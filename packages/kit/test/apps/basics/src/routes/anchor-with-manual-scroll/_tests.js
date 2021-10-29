@@ -7,7 +7,7 @@ import * as assert from 'uvu/assert';
  */
 export default function (test) {
 	test(
-		'url-supplied anchor is ignore with onMount() scrolling on direct page load',
+		'url-supplied anchor is ignored with onMount() scrolling on direct page load',
 		'/anchor-with-manual-scroll/anchor#go-to-element',
 		async ({ page, js }) => {
 			if (js) {
