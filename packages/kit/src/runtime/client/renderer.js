@@ -275,12 +275,17 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		if (opts) {
-			const { hash, scroll, keepfocus } = opts;
+		if (!opts?.keepfocus) {
+			document.body.focus();
+		}
 
-			if (!keepfocus) {
-				document.body.focus();
-			}
+		await 0;
+
+		// After `await 0`, the onMount() function in the component executed.
+		// If there was no scrolling happening (checked via pageYOffset),
+		// continue on our custom scroll handling
+		if (pageYOffset === 0 && opts) {
+			const { hash, scroll } = opts;
 
 			const deep_linked = hash && document.getElementById(hash.slice(1));
 			if (scroll) {
@@ -294,8 +299,6 @@ export class Renderer {
 				scrollTo(0, 0);
 			}
 		}
-
-		await 0;
 
 		this.loading.promise = null;
 		this.loading.id = null;

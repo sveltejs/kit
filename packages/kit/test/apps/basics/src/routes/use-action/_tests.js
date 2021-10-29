@@ -12,7 +12,7 @@ export default function (test) {
 		async ({ page, js }) => {
 			if (js) {
 				const input = await page.$('#input');
-				assert.ok(input && input.isVisible);
+				assert.ok(input && (await input.isVisible()));
 				assert.ok(await page.$eval('#input', (el) => el === document.activeElement));
 			}
 		}
@@ -25,7 +25,7 @@ export default function (test) {
 			await clicknav('[href="/use-action/focus-and-scroll"]');
 			if (js) {
 				const input = await page.$('#input');
-				assert.ok(input && input.isVisible);
+				assert.ok(input && (await input.isVisible()));
 				assert.ok(await page.$eval('#input', (el) => el === document.activeElement));
 			}
 		}
