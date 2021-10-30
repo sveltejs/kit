@@ -32,9 +32,9 @@ export async function handler(event) {
 	};
 
 	if (rendered.body instanceof Uint8Array) {
-		// Function responses should always be strings, and responses with binary
+		// Function responses should be strings (or undefined), and responses with binary
 		// content should be base64 encoded and set isBase64Encoded to true.
-		// https://github.com/netlify/functions/blob/main/src/function/response.d.ts
+		// https://github.com/netlify/functions/blob/main/src/function/response.ts
 		return {
 			...partial_response,
 			isBase64Encoded: true,

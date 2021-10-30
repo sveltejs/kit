@@ -74,8 +74,7 @@ export async function respond(incoming, options, state = {}) {
 								if (request.headers['if-none-match'] === etag) {
 									return {
 										status: 304,
-										headers: {},
-										body: ''
+										headers: {}
 									};
 								}
 
