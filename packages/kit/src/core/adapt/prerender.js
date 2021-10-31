@@ -261,7 +261,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				}
 
 				for (const href of hrefs) {
-					if (!href) continue;
+					if (!href || href.startsWith('"data:')) continue;
 
 					const resolved = resolve(path, href);
 					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
