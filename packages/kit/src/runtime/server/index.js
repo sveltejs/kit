@@ -71,7 +71,7 @@ export async function respond(incoming, options, state = {}) {
 							if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
 								let if_none_match_value = request.headers['if-none-match'];
 								// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-								if (if_none_match_value?.startsWith('W/')) {
+								if (if_none_match_value?.indexOf('W/"') === 0) {
 									if_none_match_value = if_none_match_value.substring(2);
 								}
 
