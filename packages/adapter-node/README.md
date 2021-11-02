@@ -49,6 +49,10 @@ HOST=127.0.0.1 PORT=4000 node build
 
 You can specify different environment variables if necessary using the `env` option.
 
+## Deploying
+
+If you want to run the built app on another host then all is needed is the output directory and the `package.json` (for the `{"type": "module"}` setting).
+
 ## Middleware
 
 The adapter exports a middleware `(req, res, next) => {}` that's compatible with [Express](https://github.com/expressjs/expressjs.com) / [Connect](https://github.com/senchalabs/connect) / [Polka](https://github.com/lukeed/polka). Additionally, it also exports a reference server implementation using this middleware with a plain Node HTTP server.
