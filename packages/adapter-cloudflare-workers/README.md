@@ -38,7 +38,7 @@ Now you should get some details from Cloudflare. You should get your:
 
 Get them by visiting your Cloudflare-Dashboard and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
 
-Then configure your sites build directory, your account-details and some other options in the config file. You may optionally specify a build command which will run before publishing (For example: `npm run build`) or just leave it empty. For all the available options, take a look at the [wrangler.toml](https://developers.cloudflare.com/workers/platform/sites/configuration) documentation on Cloudflare.
+Then configure your sites build directory and your account-details in the config file:
 
 ```toml
 account_id = 'YOUR ACCOUNT_ID'
