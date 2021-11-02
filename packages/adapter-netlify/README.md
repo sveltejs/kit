@@ -33,6 +33,8 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
   publish = "build"
 
 [build.environment]
+  # SvelteKit requires Node 14+, but Netlify uses Node 12 by default
+  # https://docs.netlify.com/functions/build-with-javascript/?#runtime-settings
   AWS_LAMBDA_JS_RUNTIME = "nodejs14.x"
 ```
 
