@@ -40,8 +40,6 @@ Then, make sure you have a [netlify.toml](https://docs.netlify.com/configure-bui
 
 If the `netlify.toml` file or the `build.publish` value is missing, a default value of `"build"` will be used. Note that if you have set the publish directory in the Netlify UI to something else then you will need to set it in `netlify.toml` too, or use the default value of `"build"`.
 
-The `build.environment.AWS_LAMBDA_JS_RUNTIME` value specifies the Node.js runtime for JavaScript functions running on Netlify. Netlify uses Node.js 12 by [default](https://docs.netlify.com/functions/build-with-javascript/?#runtime-settings) which is no longer supported (#2604).
-
 ## Netlify alternatives to SvelteKit functionality
 
 You may build your app using functionality provided directly by SvelteKit without relying on any Netlify functionality. Using the SvelteKit versions of these features will allow them to be used in dev mode, tested with integration tests, and to work with other adapters should you ever decide to switch away from Netlify. However, in some scenarios you may find it beneficial to use the Netlify versions of these features. One example would be if you're migrating an app that's already hosted on Netlify to SvelteKit.
