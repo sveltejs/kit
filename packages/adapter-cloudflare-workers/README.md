@@ -46,7 +46,6 @@ zone_id    = 'YOUR ZONE_ID' # optional, if you don't specify this a workers.dev 
 site = {bucket = "./build", entry-point = "./workers-site"}
 
 type = "javascript"
-compatibility_date = "2021-10-22"
 
 [build]
 command = ""
