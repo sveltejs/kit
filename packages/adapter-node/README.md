@@ -51,7 +51,7 @@ You can specify different environment variables if necessary using the `env` opt
 
 ## Deploying
 
-If you want to run the built app on another host then all is needed is the output directory and the `package.json` (for the `{"type": "module"}` setting).
+If you want to run the built app on another host, then all that is needed is the `build` directory and the `package.json` (for the `{"type": "module"}` setting).
 
 ## Middleware
 
