@@ -5,9 +5,6 @@ title: Configuration
 Your project's configuration lives in a `svelte.config.js` file. All values are optional. The complete list of options, with defaults, is shown here:
 
 ```js
-// used by vite-plugin-svelte (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
-const vitePluginSvelteConfig = {};
-
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// options passed to svelte.compile (https://svelte.dev/docs#svelte_compile)
@@ -225,6 +222,3 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 ### vite
 
 A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
-
-### vitePluginSvelteConfig
-A [vite-plugin-svelte config object](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md). These options must be in root scope of config object in svelte.config.js file.
