@@ -57,7 +57,7 @@ const config = {
 	},
 	
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
-	// see available options (https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md)
+	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
 	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
 	preprocess: null
