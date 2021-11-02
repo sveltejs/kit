@@ -48,6 +48,7 @@ site = {bucket = "./build", entry-point = "./workers-site"}
 type = "javascript"
 
 [build]
+# Assume it's already been built. You can make this "npm run build" to ensure a build before publishing
 command = ""
 
 [build.upload]
