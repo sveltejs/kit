@@ -109,14 +109,17 @@ prog
 				watcher.vite.httpServer.address()
 			);
 
-			https = https || !!config.kit.vite().server?.https;
-			open = open || !!config.kit.vite().server?.open;
+			const vite_config = config.kit.vite();
+
+			https = https || !!vite_config.server?.https;
+			open = open || !!vite_config.server?.open;
 
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
 				https,
 				open,
+				loose: vite_config.server?.fs?.strict === false,
 				allow: watcher.allowed_directories(),
 				cwd: watcher.cwd
 			});
@@ -229,11 +232,12 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   loose?: boolean;
  *   allow?: string[];
  *   cwd?: string;
  * }} param0
  */
-function welcome({ port, host, https, open, allow, cwd }) {
+function welcome({ port, host, https, open, loose, allow, cwd }) {
 	if (open) launch(port, https);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
@@ -254,7 +258,9 @@ function welcome({ port, host, https, open, allow, cwd }) {
 
 				if (exposed) {
 					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
-					if (allow?.length && cwd) {
+					if (loose) {
+						console.log(`\n  ${colors.yellow('Serving with vite.server.fs.strict: false. Note that all files on your machine will be accessible to anyone on your network.')}`);
+					} else if (allow?.length && cwd) {
 						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
 					}
 				} else {
