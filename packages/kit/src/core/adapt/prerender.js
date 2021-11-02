@@ -35,8 +35,9 @@ function get_src(attrs) {
 
 /** @param {string} attrs */
 export function is_rel_external(attrs) {
-	const match = /rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external))/.exec(attrs);
-	return !!match;
+	return /(rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external)))|(href\s*=\s*["'](#|mailto:|tel:).+["'])/.test(
+		attrs
+	);
 }
 
 /** @param {string} attrs */
