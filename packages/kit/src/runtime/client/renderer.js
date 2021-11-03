@@ -275,8 +275,15 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		if (!opts?.keepfocus) {
-			document.body.focus();
+		if (opts) {
+			if (!opts.keepfocus) {
+				document.body.focus();
+			}
+
+			// Scroll to top so we can compare the pageYOffset below. We cannot
+			// compare by recording the pageYOffset here as there is a possiblity
+			// it will change, e.g. different scroll heights
+			scrollTo(0, 0);
 		}
 
 		await 0;
@@ -295,8 +302,6 @@ export class Renderer {
 				// because it natively supports the `scroll-margin` and `scroll-behavior`
 				// CSS properties.
 				deep_linked.scrollIntoView();
-			} else {
-				scrollTo(0, 0);
 			}
 		}
 

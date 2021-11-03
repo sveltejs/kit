@@ -21,7 +21,19 @@ export default function (test) {
 		'url-supplied anchor works on navigation to page',
 		'/anchor',
 		async ({ page, clicknav, js }) => {
-			await clicknav('[href="/anchor/anchor#go-to-element"]');
+			await clicknav('#first-anchor');
+			if (js) {
+				const p = await page.$('#go-to-element');
+				assert.ok(p && (await p.isVisible()));
+			}
+		}
+	);
+
+	test(
+		'url-supplied anchor works when navigated from scrolled page',
+		'/anchor',
+		async ({ page, clicknav, js }) => {
+			await clicknav('#second-anchor');
 			if (js) {
 				const p = await page.$('#go-to-element');
 				assert.ok(p && (await p.isVisible()));
