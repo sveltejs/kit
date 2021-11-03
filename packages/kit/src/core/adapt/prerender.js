@@ -13,7 +13,7 @@ import { get_single_valued_header } from '../../utils/http.js';
  */
 
 /** @param {string} html */
-function clean_html(html) {
+export function clean_html(html) {
 	return html
 		.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gm, '')
 		.replace(/(<script[\s\S]*?>)[\s\S]*?<\/script>/gm, '$1</' + 'script>')
@@ -28,7 +28,7 @@ export function get_href(attrs) {
 }
 
 /** @param {string} attrs */
-function get_src(attrs) {
+export function get_src(attrs) {
 	const match = /(?:[\s'"]|^)src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
@@ -41,18 +41,23 @@ export function is_rel_external(attrs) {
 }
 
 /** @param {string} attrs */
-function get_srcset_urls(attrs) {
+export function get_srcset_urls(attrs) {
 	const results = [];
 	// Note that the srcset allows any ASCII whitespace, including newlines.
 	const match = /([\s'"]|^)srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
-	if (match) {
-		const attr_content = match[1] || match[2] || match[3];
-		// Parse the content of the srcset attribute.
-		// The regexp is modelled after the srcset specs (https://html.spec.whatwg.org/multipage/images.html#srcset-attribute)
-		// and should cover most reasonable cases.
-		const regex = /\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/gm;
-		let sub_matches;
-		while ((sub_matches = regex.exec(attr_content))) {
+	if (!match) return [];
+	const attr_content = match[2] || match[3];
+	if (!attr_content) return [];
+	// Parse the content of the srcset attribute.
+	// The regexp is modelled after the srcset specs (https://html.spec.whatwg.org/multipage/images.html#srcset-attribute)
+	// and should cover most reasonable cases.
+	const regex = /\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/;
+	let sub_matches;
+	const values = attr_content.split(',');
+	while (values.length > 0) {
+		const val = values.shift() || '';
+		sub_matches = regex.exec(val);
+		if (sub_matches) {
 			results.push(sub_matches[1]);
 		}
 	}
