@@ -24,7 +24,7 @@ export default async (req, res) => {
 		path: pathname,
 		query: searchParams,
 		rawBody: body,
-		nonce: globalThis.GENERATE_NONCES && randomBytes(16).toString('hex')
+		nonce: /* eslint-disable-line no-undef */ GENERATE_NONCES && randomBytes(16).toString('hex')
 	});
 
 	if (rendered) {
