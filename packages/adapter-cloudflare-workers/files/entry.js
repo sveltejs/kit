@@ -36,7 +36,9 @@ async function handle(event) {
 			rawBody: await read(request),
 			headers: Object.fromEntries(request.headers),
 			method: request.method,
-			nonce: globalThis.GENERATE_NONCES && btoa(crypto.getRandomValues(new Uint32Array(2)))
+			nonce:
+				/* eslint-disable-line no-undef */ GENERATE_NONCES &&
+				btoa(crypto.getRandomValues(new Uint32Array(2)))
 		});
 
 		if (rendered) {
