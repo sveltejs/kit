@@ -96,7 +96,7 @@ const REDIRECT = 3;
  * @returns {Promise<Array<string>>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
-	if (!config.kit.prerender.enabled && !fallback) {
+	if ((!config.kit.prerender.enabled || config.kit.cspNonce) && !fallback) {
 		return [];
 	}
 
@@ -288,7 +288,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 	}
 
-	if (config.kit.prerender.enabled) {
+	if (config.kit.prerender.enabled && !config.kit.cspNonce) {
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
