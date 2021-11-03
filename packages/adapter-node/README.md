@@ -83,10 +83,6 @@ app.listen(3000);
 
 For using middleware in dev mode, [see the FAQ](https://kit.svelte.dev/faq#how-do-i-use-x-with-sveltekit-how-do-i-use-middleware).
 
-## Deploying
-
-If you want to run the built app on another host, then all that is needed is the `build` directory and the `package.json` (for the `{"type": "module"}` setting).
-
 ## Advanced Configuration
 
 ### esbuild
@@ -122,6 +118,14 @@ The default options for this version are as follows:
 		esbuild_app_dir: `"${config.kit.appDir}"`
 	}
 }
+```
+
+## Deploying
+
+To deploy the build app simply copy the output directory (`build` by default)  and the `package.json` to the target host. From there go ahead and install your production dependencies with `npm install --only=prod` and start your server with
+
+```bash
+node build
 ```
 
 ## Changelog
