@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.193
+
+### Patch Changes
+
+- [fix] upgrade minor deps. fetch-blob 3.1.3 needed for Netlify deploys ([#2714](https://github.com/sveltejs/kit/pull/2714))
+
+* [fix] scroll to elements provided via URL hash ([#2668](https://github.com/sveltejs/kit/pull/2668))
+
 ## 1.0.0-next.192
 
 ### Patch Changes
