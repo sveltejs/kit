@@ -31,8 +31,9 @@ export function create_kit_middleware({ render }) {
 			path: parsed.pathname,
 			query: parsed.searchParams,
 			rawBody: body,
-			// @ts-ignore
-			nonce: globalThis.GENERATE_NONCES && randomBytes(16).toString('base64')
+			nonce:
+				// @ts-ignore
+				/* eslint-disable-line no-undef */ GENERATE_NONCES && randomBytes(16).toString('base64')
 		});
 
 		if (rendered) {
