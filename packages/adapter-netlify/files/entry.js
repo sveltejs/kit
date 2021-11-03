@@ -18,7 +18,7 @@ export async function handler(event) {
 		path,
 		query,
 		rawBody,
-		nonce: globalThis.GENERATE_NONCES && randomBytes(16).toString('base64')
+		nonce: /* eslint-disable-line no-undef */ GENERATE_NONCES && randomBytes(16).toString('base64')
 	});
 
 	if (!rendered) {
