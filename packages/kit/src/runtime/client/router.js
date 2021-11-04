@@ -41,6 +41,8 @@ export class Router {
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
+		/** A stack of routes which gets larger when navigating back in history, and smaller when navigating forward.*/
+		this.history = sessionStorage.getItem('sveltekit:history')?.split(',') || [];
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -71,24 +73,6 @@ export class Router {
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
 			history.scrollRestoration = 'manual';
-		});
-
-		// There's no API to capture the scroll location right before the user
-		// hits the back/forward button, so we listen for scroll events
-
-		/** @type {NodeJS.Timeout} */
-		let scroll_timer;
-		addEventListener('scroll', () => {
-			clearTimeout(scroll_timer);
-			scroll_timer = setTimeout(() => {
-				// Store the scroll location in the history
-				// This will persist even if we navigate away from the site and come back
-				const new_state = {
-					...(history.state || {}),
-					'sveltekit:scroll': scroll_state()
-				};
-				history.replaceState(new_state, document.title, window.location.href);
-			}, 50);
 		});
 
 		/** @param {MouseEvent|TouchEvent} event */
@@ -151,11 +135,15 @@ export class Router {
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
 
+			this.history = [];
+
+			history.replaceState({ 'sveltekit:scroll': scroll_state() }, '');
+			history.pushState({}, '', url.href);
+
 			const i1 = url_string.indexOf('#');
 			const i2 = location.href.indexOf('#');
 			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
 			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
 			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
@@ -163,8 +151,36 @@ export class Router {
 			event.preventDefault();
 		});
 
+		let step = 0;
+		let isBack = false;
+		/** @param {PopStateEvent} event */
 		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
+			if (!this.enabled) return;
+
+			// When user navigates back (or forwards), we navigate in reverse
+			// in order to access the history's state of the previous page.
+			if (step === 0) {
+				isBack = this.history.slice(-1)[0] !== location.pathname;
+				history.go(isBack ? +1 : -1);
+				return (step = 1);
+			}
+
+			// Persist the scroll position upon the previous page load, then navigate back.
+			if (step === 1) {
+				if (isBack) {
+					this.history.push(location.pathname);
+				} else {
+					this.history.pop();
+				}
+				sessionStorage.setItem('sveltekit:history', this.history.join(','));
+				history.replaceState({ 'sveltekit:scroll': scroll_state() }, '');
+				history.go(isBack ? -1 : +1);
+				return (step = 2);
+			}
+
+			step = 0;
+
+			if (event.state) {
 				const url = new URL(location.href);
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
