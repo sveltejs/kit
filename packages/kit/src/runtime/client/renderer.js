@@ -280,16 +280,16 @@ export class Renderer {
 				document.body.focus();
 			}
 
-			// Scroll to top so we can compare the pageYOffset below. We cannot
-			// compare by recording the pageYOffset here as there is a possiblity
-			// it will change, e.g. different scroll heights
+			// Scroll to top so we can compare the `pageYOffset` below. We cannot
+			// compare by recording the `pageYOffset` here as there is a possiblity
+			// it will change, e.g. different page heights
 			scrollTo(0, 0);
 		}
 
 		await 0;
 
-		// After `await 0`, the onMount() function in the component executed.
-		// If there was no scrolling happening (checked via pageYOffset),
+		// After `await 0`, the `onMount()` function in the component executed.
+		// If there was no scrolling happening (checked via `pageYOffset`),
 		// continue on our custom scroll handling
 		if (pageYOffset === 0 && opts) {
 			const { hash, scroll } = opts;
