@@ -281,7 +281,7 @@ export class Renderer {
 			}
 
 			// Scroll to top so we can compare the `pageYOffset` below. We cannot
-			// compare by recording the `pageYOffset` here as there is a possiblity
+			// compare by recording the `pageYOffset` here as there is a possibility
 			// it will change, e.g. different page heights
 			scrollTo(0, 0);
 		}
