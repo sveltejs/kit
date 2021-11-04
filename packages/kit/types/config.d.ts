@@ -1,6 +1,7 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
+import { Options as ViteLegacyOptions } from '@vitejs/plugin-legacy';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -89,6 +90,7 @@ export interface Config {
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
+		legacy?: ViteLegacyOptions;
 	};
 	preprocess?: any;
 }

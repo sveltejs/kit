@@ -129,6 +129,7 @@ export interface SSRNode {
 	js: string[];
 	/** inlined styles */
 	styles: string[];
+	legacy?: string;
 }
 
 export interface SSRRenderOptions {
@@ -138,6 +139,12 @@ export interface SSRRenderOptions {
 		file: string;
 		css: string[];
 		js: string[];
+	};
+	entry_legacy?: {
+		file: string;
+		css: string[];
+		js: string[];
+		polyfills: string;
 	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
@@ -157,7 +164,15 @@ export interface SSRRenderOptions {
 	service_worker?: string;
 	ssr: boolean;
 	target: string;
-	template({ head, body }: { head: string; body: string }): string;
+	template({
+		head,
+		body,
+		legacy_scripts
+	}: {
+		head: string;
+		body: string;
+		legacy_scripts?: string;
+	}): string;
 	trailing_slash: TrailingSlash;
 }
 

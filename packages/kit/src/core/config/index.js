@@ -22,6 +22,13 @@ function validate_template(cwd, validated) {
 				throw new Error(`${relative} is missing ${tag}`);
 			}
 		});
+
+		if (validated.kit.legacy) {
+			const tag = '%svelte.legacy_scripts%';
+			if (contents.indexOf(tag) === -1) {
+				throw new Error(`${relative} is missing ${tag}`);
+			}
+		}
 	} else {
 		throw new Error(`${relative} does not exist`);
 	}

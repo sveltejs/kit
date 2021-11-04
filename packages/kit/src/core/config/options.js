@@ -187,7 +187,16 @@ const options = object(
 
 					return input;
 				}
-			)
+			),
+			legacy: validate(null, (input, keypath) => {
+				if (typeof input !== 'object' || Array.isArray(input)) {
+					throw new Error(
+						`${keypath} should be an object. See https://github.com/vitejs/vite/tree/main/packages/plugin-legacy for all avaliable options`
+					);
+				}
+
+				return input;
+			})
 		})
 	},
 	true
