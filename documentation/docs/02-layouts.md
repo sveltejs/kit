@@ -80,11 +80,14 @@ If an error component has a [`load`](#loading) function, it will be called with 
 
 ```html
 <script context="module">
+	/**
+	 * @type {import('@sveltejs/kit').ErrorLoad}
+	 */
 	export function load({ error, status }) {
 		return {
 			props: {
-				title: `${status}: ${error.message}`
-			}
+				title: `${status}: ${error.message}`,
+			},
 		};
 	}
 </script>
@@ -97,3 +100,17 @@ If an error component has a [`load`](#loading) function, it will be called with 
 ```
 
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.
+
+```ts
+// declaration type
+// * also see type for `LoadOutput` in the Loading section
+
+export interface ErrorLoadInput<
+	PageParams extends Rec<string> = Rec<string>,
+	Stuff extends Rec = Rec,
+	Session = any
+> extends LoadInput<PageParams, Stuff, Session> {
+	status?: number;
+	error?: Error;
+}
+```
