@@ -275,33 +275,34 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		if (opts) {
-			if (!opts.keepfocus) {
+		if (!opts) {
+			await 0;
+		} else {
+			const { hash, scroll, keepfocus } = opts;
+
+			if (!keepfocus) {
 				document.body.focus();
 			}
 
-			// Scroll to top so we can compare the `pageYOffset` below. We cannot
-			// compare by recording the `pageYOffset` here as there is a possibility
-			// it will change, e.g. different page heights
-			scrollTo(0, 0);
-		}
+			const oldPageYOffset = pageYOffset;
+			await 0;
+			const maxPageYOffset = document.body.scrollHeight - innerHeight;
 
-		await 0;
-
-		// After `await 0`, the `onMount()` function in the component executed.
-		// If there was no scrolling happening (checked via `pageYOffset`),
-		// continue on our custom scroll handling
-		if (pageYOffset === 0 && opts) {
-			const { hash, scroll } = opts;
-
-			const deep_linked = hash && document.getElementById(hash.slice(1));
-			if (scroll) {
-				scrollTo(scroll.x, scroll.y);
-			} else if (deep_linked) {
-				// Here we use `scrollIntoView` on the element instead of `scrollTo`
-				// because it natively supports the `scroll-margin` and `scroll-behavior`
-				// CSS properties.
-				deep_linked.scrollIntoView();
+			// After `await 0`, the `onMount()` function in the component executed.
+			// If there was no scrolling happening (checked via `pageYOffset`),
+			// continue on our custom scroll handling
+			if (pageYOffset === Math.min(oldPageYOffset, maxPageYOffset)) {
+				const deep_linked = hash && document.getElementById(hash.slice(1));
+				if (scroll) {
+					scrollTo(scroll.x, scroll.y);
+				} else if (deep_linked) {
+					// Here we use `scrollIntoView` on the element instead of `scrollTo`
+					// because it natively supports the `scroll-margin` and `scroll-behavior`
+					// CSS properties.
+					deep_linked.scrollIntoView();
+				} else {
+					scrollTo(0, 0);
+				}
 			}
 		}
 
