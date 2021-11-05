@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.85
+
+### Patch Changes
+
+- feat: added .env to gitignore for skeleton and default starters ([#2732](https://github.com/sveltejs/kit/pull/2732))
+
 ## 2.0.0-next.84
 
 ### Patch Changes

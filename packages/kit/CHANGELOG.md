@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.194
+
+### Patch Changes
+
+- [fix] correct message when serving with strict:false ([#2726](https://github.com/sveltejs/kit/pull/2726))
+
+* [fix] reset scroll when navigated from scrolled page ([#2735](https://github.com/sveltejs/kit/pull/2735))
+
 ## 1.0.0-next.193
 
 ### Patch Changes
