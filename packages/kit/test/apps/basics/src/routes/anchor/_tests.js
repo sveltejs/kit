@@ -9,10 +9,9 @@ export default function (test) {
 	test(
 		'url-supplied anchor works on direct page load',
 		'/anchor/anchor#go-to-element',
-		async ({ page, js }) => {
+		async ({ is_intersecting_viewport, js }) => {
 			if (js) {
-				const p = await page.$('#go-to-element');
-				assert.ok(p && (await p.isVisible()));
+				assert.ok(is_intersecting_viewport('#go-to-element'));
 			}
 		}
 	);
@@ -20,11 +19,21 @@ export default function (test) {
 	test(
 		'url-supplied anchor works on navigation to page',
 		'/anchor',
-		async ({ page, clicknav, js }) => {
-			await clicknav('[href="/anchor/anchor#go-to-element"]');
+		async ({ clicknav, is_intersecting_viewport, js }) => {
+			await clicknav('#first-anchor');
 			if (js) {
-				const p = await page.$('#go-to-element');
-				assert.ok(p && (await p.isVisible()));
+				assert.ok(is_intersecting_viewport('#go-to-element'));
+			}
+		}
+	);
+
+	test(
+		'url-supplied anchor works when navigated from scrolled page',
+		'/anchor',
+		async ({ clicknav, is_intersecting_viewport, js }) => {
+			await clicknav('#second-anchor');
+			if (js) {
+				assert.ok(is_intersecting_viewport('#go-to-element'));
 			}
 		}
 	);
