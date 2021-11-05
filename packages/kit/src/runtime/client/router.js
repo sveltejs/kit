@@ -88,7 +88,7 @@ export class Router {
 					'sveltekit:scroll': scroll_state()
 				};
 				history.replaceState(new_state, document.title, window.location.href);
-				// iOS scroll event intervals happens between 30-150ms, sometimes around 200ms
+				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
 			}, 200);
 		});
 
