@@ -80,14 +80,12 @@ If an error component has a [`load`](#loading) function, it will be called with 
 
 ```html
 <script context="module">
-	/**
-	 * @type {import('@sveltejs/kit').ErrorLoad}
-	 */
+	/** @type {import('@sveltejs/kit').ErrorLoad} */
 	export function load({ error, status }) {
 		return {
 			props: {
-				title: `${status}: ${error.message}`,
-			},
+				title: `${status}: ${error.message}`
+			}
 		};
 	}
 </script>
