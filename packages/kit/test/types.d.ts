@@ -17,6 +17,10 @@ export interface TestContext {
 	response: PlaywrightResponse;
 	clicknav(selector: string): Promise<void>;
 	back(): Promise<void>;
+	/**
+	 * Only supported in js mode
+	 */
+	is_intersecting_viewport(selector: string): Promise<boolean>;
 	fetch(url: RequestInfo, opts?: RequestInit): Promise<NodeFetchResponse>;
 	capture_requests(fn: () => Promise<void>): Promise<string[]>;
 	errors(): string;

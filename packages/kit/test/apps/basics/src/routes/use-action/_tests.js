@@ -9,10 +9,9 @@ export default function (test) {
 	test(
 		'app-supplied scroll and focus work on direct page load',
 		'/use-action/focus-and-scroll',
-		async ({ page, js }) => {
+		async ({ page, is_intersecting_viewport, js }) => {
 			if (js) {
-				const input = await page.$('#input');
-				assert.ok(input && (await input.isVisible()));
+				assert.ok(await is_intersecting_viewport('#input'));
 				assert.ok(await page.$eval('#input', (el) => el === document.activeElement));
 			}
 		}
@@ -21,11 +20,10 @@ export default function (test) {
 	test(
 		'app-supplied scroll and focus work on navigation to page',
 		'/use-action',
-		async ({ page, clicknav, js }) => {
+		async ({ page, clicknav, is_intersecting_viewport, js }) => {
 			await clicknav('[href="/use-action/focus-and-scroll"]');
 			if (js) {
-				const input = await page.$('#input');
-				assert.ok(input && (await input.isVisible()));
+				assert.ok(await is_intersecting_viewport('#input'));
 				assert.ok(await page.$eval('#input', (el) => el === document.activeElement));
 			}
 		}
