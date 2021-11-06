@@ -439,12 +439,7 @@ async function build_server(
 
 	const default_config = {
 		build: {
-			target: 'es2020',
-			rollupOptions: {
-				output: {
-					inlineDynamicImports: true
-				}
-			}
+			target: 'es2020'
 		},
 		server: {
 			fs: {
