@@ -1,4 +1,4 @@
-import { get_base_uri } from './utils';
+import { get_base_uri, unselect_all } from './utils';
 
 function scroll_state() {
 	return {
@@ -250,8 +250,8 @@ export class Router {
 	 * @param {string} [hash]
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
+		unselect_all(window);
 		const info = this.parse(url);
-
 		if (!info) {
 			throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		}
