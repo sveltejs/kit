@@ -275,6 +275,8 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
+		getSelection()?.removeAllRanges();
+
 		if (!opts) {
 			await 0;
 		} else {

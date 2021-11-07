@@ -9,13 +9,3 @@ export function get_base_uri(doc) {
 
 	return baseURI;
 }
-
-/** @param {Window} win */
-export function unselect_all(win) {
-	if (win.getSelection) {
-		const selection = win.getSelection();
-		if (selection) {
-			selection.removeAllRanges();
-		}
-	}
-}
