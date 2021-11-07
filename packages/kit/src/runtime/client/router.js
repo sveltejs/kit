@@ -251,6 +251,7 @@ export class Router {
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
 		const info = this.parse(url);
+
 		if (!info) {
 			throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		}
