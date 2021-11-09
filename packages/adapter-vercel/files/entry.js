@@ -10,33 +10,34 @@ const getResult = (body, options) => ({
 	response: new Response(body, options)
 });
 
-_ENTRIES = typeof _ENTRIES === 'undefined' ? {} : _ENTRIES;
+// eslint-disable-next-line
+_ENTRIES = {
+	middleware_kit: {
+		async default({ request }) {
+			if (request.method === 'GET') {
+				const { pathname, searchParams } = new URL(request.url);
 
-_ENTRIES['middleware_kit'] = {
-	async default({ request }) {
-		if (request.method === 'GET') {
-			const { pathname, searchParams } = new URL(request.url);
+				if (!assets.has(pathname.slice(1))) {
+					const rendered = await render({
+						method: request.method,
+						headers: request.headers,
+						path: pathname,
+						query: searchParams,
+						rawBody: new Uint8Array() // TODO
+					});
 
-			if (!assets.has(pathname.slice(1))) {
-				const rendered = await render({
-					method: request.method,
-					headers: request.headers,
-					path: pathname,
-					query: searchParams,
-					rawBody: new Uint8Array() // TODO
-				});
-
-				if (rendered) {
-					const { status, headers, body } = rendered;
-					return getResult(body, { status, headers });
+					if (rendered) {
+						const { status, headers, body } = rendered;
+						return getResult(body, { status, headers });
+					}
 				}
 			}
-		}
 
-		return getResult(null, {
-			headers: {
-				'x-middleware-next': '1'
-			}
-		});
+			return getResult(null, {
+				headers: {
+					'x-middleware-next': '1'
+				}
+			});
+		}
 	}
 };
