@@ -5,7 +5,7 @@ import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
 import { getRawBody } from '../node/index.js';
-import { __fetch_polyfill } from '../../install-fetch.js';
+import '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
@@ -31,8 +31,6 @@ export async function preview({
 	https: use_https = false,
 	cwd = process.cwd()
 }) {
-	__fetch_polyfill();
-
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 
 	/** @type {import('types/internal').App} */

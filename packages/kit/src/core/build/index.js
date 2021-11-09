@@ -1,13 +1,11 @@
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import fs from 'fs';
 import path from 'path';
-
-import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import vite from 'vite';
 
 import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
-
 import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -26,7 +24,11 @@ const s = (value) => JSON.stringify(value);
  * @returns {Promise<import('types/internal').BuildData>}
  */
 export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
-	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
+	// TODO: build and output are confusing names because they're synonyms
+	// rename build to intermediate or generated or something clearer
+
+	const raw_build_dir = `${SVELTE_KIT}/build`;
+	const build_dir = path.resolve(cwd, raw_build_dir);
 
 	rimraf(build_dir);
 
@@ -47,7 +49,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			cwd
 		}),
 		output_dir,
-		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
+		client_entry_file: `${raw_build_dir}/runtime/internal/start.js`,
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
@@ -219,11 +221,9 @@ async function build_server(
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
-		hooks_file = path.resolve(cwd, `${SVELTE_KIT}/build/hooks.js`);
+		hooks_file = path.resolve(build_dir, 'hooks.js');
 		fs.writeFileSync(hooks_file, '');
 	}
-
-	const app_file = `${build_dir}/app.js`;
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
@@ -286,6 +286,8 @@ async function build_server(
 	const entry_css = new Set();
 
 	find_deps(client_entry_file, entry_js, entry_css);
+
+	const app_file = `${build_dir}/app.js`;
 
 	// prettier-ignore
 	fs.writeFileSync(
@@ -441,6 +443,7 @@ async function build_server(
 		build: {
 			target: 'es2020'
 		},
+		// TODO: remove after https://github.com/vitejs/vite/pull/5341 is merged and released
 		server: {
 			fs: {
 				strict: true
@@ -450,6 +453,17 @@ async function build_server(
 
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
+
+	/**
+	 * @type {{ app:string, index?:string }}
+	 */
+	const input = {
+		app: app_file
+	};
+	const server_entry_point = config.kit?.adapter?.serverEntryPoint;
+	if (server_entry_point) {
+		input.index = server_entry_point;
+	}
 
 	/** @type {[any, string[]]} */
 	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
@@ -461,9 +475,7 @@ async function build_server(
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
-				input: {
-					app: app_file
-				},
+				input,
 				output: {
 					format: 'esm',
 					entryFileNames: '[name].js',
@@ -481,8 +493,12 @@ async function build_server(
 				}
 			})
 		],
+		define: {
+			APP_DIR: `"/${config.kit.appDir}/"`
+		},
 		resolve: {
 			alias: {
+				'$server-build': path.resolve(`${build_dir}/app.js`),
 				$app: path.resolve(`${build_dir}/runtime/app`),
 				$lib: config.kit.files.lib
 			}

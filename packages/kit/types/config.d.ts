@@ -22,8 +22,8 @@ export interface AdapterUtils {
 	 */
 	copy_static_files(dest: string): string[];
 	/**
-	 * @param from the source folder from which files should be copied
-	 * @param to the destination folder to which files should be copied
+	 * @param from the source file or folder from which files should be copied
+	 * @param to the destination file or folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
 	copy(from: string, to: string, filter?: (basename: string) => boolean): string[];
@@ -32,6 +32,7 @@ export interface AdapterUtils {
 
 export interface Adapter {
 	name: string;
+	serverEntryPoint?: string;
 	adapt(context: { utils: AdapterUtils; config: ValidatedConfig }): Promise<void>;
 }
 
@@ -82,6 +83,7 @@ export interface Config {
 			onError?: PrerenderOnErrorValue;
 		};
 		router?: boolean;
+		serverEntryPoint?: string;
 		serviceWorker?: {
 			files?(filepath: string): boolean;
 		};

@@ -1,8 +1,6 @@
-// TODO hardcoding the relative location makes this brittle
-// Also, we need most of the logic in another file for testing because
-// ../output/server/app.js doesn't exist when we run the tests
-// @ts-ignore
-import { init, render } from '../output/server/app.js';
+// $server-build doesn't exist until the app is built
+// @ts-expect-error
+import { init, render } from '$server-build';
 import { create_kit_middleware } from './kit-middleware.js';
 
 import fs from 'fs';

@@ -11,7 +11,7 @@ export default [
 			sourcemap: true
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['../output/server/app.js', ...require('module').builtinModules]
+		external: ['$server-build', ...require('module').builtinModules]
 	},
 	{
 		input: 'src/index.js',
@@ -21,14 +21,6 @@ export default [
 			sourcemap: true
 		},
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['./middlewares.js', './env.js', ...require('module').builtinModules]
-	},
-	{
-		input: 'src/shims.js',
-		output: {
-			file: 'files/shims.js',
-			format: 'esm'
-		},
-		external: ['module']
+		external: ['./middlewares.js', '$server-build', ...require('module').builtinModules]
 	}
 ];

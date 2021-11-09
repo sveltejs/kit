@@ -12,6 +12,9 @@
 		".": {
 			"import": "./index.js"
 		},
+		"./entry": {
+			"import": "./files/entry.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"main": "index.js",
@@ -26,8 +29,7 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
-		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.13.4"
+		"@iarna/toml": "^2.2.5"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"

@@ -8,18 +8,20 @@
 	},
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
+	"main": "index.js",
+	"types": "index.d.ts",
 	"exports": {
 		".": {
 			"import": "./index.js"
 		},
+		"./entry": {
+			"import": "./files/index.js"
+		},
+		"./middlewares": {
+			"import": "./files/middlewares.js"
+		},
 		"./package.json": "./package.json"
 	},
-	"main": "index.js",
-	"types": "index.d.ts",
-	"files": [
-		"files",
-		"index.d.ts"
-	],
 	"scripts": {
 		"dev": "rollup -cw",
 		"build": "rollup -c",
@@ -30,7 +32,6 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"esbuild": "^0.13.4",
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {

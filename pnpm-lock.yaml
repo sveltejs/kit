@@ -100,10 +100,8 @@ importers:
     specifiers:
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
-      esbuild: ^0.13.4
     dependencies:
       '@iarna/toml': 2.2.5
-      esbuild: 0.13.12
     devDependencies:
       '@sveltejs/kit': link:../kit
 
@@ -114,7 +112,6 @@ importers:
       '@types/compression': ^1.7.2
       c8: ^7.10.0
       compression: ^1.7.4
-      esbuild: ^0.13.4
       node-fetch: ^3.0.0
       polka: ^1.0.0-next.22
       rollup: ^2.58.0
@@ -122,7 +119,6 @@ importers:
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
     dependencies:
-      esbuild: 0.13.12
       tiny-glob: 0.2.9
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.58.3

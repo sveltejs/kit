@@ -1,7 +1,4 @@
-import { router as router_ } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
-
-const router = /** @type {import('../client/router').Router} */ (router_);
 
 /**
  * @param {string} name
@@ -17,11 +14,17 @@ export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
 
+async function get_router() {
+	return /** @type {import('../client/router').Router} */ (
+		(await import('../client/singletons.js')).router
+	);
+}
+
 /**
  * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
-	return router.goto(href, opts, []);
+	return (await get_router()).goto(href, opts, []);
 }
 
 /**
@@ -29,20 +32,21 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
-	return router.renderer.invalidate(href);
+	return (await get_router()).renderer.invalidate(href);
 }
 
 /**
  * @type {import('$app/navigation').prefetch}
  */
-function prefetch_(href) {
-	return router.prefetch(new URL(href, get_base_uri(document)));
+async function prefetch_(href) {
+	return (await get_router()).prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**
  * @type {import('$app/navigation').prefetchRoutes}
  */
 async function prefetchRoutes_(pathnames) {
+	const router = await get_router();
 	const matching = pathnames
 		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
 		: router.routes;

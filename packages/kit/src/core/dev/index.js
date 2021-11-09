@@ -12,7 +12,7 @@ import vite from 'vite';
 import { respond } from '../../runtime/server/index.js';
 import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
-import { __fetch_polyfill } from '../../install-fetch.js';
+import '../../install-fetch.js';
 
 import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
@@ -27,8 +27,6 @@ import { coalesce_to_error } from '../../utils/error.js';
 
 /** @param {Options} opts */
 export function dev(opts) {
-	__fetch_polyfill();
-
 	return new Watcher(opts).init();
 }
 
