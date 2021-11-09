@@ -13,14 +13,14 @@ export default function (options) {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt({ utils }) {
-			const dir = '.vercel_build_output';
+			const dir = '.output';
 			utils.rimraf(dir);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
 			const dirs = {
 				static: join(dir, 'static'),
-				lambda: join(dir, 'functions/node/render')
+				pages: join(dir, 'server/pages')
 			};
 
 			// TODO ideally we'd have something like utils.tmpdir('vercel')
@@ -31,12 +31,24 @@ export default function (options) {
 			utils.log.minor('Generating serverless function...');
 			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
 
+			const assets = new Set([...utils.build_data.static, ...utils.build_data.client]);
+
+			utils.build_data.static.forEach((file) => {
+				if (file.endsWith('/index.html')) {
+					assets.add(file.slice(0, -11));
+				}
+			});
+
+			writeFileSync(
+				'.svelte-kit/vercel/assets.js',
+				`export const assets = new Set(${JSON.stringify([...assets])});`
+			);
+
 			/** @type {BuildOptions} */
 			const default_options = {
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
-				outfile: join(dirs.lambda, 'index.js'),
+				outfile: join(dirs.pages, '_middleware.js'),
 				bundle: true,
-				inject: [join(files, 'shims.js')],
 				platform: 'node'
 			};
 
@@ -45,19 +57,17 @@ export default function (options) {
 
 			await esbuild.build(build_options);
 
-			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
-
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
-				dest: dirs.static
+				dest: dirs.pages
 			});
 
 			utils.log.minor('Copying assets...');
 			utils.copy_static_files(dirs.static);
 			utils.copy_client_files(dirs.static);
 
-			utils.log.minor('Writing routes...');
-			utils.copy(join(files, 'routes.json'), join(dir, 'config/routes.json'));
+			utils.log.minor('Writing functions manifest...');
+			utils.copy(join(files, 'functions-manifest.json'), join(dir, 'functions-manifest.json'));
 		}
 	};
 }

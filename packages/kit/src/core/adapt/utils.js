@@ -18,6 +18,8 @@ export function get_utils({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
+		build_data,
+
 		copy_client_files(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, (file) => file[0] !== '.');
 		},

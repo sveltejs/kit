@@ -1,0 +1,14 @@
+{
+	"version": 1,
+	"pages": {
+		"_middleware.js": {
+			"runtime": "web",
+			"env": [],
+			"files": ["server/pages/_middleware.js"],
+			"name": "kit",
+			"page": "/",
+			"regexp": "^/.*$",
+			"sortingIndex": 1
+		}
+	}
+}

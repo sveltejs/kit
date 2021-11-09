@@ -1,34 +1,42 @@
-import { getRawBody } from '@sveltejs/kit/node';
-
 // TODO hardcoding the relative location makes this brittle
 import { init, render } from '../output/server/app.js';
+import { assets } from './assets.js';
 
 init();
 
-export default async (req, res) => {
-	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
+const getResult = (body, options) => ({
+	promise: Promise.resolve(),
+	waitUntil: Promise.resolve(),
+	response: new Response(body, options)
+});
 
-	let body;
+_ENTRIES = typeof _ENTRIES === 'undefined' ? {} : _ENTRIES;
 
-	try {
-		body = await getRawBody(req);
-	} catch (err) {
-		res.statusCode = err.status || 400;
-		return res.end(err.reason || 'Invalid request body');
+_ENTRIES['middleware_kit'] = {
+	async default({ request }) {
+		if (request.method === 'GET') {
+			const { pathname, searchParams } = new URL(request.url);
+
+			if (!assets.has(pathname.slice(1))) {
+				const rendered = await render({
+					method: request.method,
+					headers: request.headers,
+					path: pathname,
+					query: searchParams,
+					rawBody: new Uint8Array() // TODO
+				});
+
+				if (rendered) {
+					const { status, headers, body } = rendered;
+					return getResult(body, { status, headers });
+				}
+			}
+		}
+
+		return getResult(null, {
+			headers: {
+				'x-middleware-next': '1'
+			}
+		});
 	}
-
-	const rendered = await render({
-		method: req.method,
-		headers: req.headers,
-		path: pathname,
-		query: searchParams,
-		rawBody: body
-	});
-
-	if (rendered) {
-		const { status, headers, body } = rendered;
-		return res.writeHead(status, headers).end(body);
-	}
-
-	return res.writeHead(404).end();
 };

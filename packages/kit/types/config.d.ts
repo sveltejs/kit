@@ -1,6 +1,6 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { Logger, TrailingSlash, BuildData } from './internal';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -28,6 +28,7 @@ export interface AdapterUtils {
 	 */
 	copy(from: string, to: string, filter?: (basename: string) => boolean): string[];
 	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
+	build_data: BuildData;
 }
 
 export interface Adapter {

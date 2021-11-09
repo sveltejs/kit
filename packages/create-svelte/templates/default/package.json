@@ -4,7 +4,8 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
-		"start": "svelte-kit start"
+		"start": "svelte-kit start",
+		"deploy": "ADAPTER=@sveltejs/adapter-vercel npm run build && vercel deploy --prebuilt"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare-workers": "next",
