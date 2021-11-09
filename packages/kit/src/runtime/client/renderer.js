@@ -286,7 +286,7 @@ export class Renderer {
 
 			const oldPageYOffset = pageYOffset;
 			await 0;
-			const maxPageYOffset = document.body.scrollHeight - innerHeight;
+			const maxPageYOffset = document.documentElement.scrollHeight - innerHeight;
 
 			// After `await 0`, the `onMount()` function in the component executed.
 			// If there was no scrolling happening (checked via `pageYOffset`),
