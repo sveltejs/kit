@@ -28,6 +28,11 @@ export async function respond(opts) {
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
+	//allow developer to overwrite default template function during SSR (e.g. via `handle` hook)
+	if (request.locals.template) {
+		options.template = request.locals.template;
+	}
+
 	try {
 		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
 	} catch (err) {
