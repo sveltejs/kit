@@ -81,8 +81,8 @@ For example, if `src/routes/settings/notifications/index.svelte` failed to load,
 // * also see type for `LoadOutput` in the Loading section
 
 export interface ErrorLoadInput<
-	PageParams extends Rec<string> = Rec<string>,
-	Stuff extends Rec = Rec,
+	PageParams extends Record<string, string> = Record<string, string>,
+	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > extends LoadInput<PageParams, Stuff, Session> {
 	status?: number;
