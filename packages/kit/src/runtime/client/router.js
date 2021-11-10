@@ -8,11 +8,11 @@ function scroll_state() {
 }
 
 /**
- * @param {Node | null} node
- * @returns {HTMLAnchorElement | SVGAElement | null}
+ * @param {Node[]} nodes
+ * @returns {HTMLAnchorElement | SVGAElement | undefined}
  */
-function find_anchor(node) {
-	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
+function find_anchor(nodes) {
+	const node = nodes.find((e) => e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
 	return /** @type {HTMLAnchorElement | SVGAElement} */ (node);
 }
 
@@ -94,7 +94,7 @@ export class Router {
 
 		/** @param {MouseEvent|TouchEvent} event */
 		const trigger_prefetch = (event) => {
-			const a = find_anchor(/** @type {Node} */ (event.target));
+			const a = find_anchor(/** @type {Node[]} */ (event.composedPath()));
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
 				this.prefetch(get_href(a));
 			}
@@ -124,7 +124,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			const a = find_anchor(/** @type {Node} */ (event.target));
+			const a = find_anchor(/** @type {Node[]} */ (event.composedPath()));
 			if (!a) return;
 
 			if (!a.href) return;
