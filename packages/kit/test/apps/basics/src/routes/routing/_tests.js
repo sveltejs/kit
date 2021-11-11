@@ -95,10 +95,6 @@ export default function (test, is_dev) {
 					if (!e.message.includes('Crashing now')) throw e;
 				});
 
-				// // weird flakiness — without this, some requests are
-				// // reported after prefetchRoutes has finished
-				// await page.waitForTimeout(500);
-
 				const requests = await capture_requests(async () => {
 					await clicknav('a[href="/routing/a"]');
 					assert.equal(await page.textContent('h1'), 'a');
@@ -192,11 +188,11 @@ export default function (test, is_dev) {
 	test(
 		'back button returns to previous route when previous route has been navigated to via hash anchor',
 		'/routing/hashes/a',
-		async ({ page, clicknav }) => {
+		async ({ page, clicknav, back }) => {
 			await clicknav('[href="#hash-target"]');
 			await clicknav('[href="/routing/hashes/b"]');
 
-			await page.goBack();
+			await back();
 			assert.equal(await page.textContent('h1'), 'a');
 		}
 	);
