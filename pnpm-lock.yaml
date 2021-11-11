@@ -207,7 +207,6 @@ importers:
       '@types/marked': ^3.0.1
       '@types/mime': ^2.0.3
       '@types/node': ^16.10.3
-      '@types/rimraf': ^3.0.2
       '@types/sade': ^1.7.3
       amphtml-validator: ^1.0.35
       cheap-watch: ^1.0.4
@@ -220,7 +219,6 @@ importers:
       mime: ^2.5.2
       node-fetch: ^3.0.0
       port-authority: ^1.1.2
-      rimraf: ^3.0.2
       rollup: ^2.58.0
       sade: ^1.7.4
       selfsigned: ^1.10.11
@@ -243,7 +241,6 @@ importers:
       '@types/marked': 3.0.2
       '@types/mime': 2.0.3
       '@types/node': 16.11.6
-      '@types/rimraf': 3.0.2
       '@types/sade': 1.7.3
       amphtml-validator: 1.0.35
       cookie: 0.4.1
@@ -255,7 +252,6 @@ importers:
       mime: 2.5.2
       node-fetch: 3.0.0
       port-authority: 1.1.2
-      rimraf: 3.0.2
       rollup: 2.58.3
       selfsigned: 1.10.11
       sirv: 1.0.18
@@ -843,13 +839,6 @@ packages:
     resolution: {integrity: sha512-qxOKILdhl4e639fWdkMySS4tBkRYHkrU2ZNScsMu84EPicliFRr+gAXCLPrs7kTFWdDpgAIlxtUr+YCRtVjsKw==}
     dev: true
 
-  /@types/glob/7.2.0:
-    resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
-    dependencies:
-      '@types/minimatch': 3.0.5
-      '@types/node': 16.11.6
-    dev: true
-
   /@types/istanbul-lib-coverage/2.0.3:
     resolution: {integrity: sha512-sz7iLqvVUg1gIedBOvlkxPlc8/uVzyS5OwGz1cKjXzkl3FpL3al0crU8YGU1WoHkxn0Wxbw5tyi6hvzJKNzFsw==}
     dev: true
@@ -872,10 +861,6 @@ packages:
 
   /@types/mime/2.0.3:
     resolution: {integrity: sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==}
-    dev: true
-
-  /@types/minimatch/3.0.5:
-    resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
     dev: true
 
   /@types/minimist/1.2.2:
@@ -923,13 +908,6 @@ packages:
   /@types/resolve/1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 16.11.6
-    dev: true
-
-  /@types/rimraf/3.0.2:
-    resolution: {integrity: sha512-F3OznnSLAUxFrCEu/L5PY8+ny8DtcFRjx7fZZ9bycvXRi3KPTRS9HOitGZwvPg0juRhXFWIeKX58cnX5YqLohQ==}
-    dependencies:
-      '@types/glob': 7.2.0
       '@types/node': 16.11.6
     dev: true
 
