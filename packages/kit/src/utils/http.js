@@ -2,6 +2,7 @@
  * @param {Record<string, string | string[]>} headers
  * @param {string} key
  * @returns {string | undefined}
+ * @throws {Error}
  */
 export function get_single_valued_header(headers, key) {
 	const value = headers[key];
