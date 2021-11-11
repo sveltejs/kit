@@ -11,7 +11,7 @@ export default function (test) {
 		'/anchor-with-manual-scroll/anchor#go-to-element',
 		async ({ is_intersecting_viewport, js }) => {
 			if (js) {
-				assert.ok(is_intersecting_viewport('#abcde'));
+				assert.ok(await is_intersecting_viewport('#abcde'));
 			}
 		}
 	);
@@ -22,7 +22,7 @@ export default function (test) {
 		async ({ clicknav, is_intersecting_viewport, js }) => {
 			await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
 			if (js) {
-				assert.ok(is_intersecting_viewport('#abcde'));
+				assert.ok(await is_intersecting_viewport('#abcde'));
 			}
 		}
 	);

@@ -11,6 +11,7 @@
 	<p id="go-to-element">The browser scrolls to me</p>
 </div>
 <p id="abcde">I take precedence</p>
+<div />
 
 <style>
 	div {
