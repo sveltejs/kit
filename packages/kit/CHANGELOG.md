@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.196
+
+### Patch Changes
+
+- remove all selection before navigating to the next page ([#2755](https://github.com/sveltejs/kit/pull/2755))
+
+* [fix] properly scroll if body has margin ([#2761](https://github.com/sveltejs/kit/pull/2761))
+
 ## 1.0.0-next.195
 
 ### Patch Changes
