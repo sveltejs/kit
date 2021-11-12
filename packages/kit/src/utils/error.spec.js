@@ -9,7 +9,7 @@ test('coalesce_to_error', () => {
 		coalesce_to_error({ name: 'error', message: 'error' })
 	);
 	assert.equal(
-		new Error(`{"message":"unknown error"}`),
+		new Error('{"message":"unknown error"}'),
 		coalesce_to_error({ message: 'unknown error' })
 	);
 });
