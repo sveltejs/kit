@@ -85,6 +85,8 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate')
 	.option('-o, --open', 'Open a browser tab')
 	.action(async ({ port, host, https, open }) => {
+		await check_port(port);
+
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
 
