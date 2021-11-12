@@ -7,9 +7,7 @@ We recommend [looking at the source for an adapter](https://github.com/sveltejs/
 Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
-/**
- * @param {AdapterSpecificOptions} options
- */
+/** @param {AdapterSpecificOptions} options */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	return {

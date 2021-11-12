@@ -41,9 +41,7 @@ Our example blog page might contain a `load` function like the following:
 
 ```html
 <script context="module">
-	/**
-	 * @type {import('@sveltejs/kit').Load}
-	 */
+	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ page, fetch, session, stuff }) {
 		const url = `/blog/${page.params.slug}.json`;
 		const res = await fetch(url);

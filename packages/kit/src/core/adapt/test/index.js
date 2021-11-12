@@ -1,7 +1,7 @@
+import { rmSync } from 'fs';
 import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
-import rimraf from 'rimraf';
 import glob from 'tiny-glob/sync.js';
 import { get_utils } from '../utils.js';
 import { fileURLToPath } from 'url';
@@ -50,7 +50,7 @@ suite('copy files', () => {
 
 	const dest = join(__dirname, 'output');
 
-	rimraf.sync(dest);
+	rmSync(dest, { recursive: true, force: true });
 	utils.copy_static_files(dest);
 
 	assert.equal(
@@ -60,7 +60,7 @@ suite('copy files', () => {
 		glob('**', { cwd: dest })
 	);
 
-	rimraf.sync(dest);
+	rmSync(dest, { recursive: true, force: true });
 	utils.copy_client_files(dest);
 
 	assert.equal(
@@ -68,7 +68,7 @@ suite('copy files', () => {
 		glob('**', { cwd: dest })
 	);
 
-	rimraf.sync(dest);
+	rmSync(dest, { recursive: true, force: true });
 	utils.copy_server_files(dest);
 
 	assert.equal(
@@ -109,7 +109,7 @@ suite('prerender', async () => {
 
 	const dest = join(__dirname, 'output');
 
-	rimraf.sync(dest);
+	rmSync(dest, { recursive: true, force: true });
 	await utils.prerender({
 		all: true,
 		dest
@@ -117,7 +117,7 @@ suite('prerender', async () => {
 
 	assert.equal(glob('**', { cwd: `${prerendered_files}` }), glob('**', { cwd: dest }));
 
-	rimraf.sync(dest);
+	rmSync(dest, { recursive: true, force: true });
 });
 
 suite.run();
