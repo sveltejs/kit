@@ -85,10 +85,13 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate')
 	.option('-o, --open', 'Open a browser tab')
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
+		const vite_config = config.kit.vite();
+
+		if (!vite_config.server || vite_config.server.strictPort !== false) {
+			await check_port(port);
+		}
 
 		const { dev } = await import('./core/dev/index.js');
 
@@ -110,8 +113,6 @@ prog
 			const address_info = /** @type {import('net').AddressInfo} */ (
 				watcher.vite.httpServer.address()
 			);
-
-			const vite_config = config.kit.vite();
 
 			https = https || !!vite_config.server?.https;
 			open = open || !!vite_config.server?.open;
