@@ -8,24 +8,23 @@ import * as esbuild from 'esbuild';
  */
 export default function (options = {}) {
 	return {
-		name: 'cloudflare-pages-adapter',
+		name: '@sveltejs/adapter-cloudflare',
 		async adapt({ utils, config }) {
-			const files = fileURLToPath(new URL('./', import.meta.url));
-			const target_dir = join(process.cwd(), '.svelte-kit', 'cf-pages');
-			const target_client = join(target_dir, 'client');
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const target_dir = join(process.cwd(), '.svelte-kit', 'cloudflare');
 			utils.rimraf(target_dir);
 
 			const static_files = utils
-				.copy(config.kit.files.assets, target_client)
-				.map((f) => f.replace(`${target_client}/`, ''));
+				.copy(config.kit.files.assets, target_dir)
+				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			const client_files = utils
-				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_client)
-				.map((f) => f.replace(`${target_client}/`, ''));
+				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
+				.map((f) => f.replace(`${target_dir}/`, ''));
 
-			// needs testing to see if thi is worth it
+			// returns nothing, very sad
 			const prerendered = await utils.prerender({
-				dest: `${target_client}/`
+				dest: `${target_dir}/`
 			});
 
 			const static_assets = [...static_files, ...client_files];
@@ -33,17 +32,18 @@ export default function (options = {}) {
 
 			const worker = readFileSync(join(files, 'worker.js'), { encoding: 'utf-8' });
 
-			mkdirSync(join(target_dir, '_tmp'));
-			writeFileSync(join(target_dir, '_tmp', 'server.js'), assets + worker);
+			const target_worker = join(target_dir, '_worker.js');
+
+			writeFileSync(target_worker, assets + worker);
 
 			await esbuild.build({
-				...options,
-				entryPoints: [`${target_dir}/_tmp/server.js`],
-				outfile: `${target_dir}/server.js`,
+				entryPoints: [target_worker],
+				outfile: target_worker,
 				bundle: true,
 				format: 'esm',
 				target: 'es2020',
-				platform: 'browser'
+				platform: 'browser',
+				allowOverwrite: true
 			});
 		}
 	};
