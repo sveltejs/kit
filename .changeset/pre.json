@@ -21,7 +21,8 @@
     "@sveltejs/vite-plugin-svelte": "1.0.0-next.0",
     "@sveltejs/adapter-cloudflare-workers": "0.0.1",
     "set-env-action": "1.0.0",
-    "~TODO~": "0.0.1"
+    "~TODO~": "0.0.1",
+    "@sveltejs/adapter-cloudflare": "1.0.0-next.0"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -154,6 +155,7 @@
     "fuzzy-ghosts-call",
     "fuzzy-jeans-join",
     "fuzzy-kids-turn",
+    "gentle-dogs-heal",
     "gold-carrots-sniff",
     "gold-moles-hunt",
     "gold-trains-dream",
