@@ -20,7 +20,9 @@
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
-	"dependencies": {},
+	"dependencies": {
+		"esbuild": "^0.13.4"
+	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"
 	}
