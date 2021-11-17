@@ -1,3 +1,4 @@
+/* global ASSETS */
 import { init, render } from '../output/server/app.js';
 
 init();

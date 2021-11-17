@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import * as esbuild from 'esbuild';
 
 /**
@@ -23,7 +23,8 @@ export default function (options = {}) {
 				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			// returns nothing, very sad
-			const prerendered = await utils.prerender({
+			// TODO(future) get/save output
+			await utils.prerender({
 				dest: `${target_dir}/`
 			});
 
