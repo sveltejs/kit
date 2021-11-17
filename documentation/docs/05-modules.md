@@ -22,7 +22,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 ```
 
-- `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
+- `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. Causes the `load` function of the `href` to be called. The second argument is optional:
   - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
   - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
   - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
@@ -57,7 +57,15 @@ Because of that, the stores are not free-floating objects: they must be accessed
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
-- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
+- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details. Updating the query params of a page can be done by means of navigation by creating a new instance of `$page.query` and using the [goto](#modules-$app-navigation). For example:
+  
+  ```
+  let query = new URLSearchParams($page.query.toString());
+
+  query.set('word', word);
+      
+  goto(`?${query.toString()}`);
+  ```
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib
