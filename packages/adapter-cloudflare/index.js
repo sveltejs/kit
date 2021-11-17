@@ -3,7 +3,12 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-export function cf_pages() {
+/**
+ * @typedef {import('esbuild').BuildOptions} BuildOptions
+ */
+
+/** @type {import('.')} */
+export function cf_pages(options = {}) {
 	return {
 		name: 'cloudflare-pages-adapter',
 		async adapt({ utils, config }) {
@@ -33,7 +38,9 @@ export function cf_pages() {
 			mkdirSync(join(target_dir, '_tmp'));
 			writeFileSync(join(target_dir, '_tmp', 'server.js'), assets + worker);
 
-			const default_options = {
+			/** @type {BuildOptions} */
+			const options = {
+				...options,
 				entryPoints: [`${target_dir}/_tmp/server.js`],
 				outfile: `${target_dir}/server.js`,
 				bundle: true,
@@ -42,7 +49,7 @@ export function cf_pages() {
 				platform: 'browser'
 			};
 
-			await esbuild.build(default_options);
+			await esbuild.build(options);
 		}
 	};
 }
