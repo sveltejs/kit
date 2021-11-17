@@ -66,6 +66,15 @@ importers:
       rollup: 2.58.3
       sirv: 1.0.18
 
+  packages/adapter-cloudflare:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      esbuild: ^0.13.4
+    dependencies:
+      esbuild: 0.13.12
+    devDependencies:
+      '@sveltejs/kit': link:../kit
+
   packages/adapter-cloudflare-workers:
     specifiers:
       '@iarna/toml': ^2.2.5
