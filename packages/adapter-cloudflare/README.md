@@ -23,15 +23,15 @@ $ npm i --save-dev @sveltejs/adapter-cloudflare@next
 You can include these changes in your `svelte.config.js` configuration file:
 
 ```js
-import cloudflare from "@sveltejs/adapter-cloudflare";
+import cloudflare from '@sveltejs/adapter-cloudflare';
 
 export default {
-  kit: {
-    target: "#svelte",
-    adapter: cloudflare({
-      // any esbuild options
-    }),
-  },
+	kit: {
+		target: '#svelte',
+		adapter: cloudflare({
+			// any esbuild options
+		})
+	}
 };
 ```
 

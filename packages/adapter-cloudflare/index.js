@@ -44,7 +44,7 @@ export default function (options = {}) {
 				outfile: target_worker,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true,
+				bundle: true
 			});
 		}
 	};
