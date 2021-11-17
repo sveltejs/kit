@@ -28,7 +28,7 @@ export default {
 				});
 			}
 		} catch (e) {
-			return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
+			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
 		}
 
 		return new Response({

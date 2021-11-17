@@ -4,6 +4,19 @@ SvelteKit adapter that creates a Cloudflare Workers site using a function for dy
 
 This is very experimental; the adapter API isn't at all fleshed out, and things will definitely change.
 
+_**Comparisons**_
+
+- `adapter-cloudflare` – supports all SvelteKit features; builds for
+  [Cloudflare Pages](https://blog.cloudflare.com/cloudflare-pages-goes-full-stack/)
+- `adapter-cloudflare-workers` – supports all SvelteKit features; builds for
+  Cloudflare Workers
+- `adapter-static` – only produces client-side static assets; compatible with
+  Cloudflare Pages
+
+> **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
+> Compared to `adapter-cloudflare-workers`, this adapter will be the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
+> From SvelteKit's perspective, there is no difference and no functionality loss when migrating to/from the Workers and the Pages adapters.
+
 ## Usage
 
 Install with `npm i -D @sveltejs/adapter-cloudflare-workers@next`, then add the adapter to your `svelte.config.js`:
