@@ -14,6 +14,12 @@
 		},
 		"./package.json": "./package.json"
 	},
+	"types": "index.d.ts",
+	"files": [
+		"files",
+		"index.js",
+		"index.d.ts"
+	],
 	"main": "index.js",
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
