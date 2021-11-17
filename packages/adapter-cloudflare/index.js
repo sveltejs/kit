@@ -37,13 +37,14 @@ export default function (options = {}) {
 			writeFileSync(target_worker, assets + worker);
 
 			await esbuild.build({
-				entryPoints: [target_worker],
-				outfile: target_worker,
-				bundle: true,
-				format: 'esm',
 				target: 'es2020',
 				platform: 'browser',
-				allowOverwrite: true
+				...options,
+				entryPoints: [target_worker],
+				outfile: target_worker,
+				allowOverwrite: true,
+				format: 'esm',
+				bundle: true,
 			});
 		}
 	};
