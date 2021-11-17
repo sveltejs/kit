@@ -1,14 +1,12 @@
 import { join } from 'path';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
-import esbuild from 'esbuild';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import * as esbuild from 'esbuild';
 
 /**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
+ * @param {esbuild.BuildOptions} [options]
  */
-
-/** @type {import('.')} */
-export function cf_pages(options = {}) {
+export default function (options = {}) {
 	return {
 		name: 'cloudflare-pages-adapter',
 		async adapt({ utils, config }) {
@@ -38,8 +36,7 @@ export function cf_pages(options = {}) {
 			mkdirSync(join(target_dir, '_tmp'));
 			writeFileSync(join(target_dir, '_tmp', 'server.js'), assets + worker);
 
-			/** @type {BuildOptions} */
-			const options = {
+			await esbuild.build({
 				...options,
 				entryPoints: [`${target_dir}/_tmp/server.js`],
 				outfile: `${target_dir}/server.js`,
@@ -47,9 +44,7 @@ export function cf_pages(options = {}) {
 				format: 'esm',
 				target: 'es2020',
 				platform: 'browser'
-			};
-
-			await esbuild.build(options);
+			});
 		}
 	};
 }
