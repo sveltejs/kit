@@ -60,10 +60,8 @@ The stores themselves attach to the correct context at the point of subscription
 - `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details. Updating the query params of a page can be done by means of navigation by creating a new instance of `$page.query` and using the [goto](#modules-$app-navigation). For example:
   
   ```
-  let query = new URLSearchParams($page.query.toString());
-
+  const query = new URLSearchParams($page.query.toString());
   query.set('word', word);
-      
   goto(`?${query.toString()}`);
   ```
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
