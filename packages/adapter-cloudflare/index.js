@@ -5,7 +5,7 @@ import esbuild from 'esbuild';
 
 export function cf_pages() {
 	return {
-		name: '@sveltejs/adapter-cloudflare',
+		name: 'cloudflare-pages-adapter',
 		async adapt({ utils, config }) {
 			const files = fileURLToPath(new URL('./', import.meta.url));
 			const target_dir = join(process.cwd(), '.svelte-kit', 'cf-pages');
@@ -19,6 +19,11 @@ export function cf_pages() {
 			const client_files = utils
 				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_client)
 				.map((f) => f.replace(`${target_client}/`, ''));
+
+			// needs testing to see if thi is worth it
+			const prerendered = await utils.prerender({
+				dest: `${target_client}/`
+			});
 
 			const static_assets = [...static_files, ...client_files];
 			const assets = `const ASSETS = new Set(${JSON.stringify(static_assets)});\n`;
