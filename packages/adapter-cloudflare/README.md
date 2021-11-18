@@ -63,14 +63,13 @@ Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/ge
 
 When configuring your project settings, you must use the following settings:
 
-* **Framework preset** – None
-* **Build command** – `npm run build` or `svelte-kit build`
-* **Build output directory** – `.svelte-kit/cloudflare`
-* **Environment variables**
-	* `NODE_VERSION`: `16` or `14`
+- **Framework preset** – None
+- **Build command** – `npm run build` or `svelte-kit build`
+- **Build output directory** – `.svelte-kit/cloudflare`
+- **Environment variables**
+  - `NODE_VERSION`: `16` or `14`
 
 > **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `14.13` or later, so you should use `14` or `16` as the `NODE_VERSION` value.
-
 
 ## Changelog
 
