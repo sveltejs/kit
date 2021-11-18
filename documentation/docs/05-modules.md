@@ -22,7 +22,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 ```
 
-- `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. Causes the `load` function of the `href` to be called. The second argument is optional:
+- `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
   - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
   - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
   - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
