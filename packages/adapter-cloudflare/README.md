@@ -39,7 +39,7 @@ export default {
 };
 ```
 
-## Options
+### Options
 
 The adapter optionally accepts all
 [`esbuild.build`](https://esbuild.github.io/api/#build-api) configuration.
@@ -56,6 +56,20 @@ allowOverwrite: true,
 format: 'esm',
 bundle: true,
 ```
+
+## Deployment
+
+Please follow the [Get Started Guide](https://developers.cloudflare.com/pages/get-started) for Cloudflare Pages to begin.
+
+When configuring your project settings, you must use the following settings:
+
+- **Framework preset** – None
+- **Build command** – `npm run build` or `svelte-kit build`
+- **Build output directory** – `.svelte-kit/cloudflare`
+- **Environment variables**
+  - `NODE_VERSION`: `16` or `14`
+
+> **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `14.13` or later, so you should use `14` or `16` as the `NODE_VERSION` value.
 
 ## Changelog
 

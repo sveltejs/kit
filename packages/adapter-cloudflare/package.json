@@ -31,5 +31,8 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*"
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }
