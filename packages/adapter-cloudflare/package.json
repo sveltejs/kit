@@ -33,6 +33,6 @@
 		"@sveltejs/kit": "workspace:*"
 	},
 	"publishConfig": {
-    "access": "public"
-  }
+		"access": "public"
+	}
 }
