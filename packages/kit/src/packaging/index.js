@@ -50,7 +50,14 @@ export async function make_package(config, cwd = process.cwd()) {
 		if (!config.kit.package.files(normalized)) {
 			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
 			const dts_path = path.join(abs_package_dir, dts_file);
-			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
+			if (fs.existsSync(dts_path)) {
+				fs.unlinkSync(dts_path);
+
+				const dir = path.dirname(dts_path);
+				if (fs.readdirSync(dir).length === 0) {
+					fs.rmdirSync(dir);
+				}
+			}
 			continue;
 		}
 
