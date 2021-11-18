@@ -78,7 +78,7 @@ SvelteKit's `load` receives an implemention of `fetch`, which has the following 
 
 > Code called inside `load` blocks:
 >
-> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native fetch as the latter will make the request twice each during SSR and hydration
+> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`
 > - should not reference `window`, `document`, or any browser-specific objects
 > - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
 
