@@ -16,6 +16,7 @@ export default {
 			// default options are shown
 			out: 'build',
 			precompress: false,
+			// Name of the environment variables from which host and port are read
 			env: {
 				host: 'HOST',
 				port: 'PORT'
