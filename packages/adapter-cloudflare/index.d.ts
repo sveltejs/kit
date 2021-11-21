@@ -6,11 +6,21 @@ import { DefaultBody } from '@sveltejs/kit/types/endpoint';
 
 export default function (options?: BuildOptions): Adapter;
 
-// TODO: Does not work (is the normal Request)
-type CfRequest = Parameters<ExportedHandlerFetchHandler>[0];
+// TODO: Why do I have to copy paste that and cannot use the one direclty from @cloudflare/workers-types
+declare class Request extends Body {
+	constructor(input: Request | string, init?: RequestInit | Request);
+	clone(): Request;
+	readonly method: string;
+	readonly url: string;
+	readonly headers: Headers;
+	readonly redirect: string;
+	readonly fetcher: Fetcher | null;
+	readonly signal: AbortSignal;
+	readonly cf?: IncomingRequestCfProperties;
+}
 
 export type AdapterRequest<Env = unknown> = {
-	request: CfRequest;
+	request: Request;
 	env: Env;
 	ctx: ExecutionContext;
 };
