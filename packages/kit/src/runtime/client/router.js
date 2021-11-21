@@ -2,8 +2,8 @@ import { get_base_uri } from './utils';
 
 function scroll_state() {
 	return {
-		x: pageXOffset,
-		y: pageYOffset
+		x: scrollX,
+		y: scrollX
 	};
 }
 
