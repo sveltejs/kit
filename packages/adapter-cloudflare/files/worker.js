@@ -4,11 +4,11 @@ import { init, render } from '../output/server/app.js';
 init();
 
 export default {
-	async fetch(req, env) {
-		const url = new URL(req.url);
+	async fetch(request, env, ctx) {
+		const url = new URL(request.url);
 		// check generated asset_set for static files
 		if (ASSETS.has(url.pathname.substring(1))) {
-			return env.ASSETS.fetch(req);
+			return env.ASSETS.fetch(request);
 		}
 
 		try {
@@ -16,12 +16,17 @@ export default {
 				host: url.host || '',
 				path: url.pathname || '',
 				query: url.searchParams || '',
-				rawBody: await read(req),
-				headers: Object.fromEntries(req.headers),
-				method: req.method
+				rawBody: await read(request),
+				headers: Object.fromEntries(request.headers),
+				method: request.method,
+				adapter: { request, env, ctx }
 			});
 
 			if (rendered) {
+				if (rendered.adapter) {
+					return rendered.adapter.response;
+				}
+
 				return new Response(rendered.body, {
 					status: rendered.status,
 					headers: makeHeaders(rendered.headers)

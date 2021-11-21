@@ -30,6 +30,7 @@
 		"esbuild": "^0.13.4"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^3.2.0",
 		"@sveltejs/kit": "workspace:*"
 	}
 }

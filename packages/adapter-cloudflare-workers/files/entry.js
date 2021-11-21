@@ -35,10 +35,15 @@ async function handle(event) {
 			query: request_url.searchParams,
 			rawBody: await read(request),
 			headers: Object.fromEntries(request.headers),
-			method: request.method
+			method: request.method,
+			adapter: { event }
 		});
 
 		if (rendered) {
+			if (rendered.adapter) {
+				return rendered.adapter.response;
+			}
+
 			return new Response(rendered.body, {
 				status: rendered.status,
 				headers: makeHeaders(rendered.headers)

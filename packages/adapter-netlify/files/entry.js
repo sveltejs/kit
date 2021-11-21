@@ -3,7 +3,7 @@ import { init, render } from '../output/server/app.js';
 
 init();
 
-export async function handler(event) {
+export async function handler(event, context) {
 	const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;
 
 	const query = new URLSearchParams(rawQuery);
@@ -16,7 +16,8 @@ export async function handler(event) {
 		headers,
 		path,
 		query,
-		rawBody
+		rawBody,
+		adapter: { event, context }
 	});
 
 	if (!rendered) {
@@ -24,6 +25,10 @@ export async function handler(event) {
 			statusCode: 404,
 			body: 'Not found'
 		};
+	}
+
+	if (rendered.adapter) {
+		return rendered.adapter.response;
 	}
 
 	const partial_response = {

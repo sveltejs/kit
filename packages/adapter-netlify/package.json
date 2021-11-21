@@ -30,6 +30,7 @@
 		"esbuild": "^0.13.4"
 	},
 	"devDependencies": {
+		"@netlify/functions": "^0.9.0",
 		"@sveltejs/kit": "workspace:*"
 	}
 }
