@@ -1,6 +1,7 @@
-import {dev} from '$app/env';
+import { dev } from '$app/env';
+
 /**
- * @type {import('@sveltejs/kit').RequestHandler}
+ * @type {import('@sveltejs/adapter-netlify').AdapterRequestHandler}
  */
 export function get() {
 	return {

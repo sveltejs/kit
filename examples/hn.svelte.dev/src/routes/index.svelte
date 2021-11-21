@@ -1,4 +1,5 @@
 <script context="module">
+	/** @type {import('@sveltejs/kit').Load} */
 	export function load({ page }) {
 		let host = page.host;
 		const i = host.indexOf(':');
