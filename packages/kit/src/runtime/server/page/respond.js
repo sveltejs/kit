@@ -5,7 +5,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/hooks').ServerResponse} ServerResponse
+ * @typedef {import('types/hooks').ServerResponseNormal} ServerResponseNormal
  * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
@@ -20,7 +20,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   route: import('types/internal').SSRPage;
  *   page: import('types/page').Page;
  * }} opts
- * @returns {Promise<ServerResponse | undefined>}
+ * @returns {Promise<ServerResponseNormal | undefined>}
  */
 export async function respond(opts) {
 	const { request, options, state, $session, route } = opts;
@@ -233,7 +233,7 @@ function get_page_config(leaf, options) {
 }
 
 /**
- * @param {ServerResponse} response
+ * @param {ServerResponseNormal} response
  * @param {string[]} set_cookie_headers
  */
 function with_cookies(response, set_cookie_headers) {

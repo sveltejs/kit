@@ -39,3 +39,11 @@ export type RecursiveRequired<T> = {
 		? Extract<T[K], Function> // only take the Function type.
 		: T[K]; // Use the exact type for everything else
 };
+
+export type Only<T, U> = {
+	[P in keyof T]: T[P];
+} & {
+	[P in keyof U]?: never;
+};
+
+export type Either<T, U> = Only<T, U> | Only<U, T>;

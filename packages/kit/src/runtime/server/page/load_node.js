@@ -161,7 +161,8 @@ export async function load_node({
 							headers,
 							path: relative,
 							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
-							query: new URLSearchParams(search)
+							query: new URLSearchParams(search),
+							adapter: request.adapter
 						},
 						options,
 						{
@@ -171,6 +172,12 @@ export async function load_node({
 					);
 
 					if (rendered) {
+						if ('adapter' in rendered) {
+							throw new Error(
+								`Cannot use adapter-native response for URL (${url}) in internal server-side fetch`
+							);
+						}
+
 						if (state.prerender) {
 							state.prerender.dependencies.set(relative, rendered);
 						}

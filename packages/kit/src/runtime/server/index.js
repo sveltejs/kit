@@ -65,6 +65,10 @@ export async function respond(incoming, options, state = {}) {
 							: await render_page(request, route, match, options, state);
 
 					if (response) {
+						if ('adapter' in response) {
+							return response;
+						}
+
 						// inject ETags for 200 responses
 						if (response.status === 200) {
 							const cache_control = get_single_valued_header(response.headers, 'cache-control');

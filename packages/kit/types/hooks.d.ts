@@ -1,34 +1,65 @@
 import { IncomingRequest, ParameterizedBody } from './app';
-import { MaybePromise, ResponseHeaders } from './helper';
+import { Either, MaybePromise, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+export interface ServerRequest<
+	Locals = Record<string, any>,
+	Body = unknown,
+	AdapterRequest = unknown
+> extends IncomingRequest<AdapterRequest> {
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
 }
 
-export interface ServerResponse {
+export type ServerResponseNormal = {
 	status: number;
 	headers: ResponseHeaders;
 	body?: StrictBody;
+};
+
+export type ServerResponseAdapterResponse<AdapterResponse = unknown> = {
+	adapter: AdapterResponse;
+};
+
+export type ServerResponse<AdapterResponse = unknown> = Either<
+	ServerResponseNormal,
+	ServerResponseAdapterResponse<AdapterResponse>
+>;
+
+export interface GetSession<
+	Locals = Record<string, any>,
+	Body = unknown,
+	Session = any,
+	AdapterRequest = unknown
+> {
+	(request: ServerRequest<Locals, Body, AdapterRequest>): MaybePromise<Session>;
 }
 
-export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
-	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
-}
-
-export interface Handle<Locals = Record<string, any>, Body = unknown> {
+export interface Handle<
+	Locals = Record<string, any>,
+	Body = unknown,
+	AdapterRequest = unknown,
+	AdapterResponse = unknown
+> {
 	(input: {
-		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
-	}): MaybePromise<ServerResponse>;
+		request: ServerRequest<Locals, Body, AdapterRequest>;
+		resolve(
+			request: ServerRequest<Locals, Body, AdapterRequest>
+		): MaybePromise<ServerResponse<AdapterResponse>>;
+	}): MaybePromise<ServerResponse<AdapterResponse>>;
 }
 
-export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
+export interface HandleError<
+	Locals = Record<string, any>,
+	Body = unknown,
+	AdapterRequest = unknown
+> {
+	(input: {
+		error: Error & { frame?: string };
+		request: ServerRequest<Locals, Body, AdapterRequest>;
+	}): void;
 }
 
 export interface ExternalFetch {

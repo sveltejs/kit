@@ -60,6 +60,10 @@ export async function render_endpoint(request, route, match) {
 		return error(`${preface}: expected an object, got ${typeof response}`);
 	}
 
+	if ('adapter' in response) {
+		return { adapter: response.adapter };
+	}
+
 	let { status = 200, body, headers = {} } = response;
 
 	headers = lowercase_keys(headers);
