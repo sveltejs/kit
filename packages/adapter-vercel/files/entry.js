@@ -26,6 +26,11 @@ export default async (req, res) => {
 	});
 
 	if (rendered) {
+		if ('adapter' in rendered) {
+			throw new Error(
+				'Adapter-native request was not defined, returning a adapter-native response is not supported'
+			);
+		}
 		const { status, headers, body } = rendered;
 		return res.writeHead(status, headers).end(body);
 	}

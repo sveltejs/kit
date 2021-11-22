@@ -19,6 +19,11 @@ export const handle = sequence(
 	async ({ request, resolve }) => {
 		const response = await resolve(request);
 
+		// In this example this will not happen
+		if ('adapter' in response) {
+			return { adapter: response.adapter };
+		}
+
 		return {
 			...response,
 			headers: {

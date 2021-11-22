@@ -150,7 +150,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		/** @type {Map<string, import('types/hooks').ServerResponse>} */
+		/** @type {Map<string, import('types/hooks').ServerResponseNormal>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(
@@ -171,6 +171,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		);
 
 		if (rendered) {
+			if ('adapter' in rendered) {
+				throw new Error(
+					'Adapter-native request was not defined, returning a adapter-native response is not supported'
+				);
+			}
+
 			const response_type = Math.floor(rendered.status / 100);
 			const headers = rendered.headers;
 			const type = headers && headers['content-type'];

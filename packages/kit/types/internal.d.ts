@@ -28,12 +28,12 @@ export interface App extends PublicApp {
 		read(file: string): Buffer;
 	}): void;
 
-	render(
-		incoming: IncomingRequest,
+	render<AdapterRequest = unknown, AdapterResponse = unknown>(
+		incoming: IncomingRequest<AdapterRequest>,
 		options?: {
 			prerender: PrerenderOptions;
 		}
-	): Promise<ServerResponse>;
+	): Promise<ServerResponse<AdapterResponse>>;
 }
 
 export interface Logger {

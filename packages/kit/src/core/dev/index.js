@@ -515,6 +515,11 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 				);
 
 				if (rendered) {
+					if ('adapter' in rendered) {
+						throw new Error(
+							'Adapter-native request was not defined, returning a adapter-native response is not supported'
+						);
+					}
 					res.writeHead(rendered.status, rendered.headers);
 					if (rendered.body) res.write(rendered.body);
 					res.end();
