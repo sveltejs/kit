@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.197
+
+### Patch Changes
+
+- [fix] prevent text unselection for keepfocus ([#2857](https://github.com/sveltejs/kit/pull/2857))
+
+* [fix] use defaults when no opts passed to router ([#2819](https://github.com/sveltejs/kit/pull/2819))
+
 ## 1.0.0-next.196
 
 ### Patch Changes
