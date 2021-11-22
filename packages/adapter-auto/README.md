@@ -4,8 +4,9 @@ Automatically chooses the adapter for your current environment, if possible.
 
 ## Supported environments
 
-- [Vercel](https://vercel.com/) via [adapter-vercel](../adapter-vercel)
+- [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [adapter-cloudflare](../adapter-cloudflare)
 - [Netlify](https://netlify.com/) via [adapter-netlify](../adapter-netlify)
+- [Vercel](https://vercel.com/) via [adapter-vercel](../adapter-vercel)
 
 ## Changelog
 

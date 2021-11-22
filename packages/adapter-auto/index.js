@@ -1,11 +1,15 @@
 const adapters = [
 	{
 		test: () => !!process.env.VERCEL,
-		module: () => import('@sveltejs/adapter-vercel')
+		module: '@sveltejs/adapter-vercel'
 	},
 	{
 		test: () => !!process.env.NETLIFY,
-		module: () => import('@sveltejs/adapter-netlify')
+		module: '@sveltejs/adapter-netlify'
+	},
+	{
+		test: () => !!process.env.CF_PAGES,
+		module: '@sveltejs/adapter-cloudflare'
 	}
 ];
 
@@ -17,10 +21,10 @@ export default function () {
 		async adapt(options) {
 			for (const candidate of adapters) {
 				if (candidate.test()) {
-					const module = await candidate.module();
-					const adapter = module.default();
+					options.utils.log.info(`Detected support for ${candidate.module}`);
 
-					options.utils.log.info(`Detected support for ${adapter.name}`);
+					const module = await import(candidate.module);
+					const adapter = module.default();
 
 					return adapter.adapt(options);
 				}
