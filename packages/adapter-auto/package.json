@@ -26,6 +26,7 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
 	},
 	"dependencies": {
+		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/adapter-netlify": "workspace:*",
 		"@sveltejs/adapter-vercel": "workspace:*"
 	}
