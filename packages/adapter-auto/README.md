@@ -4,8 +4,8 @@ Automatically chooses the adapter for your current environment, if possible.
 
 ## Supported environments
 
-- Vercel
-- Netlify
+- [Vercel](https://vercel.com/) via [adapter-vercel](../adapter-vercel)
+- [Netlify](https://netlify.com/) via [adapter-netlify](../adapter-netlify)
 
 ## Changelog
 
