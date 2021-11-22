@@ -101,10 +101,10 @@ export async function load_node({
 					};
 				}
 
-				//Merge  headers  from  request
+				//merge  headers  from  request
 				opts.headers = {
-					  ...request.headers,
-					  ...opts.headers
+					...request.headers,
+					...opts.headers
 				};
 
 				const resolved = resolve(request.path, url.split('?')[0]);
@@ -221,7 +221,7 @@ export async function load_node({
 						}
 					}
 
-					const external_request = new Request(url, /** @type {RequestInit} */ opts);
+					const external_request = new Request(url, /** @type {RequestInit} */ (opts));
 					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
