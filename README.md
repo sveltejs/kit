@@ -23,16 +23,16 @@ The SvelteKit community also makes additional [SvelteKit adapters available for 
 
 ## Bug reporting
 
-Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which SvelteKit uses to build a project. It's important to note that new Vite projects don't use SSR by default and so if you create a new Vite project from scratch many issues won't reproduce eventhough they're caused by Vite. You should thus start with a project that utilizes SSR such as:
+Please make sure the issue you're reporting involves SvelteKit. Many issues related to how a project builds originate from [Vite](https://vitejs.dev/), which SvelteKit uses to build a project. It's important to note that new Vite projects don't use SSR by default, and so if you create a new Vite project from scratch, many issues won't reproduce even though Vite causes them. You should thus start with a project that utilizes SSR, such as:
 
 - https://github.com/GrygrFlzr/vite-ssr-d3
 - https://github.com/sveltejs/vite-plugin-svelte/tree/main/packages/e2e-tests/vite-ssr
 
-If an issue is caused by Vite, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
+If Vite causes an issue, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
 
 ## Developing
 
-This is a monorepo meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
+This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
 ```bash
 npm i -g pnpm
@@ -48,6 +48,7 @@ pnpm build
 ```
 
 You should now be able to run [the example](examples/hn.svelte.dev) with:
+
 ```bash
 cd examples/hn.svelte.dev
 pnpm dev
@@ -85,11 +86,11 @@ To run a single integration test, provide the `FILTER` env var with the test nam
 
 You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser.
 
-You may need to install some dependencies first e.g. with `npx playwright install-deps` (which only works on Ubuntu).
+You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
 ### Documentation
 
-All documentation for SvelteKit is in the `documentation` directory, any improvements should be made as a Pull Request to this repository. The documentation is served via and API, the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
+All documentation for SvelteKit is in the `documentation` directory, and any improvements should be made as a Pull Request to this repository. The documentation is served via an API; the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
 
 If you wish to preview documentation changes locally, please follow the instructions here: [Previewing local docs changes](https://github.com/sveltejs/sites/blob/master/sites/kit.svelte.dev/README.md#previewing-local-docs-changes).
 
@@ -101,7 +102,7 @@ The [Changesets GitHub action](https://github.com/changesets/action#with-publish
 
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
-```
+```bash
 npm publish --access=public
 ```
 
@@ -114,4 +115,4 @@ Entry points to be aware of are:
 - [`packages/kit/src/core/build/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/build/index.js) - for the production server
 - [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
 
-Most code that's called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.
+Most code called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.
