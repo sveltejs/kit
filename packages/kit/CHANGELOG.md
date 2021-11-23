@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.198
+
+### Patch Changes
+
+- Register custom service worker for AMP ([#2265](https://github.com/sveltejs/kit/pull/2265))
+
 ## 1.0.0-next.197
 
 ### Patch Changes
