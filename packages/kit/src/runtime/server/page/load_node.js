@@ -1,7 +1,7 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
-import { resolve } from '../../../utils/url.js';
+import { is_root_relative, resolve } from '../../../utils/url.js';
 
 const s = JSON.stringify;
 
@@ -127,7 +127,7 @@ export async function load_node({
 								`http://${page.host}/${asset.file}`,
 								/** @type {RequestInit} */ (opts)
 						  );
-				} else if (resolved.startsWith('/') && !resolved.startsWith('//')) {
+				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 
 					const headers = /** @type {import('types/helper').RequestHeaders} */ ({

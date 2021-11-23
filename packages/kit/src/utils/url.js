@@ -28,3 +28,8 @@ export function resolve(base, path) {
 
 	return `${prefix}${baseparts.join('/')}`;
 }
+
+/** @param {string} path */
+export function is_root_relative(path) {
+	return path[0] === '/' && path[1] !== '/';
+}

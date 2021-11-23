@@ -5,7 +5,7 @@ import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 import { get_single_valued_header } from '../../utils/http.js';
-import { resolve } from '../../utils/url.js';
+import { is_root_relative, resolve } from '../../utils/url.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -194,7 +194,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					written_files.push(file);
 
 					const resolved = resolve(path, location);
-					if (resolved.startsWith('/')) {
+					if (is_root_relative(resolved)) {
 						await visit(resolved, path);
 					}
 				} else {
@@ -270,7 +270,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (!href) continue;
 
 					const resolved = resolve(path, href);
-					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
+					if (!is_root_relative(resolved)) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
 					const pathname = decodeURI(parsed.pathname).replace(config.kit.paths.base, '');
