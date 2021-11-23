@@ -1,9 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
-
+import colors from 'kleur';
 import { preprocess } from 'svelte/compiler';
-
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -132,14 +131,14 @@ export async function make_package(config, cwd = process.cwd()) {
 				console.warn(
 					'Cannot generate a "svelte" entry point because ' +
 						'the "." entry in "exports" is not a string. ' +
-						'If you set it by hand, please also set one of the options as a "svelte" entry point'
+						'If you set it by hand, please also set one of the options as a "svelte" entry point\n'
 				);
 			}
 		} else {
 			console.warn(
 				'Cannot generate a "svelte" entry point because ' +
 					'the "." entry in "exports" is missing. ' +
-					'Please specify one or set a "svelte" entry point yourself'
+					'Please specify one or set a "svelte" entry point yourself\n'
 			);
 		}
 	}
@@ -157,13 +156,20 @@ export async function make_package(config, cwd = process.cwd()) {
 		const package_path = path.join(abs_package_dir, pathname);
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
+
+	const from = path.relative(cwd, config.kit.files.lib);
+	const to = path.relative(cwd, config.kit.package.dir);
+	console.log(colors.bold().green(`${from} -> ${to}`));
+	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
+	console.log(colors.bold().cyan(`  cd ${to}`));
+	console.log(colors.bold().cyan('  npm publish\n'));
 }
 
 /**
  * Resolves the `$lib` alias.
  *
  * TODO: make this more generic to also handle other aliases the user could have defined
- * via `kit.vite.resolve.alias`. Also investage how to do this in a more robust way
+ * via `kit.vite.resolve.alias`. Also investigate how to do this in a more robust way
  * (right now regex string replacement is used).
  * For more discussion see https://github.com/sveltejs/kit/pull/2453
  *
