@@ -35,7 +35,7 @@ export default function () {
 			}
 
 			options.utils.log.warn(
-				'Could not detect production environment. You may need to install an adapter. See https://kit.svelte.dev/docs#adapters for more information'
+				'Could not detect a supported production environment. See https://kit.svelte.dev/docs#adapters to learn how to configure your app to run on the platform of your choosing'
 			);
 		}
 	};
