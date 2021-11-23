@@ -496,9 +496,36 @@ export class Renderer {
 	 * @returns
 	 */
 	async _load_node({ status, error, module, page, stuff }) {
+		// patch the  module to ensure add  params to node.uses.params
+		let module2 = module;
+		if (!module2.original) {
+			const def = module.default;
+			module2 = {
+				...module,
+				original: module,
+				default: new Proxy(def, {
+					construct(target, args) {
+						try {
+							const page = args[0].props.$$scope.ctx[8];
+							page.params = new Proxy(page.params, {
+								get(target, prop) {
+									// @ts-ignore
+									node.uses.params.add(prop);
+									return target[prop];
+								}
+							});
+						} catch (e) {
+							console.warn(e);
+						}
+						return new target(...args);
+					}
+				})
+			};
+		}
+
 		/** @type {import('./types').BranchNode} */
 		const node = {
-			module,
+			module: module2,
 			uses: {
 				params: new Set(),
 				path: false,
@@ -633,7 +660,7 @@ export class Renderer {
 
 				const changed_since_last_render =
 					!previous ||
-					module !== previous.module ||
+					(module !== previous.module && module !== previous.module.original) ||
 					(changed.path && previous.uses.path) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.query && previous.uses.query) ||
