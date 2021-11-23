@@ -224,16 +224,16 @@ export class Renderer {
 			});
 		}
 
-		await this.update(info, chain, no_cache, nav_opts);
+		await this.update(info, chain, no_cache, opts);
 	}
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [nav_opts]
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async update(info, chain, no_cache, nav_opts) {
+	async update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
@@ -275,12 +275,12 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		// nav_opts must be passed if we're navigating
+		// opts must be passed if we're navigating
 		// they will not be supplied if we're simply invalidating
-		if (!nav_opts) {
+		if (!opts) {
 			await 0;
 		} else {
-			const { hash, scroll, keepfocus } = nav_opts || {};
+			const { hash, scroll, keepfocus } = opts || {};
 
 			if (!keepfocus) {
 				getSelection()?.removeAllRanges();
