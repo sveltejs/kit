@@ -42,8 +42,9 @@ export function copy(from, to, filter = () => true) {
 }
 
 /**
- * @param {string} cwd
- * @param {boolean} [dirs]
+ * Get a list of all files in a directory
+ * @param {string} cwd - the directory to walk
+ * @param {boolean} [dirs] - whether to include directories in the result
  */
 export function walk(cwd, dirs = false) {
 	/** @type {string[]} */
