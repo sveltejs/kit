@@ -47,7 +47,18 @@ By default, the server will accept connections on `0.0.0.0` using port 3000. The
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
-You can specify different environment variables if necessary using the `env` option.
+You can specify different environment variables if necessary using the `env` option:
+
+```js
+env: {
+	host: 'MY_HOST_VARIABLE',
+	port: 'MY_PORT_VARIABLE'
+}
+```
+
+```
+MY_HOST_VARIABLE=127.0.0.1 MY_PORT_VARIABLE=4000 node build
+```
 
 ## Middleware
 
