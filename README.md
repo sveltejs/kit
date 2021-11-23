@@ -86,7 +86,7 @@ To run a single integration test, provide the `FILTER` env var with the test nam
 
 You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser.
 
-You may need to install some dependencies first, e.g., with `npx playwright install-deps` (which only works on Ubuntu).
+You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
 ### Documentation
 
