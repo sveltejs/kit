@@ -275,11 +275,10 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		getSelection()?.removeAllRanges();
-
 		const { hash, scroll, keepfocus } = opts || {};
 
 		if (!keepfocus) {
+			getSelection()?.removeAllRanges();
 			document.body.focus();
 		}
 
