@@ -30,7 +30,7 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_fd31dfc62358d49d740c9b633be977a9
       '@typescript-eslint/eslint-plugin': 4.33.0_cc617358c89d3f38c52462f6d809db4c
       '@typescript-eslint/parser': 4.33.0_eslint@7.32.0+typescript@4.4.4
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/321fe3aec0f4484eaa42e32283025106161cc296
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/773baf07ba9391eee581dcecfb672265e5fdbddb
       dotenv: 10.0.0
       eslint: 7.32.0
       eslint-plugin-import: 2.25.2_eslint@7.32.0
@@ -55,6 +55,16 @@ importers:
       '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.44.0
+
+  packages/adapter-auto:
+    specifiers:
+      '@sveltejs/adapter-cloudflare': workspace:*
+      '@sveltejs/adapter-netlify': workspace:*
+      '@sveltejs/adapter-vercel': workspace:*
+    dependencies:
+      '@sveltejs/adapter-cloudflare': link:../adapter-cloudflare
+      '@sveltejs/adapter-netlify': link:../adapter-netlify
+      '@sveltejs/adapter-vercel': link:../adapter-vercel
 
   packages/adapter-begin:
     specifiers:
@@ -186,10 +196,8 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.5.0
       '@lukeed/uuid': ^2.0.0
-      '@sveltejs/adapter-cloudflare-workers': next
-      '@sveltejs/adapter-netlify': next
-      '@sveltejs/adapter-vercel': next
-      '@sveltejs/kit': next
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/kit': workspace:*
       cookie: ^0.4.1
       svelte: ^3.44.0
       svelte-preprocess: ^4.9.8
@@ -199,9 +207,7 @@ importers:
       '@lukeed/uuid': 2.0.0
       cookie: 0.4.1
     devDependencies:
-      '@sveltejs/adapter-cloudflare-workers': link:../../../adapter-cloudflare-workers
-      '@sveltejs/adapter-netlify': link:../../../adapter-netlify
-      '@sveltejs/adapter-vercel': link:../../../adapter-vercel
+      '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
       svelte: 3.44.0
       svelte-preprocess: 4.9.8_svelte@3.44.0+typescript@4.4.4
@@ -4382,8 +4388,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/321fe3aec0f4484eaa42e32283025106161cc296:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/321fe3aec0f4484eaa42e32283025106161cc296}
+  github.com/sveltejs/action-deploy-docs/773baf07ba9391eee581dcecfb672265e5fdbddb:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/773baf07ba9391eee581dcecfb672265e5fdbddb}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true

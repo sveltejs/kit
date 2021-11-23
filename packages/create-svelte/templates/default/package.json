@@ -7,10 +7,8 @@
 		"start": "svelte-kit start"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-cloudflare-workers": "next",
-		"@sveltejs/adapter-netlify": "next",
-		"@sveltejs/adapter-vercel": "next",
-		"@sveltejs/kit": "next",
+		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.44.0",
 		"svelte-preprocess": "^4.9.8",
 		"typescript": "^4.4.3"
