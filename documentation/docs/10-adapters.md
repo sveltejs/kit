@@ -87,13 +87,14 @@ Within the `adapt` method, there are a number of things that an adapter should d
 
 - Clear out the build directory
 - Output code that:
-  - Calls `init`
-  - Converts from the platform's request to a [SvelteKit request](#hooks-handle), calls `render`, and converts from a [SvelteKit response](#hooks-handle) to the platform's
-  - Globally shims `fetch` to work on the target platform. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
+  - Imports `init` and `render` from `.svelte-kit/output/server/app.js`
+  - Calls `init`, which configures the app
+  - Listens for requests from the platform, converts them to a a [SvelteKit request](#hooks-handle), calls the `render` function to generate a [SvelteKit response](#hooks-handle) and responds with it
+  - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if desired
 - Call `utils.prerender`
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
-If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `'.svelte-kit/' + adapterName`.
+If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
 > The adapter API may change before 1.0.
