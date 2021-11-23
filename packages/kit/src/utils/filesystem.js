@@ -41,8 +41,12 @@ export function copy(from, to, filter = () => true) {
 	return files;
 }
 
-/** @param {string} cwd */
-export function walk(cwd) {
+/**
+ * Get a list of all files in a directory
+ * @param {string} cwd - the directory to walk
+ * @param {boolean} [dirs] - whether to include directories in the result
+ */
+export function walk(cwd, dirs = false) {
 	/** @type {string[]} */
 	const all_files = [];
 
@@ -54,6 +58,7 @@ export function walk(cwd) {
 			const joined = path.join(dir, file);
 			const stats = fs.statSync(path.join(cwd, joined));
 			if (stats.isDirectory()) {
+				if (dirs) all_files.push(joined);
 				walk_dir(joined);
 			} else {
 				all_files.push(joined);
