@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.197",
+	"version": "1.0.0-next.199",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -68,6 +68,9 @@
 	},
 	"exports": {
 		"./package.json": "./package.json",
+		".": {
+			"types": "./types/index.d.ts"
+		},
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		},
@@ -79,8 +82,7 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
-		},
-		"./types": "./types/index.d.ts"
+		}
 	},
 	"types": "types/index.d.ts",
 	"engines": {

@@ -69,9 +69,15 @@ export async function respond(incoming, options, state = {}) {
 						if (response.status === 200) {
 							const cache_control = get_single_valued_header(response.headers, 'cache-control');
 							if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
+								let if_none_match_value = request.headers['if-none-match'];
+								// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+								if (if_none_match_value?.startsWith('W/"')) {
+									if_none_match_value = if_none_match_value.substring(2);
+								}
+
 								const etag = `"${hash(response.body || '')}"`;
 
-								if (request.headers['if-none-match'] === etag) {
+								if (if_none_match_value === etag) {
 									return {
 										status: 304,
 										headers: {}

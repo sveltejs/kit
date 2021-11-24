@@ -234,6 +234,7 @@ function duplicate(test_fn, config, is_build) {
 						});
 
 						await Promise.all([
+							context.pages.js.waitForNavigation({ waitUntil: 'networkidle' }),
 							context.pages.js.click(selector),
 							context.pages.js.evaluate(() => window.navigated)
 						]);

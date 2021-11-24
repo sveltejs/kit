@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { statSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -24,8 +24,8 @@ async function test_make_package(path) {
 	try {
 		const config = await load_config({ cwd });
 		await make_package(config, cwd);
-		const expected_files = walk(ewd);
-		const actual_files = walk(pwd);
+		const expected_files = walk(ewd, true);
+		const actual_files = walk(pwd, true);
 		assert.equal(
 			actual_files.length,
 			expected_files.length,
@@ -35,14 +35,16 @@ async function test_make_package(path) {
 		);
 
 		for (const file of actual_files) {
-			assert.equal(expected_files.includes(file), true, `Did not expect ${file} in ${path}`);
-			const expected_content = format(file, readFileSync(join(ewd, file), 'utf-8'));
-			const actual_content = format(file, readFileSync(join(pwd, file), 'utf-8'));
-			assert.fixture(
-				actual_content,
-				expected_content,
-				`Expected equal file contents for ${file} in ${path}`
-			);
+			if (!statSync(join(pwd, file)).isDirectory()) {
+				assert.equal(expected_files.includes(file), true, `Did not expect ${file} in ${path}`);
+				const expected_content = format(file, readFileSync(join(ewd, file), 'utf-8'));
+				const actual_content = format(file, readFileSync(join(pwd, file), 'utf-8'));
+				assert.fixture(
+					actual_content,
+					expected_content,
+					`Expected equal file contents for ${file} in ${path}`
+				);
+			}
 		}
 	} finally {
 		rimraf(pwd);

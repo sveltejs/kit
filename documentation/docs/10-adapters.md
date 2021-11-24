@@ -2,45 +2,99 @@
 title: Adapters
 ---
 
-Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment. Many adapters are optimised for a specific hosting provider, and you can generally find information about deployment in your adapter's documentation. However, some adapters, like `adapter-static`, build output that can be hosted on numerous hosting providers, so it may also be helpful to reference the documentation of your hosting provider in these cases.
+Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
 
-For example, if you want to run your app as a simple Node server, you would use the `@sveltejs/adapter-node@next` package:
+By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](#adapters-installing-custom-adapters) or [write one](#adapters-writing-custom-adapters).
 
-```js
-// svelte.config.js
-import node from '@sveltejs/adapter-node';
+> See the [adapter-auto README](https://github.com/sveltejs/kit/tree/master/packages/adapter-auto) for information on adding support for new environments.
 
-export default {
-	kit: {
-		adapter: node()
-	}
-};
-```
+### Supported environments
 
-With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside `build`. You can pass options to adapters, such as customising the output directory in `adapter-node`:
+The following platforms are officially supported and require no additional configuration:
+
+- [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare)
+- [Netlify](https://netlify.com) via [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify)
+- [Vercel](https://vercel.com) via [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel)
+
+### Installing custom adapters
+
+Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms. After installing the relevant adapter with your package manager, update your `svelte.config.js`:
 
 ```diff
 // svelte.config.js
-import node from '@sveltejs/adapter-node';
+-import adapter from '@sveltejs/adapter-auto';
++import adapter from 'svelte-adapter-[x]';
+```
+
+### Building a Node app
+
+To create a simple Node server, install the `@sveltejs/adapter-node@next` package and update your `svelte.config.js`:
+
+```diff
+// svelte.config.js
+-import adapter from '@sveltejs/adapter-auto';
++import adapter from '@sveltejs/adapter-node';
+```
+
+With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
+
+```diff
+// svelte.config.js
+import adapter from '@sveltejs/adapter-node';
 
 export default {
 	kit: {
--		adapter: node()
-+		adapter: node({ out: 'my-output-directory' })
+-		adapter: adapter()
++		adapter: adapter({ out: 'my-output-directory' })
 	}
 };
 ```
 
-A variety of official adapters exist for serverless platforms...
+### Creating a static site
 
-- [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare) — for [Cloudflare Pages](https://developers.cloudflare.com/pages/)
-- [`adapter-cloudflare-workers`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare-workers) — for [Cloudflare Workers](https://developers.cloudflare.com/workers/)
-- [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify) — for [Netlify](https://netlify.com)
-- [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel) — for [Vercel](https://vercel.com)
+Most adapters will generate static HTML for any [prerenderable](#ssr-and-javascript-prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use `@sveltejs/adapter-static@next` to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
-...and traditional platforms:
+```diff
+// svelte.config.js
+-import adapter from '@sveltejs/adapter-auto';
++import adapter from '@sveltejs/adapter-static';
+```
 
-- [`adapter-node`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) — for creating self-contained Node apps
-- [`adapter-static`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) — for prerendering your entire site as a collection of static files
+You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
-As well as [community-provided adapters](https://sveltesociety.dev/components#adapters). You may also [write your own adapter](#writing-an-adapter).
+### Writing custom adapters
+
+We recommend [looking at the source for an adapter](https://github.com/sveltejs/kit/tree/master/packages) to a platform similar to yours and copying it as a starting point.
+
+Adapters packages must implement the following API, which creates an `Adapter`:
+
+```js
+/** @param {AdapterSpecificOptions} options */
+export default function (options) {
+	/** @type {import('@sveltejs/kit').Adapter} */
+	return {
+		name: 'adapter-package-name',
+		async adapt({ utils, config }) {
+			// adapter implementation
+		}
+	};
+}
+```
+
+The types for `Adapter` and its parameters are available in [types/config.d.ts](https://github.com/sveltejs/kit/blob/master/packages/kit/types/config.d.ts).
+
+Within the `adapt` method, there are a number of things that an adapter should do:
+
+- Clear out the build directory
+- Output code that:
+  - Imports `init` and `render` from `.svelte-kit/output/server/app.js`
+  - Calls `init`, which configures the app
+  - Listens for requests from the platform, converts them to a a [SvelteKit request](#hooks-handle), calls the `render` function to generate a [SvelteKit response](#hooks-handle) and responds with it
+  - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
+- Bundle the output to avoid needing to install dependencies on the target platform, if desired
+- Call `utils.prerender`
+- Put the user's static files and the generated JS/CSS in the correct location for the target platform
+
+If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+> The adapter API may change before 1.0.

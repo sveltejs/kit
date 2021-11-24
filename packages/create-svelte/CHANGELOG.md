@@ -1,5 +1,19 @@
 # create-svelte
 
+## 2.0.0-next.87
+
+### Patch Changes
+
+- Add adapter-auto to template configs ([#2885](https://github.com/sveltejs/kit/pull/2885))
+
+## 2.0.0-next.86
+
+### Patch Changes
+
+- Add adapter-auto ([#2867](https://github.com/sveltejs/kit/pull/2867))
+
+* Add an npm run package command to templates ([#2882](https://github.com/sveltejs/kit/pull/2882))
+
 ## 2.0.0-next.85
 
 ### Patch Changes

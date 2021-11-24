@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
-import { pathToFileURL, resolve, URL } from 'url';
+import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 import { get_single_valued_header } from '../../utils/http.js';
+import { is_root_relative, resolve } from '../../utils/url.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -191,6 +192,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
 					written_files.push(file);
+
+					const resolved = resolve(path, location);
+					if (is_root_relative(resolved)) {
+						await visit(resolved, path);
+					}
 				} else {
 					log.warn(`location header missing on redirect received from ${decoded_path}`);
 				}
@@ -264,7 +270,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (!href) continue;
 
 					const resolved = resolve(path, href);
-					if (!resolved.startsWith('/') || resolved.startsWith('//')) continue;
+					if (!is_root_relative(resolved)) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
 					const pathname = decodeURI(parsed.pathname).replace(config.kit.paths.base, '');

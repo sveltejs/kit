@@ -47,4 +47,27 @@ export default function (test) {
 			js: false
 		}
 	);
+
+	test(
+		'support W/ etag prefix',
+		null,
+		async ({ fetch }) => {
+			const r1 = await fetch('/etag/text');
+			const etag = r1.headers.get('etag');
+			assert.ok(!!etag);
+
+			const r2 = await fetch('/etag/text', {
+				headers: etag
+					? {
+							'if-none-match': `W/${etag}`
+					  }
+					: {}
+			});
+
+			assert.equal(r2.status, 304);
+		},
+		{
+			js: false
+		}
+	);
 }

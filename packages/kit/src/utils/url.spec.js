@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { resolve } from './load_node.js';
+import { resolve } from './url.js';
 
 test('resolves a root-relative path', () => {
 	assert.equal(resolve('/a/b/c', '/x/y/z'), '/x/y/z');
