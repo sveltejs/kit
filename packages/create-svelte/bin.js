@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { bold, cyan, gray, green, red, magenta } from 'kleur/colors';
+import { bold, cyan, gray, green, red } from 'kleur/colors';
 import prompts from 'prompts';
 import { mkdirp, copy } from './utils.js';
 
