@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.199
+
+### Patch Changes
+
+- [fix] support etag W/ prefix ([#2709](https://github.com/sveltejs/kit/pull/2709))
+
+* [fix] revert #2819 and add code comment ([#2883](https://github.com/sveltejs/kit/pull/2883))
+
+- Don't create empty dirs when packaging ([#2831](https://github.com/sveltejs/kit/pull/2831))
+
+* [feat] Use `event.composedPath` to find anchors for prefetching and routing ([#2769](https://github.com/sveltejs/kit/pull/2769))
+
 ## 1.0.0-next.198
 
 ### Patch Changes
