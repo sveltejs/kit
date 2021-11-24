@@ -1,5 +1,13 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- Remove ANSI codes ([#2897](https://github.com/sveltejs/kit/pull/2897))
+
+* Fix platform detection order ([#2897](https://github.com/sveltejs/kit/pull/2897))
+
 ## 1.0.0-next.2
 
 ### Patch Changes
