@@ -163,7 +163,7 @@ The `body` property of the request object will be provided in the case of POST r
 
 ### Private modules
 
-A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.
+A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not. The pattern that matches a private module can be configured with [`excludes`](#configuration-excludes).
 
 ### Advanced
 
