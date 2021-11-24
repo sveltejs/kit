@@ -8,10 +8,12 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
 /**
  * @param {string} dir
- * @param {string[]} [extensions]
+ * @param {import('types/config').Config} config
  * @returns
  */
-const create = (dir, extensions = ['.svelte']) => {
+const create = (dir, config = {}) => {
+	const { kit, extensions = ['.svelte'], ...other_config } = config;
+
 	/** @type {import('types/config').Config} */
 	const initial = {
 		extensions,
@@ -23,8 +25,10 @@ const create = (dir, extensions = ['.svelte']) => {
 			appDir: '_app',
 			serviceWorker: {
 				files: (filepath) => !/\.DS_STORE/.test(filepath)
-			}
-		}
+			},
+			...kit
+		},
+		...other_config
 	};
 
 	return create_manifest_data({
@@ -216,6 +220,83 @@ test('ignores files and directories with leading dots except .well-known', () =>
 	]);
 });
 
+test('ignores files by `kit.excludes` config w/RegExp', () => {
+	const { routes } = create('samples/hidden-by-excludes-config', {
+		kit: {
+			excludes: [/.*\.(test|spec)\.js$/]
+		}
+	});
+
+	assert.equal(
+		routes
+			.map((r) => r.type === 'endpoint' && r.file)
+			.filter(Boolean)
+			.sort(),
+		[
+			'samples/hidden-by-excludes-config/.a.js',
+			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
+			'samples/hidden-by-excludes-config/_a.js',
+			'samples/hidden-by-excludes-config/a.js',
+			'samples/hidden-by-excludes-config/a.md',
+			'samples/hidden-by-excludes-config/subdir/.a.js',
+			'samples/hidden-by-excludes-config/subdir/_a.js',
+			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
+			'samples/hidden-by-excludes-config/subdir/a.js',
+			'samples/hidden-by-excludes-config/subdir/a.md'
+		].sort()
+	);
+});
+
+test('ignores files by `kit.excludes` config w/string', () => {
+	const { routes } = create('samples/hidden-by-excludes-config', {
+		kit: {
+			excludes: ['a.js']
+		}
+	});
+
+	assert.equal(
+		routes
+			.map((r) => r.type === 'endpoint' && r.file)
+			.filter(Boolean)
+			.sort(),
+		[
+			'samples/hidden-by-excludes-config/.a.js',
+			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
+			'samples/hidden-by-excludes-config/_a.js',
+			'samples/hidden-by-excludes-config/a.md',
+			'samples/hidden-by-excludes-config/a.spec.js',
+			'samples/hidden-by-excludes-config/subdir/.a.js',
+			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
+			'samples/hidden-by-excludes-config/subdir/_a.js',
+			'samples/hidden-by-excludes-config/subdir/a.md',
+			'samples/hidden-by-excludes-config/subdir/a.spec.js'
+		].sort()
+	);
+});
+
+test('ignores files by `kit.excludes` config w/function', () => {
+	const { routes } = create('samples/hidden-by-excludes-config', {
+		kit: {
+			excludes: [({ filepath }) => filepath.startsWith('samples/hidden-by-excludes-config/subdir')]
+		}
+	});
+
+	assert.equal(
+		routes
+			.map((r) => r.type === 'endpoint' && r.file)
+			.filter(Boolean)
+			.sort(),
+		[
+			'samples/hidden-by-excludes-config/.a.js',
+			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
+			'samples/hidden-by-excludes-config/_a.js',
+			'samples/hidden-by-excludes-config/a.js',
+			'samples/hidden-by-excludes-config/a.md',
+			'samples/hidden-by-excludes-config/a.spec.js'
+		].sort()
+	);
+});
+
 test('allows multiple slugs', () => {
 	const { routes } = create('samples/multiple-slugs');
 
@@ -252,12 +333,9 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('works with custom extensions', () => {
-	const { components, routes } = create('samples/custom-extension', [
-		'.jazz',
-		'.beebop',
-		'.funk',
-		'.svelte'
-	]);
+	const { components, routes } = create('samples/custom-extension', {
+		extensions: ['.jazz', '.beebop', '.funk', '.svelte']
+	});
 
 	const index = 'samples/custom-extension/index.funk';
 	const about = 'samples/custom-extension/about.jazz';
