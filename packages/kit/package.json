@@ -68,6 +68,9 @@
 	},
 	"exports": {
 		"./package.json": "./package.json",
+		".": {
+			"types": "./types/index.d.ts"
+		},
 		"./ssr": {
 			"import": "./dist/ssr.js"
 		},
@@ -79,8 +82,7 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
-		},
-		"./types": "./types/index.d.ts"
+		}
 	},
 	"types": "types/index.d.ts",
 	"engines": {
