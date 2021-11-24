@@ -82,16 +82,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				}
 			});
 
-			if (name[0] === '_') {
-				if (name[1] === '_' && !specials.has(name)) {
-					throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
-				}
-
-				return;
+			if (basename.startsWith('__') && !specials.has(name)) {
+				throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
 			}
 
-			if (basename[0] === '.' && basename !== '.well-known') return null;
 			if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
+
+			if (
+				basename !== '.well-known' &&
+				is_excluded({ excludes: config.kit.excludes, filepath: file, basename })
+			) {
+				return;
+			}
 
 			const segment = is_dir ? basename : name;
 
@@ -248,6 +250,25 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 		components,
 		routes
 	};
+}
+
+/**
+ * @param {{
+ *   excludes: import('types/config').ValidatedConfig['kit']['excludes'],
+ *   filepath: string,
+ *   basename: string,
+ * }} opts
+ */
+function is_excluded({ excludes = [/^[_.]/], filepath, basename }) {
+	return excludes.some((exclude) => {
+		if (exclude instanceof RegExp) {
+			return exclude.test(basename);
+		} else if (typeof exclude === 'function') {
+			return exclude({ filepath, basename });
+		} else {
+			return basename === exclude;
+		}
+	});
 }
 
 /**

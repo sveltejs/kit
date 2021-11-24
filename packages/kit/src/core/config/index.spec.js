@@ -52,7 +52,8 @@ test('fills in defaults', () => {
 			router: true,
 			ssr: true,
 			target: null,
-			trailingSlash: 'never'
+			trailingSlash: 'never',
+			excludes: [/^[_.]/]
 		}
 	});
 });
@@ -152,7 +153,8 @@ test('fills in partial blanks', () => {
 			router: true,
 			ssr: true,
 			target: null,
-			trailingSlash: 'never'
+			trailingSlash: 'never',
+			excludes: [/^[_.]/]
 		}
 	});
 });

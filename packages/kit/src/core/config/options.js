@@ -65,6 +65,19 @@ const options = object(
 				template: string('src/app.html')
 			}),
 
+			excludes: validate([/^[_.]/], (input, keypath) => {
+				const isValidArgType = (/** @type {any} */ arg) =>
+					typeof arg === 'string' || arg instanceof RegExp || arg instanceof Function;
+
+				if (!Array.isArray(input) || !input.every(isValidArgType)) {
+					throw new Error(
+						`${keypath} must be an array of strings, regular expressions, or functions`
+					);
+				}
+
+				return input;
+			}),
+
 			floc: boolean(false),
 
 			host: string(null),
