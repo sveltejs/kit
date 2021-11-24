@@ -275,11 +275,8 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		// opts must be passed if we're navigating
-		// they will not be supplied if we're simply invalidating
-		if (!opts) {
-			await 0;
-		} else {
+		// opts must be passed if we're navigating...
+		if (opts) {
 			const { hash, scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
@@ -319,6 +316,9 @@ export class Renderer {
 					scrollTo(0, 0);
 				}
 			}
+		} else {
+			// ...they will not be supplied if we're simply invalidating
+			await 0;
 		}
 
 		this.loading.promise = null;
