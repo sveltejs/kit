@@ -9,7 +9,7 @@ export default function () {
 			for (const candidate of adapters) {
 				if (candidate.test()) {
 					options.utils.log.info(
-						`Detected environment: \u001B[1m\u001B[92m${candidate.name}\u001B[39m\u001B[22m. Using ${candidate.module}`
+						`Detected environment: ${candidate.name}. Using ${candidate.module}`
 					);
 
 					let module;

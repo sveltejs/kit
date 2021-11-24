@@ -5,13 +5,13 @@ export const adapters = [
 		module: '@sveltejs/adapter-vercel'
 	},
 	{
-		name: 'Netlify',
-		test: () => !!process.env.NETLIFY,
-		module: '@sveltejs/adapter-netlify'
-	},
-	{
 		name: 'Cloudflare Pages',
 		test: () => !!process.env.CF_PAGES,
 		module: '@sveltejs/adapter-cloudflare'
+	},
+	{
+		name: 'Netlify',
+		test: () => !!process.env.NETLIFY,
+		module: '@sveltejs/adapter-netlify'
 	}
 ];
