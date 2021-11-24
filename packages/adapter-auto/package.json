@@ -18,7 +18,9 @@
 	"types": "index.d.ts",
 	"files": [
 		"files",
-		"index.d.ts"
+		"index.js",
+		"index.d.ts",
+		"adapters.js"
 	],
 	"scripts": {
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
