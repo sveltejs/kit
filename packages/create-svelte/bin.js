@@ -12,7 +12,7 @@ ${bold(cyan('Welcome to SvelteKit!'))}
 
 ${bold(red('This is beta software; expect bugs and missing features.'))}
 
-If you encounter a problem, open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
+Problems? Open an issue on ${cyan('https://github.com/sveltejs/kit/issues')} if none exists already.
 `;
 
 const { version } = JSON.parse(fs.readFileSync(new URL('package.json', import.meta.url), 'utf-8'));
@@ -88,47 +88,26 @@ async function main() {
 	write_template_files(options.template, options.typescript, name, cwd);
 	write_common_files(cwd, options, name);
 
-	console.log(bold(green('✔ Copied project files')));
+	console.log(bold(green('\nYour project is ready!')));
 
 	if (options.typescript) {
-		console.log(
-			bold(
-				green(
-					'✔ Added TypeScript support. ' +
-						'To use it inside Svelte components, add lang="ts" to the attributes of a script tag.'
-				)
-			)
-		);
+		console.log(bold('✔ Typescript'));
+		console.log('  Inside Svelte components, use <script lang="ts">');
 	}
 
 	if (options.eslint) {
-		console.log(
-			bold(
-				green(
-					'✔ Added ESLint.\n' +
-						'Readme for ESLint and Svelte: https://github.com/sveltejs/eslint-plugin-svelte3'
-				)
-			)
-		);
+		console.log(bold('✔ ESLint'));
+		console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte3'));
 	}
 
 	if (options.prettier) {
-		console.log(
-			bold(
-				green(
-					'✔ Added Prettier.\n' +
-						'General formatting options: https://prettier.io/docs/en/options.html\n' +
-						'Svelte-specific formatting options: https://github.com/sveltejs/prettier-plugin-svelte#options'
-				)
-			)
-		);
+		console.log(bold('✔ Prettier'));
+		console.log(cyan('  https://prettier.io/docs/en/options.html'));
+		console.log(cyan('  https://github.com/sveltejs/prettier-plugin-svelte#options'));
 	}
 
-	console.log(
-		'\nWant to add other parts to your code base? ' +
-			'Visit https://github.com/svelte-add/svelte-adders, a community project of commands ' +
-			'to add particular functionality to Svelte projects\n'
-	);
+	console.log('\nInstall community-maintained integrations:');
+	console.log(cyan('  https://github.com/svelte-add/svelte-adders'));
 
 	console.log('\nNext steps:');
 	let i = 1;
@@ -140,11 +119,11 @@ async function main() {
 
 	console.log(`  ${i++}: ${bold(cyan('npm install'))} (or pnpm install, etc)`);
 	// prettier-ignore
-	console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional step)`);
+	console.log(`  ${i++}: ${bold(cyan('git init && git add -A && git commit -m "Initial commit"'))} (optional)`);
 	console.log(`  ${i++}: ${bold(cyan('npm run dev -- --open'))}`);
 
 	console.log(`\nTo close the dev server, hit ${bold(cyan('Ctrl-C'))}`);
-	console.log('\nStuck? Visit us at https://svelte.dev/chat\n');
+	console.log(`\nStuck? Visit us at ${cyan('https://svelte.dev/chat')}\n`);
 }
 
 /**
