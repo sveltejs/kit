@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.87
+
+### Patch Changes
+
+- Add adapter-auto to template configs ([#2885](https://github.com/sveltejs/kit/pull/2885))
+
 ## 2.0.0-next.86
 
 ### Patch Changes
