@@ -91,17 +91,17 @@ async function main() {
 	console.log(bold(green('\nYour project is ready!')));
 
 	if (options.typescript) {
-		console.log(bold('✔ typescript'));
+		console.log(bold('✔ Typescript'));
 		console.log('  Inside Svelte components, use <script lang="ts">');
 	}
 
 	if (options.eslint) {
-		console.log(bold('✔ eslint'));
+		console.log(bold('✔ ESLint'));
 		console.log(cyan('  https://github.com/sveltejs/eslint-plugin-svelte3'));
 	}
 
 	if (options.prettier) {
-		console.log(bold('✔ prettier'));
+		console.log(bold('✔ Prettier'));
 		console.log(cyan('  https://prettier.io/docs/en/options.html'));
 		console.log(cyan('  https://github.com/sveltejs/prettier-plugin-svelte#options'));
 	}
