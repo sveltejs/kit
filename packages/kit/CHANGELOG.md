@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.200
+
+### Patch Changes
+
+- Follow redirects when prerendering ([#2832](https://github.com/sveltejs/kit/pull/2832))
+
+* Fix types reference in exports in package.json ([#2896](https://github.com/sveltejs/kit/pull/2896))
+
 ## 1.0.0-next.199
 
 ### Patch Changes
