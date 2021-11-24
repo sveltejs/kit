@@ -280,7 +280,7 @@ export class Renderer {
 		if (!opts) {
 			await 0;
 		} else {
-			const { hash, scroll, keepfocus } = opts || {};
+			const { hash, scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
 				getSelection()?.removeAllRanges();
