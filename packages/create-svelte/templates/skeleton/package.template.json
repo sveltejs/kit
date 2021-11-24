@@ -8,8 +8,9 @@
 		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.42.6"
+		"svelte": "^3.44.0"
 	},
 	"type": "module"
 }
