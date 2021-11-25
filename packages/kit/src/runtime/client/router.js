@@ -265,7 +265,7 @@ export class Router {
 		}
 		this.navigating++;
 
-		const self = this
+		const self = this;
 		const cancelable_navigate = () => {
 			const ctrl = new AbortController();
 			const { signal } = ctrl;
@@ -278,15 +278,15 @@ export class Router {
 				run: () => new Promise((resolve, reject) => {
 					self.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus }).then(resolve);
 					signal.addEventListener('abort', () => {
-						reject(new DOMException("Promise aborted!"));
+						reject(new DOMException('Promise aborted!'));
 					});
 				}),
 				abort() {
 					if (!signal.aborted) {
 						ctrl.abort();
 					}
-				},
-			}
+				}
+			};
 		}
 
 		// the reason why we have a navigation_stack is 
