@@ -131,6 +131,7 @@ export async function load_node({
 					const relative = resolved;
 
 					const headers = /** @type {import('types/helper').RequestHeaders} */ ({
+						...request.headers,
 						...opts.headers
 					});
 
