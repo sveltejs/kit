@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.201
+
+### Patch Changes
+
+- Ignore mailto: and tel: links ([#2915](https://github.com/sveltejs/kit/pull/2915))
+
 ## 1.0.0-next.200
 
 ### Patch Changes

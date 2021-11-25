@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.89
+
+### Patch Changes
+
+- Git ignore files with a .env. prefix ([#2905](https://github.com/sveltejs/kit/pull/2905))
+
 ## 2.0.0-next.88
 
 ### Patch Changes
