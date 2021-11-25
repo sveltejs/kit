@@ -44,7 +44,7 @@ export class Router {
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
 		/** @type {Array<{ run: () => Promise<void>, abort: () => void }>} */
-		this.navigation_stack = [];
+		this.navigation_queue = [];
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -289,13 +289,13 @@ export class Router {
 			};
 		};
 
-		// the reason why we have a navigation_stack is 
+		// the reason why we have a navigation_queue is 
 		// to cancel the previous navigate action if the user spam the click event
-		const lastest_cb = this.navigation_stack.shift();
+		const lastest_cb = this.navigation_queue.shift();
 		if (lastest_cb) lastest_cb.abort();
 
 		const cb = cancelable_navigate();
-		this.navigation_stack.push(cb);
+		this.navigation_queue.push(cb);
 
 		try  {
 			await cb.run();
