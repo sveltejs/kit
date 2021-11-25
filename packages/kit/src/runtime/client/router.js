@@ -287,7 +287,7 @@ export class Router {
 					}
 				}
 			};
-		}
+		};
 
 		// the reason why we have a navigation_stack is 
 		// to cancel the previous navigate action if the user spam the click event
