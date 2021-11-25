@@ -4,3 +4,4 @@ node_modules
 /.svelte-kit
 /package
 .env
+.env.*
