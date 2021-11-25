@@ -43,6 +43,8 @@ export class Router {
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
+		/** @type {Array<{ run: () => Promise<void>, abort: () => void }>} */
+		this.navigation_stack = [];
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -158,12 +160,12 @@ export class Router {
 			const i2 = location.href.indexOf('#');
 			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
 			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
+			// history.pushState({}, '', url.href);
 			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
-			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
+			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 		});
 
 		addEventListener('popstate', (event) => {
@@ -263,6 +265,47 @@ export class Router {
 		}
 		this.navigating++;
 
+		const self = this
+		const cancelable_navigate = () => {
+			const ctrl = new AbortController();
+			const { signal } = ctrl;
+
+			return {
+				/**
+				 * @param {URL} url
+				 * @returns {Promise<void>}
+				 */
+				run: () => new Promise((resolve, reject) => {
+					self.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus }).then(resolve);
+					signal.addEventListener('abort', () => {
+						reject(new DOMException("Promise aborted!"));
+					});
+				}),
+				abort() {
+					if (!signal.aborted) {
+						ctrl.abort();
+					}
+				},
+			}
+		}
+
+		// the reason why we have a navigation_stack is 
+		// to cancel the previous navigate action if the user spam the click event
+		const lastest_cb = this.navigation_stack.shift();
+		if (lastest_cb) lastest_cb.abort();
+
+		const cb = cancelable_navigate();
+		this.navigation_stack.push(cb);
+
+		try  {
+			await cb.run();
+		} catch (e) {
+			// if the action aborted, cancel the navigation
+			return;
+		}
+
+		history.pushState({}, '', url.href);
+
 		// remove trailing slashes
 		if (info.path !== '/') {
 			const has_trailing_slash = info.path.endsWith('/');
@@ -278,8 +321,6 @@ export class Router {
 				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
 			}
 		}
-
-		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
 		this.navigating--;
 		if (!this.navigating) {
