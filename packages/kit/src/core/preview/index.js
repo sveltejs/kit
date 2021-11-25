@@ -33,10 +33,13 @@ export async function preview({
 }) {
 	__fetch_polyfill();
 
-	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
+	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/index.js`);
+	const routes_file = resolve(cwd, `${SVELTE_KIT}/output/server/preview-routes.js`);
 
 	/** @type {import('types/internal').App} */
 	const app = await import(pathToFileURL(app_file).href);
+
+	const routes = await import(pathToFileURL(routes_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
 	const static_handler = fs.existsSync(config.kit.files.assets)
@@ -59,7 +62,8 @@ export async function preview({
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
 		},
 		prerendering: false,
-		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
+		read: (file) => fs.readFileSync(join(config.kit.files.assets, file)),
+		routes
 	});
 
 	/** @type {import('vite').UserConfig} */

@@ -41,7 +41,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		// used relative paths, I _think_ this could get fixed. Issue here:
 		// https://github.com/vitejs/vite/issues/2009
 		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
-		manifest: create_manifest_data({
+		manifest_data: create_manifest_data({
 			config,
 			output: build_dir,
 			cwd
@@ -68,8 +68,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	return {
 		client,
 		server,
-		static: options.manifest.assets.map((asset) => posixify(asset.file)),
-		entries: options.manifest.routes
+		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
+		entries: options.manifest_data.routes
 			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean)
 	};
@@ -80,7 +80,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   cwd: string;
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
- *   manifest: import('types/internal').ManifestData
+ *   manifest_data: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -91,13 +91,13 @@ async function build_client({
 	cwd,
 	assets_base,
 	config,
-	manifest,
+	manifest_data,
 	build_dir,
 	output_dir,
 	client_entry_file
 }) {
 	create_app({
-		manifest_data: manifest,
+		manifest_data,
 		output: build_dir,
 		cwd
 	});
@@ -116,7 +116,7 @@ async function build_client({
 	// This step is optional — Vite/Rollup will create the necessary chunks
 	// for everything regardless — but it means that entry chunks reflect
 	// their location in the source code, which is helpful for debugging
-	manifest.components.forEach((file) => {
+	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
 
@@ -194,7 +194,7 @@ async function build_client({
  *   cwd: string;
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
- *   manifest: import('types/internal').ManifestData
+ *   manifest_data: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -208,7 +208,7 @@ async function build_server(
 		cwd,
 		assets_base,
 		config,
-		manifest,
+		manifest_data,
 		build_dir,
 		output_dir,
 		client_entry_file,
@@ -223,7 +223,32 @@ async function build_server(
 		fs.writeFileSync(hooks_file, '');
 	}
 
-	const app_file = `${build_dir}/app.js`;
+	const app_file = `${build_dir}/app.js`; // TODO rename
+
+	/** @type {Record<string, string>} */
+	const input = {
+		// TODO
+		index: app_file
+	};
+
+	manifest_data.routes.forEach((route) => {
+		if (route.type === 'endpoint') {
+			const resolved = path.resolve(cwd, route.file);
+			const relative = path.relative(config.kit.files.routes, resolved);
+			const name = posixify(path.join('endpoints', relative));
+			input[name] = resolved;
+		}
+	});
+
+	manifest_data.components.forEach((file) => {
+		const resolved = path.resolve(cwd, file);
+		const relative = path.relative(config.kit.files.routes, resolved);
+
+		const name = relative.startsWith('..')
+			? posixify(path.join('components', path.basename(file)))
+			: posixify(path.join('components/pages', relative));
+		input[name] = resolved;
+	});
 
 	/** @type {(file: string) => string} */
 	const app_relative = (file) => {
@@ -256,7 +281,7 @@ async function build_server(
 	/** @type {Record<string, { entry: string, css: string[], js: string[], styles: string[] }>} */
 	const metadata_lookup = {};
 
-	manifest.components.forEach((file) => {
+	manifest_data.components.forEach((file) => {
 		const js_deps = new Set();
 		const css_deps = new Set();
 
@@ -303,12 +328,10 @@ async function build_server(
 
 			let options = null;
 
-			const default_settings = { paths: ${s(config.kit.paths)} };
-
 			// allow paths to be overridden in svelte-kit preview
 			// and in prerendering
-			export function init(settings = default_settings) {
-				set_paths(settings.paths);
+			export function init(settings) {
+				set_paths(settings.paths || { paths: ${s(config.kit.paths)} });
 				set_prerendering(settings.prerendering || false);
 
 				const hooks = get_hooks(user_hooks);
@@ -365,11 +388,11 @@ async function build_server(
 			const empty = () => ({});
 
 			const manifest = {
-				assets: ${s(manifest.assets)},
-				layout: ${s(manifest.layout)},
-				error: ${s(manifest.error)},
+				assets: ${s(manifest_data.assets)},
+				layout: ${s(manifest_data.layout)},
+				error: ${s(manifest_data.error)},
 				routes: [
-					${manifest.routes
+					${manifest_data.routes
 				.map((route) => {
 					if (route.type === 'page') {
 						const params = get_params(route.params);
@@ -407,7 +430,7 @@ async function build_server(
 			});
 
 			const module_lookup = {
-				${manifest.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
+				${manifest_data.components.map(file => `${s(file)}: () => import(${s(app_relative(file))})`)}
 			};
 
 			const metadata_lookup = ${s(metadata_lookup)};
@@ -461,9 +484,7 @@ async function build_server(
 			outDir: `${output_dir}/server`,
 			polyfillDynamicImport: false,
 			rollupOptions: {
-				input: {
-					app: app_file
-				},
+				input,
 				output: {
 					format: 'esm',
 					entryFileNames: '[name].js',
@@ -492,6 +513,8 @@ async function build_server(
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
 	await vite.build(merged_config);
+
+	fs.writeFileSync(`${output_dir}/server/preview-routes.js`, 'export default []');
 }
 
 /**
@@ -499,7 +522,7 @@ async function build_server(
  *   cwd: string;
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
- *   manifest: import('types/internal').ManifestData
+ *   manifest_data: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
@@ -508,7 +531,7 @@ async function build_server(
  * @param {import('vite').Manifest} client_manifest
  */
 async function build_service_worker(
-	{ cwd, assets_base, config, manifest, build_dir, output_dir, service_worker_entry_file },
+	{ cwd, assets_base, config, manifest_data, build_dir, output_dir, service_worker_entry_file },
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
@@ -535,7 +558,7 @@ async function build_service_worker(
 			];
 
 			export const files = [
-				${manifest.assets
+				${manifest_data.assets
 					.map((asset) => `${s(`${config.kit.paths.base}/${asset.file}`)}`)
 					.join(',\n\t\t\t\t')}
 			];
