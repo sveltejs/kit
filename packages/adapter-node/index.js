@@ -15,7 +15,7 @@ export default function ({
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
-		serverEntryPoint,
+		serverEntryPoints: { index: serverEntryPoint },
 
 		async adapt({ utils }) {
 			utils.rimraf(out);

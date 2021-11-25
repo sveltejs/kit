@@ -460,9 +460,9 @@ async function build_server(
 	const input = {
 		app: app_file
 	};
-	const server_entry_point = config.kit?.adapter?.serverEntryPoint;
-	if (server_entry_point) {
-		input.index = server_entry_point;
+	const server_entry_points = config.kit?.adapter?.serverEntryPoints;
+	if (server_entry_points) {
+		Object.assign(input, server_entry_points);
 	}
 
 	/** @type {[any, string[]]} */

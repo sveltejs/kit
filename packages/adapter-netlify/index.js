@@ -6,7 +6,7 @@ import toml from '@iarna/toml';
 export default function () {
 	return {
 		name: '@sveltejs/adapter-netlify',
-		serverEntryPoint: '@sveltejs/adapter-netlify/entry',
+		serverEntryPoints: {index: '@sveltejs/adapter-netlify/entry'},
 
 		async adapt({ utils }) {
 			// "build" is the default publish directory when Netlify detects SvelteKit

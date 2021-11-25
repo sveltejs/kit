@@ -32,7 +32,7 @@ export interface AdapterUtils {
 
 export interface Adapter {
 	name: string;
-	serverEntryPoint?: string;
+	serverEntryPoints: Record<string, string>;
 	adapt(context: { utils: AdapterUtils; config: ValidatedConfig }): Promise<void>;
 }
 
