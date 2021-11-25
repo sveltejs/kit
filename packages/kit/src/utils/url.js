@@ -1,10 +1,13 @@
 const absolute = /^([a-z]+:)?\/?\//;
+const scheme = /^[a-z]+:/;
 
 /**
  * @param {string} base
  * @param {string} path
  */
 export function resolve(base, path) {
+	if (scheme.test(path)) return path;
+
 	const base_match = absolute.exec(base);
 	const path_match = absolute.exec(path);
 
