@@ -46,4 +46,8 @@ test('resolves an absolute path', () => {
 	assert.equal(resolve('/a/b/c', 'https://example.com/foo'), 'https://example.com/foo');
 });
 
+test('handles schemes like tel: and mailto:', () => {
+	assert.equal(resolve('/a/b/c', 'mailto:hello@svelte.dev'), 'mailto:hello@svelte.dev');
+});
+
 test.run();
