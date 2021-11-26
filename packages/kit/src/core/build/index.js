@@ -13,6 +13,7 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
 import { copy_assets, posixify, resolve_entry } from '../utils.js';
+import { create_build_data } from '../create_build_data/index.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -52,7 +53,14 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	};
 
 	const client_manifest = await build_client(options);
-	await build_server(options, client_manifest, runtime);
+	const server_manifest = await build_server(options, client_manifest, runtime);
+
+	const build_data = `export const data = ${create_build_data(
+		options.manifest_data,
+		client_manifest,
+		server_manifest
+	)}`;
+	fs.writeFileSync(`${output_dir}/server/preview-build-data.js`, build_data);
 
 	if (options.service_worker_entry_file) {
 		if (config.kit.paths.assets) {
@@ -181,10 +189,8 @@ async function build_client({
 
 	await vite.build(merged_config);
 
-	const client_manifest_file = `${client_out_dir}/manifest.json`;
 	/** @type {import('vite').Manifest} */
-	const client_manifest = JSON.parse(fs.readFileSync(client_manifest_file, 'utf-8'));
-	fs.renameSync(client_manifest_file, `${output_dir}/manifest.json`); // inspectable but not shipped
+	const client_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
 	return client_manifest;
 }
@@ -482,6 +488,7 @@ async function build_server(
 		build: {
 			ssr: true,
 			outDir: `${output_dir}/server`,
+			manifest: true,
 			polyfillDynamicImport: false,
 			rollupOptions: {
 				input,
@@ -515,6 +522,13 @@ async function build_server(
 	await vite.build(merged_config);
 
 	fs.writeFileSync(`${output_dir}/server/preview-routes.js`, 'export default []');
+
+	/** @type {import('vite').Manifest} */
+	const server_manifest = JSON.parse(
+		fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')
+	);
+
+	return server_manifest;
 }
 
 /**

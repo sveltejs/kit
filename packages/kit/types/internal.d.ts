@@ -217,3 +217,14 @@ export interface NormalizedLoadOutput {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+export type BuildData = {
+	components: Array<{
+		load: SSRComponentLoader;
+		assets: {
+			js: string[];
+			css: string[];
+		};
+	}>;
+	routes: RouteData[];
+};
