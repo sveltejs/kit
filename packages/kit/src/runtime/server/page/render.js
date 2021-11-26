@@ -3,8 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
-
-const s = JSON.stringify;
+import { s } from '../../../utils/misc.js';
 
 // TODO rename this function/module
 

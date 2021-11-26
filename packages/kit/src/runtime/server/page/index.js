@@ -18,7 +18,7 @@ export async function render_page(request, route, match, options, state) {
 		};
 	}
 
-	const params = route.params(match);
+	const params = route.params ? route.params(match) : {};
 
 	const page = {
 		host: request.host,

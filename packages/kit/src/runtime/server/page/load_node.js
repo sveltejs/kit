@@ -1,9 +1,8 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
+import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
-
-const s = JSON.stringify;
 
 /**
  * @param {{
