@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, URL } from 'url';
+import parse5 from 'parse5';
 import { mkdirp } from '../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
@@ -13,24 +14,9 @@ import { is_root_relative, resolve } from '../../utils/url.js';
  * @typedef {import('types/internal').Logger} Logger
  */
 
-/** @param {string} html */
-function clean_html(html) {
-	return html
-		.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gm, '')
-		.replace(/(<script[\s\S]*?>)[\s\S]*?<\/script>/gm, '$1</' + 'script>')
-		.replace(/(<style[\s\S]*?>)[\s\S]*?<\/style>/gm, '$1</' + 'style>')
-		.replace(/<!--[\s\S]*?-->/gm, '');
-}
-
 /** @param {string} attrs */
 export function get_href(attrs) {
 	const match = /(?:[\s'"]|^)href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
-	return match && (match[1] || match[2] || match[3]);
-}
-
-/** @param {string} attrs */
-function get_src(attrs) {
-	const match = /(?:[\s'"]|^)src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
 	return match && (match[1] || match[2] || match[3]);
 }
 
@@ -40,23 +26,12 @@ export function is_rel_external(attrs) {
 	return !!match;
 }
 
-/** @param {string} attrs */
-function get_srcset_urls(attrs) {
-	const results = [];
-	// Note that the srcset allows any ASCII whitespace, including newlines.
-	const match = /([\s'"]|^)srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
-	if (match) {
-		const attr_content = match[1] || match[2] || match[3];
-		// Parse the content of the srcset attribute.
-		// The regexp is modelled after the srcset specs (https://html.spec.whatwg.org/multipage/images.html#srcset-attribute)
-		// and should cover most reasonable cases.
-		const regex = /\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/gm;
-		let sub_matches;
-		while ((sub_matches = regex.exec(attr_content))) {
-			results.push(sub_matches[1]);
-		}
-	}
-	return results;
+/**
+ * @param {string|Array<string>} contentType
+ * @returns {boolean}
+ */
+export function is_html(contentType) {
+	return /text\/html/gi.test(Array.isArray(contentType) ? contentType.join(" ") : contentType);
 }
 
 /** @type {(errorDetails: Parameters<PrerenderErrorHandler>[0] ) => string} */
@@ -120,7 +95,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
 	const files = new Set([...build_data.static, ...build_data.client]);
-	const written_files = [];
+	const written_files = /** @type {Array<string>} */ ([]);
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -171,111 +146,115 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 		);
 
-		if (rendered) {
-			const response_type = Math.floor(rendered.status / 100);
-			const headers = rendered.headers;
-			const type = headers && headers['content-type'];
-			const is_html = response_type === REDIRECT || type === 'text/html';
+		if (!rendered) return;
 
-			const parts = decoded_path.split('/');
-			if (is_html && parts[parts.length - 1] !== 'index.html') {
+		const response_type = Math.floor(rendered.status / 100);
+		const headers = rendered.headers || {};
+		const content_type = /** @type {string|Array<string>} */ (headers['content-type']);
+		const is_html_content = response_type === REDIRECT || is_html(content_type);
+
+		const parts = decoded_path.split('/');
+		if (is_html_content && parts[parts.length - 1] !== 'index.html') {
+			parts.push('index.html');
+		}
+
+		const file = `${out}${parts.join('/')}`;
+		mkdirp(dirname(file));
+
+		if (response_type === REDIRECT) {
+			const location = get_single_valued_header(headers, 'location');
+
+			if (location) {
+				log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
+				writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+				written_files.push(file);
+
+				const resolved = resolve(path, location);
+				if (is_root_relative(resolved)) {
+					await visit(resolved, path);
+				}
+			} else {
+				log.warn(`location header missing on redirect received from ${decoded_path}`);
+			}
+
+			return;
+		}
+
+		if (rendered.status === 200) {
+			log.info(`${rendered.status} ${decoded_path}`);
+			writeFileSync(file, rendered.body || '');
+			written_files.push(file);
+		} else if (response_type !== OK) {
+			error({ status: rendered.status, path, referrer, referenceType: 'linked' });
+		}
+
+		dependencies.forEach((result, dependency_path) => {
+			const response_type = Math.floor(result.status / 100);
+
+			const dependency_is_html_content = is_html(result.headers['content-type']);
+
+			const parts = dependency_path.split('/');
+			if (dependency_is_html_content && parts[parts.length - 1] !== 'index.html') {
 				parts.push('index.html');
 			}
 
 			const file = `${out}${parts.join('/')}`;
 			mkdirp(dirname(file));
 
-			if (response_type === REDIRECT) {
-				const location = get_single_valued_header(headers, 'location');
-
-				if (location) {
-					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
-					written_files.push(file);
-
-					const resolved = resolve(path, location);
-					if (is_root_relative(resolved)) {
-						await visit(resolved, path);
-					}
-				} else {
-					log.warn(`location header missing on redirect received from ${decoded_path}`);
-				}
-
-				return;
-			}
-
-			if (rendered.status === 200) {
-				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, rendered.body || '');
+			if (result.body) {
+				writeFileSync(file, result.body);
 				written_files.push(file);
-			} else if (response_type !== OK) {
-				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
-			dependencies.forEach((result, dependency_path) => {
-				const response_type = Math.floor(result.status / 100);
+			if (response_type === OK) {
+				log.info(`${result.status} ${dependency_path}`);
+			} else {
+				error({
+					status: result.status,
+					path: dependency_path,
+					referrer: path,
+					referenceType: 'fetched'
+				});
+			}
+		});
 
-				const is_html = result.headers['content-type'] === 'text/html';
+		if (is_html_content && config.kit.prerender.crawl) {
+			let nodes = parse5.parseFragment(/** @type {string} */ (rendered.body || '')).childNodes;
+			while (nodes.length > 0) {
+				const node = /** @type {parse5.Element|undefined} */ (nodes.shift());
+				if (!node) break;
 
-				const parts = dependency_path.split('/');
-				if (is_html && parts[parts.length - 1] !== 'index.html') {
-					parts.push('index.html');
+				nodes = nodes.concat(node.childNodes || []);
+
+				switch (node.nodeName) {
+					// skip if the it's a comment node
+					case '#comment':
+						continue;
+					case '#text':
+						continue;
 				}
 
-				const file = `${out}${parts.join('/')}`;
-				mkdirp(dirname(file));
+				const attrs = node.attrs || [];
+				if (attrs.length === 0) continue;
 
-				if (result.body) {
-					writeFileSync(file, result.body);
-					written_files.push(file);
-				}
+				while (attrs.length > 0) {
+					const attr = /** @type {parse5.Attribute|undefined} */ (attrs.shift());
+					if (!attr) break;
+					const value = attr.value.trim();
 
-				if (response_type === OK) {
-					log.info(`${result.status} ${dependency_path}`);
-				} else {
-					error({
-						status: result.status,
-						path: dependency_path,
-						referrer: path,
-						referenceType: 'fetched'
-					});
-				}
-			});
+					// ignore the empty attribute value
+					if (!value) continue;
+					// only interested on src, href and srcset attributes
+					if (!/(src|href|srcset)/i.test(attr.name)) continue;
 
-			if (is_html && config.kit.prerender.crawl) {
-				const cleaned = clean_html(/** @type {string} */ (rendered.body));
-
-				let match;
-				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
-
-				const hrefs = [];
-
-				while ((match = pattern.exec(cleaned))) {
-					const element = match[1];
-					const attrs = match[2];
-
-					if (element === 'a' || element === 'link') {
-						if (is_rel_external(attrs)) continue;
-
-						hrefs.push(get_href(attrs));
-					} else {
-						if (element === 'img') {
-							hrefs.push(get_src(attrs));
-						}
-						hrefs.push(...get_srcset_urls(attrs));
-					}
-				}
-
-				for (const href of hrefs) {
-					if (!href) continue;
-
-					const resolved = resolve(path, href);
+					const resolved = resolve(path, value);
+					// skip if it's not a relative path
 					if (!is_root_relative(resolved)) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
 					const pathname = decodeURI(parsed.pathname).replace(config.kit.paths.base, '');
-
 					const file = pathname.slice(1);
+					// skip if it's exists in static or client folder
 					if (files.has(file)) continue;
 
 					if (parsed.search) {
