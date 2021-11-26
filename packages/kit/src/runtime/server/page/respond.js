@@ -228,7 +228,8 @@ function get_page_config(leaf, options) {
 	return {
 		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
 		router: 'router' in leaf ? !!leaf.router : options.router,
-		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
+		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate,
+		legacy: options.legacy
 	};
 }
 

@@ -159,6 +159,11 @@ export interface SSRRenderOptions {
 	target: string;
 	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;
+	legacy?: {
+		modern_polyfill_filename?: string;
+		legacy_polyfill_filename?: string;
+		get_entry(entry: string): string;
+	};
 }
 
 export interface SSRRenderState {

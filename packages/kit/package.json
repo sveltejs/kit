@@ -9,6 +9,7 @@
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@dishuostec/vite-plugin-legacy": "^1.6.3-alpha.4",
 		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.30",
 		"cheap-watch": "^1.0.4",
 		"sade": "^1.7.4",

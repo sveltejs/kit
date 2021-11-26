@@ -171,6 +171,11 @@ const options = object(
 
 			trailingSlash: list(['never', 'always', 'ignore']),
 
+			legacy: validate(null, (input, _keypath) => {
+				// todo
+				return input;
+			}),
+
 			vite: validate(
 				() => ({}),
 				(input, keypath) => {

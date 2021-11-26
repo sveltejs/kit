@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
+import render_script_tags from '@dishuostec/vite-plugin-legacy/render_script_tags';
 
 const s = JSON.stringify;
 
@@ -105,21 +106,23 @@ export async function render_response({
 				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
 		  ].join('\n\t\t');
 
-	/** @type {string} */
-	let init = '';
+	/** @type {string[]} */
+	const init = [];
 
 	if (options.amp) {
-		init = `
+		init.push(`
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
-		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
-		init += options.service_worker
-			? '<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>'
-			: '';
+		<script async src="https://cdn.ampproject.org/v0.js"></script>`);
+		if (options.service_worker) {
+			init.push(
+				'<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>'
+			);
+		}
 	} else if (include_js) {
 		// prettier-ignore
-		init = `<script type="module">
-			import { start } from ${s(options.entry.file)};
+		init.push(`<script>
+		window._sveltekit_init = function sveltekit_init(start, imt, nodes) {
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
@@ -133,11 +136,7 @@ export async function render_response({
 				hydrate: ${page_config.ssr && page_config.hydrate ? `{
 					status: ${status},
 					error: ${serialize_error(error)},
-					nodes: [
-						${(branch || [])
-						.map(({ node }) => `import(${s(node.entry)})`)
-						.join(',\n\t\t\t\t\t\t')}
-					],
+					nodes: nodes.length ? nodes.split(',').map(imt) : [],
 					page: {
 						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
 						path: ${page && page.path ? try_serialize(page.path, error => {
@@ -150,17 +149,41 @@ export async function render_response({
 					}
 				}` : 'null'}
 			});
-		</script>`;
+		}
+		</script>`);
+
+		if (options.legacy?.modern_polyfill_asset) {
+			init.push(`<script type="module" src="${options.legacy.modern_polyfill_asset}"></script>`);
+		}
+
+		init.push(`<script type="module">
+			import { start } from ${s(options.entry.file)};
+			window._sveltekit_init(start, m=>import(m), ${s(
+				(branch || []).map(({ node }) => node.entry).join(',')
+			)});
+		</script>`);
+
+		if (options.legacy) {
+			init.push(
+				...render_script_tags({
+					...options.legacy,
+					branch,
+					entry_file: options.entry.file
+				})
+			);
+		}
 	}
 
 	if (options.service_worker) {
-		init += options.amp
-			? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
-			: `<script>
+		init.push(
+			options.amp
+				? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
+				: `<script>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('${options.service_worker}');
 			}
-		</script>`;
+		</script>`
+		);
 	}
 
 	const head = [
@@ -169,7 +192,7 @@ export async function render_response({
 			? `<style data-svelte>${Array.from(styles).join('\n')}</style>`
 			: '',
 		links,
-		init
+		init.join('\n\t\t')
 	].join('\n\n\t\t');
 
 	const body = options.amp
