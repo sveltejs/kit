@@ -31,7 +31,7 @@ export function is_rel_external(attrs) {
  * @returns {boolean}
  */
 export function is_html(contentType) {
-	return /text\/html/gi.test(Array.isArray(contentType) ? contentType.join(" ") : contentType);
+	return /text\/html/gi.test(Array.isArray(contentType) ? contentType.join(' ') : contentType);
 }
 
 /** @type {(errorDetails: Parameters<PrerenderErrorHandler>[0] ) => string} */
