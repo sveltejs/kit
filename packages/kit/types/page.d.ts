@@ -1,10 +1,12 @@
 import { InferValue, MaybePromise, Rec } from './helper';
 
+export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete'>;
+
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
 	host: string;
 	path: string;
 	params: Params;
-	query: URLSearchParams;
+	query: ReadonlyURLSearchParams;
 }
 
 export interface LoadInput<

@@ -1,7 +1,7 @@
 <script context="module">
 	/** @typedef {Record<string, string[]>} Query */
 
-	/** @param {URLSearchParams} query */
+	/** @param {import('types/page').ReadonlyURLSearchParams} query */
 	function to_pojo(query) {
 		/** @type {Query}*/
 		const values = {};

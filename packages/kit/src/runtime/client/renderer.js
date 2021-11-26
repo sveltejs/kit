@@ -745,7 +745,7 @@ export class Renderer {
 	 *   status?: number;
 	 *   error: Error;
 	 *   path: string;
-	 *   query: URLSearchParams
+	 *   query: import('types/page').ReadonlyURLSearchParams
 	 * }} opts
 	 */
 	async _load_error({ status, error, path, query }) {
