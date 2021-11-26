@@ -221,7 +221,7 @@ async function build_server(
 	/** @type {Record<string, string>} */
 	const input = {
 		// TODO
-		index: app_file
+		app: app_file
 	};
 
 	manifest_data.routes.forEach((route) => {
