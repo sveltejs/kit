@@ -19,24 +19,55 @@ export function rimraf(path) {
 /**
  * @param {string} from
  * @param {string} to
- * @param {(basename: string) => boolean} filter
+ * @param {{
+ *   filter?: (basename: string) => boolean;
+ *   replace?: Record<string, string>;
+ * }} opts
  */
-export function copy(from, to, filter = () => true) {
+export function copy(from, to, opts = {}) {
 	if (!fs.existsSync(from)) return [];
-	if (!filter(path.basename(from))) return [];
 
+	/** @type {string[]} */
 	const files = [];
-	const stats = fs.statSync(from);
 
-	if (stats.isDirectory()) {
-		fs.readdirSync(from).forEach((file) => {
-			files.push(...copy(path.join(from, file), path.join(to, file)));
-		});
-	} else {
-		mkdirp(path.dirname(to));
-		fs.copyFileSync(from, to);
-		files.push(to);
+	const regex = opts.replace
+		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
+		: null;
+
+	/**
+	 * @param {string} from
+	 * @param {string} to
+	 */
+	function go(from, to) {
+		if (opts.filter && !opts.filter(path.basename(from))) return;
+
+		const stats = fs.statSync(from);
+
+		if (stats.isDirectory()) {
+			fs.readdirSync(from).forEach((file) => {
+				go(path.join(from, file), path.join(to, file));
+			});
+		} else {
+			mkdirp(path.dirname(to));
+
+			if (opts.replace) {
+				const data = fs.readFileSync(from, 'utf-8');
+				fs.writeFileSync(
+					to,
+					data.replace(
+						/** @type {RegExp} */ (regex),
+						(match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
+					)
+				);
+			} else {
+				fs.copyFileSync(from, to);
+			}
+
+			files.push(to);
+		}
 	}
+
+	go(from, to);
 
 	return files;
 }

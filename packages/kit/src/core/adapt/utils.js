@@ -1,3 +1,4 @@
+import { readFileSync, writeFileSync } from 'fs';
 import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender.js';
@@ -18,15 +19,19 @@ export function get_utils({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
-		copy_client_files(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, (file) => file[0] !== '.');
+		writeClient(dest) {
+			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
+				filter: (file) => file[0] !== '.'
+			});
 		},
 
-		copy_server_files(dest) {
-			return copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, (file) => file[0] !== '.');
+		writeServer(dest) {
+			return copy(`${cwd}/${SVELTE_KIT}/output/server`, dest, {
+				filter: (file) => file[0] !== '.'
+			});
 		},
 
-		copy_static_files(dest) {
+		writeStatic(dest) {
 			return copy(config.kit.files.assets, dest);
 		},
 
