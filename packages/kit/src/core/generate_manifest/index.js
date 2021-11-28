@@ -74,7 +74,7 @@ export function generate_manifest(
 		},
 		assets: ${s(manifest_data.assets)},
 		nodes: [
-			${manifest_data.components.map((_, i) => `() => import('${relative_path}/ssr-nodes/${i}.js')`).join(',\n\t\t\t')}
+			${manifest_data.components.map((_, i) => `() => import('${relative_path}/nodes/${i}.js')`).join(',\n\t\t\t')}
 		],
 		routes: [
 			${manifest_data.routes.map(route => {

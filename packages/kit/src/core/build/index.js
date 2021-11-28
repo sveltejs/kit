@@ -59,9 +59,9 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 	find_deps(options.client_entry_file, client_manifest, entry_js, entry_css);
 
-	mkdirp(`${output_dir}/server/ssr-nodes`);
+	mkdirp(`${output_dir}/server/nodes`);
 	options.manifest_data.components.forEach((component, i) => {
-		const file = `${output_dir}/server/ssr-nodes/${i}.js`;
+		const file = `${output_dir}/server/nodes/${i}.js`;
 
 		const js = new Set();
 		const css = new Set();
@@ -257,7 +257,7 @@ async function build_server(
 		if (route.type === 'endpoint') {
 			const resolved = path.resolve(cwd, route.file);
 			const relative = path.relative(config.kit.files.routes, resolved);
-			const name = posixify(path.join('endpoints', relative));
+			const name = posixify(path.join('entries/endpoints', relative));
 			input[name] = resolved;
 		}
 	});
@@ -267,8 +267,8 @@ async function build_server(
 		const relative = path.relative(config.kit.files.routes, resolved);
 
 		const name = relative.startsWith('..')
-			? posixify(path.join('components', path.basename(file)))
-			: posixify(path.join('components/pages', relative));
+			? posixify(path.join('entries/pages', path.basename(file)))
+			: posixify(path.join('entries/pages', relative));
 		input[name] = resolved;
 	});
 
