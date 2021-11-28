@@ -6,11 +6,11 @@ import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
 import { init, render } from 'APP';
+import { manifest } from 'MANIFEST';
 
 __fetch_polyfill();
-init({
-	// TODO pass in routes
-});
+
+init({ manifest });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,7 +22,7 @@ const serve_client = sirv(path.join(__dirname, '/client'), {
 	brotli: true
 });
 
-const serve_static = sirv(path.join(__dirname, '/client'), {
+const serve_static = sirv(path.join(__dirname, '/static'), {
 	etag: true,
 	maxAge: 31536000,
 	immutable: true,

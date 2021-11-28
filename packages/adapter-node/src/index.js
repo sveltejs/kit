@@ -2,9 +2,9 @@ import { handler } from './handler.js';
 import compression from 'compression';
 import polka from 'polka';
 
-export const path = process.env[PATH_ENV];
-export const host = process.env[HOST_ENV];
-export const port = process.env[PORT_ENV];
+export const path = process.env[PATH_ENV] || false;
+export const host = process.env[HOST_ENV] || '0.0.0.0';
+export const port = process.env[PORT_ENV] || (!path && '3000');
 
 const server = polka().use(
 	// https://github.com/lukeed/polka/issues/173

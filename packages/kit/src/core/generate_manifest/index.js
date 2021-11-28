@@ -1,18 +1,20 @@
 import { s } from '../../utils/misc.js';
 
 /**
+ * @param {string} relative_path,
  * @param {import('../create_app').ManifestData} manifest_data
  * @param {string} client_entry_file
  * @param {import('vite').Manifest} client_manifest
  * @param {import('vite').Manifest} server_manifest
  */
-export function create_build_data(
+export function generate_manifest(
+	relative_path,
 	manifest_data,
 	client_entry_file,
 	client_manifest,
 	server_manifest
 ) {
-	// TODO create subsets
+	// TODO create scoped routing table
 
 	const components = new Map();
 
@@ -72,7 +74,7 @@ export function create_build_data(
 		},
 		assets: ${s(manifest_data.assets)},
 		nodes: [
-			${manifest_data.components.map((_, i) => `() => import('./ssr-nodes/${i}.js')`).join(',\n\t\t\t')}
+			${manifest_data.components.map((_, i) => `() => import('${relative_path}/ssr-nodes/${i}.js')`).join(',\n\t\t\t')}
 		],
 		routes: [
 			${manifest_data.routes.map(route => {
@@ -90,7 +92,7 @@ export function create_build_data(
 						type: 'endpoint',
 						pattern: ${route.pattern},
 						params: ${get_params(route.params)},
-						load: () => import('./${server_manifest[route.file].file}')
+						load: () => import('${relative_path}/${server_manifest[route.file].file}')
 					}`.replace(/^\t\t/gm, '');
 				}
 			}).join(',\n\t\t\t')}

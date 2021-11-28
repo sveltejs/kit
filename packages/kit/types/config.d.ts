@@ -8,6 +8,12 @@ export interface AdapterUtils {
 	mkdirp(dir: string): void;
 
 	/**
+	 * Create an app manifest with an optional scope
+	 * @param scope TODO explain this concept
+	 */
+	generateManifest(opts: { relativePath: string; scope?: string }): string;
+
+	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */

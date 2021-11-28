@@ -19,8 +19,9 @@ export interface PrerenderOptions {
 }
 
 export interface App extends PublicApp {
-	init(options?: {
-		manifest: SSRManifest;
+	init(options: { manifest: SSRManifest }): void;
+
+	override(options: {
 		paths: {
 			base: string;
 			assets: string;
@@ -203,6 +204,10 @@ export interface ManifestData {
 }
 
 export interface BuildData {
+	manifest_data: ManifestData;
+	client_entry_file: string;
+	client_manifest: import('vite').Manifest;
+	server_manifest: import('vite').Manifest;
 	client: string[];
 	server: string[];
 	static: string[];
@@ -219,14 +224,3 @@ export interface NormalizedLoadOutput {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
-
-export type BuildData = {
-	components: Array<{
-		load: SSRComponentLoader;
-		assets: {
-			js: string[];
-			css: string[];
-		};
-	}>;
-	routes: RouteData[];
-};

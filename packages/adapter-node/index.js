@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream, statSync } from 'fs';
+import { createReadStream, createWriteStream, fstat, statSync, writeFileSync } from 'fs';
 import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { fileURLToPath } from 'url';
@@ -30,9 +30,15 @@ export default function ({
 			utils.writeServer(`${out}/server`);
 			utils.writeStatic(`${out}/static`);
 
+			const manifest = `export const manifest = ${utils.generateManifest({
+				relativePath: './server'
+			})};\n`;
+			writeFileSync(`${out}/manifest.js`, manifest);
+
 			utils.copy(files, out, {
 				replace: {
 					APP: './server/app.js', // TODO hard-coded path is brittle
+					MANIFEST: './manifest.js',
 					PATH_ENV: JSON.stringify(path_env),
 					HOST_ENV: JSON.stringify(host_env),
 					PORT_ENV: JSON.stringify(port_env)

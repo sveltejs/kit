@@ -1,6 +1,7 @@
 import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender.js';
+import { generate_manifest } from '../generate_manifest/index.js';
 
 /**
  * @param {{
@@ -17,6 +18,16 @@ export function get_utils({ cwd, config, build_data, log }) {
 		rimraf,
 		mkdirp,
 		copy,
+
+		generateManifest({ relativePath = '.', scope }) {
+			return generate_manifest(
+				relativePath,
+				build_data.manifest_data,
+				build_data.client_entry_file,
+				build_data.client_manifest,
+				build_data.server_manifest
+			);
+		},
 
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {

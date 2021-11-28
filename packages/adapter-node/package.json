@@ -21,8 +21,8 @@
 		"index.d.ts"
 	],
 	"scripts": {
-		"dev": "rollup -cw",
-		"build": "rollup -c",
+		"dev": "rimraf files && rollup -cw",
+		"build": "rimraf files && rollup -c",
 		"test": "c8 uvu tests",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "npm run check-format -- --write",
@@ -41,6 +41,7 @@
 		"compression": "^1.7.4",
 		"node-fetch": "^3.0.0",
 		"polka": "^1.0.0-next.22",
+		"rimraf": "^3.0.2",
 		"rollup": "^2.58.0",
 		"sirv": "^1.0.17",
 		"uvu": "^0.5.2"

@@ -56,8 +56,7 @@ export async function preview({
 
 	const has_asset_path = !!config.kit.paths.assets;
 
-	app.init({
-		manifest,
+	app.override({
 		paths: {
 			base: config.kit.paths.base,
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
@@ -65,6 +64,8 @@ export async function preview({
 		prerendering: false,
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
+
+	app.init({ manifest });
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};

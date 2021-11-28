@@ -1,8 +1,9 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
+import { SSRManifest } from './internal';
 
 export interface App {
-	init(): void;
+	init(options: { manifest: SSRManifest }): void;
 	render(incoming: IncomingRequest): Promise<ServerResponse>;
 }
 

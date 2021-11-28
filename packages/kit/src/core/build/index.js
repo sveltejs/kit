@@ -13,7 +13,7 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
 import { copy_assets, posixify, resolve_entry } from '../utils.js';
-import { create_build_data } from '../create_build_data/index.js';
+import { generate_manifest } from '../generate_manifest/index.js';
 import { s } from '../../utils/misc.js';
 
 /**
@@ -77,12 +77,13 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		writeFileSync(file, node);
 	});
 
-	const manifest = `export const manifest = ${create_build_data(
+	const manifest = `export const manifest = ${generate_manifest(
+		'.',
 		options.manifest_data,
 		options.client_entry_file,
 		client_manifest,
 		server_manifest
-	)}`;
+	)};\n`;
 	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
 
 	if (options.service_worker_entry_file) {
@@ -97,6 +98,10 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
 
 	return {
+		manifest_data: options.manifest_data,
+		client_entry_file: options.client_entry_file,
+		client_manifest,
+		server_manifest,
 		client,
 		server,
 		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
@@ -279,7 +284,7 @@ async function build_server(
 		`
 			import { respond } from '${runtime}';
 			import root from './generated/root.svelte';
-			import { set_paths, assets } from './runtime/paths.js';
+			import { set_paths, assets, base } from './runtime/paths.js';
 			import { set_prerendering } from './runtime/env.js';
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
@@ -288,20 +293,23 @@ async function build_server(
 				.replace('%svelte.body%', '" + body + "')};
 
 			let options = null;
+			let read = null;
+
+			set_paths(${s(config.kit.paths)});
+
+			export function override(settings) {
+				set_paths(settings.paths);
+				set_prerendering(settings.prerendering);
+				read = settings.read;
+			}
 
 			// allow paths to be overridden in svelte-kit preview
 			// and in prerendering
-			export function init(settings) {
-				set_paths(settings.paths || { paths: ${s(config.kit.paths)} });
-				set_prerendering(settings.prerendering || false);
-
+			export function init({ manifest }) {
 				const hooks = get_hooks(user_hooks);
-
-				const prefix = path => assets + '/${config.kit.appDir}/' + path;
 
 				options = {
 					amp: ${config.kit.amp},
-					app_dir: ${s(config.kit.appDir)},
 					dev: false,
 					floc: ${config.kit.floc},
 					get_stack: error => String(error), // for security
@@ -311,11 +319,11 @@ async function build_server(
 					},
 					hooks,
 					hydrate: ${s(config.kit.hydrate)},
-					manifest: settings.manifest,
-					paths: settings.paths,
-					prefix: settings.paths.assets + '/${config.kit.appDir}/',
+					manifest,
+					paths: { base, assets },
+					prefix: assets + '/${config.kit.appDir}/',
 					prerender: ${config.kit.prerender.enabled},
-					read: settings.read,
+					read,
 					root,
 					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
