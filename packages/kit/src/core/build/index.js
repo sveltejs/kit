@@ -301,6 +301,7 @@ async function build_server(
 
 				options = {
 					amp: ${config.kit.amp},
+					app_dir: ${s(config.kit.appDir)},
 					dev: false,
 					floc: ${config.kit.floc},
 					get_stack: error => String(error), // for security
@@ -312,6 +313,7 @@ async function build_server(
 					hydrate: ${s(config.kit.hydrate)},
 					manifest: settings.manifest,
 					paths: settings.paths,
+					prefix: settings.paths.assets + '/${config.kit.appDir}/',
 					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
 					root,
@@ -519,24 +521,6 @@ async function build_service_worker(
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_service_worker');
 
 	await vite.build(merged_config);
-}
-
-/** @param {string[]} array */
-function get_params(array) {
-	// given an array of params like `['x', 'y', 'z']` for
-	// src/routes/[x]/[y]/[z]/svelte, create a function
-	// that turns a RexExpMatchArray into ({ x, y, z })
-	return array.length
-		? '(m) => ({ ' +
-				array
-					.map((param, i) => {
-						return param.startsWith('...')
-							? `${param.slice(3)}: d(m[${i + 1}] || '')`
-							: `${param}: d(m[${i + 1}])`;
-					})
-					.join(', ') +
-				'})'
-		: 'empty';
 }
 
 /**

@@ -436,11 +436,12 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
+						manifest: get_manifest(),
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 						},
-						manifest: get_manifest(),
+						prefix: '',
 						prerender: config.kit.prerender.enabled,
 						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 						root,

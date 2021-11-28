@@ -151,6 +151,7 @@ export interface SSRRenderOptions {
 		base: string;
 		assets: string;
 	};
+	prefix: string;
 	prerender: boolean;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
