@@ -257,7 +257,7 @@ async function build_server(
 		if (route.type === 'endpoint') {
 			const resolved = path.resolve(cwd, route.file);
 			const relative = path.relative(config.kit.files.routes, resolved);
-			const name = posixify(path.join('entries/endpoints', relative));
+			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
 		}
 	});
