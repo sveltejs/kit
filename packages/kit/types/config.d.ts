@@ -38,7 +38,7 @@ export interface AdapterUtils {
 	copy(
 		from: string,
 		to: string,
-		opts: {
+		opts?: {
 			filter?: (basename: string) => boolean;
 			replace?: Record<string, string>;
 		}
