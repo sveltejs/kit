@@ -1,11 +1,11 @@
-import fs from 'fs';
+import fs, { writeFileSync } from 'fs';
 import path from 'path';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import glob from 'tiny-glob/sync.js';
 import vite from 'vite';
 
-import { rimraf } from '../../utils/filesystem.js';
+import { mkdirp, rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 
 import { print_config_conflicts } from '../config/index.js';
@@ -53,13 +53,37 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	const client_manifest = await build_client(options);
 	const server_manifest = await build_server(options, runtime);
 
-	const build_data = `export const build_data = ${create_build_data(
+	// TODO where does this go?
+	const entry_js = new Set();
+	const entry_css = new Set();
+
+	find_deps(options.client_entry_file, client_manifest, entry_js, entry_css);
+
+	mkdirp(`${output_dir}/server/ssr-nodes`);
+	options.manifest_data.components.forEach((component, i) => {
+		const file = `${output_dir}/server/ssr-nodes/${i}.js`;
+
+		const js = new Set();
+		const css = new Set();
+		find_deps(component, client_manifest, js, css);
+
+		const node = `import * as module from '../${server_manifest[component].file}';
+			export { module };
+			export const entry = '${client_manifest[component].file}';
+			export const js = ${JSON.stringify(Array.from(js))};
+			export const css = ${JSON.stringify(Array.from(css))};
+			`.replace(/^\t\t\t/gm, '');
+
+		writeFileSync(file, node);
+	});
+
+	const manifest = `export const manifest = ${create_build_data(
 		options.manifest_data,
 		options.client_entry_file,
 		client_manifest,
 		server_manifest
 	)}`;
-	fs.writeFileSync(`${output_dir}/server/preview-build-data.js`, build_data);
+	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
 
 	if (options.service_worker_entry_file) {
 		if (config.kit.paths.assets) {
@@ -278,12 +302,6 @@ async function build_server(
 				options = {
 					amp: ${config.kit.amp},
 					dev: false,
-					entry: {
-						file: prefix(settings.build_data.manifest.entry.file),
-						css: settings.build_data.manifest.entry.css.map(prefix),
-						js: settings.build_data.manifest.entry.js.map(prefix)
-					},
-					fetched: undefined,
 					floc: ${config.kit.floc},
 					get_stack: error => String(error), // for security
 					handle_error: (error, request) => {
@@ -292,17 +310,7 @@ async function build_server(
 					},
 					hooks,
 					hydrate: ${s(config.kit.hydrate)},
-					load_component: async id => {
-						const { module, entry, css, js } = await settings.build_data.components[id]();
-						return {
-							module,
-							entry: prefix(entry),
-							css: css.map(prefix),
-							js: js.map(prefix),
-							styles: [] // TODO
-						}
-					},
-					manifest: settings.build_data.manifest,
+					manifest: settings.manifest,
 					paths: settings.paths,
 					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
@@ -529,4 +537,26 @@ function get_params(array) {
 					.join(', ') +
 				'})'
 		: 'empty';
+}
+
+/**
+ * @param {string} file
+ * @param {import('vite').Manifest} manifest
+ * @param {Set<string>} css
+ * @param {Set<string>} js
+ * @returns
+ */
+function find_deps(file, manifest, js, css) {
+	const chunk = manifest[file];
+
+	if (js.has(chunk.file)) return;
+	js.add(chunk.file);
+
+	if (chunk.css) {
+		chunk.css.forEach((file) => css.add(file));
+	}
+
+	if (chunk.imports) {
+		chunk.imports.forEach((file) => find_deps(file, manifest, js, css));
+	}
 }

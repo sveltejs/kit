@@ -27,8 +27,8 @@ export async function render_response({
 	error,
 	page
 }) {
-	const css = new Set(options.entry.css);
-	const js = new Set(options.entry.js);
+	const css = new Set(options.manifest.entry.css);
+	const js = new Set(options.manifest.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
@@ -94,14 +94,16 @@ export async function render_response({
 	const include_js = page_config.router || page_config.hydrate;
 	if (!include_js) js.clear();
 
+	const prefix = `/_app/`; // TODO
+
 	// TODO strip the AMP stuff out of the build if not relevant
 	const links = options.amp
 		? styles.size > 0 || rendered.css.code.length > 0
 			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
-				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${prefix}${dep}">`),
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${prefix}${dep}">`)
 		  ].join('\n\t\t');
 
 	/** @type {string} */
@@ -118,7 +120,7 @@ export async function render_response({
 	} else if (include_js) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.entry.file)};
+			import { start } from ${s(prefix + options.manifest.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
@@ -134,7 +136,7 @@ export async function render_response({
 					error: ${serialize_error(error)},
 					nodes: [
 						${(branch || [])
-						.map(({ node }) => `import(${s(node.entry)})`)
+						.map(({ node }) => `import(${s(prefix + node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					page: {

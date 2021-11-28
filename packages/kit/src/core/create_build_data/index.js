@@ -65,45 +65,36 @@ export function create_build_data(
 
 	// prettier-ignore
 	return `{
-		components: {
-			${Array.from(components.values()).map((component) => `'${component.id}': () => import('./${component.file}').then(module => ({
-				module,
-				entry: ${s(client_manifest[component.id].file)},
-				css: ${s(component.css)},
-				js: ${s(component.js)}
-			}))`).join(',\n\t\t\t')}
+		entry: {
+			file: ${s(client_manifest[client_entry_file].file)},
+			css: ${s(Array.from(entry_css))},
+			js: ${s(Array.from(entry_js))}
 		},
-		manifest: {
-			entry: {
-				file: ${s(client_manifest[client_entry_file].file)},
-				css: ${s(Array.from(entry_css))},
-				js: ${s(Array.from(entry_js))}
-			},
-			assets: ${s(manifest_data.assets)},
-			layout: ${s(manifest_data.layout)},
-			error: ${s(manifest_data.error)},
-			routes: [
-				${Array.from(manifest_data.routes).map(route => {
-					if (route.type === 'page') {
-						return `{
-							type: 'page',
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
-							path: ${s(route.path)},
-							a: ${s(route.a)},
-							b: ${s(route.b)}
-						}`.replace(/^\t\t/gm, '');
-					} else {
-						return `{
-							type: 'endpoint',
-							pattern: ${route.pattern},
-							params: ${get_params(route.params)},
-							load: () => import('./${server_manifest[route.file].file}')
-						}`.replace(/^\t\t/gm, '');
-					}
-				}).join(',\n\t\t\t\t')}
-			]
-		}
+		assets: ${s(manifest_data.assets)},
+		nodes: [
+			${manifest_data.components.map((_, i) => `() => import('./ssr-nodes/${i}.js')`).join(',\n\t\t\t')}
+		],
+		routes: [
+			${manifest_data.routes.map(route => {
+				if (route.type === 'page') {
+					return `{
+						type: 'page',
+						pattern: ${route.pattern},
+						params: ${get_params(route.params)},
+						path: ${s(route.path)},
+						a: ${s(route.a.map(component => manifest_data.components.indexOf(component)))},
+						b: ${s(route.b.map(component => manifest_data.components.indexOf(component)))}
+					}`.replace(/^\t\t/gm, '');
+				} else {
+					return `{
+						type: 'endpoint',
+						pattern: ${route.pattern},
+						params: ${get_params(route.params)},
+						load: () => import('./${server_manifest[route.file].file}')
+					}`.replace(/^\t\t/gm, '');
+				}
+			}).join(',\n\t\t\t')}
+		]
 	}`.replace(/^\t/gm, '');
 }
 

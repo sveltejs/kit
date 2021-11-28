@@ -101,12 +101,12 @@ prog
 				process.stderr.write(data);
 			});
 
-			if (!watcher.vite || !watcher.vite.httpServer) {
+			if (!watcher.server || !watcher.server.httpServer) {
 				throw Error('Could not find server');
 			}
 			// we never start the server on a socket path, so address will be of type AddressInfo
 			const address_info = /** @type {import('net').AddressInfo} */ (
-				watcher.vite.httpServer.address()
+				watcher.server.httpServer.address()
 			);
 
 			const vite_config = config.kit.vite();

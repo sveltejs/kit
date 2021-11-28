@@ -53,7 +53,7 @@ class Watcher extends EventEmitter {
 		/**
 		 * @type {vite.ViteDevServer | undefined}
 		 */
-		this.vite;
+		this.server;
 
 		process.on('exit', () => {
 			this.close();
@@ -180,9 +180,9 @@ class Watcher extends EventEmitter {
 			merged_config.server.port = this.port;
 		}
 
-		this.vite = await vite.createServer(merged_config);
-		remove_html_middlewares(this.vite.middlewares);
-		await this.vite.listen(this.port);
+		this.server = await vite.createServer(merged_config);
+		remove_html_middlewares(this.server.middlewares);
+		await this.server.listen(this.port);
 	}
 
 	update() {
@@ -200,17 +200,65 @@ class Watcher extends EventEmitter {
 
 		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
+			entry: {
+				file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+				css: [],
+				js: []
+			},
 			assets: manifest_data.assets,
-			layout: manifest_data.layout,
-			error: manifest_data.error,
+			nodes: manifest_data.components.map((id) => {
+				return async () => {
+					const url = `/${id}`;
+
+					if (!this.server) throw new Error('Vite server has not been initialized');
+
+					const module = /** @type {SSRComponent} */ (await this.server.ssrLoadModule(url));
+					const node = await this.server.moduleGraph.getModuleByUrl(url);
+
+					if (!node) throw new Error(`Could not find node for ${url}`);
+
+					const deps = new Set();
+					find_deps(node, deps);
+
+					const styles = new Set();
+
+					for (const dep of deps) {
+						const parsed = new URL(dep.url, 'http://localhost/');
+						const query = parsed.searchParams;
+
+						// TODO what about .scss files, etc?
+						if (
+							dep.file.endsWith('.css') ||
+							(query.has('svelte') && query.get('type') === 'style')
+						) {
+							try {
+								const mod = await this.server.ssrLoadModule(dep.url);
+								styles.add(mod.default);
+							} catch {
+								// this can happen with dynamically imported modules, I think
+								// because the Vite module graph doesn't distinguish between
+								// static and dynamic imports? TODO investigate, submit fix
+							}
+						}
+					}
+
+					return {
+						module,
+						entry: url.endsWith('.svelte') ? url : url + '?import',
+						css: [],
+						js: [],
+						styles: Array.from(styles)
+					};
+				};
+			}),
 			routes: manifest_data.routes.map((route) => {
 				if (route.type === 'page') {
 					return {
 						type: 'page',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						a: route.a,
-						b: route.b
+						a: route.a.map((id) => manifest_data.components.indexOf(id)),
+						b: route.b.map((id) => manifest_data.components.indexOf(id))
 					};
 				}
 
@@ -219,9 +267,9 @@ class Watcher extends EventEmitter {
 					pattern: route.pattern,
 					params: get_params(route.params),
 					load: async () => {
-						if (!this.vite) throw new Error('Vite server has not been initialized');
+						if (!this.server) throw new Error('Vite server has not been initialized');
 						const url = path.resolve(this.cwd, route.file);
-						return await this.vite.ssrLoadModule(url);
+						return await this.server.ssrLoadModule(url);
 					}
 				};
 			})
@@ -229,14 +277,14 @@ class Watcher extends EventEmitter {
 	}
 
 	close() {
-		if (!this.vite || !this.cheapwatch) {
+		if (!this.server || !this.cheapwatch) {
 			throw new Error('Cannot close server before it is initialized');
 		}
 
 		if (this.closed) return;
 		this.closed = true;
 
-		this.vite.close();
+		this.server.close();
 		this.cheapwatch.close();
 	}
 }
@@ -291,19 +339,6 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 	 * @type {amp_validator.Validator?}
 	 */
 	const validator = config.kit.amp ? await amp_validator.getInstance() : null;
-
-	/**
-	 * @param {import('vite').ModuleNode} node
-	 * @param {Set<import('vite').ModuleNode>} deps
-	 */
-	const find_deps = (node, deps) => {
-		for (const dep of node.importedModules) {
-			if (!deps.has(dep)) {
-				deps.add(dep);
-				find_deps(dep, deps);
-			}
-		}
-	};
 
 	/**
 	 * @param {vite.ViteDevServer} vite
@@ -390,11 +425,6 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					{
 						amp: config.kit.amp,
 						dev: true,
-						entry: {
-							file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
-							css: [],
-							js: []
-						},
 						floc: config.kit.floc,
 						get_stack: (error) => {
 							vite.ssrFixStacktrace(error);
@@ -409,47 +439,6 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-						},
-						load_component: async (id) => {
-							const url = `/${id}`;
-
-							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
-							const node = await vite.moduleGraph.getModuleByUrl(url);
-
-							if (!node) throw new Error(`Could not find node for ${url}`);
-
-							const deps = new Set();
-							find_deps(node, deps);
-
-							const styles = new Set();
-
-							for (const dep of deps) {
-								const parsed = new URL(dep.url, 'http://localhost/');
-								const query = parsed.searchParams;
-
-								// TODO what about .scss files, etc?
-								if (
-									dep.file.endsWith('.css') ||
-									(query.has('svelte') && query.get('type') === 'style')
-								) {
-									try {
-										const mod = await vite.ssrLoadModule(dep.url);
-										styles.add(mod.default);
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
-									}
-								}
-							}
-
-							return {
-								module,
-								entry: url.endsWith('.svelte') ? url : url + '?import',
-								css: [],
-								js: [],
-								styles: Array.from(styles)
-							};
 						},
 						manifest: get_manifest(),
 						prerender: config.kit.prerender.enabled,
@@ -562,6 +551,19 @@ function remove_html_middlewares(server) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
 		if (html_middlewares.includes(server.stack[i].handle.name)) {
 			server.stack.splice(i, 1);
+		}
+	}
+}
+
+/**
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<import('vite').ModuleNode>} deps
+ */
+function find_deps(node, deps) {
+	for (const dep of node.importedModules) {
+		if (!deps.has(dep)) {
+			deps.add(dep);
+			find_deps(dep, deps);
 		}
 	}
 }

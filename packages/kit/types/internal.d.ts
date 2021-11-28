@@ -20,6 +20,7 @@ export interface PrerenderOptions {
 
 export interface App extends PublicApp {
 	init(options?: {
+		manifest: SSRManifest;
 		paths: {
 			base: string;
 			assets: string;
@@ -84,12 +85,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: PageId[];
+	a: number[];
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: PageId[];
+	b: number[];
 }
 
 export interface SSREndpoint {
@@ -105,10 +106,16 @@ export type SSRRoute = SSREndpoint | SSRPage;
 
 export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
+export type SSRNodeLoader = () => Promise<SSRNode>;
+
 export interface SSRManifest {
+	entry: {
+		file: string;
+		js: string[];
+		css: string[];
+	};
 	assets: Asset[];
-	layout: string;
-	error: string;
+	nodes: SSRNodeLoader[];
 	routes: SSRRoute[];
 }
 
@@ -134,17 +141,11 @@ export interface SSRNode {
 export interface SSRRenderOptions {
 	amp: boolean;
 	dev: boolean;
-	entry: {
-		file: string;
-		css: string[];
-		js: string[];
-	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
-	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;
