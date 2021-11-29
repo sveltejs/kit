@@ -5,7 +5,7 @@ import json from '@rollup/plugin-json';
 export default [
 	{
 		input: {
-			index: 'src/index.js'
+			handler: 'src/handler.js'
 		},
 		output: [
 			{
@@ -18,6 +18,6 @@ export default [
 			}
 		],
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['../server/app.js', '../server/manifest.js', ...require('module').builtinModules]
+		external: ['./server/app.js', ...require('module').builtinModules]
 	}
 ];

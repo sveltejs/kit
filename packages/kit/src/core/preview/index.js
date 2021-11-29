@@ -37,7 +37,7 @@ export async function preview({
 	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
 
 	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(app_file).href);
+	const { App, override } = await import(pathToFileURL(app_file).href);
 
 	const { manifest } = await import(pathToFileURL(manifest_file).href);
 
@@ -56,7 +56,7 @@ export async function preview({
 
 	const has_asset_path = !!config.kit.paths.assets;
 
-	app.override({
+	override({
 		paths: {
 			base: config.kit.paths.base,
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
@@ -65,7 +65,7 @@ export async function preview({
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 
-	app.init({ manifest });
+	const app = new App(manifest);
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};

@@ -1,3 +1,4 @@
+import { decode_params } from '../utils.js';
 import { respond } from './respond.js';
 
 /**
@@ -18,7 +19,7 @@ export async function render_page(request, route, match, options, state) {
 		};
 	}
 
-	const params = route.params ? route.params(match) : {};
+	const params = route.params ? decode_params(route.params(match)) : {};
 
 	const page = {
 		host: request.host,

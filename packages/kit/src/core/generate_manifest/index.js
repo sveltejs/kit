@@ -110,8 +110,8 @@ function get_params(array) {
 				array
 					.map((param, i) => {
 						return param.startsWith('...')
-							? `${param.slice(3)}: d(m[${i + 1}] || '')`
-							: `${param}: d(m[${i + 1}])`;
+							? `${param.slice(3)}: m[${i + 1}] || ''`
+							: `${param}: m[${i + 1}]`;
 					})
 					.join(', ') +
 				'})'

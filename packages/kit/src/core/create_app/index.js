@@ -95,8 +95,6 @@ function generate_client_manifest(manifest_data, base) {
 	return trim(`
 		const c = ${components};
 
-		const d = decodeURIComponent;
-
 		export const routes = ${routes};
 
 		// we import the root layout/error components eagerly, so that

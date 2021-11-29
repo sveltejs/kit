@@ -24,18 +24,68 @@ export default function () {
 
 			// "build" is the default publish directory when Netlify detects SvelteKit
 			const publish = get_publish_directory(netlify_config, utils) || 'build';
+
+			// empty out existing build directories
 			utils.rimraf(publish);
+			utils.rimraf('.netlify/functions-internal');
+			utils.rimraf('.netlify/server');
+			utils.rimraf('.netlify/package.json');
+			utils.rimraf('.netlify/handler.js');
+
+			utils.mkdirp('.netlify/functions-internal');
 
 			utils.log.minor(`Publishing to "${publish}"`);
 
 			utils.log.minor('Generating serverless function...');
 			utils.writeServer('.netlify/server');
 
-			if (netlify_config?.functions?.node_bundler === 'esbuild') {
-				// for esbuild, we can use ESM everywhere
-				utils.copy(join(files, 'esm/index.js'), '.netlify/functions-internal/__render.js');
+			// for esbuild, use ESM; for zip-it-and-ship-it, use CJS
+			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
+
+			/** @type {string[]} */
+			const redirects = [];
+
+			const create_function = esm
+				? (manifest) =>
+						`import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
+				: (manifest) =>
+						`const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
+
+			utils.routes.forEach((route) => {
+				const fn = create_function(
+					utils.generateManifest({
+						relativePath: '../server',
+						scope: route.segments
+					})
+				);
+
+				const name =
+					route.segments
+						.map((segment) => (segment.spread ? '__' : segment.content))
+						.join('-')
+						.replace(/[[\].]/g, '_') || 'index';
+
+				writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
+
+				const pattern = [];
+
+				for (const segment of route.segments) {
+					if (segment.spread) {
+						pattern.push('*');
+						break; // Netlify redirects don't allow anything after a *
+					} else if (segment.dynamic) {
+						pattern.push(`:${pattern.length}`);
+					} else {
+						pattern.push(segment.content);
+					}
+				}
+
+				redirects.push(`/${pattern.join('/')} /.netlify/functions/${name} 200`);
+			});
+
+			if (esm) {
+				utils.copy(join(files, 'esm/handler.js'), '.netlify/handler.js');
 			} else {
-				// for zip-it-and-ship-it, we need to use CJS
 				// TODO might be useful if you could specify CJS/ESM as an option to writeServer
 				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
 					const filepath = `.netlify/server/${file}`;
@@ -44,7 +94,7 @@ export default function () {
 					writeFileSync(filepath, output);
 				});
 
-				utils.copy(join(files, 'cjs/index.js'), '.netlify/functions-internal/__render.js');
+				utils.copy(join(files, 'cjs/handler.js'), '.netlify/handler.js');
 				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 			}
 
@@ -60,7 +110,7 @@ export default function () {
 			utils.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
 			utils.copy('_redirects', redirect_file);
-			appendFileSync(redirect_file, '\n\n/* /.netlify/functions/__render 200');
+			appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 		}
 	};
 }

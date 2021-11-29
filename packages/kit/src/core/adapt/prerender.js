@@ -109,9 +109,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	const server_root = resolve_path(dir);
 
 	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
-	app.override({
+	override({
 		paths: config.kit.paths,
 		prerendering: true,
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
@@ -119,9 +119,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
-	app.init({
-		manifest
-	});
+	const app = new App(manifest);
 
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 

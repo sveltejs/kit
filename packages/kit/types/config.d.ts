@@ -18,7 +18,7 @@ export interface AdapterUtils {
 	 * Create an app manifest with an optional scope
 	 * @param scope TODO explain this concept
 	 */
-	generateManifest(opts: { relativePath: string; scope?: string }): string;
+	generateManifest(opts: { relativePath: string; scope?: RouteSegment[] }): string;
 
 	routes: RouteDefinition[];
 

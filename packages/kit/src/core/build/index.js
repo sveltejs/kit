@@ -299,62 +299,9 @@ async function build_server(
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 
-			let options = null;
 			let read = null;
 
 			set_paths(${s(config.kit.paths)});
-
-			export function override(settings) {
-				set_paths(settings.paths);
-				set_prerendering(settings.prerendering);
-				read = settings.read;
-			}
-
-			// allow paths to be overridden in svelte-kit preview
-			// and in prerendering
-			export function init({ manifest }) {
-				const hooks = get_hooks(user_hooks);
-
-				options = {
-					amp: ${config.kit.amp},
-					dev: false,
-					floc: ${config.kit.floc},
-					get_stack: error => String(error), // for security
-					handle_error: (error, request) => {
-						hooks.handleError({ error, request });
-						error.stack = options.get_stack(error);
-					},
-					hooks,
-					hydrate: ${s(config.kit.hydrate)},
-					manifest,
-					paths: { base, assets },
-					prefix: assets + '/${config.kit.appDir}/',
-					prerender: ${config.kit.prerender.enabled},
-					read,
-					root,
-					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
-					router: ${s(config.kit.router)},
-					ssr: ${s(config.kit.ssr)},
-					target: ${s(config.kit.target)},
-					template,
-					trailing_slash: ${s(config.kit.trailingSlash)}
-				};
-			}
-
-			// input has already been decoded by decodeURI
-			// now handle the rest that decodeURIComponent would do
-			const d = s => s
-				.replace(/%23/g, '#')
-				.replace(/%3[Bb]/g, ';')
-				.replace(/%2[Cc]/g, ',')
-				.replace(/%2[Ff]/g, '/')
-				.replace(/%3[Ff]/g, '?')
-				.replace(/%3[Aa]/g, ':')
-				.replace(/%40/g, '@')
-				.replace(/%26/g, '&')
-				.replace(/%3[Dd]/g, '=')
-				.replace(/%2[Bb]/g, '+')
-				.replace(/%24/g, '$');
 
 			// this looks redundant, but the indirection allows us to access
 			// named imports without triggering Rollup's missing import detection
@@ -365,11 +312,50 @@ async function build_server(
 				externalFetch: hooks.externalFetch || fetch
 			});
 
-			export function render(request, {
-				prerender
-			} = {}) {
-				const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
-				return respond({ ...request, host }, options, { prerender });
+			// allow paths to be globally overridden
+			// in svelte-kit preview and in prerendering
+			export function override(settings) {
+				set_paths(settings.paths);
+				set_prerendering(settings.prerendering);
+				read = settings.read;
+			}
+
+			export class App {
+				constructor(manifest) {
+					const hooks = get_hooks(user_hooks);
+
+					this.options = {
+						amp: ${config.kit.amp},
+						dev: false,
+						floc: ${config.kit.floc},
+						get_stack: error => String(error), // for security
+						handle_error: (error, request) => {
+							hooks.handleError({ error, request });
+							error.stack = options.get_stack(error);
+						},
+						hooks,
+						hydrate: ${s(config.kit.hydrate)},
+						manifest,
+						paths: { base, assets },
+						prefix: assets + '/${config.kit.appDir}/',
+						prerender: ${config.kit.prerender.enabled},
+						read,
+						root,
+						service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
+						router: ${s(config.kit.router)},
+						ssr: ${s(config.kit.ssr)},
+						target: ${s(config.kit.target)},
+						template,
+						trailing_slash: ${s(config.kit.trailingSlash)}
+					};
+				}
+
+				render(request, {
+					prerender
+				} = {}) {
+					const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
+					return respond({ ...request, host }, this.options, { prerender });
+				}
 			}
 		`
 			.replace(/^\t{3}/gm, '')
