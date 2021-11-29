@@ -19,7 +19,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
-		generateManifest({ relativePath = '.', scope }) {
+		generateManifest({ relativePath = '.', scope: _ }) {
 			return generate_manifest(
 				relativePath,
 				build_data.manifest_data,

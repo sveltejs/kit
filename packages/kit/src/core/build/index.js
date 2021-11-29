@@ -2,7 +2,6 @@ import fs, { writeFileSync } from 'fs';
 import path from 'path';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import glob from 'tiny-glob/sync.js';
 import vite from 'vite';
 
 import { mkdirp, rimraf } from '../../utils/filesystem.js';
