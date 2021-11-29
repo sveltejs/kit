@@ -56,27 +56,6 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       svelte: 3.44.0
 
-  examples/sandbox:
-    specifiers:
-      '@fontsource/fira-mono': ^4.5.0
-      '@lukeed/uuid': ^2.0.0
-      '@sveltejs/adapter-auto': workspace:*
-      '@sveltejs/adapter-netlify': workspace:^1.0.0-next.35
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      cookie: ^0.4.1
-      svelte: ^3.44.0
-    dependencies:
-      '@fontsource/fira-mono': 4.5.0
-      '@lukeed/uuid': 2.0.0
-      cookie: 0.4.1
-    devDependencies:
-      '@sveltejs/adapter-auto': link:../../packages/adapter-auto
-      '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
-      '@sveltejs/adapter-node': link:../../packages/adapter-node
-      '@sveltejs/kit': link:../../packages/kit
-      svelte: 3.44.0
-
   packages/adapter-auto:
     specifiers:
       '@sveltejs/adapter-cloudflare': workspace:*
@@ -310,6 +289,27 @@ importers:
       svelte2tsx: 0.4.8_svelte@3.44.0+typescript@4.4.4
       tiny-glob: 0.2.9
       uvu: 0.5.2
+
+  sandbox:
+    specifiers:
+      '@fontsource/fira-mono': ^4.5.0
+      '@lukeed/uuid': ^2.0.0
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/adapter-netlify': workspace:^1.0.0-next.35
+      '@sveltejs/adapter-node': workspace:*
+      '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
+      svelte: ^3.44.0
+    dependencies:
+      '@fontsource/fira-mono': 4.5.0
+      '@lukeed/uuid': 2.0.0
+      cookie: 0.4.1
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../packages/adapter-auto
+      '@sveltejs/adapter-netlify': link:../packages/adapter-netlify
+      '@sveltejs/adapter-node': link:../packages/adapter-node
+      '@sveltejs/kit': link:../packages/kit
+      svelte: 3.44.0
 
 packages:
 

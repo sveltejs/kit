@@ -5,6 +5,7 @@ package-lock.json
 yarn.lock
 /examples/**/.svelte
 /examples/**/build
+/sandbox
 /packages/create-svelte/template/CHANGELOG.md
 .env
 .vercel_build_output
