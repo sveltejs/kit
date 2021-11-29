@@ -6,6 +6,7 @@
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/create-svelte"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"bin": "./bin.js",
 	"dependencies": {

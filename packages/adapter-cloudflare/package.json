@@ -6,6 +6,7 @@
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-cloudflare"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"exports": {
