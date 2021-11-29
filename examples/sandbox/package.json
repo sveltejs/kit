@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/adapter-netlify": "workspace:^1.0.0-next.35",
 		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.44.0"

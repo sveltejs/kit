@@ -29,7 +29,9 @@ export async function respond(opts) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((n) => options.manifest.nodes[n]?.()));
+		nodes = await Promise.all(
+			route.a.map((n) => options.manifest.nodes[n] && options.manifest.nodes[n]())
+		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
 

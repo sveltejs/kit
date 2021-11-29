@@ -1,48 +1,52 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import glob from 'tiny-glob/sync.js';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 
 /**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
+ * @typedef {{
+ *   build?: { publish?: string }
+ *   functions?: { node_bundler?: 'zisi' | 'esbuild' }
+ * } & toml.JsonMap} NetlifyConfig
  */
 
+const files = fileURLToPath(new URL('./files', import.meta.url));
+
 /** @type {import('.')} */
-export default function (options) {
+export default function () {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
 		async adapt({ utils }) {
+			const netlify_config = get_netlify_config();
+
 			// "build" is the default publish directory when Netlify detects SvelteKit
-			const publish = get_publish_directory(utils) || 'build';
+			const publish = get_publish_directory(netlify_config, utils) || 'build';
+			utils.rimraf(publish);
 
 			utils.log.minor(`Publishing to "${publish}"`);
 
-			utils.rimraf(publish);
-
-			const files = fileURLToPath(new URL('./files', import.meta.url));
-
 			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte-kit/netlify/entry.js');
+			utils.writeServer('.netlify/server');
 
-			/** @type {BuildOptions} */
-			const default_options = {
-				entryPoints: ['.svelte-kit/netlify/entry.js'],
-				// Any functions in ".netlify/functions-internal" are bundled in addition to user-defined Netlify functions.
-				// See https://github.com/netlify/build/pull/3213 for more details
-				outfile: '.netlify/functions-internal/__render.js',
-				bundle: true,
-				inject: [join(files, 'shims.js')],
-				platform: 'node'
-			};
+			if (netlify_config?.functions?.node_bundler === 'esbuild') {
+				// for esbuild, we can use ESM everywhere
+				utils.copy(join(files, 'esm/index.js'), '.netlify/functions-internal/__render.js');
+			} else {
+				// for zip-it-and-ship-it, we need to use CJS
+				// TODO might be useful if you could specify CJS/ESM as an option to writeServer
+				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
+					const filepath = `.netlify/server/${file}`;
+					const input = readFileSync(filepath, 'utf8');
+					const output = esbuild.transformSync(input, { format: 'cjs', target: 'node12' }).code;
+					writeFileSync(filepath, output);
+				});
 
-			const build_options =
-				options && options.esbuild ? await options.esbuild(default_options) : default_options;
-
-			await esbuild.build(build_options);
-
-			writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
+				utils.copy(join(files, 'cjs/index.js'), '.netlify/functions-internal/__render.js');
+				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
+			}
 
 			utils.log.minor('Prerendering static pages...');
 			await utils.prerender({
@@ -50,32 +54,34 @@ export default function (options) {
 			});
 
 			utils.log.minor('Copying assets...');
-			utils.copy_static_files(publish);
-			utils.copy_client_files(publish);
+			utils.writeStatic(publish);
+			utils.writeClient(publish);
 
 			utils.log.minor('Writing redirects...');
-
-			const redirectPath = join(publish, '_redirects');
-			utils.copy('_redirects', redirectPath);
-			appendFileSync(redirectPath, '\n\n/* /.netlify/functions/__render 200');
+			const redirect_file = join(publish, '_redirects');
+			utils.copy('_redirects', redirect_file);
+			appendFileSync(redirect_file, '\n\n/* /.netlify/functions/__render 200');
 		}
 	};
 }
+
+function get_netlify_config() {
+	if (!existsSync('netlify.toml')) return null;
+
+	try {
+		return /** @type {NetlifyConfig} */ (toml.parse(readFileSync('netlify.toml', 'utf-8')));
+	} catch (err) {
+		err.message = `Error parsing netlify.toml: ${err.message}`;
+		throw err;
+	}
+}
+
 /**
+ * @param {NetlifyConfig} netlify_config
  * @param {import('@sveltejs/kit').AdapterUtils} utils
  **/
-function get_publish_directory(utils) {
-	if (existsSync('netlify.toml')) {
-		/** @type {{ build?: { publish?: string }} & toml.JsonMap } */
-		let netlify_config;
-
-		try {
-			netlify_config = toml.parse(readFileSync('netlify.toml', 'utf-8'));
-		} catch (err) {
-			err.message = `Error parsing netlify.toml: ${err.message}`;
-			throw err;
-		}
-
+function get_publish_directory(netlify_config, utils) {
+	if (netlify_config) {
 		if (!netlify_config.build || !netlify_config.build.publish) {
 			utils.log.warn('No publish directory specified in netlify.toml, using default');
 			return;

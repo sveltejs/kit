@@ -1,9 +1,12 @@
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
+import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
+import { init, render } from '../server/app.js';
+import { manifest } from '../server/manifest.js';
 
-init();
+__fetch_polyfill();
 
-export async function handler(event) {
+init({ manifest });
+
+export const handler = async (event) => {
 	const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;
 
 	const query = new URLSearchParams(rawQuery);
@@ -46,7 +49,7 @@ export async function handler(event) {
 		...partial_response,
 		body: rendered.body
 	};
-}
+};
 
 /**
  * Splits headers into two categories: single value and multi value
