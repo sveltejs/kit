@@ -16,6 +16,16 @@ import { copy_assets, posixify, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { s } from '../../utils/misc.js';
 
+/** @type {Record<string, string>} */
+const method_names = {
+	get: 'get',
+	head: 'head',
+	post: 'post',
+	put: 'put',
+	del: 'delete',
+	patch: 'patch'
+};
+
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {{
@@ -50,14 +60,14 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
 	};
 
-	const client_manifest = await build_client(options);
-	const server_manifest = await build_server(options, runtime);
+	const client = await build_client(options);
+	const server = await build_server(options, runtime);
 
 	// TODO where does this go?
 	const entry_js = new Set();
 	const entry_css = new Set();
 
-	find_deps(options.client_entry_file, client_manifest, entry_js, entry_css);
+	find_deps(options.client_entry_file, client.manifest, entry_js, entry_css);
 
 	mkdirp(`${output_dir}/server/nodes`);
 	options.manifest_data.components.forEach((component, i) => {
@@ -65,11 +75,11 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 		const js = new Set();
 		const css = new Set();
-		find_deps(component, client_manifest, js, css);
+		find_deps(component, client.manifest, js, css);
 
-		const node = `import * as module from '../${server_manifest[component].file}';
+		const node = `import * as module from '../${server.manifest[component].file}';
 			export { module };
-			export const entry = '${client_manifest[component].file}';
+			export const entry = '${client.manifest[component].file}';
 			export const js = ${JSON.stringify(Array.from(js))};
 			export const css = ${JSON.stringify(Array.from(css))};
 			`.replace(/^\t\t\t/gm, '');
@@ -81,8 +91,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		'.',
 		options.manifest_data,
 		options.client_entry_file,
-		client_manifest,
-		server_manifest
+		client.manifest,
+		server.manifest
 	)};\n`;
 	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
 
@@ -91,17 +101,12 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
-		await build_service_worker(options, client_manifest);
+		await build_service_worker(options, client.manifest);
 	}
-
-	const client = glob('**', { cwd: `${output_dir}/client`, filesOnly: true }).map(posixify);
-	const server = glob('**', { cwd: `${output_dir}/server`, filesOnly: true }).map(posixify);
 
 	return {
 		manifest_data: options.manifest_data,
 		client_entry_file: options.client_entry_file,
-		client_manifest,
-		server_manifest,
 		client,
 		server,
 		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
@@ -215,12 +220,14 @@ async function build_client({
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
 
-	await vite.build(merged_config);
+	const output = /** @type {import('rollup').OutputChunk[]} */ (
+		/** @type {any} */ (await vite.build(merged_config)).output
+	);
 
 	/** @type {import('vite').Manifest} */
-	const client_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
+	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
-	return client_manifest;
+	return { manifest, output };
 }
 
 /**
@@ -425,14 +432,30 @@ async function build_server(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
-	await vite.build(merged_config);
-
-	/** @type {import('vite').Manifest} */
-	const server_manifest = JSON.parse(
-		fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')
+	const output = /** @type {import('rollup').OutputChunk[]} */ (
+		/** @type {any} */ (await vite.build(merged_config)).output
 	);
 
-	return server_manifest;
+	/** @type {Record<string, string[]>} */
+	const lookup = {};
+	output.forEach((chunk) => {
+		if (!chunk.facadeModuleId) return;
+		const id = chunk.facadeModuleId.slice(cwd.length + 1);
+		lookup[id] = chunk.exports;
+	});
+
+	/** @type {Record<string, string[]>} */
+	const methods = {};
+	manifest_data.routes.forEach((route) => {
+		if (route.type === 'endpoint') {
+			methods[route.file] = lookup[route.file].map((x) => method_names[x]).filter(Boolean);
+		}
+	});
+
+	/** @type {import('vite').Manifest} */
+	const manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
+
+	return { manifest, output, methods };
 }
 
 /**

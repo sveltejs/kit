@@ -125,7 +125,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
-	const files = new Set([...build_data.static, ...build_data.client]);
+	const files = new Set([
+		...build_data.static,
+		...build_data.client.output.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+	]);
 	const written_files = [];
 
 	build_data.static.forEach((file) => {

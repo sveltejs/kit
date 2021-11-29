@@ -24,10 +24,19 @@ export function get_utils({ cwd, config, build_data, log }) {
 				relativePath,
 				build_data.manifest_data,
 				build_data.client_entry_file,
-				build_data.client_manifest,
-				build_data.server_manifest
+				build_data.client.manifest,
+				build_data.server.manifest
 			);
 		},
+
+		routes: build_data.manifest_data.routes.map((route) => {
+			return {
+				type: route.type,
+				segments: route.segments,
+				pattern: route.pattern,
+				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
+			};
+		}),
 
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {

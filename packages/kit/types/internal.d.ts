@@ -177,8 +177,17 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface RouteSegment {
+	dynamic: boolean;
+	spread: boolean;
+	content: string;
+}
+
+export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
+
 export interface PageData {
 	type: 'page';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	path: string;
@@ -188,6 +197,7 @@ export interface PageData {
 
 export interface EndpointData {
 	type: 'endpoint';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	file: string;
@@ -206,10 +216,15 @@ export interface ManifestData {
 export interface BuildData {
 	manifest_data: ManifestData;
 	client_entry_file: string;
-	client_manifest: import('vite').Manifest;
-	server_manifest: import('vite').Manifest;
-	client: string[];
-	server: string[];
+	client: {
+		manifest: import('vite').Manifest;
+		output: Array<import('rollup').OutputChunk>;
+	};
+	server: {
+		manifest: import('vite').Manifest;
+		methods: Record<string, HttpMethod[]>;
+		output: Array<import('rollup').OutputChunk>;
+	};
 	static: string[];
 	entries: string[];
 }

@@ -1,6 +1,13 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
+
+type RouteDefinition = {
+	type: 'page' | 'endpoint';
+	pattern: RegExp;
+	segments: RouteSegment[];
+	methods: HttpMethod[];
+};
 
 export interface AdapterUtils {
 	log: Logger;
@@ -12,6 +19,8 @@ export interface AdapterUtils {
 	 * @param scope TODO explain this concept
 	 */
 	generateManifest(opts: { relativePath: string; scope?: string }): string;
+
+	routes: RouteDefinition[];
 
 	/**
 	 * @param dest the destination folder to which files should be copied

@@ -160,6 +160,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			const params = parent_params.slice();
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
 
+			// TODO seems slightly backwards to derive the simple segment representation
+			// from the more complex form, rather than vice versa — maybe swap it round
+			const simple_segments = segments.map((segment) => {
+				return {
+					dynamic: segment.some((part) => part.dynamic),
+					spread: segment.some((part) => part.spread),
+					content: segment
+						.map((part) => (part.dynamic ? `[${part.content}]` : part.content))
+						.join('')
+				};
+			});
+
 			if (item.is_dir) {
 				const layout_reset = find_layout('__layout.reset', item.file);
 				const layout = find_layout('__layout', item.file);
@@ -209,6 +221,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'page',
+					segments: simple_segments,
 					pattern,
 					params,
 					path,
@@ -220,6 +233,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'endpoint',
+					segments: simple_segments,
 					pattern,
 					file: item.file,
 					params
