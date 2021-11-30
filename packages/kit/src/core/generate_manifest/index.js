@@ -26,7 +26,7 @@ export function generate_manifest(
 	routes.forEach((route) => {
 		if (route.type === 'page') {
 			[...route.a, ...route.b].forEach((component) => {
-				if (!bundled_nodes.has(component)) {
+				if (component && !bundled_nodes.has(component)) {
 					const i = build_data.manifest_data.components.indexOf(component);
 
 					bundled_nodes.set(component, {
@@ -53,8 +53,8 @@ export function generate_manifest(
 						pattern: ${route.pattern},
 						params: ${get_params(route.params)},
 						path: ${s(route.path)},
-						a: ${s(route.a.map(component => bundled_nodes.get(component).index))},
-						b: ${s(route.b.map(component => bundled_nodes.get(component).index))}
+						a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
+						b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
 					}`.replace(/^\t\t/gm, '');
 				} else {
 					if (!build_data.server.manifest[route.file]) {
