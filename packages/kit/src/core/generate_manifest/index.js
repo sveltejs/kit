@@ -57,6 +57,12 @@ export function generate_manifest(
 						b: ${s(route.b.map(component => bundled_nodes.get(component).index))}
 					}`.replace(/^\t\t/gm, '');
 				} else {
+					if (!build_data.server.manifest[route.file]) {
+						// this is necessary in cases where a .css file snuck in —
+						// perhaps it would be better to disallow these (and others?)
+						return null;
+					}
+
 					return `{
 						type: 'endpoint',
 						pattern: ${route.pattern},
@@ -64,7 +70,7 @@ export function generate_manifest(
 						load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
 					}`.replace(/^\t\t/gm, '');
 				}
-			}).join(',\n\t\t\t')}
+			}).filter(Boolean).join(',\n\t\t\t')}
 		]
 	}`.replace(/^\t/gm, '');
 }

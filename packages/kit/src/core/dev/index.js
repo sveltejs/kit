@@ -200,12 +200,12 @@ class Watcher extends EventEmitter {
 
 		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
+			assets: manifest_data.assets,
 			entry: {
 				file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
 				css: [],
 				js: []
 			},
-			assets: manifest_data.assets,
 			nodes: manifest_data.components.map((id) => {
 				return async () => {
 					const url = `/${id}`;

@@ -62,6 +62,16 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	const client = await build_client(options);
 	const server = await build_server(options, runtime);
 
+	const styles_lookup = new Map();
+	if (options.config.kit.amp) {
+		client.output.forEach((chunk) => {
+			if (chunk.fileName.endsWith('.css')) {
+				// @ts-ignore
+				styles_lookup.set(chunk.fileName, chunk.source);
+			}
+		});
+	}
+
 	mkdirp(`${output_dir}/server/nodes`);
 	options.manifest_data.components.forEach((component, i) => {
 		const file = `${output_dir}/server/nodes/${i}.js`;
@@ -70,11 +80,14 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		const css = new Set();
 		find_deps(component, client.manifest, js, css);
 
+		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
+
 		const node = `import * as module from '../${server.manifest[component].file}';
 			export { module };
 			export const entry = '${client.manifest[component].file}';
 			export const js = ${JSON.stringify(Array.from(js))};
 			export const css = ${JSON.stringify(Array.from(css))};
+			${styles ? `export const styles = ${s(styles)}` : ''}
 			`.replace(/^\t\t\t/gm, '');
 
 		writeFileSync(file, node);
@@ -331,7 +344,7 @@ async function build_server(
 						get_stack: error => String(error), // for security
 						handle_error: (error, request) => {
 							hooks.handleError({ error, request });
-							error.stack = options.get_stack(error);
+							error.stack = this.options.get_stack(error);
 						},
 						hooks,
 						hydrate: ${s(config.kit.hydrate)},
