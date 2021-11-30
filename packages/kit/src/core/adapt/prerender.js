@@ -190,12 +190,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			const file = `${out}${parts.join('/')}`;
-			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
 				const location = get_single_valued_header(headers, 'location');
 
 				if (location) {
+					mkdirp(dirname(file));
+
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
 					written_files.push(file);
@@ -212,6 +213,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			if (rendered.status === 200) {
+				mkdirp(dirname(file));
+
 				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
 				written_files.push(file);

@@ -215,10 +215,14 @@ export interface ManifestData {
 
 export interface BuildData {
 	manifest_data: ManifestData;
-	client_entry_file: string;
 	client: {
 		manifest: import('vite').Manifest;
 		output: Array<import('rollup').OutputChunk>;
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
 	};
 	server: {
 		manifest: import('vite').Manifest;

@@ -2,12 +2,24 @@ import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
 import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
-type RouteDefinition = {
+export interface RouteDefinition {
 	type: 'page' | 'endpoint';
 	pattern: RegExp;
 	segments: RouteSegment[];
 	methods: HttpMethod[];
-};
+}
+
+export interface AdapterEntryConfig<Data = any> {
+	id: string;
+	data: Data;
+	filter: (route: RouteDefinition) => boolean;
+}
+
+export interface AdapterEntry<Data = any> {
+	id: string;
+	data: Data;
+	manifest: (opts: { relativePath: string }) => string;
+}
 
 export interface AdapterUtils {
 	log: Logger;
@@ -15,12 +27,12 @@ export interface AdapterUtils {
 	mkdirp(dir: string): void;
 
 	/**
-	 * Create an app manifest with an optional scope
-	 * @param scope TODO explain this concept
+	 * Create entry points that map to individual functions
+	 * @param fn TODO explain this
 	 */
-	generateManifest(opts: { relativePath: string; scope?: RouteSegment[] }): string;
-
-	routes: RouteDefinition[];
+	createEntries<Data>(
+		fn: (route: RouteDefinition) => AdapterEntryConfig<Data>
+	): Array<AdapterEntry<Data>>;
 
 	/**
 	 * @param dest the destination folder to which files should be copied

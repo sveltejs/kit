@@ -62,12 +62,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	const client = await build_client(options);
 	const server = await build_server(options, runtime);
 
-	// TODO where does this go?
-	const entry_js = new Set();
-	const entry_css = new Set();
-
-	find_deps(options.client_entry_file, client.manifest, entry_js, entry_css);
-
 	mkdirp(`${output_dir}/server/nodes`);
 	options.manifest_data.components.forEach((component, i) => {
 		const file = `${output_dir}/server/nodes/${i}.js`;
@@ -86,15 +80,6 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		writeFileSync(file, node);
 	});
 
-	const manifest = `export const manifest = ${generate_manifest(
-		'.',
-		options.manifest_data,
-		options.client_entry_file,
-		client.manifest,
-		server.manifest
-	)};\n`;
-	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
-
 	if (options.service_worker_entry_file) {
 		if (config.kit.paths.assets) {
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
@@ -103,9 +88,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		await build_service_worker(options, client.manifest);
 	}
 
-	return {
+	const build_data = {
 		manifest_data: options.manifest_data,
-		client_entry_file: options.client_entry_file,
 		client,
 		server,
 		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
@@ -113,6 +97,11 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			.map((route) => (route.type === 'page' ? route.path : ''))
 			.filter(Boolean)
 	};
+
+	const manifest = `export const manifest = ${generate_manifest(build_data, '.')};\n`;
+	fs.writeFileSync(`${output_dir}/server/manifest.js`, manifest);
+
+	return build_data;
 }
 
 /**
@@ -226,7 +215,19 @@ async function build_client({
 	/** @type {import('vite').Manifest} */
 	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
-	return { manifest, output };
+	// TODO where does this go?
+	const entry_js = new Set();
+	const entry_css = new Set();
+
+	find_deps(client_entry_file, manifest, entry_js, entry_css);
+
+	const entry = {
+		file: manifest[client_entry_file].file,
+		js: Array.from(entry_js),
+		css: Array.from(entry_css)
+	};
+
+	return { manifest, output, entry };
 }
 
 /**
@@ -429,11 +430,13 @@ async function build_server(
 		lookup[id] = chunk.exports;
 	});
 
-	/** @type {Record<string, string[]>} */
+	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
 		if (route.type === 'endpoint') {
-			methods[route.file] = lookup[route.file].map((x) => method_names[x]).filter(Boolean);
+			methods[route.file] = lookup[route.file]
+				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
+				.filter(Boolean);
 		}
 	});
 

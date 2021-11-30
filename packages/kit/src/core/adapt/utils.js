@@ -19,24 +19,46 @@ export function get_utils({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
-		generateManifest({ relativePath = '.', scope: _ }) {
-			return generate_manifest(
-				relativePath,
-				build_data.manifest_data,
-				build_data.client_entry_file,
-				build_data.client.manifest,
-				build_data.server.manifest
-			);
-		},
+		createEntries(fn) {
+			/** @type {import('types/config').AdapterEntry[]} */
+			const entries = [];
 
-		routes: build_data.manifest_data.routes.map((route) => {
-			return {
+			const { routes } = build_data.manifest_data;
+
+			/** @type {import('types/config').RouteDefinition[]} */
+			const facades = routes.map((route) => ({
 				type: route.type,
 				segments: route.segments,
 				pattern: route.pattern,
 				methods: route.type === 'page' ? ['get'] : build_data.server.methods[route.file]
-			};
-		}),
+			}));
+
+			const seen = new Set();
+
+			for (let i = 0; i < routes.length; i += 1) {
+				const route = routes[i];
+				const { id, data, filter } = fn(facades[i]);
+
+				if (seen.has(id)) continue;
+				seen.add(id);
+
+				const group = [route];
+
+				for (let j = i + 1; j < routes.length; j += 1) {
+					if (filter(facades[j])) {
+						group.push(routes[j]);
+					}
+				}
+
+				entries.push({
+					id,
+					data,
+					manifest: ({ relativePath }) => generate_manifest(build_data, relativePath, group)
+				});
+			}
+
+			return entries;
+		},
 
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {

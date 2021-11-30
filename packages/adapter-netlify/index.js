@@ -39,48 +39,47 @@ export default function () {
 			utils.log.minor('Generating serverless function...');
 			utils.writeServer('.netlify/server');
 
+			utils.log.minor('Prerendering static pages...');
+			await utils.prerender({
+				dest: publish
+			});
+
 			// for esbuild, use ESM; for zip-it-and-ship-it, use CJS
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
-			/** @type {string[]} */
-			const redirects = [];
-
-			const create_function = esm
-				? (manifest) =>
-						`import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-				: (manifest) =>
-						`const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
-
-			utils.routes.forEach((route) => {
-				const fn = create_function(
-					utils.generateManifest({
-						relativePath: '../server',
-						scope: route.segments
-					})
-				);
-
-				const name =
-					route.segments
-						.map((segment) => (segment.spread ? '__' : segment.content))
-						.join('-')
-						.replace(/[[\].]/g, '_') || 'index';
-
-				writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
-
-				const pattern = [];
+			const entries = utils.createEntries((route) => {
+				const parts = [];
 
 				for (const segment of route.segments) {
 					if (segment.spread) {
-						pattern.push('*');
+						parts.push('*');
 						break; // Netlify redirects don't allow anything after a *
 					} else if (segment.dynamic) {
-						pattern.push(`:${pattern.length}`);
+						parts.push(`:${parts.length}`);
 					} else {
-						pattern.push(segment.content);
+						parts.push(segment.content);
 					}
 				}
 
-				redirects.push(`/${pattern.join('/')} /.netlify/functions/${name} 200`);
+				const pattern = `/${parts.join('/')}`;
+
+				return {
+					id: pattern,
+					data: {
+						name: parts.join('-').replace(/:/g, '_').replace('*', '__rest') || 'index'
+					},
+					filter: (other) => matches(route.segments, other.segments)
+				};
+			});
+
+			entries.forEach((entry) => {
+				const manifest = entry.manifest({ relativePath: '../server' });
+
+				const fn = esm
+					? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
+					: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
+
+				writeFileSync(`.netlify/functions-internal/${entry.data.name}.js`, fn);
 			});
 
 			if (esm) {
@@ -98,11 +97,6 @@ export default function () {
 				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 			}
 
-			utils.log.minor('Prerendering static pages...');
-			await utils.prerender({
-				dest: publish
-			});
-
 			utils.log.minor('Copying assets...');
 			utils.writeStatic(publish);
 			utils.writeClient(publish);
@@ -110,7 +104,12 @@ export default function () {
 			utils.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
 			utils.copy('_redirects', redirect_file);
-			appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
+			const redirects = entries
+				.map(({ id, data }) => `${id} /.netlify/functions/${data.name} 200`)
+				.join('\n');
+			appendFileSync(redirect_file, `\n\n${redirects}`);
+
+			// TODO write a _headers file that makes client-side assets immutable
 		}
 	};
 }
@@ -153,4 +152,40 @@ function get_publish_directory(netlify_config, utils) {
 	utils.log.warn(
 		'No netlify.toml found. Using default publish directory. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration for more details '
 	);
+}
+
+/**
+ * @typedef {{ spread: boolean, dynamic: boolean, content: string }} RouteSegment
+ */
+
+/**
+ * @param {RouteSegment[]} a
+ * @param {RouteSegment[]} b
+ * @returns {boolean}
+ */
+function matches(a, b) {
+	if (a[0] && b[0]) {
+		if (b[0].spread) {
+			if (b.length === 1) return true;
+
+			const next_b = b.slice(1);
+
+			for (let i = 0; i < a.length; i += 1) {
+				if (matches(a.slice(i), next_b)) return true;
+			}
+
+			return false;
+		}
+
+		if (!b[0].dynamic) {
+			if (!a[0].dynamic && a[0].content !== b[0].content) return false;
+		}
+
+		if (a.length === 1 && b.length === 1) return true;
+		return matches(a.slice(1), b.slice(1));
+	} else if (a[0]) {
+		return a.length === 1 && a[0].spread;
+	} else {
+		return b.length === 1 && b[0].spread;
+	}
 }

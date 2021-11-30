@@ -1,64 +1,37 @@
 import { s } from '../../utils/misc.js';
 
 /**
- * @param {string} relative_path,
- * @param {import('../create_app').ManifestData} manifest_data
- * @param {string} client_entry_file
- * @param {import('vite').Manifest} client_manifest
- * @param {import('vite').Manifest} server_manifest
+ * @param {import('../../../types/internal').BuildData} build_data;
+ * @param {string} relative_path;
+ * @param {import('../../../types/internal').RouteData[]} routes;
  */
 export function generate_manifest(
+	build_data,
 	relative_path,
-	manifest_data,
-	client_entry_file,
-	client_manifest,
-	server_manifest
+	routes = build_data.manifest_data.routes
 ) {
-	// TODO create scoped routing table
+	const bundled_nodes = new Map();
 
-	const components = new Map();
+	// 0 and 1 are special, they correspond to the root layout and root error nodes
+	bundled_nodes.set(build_data.manifest_data.components[0], {
+		path: `${relative_path}/nodes/0.js`,
+		index: 0
+	});
 
-	/**
-	 * @param {string} file
-	 * @param {Set<string>} css
-	 * @param {Set<string>} js
-	 * @returns
-	 */
-	function find_deps(file, js, css) {
-		const chunk = client_manifest[file];
+	bundled_nodes.set(build_data.manifest_data.components[1], {
+		path: `${relative_path}/nodes/1.js`,
+		index: 1
+	});
 
-		if (js.has(chunk.file)) return;
-		js.add(chunk.file);
-
-		if (chunk.css) {
-			chunk.css.forEach((file) => css.add(file));
-		}
-
-		if (chunk.imports) {
-			chunk.imports.forEach((file) => find_deps(file, js, css));
-		}
-	}
-
-	const entry_js = new Set();
-	const entry_css = new Set();
-
-	find_deps(client_entry_file, entry_js, entry_css);
-
-	manifest_data.routes.forEach((route) => {
+	routes.forEach((route) => {
 		if (route.type === 'page') {
-			[...route.a, ...route.b].forEach((id) => {
-				if (!components.has(id)) {
-					const js = new Set();
-					const css = new Set();
+			[...route.a, ...route.b].forEach((component) => {
+				if (!bundled_nodes.has(component)) {
+					const i = build_data.manifest_data.components.indexOf(component);
 
-					find_deps(id, js, css);
-
-					components.set(id, {
-						id,
-						index: components.size,
-						file: server_manifest[id].file,
-						css: Array.from(css),
-						js: Array.from(js)
+					bundled_nodes.set(component, {
+						path: `${relative_path}/nodes/${i}.js`,
+						index: bundled_nodes.size
 					});
 				}
 			});
@@ -67,32 +40,28 @@ export function generate_manifest(
 
 	// prettier-ignore
 	return `{
-		entry: {
-			file: ${s(client_manifest[client_entry_file].file)},
-			css: ${s(Array.from(entry_css))},
-			js: ${s(Array.from(entry_js))}
-		},
-		assets: ${s(manifest_data.assets)},
+		assets: ${s(build_data.manifest_data.assets)},
+		entry: ${s(build_data.client.entry)},
 		nodes: [
-			${manifest_data.components.map((_, i) => `() => import('${relative_path}/nodes/${i}.js')`).join(',\n\t\t\t')}
+			${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t')}
 		],
 		routes: [
-			${manifest_data.routes.map(route => {
+			${routes.map(route => {
 				if (route.type === 'page') {
 					return `{
 						type: 'page',
 						pattern: ${route.pattern},
 						params: ${get_params(route.params)},
 						path: ${s(route.path)},
-						a: ${s(route.a.map(component => manifest_data.components.indexOf(component)))},
-						b: ${s(route.b.map(component => manifest_data.components.indexOf(component)))}
+						a: ${s(route.a.map(component => bundled_nodes.get(component).index))},
+						b: ${s(route.b.map(component => bundled_nodes.get(component).index))}
 					}`.replace(/^\t\t/gm, '');
 				} else {
 					return `{
 						type: 'endpoint',
 						pattern: ${route.pattern},
 						params: ${get_params(route.params)},
-						load: () => import('${relative_path}/${server_manifest[route.file].file}')
+						load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
 					}`.replace(/^\t\t/gm, '');
 				}
 			}).join(',\n\t\t\t')}
