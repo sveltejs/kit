@@ -1,5 +1,5 @@
 import { test } from 'uvu';
-import { create_kit_middleware } from '../src/kit-middleware.js';
+import { create_kit_middleware } from '../src/handler.js';
 import * as assert from 'uvu/assert';
 import fetch from 'node-fetch';
 import polka from 'polka';

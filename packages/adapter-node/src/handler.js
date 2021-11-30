@@ -5,12 +5,12 @@ import { getRawBody } from '@sveltejs/kit/node';
 import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
-import { init, render } from 'APP';
+import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
 __fetch_polyfill();
 
-init({ manifest });
+const app = new App(manifest);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -56,7 +56,7 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await render({
+	const rendered = await app.render({
 		method: req.method,
 		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 		path: parsed.pathname,
