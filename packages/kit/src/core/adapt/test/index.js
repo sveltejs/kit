@@ -51,7 +51,7 @@ suite('copy files', () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_static_files(dest);
+	utils.writeStatic(dest);
 
 	assert.equal(
 		glob('**', {
@@ -61,7 +61,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_client_files(dest);
+	utils.writeClient(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
@@ -69,7 +69,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_server_files(dest);
+	utils.writeServer(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
@@ -98,7 +98,12 @@ suite('prerender', async () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
+	const build_data = {
+		client: { output: [] },
+		server: { output: [] },
+		static: [],
+		entries: ['/nested']
+	};
 
 	const utils = get_utils({
 		cwd,
