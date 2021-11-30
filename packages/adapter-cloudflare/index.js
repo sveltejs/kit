@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync, writeFileSync } from 'fs';
 import * as esbuild from 'esbuild';
@@ -16,10 +16,12 @@ export default function (options = {}) {
 
 			const static_files = utils
 				.copy(config.kit.files.assets, target_dir)
+			  .map((f) => f.replace(sep, '/'))
 				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			const client_files = utils
 				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
+			  .map((f) => f.replace(sep, '/'))
 				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			// returns nothing, very sad
