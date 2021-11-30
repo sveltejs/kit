@@ -16,13 +16,11 @@ export default function (options = {}) {
 
 			const static_files = utils
 				.copy(config.kit.files.assets, target_dir)
-				.map((f) => f.replace(sep, '/'))
-				.map((f) => f.replace(`${target_dir}/`, ''));
+				.map((f) => f.replace(`${target_dir}${sep}`, ''));
 
 			const client_files = utils
 				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
-				.map((f) => f.replace(sep, '/'))
-				.map((f) => f.replace(`${target_dir}/`, ''));
+				.map((f) => f.replace(`${target_dir}${sep}`, ''));
 
 			// returns nothing, very sad
 			// TODO(future) get/save output
@@ -30,7 +28,7 @@ export default function (options = {}) {
 				dest: `${target_dir}/`
 			});
 
-			const static_assets = [...static_files, ...client_files];
+			const static_assets = [...static_files, ...client_files].map((f) => f.replaceAll(sep, '/'));
 			const assets = `const ASSETS = new Set(${JSON.stringify(static_assets)});\n`;
 
 			const worker = readFileSync(join(files, 'worker.js'), { encoding: 'utf-8' });
