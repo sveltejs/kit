@@ -16,12 +16,12 @@ export default function (options = {}) {
 
 			const static_files = utils
 				.copy(config.kit.files.assets, target_dir)
-			  .map((f) => f.replace(sep, '/'))
+				.map((f) => f.replace(sep, '/'))
 				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			const client_files = utils
 				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
-			  .map((f) => f.replace(sep, '/'))
+				.map((f) => f.replace(sep, '/'))
 				.map((f) => f.replace(`${target_dir}/`, ''));
 
 			// returns nothing, very sad
