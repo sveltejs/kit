@@ -15,7 +15,6 @@ export type NavigationCandidate = {
 };
 
 export type NavigationResult = {
-	reload?: boolean;
 	redirect?: string;
 	state: NavigationState;
 	props: Record<string, any>;
