@@ -51,7 +51,7 @@ export default function () {
 				const parts = [];
 
 				for (const segment of route.segments) {
-					if (segment.spread) {
+					if (segment.rest) {
 						parts.push('*');
 						break; // Netlify redirects don't allow anything after a *
 					} else if (segment.dynamic) {
@@ -155,7 +155,7 @@ function get_publish_directory(netlify_config, utils) {
 }
 
 /**
- * @typedef {{ spread: boolean, dynamic: boolean, content: string }} RouteSegment
+ * @typedef {{ rest: boolean, dynamic: boolean, content: string }} RouteSegment
  */
 
 /**
@@ -165,7 +165,7 @@ function get_publish_directory(netlify_config, utils) {
  */
 function matches(a, b) {
 	if (a[0] && b[0]) {
-		if (b[0].spread) {
+		if (b[0].rest) {
 			if (b.length === 1) return true;
 
 			const next_b = b.slice(1);
@@ -184,8 +184,8 @@ function matches(a, b) {
 		if (a.length === 1 && b.length === 1) return true;
 		return matches(a.slice(1), b.slice(1));
 	} else if (a[0]) {
-		return a.length === 1 && a[0].spread;
+		return a.length === 1 && a[0].rest;
 	} else {
-		return b.length === 1 && b[0].spread;
+		return b.length === 1 && b[0].rest;
 	}
 }

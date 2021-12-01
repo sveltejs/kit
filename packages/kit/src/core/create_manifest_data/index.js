@@ -9,7 +9,7 @@ import { posixify } from '../utils.js';
  * @typedef {{
  *   content: string;
  *   dynamic: boolean;
- *   spread: boolean;
+ *   rest: boolean;
  * }} Part
  * @typedef {{
  *   basename: string;
@@ -137,13 +137,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						if (last_part.dynamic) {
 							last_segment.push({
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: item.route_suffix
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: `${last_part.content}${item.route_suffix}`
 							};
 						}
@@ -165,7 +165,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 			const simple_segments = segments.map((segment) => {
 				return {
 					dynamic: segment.some((part) => part.dynamic),
-					spread: segment.some((part) => part.spread),
+					rest: segment.some((part) => part.rest),
 					content: segment
 						.map((part) => (part.dynamic ? `[${part.content}]` : part.content))
 						.join('')
@@ -302,13 +302,13 @@ function comparator(a, b) {
 		if (!a_sub_part) return 1; // b is more specific, so goes first
 		if (!b_sub_part) return -1;
 
-		// if spread && index, order later
-		if (a_sub_part.spread && b_sub_part.spread) {
+		// if rest && index, order later
+		if (a_sub_part.rest && b_sub_part.rest) {
 			return a.is_index ? 1 : -1;
 		}
 
-		// If one is ...spread order it later
-		if (a_sub_part.spread !== b_sub_part.spread) return a_sub_part.spread ? 1 : -1;
+		// If one is ...rest order it later
+		if (a_sub_part.rest !== b_sub_part.rest) return a_sub_part.rest ? 1 : -1;
 
 		if (a_sub_part.dynamic !== b_sub_part.dynamic) {
 			return a_sub_part.dynamic ? 1 : -1;
@@ -350,7 +350,7 @@ function get_parts(part, file) {
 		result.push({
 			content,
 			dynamic,
-			spread: dynamic && /^\.{3}.+$/.test(content)
+			rest: dynamic && /^\.{3}.+$/.test(content)
 		});
 	});
 
@@ -364,7 +364,7 @@ function get_parts(part, file) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment[0].spread
+			return segment[0].rest
 				? '(?:\\/(.*))?'
 				: '\\/' +
 						segment

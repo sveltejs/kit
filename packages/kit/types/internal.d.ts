@@ -171,9 +171,9 @@ export interface Asset {
 }
 
 export interface RouteSegment {
-	dynamic: boolean;
-	spread: boolean;
 	content: string;
+	dynamic: boolean;
+	rest: boolean;
 }
 
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
