@@ -103,7 +103,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				throw new Error(`Invalid route ${file} — brackets are unbalanced`);
 			}
 
-			if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment)) {
+			if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment) && !/\[\.\.\.[^\]]+\]\.json/.test(segment)) {
 				throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
 			}
 
