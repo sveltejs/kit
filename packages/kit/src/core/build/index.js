@@ -265,14 +265,12 @@ async function build_server(
 		fs.writeFileSync(hooks_file, '');
 	}
 
-	const app_file = `${build_dir}/app.js`; // TODO rename
-
 	/** @type {Record<string, string>} */
 	const input = {
-		// TODO
-		app: app_file
+		app: `${build_dir}/app.js`
 	};
 
+	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
 		if (route.type === 'endpoint') {
 			const resolved = path.resolve(cwd, route.file);
@@ -282,6 +280,7 @@ async function build_server(
 		}
 	});
 
+	// ...and every component used by pages
 	manifest_data.components.forEach((file) => {
 		const resolved = path.resolve(cwd, file);
 		const relative = path.relative(config.kit.files.routes, resolved);
@@ -300,7 +299,7 @@ async function build_server(
 
 	// prettier-ignore
 	fs.writeFileSync(
-		app_file,
+		input.app,
 		`
 			import { respond } from '${runtime}';
 			import root from './generated/root.svelte';
