@@ -1,7 +1,7 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
 import { Logger, TrailingSlash } from './internal';
-import { Options } from '@dishuostec/vite-plugin-legacy';
+import type { Options } from '@dishuostec/vite-plugin-legacy/vite_plugin';
 
 export interface AdapterUtils {
 	log: Logger;

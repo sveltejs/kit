@@ -294,11 +294,12 @@ async function build_server(
 
 	let modern_polyfill_asset;
 	let legacy_polyfill_asset;
+	/** @type {Record<string, string>} */
 	const legacy_lookup = {};
 
 	if (config.kit.legacy) {
 		Object.values(client_manifest).forEach((item) => {
-			if (!item.isEntry && !item.isDynamicEntry) {
+			if ((!item.isEntry && !item.isDynamicEntry) || !item.src) {
 				return;
 			}
 
@@ -333,8 +334,8 @@ async function build_server(
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
-				.replace('%svelte.head%', '" + head + "')
-				.replace('%svelte.body%', '" + body + "')};
+			.replace('%svelte.head%', '" + head + "')
+			.replace('%svelte.body%', '" + body + "')};
 
 			let options = null;
 
@@ -410,30 +411,30 @@ async function build_server(
 				error: ${s(manifest.error)},
 				routes: [
 					${manifest.routes
-				.map((route) => {
-					if (route.type === 'page') {
-						const params = get_params(route.params);
+			.map((route) => {
+				if (route.type === 'page') {
+					const params = get_params(route.params);
 
-						return `{
+					return `{
 									type: 'page',
 									pattern: ${route.pattern},
 									params: ${params},
 									a: [${route.a.map(file => file && s(file)).join(', ')}],
 									b: [${route.b.map(file => file && s(file)).join(', ')}]
 								}`;
-					} else {
-						const params = get_params(route.params);
-						const load = `() => import(${s(app_relative(route.file))})`;
+				} else {
+					const params = get_params(route.params);
+					const load = `() => import(${s(app_relative(route.file))})`;
 
-						return `{
+					return `{
 									type: 'endpoint',
 									pattern: ${route.pattern},
 									params: ${params},
 									load: ${load}
 								}`;
-					}
-				})
-				.join(',\n\t\t\t\t\t')}
+				}
+			})
+			.join(',\n\t\t\t\t\t')}
 				]
 			};
 
