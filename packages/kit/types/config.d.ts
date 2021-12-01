@@ -18,7 +18,7 @@ export interface AdapterEntryConfig<Data = any> {
 export interface AdapterEntry<Data = any> {
 	id: string;
 	data: Data;
-	manifest: (opts: { relativePath: string }) => string;
+	generateManifest: (opts: { relativePath: string }) => string;
 }
 
 export interface AdapterUtils {
@@ -33,6 +33,8 @@ export interface AdapterUtils {
 	createEntries<Data>(
 		fn: (route: RouteDefinition) => AdapterEntryConfig<Data>
 	): Array<AdapterEntry<Data>>;
+
+	generateManifest: (opts: { relativePath: string }) => string;
 
 	/**
 	 * @param dest the destination folder to which files should be copied

@@ -73,7 +73,7 @@ export default function () {
 			});
 
 			entries.forEach((entry) => {
-				const manifest = entry.manifest({ relativePath: '../server' });
+				const manifest = entry.generateManifest({ relativePath: '../server' });
 
 				const fn = esm
 					? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`

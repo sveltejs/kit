@@ -53,12 +53,14 @@ export function get_utils({ cwd, config, build_data, log }) {
 				entries.push({
 					id,
 					data,
-					manifest: ({ relativePath }) => generate_manifest(build_data, relativePath, group)
+					generateManifest: ({ relativePath }) => generate_manifest(build_data, relativePath, group)
 				});
 			}
 
 			return entries;
 		},
+
+		generateManifest: ({ relativePath }) => generate_manifest(build_data, relativePath),
 
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
