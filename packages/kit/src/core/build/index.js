@@ -65,8 +65,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	const styles_lookup = new Map();
 	if (options.config.kit.amp) {
 		client.output.forEach((chunk) => {
-			if (chunk.fileName.endsWith('.css')) {
-				// @ts-ignore
+			if (chunk.type === 'asset' && chunk.fileName.endsWith('.css')) {
 				styles_lookup.set(chunk.fileName, chunk.source);
 			}
 		});
@@ -221,9 +220,7 @@ async function build_client({
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
 
-	const output = /** @type {import('rollup').OutputChunk[]} */ (
-		/** @type {any} */ (await vite.build(merged_config)).output
-	);
+	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(merged_config));
 
 	/** @type {import('vite').Manifest} */
 	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
@@ -430,9 +427,7 @@ async function build_server(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
-	const output = /** @type {import('rollup').OutputChunk[]} */ (
-		/** @type {any} */ (await vite.build(merged_config)).output
-	);
+	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(merged_config));
 
 	/** @type {Record<string, string[]>} */
 	const lookup = {};
