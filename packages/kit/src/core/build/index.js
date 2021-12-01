@@ -228,19 +228,19 @@ async function build_client({
 	/** @type {import('vite').Manifest} */
 	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
-	// TODO where does this go?
 	const entry_js = new Set();
 	const entry_css = new Set();
-
 	find_deps(client_entry_file, manifest, entry_js, entry_css);
 
-	const entry = {
-		file: manifest[client_entry_file].file,
-		js: Array.from(entry_js),
-		css: Array.from(entry_css)
+	return {
+		entry: {
+			file: manifest[client_entry_file].file,
+			js: Array.from(entry_js),
+			css: Array.from(entry_css)
+		},
+		output,
+		manifest
 	};
-
-	return { manifest, output, entry };
 }
 
 /**
