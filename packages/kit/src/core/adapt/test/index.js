@@ -107,9 +107,9 @@ suite('prerender', async () => {
 	/** @type {import('types/internal').BuildData} */
 	const build_data = {
 		// @ts-ignore
-		client: { output: [] },
+		client: { chunks: [] },
 		// @ts-ignore
-		server: { output: [] },
+		server: { chunks: [] },
 		static: [],
 		entries: ['/nested']
 	};
