@@ -200,6 +200,13 @@ test('disallows rest parameters inside segments', () => {
 	);
 });
 
+test('allows rest parameters inside endpoints', () => {
+	const { routes } = create('samples/invalid-rest-endpoint-exclusion');
+	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
+		'samples/invalid-rest-endpoint-exclusion/[...rest].json.js'
+	]);
+});
+
 test('ignores files and directories with leading underscores', () => {
 	const { routes } = create('samples/hidden-underscore');
 
