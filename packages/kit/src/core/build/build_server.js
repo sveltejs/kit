@@ -9,6 +9,86 @@ import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
 /**
+ *
+ * @param {{ runtime: string, hooks: string, config: import('types/config').ValidatedConfig }} param0
+ * @returns
+ */
+const template = ({ config, hooks, runtime }) => `
+import { respond } from '${runtime}';
+import root from './generated/root.svelte';
+import { set_paths, assets, base } from './runtime/paths.js';
+import { set_prerendering } from './runtime/env.js';
+import * as user_hooks from ${s(hooks)};
+
+const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
+	.replace('%svelte.head%', '" + head + "')
+	.replace('%svelte.body%', '" + body + "')};
+
+let read = null;
+
+set_paths(${s(config.kit.paths)});
+
+// this looks redundant, but the indirection allows us to access
+// named imports without triggering Rollup's missing import detection
+const get_hooks = hooks => ({
+	getSession: hooks.getSession || (() => ({})),
+	handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
+	externalFetch: hooks.externalFetch || fetch
+});
+
+// allow paths to be globally overridden
+// in svelte-kit preview and in prerendering
+export function override(settings) {
+	set_paths(settings.paths);
+	set_prerendering(settings.prerendering);
+	read = settings.read;
+}
+
+export class App {
+	constructor(manifest) {
+		const hooks = get_hooks(user_hooks);
+
+		this.options = {
+			amp: ${config.kit.amp},
+			dev: false,
+			floc: ${config.kit.floc},
+			get_stack: error => String(error), // for security
+			handle_error: (error, request) => {
+				hooks.handleError({ error, request });
+				error.stack = this.options.get_stack(error);
+			},
+			hooks,
+			hydrate: ${s(config.kit.hydrate)},
+			manifest,
+			paths: { base, assets },
+			prefix: assets + '/${config.kit.appDir}/',
+			prerender: ${config.kit.prerender.enabled},
+			read,
+			root,
+			service_worker: ${config.kit.files.serviceWorker ? "'/service-worker.js'" : 'null'},
+			router: ${s(config.kit.router)},
+			ssr: ${s(config.kit.ssr)},
+			target: ${s(config.kit.target)},
+			template,
+			trailing_slash: ${s(config.kit.trailingSlash)}
+		};
+	}
+
+	render(request, {
+		prerender
+	} = {}) {
+		const host = ${
+			config.kit.host
+				? s(config.kit.host)
+				: `request.headers[${s(config.kit.hostHeader || 'host')}]`
+		};
+		return respond({ ...request, host }, this.options, { prerender });
+	}
+}
+`;
+
+/**
  * @param {{
  *   cwd: string;
  *   assets_base: string;
@@ -16,12 +96,11 @@ import { s } from '../../utils/misc.js';
  *   manifest_data: import('types/internal').ManifestData
  *   build_dir: string;
  *   output_dir: string;
- *   service_worker_entry_file: string | null;
  * }} options
  * @param {string} runtime
  */
 export async function build_server(
-	{ cwd, assets_base, config, manifest_data, build_dir, output_dir, service_worker_entry_file },
+	{ cwd, assets_base, config, manifest_data, build_dir, output_dir },
 	runtime
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
@@ -65,78 +144,11 @@ export async function build_server(
 	// prettier-ignore
 	fs.writeFileSync(
 		input.app,
-		`
-			import { respond } from '${runtime}';
-			import root from './generated/root.svelte';
-			import { set_paths, assets, base } from './runtime/paths.js';
-			import { set_prerendering } from './runtime/env.js';
-			import * as user_hooks from ${s(app_relative(hooks_file))};
-
-			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
-				.replace('%svelte.head%', '" + head + "')
-				.replace('%svelte.body%', '" + body + "')};
-
-			let read = null;
-
-			set_paths(${s(config.kit.paths)});
-
-			// this looks redundant, but the indirection allows us to access
-			// named imports without triggering Rollup's missing import detection
-			const get_hooks = hooks => ({
-				getSession: hooks.getSession || (() => ({})),
-				handle: hooks.handle || (({ request, resolve }) => resolve(request)),
-				handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
-				externalFetch: hooks.externalFetch || fetch
-			});
-
-			// allow paths to be globally overridden
-			// in svelte-kit preview and in prerendering
-			export function override(settings) {
-				set_paths(settings.paths);
-				set_prerendering(settings.prerendering);
-				read = settings.read;
-			}
-
-			export class App {
-				constructor(manifest) {
-					const hooks = get_hooks(user_hooks);
-
-					this.options = {
-						amp: ${config.kit.amp},
-						dev: false,
-						floc: ${config.kit.floc},
-						get_stack: error => String(error), // for security
-						handle_error: (error, request) => {
-							hooks.handleError({ error, request });
-							error.stack = this.options.get_stack(error);
-						},
-						hooks,
-						hydrate: ${s(config.kit.hydrate)},
-						manifest,
-						paths: { base, assets },
-						prefix: assets + '/${config.kit.appDir}/',
-						prerender: ${config.kit.prerender.enabled},
-						read,
-						root,
-						service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
-						router: ${s(config.kit.router)},
-						ssr: ${s(config.kit.ssr)},
-						target: ${s(config.kit.target)},
-						template,
-						trailing_slash: ${s(config.kit.trailingSlash)}
-					};
-				}
-
-				render(request, {
-					prerender
-				} = {}) {
-					const host = ${config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader || 'host')}]`};
-					return respond({ ...request, host }, this.options, { prerender });
-				}
-			}
-		`
-			.replace(/^\t{3}/gm, '')
-			.trim()
+		template({
+			config,
+			hooks: app_relative(hooks_file),
+			runtime
+		})
 	);
 
 	/** @type {import('vite').UserConfig} */
