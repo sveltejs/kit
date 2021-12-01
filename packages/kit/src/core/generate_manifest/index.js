@@ -1,4 +1,3 @@
-import path from 'path';
 import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 
