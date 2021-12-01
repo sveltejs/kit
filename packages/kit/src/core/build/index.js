@@ -453,10 +453,12 @@ async function build_server(
 		}
 	});
 
-	/** @type {import('vite').Manifest} */
-	const manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
-
-	return { manifest, output, methods };
+	return {
+		output,
+		/** @type {import('vite').Manifest} */
+		manifest: JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')),
+		methods: get_methods(cwd, output, manifest_data)
+	};
 }
 
 /**
@@ -575,4 +577,32 @@ function find_deps(file, manifest, js, css) {
 	if (chunk.imports) {
 		chunk.imports.forEach((file) => find_deps(file, manifest, js, css));
 	}
+}
+
+/**
+ *
+ * @param {string} cwd
+ * @param {import('rollup').OutputChunk[]} output
+ * @param {import('types/internal').ManifestData} manifest_data
+ */
+function get_methods(cwd, output, manifest_data) {
+	/** @type {Record<string, string[]>} */
+	const lookup = {};
+	output.forEach((chunk) => {
+		if (!chunk.facadeModuleId) return;
+		const id = chunk.facadeModuleId.slice(cwd.length + 1);
+		lookup[id] = chunk.exports;
+	});
+
+	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
+	const methods = {};
+	manifest_data.routes.forEach((route) => {
+		if (route.type === 'endpoint' && lookup[route.file]) {
+			methods[route.file] = lookup[route.file]
+				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
+				.filter(Boolean);
+		}
+	});
+
+	return methods;
 }
