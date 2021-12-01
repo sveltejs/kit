@@ -31,7 +31,7 @@ export function copy(source, target, opts = {}) {
 	/** @type {string[]} */
 	const files = [];
 
-	const prefix = target + '/';
+	const prefix = posixify(target) + '/';
 
 	const regex = opts.replace
 		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
