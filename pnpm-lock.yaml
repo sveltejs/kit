@@ -295,6 +295,7 @@ importers:
       '@fontsource/fira-mono': ^4.5.0
       '@lukeed/uuid': ^2.0.0
       '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/adapter-cloudflare': workspace:^1.0.0-next.2
       '@sveltejs/adapter-netlify': workspace:^1.0.0-next.35
       '@sveltejs/adapter-node': workspace:*
       '@sveltejs/kit': workspace:*
@@ -306,6 +307,7 @@ importers:
       cookie: 0.4.1
     devDependencies:
       '@sveltejs/adapter-auto': link:../packages/adapter-auto
+      '@sveltejs/adapter-cloudflare': link:../packages/adapter-cloudflare
       '@sveltejs/adapter-netlify': link:../packages/adapter-netlify
       '@sveltejs/adapter-node': link:../packages/adapter-node
       '@sveltejs/kit': link:../packages/kit

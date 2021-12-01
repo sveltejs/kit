@@ -72,7 +72,7 @@ export interface AdapterUtils {
 
 export interface Adapter {
 	name: string;
-	adapt(context: { utils: AdapterUtils; config: ValidatedConfig }): Promise<void>;
+	adapt(utils: AdapterUtils): Promise<void>;
 }
 
 export interface PrerenderErrorHandler {

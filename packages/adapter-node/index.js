@@ -22,7 +22,7 @@ export default function ({
 	return {
 		name: '@sveltejs/adapter-node',
 
-		async adapt({ utils }) {
+		async adapt(utils) {
 			utils.rimraf(out);
 
 			utils.log.minor('Copying assets');

@@ -13,7 +13,7 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
-		async adapt({ utils }) {
+		async adapt(utils) {
 			const { site } = validate_config(utils);
 
 			const bucket = site.bucket;

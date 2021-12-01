@@ -3,7 +3,7 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
-		async adapt({ utils }) {
+		async adapt(utils) {
 			utils.rimraf(assets);
 			utils.rimraf(pages);
 

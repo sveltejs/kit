@@ -3,24 +3,17 @@ import { fileURLToPath } from 'url';
 import { readFileSync, writeFileSync } from 'fs';
 import * as esbuild from 'esbuild';
 
-/**
- * @param {esbuild.BuildOptions} [options]
- */
+/** @type {import('.')} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
-		async adapt({ utils, config }) {
+		async adapt(utils) {
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 			const target_dir = join(process.cwd(), '.svelte-kit', 'cloudflare');
 			utils.rimraf(target_dir);
 
-			const static_files = utils
-				.copy(config.kit.files.assets, target_dir)
-				.map((f) => f.replace(`${target_dir}/`, ''));
-
-			const client_files = utils
-				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
-				.map((f) => f.replace(`${target_dir}/`, ''));
+			const static_files = utils.writeStatic(target_dir);
+			const client_files = utils.writeClient(target_dir);
 
 			// returns nothing, very sad
 			// TODO(future) get/save output

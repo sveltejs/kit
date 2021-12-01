@@ -19,7 +19,7 @@ export default function () {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
-		async adapt({ utils }) {
+		async adapt(utils) {
 			const netlify_config = get_netlify_config();
 
 			// "build" is the default publish directory when Netlify detects SvelteKit
