@@ -446,8 +446,7 @@ async function build_server(
 	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint') {
-			if (lookup[route.file]) {
+		if (route.type === 'endpoint' && lookup[route.file]) {
 				methods[route.file] = lookup[route.file]
 					.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
 					.filter(Boolean);
