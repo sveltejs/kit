@@ -160,8 +160,8 @@ export interface SSRRenderOptions {
 	template({ head, body }: { head: string; body: string }): string;
 	trailing_slash: TrailingSlash;
 	legacy?: {
-		modern_polyfill_filename?: string;
-		legacy_polyfill_filename?: string;
+		modern_polyfill_asset?: string;
+		legacy_polyfill_asset?: string;
 		get_entry(entry: string): string;
 	};
 }
