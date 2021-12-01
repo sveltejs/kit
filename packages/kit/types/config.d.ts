@@ -67,7 +67,9 @@ export interface AdapterUtils {
 		}
 	): string[];
 
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
+	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<{
+		paths: string[];
+	}>;
 }
 
 export interface Adapter {

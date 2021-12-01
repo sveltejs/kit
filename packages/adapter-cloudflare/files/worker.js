@@ -1,5 +1,5 @@
 import { App } from '../output/server/app.js';
-import { manifest } from '../output/server/manifest.js';
+import { manifest, prerendered } from '../cloudflare-tmp/manifest.js';
 
 const app = new App(manifest);
 
@@ -8,9 +8,14 @@ const prefix = `/${manifest.appDir}/`;
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
+		const file = url.pathname.substring(1);
 
-		if (url.pathname.startsWith(prefix) || manifest.assets.has(url.pathname.substring(1))) {
+		if (url.pathname.startsWith(prefix) || manifest.assets.has(file)) {
 			return env.ASSETS.fetch(req);
+		}
+
+		if (prerendered.has(url.pathname) || manifest.assets.has(file + '/index.html')) {
+			return env.ASSETS.fetch(new Request(req.url + '/index.html', req));
 		}
 
 		try {

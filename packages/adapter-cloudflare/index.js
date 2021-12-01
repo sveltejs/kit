@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import * as esbuild from 'esbuild';
@@ -14,9 +15,17 @@ export default function (options = {}) {
 			utils.writeStatic(dest);
 			utils.writeClient(dest);
 
-			// returns nothing, very sad
-			// TODO(future) get/save output
-			await utils.prerender({ dest });
+			const { paths } = await utils.prerender({ dest });
+
+			const tmp = join(process.cwd(), '.svelte-kit', 'cloudflare-tmp');
+			utils.mkdirp(tmp);
+
+			writeFileSync(
+				join(tmp, 'manifest.js'),
+				`export const manifest = ${utils.generateManifest({
+					relativePath: '../output/server'
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(paths)});\n`
+			);
 
 			const worker = join(dest, '_worker.js');
 

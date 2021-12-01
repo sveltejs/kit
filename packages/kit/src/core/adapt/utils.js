@@ -13,6 +13,18 @@ import { generate_manifest } from '../generate_manifest/index.js';
  * @returns {import('types/config').AdapterUtils}
  */
 export function get_utils({ cwd, config, build_data, log }) {
+	/** @type {Set<string>} */
+	const prerendered_paths = new Set();
+	let generated_manifest = false;
+
+	function not_prerendered(route) {
+		if (route.type === 'page' && route.path) {
+			return !prerendered_paths.has(route.path);
+		}
+
+		return true;
+	}
+
 	return {
 		log,
 		rimraf,
@@ -53,14 +65,24 @@ export function get_utils({ cwd, config, build_data, log }) {
 				entries.push({
 					id,
 					data,
-					generateManifest: ({ relativePath }) => generate_manifest(build_data, relativePath, group)
+					generateManifest: ({ relativePath }) => {
+						generated_manifest = true;
+						return generate_manifest(build_data, relativePath, group.filter(not_prerendered));
+					}
 				});
 			}
 
 			return entries;
 		},
 
-		generateManifest: ({ relativePath }) => generate_manifest(build_data, relativePath),
+		generateManifest: ({ relativePath }) => {
+			generated_manifest = true;
+			return generate_manifest(
+				build_data,
+				relativePath,
+				build_data.manifest_data.routes.filter(not_prerendered)
+			);
+		},
 
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
@@ -79,7 +101,11 @@ export function get_utils({ cwd, config, build_data, log }) {
 		},
 
 		async prerender({ all = false, dest, fallback }) {
-			await prerender({
+			if (generated_manifest) {
+				throw new Error('Adapters must call prerender(...) before generateManifest(...)');
+			}
+
+			const prerendered = await prerender({
 				out: dest,
 				all,
 				cwd,
@@ -88,6 +114,13 @@ export function get_utils({ cwd, config, build_data, log }) {
 				fallback,
 				log
 			});
+
+			prerendered.paths.forEach((path) => {
+				prerendered_paths.add(path);
+				prerendered_paths.add(path + '/');
+			});
+
+			return prerendered;
 		}
 	};
 }

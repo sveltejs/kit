@@ -93,11 +93,11 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns {Promise<Array<string>>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
+ * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
-		return [];
+		return { paths: [] };
 	}
 
 	__fetch_polyfill();
@@ -130,7 +130,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
 		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
 	]);
-	const written_files = [];
+
+	/** @type {string[]} */
+	const paths = [];
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -156,7 +158,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(decoded_path, referrer) {
-		const path = encodeURI(normalize(decoded_path));
+		const normalized_path = normalize(decoded_path);
+		const path = encodeURI(normalized_path);
 
 		if (seen.has(path)) return;
 		seen.add(path);
@@ -202,7 +205,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
-					written_files.push(file);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -220,7 +222,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
-				written_files.push(file);
+				paths.push(normalized_path);
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
@@ -240,7 +242,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				if (result.body) {
 					writeFileSync(file, result.body);
-					written_files.push(file);
+					paths.push(dependency_path);
 				}
 
 				if (response_type === OK) {
@@ -335,8 +337,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
-		written_files.push(file);
 	}
 
-	return written_files;
+	return {
+		paths
+	};
 }
