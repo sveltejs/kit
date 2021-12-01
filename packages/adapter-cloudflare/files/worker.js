@@ -1,21 +1,22 @@
 /* global ASSETS */
-import { init, render } from '../output/server/app.js';
+import { App } from '../output/server/app.js';
+import { manifest } from '../output/server/manifest.js';
 
-init();
+const app = new App(manifest);
 
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
+
 		// check generated asset_set for static files
 		if (ASSETS.has(url.pathname.substring(1))) {
 			return env.ASSETS.fetch(req);
 		}
 
 		try {
-			const rendered = await render({
-				host: url.host || '',
-				path: url.pathname || '',
-				query: url.searchParams || '',
+			const rendered = await app.render({
+				path: url.pathname,
+				query: url.searchParams,
 				rawBody: await read(req),
 				headers: Object.fromEntries(req.headers),
 				method: req.method
