@@ -79,17 +79,11 @@ suite_copy('returns a list of copied files', () => {
 	write('deep/a.js', '');
 	write('deep/b.js', '');
 
-	const file_list = copy(source_dir, dest_dir);
+	let file_list = copy(source_dir, dest_dir);
+	assert.equal(file_list.sort(), ['file-one.js', 'file-two.css', 'deep/a.js', 'deep/b.js'].sort());
 
-	assert.equal(
-		file_list.sort(),
-		[
-			join(dest_dir, 'file-one.js'),
-			join(dest_dir, 'file-two.css'),
-			join(dest_dir, 'deep/a.js'),
-			join(dest_dir, 'deep/b.js')
-		].sort()
-	);
+	file_list = copy(`${source_dir}/file-one.js`, `${dest_dir}/file-one-renamed.js`);
+	assert.equal(file_list, ['file-one-renamed.js']);
 });
 
 suite_copy('replaces strings', () => {

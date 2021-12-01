@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { posixify } from '../core/utils.js';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -17,18 +18,20 @@ export function rimraf(path) {
 }
 
 /**
- * @param {string} from
- * @param {string} to
+ * @param {string} source
+ * @param {string} target
  * @param {{
  *   filter?: (basename: string) => boolean;
  *   replace?: Record<string, string>;
  * }} opts
  */
-export function copy(from, to, opts = {}) {
-	if (!fs.existsSync(from)) return [];
+export function copy(source, target, opts = {}) {
+	if (!fs.existsSync(source)) return [];
 
 	/** @type {string[]} */
 	const files = [];
+
+	const prefix = target + '/';
 
 	const regex = opts.replace
 		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
@@ -63,11 +66,11 @@ export function copy(from, to, opts = {}) {
 				fs.copyFileSync(from, to);
 			}
 
-			files.push(to);
+			files.push(to === target ? posixify(path.basename(to)) : posixify(to).replace(prefix, ''));
 		}
 	}
 
-	go(from, to);
+	go(source, target);
 
 	return files;
 }
