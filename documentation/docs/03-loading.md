@@ -68,7 +68,7 @@ Our example blog page might contain a `load` function like the following:
 
 If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-SvelteKit's `load` receives an implemention of `fetch`, which has the following special properties:
+SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
 - it has access to cookies on the server
 - it can make requests against the app's own endpoints without issuing an HTTP call

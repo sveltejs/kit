@@ -6,6 +6,7 @@
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-begin"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"main": "index.cjs",
 	"types": "index.d.ts",
