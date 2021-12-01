@@ -55,7 +55,7 @@ export async function respond(incoming, options, state = {}) {
 				}
 
 				const decoded = decodeURI(request.path);
-				for (const route of options.manifest.routes) {
+				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 

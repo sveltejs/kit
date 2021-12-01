@@ -27,8 +27,8 @@ export async function render_response({
 	error,
 	page
 }) {
-	const css = new Set(options.manifest.entry.css);
-	const js = new Set(options.manifest.entry.js);
+	const css = new Set(options.manifest._.entry.css);
+	const js = new Set(options.manifest._.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
@@ -118,7 +118,7 @@ export async function render_response({
 	} else if (include_js) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.prefix + options.manifest.entry.file)};
+			import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},

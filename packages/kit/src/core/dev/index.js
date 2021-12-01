@@ -19,7 +19,7 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, get_mime_lookup, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -200,79 +200,82 @@ class Watcher extends EventEmitter {
 
 		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
-			assets: manifest_data.assets,
-			entry: {
-				file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
-				css: [],
-				js: []
-			},
-			nodes: manifest_data.components.map((id) => {
-				return async () => {
-					const url = `/${id}`;
+			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+			_: {
+				mime: get_mime_lookup(manifest_data),
+				entry: {
+					file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+					css: [],
+					js: []
+				},
+				nodes: manifest_data.components.map((id) => {
+					return async () => {
+						const url = `/${id}`;
 
-					if (!this.server) throw new Error('Vite server has not been initialized');
+						if (!this.server) throw new Error('Vite server has not been initialized');
 
-					const module = /** @type {SSRComponent} */ (await this.server.ssrLoadModule(url));
-					const node = await this.server.moduleGraph.getModuleByUrl(url);
+						const module = /** @type {SSRComponent} */ (await this.server.ssrLoadModule(url));
+						const node = await this.server.moduleGraph.getModuleByUrl(url);
 
-					if (!node) throw new Error(`Could not find node for ${url}`);
+						if (!node) throw new Error(`Could not find node for ${url}`);
 
-					const deps = new Set();
-					find_deps(node, deps);
+						const deps = new Set();
+						find_deps(node, deps);
 
-					const styles = new Set();
+						const styles = new Set();
 
-					for (const dep of deps) {
-						const parsed = new URL(dep.url, 'http://localhost/');
-						const query = parsed.searchParams;
+						for (const dep of deps) {
+							const parsed = new URL(dep.url, 'http://localhost/');
+							const query = parsed.searchParams;
 
-						// TODO what about .scss files, etc?
-						if (
-							dep.file.endsWith('.css') ||
-							(query.has('svelte') && query.get('type') === 'style')
-						) {
-							try {
-								const mod = await this.server.ssrLoadModule(dep.url);
-								styles.add(mod.default);
-							} catch {
-								// this can happen with dynamically imported modules, I think
-								// because the Vite module graph doesn't distinguish between
-								// static and dynamic imports? TODO investigate, submit fix
+							// TODO what about .scss files, etc?
+							if (
+								dep.file.endsWith('.css') ||
+								(query.has('svelte') && query.get('type') === 'style')
+							) {
+								try {
+									const mod = await this.server.ssrLoadModule(dep.url);
+									styles.add(mod.default);
+								} catch {
+									// this can happen with dynamically imported modules, I think
+									// because the Vite module graph doesn't distinguish between
+									// static and dynamic imports? TODO investigate, submit fix
+								}
 							}
 						}
+
+						return {
+							module,
+							entry: url.endsWith('.svelte') ? url : url + '?import',
+							css: [],
+							js: [],
+							styles: Array.from(styles)
+						};
+					};
+				}),
+				routes: manifest_data.routes.map((route) => {
+					if (route.type === 'page') {
+						return {
+							type: 'page',
+							pattern: route.pattern,
+							params: get_params(route.params),
+							a: route.a.map((id) => manifest_data.components.indexOf(id)),
+							b: route.b.map((id) => manifest_data.components.indexOf(id))
+						};
 					}
 
 					return {
-						module,
-						entry: url.endsWith('.svelte') ? url : url + '?import',
-						css: [],
-						js: [],
-						styles: Array.from(styles)
-					};
-				};
-			}),
-			routes: manifest_data.routes.map((route) => {
-				if (route.type === 'page') {
-					return {
-						type: 'page',
+						type: 'endpoint',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						a: route.a.map((id) => manifest_data.components.indexOf(id)),
-						b: route.b.map((id) => manifest_data.components.indexOf(id))
+						load: async () => {
+							if (!this.server) throw new Error('Vite server has not been initialized');
+							const url = path.resolve(this.cwd, route.file);
+							return await this.server.ssrLoadModule(url);
+						}
 					};
-				}
-
-				return {
-					type: 'endpoint',
-					pattern: route.pattern,
-					params: get_params(route.params),
-					load: async () => {
-						if (!this.server) throw new Error('Vite server has not been initialized');
-						const url = path.resolve(this.cwd, route.file);
-						return await this.server.ssrLoadModule(url);
-					}
-				};
-			})
+				})
+			}
 		};
 	}
 

@@ -104,14 +104,17 @@ export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetP
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSRManifest {
-	entry: {
-		file: string;
-		js: string[];
-		css: string[];
+	assets: Set<string>;
+	_: {
+		mime: Record<string, string>;
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
+		nodes: SSRNodeLoader[];
+		routes: SSRRoute[];
 	};
-	assets: Asset[];
-	nodes: SSRNodeLoader[];
-	routes: SSRRoute[];
 }
 
 export interface Hooks {

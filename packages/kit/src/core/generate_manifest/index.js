@@ -1,4 +1,6 @@
+import path from 'path';
 import { s } from '../../utils/misc.js';
+import { get_mime_lookup } from '../utils.js';
 
 /**
  * @param {import('../../../types/internal').BuildData} build_data;
@@ -40,38 +42,41 @@ export function generate_manifest(
 
 	// prettier-ignore
 	return `{
-		assets: ${s(build_data.manifest_data.assets)},
-		entry: ${s(build_data.client.entry)},
-		nodes: [
-			${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t')}
-		],
-		routes: [
-			${routes.map(route => {
-				if (route.type === 'page') {
-					return `{
-						type: 'page',
-						pattern: ${route.pattern},
-						params: ${get_params(route.params)},
-						path: ${s(route.path)},
-						a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
-						b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
-					}`.replace(/^\t\t/gm, '');
-				} else {
-					if (!build_data.server.manifest[route.file]) {
-						// this is necessary in cases where a .css file snuck in —
-						// perhaps it would be better to disallow these (and others?)
-						return null;
-					}
+		assets: new Set(${s(build_data.manifest_data.assets.map(asset => asset.file))}),
+		_: {
+			mime: ${s(get_mime_lookup(build_data.manifest_data))},
+			entry: ${s(build_data.client.entry)},
+			nodes: [
+				${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t')}
+			],
+			routes: [
+				${routes.map(route => {
+					if (route.type === 'page') {
+						return `{
+							type: 'page',
+							pattern: ${route.pattern},
+							params: ${get_params(route.params)},
+							path: ${s(route.path)},
+							a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
+							b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
+						}`.replace(/^\t\t/gm, '');
+					} else {
+						if (!build_data.server.manifest[route.file]) {
+							// this is necessary in cases where a .css file snuck in —
+							// perhaps it would be better to disallow these (and others?)
+							return null;
+						}
 
-					return `{
-						type: 'endpoint',
-						pattern: ${route.pattern},
-						params: ${get_params(route.params)},
-						load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
-					}`.replace(/^\t\t/gm, '');
-				}
-			}).filter(Boolean).join(',\n\t\t\t')}
-		]
+						return `{
+							type: 'endpoint',
+							pattern: ${route.pattern},
+							params: ${get_params(route.params)},
+							load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
+						}`.replace(/^\t\t/gm, '');
+					}
+				}).filter(Boolean).join(',\n\t\t\t')}
+			]
+		}
 	}`.replace(/^\t/gm, '');
 }
 

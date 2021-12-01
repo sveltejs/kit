@@ -112,20 +112,28 @@ export async function load_node({
 					resolved.startsWith(prefix) ? resolved.slice(prefix.length) : resolved
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
-				const asset = options.manifest.assets.find(
-					(d) => d.file === filename || d.file === filename_html
-				);
 
-				if (asset) {
-					response = options.read
-						? new Response(options.read(asset.file), {
-								headers: asset.type ? { 'content-type': asset.type } : {}
-						  })
-						: await fetch(
-								// TODO we need to know what protocol to use
-								`http://${page.host}/${asset.file}`,
-								/** @type {RequestInit} */ (opts)
-						  );
+				const is_asset = options.manifest.assets.has(filename);
+				const is_asset_html = options.manifest.assets.has(filename_html);
+
+				if (is_asset || is_asset_html) {
+					const file = is_asset ? filename : filename_html;
+
+					if (options.read) {
+						const type = is_asset
+							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							: 'text/html';
+
+						response = new Response(options.read(file), {
+							headers: type ? { 'content-type': type } : {}
+						});
+					} else {
+						response = await fetch(
+							// TODO we need to know what protocol to use
+							`http://${page.host}/${file}`,
+							/** @type {RequestInit} */ (opts)
+						);
+					}
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 

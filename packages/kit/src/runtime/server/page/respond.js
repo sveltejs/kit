@@ -30,7 +30,7 @@ export async function respond(opts) {
 
 	try {
 		nodes = await Promise.all(
-			route.a.map((n) => options.manifest.nodes[n] && options.manifest.nodes[n]())
+			route.a.map((n) => options.manifest._.nodes[n] && options.manifest._.nodes[n]())
 		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
@@ -128,7 +128,7 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.manifest.nodes[route.b[i]]();
+							const error_node = await options.manifest._.nodes[route.b[i]]();
 
 							/** @type {Loaded} */
 							let node_loaded;
