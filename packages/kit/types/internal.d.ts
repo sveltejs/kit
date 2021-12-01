@@ -1,5 +1,5 @@
 import { RequestHandler } from './endpoint';
-import { App as PublicApp, IncomingRequest } from './app';
+import { App, IncomingRequest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -18,8 +18,8 @@ export interface PrerenderOptions {
 	dependencies: Map<string, ServerResponse>;
 }
 
-export interface App extends PublicApp {
-	init(options: { manifest: SSRManifest }): void;
+export interface AppModule {
+	App: typeof App;
 
 	override(options: {
 		paths: {
@@ -29,13 +29,6 @@ export interface App extends PublicApp {
 		prerendering: boolean;
 		read(file: string): Buffer;
 	}): void;
-
-	render(
-		incoming: IncomingRequest,
-		options?: {
-			prerender: PrerenderOptions;
-		}
-	): Promise<ServerResponse>;
 }
 
 export interface Logger {

@@ -36,7 +36,7 @@ export async function preview({
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
 
-	/** @type {import('types/internal').App} */
+	/** @type {import('types/internal').AppModule} */
 	const { App, override } = await import(pathToFileURL(app_file).href);
 
 	const { manifest } = await import(pathToFileURL(manifest_file).href);

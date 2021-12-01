@@ -39,7 +39,14 @@ suite('copy files', () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: [] };
+	const build_data = {
+		// @ts-ignore
+		client: {},
+		// @ts-ignore
+		server: {},
+		static: [],
+		entries: []
+	};
 
 	const utils = get_utils({
 		cwd,
@@ -99,7 +106,9 @@ suite('prerender', async () => {
 
 	/** @type {import('types/internal').BuildData} */
 	const build_data = {
+		// @ts-ignore
 		client: { output: [] },
+		// @ts-ignore
 		server: { output: [] },
 		static: [],
 		entries: ['/nested']

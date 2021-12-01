@@ -7,8 +7,8 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 			utils.rimraf(assets);
 			utils.rimraf(pages);
 
-			utils.copy_static_files(assets);
-			utils.copy_client_files(assets);
+			utils.writeStatic(assets);
+			utils.writeClient(assets);
 
 			await utils.prerender({
 				fallback,

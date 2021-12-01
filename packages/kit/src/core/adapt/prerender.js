@@ -108,7 +108,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('types/internal').App} */
+	/** @type {import('types/internal').AppModule} */
 	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
 	override({

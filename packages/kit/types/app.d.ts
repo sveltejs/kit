@@ -1,10 +1,15 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
-import { SSRManifest } from './internal';
+import { PrerenderOptions, SSRManifest } from './internal';
 
-export interface App {
-	init(options: { manifest: SSRManifest }): void;
-	render(incoming: IncomingRequest): Promise<ServerResponse>;
+export class App {
+	constructor(manifest: SSRManifest);
+	render(
+		incoming: IncomingRequest,
+		options?: {
+			prerender: PrerenderOptions;
+		}
+	): Promise<ServerResponse>;
 }
 
 export type RawBody = null | Uint8Array;
