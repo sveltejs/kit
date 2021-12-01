@@ -107,7 +107,7 @@ suite('prerender', async () => {
 	/** @type {import('types/internal').BuildData} */
 	const build_data = {
 		// @ts-ignore
-		client: { chunks: [] },
+		client: { assets: [], chunks: [] },
 		// @ts-ignore
 		server: { chunks: [] },
 		static: [],
