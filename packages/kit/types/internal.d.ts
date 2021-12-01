@@ -1,5 +1,6 @@
+import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { App, IncomingRequest } from './app';
+import { App } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -209,18 +210,19 @@ export interface ManifestData {
 export interface BuildData {
 	manifest_data: ManifestData;
 	client: {
-		manifest: import('vite').Manifest;
-		output: Array<import('rollup').OutputChunk>;
+		assets: OutputAsset[];
+		chunks: OutputChunk[];
 		entry: {
 			file: string;
 			js: string[];
 			css: string[];
 		};
+		manifest: import('vite').Manifest;
 	};
 	server: {
+		chunks: OutputChunk[];
 		manifest: import('vite').Manifest;
 		methods: Record<string, HttpMethod[]>;
-		output: Array<import('rollup').OutputChunk>;
 	};
 	static: string[];
 	entries: string[];

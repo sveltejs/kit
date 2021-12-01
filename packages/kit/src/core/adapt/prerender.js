@@ -127,7 +127,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const files = new Set([
 		...build_data.static,
-		...build_data.client.output.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
 	]);
 	const written_files = [];
 

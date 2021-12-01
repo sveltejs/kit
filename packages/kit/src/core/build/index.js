@@ -64,9 +64,9 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 	const styles_lookup = new Map();
 	if (options.config.kit.amp) {
-		client.output.forEach((chunk) => {
-			if (chunk.type === 'asset' && chunk.fileName.endsWith('.css')) {
-				styles_lookup.set(chunk.fileName, chunk.source);
+		client.assets.forEach((asset) => {
+			if (asset.fileName.endsWith('.css')) {
+				styles_lookup.set(asset.fileName, asset.source);
 			}
 		});
 	}
@@ -220,7 +220,7 @@ async function build_client({
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_client');
 
-	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(merged_config));
+	const { chunks, assets } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
 	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
@@ -230,12 +230,13 @@ async function build_client({
 	find_deps(client_entry_file, manifest, entry_js, entry_css);
 
 	return {
+		assets,
+		chunks,
 		entry: {
 			file: manifest[client_entry_file].file,
 			js: Array.from(entry_js),
 			css: Array.from(entry_css)
 		},
-		output,
 		manifest
 	};
 }
@@ -427,11 +428,11 @@ async function build_server(
 
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
-	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(merged_config));
+	const { chunks } = await create_build(merged_config);
 
 	/** @type {Record<string, string[]>} */
 	const lookup = {};
-	output.forEach((chunk) => {
+	chunks.forEach((chunk) => {
 		if (!chunk.facadeModuleId) return;
 		const id = chunk.facadeModuleId.slice(cwd.length + 1);
 		lookup[id] = chunk.exports;
@@ -448,10 +449,10 @@ async function build_server(
 	});
 
 	return {
-		output,
+		chunks,
 		/** @type {import('vite').Manifest} */
 		manifest: JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')),
-		methods: get_methods(cwd, output, manifest_data)
+		methods: get_methods(cwd, chunks, manifest_data)
 	};
 }
 
@@ -599,4 +600,19 @@ function get_methods(cwd, output, manifest_data) {
 	});
 
 	return methods;
+}
+
+/** @param {import('vite').UserConfig} config */
+async function create_build(config) {
+	const { output } = /** @type {import('rollup').RollupOutput} */ (await vite.build(config));
+
+	const chunks = /** @type {import('rollup').OutputChunk[]} */ (
+		output.filter((output) => output.type === 'chunk')
+	);
+
+	const assets = /** @type {import('rollup').OutputAsset[]} */ (
+		output.filter((output) => output.type === 'asset')
+	);
+
+	return { chunks, assets };
 }
