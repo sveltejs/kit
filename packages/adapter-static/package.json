@@ -26,10 +26,10 @@
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"playwright-chromium": "^1.15.2",
+		"playwright-chromium": "^1.17.0",
 		"port-authority": "^1.1.2",
-		"sirv": "^1.0.17",
-		"svelte": "^3.44.0",
+		"sirv": "^1.0.19",
+		"svelte": "^3.44.2",
 		"uvu": "^0.5.2"
 	}
 }
