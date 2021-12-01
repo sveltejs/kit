@@ -102,6 +102,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	__fetch_polyfill();
 
+	mkdirp(out);
+
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	const seen = new Set();
