@@ -17,6 +17,7 @@ export function get_utils({ cwd, config, build_data, log }) {
 	const prerendered_paths = new Set();
 	let generated_manifest = false;
 
+	/** @param {import('types/internal').RouteData} route */
 	function not_prerendered(route) {
 		if (route.type === 'page' && route.path) {
 			return !prerendered_paths.has(route.path);
