@@ -221,4 +221,4 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 ### vite
 
-A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
+A [Vite config object](https://vitejs.dev/config), or a function that returns one. You can pass [Vite and Rollup plugins](https://github.com/vitejs/awesome-vite#plugins) via [the `plugins` option](https://vitejs.dev/config/#plugins) to customize your build in advanced ways such as supporting image optimization, Tauri, WASM, Workbox, and more. SvelteKit will prevent you from setting certain build-related options since it depends on certain configuration values.
