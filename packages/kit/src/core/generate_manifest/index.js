@@ -41,6 +41,7 @@ export function generate_manifest(
 
 	// prettier-ignore
 	return `{
+		appDir: ${s(build_data.app_dir)},
 		assets: new Set(${s(build_data.manifest_data.assets.map(asset => asset.file))}),
 		_: {
 			mime: ${s(get_mime_lookup(build_data.manifest_data))},

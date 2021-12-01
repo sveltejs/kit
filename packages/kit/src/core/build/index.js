@@ -87,6 +87,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 	}
 
 	const build_data = {
+		app_dir: config.kit.appDir,
 		manifest_data: options.manifest_data,
 		client,
 		server,

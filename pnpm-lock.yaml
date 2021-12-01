@@ -290,6 +290,29 @@ importers:
       tiny-glob: 0.2.9
       uvu: 0.5.2
 
+  sandbox:
+    specifiers:
+      '@fontsource/fira-mono': ^4.5.0
+      '@lukeed/uuid': ^2.0.0
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/adapter-cloudflare': workspace:*
+      '@sveltejs/kit': workspace:*
+      cookie: ^0.4.1
+      prettier: ^2.4.1
+      prettier-plugin-svelte: ^2.4.0
+      svelte: ^3.44.0
+    dependencies:
+      '@fontsource/fira-mono': 4.5.0
+      '@lukeed/uuid': 2.0.0
+      cookie: 0.4.1
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../packages/adapter-auto
+      '@sveltejs/adapter-cloudflare': link:../packages/adapter-cloudflare
+      '@sveltejs/kit': link:../packages/kit
+      prettier: 2.5.0
+      prettier-plugin-svelte: 2.5.0_prettier@2.5.0+svelte@3.44.2
+      svelte: 3.44.2
+
 packages:
 
   /@actions/core/1.6.0:

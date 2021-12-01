@@ -200,6 +200,7 @@ class Watcher extends EventEmitter {
 
 		/** @type {import('types/internal').SSRManifest} */
 		this.manifest = {
+			appDir: this.config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
 			_: {
 				mime: get_mime_lookup(manifest_data),

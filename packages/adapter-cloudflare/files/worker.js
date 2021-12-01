@@ -1,15 +1,15 @@
-/* global ASSETS */
 import { App } from '../output/server/app.js';
 import { manifest } from '../output/server/manifest.js';
 
 const app = new App(manifest);
 
+const prefix = `/${manifest.appDir}/`;
+
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
 
-		// check generated asset_set for static files
-		if (ASSETS.has(url.pathname.substring(1))) {
+		if (url.pathname.startsWith(prefix) || manifest.assets.has(url.pathname.substring(1))) {
 			return env.ASSETS.fetch(req);
 		}
 
@@ -17,7 +17,7 @@ export default {
 			const rendered = await app.render({
 				path: url.pathname,
 				query: url.searchParams,
-				rawBody: await read(req),
+				rawBody: new Uint8Array(await req.arrayBuffer()),
 				headers: Object.fromEntries(req.headers),
 				method: req.method
 			});
@@ -25,7 +25,7 @@ export default {
 			if (rendered) {
 				return new Response(rendered.body, {
 					status: rendered.status,
-					headers: makeHeaders(rendered.headers)
+					headers: make_headers(rendered.headers)
 				});
 			}
 		} catch (e) {
@@ -39,11 +39,7 @@ export default {
 	}
 };
 
-async function read(request) {
-	return new Uint8Array(await request.arrayBuffer());
-}
-
-function makeHeaders(headers) {
+function make_headers(headers) {
 	const result = new Headers();
 	for (const header in headers) {
 		const value = headers[header];

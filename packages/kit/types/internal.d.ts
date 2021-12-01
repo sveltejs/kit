@@ -104,6 +104,7 @@ export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetP
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface SSRManifest {
+	appDir: string;
 	assets: Set<string>;
 	_: {
 		mime: Record<string, string>;
@@ -211,6 +212,7 @@ export interface ManifestData {
 }
 
 export interface BuildData {
+	app_dir: string;
 	manifest_data: ManifestData;
 	client: {
 		assets: OutputAsset[];
