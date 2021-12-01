@@ -14,7 +14,7 @@ SvelteKit is a framework for building extremely high-performance web apps.
 
 Building an app with all the modern best practices is fiendishly complicated. Those practices include [build optimizations](https://vitejs.dev/guide/features.html#build-optimizations), so that you load only the minimal required code; [offline support](#service-workers); [prefetching](#anchor-options-sveltekit-prefetch) pages before the user initiates navigation; and [configurable rendering](#ssr-and-javascript) that allows you to generate HTML [on the server](#ssr-and-javascript-ssr) or [in the browser](#ssr-and-javascript-router) at runtime or [at build-time](#ssr-and-javascript-prerender). SvelteKit does all the boring stuff for you so that you can get on with the creative part.
 
-It uses [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) to provide a lightning-fast and feature-rich development experience, where changes to your code are reflected in the browser immediately.
+It uses [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) to provide a lightning-fast and feature-rich development experience with [Hot Module Replacement (HMR)](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#hot), where changes to your code are reflected in the browser instantly.
 
 You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introduction to Svelte blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [Svelte tutorial](https://svelte.dev/tutorial) to learn more.
 
@@ -36,4 +36,8 @@ There are two basic concepts:
 - Each page of your app is a [Svelte](https://svelte.dev) component
 - You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
 
-Try editing the files to get a feel for how everything works – you may not need to bother reading the rest of this guide! We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode), but [support also exists for numerous other editors](https://sveltesociety.dev/tools#editor-support).
+Try editing the files to get a feel for how everything works – you may not need to bother reading the rest of this guide!
+
+#### Editor setup
+
+We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode), but [support also exists for numerous other editors](https://sveltesociety.dev/tools#editor-support).
