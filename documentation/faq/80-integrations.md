@@ -38,6 +38,54 @@ export default config;
 
 See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#configureserver) for more details including how to control ordering.
 
+### How do I setup client-side code with an initialization function?
+
+If you have a function that needs to run only once on the *client side*, such as an initialization function for a GraphQL query library, you could use an approach like this:
+
+```js
+// clientConnection.ts
+import { initalizeConnection } from 'some-library';
+import { readable } from 'svelte/store';
+
+let storedConnection = null;
+const noop = () => {};
+
+export const connection = readable(null, (set) => {
+	if (!storedConnection) {
+		storedConnection = initializeConnection('params');
+	}
+	set(storedConnection);
+	return noop;
+});
+```
+
+Then in the rest of your code, you can do this:
+
+```js
+import { connection } from '$lib/clientConnection.ts';
+
+function getResult(query) {
+	return $connection.get(query);
+}
+```
+
+This technique uses the [initalization function of Svelte stores](https://svelte.dev/docs#svelte_store), which is called when the number of subscribers goes from zero to one (but not from one to two, etc) to set up a connection on demand. And because the connection is cached in an external variable, when one page unsubscribes from the store and a second page subscribes, the store's initialization function will be called again, but it will return the cached connection instead of creating a new one.
+
+**The drawback to this technique** is that the connection will never be cleaned up. If the library you're using requires connections to be closed when you're done with them, it might be better to do this:
+
+```js
+export const connection = readable(null, (set) => {
+	if (!storedConnection) {
+		storedConnection = initializeConnection('params');
+	}
+	set(storedConnection);
+	return () => {
+		closeConnection(storedConnection);
+		storedConnection = null;
+	};
+});
+```
+
 ### How do I use a client-side only library that depends on `document` or `window`?
 
 Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. [This currently occurs even when SSR is disabled](https://github.com/sveltejs/kit/issues/754).
