@@ -19,35 +19,35 @@ export default function () {
 	return {
 		name: '@sveltejs/adapter-netlify',
 
-		async adapt(utils) {
+		async adapt(builder) {
 			const netlify_config = get_netlify_config();
 
 			// "build" is the default publish directory when Netlify detects SvelteKit
-			const publish = get_publish_directory(netlify_config, utils) || 'build';
+			const publish = get_publish_directory(netlify_config, builder) || 'build';
 
 			// empty out existing build directories
-			utils.rimraf(publish);
-			utils.rimraf('.netlify/functions-internal');
-			utils.rimraf('.netlify/server');
-			utils.rimraf('.netlify/package.json');
-			utils.rimraf('.netlify/handler.js');
+			builder.rimraf(publish);
+			builder.rimraf('.netlify/functions-internal');
+			builder.rimraf('.netlify/server');
+			builder.rimraf('.netlify/package.json');
+			builder.rimraf('.netlify/handler.js');
 
-			utils.mkdirp('.netlify/functions-internal');
+			builder.mkdirp('.netlify/functions-internal');
 
-			utils.log.minor(`Publishing to "${publish}"`);
+			builder.log.minor(`Publishing to "${publish}"`);
 
-			utils.log.minor('Generating serverless function...');
-			utils.writeServer('.netlify/server');
+			builder.log.minor('Generating serverless function...');
+			builder.writeServer('.netlify/server');
 
-			utils.log.minor('Prerendering static pages...');
-			await utils.prerender({
+			builder.log.minor('Prerendering static pages...');
+			await builder.prerender({
 				dest: publish
 			});
 
 			// for esbuild, use ESM; for zip-it-and-ship-it, use CJS
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
-			const entries = utils.createEntries((route) => {
+			const entries = builder.createEntries((route) => {
 				const parts = [];
 
 				for (const segment of route.segments) {
@@ -83,7 +83,7 @@ export default function () {
 			});
 
 			if (esm) {
-				utils.copy(join(files, 'esm/handler.js'), '.netlify/handler.js');
+				builder.copy(join(files, 'esm/handler.js'), '.netlify/handler.js');
 			} else {
 				// TODO might be useful if you could specify CJS/ESM as an option to writeServer
 				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
@@ -93,17 +93,17 @@ export default function () {
 					writeFileSync(filepath, output);
 				});
 
-				utils.copy(join(files, 'cjs/handler.js'), '.netlify/handler.js');
+				builder.copy(join(files, 'cjs/handler.js'), '.netlify/handler.js');
 				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 			}
 
-			utils.log.minor('Copying assets...');
-			utils.writeStatic(publish);
-			utils.writeClient(publish);
+			builder.log.minor('Copying assets...');
+			builder.writeStatic(publish);
+			builder.writeClient(publish);
 
-			utils.log.minor('Writing redirects...');
+			builder.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
-			utils.copy('_redirects', redirect_file);
+			builder.copy('_redirects', redirect_file);
 			const redirects = entries
 				.map(({ id, data }) => `${id} /.netlify/functions/${data.name} 200`)
 				.join('\n');
@@ -127,12 +127,12 @@ function get_netlify_config() {
 
 /**
  * @param {NetlifyConfig} netlify_config
- * @param {import('@sveltejs/kit').AdapterUtils} utils
+ * @param {import('@sveltejs/kit').Builder} builder
  **/
-function get_publish_directory(netlify_config, utils) {
+function get_publish_directory(netlify_config, builder) {
 	if (netlify_config) {
 		if (!netlify_config.build || !netlify_config.build.publish) {
-			utils.log.warn('No publish directory specified in netlify.toml, using default');
+			builder.log.warn('No publish directory specified in netlify.toml, using default');
 			return;
 		}
 
@@ -149,7 +149,7 @@ function get_publish_directory(netlify_config, utils) {
 		return netlify_config.build.publish;
 	}
 
-	utils.log.warn(
+	builder.log.warn(
 		'No netlify.toml found. Using default publish directory. Consult https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify#configuration for more details '
 	);
 }

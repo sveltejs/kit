@@ -4,7 +4,7 @@
 import './ambient-modules';
 
 export { App, IncomingRequest, RawBody } from './app';
-export { Adapter, AdapterUtils, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
+export { Adapter, Builder, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput, Page } from './page';
 export {

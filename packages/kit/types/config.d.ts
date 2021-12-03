@@ -21,7 +21,7 @@ export interface AdapterEntry<Data = any> {
 	generateManifest: (opts: { relativePath: string }) => string;
 }
 
-export interface AdapterUtils {
+export interface Builder {
 	log: Logger;
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
@@ -74,7 +74,7 @@ export interface AdapterUtils {
 
 export interface Adapter {
 	name: string;
-	adapt(utils: AdapterUtils): Promise<void>;
+	adapt(builder: Builder): Promise<void>;
 }
 
 export interface PrerenderErrorHandler {

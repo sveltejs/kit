@@ -12,9 +12,9 @@ export default function () {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
-		async adapt(utils) {
+		async adapt(builder) {
 			const dir = '.output';
-			utils.rimraf(dir);
+			builder.rimraf(dir);
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
@@ -23,18 +23,18 @@ export default function () {
 				lambda: join(dir, 'server/pages')
 			};
 
-			utils.log.minor('Prerendering static pages...');
-			await utils.prerender({
+			builder.log.minor('Prerendering static pages...');
+			await builder.prerender({
 				dest: dirs.static
 			});
 
-			// TODO ideally we'd have something like utils.tmpdir('vercel')
+			// TODO ideally we'd have something like builder.tmpdir('vercel')
 			// rather than hardcoding '.svelte-kit/vercel/entry.js', and the
 			// relative import from that file to output/server/app.js
 			// would be controlled. at the moment we're exposing
 			// implementation details that could change
-			utils.log.minor('Generating serverless function...');
-			utils.copy(files, '.svelte-kit/vercel', {
+			builder.log.minor('Generating serverless function...');
+			builder.copy(files, '.svelte-kit/vercel', {
 				replace: {
 					APP: '../output/server/app.js',
 					MANIFEST: './manifest.js'
@@ -43,7 +43,9 @@ export default function () {
 
 			writeFileSync(
 				'.svelte-kit/vercel/manifest.js',
-				`export const manifest = ${utils.generateManifest({ relativePath: '../output/server' })};\n`
+				`export const manifest = ${builder.generateManifest({
+					relativePath: '../output/server'
+				})};\n`
 			);
 
 			await esbuild.build({
@@ -56,11 +58,11 @@ export default function () {
 
 			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
 
-			utils.log.minor('Copying assets...');
-			utils.writeClient(dirs.static);
-			utils.writeStatic(dirs.static);
+			builder.log.minor('Copying assets...');
+			builder.writeClient(dirs.static);
+			builder.writeStatic(dirs.static);
 
-			utils.log.minor('Writing manifests...');
+			builder.log.minor('Writing manifests...');
 			writeFileSync(
 				join(dir, 'routes-manifest.json'),
 				JSON.stringify({

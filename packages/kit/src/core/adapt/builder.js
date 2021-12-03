@@ -10,9 +10,9 @@ import { generate_manifest } from '../generate_manifest/index.js';
  *   build_data: import('types/internal').BuildData;
  *   log: import('types/internal').Logger;
  * }} opts
- * @returns {import('types/config').AdapterUtils}
+ * @returns {import('types/config').Builder}
  */
-export function get_utils({ cwd, config, build_data, log }) {
+export function create_builder({ cwd, config, build_data, log }) {
 	/** @type {Set<string>} */
 	const prerendered_paths = new Set();
 	let generated_manifest = false;

@@ -3,7 +3,7 @@ import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
 import glob from 'tiny-glob/sync.js';
-import { get_utils } from '../utils.js';
+import { create_builder } from '../builder.js';
 import { fileURLToPath } from 'url';
 import { SVELTE_KIT } from '../../constants.js';
 
@@ -22,7 +22,7 @@ const log = Object.assign(logger, {
 	success: logger
 });
 
-const suite = uvu.suite('adapter utils');
+const suite = uvu.suite('adapter');
 
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
@@ -48,7 +48,7 @@ suite('copy files', () => {
 		entries: []
 	};
 
-	const utils = get_utils({
+	const builder = create_builder({
 		cwd,
 		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
 		build_data,
@@ -58,7 +58,7 @@ suite('copy files', () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.writeStatic(dest);
+	builder.writeStatic(dest);
 
 	assert.equal(
 		glob('**', {
@@ -68,7 +68,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.writeClient(dest);
+	builder.writeClient(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
@@ -76,7 +76,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.writeServer(dest);
+	builder.writeServer(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
@@ -114,7 +114,7 @@ suite('prerender', async () => {
 		entries: ['/nested']
 	};
 
-	const utils = get_utils({
+	const builder = create_builder({
 		cwd,
 		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
 		build_data,
@@ -124,7 +124,7 @@ suite('prerender', async () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	await utils.prerender({
+	await builder.prerender({
 		all: true,
 		dest
 	});

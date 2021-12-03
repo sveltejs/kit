@@ -22,22 +22,22 @@ export default function ({
 	return {
 		name: '@sveltejs/adapter-node',
 
-		async adapt(utils) {
-			utils.rimraf(out);
+		async adapt(builder) {
+			builder.rimraf(out);
 
-			utils.log.minor('Copying assets');
-			utils.writeClient(`${out}/client`);
-			utils.writeServer(`${out}/server`);
-			utils.writeStatic(`${out}/static`);
+			builder.log.minor('Copying assets');
+			builder.writeClient(`${out}/client`);
+			builder.writeServer(`${out}/server`);
+			builder.writeStatic(`${out}/static`);
 
 			writeFileSync(
 				`${out}/manifest.js`,
-				`export const manifest = ${utils.generateManifest({
+				`export const manifest = ${builder.generateManifest({
 					relativePath: './server'
 				})};\n`
 			);
 
-			utils.copy(files, out, {
+			builder.copy(files, out, {
 				replace: {
 					APP: './server/app.js', // TODO hard-coded path is brittle
 					MANIFEST: './manifest.js',
@@ -47,13 +47,13 @@ export default function ({
 				}
 			});
 
-			utils.log.minor('Prerendering static pages');
-			await utils.prerender({
+			builder.log.minor('Prerendering static pages');
+			await builder.prerender({
 				dest: `${out}/prerendered`
 			});
 
 			if (precompress) {
-				utils.log.minor('Compressing assets');
+				builder.log.minor('Compressing assets');
 				await compress(`${out}/client`);
 				await compress(`${out}/static`);
 				await compress(`${out}/prerendered`);

@@ -13,26 +13,26 @@ export default function (options) {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
-		async adapt(utils) {
-			const { site } = validate_config(utils);
+		async adapt(builder) {
+			const { site } = validate_config(builder);
 
 			const bucket = site.bucket;
 			const entrypoint = site['entry-point'] || 'workers-site';
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
 
-			utils.rimraf(bucket);
-			utils.rimraf(entrypoint);
+			builder.rimraf(bucket);
+			builder.rimraf(entrypoint);
 
-			utils.log.info('Installing worker dependencies...');
-			utils.copy(`${files}/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
+			builder.log.info('Installing worker dependencies...');
+			builder.copy(`${files}/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
 
 			// TODO would be cool if we could make this step unnecessary somehow
 			const stdout = execSync('npm install', { cwd: '.svelte-kit/cloudflare-workers' });
-			utils.log.info(stdout.toString());
+			builder.log.info(stdout.toString());
 
-			utils.log.minor('Generating worker...');
-			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
+			builder.log.minor('Generating worker...');
+			builder.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
 
 			/** @type {BuildOptions} */
 			const default_options = {
@@ -50,19 +50,19 @@ export default function (options) {
 
 			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
 
-			utils.log.info('Prerendering static pages...');
-			await utils.prerender({
+			builder.log.info('Prerendering static pages...');
+			await builder.prerender({
 				dest: bucket
 			});
 
-			utils.log.minor('Copying assets...');
-			utils.copy_static_files(bucket);
-			utils.copy_client_files(bucket);
+			builder.log.minor('Copying assets...');
+			builder.copy_static_files(bucket);
+			builder.copy_client_files(bucket);
 		}
 	};
 }
 
-function validate_config(utils) {
+function validate_config(builder) {
 	if (fs.existsSync('wrangler.toml')) {
 		let wrangler_config;
 
@@ -82,11 +82,11 @@ function validate_config(utils) {
 		return wrangler_config;
 	}
 
-	utils.log.error(
+	builder.log.error(
 		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
 	);
 
-	utils.log(
+	builder.log(
 		`
 		Sample wrangler.toml:
 

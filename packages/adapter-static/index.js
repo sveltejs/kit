@@ -3,14 +3,14 @@ export default function ({ pages = 'build', assets = pages, fallback } = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
-		async adapt(utils) {
-			utils.rimraf(assets);
-			utils.rimraf(pages);
+		async adapt(builder) {
+			builder.rimraf(assets);
+			builder.rimraf(pages);
 
-			utils.writeStatic(assets);
-			utils.writeClient(assets);
+			builder.writeStatic(assets);
+			builder.writeClient(assets);
 
-			await utils.prerender({
+			await builder.prerender({
 				fallback,
 				all: !fallback,
 				dest: pages
