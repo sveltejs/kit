@@ -105,7 +105,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 			if (
 				/.+\[\.\.\.[^\]]+\]/.test(segment) ||
-				(/\[\.\.\.[^\]]+\].+/.test(segment) && !/\[\.\.\.[^\]]+\]\.json/.test(segment))
+				(/\[\.\.\.[^\]]+\].+/.test(segment) && !/\[\.\.\.[^\]]+\]\.json$/.test(segment))
 			) {
 				throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
 			}
