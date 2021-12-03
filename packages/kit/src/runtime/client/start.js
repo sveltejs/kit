@@ -13,7 +13,7 @@ import { set_paths } from '../paths.js';
  *     assets: string;
  *     base: string;
  *   },
- *   target: Node;
+ *   target: string;
  *   session: any;
  *   host: string;
  *   route: boolean;
@@ -22,7 +22,8 @@ import { set_paths } from '../paths.js';
  *   hydrate: {
  *     status: number;
  *     error: Error;
- *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
+ *     nodes: Array<import('types/internal').CSRComponent>;
+ *     legacy_nodes: Array<import('types/internal').CSRComponent>;
  *     page: import('types/page').Page;
  *   };
  * }} opts
@@ -35,7 +36,7 @@ export async function start({ paths, target, session, host, route, spa, trailing
 	const renderer = new Renderer({
 		Root,
 		fallback,
-		target,
+		target: document.querySelector(target) ?? document.body,
 		session,
 		host
 	});
@@ -52,7 +53,17 @@ export async function start({ paths, target, session, host, route, spa, trailing
 	init(router);
 	set_paths(paths);
 
-	if (hydrate) await renderer.start(hydrate);
+	if (hydrate) {
+		if (import.meta.env.LEGACY) {
+			hydrate.nodes = hydrate.legacy_nodes;
+		}
+
+		hydrate.nodes = await Promise.all(hydrate.nodes.map((n) => import(/* @vite-ignore */ n)));
+		hydrate.page.query = new URLSearchParams(hydrate.page.query);
+
+		await renderer.start(hydrate);
+	}
+
 	if (router) {
 		if (spa) router.goto(location.href, { replaceState: true }, []);
 		router.init_listeners();

@@ -67,7 +67,7 @@ export class Renderer {
 	 * @param {{
 	 *   Root: CSRComponent;
 	 *   fallback: [CSRComponent, CSRComponent];
-	 *   target: Node;
+	 *   target: Element;
 	 *   session: any;
 	 *   host: string;
 	 * }} opts

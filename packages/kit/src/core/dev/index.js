@@ -458,11 +458,12 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						router: config.kit.router,
 						ssr: config.kit.ssr,
 						target: config.kit.target,
-						template: ({ head, body }) => {
+						template: ({ head, body, legacy_scripts = '' }) => {
 							let rendered = fs
 								.readFileSync(config.kit.files.template, 'utf8')
 								.replace('%svelte.head%', () => head)
-								.replace('%svelte.body%', () => body);
+								.replace('%svelte.body%', () => body)
+								.replace('%svelte.legacy_scripts%', () => legacy_scripts);
 
 							if (config.kit.amp && validator) {
 								const result = validator.validateString(rendered);

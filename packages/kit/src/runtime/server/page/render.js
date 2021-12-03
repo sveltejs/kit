@@ -115,38 +115,52 @@ export async function render_response({
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
 	} else if (include_js) {
 		// prettier-ignore
-		init = `<script type="module">
-			import { start } from ${s(options.entry.file)};
-			start({
-				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				paths: ${s(options.paths)},
-				session: ${try_serialize($session, (error) => {
-					throw new Error(`Failed to serialize session data: ${error.message}`);
-				})},
-				host: ${page && page.host ? s(page.host) : 'location.host'},
-				route: ${!!page_config.router},
-				spa: ${!page_config.ssr},
-				trailing_slash: ${s(options.trailing_slash)},
-				hydrate: ${page_config.ssr && page_config.hydrate ? `{
-					status: ${status},
-					error: ${serialize_error(error)},
-					nodes: [
-						${(branch || [])
-						.map(({ node }) => `import(${s(node.entry)})`)
-						.join(',\n\t\t\t\t\t\t')}
-					],
-					page: {
-						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-						path: ${page && page.path ? try_serialize(page.path, error => {
-							throw new Error(`Failed to serialize page.path: ${error.message}`);
-						}) : null},
-						query: new URLSearchParams(${page && page.query ? s(page.query.toString()) : ''}),
-						params: ${page && page.params ? try_serialize(page.params, error => {
-							throw new Error(`Failed to serialize page.params: ${error.message}`);
-						}) : null}
+		init = `<script>window.__KIT_DATA__ = {
+			target: ${options.target ? `${s(options.target)}` : 'body'},
+			paths: ${s(options.paths)},
+			session: ${try_serialize($session, (error) => {
+				throw new Error(`Failed to serialize session data: ${error.message}`);
+			})},
+			host: ${page && page.host ? s(page.host) : 'location.host'},
+			route: ${!!page_config.router},
+			spa: ${!page_config.ssr},
+			trailing_slash: ${s(options.trailing_slash)},
+			hydrate: ${
+				page_config.ssr && page_config.hydrate
+					? `{
+				status: ${status},
+				error: ${serialize_error(error)},
+				nodes: [
+					${(branch || []).map(({ node }) => `${s(node.entry)}`).join(',\n\t\t\t\t\t\t')}
+				],
+				legacy_nodes: [
+					${(branch || []).map(({ node }) => `${s(node.legacy)}`).join(',\n\t\t\t\t\t\t')},
+				],
+				page: {
+					host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
+					path: ${
+						page && page.path
+							? try_serialize(page.path, (error) => {
+									throw new Error(`Failed to serialize page.path: ${error.message}`);
+							  })
+							: null
+					},
+					query: ${page && page.query ? s(page.query.toString()) : ''},
+					params: ${
+						page && page.params
+							? try_serialize(page.params, (error) => {
+									throw new Error(`Failed to serialize page.params: ${error.message}`);
+							  })
+							: null
 					}
-				}` : 'null'}
-			});
+				}
+			}`
+					: 'null'
+			}
+		}</script>\n`;
+		init += `<script type="module">
+			import { start } from ${s(options.entry.file)};
+			start(window.__KIT_DATA__);
 		</script>`;
 
 		if (options.entry_legacy) {
@@ -208,51 +222,11 @@ export async function render_response({
 			`<script nomodule id="vite-legacy-polyfill" src=${s(
 				options.entry_legacy.polyfills
 			)}></script>`,
-			`<script nomodule id="vite-legacy-entry">
-				System.import(${s(options.entry_legacy.file)}).then(function (m) {
-					m.start({
-						target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-						paths: ${s(options.paths)},
-						session: ${try_serialize($session, (error) => {
-							throw new Error(`Failed to serialize session data: ${error.message}`);
-						})},
-						host: ${page && page.host ? s(page.host) : 'location.host'},
-						route: ${!!page_config.router},
-						spa: ${!page_config.ssr},
-						trailing_slash: ${s(options.trailing_slash)},
-						hydrate: ${
-							page_config.ssr && page_config.hydrate
-								? `{
-							status: ${status},
-							error: ${serialize_error(error)},
-							nodes: [
-								${(branch || [])
-									.map(({ node }) => `System.import(${s(node.legacy)})`)
-									.join(',\n\t\t\t\t\t\t\t\t\t')}
-							],
-							page: {
-								host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-								path: ${
-									page && page.path
-										? try_serialize(page.path, (error) => {
-												throw new Error(`Failed to serialize page.path: ${error.message}`);
-										  })
-										: null
-								},
-								query: new URLSearchParams(${page && page.query ? s(page.query.toString()) : ''}),
-								params: ${
-									page && page.params
-										? try_serialize(page.params, (error) => {
-												throw new Error(`Failed to serialize page.params: ${error.message}`);
-										  })
-										: null
-								}
-							}
-						}`
-								: 'null'
-						}
-					});
-				});
+			`<script nomodule id="vite-legacy-entry" data-src="${s(
+				options.entry_legacy.file
+			)}">System.import(${s(
+				options.entry_legacy.file
+			)}).then(function (m){m.start(window.__KIT_DATA__);});
 		</script>`
 		].join('\n\t\t');
 	}
