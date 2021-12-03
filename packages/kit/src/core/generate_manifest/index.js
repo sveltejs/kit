@@ -47,7 +47,7 @@ export function generate_manifest(
 			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t')}
+				${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
@@ -74,7 +74,7 @@ export function generate_manifest(
 							load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
 						}`.replace(/^\t\t/gm, '');
 					}
-				}).filter(Boolean).join(',\n\t\t\t')}
+				}).filter(Boolean).join(',\n\t\t\t\t')}
 			]
 		}
 	}`.replace(/^\t/gm, '');
