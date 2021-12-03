@@ -1,5 +1,5 @@
 import { App } from '../output/server/app.js';
-import { manifest, prerendered } from '../cloudflare-tmp/manifest.js';
+import { manifest, prerendered } from './manifest.js';
 
 const app = new App(manifest);
 

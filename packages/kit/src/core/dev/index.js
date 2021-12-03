@@ -99,7 +99,7 @@ class Watcher extends EventEmitter {
 				this.config.kit.files.lib,
 				this.config.kit.files.routes,
 				path.resolve(this.cwd, 'src'),
-				path.resolve(this.cwd, '.svelte-kit'),
+				path.resolve(this.cwd, SVELTE_KIT),
 				path.resolve(this.cwd, 'node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
 			])
