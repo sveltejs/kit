@@ -157,11 +157,6 @@ export async function build_server(
 	const default_config = {
 		build: {
 			target: 'es2020'
-		},
-		server: {
-			fs: {
-				strict: true
-			}
 		}
 	};
 

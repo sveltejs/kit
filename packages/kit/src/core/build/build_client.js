@@ -58,22 +58,8 @@ export async function build_client({
 		input[name] = resolved;
 	});
 
-	/** @type {import('vite').UserConfig} */
-	const vite_config = config.kit.vite();
-
-	const default_config = {
-		server: {
-			fs: {
-				strict: true
-			}
-		}
-	};
-
-	// don't warn on overriding defaults
-	const [modified_vite_config] = deep_merge(default_config, vite_config);
-
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
+	const [merged_config, conflicts] = deep_merge(config.kit.vite(), {
 		configFile: false,
 		root: cwd,
 		base: assets_base,
