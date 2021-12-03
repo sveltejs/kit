@@ -1,11 +1,11 @@
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { relative } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-/**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
- */
+// By writing to .output, we opt in to the Vercel filesystem API:
+// https://vercel.com/docs/file-system-api
+const VERCEL_OUTPUT = '.output';
 
 /** @type {import('.')} **/
 export default function () {
@@ -13,58 +13,55 @@ export default function () {
 		name: '@sveltejs/adapter-vercel',
 
 		async adapt(builder) {
-			const dir = '.output';
-			builder.rimraf(dir);
+			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
-
-			const dirs = {
-				static: join(dir, 'static'),
-				lambda: join(dir, 'server/pages')
-			};
+			builder.rimraf(VERCEL_OUTPUT);
+			builder.rimraf(tmp);
 
 			builder.log.minor('Prerendering static pages...');
 			await builder.prerender({
-				dest: dirs.static
+				dest: `${VERCEL_OUTPUT}/static`
 			});
 
-			// TODO ideally we'd have something like builder.tmpdir('vercel')
-			// rather than hardcoding '.svelte-kit/vercel/entry.js', and the
-			// relative import from that file to output/server/app.js
-			// would be controlled. at the moment we're exposing
-			// implementation details that could change
 			builder.log.minor('Generating serverless function...');
-			builder.copy(files, '.svelte-kit/vercel', {
+
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const relativePath = relative(tmp, builder.getServerDirectory());
+
+			builder.copy(files, tmp, {
 				replace: {
-					APP: '../output/server/app.js',
+					APP: `${relativePath}/app.js`,
 					MANIFEST: './manifest.js'
 				}
 			});
 
 			writeFileSync(
-				'.svelte-kit/vercel/manifest.js',
+				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
-					relativePath: '../output/server'
+					relativePath
 				})};\n`
 			);
 
 			await esbuild.build({
-				entryPoints: ['.svelte-kit/vercel/entry.js'],
-				outfile: join(dirs.lambda, '__render.js'),
+				entryPoints: [`${tmp}/entry.js`],
+				outfile: `${VERCEL_OUTPUT}/server/pages/__render.js`,
 				target: 'node14',
 				bundle: true,
 				platform: 'node'
 			});
 
-			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
+			writeFileSync(
+				`${VERCEL_OUTPUT}/server/pages/package.json`,
+				JSON.stringify({ type: 'commonjs' })
+			);
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(dirs.static);
-			builder.writeStatic(dirs.static);
+			builder.writeClient(`${VERCEL_OUTPUT}/static`);
+			builder.writeStatic(`${VERCEL_OUTPUT}/static`);
 
 			builder.log.minor('Writing manifests...');
 			writeFileSync(
-				join(dir, 'routes-manifest.json'),
+				`${VERCEL_OUTPUT}/routes-manifest.json`,
 				JSON.stringify({
 					version: 3,
 					dynamicRoutes: [

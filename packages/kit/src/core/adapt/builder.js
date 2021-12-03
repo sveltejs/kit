@@ -85,6 +85,22 @@ export function create_builder({ cwd, config, build_data, log }) {
 			);
 		},
 
+		getBuildDirectory(name) {
+			return `${cwd}/${SVELTE_KIT}/${name}`;
+		},
+
+		getClientDirectory() {
+			return `${cwd}/${SVELTE_KIT}/output/client`;
+		},
+
+		getServerDirectory() {
+			return `${cwd}/${SVELTE_KIT}/output/server`;
+		},
+
+		getStaticDirectory() {
+			return config.kit.files.assets;
+		},
+
 		writeClient(dest) {
 			return copy(`${cwd}/${SVELTE_KIT}/output/client`, dest, {
 				filter: (file) => file[0] !== '.'

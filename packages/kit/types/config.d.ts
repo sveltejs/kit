@@ -36,6 +36,11 @@ export interface Builder {
 
 	generateManifest: (opts: { relativePath: string }) => string;
 
+	getBuildDirectory(name: string): string;
+	getClientDirectory(): string;
+	getServerDirectory(): string;
+	getStaticDirectory(): string;
+
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
