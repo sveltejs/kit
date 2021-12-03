@@ -30,7 +30,7 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_d9525e585486a10ae6317f3f61e9597f
       '@typescript-eslint/eslint-plugin': 5.5.0_15fb0f7dd5018b02e6608eb3a323af2f
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.4.4
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/773baf07ba9391eee581dcecfb672265e5fdbddb
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/ef4db5cf325a5c6d2d492c6fb4492ebf455e06ff
       dotenv: 10.0.0
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
@@ -126,7 +126,6 @@ importers:
       '@types/compression': ^1.7.2
       c8: ^7.10.0
       compression: ^1.7.4
-      esbuild: ^0.13.15
       node-fetch: ^3.1.0
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
@@ -135,7 +134,6 @@ importers:
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
     dependencies:
-      esbuild: 0.13.15
       tiny-glob: 0.2.9
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
@@ -5185,8 +5183,8 @@ packages:
       stack-trace: 0.0.10
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/773baf07ba9391eee581dcecfb672265e5fdbddb:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/773baf07ba9391eee581dcecfb672265e5fdbddb}
+  github.com/sveltejs/action-deploy-docs/ef4db5cf325a5c6d2d492c6fb4492ebf455e06ff:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/ef4db5cf325a5c6d2d492c6fb4492ebf455e06ff}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true
