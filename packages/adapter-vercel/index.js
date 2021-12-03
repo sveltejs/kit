@@ -49,6 +49,7 @@ export default function () {
 			await esbuild.build({
 				entryPoints: ['.svelte-kit/vercel/entry.js'],
 				outfile: join(dirs.lambda, '__render.js'),
+				target: 'node14',
 				bundle: true,
 				platform: 'node'
 			});
