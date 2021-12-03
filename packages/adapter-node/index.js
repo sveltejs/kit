@@ -30,6 +30,11 @@ export default function ({
 			builder.writeServer(`${out}/server`);
 			builder.writeStatic(`${out}/static`);
 
+			builder.log.minor('Prerendering static pages');
+			await builder.prerender({
+				dest: `${out}/prerendered`
+			});
+
 			writeFileSync(
 				`${out}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
@@ -39,17 +44,12 @@ export default function ({
 
 			builder.copy(files, out, {
 				replace: {
-					APP: './server/app.js', // TODO hard-coded path is brittle
+					APP: './server/app.js',
 					MANIFEST: './manifest.js',
 					PATH_ENV: JSON.stringify(path_env),
 					HOST_ENV: JSON.stringify(host_env),
 					PORT_ENV: JSON.stringify(port_env)
 				}
-			});
-
-			builder.log.minor('Prerendering static pages');
-			await builder.prerender({
-				dest: `${out}/prerendered`
 			});
 
 			if (precompress) {

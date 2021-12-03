@@ -297,6 +297,7 @@ importers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/adapter-cloudflare': workspace:*
       '@sveltejs/adapter-cloudflare-workers': workspace:^1.0.0-next.25
+      '@sveltejs/adapter-node': workspace:^1.0.0-next.55
       '@sveltejs/adapter-vercel': '*'
       '@sveltejs/kit': workspace:*
       cookie: ^0.4.1
@@ -312,6 +313,7 @@ importers:
       '@sveltejs/adapter-auto': link:../packages/adapter-auto
       '@sveltejs/adapter-cloudflare': link:../packages/adapter-cloudflare
       '@sveltejs/adapter-cloudflare-workers': link:../packages/adapter-cloudflare-workers
+      '@sveltejs/adapter-node': link:../packages/adapter-node
       '@sveltejs/adapter-vercel': link:../packages/adapter-vercel
       '@sveltejs/kit': link:../packages/kit
       prettier: 2.5.0
