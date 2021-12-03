@@ -9,8 +9,7 @@ import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
 /**
- *
- * @param {{ runtime: string, hooks: string, config: import('types/config').ValidatedConfig }} param0
+ * @param {{ runtime: string, hooks: string, config: import('types/config').ValidatedConfig }} opts
  * @returns
  */
 const template = ({ config, hooks, runtime }) => `
