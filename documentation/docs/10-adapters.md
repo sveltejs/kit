@@ -10,23 +10,15 @@ By default, projects are configured to use `@sveltejs/adapter-auto`, which detec
 
 ### Supported environments
 
-The following platforms are officially supported and require no additional configuration:
+SvelteKit offers a number of officially-supported adapters.
+
+The following platforms require no additional configuration:
 
 - [Cloudflare Pages](https://developers.cloudflare.com/pages/) via [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/master/packages/adapter-cloudflare)
 - [Netlify](https://netlify.com) via [`adapter-netlify`](https://github.com/sveltejs/kit/tree/master/packages/adapter-netlify)
 - [Vercel](https://vercel.com) via [`adapter-vercel`](https://github.com/sveltejs/kit/tree/master/packages/adapter-vercel)
 
-### Installing custom adapters
-
-Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms. After installing the relevant adapter with your package manager, update your `svelte.config.js`:
-
-```diff
-// svelte.config.js
--import adapter from '@sveltejs/adapter-auto';
-+import adapter from 'svelte-adapter-[x]';
-```
-
-### Building a Node app
+#### Node.js
 
 To create a simple Node server, install the `@sveltejs/adapter-node@next` package and update your `svelte.config.js`:
 
@@ -50,7 +42,7 @@ export default {
 };
 ```
 
-### Creating a static site
+#### Static sites
 
 Most adapters will generate static HTML for any [prerenderable](#ssr-and-javascript-prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use `@sveltejs/adapter-static@next` to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
@@ -61,6 +53,16 @@ Most adapters will generate static HTML for any [prerenderable](#ssr-and-javascr
 ```
 
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
+
+### Community adapters
+
+Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms. After installing the relevant adapter with your package manager, update your `svelte.config.js`:
+
+```diff
+// svelte.config.js
+-import adapter from '@sveltejs/adapter-auto';
++import adapter from 'svelte-adapter-[x]';
+```
 
 ### Writing custom adapters
 
