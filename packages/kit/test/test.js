@@ -122,7 +122,16 @@ async function setup({ port }) {
 			 * @param {string[]} [urls]
 			 * @returns {Promise<void>}
 			 */
-			prefetchRoutes: (urls) => pages.js.evaluate((urls) => prefetchRoutes(urls), urls)
+			prefetchRoutes: (urls) => pages.js.evaluate((urls) => prefetchRoutes(urls), urls),
+
+			/**
+			 * @param {import('../src/runtime/client/types.js').NavigationIntent} navigationIntent
+			 */
+			onBeforeNavigate: (navigationIntent) =>
+				pages.js.evaluate(
+					(navigationIntent) => onBeforeNavigate(navigationIntent),
+					navigationIntent
+				)
 		},
 
 		reset: () => browser && browser.close()

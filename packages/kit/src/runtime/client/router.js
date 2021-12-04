@@ -17,7 +17,7 @@ function triggerNavigationIntentListener(url) {
 	dispatchEvent(
 		new CustomEvent('sveltekit:navigation-intent', {
 			detail: {
-				url: url,
+				url,
 				cancel: () => {
 					canNavigate = false;
 				}
