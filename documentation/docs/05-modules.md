@@ -19,7 +19,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 ### $app/navigation
 
 ```js
-import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
+import { goto, invalidate, prefetch, prefetchRoutes, onBeforeNavigate } from '$app/navigation';
 ```
 
 - `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
@@ -30,6 +30,7 @@ import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 - `invalidate(href)` causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. It returns a `Promise` that resolves when the page is subsequently updated.
 - `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 - `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched; otherwise, you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
+- `onBeforeNavigate((navigationIntent)=>void)` — a navigation interceptor that triggers before we navigate to a new route. This is helpful if we want to conditionally prevent a navigation or lookup the upcoming url.
 
 ### $app/paths
 
@@ -84,12 +85,12 @@ This module provides a helper function to sequence multiple `handle` calls.
 import { sequence } from '@sveltejs/kit/hooks';
 
 async function first({ request, resolve }) {
-  console.log('first');
-  return await resolve(request);
+	console.log('first');
+	return await resolve(request);
 }
 async function second({ request, resolve }) {
-  console.log('second');
-  return await resolve(request);
+	console.log('second');
+	return await resolve(request);
 }
 
 export const handle = sequence(first, second);

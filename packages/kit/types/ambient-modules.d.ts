@@ -67,6 +67,16 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
+
+	/**
+	 * A navigation interceptor that triggers before we navigate to a new route.
+	 * This is helpful if we want to conditionally prevent a navigation or lookup the upcoming url.
+	 *
+	 * Currently the onBeforeNavigate listener has to wrapped instead of a if(browser) check
+	 */
+	export function onBeforeNavigate(
+		fn: (navigationIntent: { url: URL; cancel: () => void }) => void
+	): any;
 }
 
 declare module '$app/paths' {

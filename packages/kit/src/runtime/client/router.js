@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import { get_base_uri } from './utils';
 
 function scroll_state() {
@@ -5,6 +6,25 @@ function scroll_state() {
 		x: pageXOffset,
 		y: pageYOffset
 	};
+}
+/**
+ * @param {URL} url
+ * @returns {boolean}
+ */
+function triggerNavigationIntentListener(url) {
+	let canNavigate = true;
+
+	dispatchEvent(
+		new CustomEvent('sveltekit:navigation-intent', {
+			detail: {
+				url: url,
+				cancel: () => {
+					canNavigate = false;
+				}
+			}
+		})
+	);
+	return canNavigate;
 }
 
 /**
@@ -55,6 +75,8 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
+		// keepeng track of the last location to prevent popstate event if needed
+		this.previousLocation = location.href;
 	}
 
 	init_listeners() {
@@ -89,6 +111,7 @@ export class Router {
 					...(history.state || {}),
 					'sveltekit:scroll': scroll_state()
 				};
+				this.previousLocation = window.location.href;
 				history.replaceState(new_state, document.title, window.location.href);
 				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
 			}, 200);
@@ -152,6 +175,12 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
+			const canNavigate = triggerNavigationIntentListener(url);
+			if (!canNavigate) {
+				event.preventDefault();
+				return;
+			}
+
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
 
 			const i1 = url_string.indexOf('#');
@@ -169,6 +198,14 @@ export class Router {
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
+
+				const canNavigate = triggerNavigationIntentListener(url);
+				if (!canNavigate) {
+					//"disabling" the back/forward button click by pushing the previous location
+					history.pushState({}, '', this.previousLocation);
+					return;
+				}
+
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
@@ -211,6 +248,9 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
+		const canNavigate = triggerNavigationIntentListener(url);
+		if (!canNavigate) return;
+
 		if (this.enabled && this.owns(url)) {
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
 			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
@@ -244,6 +284,24 @@ export class Router {
 		return this.renderer.load(info);
 	}
 
+	/** @param {(navigationIntent: import('./types').NavigationIntent) => void} fn */
+	onBeforeNavigate(fn) {
+		/** @param {Event} event*/
+		function onBeforeNavEventListener(event) {
+			/** @type {any}*/
+			const customEvent = event;
+			fn(customEvent.detail);
+		}
+
+		onMount(() => {
+			addEventListener('sveltekit:navigation-intent', onBeforeNavEventListener);
+
+			return () => {
+				removeEventListener('sveltekit:navigation-intent', onBeforeNavEventListener);
+			};
+		});
+	}
+
 	/**
 	 * @param {URL} url
 	 * @param {{ x: number, y: number }?} scroll
@@ -252,6 +310,7 @@ export class Router {
 	 * @param {string} [hash]
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
+		this.previousLocation = url.href;
 		const info = this.parse(url);
 
 		if (!info) {

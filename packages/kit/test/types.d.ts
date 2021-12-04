@@ -32,6 +32,7 @@ export interface TestContext {
 		invalidate(url: string): Promise<void>;
 		prefetch(url: string): Promise<void>;
 		prefetchRoutes(urls?: string[]): Promise<void>;
+		onBeforeNavigate(navigationIntent: { url: URL; cancel: () => void }): void;
 	};
 
 	watcher: any; // watcher type is not exposed

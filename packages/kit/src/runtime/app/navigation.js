@@ -16,6 +16,7 @@ export const goto = import.meta.env.SSR ? guard('goto') : goto_;
 export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate_;
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
+export const onBeforeNavigate = import.meta.env.SSR ? guard('onBeforeNavigate') : onBeforeNavigate_;
 
 /**
  * @type {import('$app/navigation').goto}
@@ -50,4 +51,11 @@ async function prefetchRoutes_(pathnames) {
 	const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
+}
+
+/**
+ * @type {import('$app/navigation').onBeforeNavigate}
+ */
+function onBeforeNavigate_(fn) {
+	return router.onBeforeNavigate(fn);
 }
