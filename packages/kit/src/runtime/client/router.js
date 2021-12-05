@@ -111,7 +111,6 @@ export class Router {
 					...(history.state || {}),
 					'sveltekit:scroll': scroll_state()
 				};
-				this.lastKnownLocation = window.location.href;
 				history.replaceState(new_state, document.title, window.location.href);
 				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
 			}, 200);
