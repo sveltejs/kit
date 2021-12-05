@@ -158,18 +158,40 @@ export class Router {
 			const i2 = location.href.indexOf('#');
 			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
 			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
+			history.pushState(
+				{
+					'sveltekit:router': {
+						scroll: noscroll ? scroll_state() : null,
+						keepfocus: false,
+						hash: url.hash
+					}
+				},
+				'',
+				url.href
+			);
 			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
-			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
+			this._navigate(url, []);
 			event.preventDefault();
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], false, []);
+				history.replaceState(
+					{
+						...event.state,
+						'sveltekit:router': {
+							scroll: event.state['sveltekit:scroll'],
+							keepfocus: false,
+							hash: null
+						}
+					},
+					'',
+					url.href
+				);
+				this._navigate(url, []);
 			}
 		});
 	}
@@ -212,8 +234,19 @@ export class Router {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled && this.owns(url)) {
-			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
-			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
+			history[replaceState ? 'replaceState' : 'pushState'](
+				{
+					...state,
+					'sveltekit:router': {
+						scroll: noscroll ? scroll_state() : null,
+						keepfocus,
+						hash: url.hash
+					}
+				},
+				'',
+				url.href
+			);
+			return this._navigate(url, chain);
 		}
 
 		location.href = url.href;
@@ -246,12 +279,9 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @param {{ x: number, y: number }?} scroll
-	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
-	 * @param {string} [hash]
 	 */
-	async _navigate(url, scroll, keepfocus, chain, hash) {
+	async _navigate(url, chain) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -279,7 +309,7 @@ export class Router {
 			}
 		}
 
-		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
+		await this.renderer.handle_navigation(info, chain, false);
 
 		this.navigating--;
 		if (!this.navigating) {

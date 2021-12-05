@@ -12,7 +12,8 @@ import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { copy_assets, posixify, resolve_entry } from '../utils.js';
+import { copy_assets, normalize_preprocessors, posixify, resolve_entry } from '../utils.js';
+import { route_preprocessor } from '../route_preprocessor.js';
 
 /** @param {any} value */
 const s = (value) => JSON.stringify(value);
@@ -170,6 +171,7 @@ async function build_client({
 			svelte({
 				extensions: config.extensions,
 				emitCss: !config.kit.amp,
+				preprocess: normalize_preprocessors(config.preprocess).concat(route_preprocessor(config)),
 				compilerOptions: {
 					hydratable: !!config.kit.hydrate
 				}
@@ -476,6 +478,7 @@ async function build_server(
 		plugins: [
 			svelte({
 				extensions: config.extensions,
+				preprocess: normalize_preprocessors(config.preprocess).concat(route_preprocessor(config)),
 				compilerOptions: {
 					hydratable: !!config.kit.hydrate
 				}

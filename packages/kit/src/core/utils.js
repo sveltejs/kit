@@ -74,3 +74,13 @@ export function resolve_entry(entry) {
 export function posixify(str) {
 	return str.replace(/\\/g, '/');
 }
+
+/**
+ * @typedef {import('svelte/types/compiler/preprocess').PreprocessorGroup} PreprocessorGroup
+ * @param {PreprocessorGroup | PreprocessorGroup[] | null | undefined} preprocess
+ * @returns {PreprocessorGroup[]}
+ */
+export function normalize_preprocessors(preprocess) {
+	if (!preprocess) return [];
+	return Array.isArray(preprocess) ? preprocess : [preprocess];
+}

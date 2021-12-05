@@ -49,7 +49,8 @@ export default [
 			ssr: 'src/runtime/server/index.js',
 			node: 'src/core/node/index.js',
 			hooks: 'src/runtime/hooks.js',
-			'install-fetch': 'src/install-fetch.js'
+			'install-fetch': 'src/install-fetch.js',
+			router: 'src/router.js'
 		},
 		output: {
 			dir: 'dist',

@@ -19,8 +19,9 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, normalize_preprocessors, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { route_preprocessor } from '../route_preprocessor.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
@@ -154,6 +155,9 @@ class Watcher extends EventEmitter {
 				svelte({
 					extensions: this.config.extensions,
 					emitCss: !this.config.kit.amp,
+					preprocess: normalize_preprocessors(this.config.preprocess).concat(
+						route_preprocessor(this.config)
+					),
 					compilerOptions: {
 						hydratable: !!this.config.kit.hydrate
 					}

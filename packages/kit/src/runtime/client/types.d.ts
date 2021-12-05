@@ -39,3 +39,9 @@ export type NavigationState = {
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
 };
+
+export type RouterStateOpts = {
+	scroll: { x: number; y: number } | null;
+	keepfocus: boolean;
+	hash: string | null;
+};
