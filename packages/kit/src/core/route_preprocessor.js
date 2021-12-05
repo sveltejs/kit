@@ -16,16 +16,16 @@ export function route_preprocessor(config) {
 				!path.basename(filename).startsWith('_')
 			) {
 				const s = new MagicString(content);
-				s.prepend(`<svelte:body use:__handle_route></svelte:body>`);
+				s.prepend('<svelte:body use:__handle_route></svelte:body>');
 
 				const script_start_regex = /<script.*?>/g;
 				if (script_start_regex.test(content)) {
 					s.appendLeft(
 						script_start_regex.lastIndex,
-						`import { __handle_route } from '@sveltejs/kit/router';`
+						'import { __handle_route } from "@sveltejs/kit/router";'
 					);
 				} else {
-					s.prepend(`<script>import { __handle_route } from '@sveltejs/kit/router';</script>`);
+					s.prepend('<script>import { __handle_route } from "@sveltejs/kit/router";</script>');
 				}
 
 				return {
