@@ -29,6 +29,7 @@
 		"eslint": "^8.3.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
+		"magic-string": "^0.25.7",
 		"marked": "^4.0.5",
 		"mime": "^3.0.0",
 		"node-fetch": "^3.1.0",
@@ -83,6 +84,9 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
+		},
+		"./router": {
+			"import": "./dist/router.js"
 		}
 	},
 	"types": "types/index.d.ts",
