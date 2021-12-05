@@ -75,7 +75,7 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
-		// keepeng track of the last location to prevent popstate event if needed
+		// keepeng track of the last known location to prevent popstate event navigation if needed
 		this.lastKnownLocation = location.href;
 	}
 
@@ -201,7 +201,7 @@ export class Router {
 
 				const canNavigate = triggerNavigationIntentListener(url);
 				if (!canNavigate) {
-					//"disabling" the back/forward button click by pushing the previous location
+					//"disabling" the back/forward button click by pushing the last known location
 					history.pushState({}, '', this.lastKnownLocation);
 					return;
 				}
