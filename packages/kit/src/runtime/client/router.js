@@ -76,7 +76,7 @@ export class Router {
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
 		// keepeng track of the last location to prevent popstate event if needed
-		this.previousLocation = location.href;
+		this.lastKnownLocation = location.href;
 	}
 
 	init_listeners() {
@@ -111,7 +111,7 @@ export class Router {
 					...(history.state || {}),
 					'sveltekit:scroll': scroll_state()
 				};
-				this.previousLocation = window.location.href;
+				this.lastKnownLocation = window.location.href;
 				history.replaceState(new_state, document.title, window.location.href);
 				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
 			}, 200);
@@ -202,7 +202,7 @@ export class Router {
 				const canNavigate = triggerNavigationIntentListener(url);
 				if (!canNavigate) {
 					//"disabling" the back/forward button click by pushing the previous location
-					history.pushState({}, '', this.previousLocation);
+					history.pushState({}, '', this.lastKnownLocation);
 					return;
 				}
 
@@ -310,7 +310,7 @@ export class Router {
 	 * @param {string} [hash]
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
-		this.previousLocation = url.href;
+		this.lastKnownLocation = url.href;
 		const info = this.parse(url);
 
 		if (!info) {
