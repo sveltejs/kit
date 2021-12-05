@@ -6,6 +6,11 @@ const config = {
 			build: {
 				minify: false
 			},
+			resolve: {
+				alias: {
+					'@sveltejs/kit/router': new URL('../../../src/router.js', import.meta.url).pathname
+				}
+			},
 			clearScreen: false,
 			optimizeDeps: {
 				// for CI, we need to explicitly prebundle deps, since

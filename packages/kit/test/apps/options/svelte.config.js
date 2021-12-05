@@ -17,6 +17,11 @@ const config = {
 			build: {
 				minify: false
 			},
+			resolve: {
+				alias: {
+					'@sveltejs/kit/router': new URL('../../../src/router.js', import.meta.url).pathname
+				}
+			},
 			clearScreen: false
 		},
 		paths: {
