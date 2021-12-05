@@ -160,6 +160,7 @@ export class Router {
 			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
 			history.pushState(
 				{
+					...history.state,
 					'sveltekit:router': {
 						scroll: noscroll ? scroll_state() : null,
 						keepfocus: false,

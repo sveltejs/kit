@@ -8,12 +8,21 @@ export default function (test) {
 	test(
 		'collapsed margin on body should keep at same scroll position after go back',
 		'/scroll',
-		async ({ clicknav, is_intersecting_viewport, page, js }) => {
+		async ({ clicknav, back, wait_for_scroll_record, page, js }) => {
 			if (js) {
-				await clicknav('#number-250');
-				await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-				await page.goBack();
-				assert.ok(await is_intersecting_viewport('#number-250'));
+				await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+				await wait_for_scroll_record();
+
+				const start_page_y_offset = await page.evaluate(() => pageYOffset);
+
+				await clicknav('#number-299');
+				await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+				await wait_for_scroll_record();
+
+				await back();
+
+				const end_page_y_offset = await page.evaluate(() => pageYOffset);
+				assert.equal(end_page_y_offset, start_page_y_offset);
 			}
 		}
 	);

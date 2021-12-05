@@ -181,6 +181,7 @@ function duplicate(test_fn, config, is_build) {
 					page: context.pages.nojs,
 					clicknav: (selector) => context.pages.nojs.click(selector),
 					back: () => context.pages.nojs.goBack().then(() => void 0),
+					wait_for_scroll_record: () => context.pages.nojs.waitForTimeout(250),
 					is_intersecting_viewport: async () => {
 						console.warn('is_intersecting_viewport is not supported in nojs mode');
 						return false;
@@ -259,6 +260,7 @@ function duplicate(test_fn, config, is_build) {
 							context.pages.js.evaluate(() => window.navigated)
 						]);
 					},
+					wait_for_scroll_record: () => context.pages.nojs.waitForTimeout(250),
 					// Reference from Puppeteer: https://github.com/puppeteer/puppeteer/blob/943477cc1eb4b129870142873b3554737d5ef252/experimental/puppeteer-firefox/lib/JSHandle.js#L190-L204
 					is_intersecting_viewport: async (selector) => {
 						return await context.pages.js.$eval(selector, async (element) => {

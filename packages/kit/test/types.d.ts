@@ -18,6 +18,11 @@ export interface TestContext {
 	clicknav(selector: string): Promise<void>;
 	back(): Promise<void>;
 	/**
+	 * Since we record scroll position in scroll events, wait for the debounce
+	 * function to finish recording in history state before continuing
+	 */
+	wait_for_scroll_record(): Promise<void>;
+	/**
 	 * Only supported in js mode
 	 */
 	is_intersecting_viewport(selector: string): Promise<boolean>;
