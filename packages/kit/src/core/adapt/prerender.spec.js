@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { get_href, is_rel_external /*, get_tag */} from './prerender.js';
+import { get_href, is_rel_external /*, get_tag */ } from './prerender.js';
 
 test('get_href', () => {
 	assert.equal(get_href('href="/foo" target=""'), '/foo');
@@ -15,6 +15,7 @@ test('get_href', () => {
 	);
 	/**
 	 * @TODO solve this case
+	 * is solved by PR: https://github.com/sveltejs/kit/pull/2923 (instead of regex, it use parse5)
 	 */
 	// assert.equal(get_tag('<a href="foo>bar">'), '<a href="foo>bar">');
 });
