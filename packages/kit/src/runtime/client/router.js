@@ -109,7 +109,7 @@ export class Router {
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				event.target.dispatchEvent(new CustomEvent('trigger_prefetch', { bubbles: true }))
+				event.target.dispatchEvent(new CustomEvent('trigger_prefetch', { bubbles: true }));
 			}, 20);
 		};
 
