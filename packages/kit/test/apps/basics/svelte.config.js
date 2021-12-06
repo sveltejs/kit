@@ -12,6 +12,9 @@ const config = {
 				// the reload confuses Playwright
 				include: ['cookie', 'marked']
 			}
+		},
+		methodOverride: {
+			enabled: true
 		}
 	}
 };

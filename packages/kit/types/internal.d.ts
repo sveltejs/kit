@@ -146,6 +146,7 @@ export interface SSRRenderOptions {
 	hydrate: boolean;
 	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
+	methodOverride: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
@@ -217,3 +218,12 @@ export interface NormalizedLoadOutput {
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+
+export type MethodOverrideStrategy = 'both' | 'url_parameter' | 'form_data';
+
+export interface MethodOverride {
+	enabled?: boolean;
+	key?: string;
+	allowedMethods?: string[];
+	strategy?: MethodOverrideStrategy;
+}

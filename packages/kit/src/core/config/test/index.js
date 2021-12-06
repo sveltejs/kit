@@ -37,6 +37,12 @@ async function testLoadDefaultConfig(path) {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			methodOverride: {
+				enabled: false,
+				key: '_method',
+				allowedMethods: ['PUT', 'PATCH', 'DELETE'],
+				strategy: 'both'
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true

@@ -1,6 +1,6 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { Logger, MethodOverride, TrailingSlash } from './internal';
 
 export interface AdapterUtils {
 	log: Logger;
@@ -65,6 +65,7 @@ export interface Config {
 		host?: string;
 		hostHeader?: string;
 		hydrate?: boolean;
+		methodOverride?: MethodOverride;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;

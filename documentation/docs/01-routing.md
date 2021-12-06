@@ -161,6 +161,45 @@ The `body` property of the request object will be provided in the case of POST r
 - Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 - All other data will be provided as a `Uint8Array`
 
+#### HTTP Method Overrides
+
+Given that the only valid `<form>` methods are GET and POST, functionality is provided to override this limitation and allow the use of other HTTP verbs. This is particularly helpful when ensuring your application works even when javascript fails or is disabled.
+
+- Disabled by default to prevent unintended behavior for those who don't need it
+- For security purposes, the original method on the form must be `POST` and cannot be overridden with `GET`
+- There are 2 different ways to specify a method override strategy
+  - `url_parameter`: Pass the key and desired method as a query string
+  - `form_data`: Pass as a field within the form where the field name is the key and the field value is the desired method
+- `strategy: 'both'` will enable both methods (`url_parameter` takes precendence in the event that both strategies are used within the same form)
+
+```js
+// svelte.config.js
+export default {
+	kit: {
+		methodOverride: {
+			enabled: true,
+			key: '_method',
+			allowedMethods: ['PUT', 'PATCH', 'DELETE'],
+			strategy: 'both'
+		},
+	}
+};
+```
+
+```html
+<form method="post" action="/todos/{id}?_method=put">
+  <!-- form elements -->
+</form>
+```
+
+OR
+
+```html
+<form method="post" action="/todos/{id}">
+	<input type="hidden" name="_method" value="PUT">
+</form>
+```
+
 ### Private modules
 
 A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.

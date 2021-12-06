@@ -73,6 +73,22 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			methodOverride: object({
+				enabled: boolean(false),
+				key: string('_method'),
+				allowedMethods: validate(['PUT', 'PATCH', 'DELETE'], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					return input;
+				}),
+				strategy: validate('both', (input, keypath) => {
+					if (['both', 'url_parameter', 'form_data'].includes(input)) return input;
+					throw new Error(`${keypath} must be either "both", "url_parameter" or "form_data"`);
+				})
+			}),
+
 			package: object({
 				dir: string('package'),
 				// excludes all .d.ts and filename starting with _

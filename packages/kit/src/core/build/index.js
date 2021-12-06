@@ -334,6 +334,12 @@ async function build_server(
 					initiator: undefined,
 					load_component,
 					manifest,
+					methodOverride: {
+						enabled: ${config.kit.methodOverride.enabled},
+						key: ${s(config.kit.methodOverride.key)},
+						allowedMethods: [${config.kit.methodOverride.allowedMethods.map(method => s(method))}],
+						strategy: ${s(config.kit.methodOverride.strategy)}
+					},
 					paths: settings.paths,
 					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,

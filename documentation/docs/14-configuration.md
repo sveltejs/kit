@@ -29,6 +29,12 @@ const config = {
 		host: null,
 		hostHeader: null,
 		hydrate: true,
+		methodOverride: {
+			enabled: false,
+			key: '_method',
+			allowedMethods: ['PUT', 'PATCH', 'DELETE'],
+			strategy: 'both'
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -123,6 +129,19 @@ export default {
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### methodOverride
+
+See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+
+- `enabled` — set to `true` to enable method overriding
+- `key` — query parameter name/field name to use for passing the intended method value
+- `allowedMethods` - array of HTTP methods that can be used when overriding the original request method
+- `strategy`
+
+  - `'both'` — (default) will look for the override key in both the list of query parameters and the form fields
+  - `'url_parameter'` — only allow overriding via a query parameter
+  - `form_data` — only allow overriding via a form field
 
 ### package
 

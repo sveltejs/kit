@@ -32,6 +32,12 @@ test('fills in defaults', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			methodOverride: {
+				enabled: false,
+				key: '_method',
+				allowedMethods: ['PUT', 'PATCH', 'DELETE'],
+				strategy: 'both'
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
@@ -132,6 +138,12 @@ test('fills in partial blanks', () => {
 			host: null,
 			hostHeader: null,
 			hydrate: true,
+			methodOverride: {
+				enabled: false,
+				key: '_method',
+				allowedMethods: ['PUT', 'PATCH', 'DELETE'],
+				strategy: 'both'
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true

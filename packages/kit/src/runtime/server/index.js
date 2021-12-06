@@ -7,6 +7,7 @@ import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { ReadOnlyFormData } from './parse_body/read_only_form_data.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
@@ -39,6 +40,31 @@ export async function respond(incoming, options, state = {}) {
 		params: {},
 		locals: {}
 	};
+
+	if (options.methodOverride.enabled && request.method.toUpperCase() === 'POST') {
+		const { strategy = '', key: method_key = '', allowedMethods = [] } = options.methodOverride;
+		let new_request_method;
+
+		if (
+			['both', 'form_data'].includes(strategy) &&
+			request.body instanceof ReadOnlyFormData &&
+			request.body.has(method_key)
+		) {
+			new_request_method = (request.body.get(method_key) || request.method).toUpperCase();
+		}
+
+		if (['both', 'url_parameter'].includes(strategy) && incoming.query.has(method_key)) {
+			new_request_method = (incoming.query.get(method_key) || request.method).toUpperCase();
+		}
+
+		if (
+			new_request_method &&
+			allowedMethods.includes(new_request_method) &&
+			new_request_method !== 'GET'
+		) {
+			request.method = new_request_method;
+		}
+	}
 
 	try {
 		return await options.hooks.handle({

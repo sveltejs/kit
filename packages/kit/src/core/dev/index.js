@@ -406,6 +406,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
+						methodOverride: config.kit.methodOverride,
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
