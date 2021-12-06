@@ -21,6 +21,12 @@ function clean_html(html) {
 		.replace(/<!--[\s\S]*?-->/gm, '');
 }
 
+/** @param {string} html */
+export function get_tag(html) {
+	const match = /<(a|img|link|source)\s+([\s\S]+?)>/.exec(html);
+	return match;
+}
+
 /** @param {string} attrs */
 export function get_href(attrs) {
 	const match = /(?:[\s'"]|^)href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
