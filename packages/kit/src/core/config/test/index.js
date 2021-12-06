@@ -41,7 +41,9 @@ async function testLoadDefaultConfig(path) {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				inject: true
+			},
 			paths: { base: '', assets: '' },
 			prerender: {
 				crawl: true,

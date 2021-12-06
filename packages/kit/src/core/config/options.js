@@ -162,6 +162,7 @@ const options = object(
 			router: boolean(true),
 
 			serviceWorker: object({
+				inject: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 

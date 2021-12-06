@@ -36,7 +36,9 @@ test('fills in defaults', () => {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				inject: true
+			},
 			paths: {
 				base: '',
 				assets: ''
@@ -136,7 +138,9 @@ test('fills in partial blanks', () => {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				inject: true
+			},
 			paths: {
 				base: '',
 				assets: ''
