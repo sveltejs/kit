@@ -48,6 +48,7 @@ const config = {
 		},
 		router: true,
 		serviceWorker: {
+			inject: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
 		ssr: true,
