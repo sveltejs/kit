@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-dispatch custom event to retrieve composed path
+fix `sveltekit:prefetch` mouse detection

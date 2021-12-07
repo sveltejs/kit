@@ -109,13 +109,16 @@ export class Router {
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				event.target.dispatchEvent(new CustomEvent('trigger_prefetch', { bubbles: true }));
+				// ensure event.composedPath() in find_anchor(event) returns an array of EventTarget objects
+				event.target.dispatchEvent(
+					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+				);
 			}, 20);
 		};
 
 		addEventListener('touchstart', trigger_prefetch);
 		addEventListener('mousemove', handle_mousemove);
-		addEventListener('trigger_prefetch', trigger_prefetch);
+		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
