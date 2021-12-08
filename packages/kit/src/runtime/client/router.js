@@ -75,7 +75,7 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
-		// keepeng track of the last known location to prevent popstate event navigation if needed
+		// keeping track of the last known location in order to prevent popstate event navigation if needed
 		this.lastKnownLocation = location.href;
 	}
 
