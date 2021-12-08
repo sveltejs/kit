@@ -2,7 +2,7 @@ import path from 'path';
 import MagicString from 'magic-string';
 
 /**
- * Injects __handle_route of `@sveltejs/init-route` to handle scrolling when component mounts
+ * Injects `use:__handle_route` from `@sveltejs/kit/router` to handle scrolling when route component mounts
  * @param {import('types/config').ValidatedConfig} config
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
  */
