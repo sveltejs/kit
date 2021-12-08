@@ -234,12 +234,24 @@ async function build_server(
 	const prefix = `/${config.kit.appDir}/`;
 
 	/**
+	 * When vite encounters symlinked sources, it resolves them with fs.realpathSync and
+	 * those relative paths to the real files get used to index chunks in the client_manifest.
+	 * 
+	 * This lookup function ensures that svelte_kit is able to find those chunks if symlinks exist.
+ 	 * @param {import('vite').Manifest} client_manifest
+	 * @param {string} file
+	 */
+	function get_chunk_from_client_manifest(client_manifest, file) {
+		return client_manifest[file] ?? client_manifest[path.relative(cwd, fs.realpathSync(file))];
+	}
+
+	/**
 	 * @param {string} file
 	 * @param {Set<string>} js_deps
 	 * @param {Set<string>} css_deps
 	 */
 	function find_deps(file, js_deps, css_deps) {
-		const chunk = client_manifest[file];
+		const chunk = get_chunk_from_client_manifest(client_manifest, file);
 
 		if (js_deps.has(chunk.file)) return;
 		js_deps.add(chunk.file);
@@ -273,7 +285,7 @@ async function build_server(
 			: [];
 
 		metadata_lookup[file] = {
-			entry: client_manifest[file].file,
+			entry: get_chunk_from_client_manifest(client_manifest, file).file,
 			css,
 			js,
 			styles
