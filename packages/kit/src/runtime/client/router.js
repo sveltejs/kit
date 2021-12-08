@@ -200,7 +200,7 @@ export class Router {
 
 				const canNavigate = triggerNavigationIntentListener(url);
 				if (!canNavigate) {
-					//"disabling" the back/forward button click by pushing the last known location
+					// "disabling" the back/forward button click by pushing the last known location
 					history.pushState({}, '', this.lastKnownLocation);
 					return;
 				}
@@ -287,9 +287,7 @@ export class Router {
 	onBeforeNavigate(fn) {
 		/** @param {Event} event*/
 		function onBeforeNavEventListener(event) {
-			/** @type {any}*/
-			const customEvent = event;
-			fn(customEvent.detail);
+			fn(/** @type {CustomEvent}*/ (event).detail);
 		}
 
 		onMount(() => {
