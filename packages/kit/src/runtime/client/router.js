@@ -94,7 +94,7 @@ export class Router {
 			}, 200);
 		});
 
-		/** @param {MouseEvent|TouchEvent} event */
+		/** @param {Event} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(event);
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
@@ -109,6 +109,7 @@ export class Router {
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
+				if (!event.target) return;
 				// ensure event.composedPath() in find_anchor(event) returns an array of EventTarget objects
 				event.target.dispatchEvent(
 					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
