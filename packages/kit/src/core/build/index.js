@@ -236,9 +236,9 @@ async function build_server(
 	/**
 	 * When vite encounters symlinked sources, it resolves them with fs.realpathSync and
 	 * those relative paths to the real files get used to index chunks in the client_manifest.
-	 * 
+	 *
 	 * This lookup function ensures that svelte_kit is able to find those chunks if symlinks exist.
- 	 * @param {import('vite').Manifest} client_manifest
+	 * @param {import('vite').Manifest} client_manifest
 	 * @param {string} file
 	 */
 	function get_chunk_from_client_manifest(client_manifest, file) {
