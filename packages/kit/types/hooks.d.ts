@@ -22,6 +22,7 @@ export interface GetSession<Locals = Record<string, any>, Body = unknown, Sessio
 
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
+		render(path: string): Promise<StrictBody | undefined>;
 		request: ServerRequest<Locals, Body>;
 		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;

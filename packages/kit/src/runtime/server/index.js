@@ -42,6 +42,24 @@ export async function respond(incoming, options, state = {}) {
 
 	try {
 		return await options.hooks.handle({
+			render: async (path) => {
+				const decoded = decodeURI(path);
+				for (const route of options.manifest.routes) {
+					const match = route.pattern.exec(decoded);
+					if (!match) continue;
+
+					const response =
+						route.type === 'endpoint'
+							? undefined
+							: await render_page(request, route, match, options, state);
+
+					if(!response) continue;
+
+					const {status, body} = response;
+
+					if(status === 200) return body;
+				}
+			},
 			request,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
