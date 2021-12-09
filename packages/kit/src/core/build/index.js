@@ -242,7 +242,11 @@ async function build_server(
 	 * @param {string} file
 	 */
 	function get_chunk_from_client_manifest(client_manifest, file) {
-		return client_manifest[file];// ?? client_manifest[path.relative(cwd, fs.realpathSync(file))];
+		const chunk = client_manifest[file];
+		if (chunk) return chunk;
+
+		const realFile = path.relative(cwd, fs.realpathSync(path.join(cwd, file)));
+		return client_manifest[realFile];
 	}
 
 	/**
