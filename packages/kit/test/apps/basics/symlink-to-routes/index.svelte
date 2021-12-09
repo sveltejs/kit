@@ -1,0 +1,1 @@
+<h1>this file will be symlinked into packages/kit/test/apps/basics/src/routes/with-symlink</h1>

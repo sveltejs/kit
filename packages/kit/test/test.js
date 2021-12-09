@@ -9,6 +9,7 @@ import { preview } from '../src/core/preview/index.js';
 import { load_config } from '../src/core/config/index.js';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { format } from 'util';
+import path from 'path';
 
 /**
  * @param {{ port: number }} opts
@@ -283,6 +284,14 @@ function duplicate(test_fn, config, is_build) {
 	};
 }
 
+/**
+ * 
+ * @param {*} app string
+ */
+ function getCwd(app) {
+	return fileURLToPath(new URL(`apps/${app}`, import.meta.url));
+}
+
 async function main() {
 	// @ts-expect-error
 	globalThis.UVU_DEFER = 1;
@@ -290,7 +299,7 @@ async function main() {
 
 	const apps = process.env.APP
 		? [process.env.APP]
-		: fs.readdirSync(new URL('apps', import.meta.url));
+		: fs.readdirSync(new URL('apps', import.meta.url));	
 
 	/**
 	 * @param {string} app
@@ -415,7 +424,7 @@ async function main() {
 	}
 
 	for (const app of apps) {
-		const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
+		const cwd = getCwd(app);
 		const tests = await Promise.all(
 			glob('**/_tests.js', { cwd }).map((file) => import(pathToFileURL(`${cwd}/${file}`).href))
 		);
@@ -432,7 +441,15 @@ async function main() {
 	}
 
 	await uvu.exec();
+
 	process.exit(process.exitCode || 0);
 }
 
-main();
+// sets up a symlinked route
+const basicsCwd = getCwd('basics');
+const simlinkRoutePath = path.resolve(`${basicsCwd}/src/routes/with-symlink/symlinked`);
+fs.rmSync(simlinkRoutePath, { recursive: true, force: true});
+fs.symlinkSync(path.resolve(`${basicsCwd}/symlink-to-routes`), simlinkRoutePath, 'dir');
+
+main().finally(() => fs.rmSync(simlinkRoutePath, { recursive: true, force: true}));
+

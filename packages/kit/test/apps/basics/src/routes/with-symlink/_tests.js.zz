@@ -1,0 +1,14 @@
+import * as assert from 'uvu/assert';
+
+/** @type {import('test').TestMaker} */
+export default function (test) {
+	/**
+	 * The dir at basics/symlink-to-routes should be symlinked to /with-symlink/symlinked during testing.
+	 * The symlinking is performed by code in kit/test/test.js, wrapping the 'main' function.
+	 * 
+	 * Sveltekit should resolve symlinked routes correctly, in parity with vite.
+	 */
+	test('builds and displays symlinked routes', '/with-symlink/symlinked', async ({ page }) => {
+		assert.equal(await page.textContent('h1'), 'this file will be symlinked into packages/kit/test/apps/basics/src/routes/with-symlink');
+	});
+}
