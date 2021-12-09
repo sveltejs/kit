@@ -109,9 +109,8 @@ export class Router {
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				if (!event.target) return;
 				// ensure event.composedPath() in find_anchor(event) returns an array of EventTarget objects
-				event.target.dispatchEvent(
+				event.target?.dispatchEvent(
 					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
 				);
 			}, 20);
