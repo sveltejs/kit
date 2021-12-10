@@ -115,7 +115,6 @@ class Watcher extends EventEmitter {
 		const default_config = {
 			server: {
 				fs: {
-					strict: true,
 					allow: this.allowed_directories()
 				},
 				strictPort: true
