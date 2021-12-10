@@ -448,7 +448,13 @@ async function main() {
 // sets up a symlinked route
 const basicsCwd = getCwd('basics');
 const simlinkRoutePath = path.resolve(`${basicsCwd}/src/routes/with-symlink/symlinked`);
-fs.rmSync(simlinkRoutePath, { recursive: true, force: true });
+removeSymlinkRoute();
 fs.symlinkSync(path.resolve(`${basicsCwd}/symlink-to-routes`), simlinkRoutePath, 'dir');
 
-main().finally(() => fs.rmSync(simlinkRoutePath, { recursive: true, force: true }));
+main().finally(() => removeSymlinkRoute());
+
+function removeSymlinkRoute() {
+	if (fs.existsSync(simlinkRoutePath)) {
+		fs.unlinkSync(simlinkRoutePath);
+	}
+}
