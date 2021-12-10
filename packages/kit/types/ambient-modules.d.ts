@@ -71,8 +71,6 @@ declare module '$app/navigation' {
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new route.
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
-	 *
-	 * Currently the onBeforeNavigate listener has to wrapped inside of a if(browser) check
 	 */
 	export function onBeforeNavigate(
 		fn: (navigationIntent: { url: URL; cancel: () => void }) => void
