@@ -285,10 +285,10 @@ function duplicate(test_fn, config, is_build) {
 }
 
 /**
- * 
+ *
  * @param {*} app string
  */
- function getCwd(app) {
+function getCwd(app) {
 	return fileURLToPath(new URL(`apps/${app}`, import.meta.url));
 }
 
@@ -299,7 +299,7 @@ async function main() {
 
 	const apps = process.env.APP
 		? [process.env.APP]
-		: fs.readdirSync(new URL('apps', import.meta.url));	
+		: fs.readdirSync(new URL('apps', import.meta.url));
 
 	/**
 	 * @param {string} app
@@ -448,8 +448,7 @@ async function main() {
 // sets up a symlinked route
 const basicsCwd = getCwd('basics');
 const simlinkRoutePath = path.resolve(`${basicsCwd}/src/routes/with-symlink/symlinked`);
-fs.rmSync(simlinkRoutePath, { recursive: true, force: true});
+fs.rmSync(simlinkRoutePath, { recursive: true, force: true });
 fs.symlinkSync(path.resolve(`${basicsCwd}/symlink-to-routes`), simlinkRoutePath, 'dir');
 
-main().finally(() => fs.rmSync(simlinkRoutePath, { recursive: true, force: true}));
-
+main().finally(() => fs.rmSync(simlinkRoutePath, { recursive: true, force: true }));
