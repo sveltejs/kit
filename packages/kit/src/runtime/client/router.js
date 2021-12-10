@@ -287,7 +287,7 @@ export class Router {
 	onBeforeNavigate(fn) {
 		/** @param {Event} event*/
 		function onBeforeNavEventListener(event) {
-			fn(/** @type {CustomEvent}*/ (event).detail);
+			fn(/** @type {CustomEvent<import('./types').NavigationIntent>}*/ (event).detail);
 		}
 
 		onMount(() => {
