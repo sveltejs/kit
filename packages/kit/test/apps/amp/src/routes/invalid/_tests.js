@@ -7,10 +7,12 @@ export default function (test, is_dev) {
 		if (is_dev) {
 			assert.equal(await page.textContent('h1'), 'AMP validation failed');
 
-			assert.ok(body.includes("The tag 'img' may only appear as a descendant of tag 'noscript'"));
-			assert.ok(body.includes('&lt;img alt="A potato." src="potato.jpg"&gt;'));
+			assert.ok(
+				body.includes("Invalid URL protocol 'javascript:' for attribute 'href' in tag 'a'")
+			);
+			assert.ok(body.includes('&lt;a href="javascript:void(0);"&gt;invalid&lt;/a&gt;'));
 		} else {
-			assert.ok(body.includes('<img alt="A potato." src="potato.jpg">'));
+			assert.ok(body.includes('<a href="javascript:void(0);">invalid</a>'));
 		}
 	});
 }
