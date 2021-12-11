@@ -314,8 +314,6 @@ export class Router {
 
 		this.navigating--;
 		if (!this.navigating) {
-			// ensure autoscroll is handled before navigation end
-			await 0;
 			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 		}
 	}

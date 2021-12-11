@@ -1,5 +1,6 @@
 import path from 'path';
 import MagicString from 'magic-string';
+import { normalizePath } from 'vite';
 
 /**
  * Injects `use:__handle_route` from `@sveltejs/kit/router` to handle scrolling when route component mounts
@@ -7,11 +8,14 @@ import MagicString from 'magic-string';
  * @returns {import('svelte/types/compiler/preprocess').PreprocessorGroup}
  */
 export function route_preprocessor(config) {
+	// Vite normalizes `filename` so we normalize the config's as well
+	const routesPath = normalizePath(config.kit.files.routes);
+
 	return {
 		markup({ content, filename }) {
 			if (
 				filename &&
-				filename.startsWith(config.kit.files.routes) &&
+				filename.startsWith(routesPath) &&
 				config.extensions.some((ext) => filename.endsWith(ext)) &&
 				!path.basename(filename).startsWith('_')
 			) {
