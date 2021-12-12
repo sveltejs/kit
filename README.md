@@ -65,6 +65,7 @@ git config core.hookspath .githooks
 ### Coding style
 
 There are a few guidelines we follow:
+
 - Internal variables are written with `snake_case` while external APIs are written with `camelCase`
 - Provide a single object as the argument to public APIs. This object can have multiple properties
 - Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
@@ -88,6 +89,22 @@ You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
+To test Vite locally, add the below code into the root `package.json` and run `pnpm install` to link the local Vite package.
+
+```jsonc
+{
+	// ...
+	"dependencies": {
+		"vite": "^2.0.0"
+	},
+	"pnpm": {
+		"overrides": {
+			"vite": "link:../path/to/vite/packages/vite"
+		}
+	}
+}
+```
+
 ### Documentation
 
 All documentation for SvelteKit is in the `documentation` directory, and any improvements should be made as a Pull Request to this repository. The documentation is served via an API; the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
@@ -109,6 +126,7 @@ npm publish --access=public
 ## Code structure
 
 Entry points to be aware of are:
+
 - [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte@next`
 - [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
 - [`packages/kit/src/core/dev/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/dev/index.js) - for the dev-mode server
