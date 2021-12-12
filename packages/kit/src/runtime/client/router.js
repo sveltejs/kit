@@ -12,19 +12,19 @@ function scroll_state() {
  * @returns {boolean}
  */
 function dispatch_navigation_intent(url) {
-	let canNavigate = true;
+	let can_navigate = true;
 
 	dispatchEvent(
 		new CustomEvent('sveltekit:navigation-intent', {
 			detail: {
 				url,
 				cancel: () => {
-					canNavigate = false;
+					can_navigate = false;
 				}
 			}
 		})
 	);
-	return canNavigate;
+	return can_navigate;
 }
 
 /**
@@ -76,7 +76,7 @@ export class Router {
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
 		// keeping track of the last known location in order to prevent popstate event navigation if needed
-		this.lastKnownLocation = location.href;
+		this.last_known_location = location.href;
 	}
 
 	init_listeners() {
@@ -174,8 +174,8 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const canNavigate = dispatch_navigation_intent(url);
-			if (!canNavigate) {
+			const can_navigate = dispatch_navigation_intent(url);
+			if (!can_navigate) {
 				event.preventDefault();
 				return;
 			}
@@ -198,10 +198,10 @@ export class Router {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 
-				const canNavigate = dispatch_navigation_intent(url);
-				if (!canNavigate) {
+				const can_navigate = dispatch_navigation_intent(url);
+				if (!can_navigate) {
 					// "disabling" the back/forward button click by pushing the last known location
-					history.pushState({}, '', this.lastKnownLocation);
+					history.pushState({}, '', this.last_known_location);
 					return;
 				}
 
@@ -247,8 +247,8 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const canNavigate = dispatch_navigation_intent(url);
-		if (!canNavigate) return;
+		const can_navigate = dispatch_navigation_intent(url);
+		if (!can_navigate) return;
 
 		if (this.enabled && this.owns(url)) {
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
@@ -307,7 +307,7 @@ export class Router {
 	 * @param {string} [hash]
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
-		this.lastKnownLocation = url.href;
+		this.last_known_location = url.href;
 		const info = this.parse(url);
 
 		if (!info) {
