@@ -12,19 +12,19 @@ function scroll_state() {
  * @returns {boolean}
  */
 function dispatch_navigation_intent(url) {
-	let can_navigate = true;
+	let allow_navigation = true;
 
 	dispatchEvent(
 		new CustomEvent('sveltekit:navigation-intent', {
 			detail: {
 				url,
 				cancel: () => {
-					can_navigate = false;
+					allow_navigation = false;
 				}
 			}
 		})
 	);
-	return can_navigate;
+	return allow_navigation;
 }
 
 /**
@@ -174,8 +174,8 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const can_navigate = dispatch_navigation_intent(url);
-			if (!can_navigate) {
+			const allow_navigation = dispatch_navigation_intent(url);
+			if (!allow_navigation) {
 				event.preventDefault();
 				return;
 			}
@@ -198,8 +198,8 @@ export class Router {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 
-				const can_navigate = dispatch_navigation_intent(url);
-				if (!can_navigate) {
+				const allow_navigation = dispatch_navigation_intent(url);
+				if (!allow_navigation) {
 					// "disabling" the back/forward button click by pushing the last known location
 					history.pushState({}, '', this.last_known_location);
 					return;
@@ -247,8 +247,8 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const can_navigate = dispatch_navigation_intent(url);
-		if (!can_navigate) return;
+		const allow_navigation = dispatch_navigation_intent(url);
+		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
