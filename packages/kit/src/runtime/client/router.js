@@ -11,7 +11,7 @@ function scroll_state() {
  * @param {URL} url
  * @returns {boolean}
  */
-function triggerNavigationIntentListener(url) {
+function dispatch_navigation_intent(url) {
 	let canNavigate = true;
 
 	dispatchEvent(
@@ -174,7 +174,7 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const canNavigate = triggerNavigationIntentListener(url);
+			const canNavigate = dispatch_navigation_intent(url);
 			if (!canNavigate) {
 				event.preventDefault();
 				return;
@@ -198,7 +198,7 @@ export class Router {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 
-				const canNavigate = triggerNavigationIntentListener(url);
+				const canNavigate = dispatch_navigation_intent(url);
 				if (!canNavigate) {
 					// "disabling" the back/forward button click by pushing the last known location
 					history.pushState({}, '', this.lastKnownLocation);
@@ -247,7 +247,7 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const canNavigate = triggerNavigationIntentListener(url);
+		const canNavigate = dispatch_navigation_intent(url);
 		if (!canNavigate) return;
 
 		if (this.enabled && this.owns(url)) {
