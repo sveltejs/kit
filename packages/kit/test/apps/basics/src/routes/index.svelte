@@ -15,4 +15,7 @@
 	export let answer;
 </script>
 
+<!-- ensure route_preprocessor don't mess this up -->
+<svelte:body on:dblclick={() => {}} />
+
 <h1>the answer is {answer}</h1>

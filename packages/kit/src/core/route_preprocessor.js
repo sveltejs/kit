@@ -20,7 +20,20 @@ export function route_preprocessor(config) {
 				!path.basename(filename).startsWith('_')
 			) {
 				const s = new MagicString(content);
-				s.prepend('<svelte:body use:__handle_route></svelte:body>');
+
+				const svelte_body_regex = /<svelte:body[^>]*\/>|<svelte:body.*<\/svelte:body>/;
+				let svelte_body_match;
+				if ((svelte_body_match = svelte_body_regex.exec(content))) {
+					const start_index = svelte_body_match.index;
+					const end_index = svelte_body_match.index + svelte_body_match[0].length;
+					let svelte_body = s.slice(start_index, end_index);
+					svelte_body =
+						svelte_body.substring(0, 12) + ' use:__handle_route' + svelte_body.substring(12);
+					s.remove(start_index, end_index);
+					s.prepend(svelte_body);
+				} else {
+					s.prepend('<svelte:body use:__handle_route></svelte:body>');
+				}
 
 				const script_start_regex = /<script.*?>/g;
 				if (script_start_regex.test(content)) {
