@@ -95,7 +95,7 @@ To test Vite locally, add the below code into the root `package.json` and run `p
 {
 	// ...
 	"dependencies": {
-		"vite": "^2.7.1"
+		"vite": "^2.0.0"
 	},
 	"pnpm": {
 		"overrides": {
