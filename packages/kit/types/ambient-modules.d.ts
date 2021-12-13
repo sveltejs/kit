@@ -75,6 +75,11 @@ declare module '$app/navigation' {
 	export function onBeforeNavigate(
 		fn: (navigationIntent: { url: URL; cancel: () => void }) => void
 	): any;
+
+	/**
+	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
+	 */
+	export function onNavigate(fn: () => void): any;
 }
 
 declare module '$app/paths' {

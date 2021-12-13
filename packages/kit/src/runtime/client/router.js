@@ -1,3 +1,4 @@
+import { getStores } from '$app/stores';
 import { onMount } from 'svelte';
 import { get_base_uri } from './utils';
 
@@ -281,6 +282,25 @@ export class Router {
 		}
 
 		return this.renderer.load(info);
+	}
+
+	/** @param {() => void} fn */
+	onNavigate(fn) {
+		let mounted = false;
+
+		const unsubscribe = getStores().page.subscribe(() => {
+			if (mounted) fn();
+		});
+
+		onMount(() => {
+			mounted = true;
+			fn();
+
+			return () => {
+				unsubscribe();
+				mounted = false;
+			};
+		});
 	}
 
 	/** @param {(navigationIntent: import('./types').NavigationIntent) => void} fn */

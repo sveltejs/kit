@@ -126,12 +126,20 @@ async function setup({ port }) {
 
 			/**
 			 * @param {import('../src/runtime/client/types.js').NavigationIntent} navigationIntent
+			 * @returns {Promise<void>}
 			 */
 			onBeforeNavigate: (navigationIntent) =>
 				pages.js.evaluate(
 					(navigationIntent) => onBeforeNavigate(navigationIntent),
 					navigationIntent
-				)
+				),
+
+			/**
+			 * @param {() => void} fn
+			 * @returns {Promise<void>}
+			 */
+
+			onNavigate: () => pages.js.evaluate(() => onNavigate(() => {}))
 		},
 
 		reset: () => browser && browser.close()

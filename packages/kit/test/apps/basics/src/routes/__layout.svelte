@@ -12,10 +12,10 @@
 </script>
 
 <script>
-	import { goto, invalidate, prefetch, prefetchRoutes, onBeforeNavigate } from '$app/navigation';
+	import { goto, invalidate, prefetch, prefetchRoutes, onBeforeNavigate, onNavigate } from '$app/navigation';
 
 	if (typeof window !== 'undefined') {
-		Object.assign(window, { goto, invalidate, prefetch, prefetchRoutes, onBeforeNavigate });
+		Object.assign(window, { goto, invalidate, prefetch, prefetchRoutes, onBeforeNavigate, onNavigate });
 	}
 
 	/** @type {{ bar: string }} */
