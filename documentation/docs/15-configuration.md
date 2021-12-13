@@ -56,7 +56,7 @@ const config = {
 		cspNonce: false,
 		vite: () => ({})
 	},
-	
+
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
 	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
@@ -222,7 +222,7 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 ### cspNonce
 
-Enables or disables automatically adding [CSP Nonces](#content-security-policy) to your script and style tags.
+Enables or disables automatically adding [CSP Nonces](#content-security-policy) to your script and style tags. Will also disable prerendering when active.
 
 ### vite
 

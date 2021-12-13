@@ -9,43 +9,43 @@ However, SvelteKit also requires some small pieces of inline JavaScript for hydr
 The nonce value is available to hooks as `request.locals.nonce`. A basic CSP handler hook might then look like this:
 
 ```javascript
-export async function handle ({ request, resolve }) {
-  const response = await resolve(request);
+export async function handle({ request, resolve }) {
+	const response = await resolve(request);
 
-  if (response.headers['content-type'] !== 'text/html') {
-  	return response;
+	if (response.headers['content-type'] !== 'text/html') {
+		return response;
 	}
 
-  const nonce = request.locals.nonce;
+	const nonce = request.locals.nonce;
 
-  const directives = {
-    'default-src': ["'self'", 'static.someotherdomain.com'],
-    'script-src': ["'strict-dynamic'", `'nonce-${nonce}'`],
-    'style-src': ["'self'", `'nonce-${nonce}'`]
+	const directives = {
+		'default-src': ["'self'", 'static.someotherdomain.com'],
+		'script-src': ["'strict-dynamic'", `'nonce-${nonce}'`],
+		'style-src': ["'self'", `'nonce-${nonce}'`]
 	};
 
-  if (process.env.NODE_ENV === 'development') {
-    // Because of the way Vite performs hot reloads of stylesheets,
-    // 'unsafe-inline' is required in dev mode.
-    directives['style-src'].push('unsafe-inline')
-  }
+	if (process.env.NODE_ENV === 'development') {
+		// Because of the way Vite performs hot reloads of stylesheets,
+		// 'unsafe-inline' is required in dev mode.
+		directives['style-src'].push('unsafe-inline');
+	}
 
-  const csp = Object.entries(directives)
-    .map(([key, arr]) => key + ' ' + arr.join(' '))
-    .join('; ');
+	const csp = Object.entries(directives)
+		.map(([key, arr]) => key + ' ' + arr.join(' '))
+		.join('; ');
 
-  return {
-    ...response,
-    headers: {
-      ...response.headers,
-      'Content-Security-Policy': csp
-    }
-  };
-};
+	return {
+		...response,
+		headers: {
+			...response.headers,
+			'Content-Security-Policy': csp
+		}
+	};
+}
 ```
 
 Be warned: some other features of Svelte ([in particular CSS transitions and animations](https://github.com/sveltejs/svelte/issues/6662)) might run afoul of this Content Security Policy and require either rewriting to JS-based transitions or enabling `style-src: 'unsafe-inline'`.
 
 The `'strict-dynamic'` directive is optional but supported by Kit. If not using it you must allow `'self'`.
 
-The nonce placeholders can be toggled with the `kit.cspNonce` configuration option.
+The nonce placeholders can be toggled with the `kit.cspNonce` configuration option. Since nonces must be uniquely generated for each request, this also disables prerendering.
