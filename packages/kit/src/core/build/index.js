@@ -129,13 +129,7 @@ async function build_client({
 	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();
 
-	const default_config = {
-		server: {
-			fs: {
-				strict: true
-			}
-		}
-	};
+	const default_config = {};
 
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
@@ -440,11 +434,6 @@ async function build_server(
 	const default_config = {
 		build: {
 			target: 'es2020'
-		},
-		server: {
-			fs: {
-				strict: true
-			}
 		}
 	};
 
@@ -547,13 +536,7 @@ async function build_service_worker(
 	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();
 
-	const default_config = {
-		server: {
-			fs: {
-				strict: true
-			}
-		}
-	};
+	const default_config = {};
 
 	// don't warn on overriding defaults
 	const [modified_vite_config] = deep_merge(default_config, vite_config);
