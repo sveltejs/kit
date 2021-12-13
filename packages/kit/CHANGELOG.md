@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.202
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.7 ([#3018](https://github.com/sveltejs/kit/pull/3018))
+
+* Allow absolute file paths given to package.dir ([#3012](https://github.com/sveltejs/kit/pull/3012))
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
 ## 1.0.0-next.201
 
 ### Patch Changes
