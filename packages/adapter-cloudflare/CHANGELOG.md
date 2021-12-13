@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.3
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
 ## 1.0.0-next.2
 
 ### Patch Changes
