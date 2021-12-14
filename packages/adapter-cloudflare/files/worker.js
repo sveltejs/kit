@@ -7,7 +7,7 @@ export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
 		// check generated asset_set for static files
-		if (ASSETS.has(url.pathname.substring(1))) {
+		if (ASSETS.has(decodeURIComponent(url.pathname.substring(1)))) {
 			return env.ASSETS.fetch(req);
 		}
 
