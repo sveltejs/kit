@@ -6,7 +6,7 @@ SvelteKit is still in beta. Expect bugs! Read more [here](https://svelte.dev/blo
 
 Please see [the documentation](https://kit.svelte.dev/docs) for information about getting started and developing with SvelteKit.
 
-## Packages
+### Packages
 
 | Package                                                                     | Changelog                                                     |
 | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -31,6 +31,8 @@ Please make sure the issue you're reporting involves SvelteKit. Many issues rela
 If Vite causes an issue, please report in the [Vite issue tracker](https://github.com/vitejs/vite/issues).
 
 ## Developing
+
+### Building and Running
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.js.org/en/). You can [install pnpm](https://pnpm.io/installation) with:
 
@@ -62,18 +64,16 @@ To use the git hooks in the repo, which will save you waiting for CI to tell you
 git config core.hookspath .githooks
 ```
 
-### Coding style
+### Code structure
 
-There are a few guidelines we follow:
+Entry points to be aware of are:
+- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte@next`
+- [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
+- [`packages/kit/src/core/dev/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/dev/index.js) - for the dev-mode server
+- [`packages/kit/src/core/build/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/build/index.js) - for the production server
+- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
 
-- Internal variables are written with `snake_case` while external APIs are written with `camelCase`
-- Provide a single object as the argument to public APIs. This object can have multiple properties
-- Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
-- Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
-
-### Generating changelogs
-
-For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
+Most code called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.
 
 ### Testing
 
@@ -89,7 +89,9 @@ You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
-To test Vite locally, add the below code into the root `package.json` and run `pnpm install` to link the local Vite package.
+### Working on Vite and other dependencies
+
+If you would like to test local changes to Vite or another dependency, you can build it and then use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
 
 ```jsonc
 {
@@ -105,13 +107,27 @@ To test Vite locally, add the below code into the root `package.json` and run `p
 }
 ```
 
-### Documentation
+### Documentation changes
 
-All documentation for SvelteKit is in the `documentation` directory, and any improvements should be made as a Pull Request to this repository. The documentation is served via an API; the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
+All documentation for SvelteKit is in the `documentation` directory, and any improvements should be made as a Pull Request to this repository. The documentation is served via [an API](https://github.com/sveltejs/api.svelte.dev); the site itself is located in the [`sites` repository](https://github.com/sveltejs/sites).
 
 If you wish to preview documentation changes locally, please follow the instructions here: [Previewing local docs changes](https://github.com/sveltejs/sites/blob/master/sites/kit.svelte.dev/README.md#previewing-local-docs-changes).
 
-### Releases
+### Sending PRs
+
+#### Coding style
+
+There are a few guidelines we follow:
+- Internal variables are written with `snake_case` while external APIs are written with `camelCase`
+- Provide a single object as the argument to public APIs. This object can have multiple properties
+- Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
+- Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
+
+#### Generating changelogs
+
+For changes to be reflected in package changelogs, run `pnpx changeset` and follow the prompts. All changesets should be `patch` until SvelteKit 1.0
+
+## Releases
 
 The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
 
@@ -122,15 +138,3 @@ New packages will need to be published manually the first time if they are scope
 ```bash
 npm publish --access=public
 ```
-
-## Code structure
-
-Entry points to be aware of are:
-
-- [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte@next`
-- [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
-- [`packages/kit/src/core/dev/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/dev/index.js) - for the dev-mode server
-- [`packages/kit/src/core/build/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/build/index.js) - for the production server
-- [`packages/adapter-[platform]`](https://github.com/sveltejs/kit/tree/master/packages) - for the various SvelteKit-provided adapters
-
-Most code called at build-time or from the CLI entry point lives in [packages/kit/src/core](https://github.com/sveltejs/kit/tree/master/packages/kit/src/core). Code that runs for rendering and routing lives in [packages/kit/src/runtime](https://github.com/sveltejs/kit/tree/master/packages/kit/src/runtime). Most changes to SvelteKit itself would involve code in these two directories.
