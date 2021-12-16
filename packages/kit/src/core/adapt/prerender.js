@@ -147,7 +147,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {any} body
 	 */
 	async function writeBodyToFile(file, body) {
-		if (body !== null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function') {
+		if (
+			body !== null &&
+			typeof body === 'object' &&
+			typeof body[Symbol.asyncIterator] === 'function'
+		) {
 			const output_stream = createWriteStream(file);
 			const data = Readable.from(body);
 			data.on('error', () => output_stream.end());
