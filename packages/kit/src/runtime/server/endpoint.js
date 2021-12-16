@@ -33,8 +33,7 @@ function is_content_type_textual(content_type) {
 		type === 'text/plain' ||
 		type === 'application/json' ||
 		type === 'application/x-www-form-urlencoded' ||
-		type === 'multipart/form-data' ||
-		type === 'text/event-stream'
+		type === 'multipart/form-data'
 	);
 }
 

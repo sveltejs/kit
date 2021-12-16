@@ -47,6 +47,7 @@ export function create_kit_middleware({ render }) {
 				if (flush) {
 					data.on('data', () => flush());
 				}
+				res.on('close', () => data.destroy());
 				data.pipe(res);
 			} else {
 				res.end(rendered.body);
