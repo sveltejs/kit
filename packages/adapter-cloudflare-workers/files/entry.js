@@ -53,7 +53,9 @@ async function handle(event) {
 							controller.enqueue(value);
 						}
 					},
-					cancel() { return rendered.body.return(); }
+					cancel() {
+						return rendered.body.return();
+					}
 				});
 				return new Response(body_stream, {
 					status: rendered.status,

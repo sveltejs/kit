@@ -41,7 +41,8 @@ export function create_kit_middleware({ render }) {
 				typeof rendered.body === 'object' &&
 				typeof rendered.body[Symbol.asyncIterator] === 'function'
 			) {
-				const flush = rendered.headers && compressible(rendered.headers['content-type']) ? res.flush : null;
+				const flush =
+					rendered.headers && compressible(rendered.headers['content-type']) ? res.flush : null;
 				const data = Readable.from(rendered.body);
 				data.on('error', () => res.end());
 				if (flush) {

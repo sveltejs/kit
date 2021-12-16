@@ -72,7 +72,10 @@ export async function render_endpoint(request, route, match) {
 
 	const is_type_textual = is_content_type_textual(type);
 
-	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body) || is_async_iterator(body))) {
+	if (
+		!is_type_textual &&
+		!(body instanceof Uint8Array || is_string(body) || is_async_iterator(body))
+	) {
 		return error(
 			`${preface}: body must be an instance of string or Uint8Array or an async iterator if content-type is not a supported textual content-type`
 		);
