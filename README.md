@@ -60,4 +60,4 @@ Funds donated via Open Collective will be used for compensating expenses related
 
 ## License
 
-[https://github.com/sveltejs/kit/blob/master/LICENSE](MIT)
+[MIT](https://github.com/sveltejs/kit/blob/master/LICENSE)
