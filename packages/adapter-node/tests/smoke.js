@@ -70,7 +70,7 @@ test('serve a 400 when we have a malformed url', async () => {
 
 test('handles an async iterator body', async () => {
 	const server = await startServer({
-		render: (incoming) => {
+		render: () => {
 			return {
 				status: 200,
 				body: (async function* () {
