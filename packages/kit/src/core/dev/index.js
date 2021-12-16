@@ -525,7 +525,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						data.on('error', () => res.end());
 						data.pipe(res);
 					} else {
-						res.end(rendered.body);
+						if (rendered.body) res.write(rendered.body);
+						res.end();
 					}
 				} else {
 					not_found(res);
