@@ -15,9 +15,9 @@ function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
 }
 
-/** @param {unknown} s */
+/** @param {any} s */
 function is_async_iterator(s) {
-	return s && typeof s === 'object' && typeof s[Symbol.asyncIterator] === 'function';
+	return s !== null && typeof s === 'object' && typeof s[Symbol.asyncIterator] === 'function';
 }
 
 /**
@@ -84,9 +84,9 @@ export async function render_endpoint(request, route, match) {
 	/** @type {import('types/hooks').StrictBody} */
 	let normalized_body;
 
-	// ensure the body is an object
+	// ensure the body is a supported value
 	if (is_async_iterator(body)) {
-		normalized_body = /** @type {object} */ (body);
+		normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 	} else if (
 		(typeof body === 'object' || typeof body === 'undefined') &&
 		!(body instanceof Uint8Array) &&

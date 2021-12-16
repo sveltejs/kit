@@ -144,10 +144,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} file
-	 * @param {unknown} body
+	 * @param {any} body
 	 */
 	async function writeBodyToFile(file, body) {
-		if (body && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function') {
+		if (body !== null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function') {
 			const output_stream = createWriteStream(file);
 			const data = Readable.from(body);
 			data.on('error', () => output_stream.end());
@@ -338,7 +338,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
-		writeFileSync(file, rendered.body || '');
+		await writeBodyToFile(file, rendered.body || '');
 		written_files.push(file);
 	}
 

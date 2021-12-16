@@ -1,7 +1,8 @@
 import { IncomingRequest, ParameterizedBody } from './app';
 import { MaybePromise, ResponseHeaders } from './helper';
+import { Either } from './either';
 
-export type StrictBody = string | Uint8Array;
+export type StrictBody = Either<string | Uint8Array, AsyncIterable<any> | null>;
 
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {

@@ -517,7 +517,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 				if (rendered) {
 					res.writeHead(rendered.status, rendered.headers);
 					if (
-						rendered.body &&
+						rendered.body !== null &&
 						typeof rendered.body === 'object' &&
 						typeof rendered.body[Symbol.asyncIterator] === 'function'
 					) {

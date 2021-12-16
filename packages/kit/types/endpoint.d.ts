@@ -1,7 +1,8 @@
 import { ServerRequest } from './hooks';
 import { JSONString, MaybePromise, ResponseHeaders } from './helper';
+import { Either } from './either';
 
-type DefaultBody = JSONString | Uint8Array;
+type DefaultBody = Either<JSONString | Uint8Array, AsyncIterable<any> | null>;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
