@@ -1,3 +1,6 @@
+
+// Care of: https://stackoverflow.com/a/66605669
+
 type Only<T, U> = {
 	[P in keyof T]: T[P];
 } & {
