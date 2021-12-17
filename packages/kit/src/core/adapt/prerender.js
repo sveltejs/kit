@@ -289,12 +289,28 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (config.kit.prerender.enabled) {
-		for (const entry of config.kit.prerender.entries) {
-			if (entry === '*') {
-				for (const entry of build_data.entries) {
-					await visit(entry, null);
+		const prerenderAllNonDynamicPages = config.kit.prerender.entries.some((entry) => entry === '*');
+		const entries = prerenderAllNonDynamicPages
+			? [...build_data.entries, ...config.kit.prerender.entries.filter((e) => e !== '*')]
+			: config.kit.prerender.entries;
+
+		if (config.kit.prerender.parallel) {
+			const batchSize = 10;
+			const batchEntries = (acc, _, i, arr) => {
+				if (i % batchSize === 0) {
+					return [...acc, arr.slice(i, i + batchSize)];
 				}
-			} else {
+				return acc;
+			};
+
+			const batches = entries.reduce(batchEntries, []);
+
+			for (const entries of batches) {
+				const visitResults = entries.map((entry) => visit(entry, null));
+				await Promise.all(visitResults);
+			}
+		} else {
+			for (const entry of entries) {
 				await visit(entry, null);
 			}
 		}

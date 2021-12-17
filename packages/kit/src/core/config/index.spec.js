@@ -44,6 +44,7 @@ test('fills in defaults', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
+				parallel: false,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
@@ -144,6 +145,7 @@ test('fills in partial blanks', () => {
 			prerender: {
 				crawl: true,
 				enabled: true,
+				parallel: false,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',

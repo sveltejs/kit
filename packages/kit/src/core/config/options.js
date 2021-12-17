@@ -116,6 +116,7 @@ const options = object(
 
 			prerender: object({
 				crawl: boolean(true),
+				parallel: boolean(false),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

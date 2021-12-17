@@ -46,6 +46,7 @@ async function testLoadDefaultConfig(path) {
 			prerender: {
 				crawl: true,
 				enabled: true,
+				parallel: false,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
