@@ -81,6 +81,10 @@ const options = object(
 						throw new Error(`${keypath} must be an array of strings`);
 					}
 
+					if (input.map((i) => i.toUpperCase()).includes('GET')) {
+						throw new Error(`${keypath} cannot contain "GET"`);
+					}
+
 					return input;
 				}),
 				strategy: validate('both', (input, keypath) => {

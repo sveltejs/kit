@@ -141,7 +141,7 @@ See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object
 
   - `'both'` — (default) will look for the override key in both the list of query parameters and the form fields
   - `'url_parameter'` — only allow overriding via a query parameter
-  - `form_data` — only allow overriding via a form field
+  - `'form_data'` — only allow overriding via a form field
 
 ### package
 

@@ -50,19 +50,25 @@ export async function respond(incoming, options, state = {}) {
 			request.body instanceof ReadOnlyFormData &&
 			request.body.has(method_key)
 		) {
-			new_request_method = (request.body.get(method_key) || request.method).toUpperCase();
+			new_request_method = /** @type {string} */ (request.body.get(method_key)).toUpperCase();
 		}
 
 		if (['both', 'url_parameter'].includes(strategy) && incoming.query.has(method_key)) {
-			new_request_method = (incoming.query.get(method_key) || request.method).toUpperCase();
+			new_request_method = /** @type {string} */ (incoming.query.get(method_key)).toUpperCase();
 		}
 
-		if (
-			new_request_method &&
-			allowedMethods.includes(new_request_method) &&
-			new_request_method !== 'GET'
-		) {
-			request.method = new_request_method;
+		if (new_request_method) {
+			if (allowedMethods.includes(new_request_method)) {
+				request.method = new_request_method;
+			} else {
+				return {
+					status: 400,
+					headers: {},
+					body: `Form method override provided ("${new_request_method}") is not included in list of allowed methods ("${allowedMethods.join(
+						'", "'
+					)}")`
+				};
+			}
 		}
 	}
 

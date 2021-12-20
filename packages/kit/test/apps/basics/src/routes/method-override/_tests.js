@@ -24,12 +24,6 @@ export default function (test) {
 		assert.equal('GET', val);
 	});
 
-	test('POST method is not overridden with GET', '/method-override', async ({ page }) => {
-		await page.click('"No Override To GET"');
-		const val = await page.textContent('h1');
-		assert.equal('POST', val);
-	});
-
 	test('http method is overridden via hidden input', '/method-override', async ({ page }) => {
 		await page.click('"PATCH Via Hidden Input"');
 		const val = await page.textContent('h1');
@@ -41,14 +35,4 @@ export default function (test) {
 		const val = await page.textContent('h1');
 		assert.equal('GET', val);
 	});
-
-	test(
-		'POST method is not overridden with GET via hidden input',
-		'/method-override',
-		async ({ page }) => {
-			await page.click('"No Override To GET Via Hidden Input"');
-			const val = await page.textContent('h1');
-			assert.equal('POST', val);
-		}
-	);
 }
