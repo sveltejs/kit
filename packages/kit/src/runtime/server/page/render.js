@@ -171,7 +171,8 @@ export async function render_response({
 	].join('\n\n\t\t');
 
 	const body = options.amp
-		? rendered.html + `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
+		? `${rendered.html}
+			<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
 		: `${rendered.html}
 
 			${serialized_data
