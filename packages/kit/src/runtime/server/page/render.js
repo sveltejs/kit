@@ -153,10 +153,8 @@ export async function render_response({
 		</script>`;
 	}
 
-	if (options.service_worker) {
-		init += options.amp
-			? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
-			: `<script>
+	if (options.service_worker && !options.amp) {
+		init += `<script>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('${options.service_worker}');
 			}
@@ -173,7 +171,7 @@ export async function render_response({
 	].join('\n\n\t\t');
 
 	const body = options.amp
-		? rendered.html
+		? rendered.html + `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
 		: `${rendered.html}
 
 			${serialized_data
