@@ -172,7 +172,11 @@ export async function render_response({
 
 	const body = options.amp
 		? `${rendered.html}
-			<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
+			${
+				options.service_worker
+					? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
+					: ''
+			}`
 		: `${rendered.html}
 
 			${serialized_data
