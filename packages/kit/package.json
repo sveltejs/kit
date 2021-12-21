@@ -28,6 +28,7 @@
 		"cookie": "^0.4.1",
 		"devalue": "^2.0.1",
 		"eslint": "^8.3.0",
+		"formdata-node": "^4.3.1",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
 		"marked": "^4.0.5",

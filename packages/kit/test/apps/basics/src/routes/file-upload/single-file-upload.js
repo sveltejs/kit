@@ -1,10 +1,10 @@
 /** @type {import('@sveltejs/kit').RequestHandler<any, import('@sveltejs/kit/types/helper').ReadOnlyFormData>} */
 export function post({ body }) {
-	const favicon = body.file('favicon');
+	const file1 = body.file('file1');
 
 	return {
 		body: {
-			filename: favicon?.filename ?? null
+			filename: file1?.filename ?? null
 		}
 	};
 }
