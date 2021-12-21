@@ -4,7 +4,8 @@ export function post({ body }) {
 
 	return {
 		body: {
-			filename: file1?.filename ?? null
+			filename: file1?.filename ?? null,
+			content: file1.data.toString()
 		}
 	};
 }

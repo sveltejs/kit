@@ -6,9 +6,27 @@ const { data, append, appendFile } = read_only_form_data();
 append('foo', '1'), append('foo', '2'), append('foo', '3');
 append('bar', '2'), append('bar', '1');
 
-appendFile('foo', { contentType: 'image/png', data: Buffer.from([123]), filename: 'foo.png', fieldname: 'foo', encoding: '' });
-appendFile('foo', { contentType: 'image/png', data: Buffer.from([123]), filename: 'foo2.png', fieldname: 'foo', encoding: '' });
-appendFile('bar', { contentType: 'image/png', data: Buffer.from([123456789]), filename: 'bar.png', fieldname: 'bar', encoding: '' });
+appendFile('foo', {
+	contentType: 'image/png',
+	data: Buffer.from([123]),
+	filename: 'foo.png',
+	fieldname: 'foo',
+	encoding: ''
+});
+appendFile('foo', {
+	contentType: 'image/png',
+	data: Buffer.from([123]),
+	filename: 'foo2.png',
+	fieldname: 'foo',
+	encoding: ''
+});
+appendFile('bar', {
+	contentType: 'image/png',
+	data: Buffer.from([123456789]),
+	filename: 'bar.png',
+	fieldname: 'bar',
+	encoding: ''
+});
 
 test('ro-fd get returns first value', () => {
 	assert.equal(data.get('foo'), '1');
@@ -21,14 +39,38 @@ test('ro-fd getAll returns array', () => {
 });
 
 test('ro-fd file returns first file', () => {
-	assert.equal(data.file('foo'), { contentType: 'image/png', data: Buffer.from([123]), filename: 'foo.png', fieldname: 'foo', encoding: '' });
-	assert.equal(data.file('bar'), { contentType: 'image/png', data: Buffer.from([123456789]), filename: 'bar.png', fieldname: 'bar', encoding: '' });
+	assert.equal(data.file('foo'), {
+		contentType: 'image/png',
+		data: Buffer.from([123]),
+		filename: 'foo.png',
+		fieldname: 'foo',
+		encoding: ''
+	});
+	assert.equal(data.file('bar'), {
+		contentType: 'image/png',
+		data: Buffer.from([123456789]),
+		filename: 'bar.png',
+		fieldname: 'bar',
+		encoding: ''
+	});
 });
 
 test('ro-fd file returns array of matched files', () => {
 	assert.equal(data.files('foo'), [
-		{ contentType: 'image/png', data: Buffer.from([123]), filename: 'foo.png', fieldname: 'foo', encoding: '' },
-		{ contentType: 'image/png', data: Buffer.from([123]), filename: 'foo2.png', fieldname: 'foo', encoding: '' }
+		{
+			contentType: 'image/png',
+			data: Buffer.from([123]),
+			filename: 'foo.png',
+			fieldname: 'foo',
+			encoding: ''
+		},
+		{
+			contentType: 'image/png',
+			data: Buffer.from([123]),
+			filename: 'foo2.png',
+			fieldname: 'foo',
+			encoding: ''
+		}
 	]);
 });
 

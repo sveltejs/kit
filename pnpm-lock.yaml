@@ -30,7 +30,7 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_d9525e585486a10ae6317f3f61e9597f
       '@typescript-eslint/eslint-plugin': 5.5.0_15fb0f7dd5018b02e6608eb3a323af2f
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.4.4
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/e238bd8fcb7c96b683534eff14f3c7283d6a85c2
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3
       dotenv: 10.0.0
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
@@ -224,10 +224,12 @@ importers:
       '@types/node': ^16.11.11
       '@types/sade': ^1.7.3
       amphtml-validator: ^1.0.35
+      busboy-esm: ^1.0.1
       cheap-watch: ^1.0.4
       cookie: ^0.4.1
       devalue: ^2.0.1
       eslint: ^8.3.0
+      formdata-node: ^4.3.1
       kleur: ^4.1.4
       locate-character: ^2.0.5
       marked: ^4.0.5
@@ -258,9 +260,11 @@ importers:
       '@types/node': 16.11.11
       '@types/sade': 1.7.3
       amphtml-validator: 1.0.35
+      busboy-esm: 1.0.2
       cookie: 0.4.1
       devalue: 2.0.1
       eslint: 8.3.0
+      formdata-node: 4.3.1
       kleur: 4.1.4
       locate-character: 2.0.5
       marked: 4.0.5
@@ -1263,6 +1267,11 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
+  /busboy-esm/1.0.2:
+    resolution: {integrity: sha512-cYS+kRIHG32GZS0RGM0cqF58nubgW3W9s+VvSuvshX/dbtR4rXxhFO8I7O3ZXqz57mwPuMNU9q76p8J39aQPVQ==}
+    engines: {node: '>=10.16.0'}
+    dev: true
+
   /bytes/3.0.0:
     resolution: {integrity: sha1-0ygVQE1olpn4Wk6k+odV3ROpYEg=}
     engines: {node: '>= 0.8'}
@@ -2221,6 +2230,14 @@ packages:
       signal-exit: 3.0.6
     dev: true
 
+  /formdata-node/4.3.1:
+    resolution: {integrity: sha512-8xKSa9et4zb+yziWsD/bI+EYjdg1z2p9EpKr+o+Yk12F/wP66bmDdvjj2ZXd2K/MJlR3HBzWnuV7f82jzHRqCA==}
+    engines: {node: '>= 12.20'}
+    dependencies:
+      node-domexception: 1.0.0
+      web-streams-polyfill: 4.0.0-beta.1
+    dev: true
+
   /formdata-polyfill/4.0.10:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
@@ -3132,6 +3149,11 @@ packages:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.3.1
+    dev: true
+
+  /node-domexception/1.0.0:
+    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
+    engines: {node: '>=10.5.0'}
     dev: true
 
   /node-fetch/2.6.6:
@@ -4457,6 +4479,11 @@ packages:
     engines: {node: '>= 8'}
     dev: true
 
+  /web-streams-polyfill/4.0.0-beta.1:
+    resolution: {integrity: sha512-3ux37gEX670UUphBF9AMCq8XM6iQ8Ac6A+DSRRjDoRBm1ufCkaCDdNVbaqq60PsEkdNlLKrGtv/YBP4EJXqNtQ==}
+    engines: {node: '>= 12'}
+    dev: true
+
   /webidl-conversions/3.0.1:
     resolution: {integrity: sha1-JFNCdeKnvGvnvIZhHMFq4KVlSHE=}
     dev: true
@@ -4634,8 +4661,8 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/e238bd8fcb7c96b683534eff14f3c7283d6a85c2:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/e238bd8fcb7c96b683534eff14f3c7283d6a85c2}
+  github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true
