@@ -1,6 +1,8 @@
 export function read_only_form_data() {
 	/** @type {Map<string, string[]>} */
 	const map = new Map();
+	/** @type {Map<string, import('types/helper').File[]>} */
+	const files = new Map();
 
 	return {
 		/**
@@ -14,8 +16,18 @@ export function read_only_form_data() {
 				map.set(key, [value]);
 			}
 		},
-
-		data: new ReadOnlyFormData(map)
+		/**
+		 * @param {string} key
+		 * @param {import('types/helper').File} file
+		 */
+		appendFile(key, file) {
+			if (files.has(key)) {
+				(files.get(key) || []).push(file);
+			} else {
+				files.set(key, [file]);
+			}
+		},
+		data: new ReadOnlyFormData(map, files)
 	};
 }
 
@@ -23,9 +35,16 @@ class ReadOnlyFormData {
 	/** @type {Map<string, string[]>} */
 	#map;
 
-	/** @param {Map<string, string[]>} map */
-	constructor(map) {
+	/** @type {Map<string, import('types/helper').File[]>} */
+	#files;
+
+	/**
+	 * @param {Map<string, string[]>} map
+	 * @param {Map<string, import('types/helper').File[]>} files
+	 */
+	constructor(map, files) {
 		this.#map = map;
+		this.#files = files;
 	}
 
 	/** @param {string} key */
@@ -37,6 +56,17 @@ class ReadOnlyFormData {
 	/** @param {string} key */
 	getAll(key) {
 		return this.#map.get(key);
+	}
+
+	/** @param {string} key */
+	file(key) {
+		const file = this.#files.get(key);
+		return file && file[0];
+	}
+
+	/** @param {string} key */
+	files(key) {
+		return this.#files.get(key);
 	}
 
 	/** @param {string} key */

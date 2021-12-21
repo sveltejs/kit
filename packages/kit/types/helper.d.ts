@@ -1,12 +1,22 @@
 interface ReadOnlyFormData {
 	get(key: string): string;
 	getAll(key: string): string[];
+	file(key: string): File;
+	files(key: string): File[];
 	has(key: string): boolean;
 	entries(): Generator<[string, string], void>;
 	keys(): Generator<string, void>;
 	values(): Generator<string, void>;
 	[Symbol.iterator](): Generator<[string, string], void>;
 }
+
+type File = {
+	data: Buffer | Uint8Array;
+	filename: string;
+	contentType: string;
+	encoding: string;
+	fieldname: string;
+};
 
 type ToJSON = { toJSON(...args: any[]): JSONValue };
 type JSONValue = Exclude<JSONString, ToJSON>;
