@@ -1,5 +1,5 @@
 import { read_only_form_data } from './read_only_form_data.js';
-import busboy from 'busboy-esm';
+import busboy from '@fastify/busboy';
 
 /**
  * @param {import('types/app').IncomingRequest} incoming
@@ -45,7 +45,7 @@ function parse_form(incoming) {
 
 		const { data, append, appendFile } = read_only_form_data();
 
-		bb.on('file', (fieldname, file, fileInfos) => {
+		bb.on('file', (fieldname, file, filename, encoding, mimeType) => {
 			/**
 			 * @type {import('types/helper').File}
 			 */
@@ -58,11 +58,10 @@ function parse_form(incoming) {
 
 			file.on('end', () => {
 				if (uploadFile.data) {
-					uploadFile.filename = fileInfos.filename;
-					uploadFile.contentType = fileInfos.mimeType;
-					uploadFile.encoding = fileInfos.encoding;
-					uploadFile.fieldname = fieldname;
-					appendFile(uploadFile.fieldname, uploadFile);
+					uploadFile.filename = filename;
+					uploadFile.mimeType = mimeType;
+					uploadFile.encoding = encoding;
+					appendFile(fieldname, uploadFile);
 				}
 			});
 		});

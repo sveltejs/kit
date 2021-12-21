@@ -16,6 +16,7 @@
 		"vite": "^2.7.2"
 	},
 	"devDependencies": {
+		"@fastify/busboy": "^1.0.0",
 		"@rollup/plugin-replace": "^3.0.0",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.1",
@@ -24,7 +25,6 @@
 		"@types/node": "^16.11.11",
 		"@types/sade": "^1.7.3",
 		"amphtml-validator": "^1.0.35",
-		"busboy-esm": "^1.0.1",
 		"cookie": "^0.4.1",
 		"devalue": "^2.0.1",
 		"eslint": "^8.3.0",

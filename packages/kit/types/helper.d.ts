@@ -13,9 +13,8 @@ interface ReadOnlyFormData {
 type File = {
 	data: Buffer | Uint8Array;
 	filename: string;
-	contentType: string;
+	mimeType: string;
 	encoding: string;
-	fieldname: string;
 };
 
 type ToJSON = { toJSON(...args: any[]): JSONValue };
