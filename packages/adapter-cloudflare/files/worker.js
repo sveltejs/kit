@@ -6,8 +6,16 @@ init();
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
+
 		// check generated asset_set for static files
-		if (ASSETS.has(url.pathname.substring(1))) {
+		let pathname = url.pathname.substring(1);
+		try {
+			pathname = decodeURIComponent(pathname);
+		} catch (err) {
+			// ignore
+		}
+
+		if (ASSETS.has(pathname)) {
 			return env.ASSETS.fetch(req);
 		}
 
