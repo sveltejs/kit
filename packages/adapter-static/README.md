@@ -16,7 +16,8 @@ export default {
 			// default options are shown
 			pages: 'build',
 			assets: 'build',
-			fallback: null
+			fallback: null,
+			precompress: false
 		})
 	}
 };
@@ -37,6 +38,10 @@ The directory to write static assets (the contents of `static`, plus client-side
 ### fallback
 
 Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.html`.
+
+### precompress
+
+If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
 
 ## SPA mode
 
