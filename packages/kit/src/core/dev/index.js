@@ -460,6 +460,8 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						template: ({ head, body }) => {
 							let rendered = fs
 								.readFileSync(config.kit.files.template, 'utf8')
+								.replace(/%svelte.base%/g, config.kit.paths.base)
+								.replace(/%svelte.assets%/g, config.kit.paths.assets)
 								.replace('%svelte.head%', () => head)
 								.replace('%svelte.body%', () => body);
 

@@ -292,6 +292,8 @@ async function build_server(
 			import * as user_hooks from ${s(app_relative(hooks_file))};
 
 			const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
+				.replace(/%svelte.base%/g, config.kit.paths.base)
+				.replace(/%svelte.assets%/g, config.kit.paths.assets)
 				.replace('%svelte.head%', '" + head + "')
 				.replace('%svelte.body%', '" + body + "')};
 

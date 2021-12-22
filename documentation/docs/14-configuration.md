@@ -158,6 +158,9 @@ An object containing zero or more of the following `string` values:
 
 - `assets` — an absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind
 - `base` — a root-relative path that must start, but not end with `/` (e.g. `/base-path`). This specifies where your app is served from and allows the app to live on a non-root path
+- the specified paths will be available through a placeholder in your `.html` template.
+	- `%svelte.assets%` is the placeholder for `config.paths.assets`
+	- `%svelte.base%` is the placeholder for `config.paths.base`
 
 ### prerender
 

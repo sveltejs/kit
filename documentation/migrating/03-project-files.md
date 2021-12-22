@@ -33,7 +33,7 @@ Most imports from `@sapper/service-worker` have equivalents in [`$service-worker
 
 The `src/template.html` file should be renamed `src/app.html`.
 
-Remove `%sapper.base%`, `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%svelte.head%` and `%sapper.html%` with `%svelte.body%`.
+Remove `%sapper.scripts%` and `%sapper.styles%`. Replace `%sapper.head%` with `%svelte.head%`, `%sapper.base%` with `%svelte.base%` and `%sapper.html%` with `%svelte.body%`.
 
 The `<div id="sapper">` is no longer necessary, though you can continue mounting the app to a wrapper element by specifying it with the [`target`](/docs#configuration-target) config option.
 
