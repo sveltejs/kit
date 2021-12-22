@@ -35,7 +35,7 @@ export async function respond(incoming, options, state = {}) {
 	const request = {
 		...incoming,
 		headers,
-		body: await parse_body(incoming, headers),
+		body: await parse_body(incoming.rawBody, headers),
 		params: {},
 		locals: {}
 	};

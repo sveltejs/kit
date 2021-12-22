@@ -2,12 +2,10 @@ import { read_only_form_data } from './read_only_form_data.js';
 import busboy from '@fastify/busboy';
 
 /**
- * @param {import('types/app').IncomingRequest} incoming
+ * @param {import('types/app').RawBody} rawBody
  * @param {import('types/helper').RequestHeaders} headers
  */
-export function parse_body(incoming, headers) {
-	const { rawBody } = incoming;
-
+export function parse_body(rawBody, headers) {
 	if (!rawBody) return rawBody;
 
 	const content_type = headers['content-type'];
@@ -24,7 +22,7 @@ export function parse_body(incoming, headers) {
 
 		case 'application/x-www-form-urlencoded':
 		case 'multipart/form-data':
-			return parse_form(incoming);
+			return parse_form(rawBody, headers);
 
 		default:
 			return rawBody;
@@ -32,14 +30,14 @@ export function parse_body(incoming, headers) {
 }
 
 /**
- *
- * @param {import('types/app').IncomingRequest} incoming
+ * @param {import('types/app').RawBody} rawBody
+ * @param {import('types/helper').RequestHeaders} headers
  */
-function parse_form(incoming) {
+function parse_form(rawBody, headers) {
 	return new Promise((fulfil, reject) => {
 		const bb = busboy({
 			headers: {
-				'content-type': incoming.headers['content-type']
+				'content-type': headers['content-type']
 			}
 		});
 
@@ -78,7 +76,7 @@ function parse_form(incoming) {
 			fulfil(data);
 		});
 
-		bb.write(incoming.rawBody);
+		bb.write(rawBody);
 		bb.end();
 	});
 }
