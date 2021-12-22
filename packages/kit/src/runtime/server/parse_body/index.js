@@ -41,7 +41,7 @@ function parse_form(rawBody, headers) {
 			}
 		});
 
-		const { data, append, appendFile } = read_only_form_data();
+		const { data, append, append_file } = read_only_form_data();
 
 		bb.on('file', (fieldname, file, filename, encoding, mimeType) => {
 			/**
@@ -59,7 +59,7 @@ function parse_form(rawBody, headers) {
 					uploadFile.filename = filename;
 					uploadFile.mimeType = mimeType;
 					uploadFile.encoding = encoding;
-					appendFile(fieldname, uploadFile);
+					append_file(fieldname, uploadFile);
 				}
 			});
 		});

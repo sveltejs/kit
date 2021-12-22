@@ -2,23 +2,23 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { read_only_form_data } from './read_only_form_data.js';
 
-const { data, append, appendFile } = read_only_form_data();
+const { data, append, append_file } = read_only_form_data();
 append('foo', '1'), append('foo', '2'), append('foo', '3');
 append('bar', '2'), append('bar', '1');
 
-appendFile('foo', {
+append_file('foo', {
 	mimeType: 'image/png',
 	data: Buffer.from([123]),
 	filename: 'foo.png',
 	encoding: ''
 });
-appendFile('foo', {
+append_file('foo', {
 	mimeType: 'image/png',
 	data: Buffer.from([123]),
 	filename: 'foo2.png',
 	encoding: ''
 });
-appendFile('bar', {
+append_file('bar', {
 	mimeType: 'image/png',
 	data: Buffer.from([123456789]),
 	filename: 'bar.png',

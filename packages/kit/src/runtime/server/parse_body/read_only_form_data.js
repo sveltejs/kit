@@ -20,7 +20,7 @@ export function read_only_form_data() {
 		 * @param {string} key
 		 * @param {import('types/helper').File} file
 		 */
-		appendFile(key, file) {
+		append_file(key, file) {
 			if (files.has(key)) {
 				(files.get(key) || []).push(file);
 			} else {
