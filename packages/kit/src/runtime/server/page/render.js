@@ -170,26 +170,23 @@ export async function render_response({
 		init
 	].join('\n\n\t\t');
 
-	const body = options.amp
-		? `${rendered.html}
-			${
-				options.service_worker
-					? `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`
-					: ''
-			}`
-		: `${rendered.html}
+	let body = rendered.html;
+	if (options.amp) {
+		if (options.service_worker) {
+			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
+		}
+	} else {
+		body += `${serialized_data
+			.map(({ url, body, json }) => {
+				let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
+					url
+				)}`;
+				if (body) attributes += ` data-body="${hash(body)}"`;
 
-			${serialized_data
-				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
-						url
-					)}`;
-					if (body) attributes += ` data-body="${hash(body)}"`;
-
-					return `<script ${attributes}>${json}</script>`;
-				})
-				.join('\n\n\t')}
-		`;
+				return `<script ${attributes}>${json}</script>`;
+			})
+			.join('\n\n\t')}`;
+	}
 
 	/** @type {import('types/helper').ResponseHeaders} */
 	const headers = {
