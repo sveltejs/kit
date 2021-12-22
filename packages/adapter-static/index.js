@@ -7,7 +7,7 @@ import zlib from 'zlib';
 const pipe = promisify(pipeline);
 
 /** @type {import('.')} */
-export default function ({ pages = 'build', assets = pages, fallback, precompress = true } = {}) {
+export default function ({ pages = 'build', assets = pages, fallback, precompress = false } = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
