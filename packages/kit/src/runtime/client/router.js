@@ -8,6 +8,7 @@ function scroll_state() {
 		y: pageYOffset
 	};
 }
+
 /**
  * @param {URL} url
  * @returns {boolean}
