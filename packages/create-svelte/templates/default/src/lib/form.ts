@@ -41,7 +41,7 @@ export function enhance(
 			} else {
 				console.error(await res.text());
 			}
-		} catch (e) {
+		} catch (e: any) {
 			if (error) {
 				error(null, e, form);
 			} else {
