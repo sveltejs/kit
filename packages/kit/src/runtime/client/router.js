@@ -312,15 +312,15 @@ export class Router {
 	/** @param {(navigationIntent: import('./types').NavigationIntent) => void} fn */
 	on_before_navigate(fn) {
 		/** @param {Event} event*/
-		function onBeforeNavEventListener(event) {
+		function on_before_navigate_event_listener(event) {
 			fn(/** @type {CustomEvent<import('./types').NavigationIntent>}*/ (event).detail);
 		}
 
 		onMount(() => {
-			addEventListener('sveltekit:navigation-intent', onBeforeNavEventListener);
+			addEventListener('sveltekit:navigation-intent', on_before_navigate_event_listener);
 
 			return () => {
-				removeEventListener('sveltekit:navigation-intent', onBeforeNavEventListener);
+				removeEventListener('sveltekit:navigation-intent', on_before_navigate_event_listener);
 			};
 		});
 	}
