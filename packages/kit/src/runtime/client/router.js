@@ -291,7 +291,7 @@ export class Router {
 	}
 
 	/** @param {() => void} fn */
-	onNavigate(fn) {
+	on_navigate(fn) {
 		let mounted = false;
 
 		const unsubscribe = getStores().page.subscribe(() => {
@@ -310,7 +310,7 @@ export class Router {
 	}
 
 	/** @param {(navigationIntent: import('./types').NavigationIntent) => void} fn */
-	onBeforeNavigate(fn) {
+	on_before_navigate(fn) {
 		/** @param {Event} event*/
 		function onBeforeNavEventListener(event) {
 			fn(/** @type {CustomEvent<import('./types').NavigationIntent>}*/ (event).detail);
