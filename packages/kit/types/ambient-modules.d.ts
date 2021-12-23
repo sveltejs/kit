@@ -93,6 +93,7 @@ declare module '$app/stores' {
 		navigating: Readable<Navigating | null>;
 		page: Readable<Page>;
 		session: Writable<Session>;
+		error: Readable<Error | null>;
 	};
 	/**
 	 * A readable store whose value reflects the object passed to load functions.
@@ -109,6 +110,10 @@ declare module '$app/stores' {
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<any>;
+	/**
+	 * A readable store.
+	 */
+	export const error: Readable<Error | null>;
 }
 
 declare module '$service-worker' {

@@ -34,7 +34,10 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		session: stores.session
+		session: stores.session,
+		error: {
+			subscribe: stores.error
+		}
 	};
 };
 
@@ -55,8 +58,16 @@ export const navigating = {
 	}
 };
 
+/** @type {typeof import('$app/stores').error} */
+export const error = {
+	subscribe(fn) {
+		const store = getStores().error;
+		return store.subscribe(fn);
+	}
+};
+
 /** @param {string} verb */
-const error = (verb) => {
+const throw_error = (verb) => {
 	throw new Error(
 		ssr
 			? `Can only ${verb} session store in browser`
@@ -76,6 +87,6 @@ export const session = {
 
 		return store.subscribe(fn);
 	},
-	set: () => error('set'),
-	update: () => error('update')
+	set: () => throw_error('set'),
+	update: () => throw_error('update')
 };
