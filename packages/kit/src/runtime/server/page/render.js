@@ -176,7 +176,7 @@ export async function render_response({
 			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
 		}
 	} else {
-		body += `${serialized_data
+		body += serialized_data
 			.map(({ url, body, json }) => {
 				let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
 					url
@@ -185,7 +185,7 @@ export async function render_response({
 
 				return `<script ${attributes}>${json}</script>`;
 			})
-			.join('\n\n\t')}`;
+			.join('\n\n\t');
 	}
 
 	/** @type {import('types/helper').ResponseHeaders} */
