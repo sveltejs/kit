@@ -138,7 +138,6 @@ async function setup({ port }) {
 			 * @param {() => void} fn
 			 * @returns {Promise<void>}
 			 */
-
 			onNavigate: () => pages.js.evaluate(() => onNavigate(() => {}))
 		},
 
