@@ -38,6 +38,17 @@ import {
 - `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 - `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched; otherwise, you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
 - `onBeforeNavigate((navigationIntent) => void)` — a navigation interceptor that triggers before we navigate to a new route. This is helpful if we want to conditionally prevent a navigation or lookup the upcoming URL.
+
+```js
+onBeforeNavigate((navigationIntent) => {
+	//the URL we are going to navigate to
+	console.log(navigationIntent.url);
+
+	//optionally cancel the navigation
+	navigationIntent.cancel();
+});
+```
+
 - `onNavigate(() => void)` - a lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
 
 ### $app/paths
