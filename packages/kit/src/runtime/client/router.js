@@ -327,11 +327,11 @@ export class Router {
 	 */
 	on_before_navigate(fn) {
 		onMount(() => {
-			const existing_before_navigate_callback = this.on_before_navigate_callbacks.find(
+			const existing_on_before_navigate_callback = this.on_before_navigate_callbacks.find(
 				(cb) => cb === fn
 			);
 
-			if (!existing_before_navigate_callback) {
+			if (!existing_on_before_navigate_callback) {
 				this.on_before_navigate_callbacks.push(fn);
 			}
 
