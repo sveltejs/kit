@@ -10,26 +10,6 @@ function scroll_state() {
 }
 
 /**
- * @param {URL} url
- * @returns {boolean}
- */
-function dispatch_navigation_intent(url) {
-	let allow_navigation = true;
-
-	dispatchEvent(
-		new CustomEvent('sveltekit:navigation-intent', {
-			detail: {
-				url,
-				cancel: () => {
-					allow_navigation = false;
-				}
-			}
-		})
-	);
-	return allow_navigation;
-}
-
-/**
  * @param {Event} event
  * @returns {HTMLAnchorElement | SVGAElement | undefined}
  */
@@ -79,6 +59,9 @@ export class Router {
 		history.replaceState(history.state || {}, '', location.href);
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		this.current_history_index = 0;
+
+		/** @type {((url:URL) => Promise<boolean>)[]} */
+		this.on_before_navigate_callbacks = [];
 	}
 
 	init_listeners() {
@@ -152,7 +135,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
+		addEventListener('click', async (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js
@@ -187,10 +170,12 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const allow_navigation = dispatch_navigation_intent(url);
-			if (!allow_navigation) {
+			if (this.on_before_navigate_callbacks.length != 0) {
 				event.preventDefault();
-				return;
+				const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
+				if (!allow_navigation) {
+					return;
+				}
 			}
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
@@ -207,14 +192,14 @@ export class Router {
 			event.preventDefault();
 		});
 
-		addEventListener('popstate', (event) => {
+		addEventListener('popstate', async (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 
 				const delta = this.current_history_index - event.state['sveltekit:index'];
 				// the delta check is used in order to prevent the double execution of the popstate event when we prevent the navigation from completing
 				if (delta !== 0) {
-					const allow_navigation = dispatch_navigation_intent(url);
+					const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
 					if (!allow_navigation) {
 						// "disabling" the back/forward browser button click
 						history.go(delta);
@@ -226,6 +211,20 @@ export class Router {
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
+	}
+
+	/**
+	 * @param {URL} url
+	 * @returns {Promise<boolean>}
+	 */
+	async trigger_on_before_navigate_callbacks(url) {
+		if (this.on_before_navigate_callbacks.length == 0) return true;
+
+		const allow_navigation = !(
+			await Promise.all(this.on_before_navigate_callbacks.map((callback) => callback(url)))
+		).some((result) => result === false);
+
+		return allow_navigation;
 	}
 
 	/** @param {URL} url */
@@ -265,7 +264,7 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const allow_navigation = dispatch_navigation_intent(url);
+		const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
 		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
@@ -323,18 +322,26 @@ export class Router {
 		});
 	}
 
-	/** @param {(navigationIntent: import('./types').NavigationIntent) => void} fn */
+	/**
+	 * @param {(url:URL) => Promise<boolean>} fn
+	 */
 	on_before_navigate(fn) {
-		/** @param {Event} event*/
-		function on_before_navigate_event_listener(event) {
-			fn(/** @type {CustomEvent<import('./types').NavigationIntent>}*/ (event).detail);
-		}
-
 		onMount(() => {
-			addEventListener('sveltekit:navigation-intent', on_before_navigate_event_listener);
+			const existing_before_navigate_callback = this.on_before_navigate_callbacks.find(
+				(cb) => cb === fn
+			);
+
+			if (!existing_before_navigate_callback) {
+				console.log('add cb');
+				this.on_before_navigate_callbacks.push(fn);
+			}
 
 			return () => {
-				removeEventListener('sveltekit:navigation-intent', on_before_navigate_event_listener);
+				const index = this.on_before_navigate_callbacks.findIndex((cb) => cb === fn);
+				if (index !== -1) {
+					console.log('remove cb');
+					this.on_before_navigate_callbacks.splice(index, 1);
+				}
 			};
 		});
 	}

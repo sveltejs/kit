@@ -5,7 +5,6 @@ title: Events
 SvelteKit emits [CustomEvents](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent) on the `window` object when certain things happen:
 
 - `sveltekit:start` — fired once the app has hydrated
-- `sveltekit:navigation-intent` — a navigation intent has been fired
 - `sveltekit:navigation-start` — navigation has started
 - `sveltekit:navigation-end` — navigation has ended
 

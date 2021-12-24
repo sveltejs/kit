@@ -2,7 +2,6 @@
 
 import { Page, Response as PlaywrightResponse } from 'playwright-chromium';
 import { RequestInfo, RequestInit, Response as NodeFetchResponse } from 'node-fetch';
-import { NavigationIntent } from '../src/runtime/client/types';
 
 // TODO passing `page` used to break uvu because it gets mutated, but it
 // seems like that's no longer an issue? in which case we don't need
@@ -33,7 +32,7 @@ export interface TestContext {
 		invalidate(url: string): Promise<void>;
 		prefetch(url: string): Promise<void>;
 		prefetchRoutes(urls?: string[]): Promise<void>;
-		onBeforeNavigate(navigationIntent: NavigationIntent): void;
+		onBeforeNavigate(fn: (url: URL) => Promise<boolean>): void;
 		onNavigate(fn: () => void): void;
 	};
 

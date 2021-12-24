@@ -14,11 +14,6 @@ export type NavigationCandidate = {
 	info: NavigationInfo;
 };
 
-export type NavigationIntent = {
-	url: URL;
-	cancel: () => void;
-};
-
 export type NavigationResult = {
 	redirect?: string;
 	state: NavigationState;

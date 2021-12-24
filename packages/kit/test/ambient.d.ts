@@ -1,5 +1,3 @@
-import { NavigationIntent } from '../src/runtime/client/types';
-
 declare global {
 	interface Window {
 		navigated: Promise<void>;
@@ -20,7 +18,7 @@ declare global {
 
 	const invalidate: (url: string) => Promise<void>;
 	const prefetch: (url: string) => Promise<void>;
-	const onBeforeNavigate: (fn: NavigationIntent) => void;
+	const onBeforeNavigate: (fn: (url: URL) => Promise<boolean>) => void;
 	const onNavigate: (fn: () => void) => void;
 	const prefetchRoutes: (urls?: string[]) => Promise<void>;
 }
