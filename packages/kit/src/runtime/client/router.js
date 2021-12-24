@@ -77,11 +77,17 @@ export class Router {
 
 		// create initial history entry, so we can return here
 		history.replaceState(history.state || {}, '', location.href);
-		// keeping track of the last known location in order to prevent popstate event navigation if needed
-		this.last_known_location = location.href;
+		// keeping track of the history index in order to prevent popstate navigation events if needed
+		this.current_history_index = 0;
 	}
 
 	init_listeners() {
+		if (history.state['sveltekit:index'] >= 0) {
+			this.current_history_index = history.state['sveltekit:index'];
+		} else {
+			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+		}
+
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
 		}
@@ -193,7 +199,7 @@ export class Router {
 			const i2 = location.href.indexOf('#');
 			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
 			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
+			history.pushState({ 'sveltekit:index': ++this.current_history_index }, '', url.href);
 			if (u1 === u2) {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
@@ -205,13 +211,18 @@ export class Router {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
 
-				const allow_navigation = dispatch_navigation_intent(url);
-				if (!allow_navigation) {
-					// "disabling" the back/forward button click by pushing the last known location
-					history.pushState({}, '', this.last_known_location);
-					return;
+				const delta = this.current_history_index - event.state['sveltekit:index'];
+				// the delta check is used in order to prevent the double execution of the popstate event when we prevent the navigation from completing
+				if (delta !== 0) {
+					const allow_navigation = dispatch_navigation_intent(url);
+					if (!allow_navigation) {
+						// "disabling" the back/forward browser button click
+						history.go(delta);
+						return;
+					}
 				}
 
+				this.current_history_index = event.state['sveltekit:index'];
 				this._navigate(url, event.state['sveltekit:scroll'], false, []);
 			}
 		});
@@ -258,6 +269,9 @@ export class Router {
 		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
+			if (!replaceState) {
+				state['sveltekit:index'] = ++this.current_history_index;
+			}
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
 			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
 		}
@@ -333,7 +347,6 @@ export class Router {
 	 * @param {string} [hash]
 	 */
 	async _navigate(url, scroll, keepfocus, chain, hash) {
-		this.last_known_location = url.href;
 		const info = this.parse(url);
 
 		if (!info) {
