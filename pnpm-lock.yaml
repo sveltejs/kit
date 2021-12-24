@@ -143,7 +143,10 @@ importers:
       port-authority: ^1.1.2
       sirv: ^1.0.19
       svelte: ^3.44.2
+      tiny-glob: ^0.2.9
       uvu: ^0.5.2
+    dependencies:
+      tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
       playwright-chromium: 1.17.0
