@@ -332,14 +332,12 @@ export class Router {
 			);
 
 			if (!existing_before_navigate_callback) {
-				console.log('add cb');
 				this.on_before_navigate_callbacks.push(fn);
 			}
 
 			return () => {
 				const index = this.on_before_navigate_callbacks.findIndex((cb) => cb === fn);
 				if (index !== -1) {
-					console.log('remove cb');
 					this.on_before_navigate_callbacks.splice(index, 1);
 				}
 			};
