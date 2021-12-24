@@ -269,9 +269,9 @@ export class Router {
 		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
-			if (!replaceState) {
-				state['sveltekit:index'] = ++this.current_history_index;
-			}
+			state['sveltekit:index'] = replaceState
+				? this.current_history_index
+				: ++this.current_history_index;
 			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
 			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
 		}
