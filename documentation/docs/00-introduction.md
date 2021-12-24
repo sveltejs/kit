@@ -4,23 +4,23 @@ title: Introduction
 
 ### Before we begin
 
-> SvelteKit is in early development, and some things may change before we hit version 1.0. This document is a work-in-progress. If you get stuck, reach out for help in the [Discord chatroom](https://svelte.dev/chat).
+> SvelteKitはまだ開発早期段階で、1.0に到達するまでに変更される可能性があります。このドキュメントは作業途中のものです。もし行き詰まったら、[Discord チャットルーム](https://svelte.dev/chat)にどうぞ。
 >
-> See the [migration guides](/migrating) for help upgrading from Sapper.
+> Sapperからのアップグレードについては[移行ガイド](/migrating)をご覧ください。
 
 ### What is SvelteKit?
 
-SvelteKit is a framework for building extremely high-performance web apps.
+SvelteKitはとてもハイパフォーマンスなWebアプリを構築するためのフレームワークです。
 
-Building an app with all the modern best practices is fiendishly complicated. Those practices include [build optimizations](https://vitejs.dev/guide/features.html#build-optimizations), so that you load only the minimal required code; [offline support](#service-workers); [prefetching](#anchor-options-sveltekit-prefetch) pages before the user initiates navigation; and [configurable rendering](#ssr-and-javascript) that allows you to generate HTML [on the server](#ssr-and-javascript-ssr) or [in the browser](#ssr-and-javascript-router) at runtime or [at build-time](#ssr-and-javascript-prerender). SvelteKit does all the boring stuff for you so that you can get on with the creative part.
+モダンなベストプラクティスを全て取り入れたアプリを構築するのは、恐ろしく複雑です。これらのプラクティスには、必要最小限のコードのみをロードするための[ビルドの最適化](https://vitejs.dev/guide/features.html#build-optimizations)、[オフラインサポート](#service-workers)、ユーザーがナビゲーションを開始する前のページの[プリフェッチ](#anchor-options-sveltekit-prefetch)、HTMLの生成をランタイム又は[ビルド時](#ssr-and-javascript-prerender)に、[サーバー上](#ssr-and-javascript-ssr)又は[ブラウザ上](#ssr-and-javascript-router)で行うか[設定可能なレンダリング](#ssr-and-javascript)が含まれています。SvelteKitが全ての退屈な作業を行ってくれるので、あなたはクリエイティブな作業に専念することができます。
 
-It uses [Vite](https://vitejs.dev/) with a [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) to provide a lightning-fast and feature-rich development experience with [Hot Module Replacement (HMR)](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#hot), where changes to your code are reflected in the browser instantly.
+[Vite](https://vitejs.dev/) を [Svelte plugin](https://github.com/sveltejs/vite-plugin-svelte) 経由で使用しており、非常に高速で機能豊富な開発体験を提供します。[Hot Module Replacement (HMR)](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#hot)により、コードを変更すると即座にブラウザに反映されます。
 
-You don't need to know Svelte to understand the rest of this guide, but it will help. In short, it's a UI framework that compiles your components to highly optimized vanilla JavaScript. Read the [introduction to Svelte blog post](https://svelte.dev/blog/svelte-3-rethinking-reactivity) and the [Svelte tutorial](https://svelte.dev/tutorial) to learn more.
+このガイドを理解するためにSvelteを知っておく必要はありませんが、知っていれば役に立つでしょう。簡単にいうとSvelteは、コンポーネントを高度に最適化されたvanilla JavaScriptにコンパイルしてくれるUIフレームワークです。詳しくは、[Svelteを紹介するブログ記事](https://svelte.dev/blog/svelte-3-rethinking-reactivity)と[Svelteチュートリアル](https://svelte.dev/tutorial)を読んでみてください。
 
 ### Getting started
 
-The easiest way to start building a SvelteKit app is to run `npm init`:
+SvelteKitアプリを構築してみるのに最も簡単な方法は、`npm init` を実行することです:
 
 ```bash
 npm init svelte@next my-app
@@ -29,15 +29,15 @@ npm install
 npm run dev
 ```
 
-The first command will scaffold a new project in the `my-app` directory asking you if you'd like to setup some basic tooling such as TypeScript. See the FAQ for [pointers on setting up additional tooling](https://kit.svelte.dev/faq#integrations). The subsequent commands will then install its dependencies and start a server on [localhost:3000](http://localhost:3000).
+最初のコマンドは、TypeScriptなどの基本的なツールをセットアップするか確認して `my-app` ディレクトリに新しいプロジェクトを生成します。[追加のツールの設定に関するポイント](https://kit.svelte.jp/faq#integrations)については、FAQをご覧ください。以降のコマンドは、依存関係をインストールし、 [localhost:3000](http://localhost:3000) でサーバーを起動します。
 
-There are two basic concepts:
+ここには2つの基本的なコンセプトがあります。
 
-- Each page of your app is a [Svelte](https://svelte.dev) component
-- You create pages by adding files to the `src/routes` directory of your project. These will be server-rendered so that a user's first visit to your app is as fast as possible, then a client-side app takes over
+- アプリの各ページは [Svelte](https://svelte.jp) コンポーネントです
+- プロジェクトの `src/routes` ディレクトリにファイルを追加することで、ページを作成できます。これらはサーバーでレンダリングされるのでユーザーの最初のアクセスの際に可能な限り速く表示されるようになり、それからクライアントサイドのアプリに引き継がれます。
 
-Try editing the files to get a feel for how everything works – you may not need to bother reading the rest of this guide!
+ファイルを編集して、どのように動作するのか確かめてみてください。もしかしたら、もうこれ以降のガイドを読む必要はないかもしれません!
 
 #### Editor setup
 
-We recommend using [Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) with [the Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode), but [support also exists for numerous other editors](https://sveltesociety.dev/tools#editor-support).
+[Visual Studio Code (aka VS Code)](https://code.visualstudio.com/download) と [Svelte extension](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) のご使用をおすすめしていますが、[他にも数多くのエディタをサポートしています](https://sveltesociety.dev/tools#editor-support)。
