@@ -44,7 +44,7 @@ onBeforeNavigate(async (url) => {
 	// the URL we are going to navigate to
 	console.log(url);
 
-	// cancel the navigation or allow navigation in the return statement
+	// cancel or allow the navigation in the return statement
 	return false;
 });
 ```
