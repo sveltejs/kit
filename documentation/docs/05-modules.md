@@ -42,7 +42,7 @@ import {
 ```js
 onBeforeNavigate(async (url) => {
 	// the URL we are going to navigate to
-	console.log(nurl);
+	console.log(url);
 
 	// cancel the navigation or allow navigation in the return statement
 	return false;
