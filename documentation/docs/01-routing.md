@@ -2,21 +2,21 @@
 title: Routing
 ---
 
-At the heart of SvelteKit is a _filesystem-based router_. This means that the structure of your application is defined by the structure of your codebase — specifically, the contents of `src/routes`.
+Sveltekitの核心は、 _ファイルシステムベースのルーター_ です。これは、アプリケーション構造がコードベースの構造に、具体的には `src/routes` のコンテンツによって定義されることを意味します。
 
-> You can change this to a different directory by editing the [project config](#configuration).
+> [プロジェクトのコンフィグ](#configuration) を編集することで、これを異なるディレクトリに変更できます。
 
-There are two types of route — **pages** and **endpoints**.
+ルートには、**ページ(pages)** と **エンドポイント(endpoints)** の2つのタイプがあります。
 
-Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
+ページは通常、ユーザーに表示するHTML(とページに必要なCSSやJavaScript)を生成します。デフォルトでは、ページはクライアントとサーバーの両方でレンダリングされますが、この動作は設定によって変更可能です。
 
-Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
+エンドポイントは、サーバー(もしくはサイトをビルドするときに[プリレンダリング](#ssr-and-javascript-prerender)している場合)でのみ実行されます。これは、プライベートな認証情報を必要とするデータベースやAPIにアクセスする場合や、本番環境のネットワーク上にあるマシンにあるデータを返す場合などに使用されます。ページはエンドポイントにデータをリクエストすることができます。エンドポイントはデフォルトではJSONを返しますが、他のフォーマットでもデータを返すことができます。
 
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
+ページ(Pages)は `.svelte` ファイル (または[`config.extensions`](#configuration) に記載されている拡張子のファイル) に書かれているSvelteコンポーネントです。デフォルトでは、ユーザーが始めてアプリにアクセスすると、サーバーレンダリングバージョンのページと、そのページを'ハイドレート(hydrate)'しクライアントサイドルーターを初期化するJavaScriptが提供されます。それ以降、他のページへのナビゲーションは全てクライアント側で処理され、ページの共通部分は再レンダリングする必要がなくなるため、高速でアプリのような操作感になります。
 
-The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
+ファイル名でルート(**route**)が決まります。例えば、`src/routes/index.svelte` はサイトのルート(**root**)になります。
 
 ```html
 <!-- src/routes/index.svelte -->
@@ -27,7 +27,7 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 <h1>Hello and welcome to my site!</h1>
 ```
 
-A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
+`src/routes/about.svelte` と `src/routes/about/index.svelte` はどちらも `/about` ルート(route)になります。
 
 ```html
 <!-- src/routes/about.svelte -->
@@ -39,13 +39,13 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 <p>TODO...</p>
 ```
 
-Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. Soon, we'll see how to access that parameter in a [load function](#loading) or the [page store](#modules-$app-stores).
+動的なパラメータは `[括弧]` を使用してエンコードされます。例えば、ブログ記事は `src/routes/blog/[slug].svelte` のように定義することがあるでしょう。この後すぐ、[load function](#loading) や [page store](#modules-$app-stores) でそのパラメータにアクセスする方法をご覧いただけます。
 
-A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
+ファイルやディレクトリは、`[id]-[category].svelte` のように、動的なパーツを複数持つことができます。(パラメータは 'non-greedy' です。`x-y-z` のようにあいまいなケースでは、`id` は `x` 、 `category` は `y-z` となります。)
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods.
+エンドポイント(Endpoints)は `.js` (または `.ts`) ファイルで書かれたモジュールで、HTTPメソッドに対応した関数をエクスポートします。
 
 ```ts
 // Declaration types for Endpoints
@@ -96,7 +96,7 @@ export interface RequestHandler<
 }
 ```
 
- For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+ 例えば、仮想的なブログページ `/blog/cool-article` が、 `/blog/cool-article.json` というデータをリクエストする場合、`src/routes/blog/[slug].json.js` というエンドポイントになるかもしれません。
 
 ```js
 import db from '$lib/database';
@@ -119,30 +119,30 @@ export async function get({ params }) {
 }
 ```
 
-> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs.
+> エンドポイントを含む全てのサーバーサイドのコードは、外部のAPIにデータをリクエストする必要がある場合に備えて、`fetch` にアクセスすることができます。
 
-The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
+この関数の仕事は、レスポンスを表す `{ status, headers, body }` オブジェクトを返すことです。`status` は [HTTPステータスコード](https://httpstatusdogs.com)です。
 
-- `2xx` — successful response (default is `200`)
-- `3xx` — redirection (should be accompanied by a `location` header)
-- `4xx` — client error
-- `5xx` — server error
+- `2xx` — 成功レスポンス (デフォルトは `200`)
+- `3xx` — リダイレクション (`location` ヘッダーが必要です)
+- `4xx` — クライアントエラー
+- `5xx` — サーバーエラー
 
-If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
+もし返された `body` がオブジェクトで、かつ `content-type` ヘッダーが無い場合は、自動的に JSON レスポンスとなります。(`$lib` については心配無用です、[後で](#modules-$lib) 説明します。)
 
-> Returning nothing is equivalent to an explicit 404 response.
+> 何も返さなければ、明示的な404レスポンスと同じです。
 
-For endpoints that handle other HTTP methods, like POST, export the corresponding function:
+例えば POST のような HTTP メソッドを処理するエンドポイントは、これに相当する関数をエクスポートします。
 
 ```js
 export function post(request) {...}
 ```
 
-Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
+`delete` は JavaScript の予約語であるため、DELETE リクエストは`del` 関数によって処理されます。
 
-> We don't interact with the `req`/`res` objects you might be familiar with from Node's `http` module or frameworks like Express, because they're only available on certain platforms. Instead, SvelteKit translates the returned object into whatever's required by the platform you're deploying your app to.
+> Node の `http` モジュールや Express などのフレームワークでおなじみの `req`/`res` オブジェクトは、特定のプラットフォームでしか利用できないため使用しません。代わりに、SvelteKitでは返却されるオブジェクトを、アプリがデプロイされるプラットフォームで要求されるものに変換します。
 
-To set multiple cookies in a single set of response headers, you can return an array:
+複数のクッキーを1つのレスポンスヘッダーにセットする場合は、配列で返します。
 
 ```js
 return {
@@ -154,28 +154,28 @@ return {
 
 #### Body parsing
 
-The `body` property of the request object will be provided in the case of POST requests:
+POST リクエストの場合は、リクエストオブジェクトの `body` プロパティが提供されます。
 
-- Text data (with content-type `text/plain`) will be parsed to a `string`
-- JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
-- Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
-- All other data will be provided as a `Uint8Array`
+- テキストデータ (content-type `text/plain`) は `string` に変換されます
+- JSON データ (content-type `application/json`) は `JSONValue` に変換されます (`object`、`Array`、またはプリミティブ)。
+- Form データ (content-type `application/x-www-form-urlencoded` または `multipart/form-data`) read-only な [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) オブジェクトに変換されます。
+- それ以外のデータは全て `Uint8Array` として提供されます。
 
 ### Private modules
 
-A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.
+`src/routes/foo/_Private.svelte` や `src/routes/bar/_utils/cool-util.js` のように、先頭にアンダースコアが付くファイル名はルーターから隠されますが、そうではないファイルからインポートすることは可能です。
 
 ### Advanced
 
 #### Rest parameters
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+例えば `src/routes/[category]/[item].svelte` や `src/routes/[category]-[item].svelte` のように、ルート(route)は動的なパラメータを複数持つことができます。ルートセグメント(route segments)の数が不明な場合は、rest 構文を使用することができます。例えば、GitHubのファイルビューアは次のように実装することができます…
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]
 ```
 
-...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
+…この場合、`/sveltejs/kit/tree/master/documentation/docs/01-routing.md` をリクエストすると、以下のパラメータをページで使うことができます。
 
 ```js
 {
@@ -186,11 +186,11 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 }
 ```
 
-> `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
+> `src/routes/a/[...rest]/z.svelte` は `/a/z` だけでなく、`/a/b/z` と `/a/b/c/z` にもマッチします。rest パラメータの値が有効であることを必ず確かめてください。
 
 #### Fallthrough routes
 
-Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
+パスに一致するルート(routes)が複数ある場合、Sveltekit は応答があるまでそれぞれのルート(routes)を試行します。例えば、このようなルート(routes)がある場合…
 
 ```bash
 src/routes/[baz].js
@@ -199,6 +199,6 @@ src/routes/[qux].svelte
 src/routes/foo-[bar].svelte
 ```
 
-...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].js` (which is also a valid match for `/foo-xyz`, but less specific), then `[baz].svelte` and `[qux].svelte` in alphabetical order (endpoints have higher precedence than pages). The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+…`/foo-xyz` にアクセスすると、SvelteKit は最初に `foo-[bar].svelte` を試行します、なぜならベストマッチだからです。次に、`[baz].js` (マッチするが、`/foo-xyz` よりも具体的でないため)、それからアルファベット順で `[baz].svelte` と `[qux].svelte` (エンドポイントはページより優先度が高いため)を試行します。最初に応答するルート(route)、例えば [`load`](#loading) から何かを返すページ、`load` 関数がないページ、または何かを返すエンドポイントが、リクエストを処理します。
 
-If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.
+どのページやエンドポイントもリクエストに応答しない場合、SvelteKitは一般的な404で応答します。
