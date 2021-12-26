@@ -12,7 +12,8 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
-	const abs_package_dir = path.join(cwd, config.kit.package.dir);
+	const package_dir = config.kit.package.dir;
+	const abs_package_dir = path.isAbsolute(package_dir) ? package_dir : path.join(cwd, package_dir);
 	rimraf(abs_package_dir);
 
 	if (config.kit.package.emitTypes) {

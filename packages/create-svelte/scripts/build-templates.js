@@ -56,7 +56,7 @@ async function generate_templates(shared) {
 					contents
 				});
 			} else {
-				const dest = path.join(assets, name).replace('.gitignore', 'gitignore'); // npm does wacky stuff to gitignores
+				const dest = path.join(assets, name.replace(/^\./, 'DOT-'));
 				mkdirp(path.dirname(dest));
 				fs.copyFileSync(path.join(cwd, name), dest);
 			}

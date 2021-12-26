@@ -8,11 +8,17 @@ const prefix = `/${manifest.appDir}/`;
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
+		if (url.pathname.startsWith(prefix)) return env.ASSETS.fetch(req);
+
 		const file = url.pathname.substring(1);
 
-		if (url.pathname.startsWith(prefix) || manifest.assets.has(file)) {
-			return env.ASSETS.fetch(req);
+		try {
+			file = decodeURIComponent(file);
+		} catch (err) {
+			// ignore
 		}
+
+		if (manifest.assets.has(file)) return env.ASSETS.fetch(req);
 
 		if (prerendered.has(url.pathname) || manifest.assets.has(file + '/index.html')) {
 			return env.ASSETS.fetch(new Request(req.url + '/index.html', req));

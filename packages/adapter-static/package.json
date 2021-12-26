@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.21",
+	"version": "1.0.0-next.22",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -23,6 +23,9 @@
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "uvu test test.js"
+	},
+	"dependencies": {
+		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
