@@ -116,7 +116,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				basename,
 				ext,
 				parts,
-				file: posixify(file),
+				file,
 				is_dir,
 				is_index,
 				is_page,
@@ -302,9 +302,9 @@ function comparator(a, b) {
 		if (!a_sub_part) return 1; // b is more specific, so goes first
 		if (!b_sub_part) return -1;
 
-		// if rest && index, order later
 		if (a_sub_part.rest && b_sub_part.rest) {
-			return a.is_index ? 1 : -1;
+			// sort alphabetically
+			return a_sub_part.content < b_sub_part.content ? -1 : 1;
 		}
 
 		// If one is ...rest order it later
