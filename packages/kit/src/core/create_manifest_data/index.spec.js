@@ -176,6 +176,7 @@ test('sorts routes correctly', () => {
 			[layout, 'samples/sorting/post/[id].svelte'],
 			'samples/sorting/[endpoint].js',
 			[layout, 'samples/sorting/[wildcard].svelte'],
+			[layout, 'samples/sorting/[...anotherrest]/index.svelte'],
 			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/xyz.svelte'],
 			[layout, 'samples/sorting/[...rest]/deep/[...deep_rest]/index.svelte'],
 			[layout, 'samples/sorting/[...rest]/deep/index.svelte'],
