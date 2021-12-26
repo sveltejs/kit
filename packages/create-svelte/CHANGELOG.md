@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.91
+
+### Patch Changes
+
+- Make demo app complies with TypeScript strict mode ([#3095](https://github.com/sveltejs/kit/pull/3095))
+
 ## 2.0.0-next.90
 
 ### Patch Changes
