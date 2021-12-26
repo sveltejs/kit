@@ -10,7 +10,7 @@ export default {
 		const url = new URL(req.url);
 		if (url.pathname.startsWith(prefix)) return env.ASSETS.fetch(req);
 
-		const file = url.pathname.substring(1);
+		let file = url.pathname.substring(1);
 
 		try {
 			file = decodeURIComponent(file);

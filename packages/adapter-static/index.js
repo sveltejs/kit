@@ -26,13 +26,13 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 
 			if (precompress) {
 				if (pages === assets) {
-					utils.log.minor('Compressing assets and pages');
+					builder.log.minor('Compressing assets and pages');
 					await compress(assets);
 				} else {
-					utils.log.minor('Compressing assets');
+					builder.log.minor('Compressing assets');
 					await compress(assets);
 
-					utils.log.minor('Compressing pages');
+					builder.log.minor('Compressing pages');
 					await compress(pages);
 				}
 			}
