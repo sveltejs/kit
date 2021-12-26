@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.4
+
+### Patch Changes
+
+- Updated Cloudflare adapter to allow static files with spaces (eg. "Example File.pdf") to be accessed. ([#3047](https://github.com/sveltejs/kit/pull/3047))
+
 ## 1.0.0-next.3
 
 ### Patch Changes
