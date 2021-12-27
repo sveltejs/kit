@@ -1,6 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { InternalApp } from './app';
+import { InternalApp, SSRManifest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -102,22 +102,6 @@ export type SSRRoute = SSREndpoint | SSRPage;
 export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
-
-export interface SSRManifest {
-	appDir: string;
-	assets: Set<string>;
-	/** private fields */
-	_: {
-		mime: Record<string, string>;
-		entry: {
-			file: string;
-			js: string[];
-			css: string[];
-		};
-		nodes: SSRNodeLoader[];
-		routes: SSRRoute[];
-	};
-}
 
 export interface Hooks {
 	externalFetch: ExternalFetch;

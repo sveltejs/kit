@@ -197,7 +197,7 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		/** @type {import('types/internal').SSRManifest} */
+		/** @type {import('types/app').SSRManifest} */
 		this.manifest = {
 			appDir: this.config.kit.appDir,
 			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
@@ -319,7 +319,7 @@ function get_params(array) {
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
  * @param {string} cwd
- * @param {() => import('types/internal').SSRManifest} get_manifest
+ * @param {() => import('types/app').SSRManifest} get_manifest
  */
 async function create_plugin(config, dir, cwd, get_manifest) {
 	/**
