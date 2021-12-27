@@ -46,8 +46,8 @@ export default function ({ split = false } = {}) {
 			// for esbuild, use ESM; for zip-it-and-ship-it, use CJS
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
-			/** @type {string} */
-			let redirects;
+			/** @type {string[]} */
+			const redirects = [];
 
 			if (esm) {
 				builder.copy(`${files}/esm`, '.netlify');
@@ -67,7 +67,7 @@ export default function ({ split = false } = {}) {
 			if (split) {
 				builder.log.minor('Generating serverless functions...');
 
-				const entries = builder.createEntries((route) => {
+				builder.createEntries((route) => {
 					const parts = [];
 
 					for (const segment of route.segments) {
@@ -82,32 +82,27 @@ export default function ({ split = false } = {}) {
 					}
 
 					const pattern = `/${parts.join('/')}`;
+					const name = parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index';
 
 					return {
 						id: pattern,
-						data: {
-							name: parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index'
-						},
-						filter: (other) => matches(route.segments, other.segments)
+						filter: (other) => matches(route.segments, other.segments),
+						complete: (entry) => {
+							const manifest = entry.generateManifest({
+								relativePath: '../server',
+								format: esm ? 'esm' : 'cjs'
+							});
+
+							const fn = esm
+								? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
+								: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
+
+							writeFileSync(`.netlify/functions-internal/${name}.js`, fn);
+
+							redirects.push(`${pattern} /.netlify/functions/${name} 200`);
+						}
 					};
 				});
-
-				entries.forEach((entry) => {
-					const manifest = entry.generateManifest({
-						relativePath: '../server',
-						format: esm ? 'esm' : 'cjs'
-					});
-
-					const fn = esm
-						? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
-						: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
-
-					writeFileSync(`.netlify/functions-internal/${entry.data.name}.js`, fn);
-				});
-
-				redirects = entries
-					.map(({ id, data }) => `${id} /.netlify/functions/${data.name} 200`)
-					.join('\n');
 			} else {
 				builder.log.minor('Generating serverless functions...');
 
@@ -122,7 +117,7 @@ export default function ({ split = false } = {}) {
 
 				writeFileSync(`.netlify/functions-internal/render.js`, fn);
 
-				redirects = '* /.netlify/functions/render 200';
+				redirects.push('* /.netlify/functions/render 200');
 			}
 
 			builder.log.minor('Copying assets...');
@@ -132,7 +127,7 @@ export default function ({ split = false } = {}) {
 			builder.log.minor('Writing redirects...');
 			const redirect_file = join(publish, '_redirects');
 			builder.copy('_redirects', redirect_file);
-			appendFileSync(redirect_file, `\n\n${redirects}`);
+			appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 
 			// TODO write a _headers file that makes client-side assets immutable
 		}

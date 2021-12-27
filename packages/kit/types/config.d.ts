@@ -11,13 +11,11 @@ export interface RouteDefinition {
 
 export interface AdapterEntryConfig<Data = any> {
 	id: string;
-	data: Data;
 	filter: (route: RouteDefinition) => boolean;
+	complete: (entry: AdapterEntry) => void;
 }
 
 export interface AdapterEntry<Data = any> {
-	id: string;
-	data: Data;
 	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 }
 
@@ -30,9 +28,7 @@ export interface Builder {
 	 * Create entry points that map to individual functions
 	 * @param fn TODO explain this
 	 */
-	createEntries<Data>(
-		fn: (route: RouteDefinition) => AdapterEntryConfig<Data>
-	): Array<AdapterEntry<Data>>;
+	createEntries<Data>(fn: (route: RouteDefinition) => AdapterEntryConfig<Data>): void;
 
 	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 

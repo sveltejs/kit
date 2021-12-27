@@ -35,9 +35,6 @@ export function create_builder({ cwd, config, build_data, log }) {
 		createEntries(fn) {
 			generated_manifest = true;
 
-			/** @type {import('types/config').AdapterEntry[]} */
-			const entries = [];
-
 			const { routes } = build_data.manifest_data;
 
 			/** @type {import('types/config').RouteDefinition[]} */
@@ -52,13 +49,14 @@ export function create_builder({ cwd, config, build_data, log }) {
 
 			for (let i = 0; i < routes.length; i += 1) {
 				const route = routes[i];
-				const { id, data, filter } = fn(facades[i]);
+				const { id, filter, complete } = fn(facades[i]);
 
 				if (seen.has(id)) continue;
 				seen.add(id);
 
 				const group = [route];
 
+				// figure out which _lower priority_ routes should be considered fallbacks
 				for (let j = i + 1; j < routes.length; j += 1) {
 					if (filter(facades[j])) {
 						group.push(routes[j]);
@@ -68,17 +66,12 @@ export function create_builder({ cwd, config, build_data, log }) {
 				const filtered = group.filter(not_prerendered);
 
 				if (filtered.length > 0) {
-					entries.push({
-						id,
-						data,
-						generateManifest: ({ relativePath, format }) => {
-							return generate_manifest(build_data, relativePath, filtered, format);
-						}
+					complete({
+						generateManifest: ({ relativePath, format }) =>
+							generate_manifest(build_data, relativePath, filtered, format)
 					});
 				}
 			}
-
-			return entries;
 		},
 
 		generateManifest: ({ relativePath, format }) => {

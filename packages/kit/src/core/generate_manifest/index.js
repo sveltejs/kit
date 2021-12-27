@@ -64,7 +64,7 @@ export function generate_manifest(
 							type: 'page',
 							pattern: ${route.pattern},
 							params: ${get_params(route.params)},
-							path: ${s(route.path)},
+							path: ${route.path ? s(route.path) : null},
 							a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
 							b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
 						}`.replace(/^\t\t/gm, '');
