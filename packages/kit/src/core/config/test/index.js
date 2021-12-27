@@ -35,7 +35,7 @@ async function testLoadDefaultConfig(path) {
 			},
 			floc: false,
 			headers: {
-				host: 'host',
+				host: null,
 				protocol: null
 			},
 			host: null,

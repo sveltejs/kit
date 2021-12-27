@@ -1,4 +1,3 @@
-/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 /** @typedef {import('./types').Validator} Validator */
 
 /** @type {Validator} */
@@ -68,7 +67,7 @@ const options = object(
 			floc: boolean(false),
 
 			headers: object({
-				host: string('host'),
+				host: string(null),
 				protocol: string(null)
 			}),
 

@@ -9,7 +9,11 @@ import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
 /**
- * @param {{ runtime: string, hooks: string, config: import('types/config').ValidatedConfig }} opts
+ * @param {{
+ *   runtime: string,
+ *   hooks: string,
+ *   config: import('types/config').ValidatedConfig
+ * }} opts
  * @returns
  */
 const template = ({ config, hooks, runtime }) => `
@@ -81,12 +85,16 @@ export class App {
 		prerender
 	} = {}) {
 		const host = ${
-			config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.headers.host)}]`
+			config.kit.host
+				? s(config.kit.host)
+				: `request.headers[${s(config.kit.headers.host || 'host')}]`
 		};
 		const protocol = ${
 			config.kit.protocol
 				? s(config.kit.protocol)
-				: `request.headers[${s(config.kit.headers.protocol)}] || default_protocol`
+				: config.kit.headers.protocol
+				? `request.headers[${s(config.kit.headers.protocol)}] || default_protocol`
+				: 'default_protocol'
 		};
 
 		return respond({ ...request, origin: protocol + '://' + host }, this.options, { prerender });

@@ -27,7 +27,7 @@ const config = {
 		},
 		floc: false,
 		headers: {
-			host: 'host',
+			host: null,
 			protocol: null
 		},
 		host: null,
@@ -123,7 +123,7 @@ export default {
 };
 ```
 
-**You should only do this if you trust the reverse proxy**, which is why it isn't the default. Some adapters will configure this automatically for you.
+**You should only do this if you trust the reverse proxy**, which is why it isn't the default.
 
 ### host
 

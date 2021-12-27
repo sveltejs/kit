@@ -79,6 +79,10 @@ export interface Builder {
 
 export interface Adapter {
 	name: string;
+	headers?: {
+		host?: string;
+		protocol?: string;
+	};
 	adapt(builder: Builder): Promise<void>;
 }
 

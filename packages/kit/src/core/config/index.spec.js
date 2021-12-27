@@ -30,7 +30,7 @@ test('fills in defaults', () => {
 			},
 			floc: false,
 			headers: {
-				host: 'host',
+				host: null,
 				protocol: null
 			},
 			host: null,
@@ -134,7 +134,7 @@ test('fills in partial blanks', () => {
 			},
 			floc: false,
 			headers: {
-				host: 'host',
+				host: null,
 				protocol: null
 			},
 			host: null,
