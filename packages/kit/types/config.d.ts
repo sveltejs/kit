@@ -18,7 +18,7 @@ export interface AdapterEntryConfig<Data = any> {
 export interface AdapterEntry<Data = any> {
 	id: string;
 	data: Data;
-	generateManifest: (opts: { relativePath: string }) => string;
+	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 }
 
 export interface Builder {
@@ -34,7 +34,7 @@ export interface Builder {
 		fn: (route: RouteDefinition) => AdapterEntryConfig<Data>
 	): Array<AdapterEntry<Data>>;
 
-	generateManifest: (opts: { relativePath: string }) => string;
+	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
