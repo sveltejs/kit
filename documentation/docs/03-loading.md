@@ -2,7 +2,7 @@
 title: Loading
 ---
 
-A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
+ページやレイアウトを定義するコンポーネントは、コンポーネントが作成される前に実行される `load` 関数をエクスポートすることができます。この関数はサーバーサイドレンダリングとクライアントの両方で実行され、(例えば)ローディングスピナーを表示して `onMount` でデータをフェッチするといったような作業をすることなく、ページのデータを取得することができます。
 
 ```ts
 // Declaration types for Loading
@@ -37,7 +37,7 @@ export interface LoadOutput<
 }
 ```
 
-Our example blog page might contain a `load` function like the following:
+ブログページの例では、以下のような `load` 関数が含まれています。
 
 ```html
 <script context="module">
@@ -62,39 +62,39 @@ Our example blog page might contain a `load` function like the following:
 </script>
 ```
 
-> Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.
+> `<script context="module">` であることにご注意ください。これは、コンポーネントがレンダリングされる前に `load` が実行されるのに必要なものです。コンポーネントインスタンスごとのコードは2つ目の `<script>` タグに記述する必要があります。
 
-`load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
+`load` は Next.js の `getStaticProps` や `getServerSideProps` に似ていますが、サーバーとクライアントの両方で動作する点が異なります。
 
-If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+`load` が何も返さない場合、SvelteKitは応答が返るまで他のルート(routes)に[フォールスルー](#routing-advanced-fallthrough-routes)するか、もしくは一般的な404で応答します。
 
-SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
+SvelteKitの `load` は、以下のような特別なプロパティを持つ `fetch` の実装を受け取ります。
 
-- it has access to cookies on the server
-- it can make requests against the app's own endpoints without issuing an HTTP call
-- it makes a copy of the response when you use it, and then sends it embedded in the initial page load for hydration
+- サーバー上のクッキーにアクセスできます
+- HTTPコールを発行することなく、アプリ自身のエンドポイントに対してリクエストを行うことができます
+- 使用時にレスポンスのコピーを作成し、ハイドレーション(hydration)のために最初のページロードに埋め込んで送信します
 
-`load` only applies to [page](#routing-pages) and [layout](#layouts) components (not components they import), and runs on both the server and in the browser with the default rendering options.
+`load` は [ページ](#routing-pages)、[レイアウト](#layouts)コンポーネントにのみ適用され (インポートされるコンポーネントには適用できません)、デフォルトのレンダリング設定ではサーバーとクライアントの両方で実行されます。
 
-> Code called inside `load` blocks:
+> `load` の中で呼び出されるコードについて:
 >
-> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`
-> - should not reference `window`, `document`, or any browser-specific objects
-> - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
+> - ネイティブの `fetch` ではなく Sveltekitが提供する [`fetch`](#loading-input-fetch) ラッパーを使用する必要があります
+> - `window` や `document` などの、ブラウザ固有のオブジェクトを参照してはいけません
+> - クライアントに公開されるAPIキーやシークレットを直接参照するのではなく、必要なシークレットを使用するエンドポイントを呼び出す必要があります。
 
-It is recommended that you not store pre-request state in global variables, but instead use them only for cross-cutting concerns such as caching and holding database connections.
+リクエスト前の状態をグローバル変数に保存しないでください。キャッシュやデータベース接続の保持など、横断的な関心事にのみ使用することを推奨します。
 
-> Mutating any shared state on the server will affect all clients, not just the current one.
+> サーバー上の共有状態を変更すると、現在のクライアントだけでなく全てのクライアントに影響します。
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `stuff` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, stuff })` function will re-run every time `session` or `stuff` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
+`load` 関数は、`page`、`fetch`、`session`、`stuff` の4つのフィールドを持つオブジェクトを受け取ります。`load` 関数はリアクティブなので、関数内でそれらのパラメータが使われている場合は、そのパラメータが変更されると再実行されます。具体的には、`page.query`、`page.path`、`session`、`stuff` が関数で使用されている場合、それらの値が変更されると再実行されます。関数宣言の中でパラメータを分割しているだけで、使用されていると見なされるのでご注意ください。上記の例の `load({ page, fetch, session, stuff })` 関数の場合、その関数のボディで `session` や `stuff` を使用していませんが、それらが変更されると再実行されます。もしこれを `load({ page, fetch })` のように書き換えれば、`page.params.slug` が変更されたときにのみ再実行されるようになります。同じリアクティビティが `page.params` にも適用されますが、実際に関数の中で使われているパラメータにのみ適用されます。もし `page.params.foo` が変更されたとしても、上記の例では `page.params.foo` にはアクセスしていないため、再実行されません。
 
 #### page
 
-`page` is a `{ host, path, params, query }` object where `host` is the URL's host, `path` is its pathname, `params` is derived from `path` and the route filename, and `query` is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams). Mutating `page` does not update the current URL; you should instead navigate using [`goto`](#modules-$app-navigation).
+`page` は `{ host, path, params, query }` というオブジェクトで、`host` には URL のホスト、`path` にはそのパス名、`params` は `path` とルート(route)のファイル名から抽出され、`query` は [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) のインスタンスです。`page` を変更しても現在のURLは更新されません。代わりに、[`goto`](#modules-$app-navigation) を使用してナビゲートする必要があります。
 
-So if the example above was `src/routes/blog/[slug].svelte` and the URL was `https://example.com/blog/some-post?foo=bar&baz&bizz=a&bizz=b`, the following would be true:
+なので、上記の例が `src/routes/blog/[slug].svelte` であるとして、URL が `https://example.com/blog/some-post?foo=bar&baz&bizz=a&bizz=b` だったとしたら、以下は全て true になります。
 
 - `page.host === 'example.com'`
 - `page.path === '/blog/some-post'`
@@ -105,48 +105,48 @@ So if the example above was `src/routes/blog/[slug].svelte` and the URL was `htt
 
 #### fetch
 
-`fetch` is equivalent to the native `fetch` web API, and can make credentialed requests. It can be used across both client and server contexts.
+`fetch` はネイティブの `fetch` web API と同等であり、クレデンシャル付きのリクエストができます。クライアントとサーバーの両方のコンテキストで使用することができます。
 
-> When `fetch` runs on the server, the resulting response will be serialized and inlined into the rendered HTML. This allows the subsequent client-side `load` to access identical data immediately without an additional network request.
+> `fetch` がサーバーで実行される場合、その結果のレスポンスはシリアライズされ、レンダリング済のHTMLにインライン化されます。これにより、その後のクライアントサイドの `load` は、追加のネットワークリクエストなしで、同一のデータに即座にアクセスすることができます。
 
-> Cookies will only be passed through if the target host is the same as the SvelteKit application or a more specific subdomain of it.
+> クッキーは、ターゲットホストが Sveltekit アプリケーションと同じか、より特定のサブドメインである場合にのみ引き渡されます。
 
 #### session
 
-`session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [`getSession`](#hooks-getsession) to learn how to use it.
+`session` は現在のリクエストに関連するサーバーからのデータ(例えば現在のユーザー情報)の受け渡しに使用することができます。デフォルトでは `undefined` です。使い方を学ぶには [`getSession`](#hooks-getsession) をご参照ください。
 
 #### stuff
 
-`stuff` is passed from layout components to child layouts and page components and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
+`stuff` は、レイアウトコンポーネントから子レイアウトコンポーネントと子ページコンポーネントに渡されるもので、使いたいものを埋め込むことができます。ルート(root)の `__layout.svelte` コンポーネントでは `{}` と同じですが、そのコンポーネントの `load` 関数が `stuff` プロパティを持つオブジェクトを帰す場合、それ以降の `load` 関数でそれが利用できるようになります。
 
 ### Output
 
-If you return a Promise from `load`, SvelteKit will delay rendering until the promise resolves. The return value has several properties, all optional:
+`load` から Promise を返した場合、SvelteKit は Promise が解決するまでレンダリングを遅らせます。戻り値にはいくつかプロパティがあり、全てオプションです。
 
 #### status
 
-The HTTP status code for the page. If returning an `error` this must be a `4xx` or `5xx` response; if returning a `redirect` it must be a `3xx` response. The default is `200`.
+ページの HTTPステータスコードです。`error` を返す場合は `4xx` か `5xx` のレスポンスでなければなりません。`redirect` を返す場合は `3xx` のレスポンスでなければなりません。デフォルトは `200` です。
 
 #### error
 
-If something goes wrong during `load`, return an `Error` object or a `string` describing the error alongside a `4xx` or `5xx` status code.
+`load` で何か問題が発生した場合、`Error` オブジェクトか、`4xx` または `5xx` といったステータスコードとともにエラーを説明する `string` を返しましょう。
 
 #### redirect
 
-If the page should redirect (because the page is deprecated, or the user needs to be logged in, or whatever else) return a `string` containing the location to which they should be redirected alongside a `3xx` status code.
+(ページが非推奨であるとか、もしくはログインが必要であるなどの理由で) ページがリダイレクトされるべきなら、`3xx` のステータスコードとともにリダイレクト先となる location を含む `string` を返しましょう。
 
 #### maxage
 
-To cause pages to be cached, return a `number` describing the page's max age in seconds. The resulting cache header will include `private` if user data was involved in rendering the page (either via `session`, or because a credentialed `fetch` was made in a `load` function), but otherwise will include `public` so that it can be cached by CDNs.
+ページをキャッシュさせるには、ページの max age を秒単位で表した `number` を返します。レンダリングページにユーザーデータが含まれる場合(`session`経由か、`load` 関数内のクレデンシャル付きの `fetch` など)、結果のキャッシュヘッダには `private` が含まれます。それ以外の場合は、CDN でキャッシュできるように `public` が含まれます。
 
-This only applies to page components, _not_ layout components.
+これはページコンポーネントにのみ適用され、レイアウトコンポーネントには適用されません。
 
 #### props
 
-If the `load` function returns a `props` object, the props will be passed to the component when it is rendered.
+`load` 関数が `props` オブジェクトを返す場合、そのプロパティ(props)はレンダリング時にコンポーネントに渡されます。
 
 #### stuff
 
-This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
+これは既存の `stuff` とマージされ、後続のレイアウトコンポーネントやページコンポーネントの `load` 関数に渡されます。
 
-This only applies to layout components, _not_ page components.
+これはレイアウトコンポーネントにのみ適用され、ページコンポーネントには適用されません。
