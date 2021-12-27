@@ -2,17 +2,17 @@
 title: Hooks
 ---
 
-An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports four functions, all optional, that run on the server — **handle**, **handleError**, **getSession**, and **externalFetch**.
+オプションの `src/hooks.js` (または `src/hooks.ts`、または `src/hooks/index.js`) ファイルはサーバー上で実行される4つの関数 — **handle**、**handleError**、**getSession**、**externalFetch** — をエクスポートできます。それらは全てオプションです。
 
-> The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
+> このファイルの配置場所は [コンフィグ](#configuration) の `config.kit.files.hooks` で変更することができます。
 
 ### handle
 
-This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#ssr-and-javascript-prerender) — and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+この関数は SvelteKit がリクエストを受けるたびに (アプリの実行中であろうと、[プリレンダリング](#ssr-and-javascript-prerender)であろうと) 実行され、レスポンスを決定します。`request` オブジェクトと、SvelteKitのルーターを呼び出しそれに応じて(ページをレンダリングしたり、エンドポイントを呼び出したりして)レスポンスを生成する `resolve` という関数を受け取ります。これにより、レスポンスのヘッダーやボディを変更したり、SvelteKitを完全にバイパスすることができます (例えば、プログラムでエンドポイントを実装する場合など)。
 
-> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
+> (プリレンダリング済みのページを含む) 静的アセットに対するリクエストは SvelteKit では処理されません。
 
-If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
+未実装の場合、デフォルトでは `({ request, resolve }) => resolve(request)` となります。
 
 ```ts
 // Declaration types for Hooks
@@ -60,7 +60,7 @@ export interface Handle<Locals = Record<string, any>, Body = unknown> {
 }
 ```
 
-To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
+エンドポイントに渡されるリクエストにカスタムデータを追加するには、以下のように `request.locals` オブジェクトにデータを投入します。
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
@@ -79,15 +79,15 @@ export async function handle({ request, resolve }) {
 }
 ```
 
-You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
+[`sequence` ヘルパー関数](#modules-sveltejs-kit-hooks)を使用すると、複数の `handle` 関数呼び出しを追加することができます。
 
 ### handleError
 
-If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+もしレンダリング中にエラーがスローされたら、`error` とそれを引き起こした `request` を引数にこの関数が呼び出されます。これによってデータをエラートラッキングサービスに送ったり、エラーをコンソールに出力する前にフォーマットをカスタマイズしたりすることができます。
 
-During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
+開発中、もし Svelte コードで構文エラーが発生した場合、エラー場所をハイライトする `frame` プロパティが追加されます。
 
-If unimplemented, SvelteKit will log the error with default formatting.
+未実装の場合、SvelteKitはデフォルトのフォーマットでエラーをログ出力します。
 
 ```ts
 // Declaration types for handleError hook
@@ -105,13 +105,13 @@ export async function handleError({ error, request }) {
 }
 ```
 
-> `handleError` is only called in the case of an uncaught exception. It is not called when pages and endpoints explicitly respond with 4xx and 5xx status codes.
+> `handleError` は例外がキャッチされていない場合にのみ呼び出されます。ページやエンドポイントが明示的に 4xx や 5xx ステータスコードで応答した場合は呼び出されません。
 
 ### getSession
 
-This function takes the `request` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
+この関数は、`request` オブジェクトを引数に取り、[クライアントからアクセス可能](#modules-$app-stores)な `session` オブジェクトを返します。つまり `session` オブジェクトはユーザーに公開しても安全でなければなりません。この関数はSvelteKitがページをサーバーレンダリングする際に実行されます。
 
-If unimplemented, session is `{}`.
+未実装の場合、session は `{}` です。
 
 ```ts
 // Declaration types for getSession hook
@@ -139,13 +139,13 @@ export function getSession(request) {
 }
 ```
 
-> `session` must be serializable, which means it must not contain things like functions or custom classes, just built-in JavaScript data types
+> `session` はシリアライズ可能でなければなりません。つまり、関数やカスタムクラスなどを含んではならず、JavaScriptの組み込みデータ型だけでなければいけません
 
 ### externalFetch
 
-This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).
+この関数によって、サーバー上で (またはプリレンダリング中に) 実行される `load` 関数の中で発生する、外部リソースへの `fetch` リクエストを変更 (または置換) することができます。
 
-For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
+例えば、ユーザーがクライアントサイドで `https://api.yourapp.com` のようなパブリックなURLに移動をするときには、`load` 関数でそのURLにリクエストを行うかもしれません。しかしSSRでは、(パブリックなインターネットとの間にあるプロキシーやロードバランサーをバイパスして) 直接 API にアクセスするほうが理にかなっている場合があります。
 
 ```ts
 // Declaration types for externalFetch hook
