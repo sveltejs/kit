@@ -2,19 +2,19 @@
 title: Routing
 ---
 
-Sveltekitの核心は、 _ファイルシステムベースのルーター_ です。これは、アプリケーション構造がコードベースの構造に、具体的には `src/routes` のコンテンツによって定義されることを意味します。
+Sveltekitの核心は、 _ファイルシステムベースのルーター_ です。これは、アプリケーション構造がコードベースの構造(具体的には `src/routes` のコンテンツ)によって定義されることを意味します。
 
 > [プロジェクトのコンフィグ](#configuration) を編集することで、これを異なるディレクトリに変更できます。
 
 ルートには、**ページ(pages)** と **エンドポイント(endpoints)** の2つのタイプがあります。
 
-ページは通常、ユーザーに表示するHTML(とページに必要なCSSやJavaScript)を生成します。デフォルトでは、ページはクライアントとサーバーの両方でレンダリングされますが、この動作は設定によって変更可能です。
+ページは通常、ユーザーに表示するHTML(及びページに必要なCSSやJavaScript)を生成します。デフォルトでは、ページはクライアントとサーバーの両方でレンダリングされますが、この動作は設定によって変更可能です。
 
-エンドポイントは、サーバー(もしくはサイトをビルドするときに[プリレンダリング](#ssr-and-javascript-prerender)している場合)でのみ実行されます。これは、プライベートな認証情報を必要とするデータベースやAPIにアクセスする場合や、本番環境のネットワーク上にあるマシンにあるデータを返す場合などに使用されます。ページはエンドポイントにデータをリクエストすることができます。エンドポイントはデフォルトではJSONを返しますが、他のフォーマットでもデータを返すことができます。
+エンドポイントは、サーバー上でのみ実行されます(もしくはサイトをビルドするときに[プリレンダリング](#ssr-and-javascript-prerender)している場合)。これは、プライベートな認証情報を必要とするデータベースやAPIにアクセスする場合や、本番環境ネットワーク上のマシンにあるデータを返す場合などに使用されます。ページはエンドポイントにデータをリクエストすることができます。エンドポイントはデフォルトではJSONを返しますが、他のフォーマットでもデータを返すことができます。
 
 ### Pages
 
-ページ(Pages)は `.svelte` ファイル (または[`config.extensions`](#configuration) に記載されている拡張子のファイル) に書かれているSvelteコンポーネントです。デフォルトでは、ユーザーが始めてアプリにアクセスすると、サーバーレンダリングバージョンのページと、そのページを'ハイドレート(hydrate)'しクライアントサイドルーターを初期化するJavaScriptが提供されます。それ以降、他のページへのナビゲーションは全てクライアント側で処理され、ページの共通部分は再レンダリングする必要がなくなるため、高速でアプリのような操作感になります。
+ページ(Pages)は `.svelte` ファイル (または[`config.extensions`](#configuration) に記載されている拡張子のファイル) に書かれているSvelteコンポーネントです。デフォルトでは、ユーザーが初めてアプリにアクセスすると、サーバーレンダリングバージョンのページと、そのページを'ハイドレート(hydrate)'しクライアントサイドルーターを初期化するJavaScriptが提供されます。それ以降、他のページへのナビゲーションは全てクライアント側で処理され、ページの共通部分を再レンダリングする必要がなくなるため、高速でアプリのような操作感になります。
 
 ファイル名でルート(**route**)が決まります。例えば、`src/routes/index.svelte` はサイトのルート(**root**)になります。
 
@@ -39,9 +39,9 @@ Sveltekitの核心は、 _ファイルシステムベースのルーター_ で�
 <p>TODO...</p>
 ```
 
-動的なパラメータは `[括弧]` を使用してエンコードされます。例えば、ブログ記事は `src/routes/blog/[slug].svelte` のように定義することがあるでしょう。この後すぐ、[load function](#loading) や [page store](#modules-$app-stores) でそのパラメータにアクセスする方法をご覧いただけます。
+動的なパラメータは `[括弧]` を使用してエンコードされます。例えば、ブログ記事は `src/routes/blog/[slug].svelte` のように定義することがあるでしょう。後ほど、[load function](#loading) や [page store](#modules-$app-stores) でそのパラメータにアクセスする方法をご覧いただけます。
 
-ファイルやディレクトリは、`[id]-[category].svelte` のように、動的なパーツを複数持つことができます。(パラメータは 'non-greedy' です。`x-y-z` のようにあいまいなケースでは、`id` は `x` 、 `category` は `y-z` となります。)
+ファイルやディレクトリは、`[id]-[category].svelte` のように、動的なパーツを複数持つことができます。(パラメータは 'non-greedy' です。`x-y-z` のようにあいまいなケースでは、`id` は `x` 、 `category` は `y-z` となります)
 
 ### Endpoints
 
@@ -96,7 +96,7 @@ export interface RequestHandler<
 }
 ```
 
- 例えば、仮想的なブログページ `/blog/cool-article` が、 `/blog/cool-article.json` というデータをリクエストする場合、`src/routes/blog/[slug].json.js` というエンドポイントになるかもしれません。
+ 例えば、仮想的なブログページ `/blog/cool-article` が `/blog/cool-article.json` というデータをリクエストする場合は、`src/routes/blog/[slug].json.js` というエンドポイントになるかもしれません。
 
 ```js
 import db from '$lib/database';
@@ -119,7 +119,7 @@ export async function get({ params }) {
 }
 ```
 
-> エンドポイントを含む全てのサーバーサイドのコードは、外部のAPIにデータをリクエストする必要がある場合に備えて、`fetch` にアクセスすることができます。
+> エンドポイントを含む全てのサーバーサイドのコードは、外部のAPIにデータをリクエストする場合に備えて、`fetch` にアクセスすることができます。
 
 この関数の仕事は、レスポンスを表す `{ status, headers, body }` オブジェクトを返すことです。`status` は [HTTPステータスコード](https://httpstatusdogs.com)です。
 
@@ -128,9 +128,9 @@ export async function get({ params }) {
 - `4xx` — クライアントエラー
 - `5xx` — サーバーエラー
 
-もし返された `body` がオブジェクトで、かつ `content-type` ヘッダーが無い場合は、自動的に JSON レスポンスとなります。(`$lib` については心配無用です、[後で](#modules-$lib) 説明します。)
+もし返された `body` がオブジェクトで、かつ `content-type` ヘッダーが無い場合は、自動的に JSON レスポンスとなります。(`$lib` については心配無用です、[後ほど](#modules-$lib) 説明します)
 
-> 何も返さなければ、明示的な404レスポンスと同じです。
+> 何も返さない場合は、明示的な404レスポンスと同じです。
 
 例えば POST のような HTTP メソッドを処理するエンドポイントは、これに相当する関数をエクスポートします。
 
@@ -158,7 +158,7 @@ POST リクエストの場合は、リクエストオブジェクトの `body` �
 
 - テキストデータ (content-type `text/plain`) は `string` に変換されます
 - JSON データ (content-type `application/json`) は `JSONValue` に変換されます (`object`、`Array`、またはプリミティブ)。
-- Form データ (content-type `application/x-www-form-urlencoded` または `multipart/form-data`) read-only な [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) オブジェクトに変換されます。
+- Form データ (content-type `application/x-www-form-urlencoded` または `multipart/form-data`) は read-only な [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) オブジェクトに変換されます。
 - それ以外のデータは全て `Uint8Array` として提供されます。
 
 ### Private modules
