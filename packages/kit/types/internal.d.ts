@@ -1,6 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { App } from './app';
+import { InternalApp } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -20,7 +20,7 @@ export interface PrerenderOptions {
 }
 
 export interface AppModule {
-	App: typeof App;
+	App: typeof InternalApp;
 
 	override(options: {
 		paths: {

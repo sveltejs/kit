@@ -4,6 +4,10 @@ import { PrerenderOptions, SSRManifest } from './internal';
 
 export class App {
 	constructor(manifest: SSRManifest);
+	render(incoming: IncomingRequest): Promise<ServerResponse>;
+}
+
+export class InternalApp extends App {
 	render(
 		incoming: IncomingRequest,
 		options?: {
