@@ -2,17 +2,17 @@
 title: Layouts
 ---
 
-So far, we've treated pages as entirely standalone components — upon navigation, the existing component will be destroyed, and a new one will take its place.
+ここまで、ページを完全に独立したコンポーネントとして扱ってきました — ナビゲーションを行うと、既存のコンポーネントは破棄され、新しいコンポーネントがその場所を引き継ぎます。
 
-But in many apps, there are elements that should be visible on _every_ page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use _layout_ components.
+しかし、多くのアプリでは、トップレベルのナビゲーションやフッターなど、全てのページで表示されるべき要素が存在します。それらを全てのページで繰り返し書くのではなく、_レイアウト(layout)_ コンポーネントを使うことができます。
 
-To create a layout component that applies to every page, make a file called `src/routes/__layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
+全てのページに適用されるレイアウトコンポーネントを作るには、`src/routes/__layout.svelte` というファイルを作成します。(自分で作成していない場合に使用される)デフォルトのレイアウトコンポーネントは、以下のようなものです…
 
 ```html
 <slot></slot>
 ```
 
-...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
+…ですが、お好みのマークアップ、スタイル、動作を追加できます。ただし、コンポーネントがページコンテンツ用の `<slot>` を含んでいる必要があります。例えば、ナビゲーションバー(nav bar)を追加してみるとしましょう。
 
 ```html
 <!-- src/routes/__layout.svelte -->
@@ -25,7 +25,7 @@ To create a layout component that applies to every page, make a file called `src
 <slot></slot>
 ```
 
-If we create pages for `/`, `/about` and `/settings`...
+`/`、`/about`、`/settings` 用のページを作成してみます…
 
 ```html
 <!-- src/routes/index.svelte -->
@@ -42,13 +42,13 @@ If we create pages for `/`, `/about` and `/settings`...
 <h1>Settings</h1>
 ```
 
-...the nav will always be visible, and clicking between the three pages will only result in the `<h1>` being replaced.
+...nav は常に表示され、3つのページリンクをそれぞれクリックすると、`<h1>` が置き換えられるだけです。
 
 ### Nested layouts
 
-Suppose we don't just have a single `/settings` page, but instead have nested pages like `/settings/profile` and `/settings/notifications` with a shared submenu (for a real-life example, see [github.com/settings](https://github.com/settings)).
+単一の `/settings` ページを持つのではなく、`/settings/profile` や `/settings/notifications` といったページを入れ子にしてサブメニューを共有するとします (実例としては、[github.com/settings](https://github.com/settings) をご覧ください)。
 
-We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
+(Topレベルの nav を持つルートレイアウト(root layout)を継承しつつ) `/settings` 以下のページにのみ適用されるレイアウトを作成することができます。
 
 ```html
 <!-- src/routes/settings/__layout.svelte -->
@@ -64,17 +64,17 @@ We can create a layout that only applies to pages below `/settings` (while inher
 
 ### Resets
 
-To reset the layout stack, create a `__layout.reset.svelte` file instead of a `__layout.svelte` file. For example, if you want your `/admin/*` pages to _not_ inherit the root layout, create a file called `src/routes/admin/__layout.reset.svelte`.
+レイアウトスタックをリセットするには、`__layout.svelte` の代わりに、`__layout.reset.svelte` ファイルを作成します。例えば、`/admin/*` ページにはルートレイアウト(root layout)を継承させたくない場合は、`src/routes/admin/__layout.reset.svelte` というファイルを作成します。
 
-Layout resets are otherwise identical to normal layout components.
+レイアウトリセットは、それ以外は通常のレイアウトコンポーネントと同じです。
 
 ### Error pages
 
-If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layout and page components.
+ページがロード([Loading](#loading)を参照)に失敗した場合、SvelteKitはエラーページをレンダリングします。レイアウトやページコンポーネントと一緒に `__error.svelte` コンポーネントを作ることで、このページをカスタマイズすることができます。
 
-For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
+例えば、`src/routes/settings/notifications/index.svelte` でロードに失敗した場合、`src/routes/settings/notifications/__error.svelte` が存在すればSveltekitはそれを同じレイアウトでレンダリングします。もし存在しなければ、`src/routes/settings/__error.svelte` を親のレイアウトでレンダリングします。もしそれも存在しなければ、 `src/routes/__error.svelte` をルートレイアウト(root layout) でレンダリングします。
 
-> SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommended that you bring your own.
+> SvelteKit はデフォルトのエラーページを提供してますが、ご自身で `src/routes/__error.svelte` を用意することを推奨します。
 
 ```ts
 // declaration type
@@ -90,7 +90,7 @@ export interface ErrorLoadInput<
 }
 ```
 
-If an error component has a [`load`](#loading) function, it will be called with `error` and `status` properties:
+エラーコンポーネントに [`load`](#loading) 関数がある場合、`error` プロパティと `status` プロパティが引数に渡されて呼び出されます。
 
 ```html
 <script context="module">
@@ -111,4 +111,4 @@ If an error component has a [`load`](#loading) function, it will be called with 
 <h1>{title}</h1>
 ```
 
-> Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.
+> ユーザーに特権的な情報が公開されないようにするため、本番環境では `error` からサーバーサイドのスタックトレースが取り除かれます。
