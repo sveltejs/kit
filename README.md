@@ -1,3 +1,26 @@
+# SvelteKitドキュメント日本語翻訳プロジェクト
+
+[SvelteKit](https://github.com/sveltejs/kit)のドキュメントサイト [kit.svelte.dev](https://kit.svelte.dev/) を日本語に翻訳するプロジェクトです。
+
+**SvelteKit日本語ドキュメントサイト : https://kit.svelte.jp/**
+
+> Svelte本体のドキュメントの日本語化プロジェクトのリポジトリは [svelte-jp/svelte-site-jp](https://github.com/svelte-jp/svelte-site-jp) です。
+
+
+## 貢献(Contribution)について
+
+この翻訳プロジェクトではみなさんの貢献を歓迎しています！
+
+興味がある方は [CONTRIBUTING_ja.md](https://github.com/svelte-jp/kit/blob/master/CONTRIBUTING_ja.md) をご参照ください。
+
+ご意見や気が付いたことがあれば、お気軽に Issue を作成して知らせてください。  
+もしくは [Svelte 日本の Discord](https://discord.com/invite/YTXq3ZtBbx) の `#ドキュメント翻訳`チャンネルに投稿頂いても構いません。
+
+
+以下は sveltejs/kit のREADMEの内容です。
+
+---
+
 [![Chat](https://img.shields.io/discord/457912077277855764?label=chat&logo=discord)](https://svelte.dev/chat)
 
 # READ THIS FIRST!
