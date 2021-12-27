@@ -66,14 +66,17 @@ export default function () {
 				return {
 					id: pattern,
 					data: {
-						name: parts.join('-').replace(/:/g, '_').replace('*', '__rest') || 'index'
+						name: parts.join('-').replace(/[:.]/g, '_').replace('*', '__rest') || 'index'
 					},
 					filter: (other) => matches(route.segments, other.segments)
 				};
 			});
 
 			entries.forEach((entry) => {
-				const manifest = entry.generateManifest({ relativePath: '../server' });
+				const manifest = entry.generateManifest({
+					relativePath: '../server',
+					format: esm ? 'esm' : 'cjs'
+				});
 
 				const fn = esm
 					? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
@@ -83,7 +86,7 @@ export default function () {
 			});
 
 			if (esm) {
-				builder.copy(join(files, 'esm/handler.js'), '.netlify/handler.js');
+				builder.copy(`${files}/esm`, '.netlify');
 			} else {
 				// TODO might be useful if you could specify CJS/ESM as an option to writeServer
 				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
@@ -93,7 +96,7 @@ export default function () {
 					writeFileSync(filepath, output);
 				});
 
-				builder.copy(join(files, 'cjs/handler.js'), '.netlify/handler.js');
+				builder.copy(`${files}/cjs`, '.netlify');
 				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 			}
 
