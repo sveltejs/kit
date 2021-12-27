@@ -1,4 +1,4 @@
 import { Adapter } from '@sveltejs/kit';
 
-declare function plugin(): Adapter;
+declare function plugin(opts?: { split?: boolean }): Adapter;
 export = plugin;
