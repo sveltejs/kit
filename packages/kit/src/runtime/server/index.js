@@ -92,15 +92,19 @@ export async function respond(incoming, options, state = {}) {
 					}
 				}
 
-				const $session = await options.hooks.getSession(request);
-				return await respond_with_error({
-					request,
-					options,
-					state,
-					$session,
-					status: 404,
-					error: new Error(`Not found: ${request.path}`)
-				});
+				// if this request came direct from the user, rather than
+				// via a `fetch` in a `load`, render a 404 page
+				if (!state.initiator) {
+					const $session = await options.hooks.getSession(request);
+					return await respond_with_error({
+						request,
+						options,
+						state,
+						$session,
+						status: 404,
+						error: new Error(`Not found: ${request.path}`)
+					});
+				}
 			}
 		});
 	} catch (/** @type {unknown} */ err) {

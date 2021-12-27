@@ -190,6 +190,14 @@ export async function load_node({
 							status: rendered.status,
 							headers: /** @type {Record<string, string>} */ (rendered.headers)
 						});
+					} else {
+						// we can't load the endpoint from our own manifest,
+						// so we need to make an actual HTTP request
+						// TODO protocol should be configurable/determined by e.g. x-forwarded-proto
+						return fetch(`https://${request.host}${relative}${search}`, {
+							method: opts.method || 'GET',
+							headers
+						});
 					}
 				} else {
 					// external
