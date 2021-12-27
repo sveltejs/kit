@@ -30,7 +30,7 @@ test('fills in defaults', () => {
 			},
 			floc: false,
 			host: null,
-			hostHeader: null,
+			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',
@@ -130,7 +130,7 @@ test('fills in partial blanks', () => {
 			},
 			floc: false,
 			host: null,
-			hostHeader: null,
+			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',

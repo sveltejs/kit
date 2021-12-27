@@ -35,7 +35,7 @@ async function testLoadDefaultConfig(path) {
 			},
 			floc: false,
 			host: null,
-			hostHeader: null,
+			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',

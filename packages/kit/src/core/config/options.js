@@ -69,7 +69,7 @@ const options = object(
 
 			host: string(null),
 
-			hostHeader: string(null),
+			hostHeader: string('host'),
 
 			hydrate: boolean(true),
 

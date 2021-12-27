@@ -396,9 +396,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const host = /** @type {string} */ (
-					config.kit.host || req.headers[config.kit.hostHeader || 'host']
-				);
+				const host = /** @type {string} */ (config.kit.host || req.headers[config.kit.hostHeader]);
 
 				const rendered = await respond(
 					{

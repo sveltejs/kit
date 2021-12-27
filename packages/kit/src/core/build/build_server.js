@@ -78,9 +78,7 @@ export class App {
 		prerender
 	} = {}) {
 		const host = ${
-			config.kit.host
-				? s(config.kit.host)
-				: `request.headers[${s(config.kit.hostHeader || 'host')}]`
+			config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader)}]`
 		};
 		return respond({ ...request, host }, this.options, { prerender });
 	}
