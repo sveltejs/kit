@@ -128,11 +128,7 @@ export async function load_node({
 							headers: type ? { 'content-type': type } : {}
 						});
 					} else {
-						response = await fetch(
-							// TODO we need to know what protocol to use
-							`http://${page.host}/${file}`,
-							/** @type {RequestInit} */ (opts)
-						);
+						response = await fetch(`${page.origin}/${file}`, /** @type {RequestInit} */ (opts));
 					}
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
@@ -164,7 +160,7 @@ export async function load_node({
 
 					const rendered = await respond(
 						{
-							host: request.host,
+							origin: request.origin,
 							method: opts.method || 'GET',
 							headers,
 							path: relative,
@@ -193,8 +189,7 @@ export async function load_node({
 					} else {
 						// we can't load the endpoint from our own manifest,
 						// so we need to make an actual HTTP request
-						// TODO protocol should be configurable/determined by e.g. x-forwarded-proto
-						return fetch(`https://${request.host}${relative}${search}`, {
+						return fetch(request.origin + relative + search, {
 							method: opts.method || 'GET',
 							headers
 						});
@@ -206,9 +201,9 @@ export async function load_node({
 					}
 
 					// external fetch
-					if (typeof request.host !== 'undefined') {
-						const { hostname: fetch_hostname } = new URL(url);
-						const [server_hostname] = request.host.split(':');
+					if (typeof request.origin !== 'undefined') {
+						const fetch_hostname = new URL(url).hostname;
+						const server_hostname = new URL(request.origin).hostname;
 
 						// allow cookie passthrough for "same-origin"
 						// if SvelteKit is serving my.domain.com:

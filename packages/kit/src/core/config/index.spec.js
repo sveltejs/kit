@@ -29,8 +29,11 @@ test('fills in defaults', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
+			headers: {
+				host: 'host',
+				protocol: null
+			},
 			host: null,
-			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',
@@ -49,6 +52,7 @@ test('fills in defaults', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,
@@ -129,8 +133,11 @@ test('fills in partial blanks', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
+			headers: {
+				host: 'host',
+				protocol: null
+			},
 			host: null,
-			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',
@@ -149,6 +156,7 @@ test('fills in partial blanks', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,

@@ -36,9 +36,12 @@ const get_hooks = hooks => ({
 	externalFetch: hooks.externalFetch || fetch
 });
 
+let default_protocol = 'https';
+
 // allow paths to be globally overridden
 // in svelte-kit preview and in prerendering
 export function override(settings) {
+	default_protocol = settings.protocol || default_protocol;
 	set_paths(settings.paths);
 	set_prerendering(settings.prerendering);
 	read = settings.read;
@@ -78,9 +81,15 @@ export class App {
 		prerender
 	} = {}) {
 		const host = ${
-			config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.hostHeader)}]`
+			config.kit.host ? s(config.kit.host) : `request.headers[${s(config.kit.headers.host)}]`
 		};
-		return respond({ ...request, host }, this.options, { prerender });
+		const protocol = ${
+			config.kit.protocol
+				? s(config.kit.protocol)
+				: `request.headers[${s(config.kit.headers.protocol)}] || default_protocol`
+		};
+
+		return respond({ ...request, origin: protocol + '://' + host }, this.options, { prerender });
 	}
 }
 `;

@@ -26,7 +26,6 @@ type RequestHeaders = Record<string, string>;
 export type RawBody = null | Uint8Array;
 export interface IncomingRequest {
 	method: string;
-	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;

@@ -22,7 +22,7 @@ export async function render_page(request, route, match, options, state) {
 	const params = route.params ? decode_params(route.params(match)) : {};
 
 	const page = {
-		host: request.host,
+		origin: request.origin,
 		path: request.path,
 		query: request.query,
 		params

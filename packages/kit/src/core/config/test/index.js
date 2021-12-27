@@ -34,8 +34,11 @@ async function testLoadDefaultConfig(path) {
 				template: join(cwd, 'src/app.html')
 			},
 			floc: false,
+			headers: {
+				host: 'host',
+				protocol: null
+			},
 			host: null,
-			hostHeader: 'host',
 			hydrate: true,
 			package: {
 				dir: 'package',
@@ -51,6 +54,7 @@ async function testLoadDefaultConfig(path) {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,

@@ -24,7 +24,7 @@ export async function respond_with_error({ request, options, state, $session, st
 	const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
 	const page = {
-		host: request.host,
+		origin: request.origin,
 		path: request.path,
 		query: request.query,
 		params: {}

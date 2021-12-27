@@ -125,7 +125,7 @@ export async function render_response({
 				session: ${try_serialize($session, (error) => {
 					throw new Error(`Failed to serialize session data: ${error.message}`);
 				})},
-				host: ${page && page.host ? s(page.host) : 'location.host'},
+				origin: ${page && page.origin ? s(page.origin) : 'location.origin'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
@@ -138,7 +138,7 @@ export async function render_response({
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					page: {
-						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
+						origin: ${page && page.origin ? s(page.origin) : 'location.origin'}, // TODO this is redundant
 						path: ${page && page.path ? try_serialize(page.path, error => {
 							throw new Error(`Failed to serialize page.path: ${error.message}`);
 						}) : null},

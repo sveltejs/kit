@@ -109,8 +109,11 @@ export interface Config {
 			template?: string;
 		};
 		floc?: boolean;
+		headers?: {
+			host?: string;
+			protocol?: string;
+		};
 		host?: string;
-		hostHeader?: string;
 		hydrate?: boolean;
 		package?: {
 			dir?: string;
@@ -128,6 +131,7 @@ export interface Config {
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
 		};
+		protocol?: string;
 		router?: boolean;
 		serviceWorker?: {
 			files?(filepath: string): boolean;

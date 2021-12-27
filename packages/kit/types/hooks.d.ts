@@ -5,7 +5,7 @@ export type StrictBody = string | Uint8Array;
 
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
-	host: string;
+	origin: string;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;

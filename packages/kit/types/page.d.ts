@@ -1,7 +1,7 @@
 import { InferValue, MaybePromise, Rec } from './helper';
 
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
-	host: string;
+	origin: string;
 	path: string;
 	params: Params;
 	query: URLSearchParams;

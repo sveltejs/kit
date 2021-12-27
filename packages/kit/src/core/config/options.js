@@ -67,9 +67,12 @@ const options = object(
 
 			floc: boolean(false),
 
-			host: string(null),
+			headers: object({
+				host: string('host'),
+				protocol: string(null)
+			}),
 
-			hostHeader: string('host'),
+			host: string(null),
 
 			hydrate: boolean(true),
 
@@ -158,6 +161,8 @@ const options = object(
 					}
 				})
 			}),
+
+			protocol: string(null),
 
 			router: boolean(true),
 

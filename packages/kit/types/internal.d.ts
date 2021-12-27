@@ -28,6 +28,7 @@ export interface AppModule {
 			assets: string;
 		};
 		prerendering: boolean;
+		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
 }

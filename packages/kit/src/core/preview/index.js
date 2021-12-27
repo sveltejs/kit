@@ -62,6 +62,7 @@ export async function preview({
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
 		},
 		prerendering: false,
+		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
 

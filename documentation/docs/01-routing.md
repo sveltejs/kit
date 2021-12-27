@@ -59,7 +59,6 @@ type RequestHeaders = Record<string, string>;
 export type RawBody = null | Uint8Array;
 export interface IncomingRequest {
 	method: string;
-	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;
@@ -96,7 +95,7 @@ export interface RequestHandler<
 }
 ```
 
- For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';

@@ -124,7 +124,7 @@ class Watcher extends EventEmitter {
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
-		const kit_plugin = await create_plugin(this.config, this.dir, this.cwd, () => {
+		const kit_plugin = await create_plugin(this.config, this.dir, this.https, () => {
 			if (!this.manifest) {
 				throw new Error('Manifest is not available');
 			}
@@ -318,10 +318,10 @@ function get_params(array) {
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
- * @param {string} cwd
+ * @param {boolean} https
  * @param {() => import('types/app').SSRManifest} get_manifest
  */
-async function create_plugin(config, dir, cwd, get_manifest) {
+async function create_plugin(config, dir, https, get_manifest) {
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
@@ -396,13 +396,13 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const host = /** @type {string} */ (config.kit.host || req.headers[config.kit.hostHeader]);
+				const origin = `${https ? 'https' : 'http'}://${req.headers.host}`;
 
 				const rendered = await respond(
 					{
 						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 						method: req.method,
-						host,
+						origin,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
 						rawBody: body
