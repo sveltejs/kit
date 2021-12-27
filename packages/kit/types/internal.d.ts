@@ -106,6 +106,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
+	/** private fields */
 	_: {
 		mime: Record<string, string>;
 		entry: {
