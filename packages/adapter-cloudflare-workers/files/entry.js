@@ -30,7 +30,6 @@ async function handle(event) {
 
 	try {
 		const rendered = await app.render({
-			host: request_url.host,
 			path: request_url.pathname,
 			query: request_url.searchParams,
 			rawBody: await read(request),

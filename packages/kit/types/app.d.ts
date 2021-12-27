@@ -23,7 +23,6 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 
 export interface IncomingRequest {
 	method: string;
-	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;
