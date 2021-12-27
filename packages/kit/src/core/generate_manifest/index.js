@@ -5,11 +5,13 @@ import { get_mime_lookup } from '../utils.js';
  * @param {import('../../../types/internal').BuildData} build_data;
  * @param {string} relative_path;
  * @param {import('../../../types/internal').RouteData[]} routes;
+ * @param {'esm' | 'cjs'} format
  */
 export function generate_manifest(
 	build_data,
 	relative_path,
-	routes = build_data.manifest_data.routes
+	routes = build_data.manifest_data.routes,
+	format = 'esm'
 ) {
 	const bundled_nodes = new Map();
 
@@ -39,6 +41,12 @@ export function generate_manifest(
 		}
 	});
 
+	/** @type {(path: string) => string} */
+	const importer =
+		format === 'esm'
+			? (path) => `() => import('${path}')`
+			: (path) => `() => Promise.resolve().then(() => require('${path}'))`;
+
 	// prettier-ignore
 	return `{
 		appDir: ${s(build_data.app_dir)},
@@ -47,7 +55,7 @@ export function generate_manifest(
 			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
 			nodes: [
-				${Array.from(bundled_nodes.values()).map(node => `() => import('${node.path}')`).join(',\n\t\t\t\t')}
+				${Array.from(bundled_nodes.values()).map(node => importer(node.path)).join(',\n\t\t\t\t')}
 			],
 			routes: [
 				${routes.map(route => {
@@ -71,7 +79,7 @@ export function generate_manifest(
 							type: 'endpoint',
 							pattern: ${route.pattern},
 							params: ${get_params(route.params)},
-							load: () => import('${relative_path}/${build_data.server.manifest[route.file].file}')
+							load: ${importer(`${relative_path}/${build_data.server.manifest[route.file].file}`)}
 						}`.replace(/^\t\t/gm, '');
 					}
 				}).filter(Boolean).join(',\n\t\t\t\t')}
