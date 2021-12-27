@@ -180,7 +180,6 @@ class Watcher extends EventEmitter {
 		}
 
 		this.vite = await vite.createServer(merged_config);
-		remove_html_middlewares(this.vite.middlewares);
 		await this.vite.listen(this.port);
 	}
 
@@ -536,6 +535,7 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 		 */
 		configureServer(vite) {
 			return () => {
+				remove_html_middlewares(vite.middlewares);
 				vite.middlewares.use(create_kit_middleware(vite));
 			};
 		}
