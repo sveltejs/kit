@@ -22,7 +22,7 @@ You can also programmatically invoke `prefetch` from `$app/navigation`.
 
 ### sveltekit:noscroll
 
-When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to 0,0 so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
+When navigating to internal links, SvelteKit mirrors the browser's default navigation behaviour: it will change the scroll position to [0,0] so that the user is at the very top left of the page (unless the link includes a `#hash`, in which case it will scroll to the element with a matching ID).
 
 In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:noscroll` attribute to a link...
 
