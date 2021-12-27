@@ -11,6 +11,7 @@
 		"format": "pnpm -r format",
 		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
 		"preview:docs": "action-deploy-docs --project=kit",
+		"textlint": "node -e \"var shell=require('shelljs');var files=shell.find(['./CONTRIBUTING_ja.md','./documentation/**/*.md']).join(' ');if(shell.exec('textlint -f pretty-error '+files).code!==0){shell.exit(1)};\"",
 		"changeset:version": "changeset version && pnpm i --lockfile-only"
 	},
 	"repository": {
@@ -40,6 +41,11 @@
 		"playwright-chromium": "^1.17.0",
 		"prettier": "^2.5.0",
 		"rollup": "^2.60.2",
+		"shelljs": "^0.8.3",
+		"textlint": "^11.9.0",
+		"textlint-rule-detect-bad-chars": "^1.0.2",
+		"textlint-rule-no-mix-dearu-desumasu": "^4.0.1",
+		"textlint-rule-preset-jtf-style": "^2.3.8",
 		"typescript": "~4.4.4"
 	},
 	"type": "module"

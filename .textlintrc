@@ -1,0 +1,24 @@
+{
+    "rules": {
+        "textlint-rule-detect-bad-chars": {
+
+        },
+        "preset-jtf-style": {
+            "1.1.3.箇条書き": false,
+            "2.1.5.カタカナ": false,
+            "2.1.6.カタカナの長音": false,
+            "3.1.1.全角文字と半角文字の間": false,
+            "3.1.2.全角文字どうし": false,
+            "4.2.6.ハイフン(-)": false,
+            "4.2.7.コロン(：)": false,
+            "4.3.1.丸かっこ（）": false,
+            "4.3.2.大かっこ［］": false
+        },
+        "no-mix-dearu-desumasu": {
+            "preferInHeader": "",
+            "preferInBody": "ですます",
+            "preferInList": "ですます",
+            "strict": false
+        }
+    }
+}
