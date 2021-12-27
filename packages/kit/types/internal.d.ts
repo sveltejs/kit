@@ -4,8 +4,8 @@ import { InternalApp, SSRManifest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
-	Handle,
 	HandleError,
+	InternalHandle,
 	ServerRequest,
 	ServerResponse
 } from './hooks';
@@ -106,7 +106,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: Handle;
+	handle: InternalHandle;
 	handleError: HandleError;
 }
 
