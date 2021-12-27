@@ -8,9 +8,13 @@ const prefix = `/${manifest.appDir}/`;
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
+
+		// static assets
 		if (url.pathname.startsWith(prefix)) return env.ASSETS.fetch(req);
 
-		let file = url.pathname.substring(1);
+		// prerendered pages and index.html files
+		const pathname = url.pathname.replace(/\/$/, '');
+		let file = pathname.substring(1);
 
 		try {
 			file = decodeURIComponent(file);
@@ -18,12 +22,15 @@ export default {
 			// ignore
 		}
 
-		if (manifest.assets.has(file)) return env.ASSETS.fetch(req);
-
-		if (prerendered.has(url.pathname) || manifest.assets.has(file + '/index.html')) {
-			return env.ASSETS.fetch(new Request(req.url + '/index.html', req));
+		if (
+			manifest.assets.has(file) ||
+			manifest.assets.has(file + '/index.html') ||
+			prerendered.has(pathname || '/')
+		) {
+			return env.ASSETS.fetch(req);
 		}
 
+		// dynamically-generated pages
 		try {
 			const rendered = await app.render({
 				path: url.pathname,
