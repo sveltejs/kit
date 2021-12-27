@@ -33,6 +33,8 @@ export function create_builder({ cwd, config, build_data, log }) {
 		copy,
 
 		createEntries(fn) {
+			generated_manifest = true;
+
 			/** @type {import('types/config').AdapterEntry[]} */
 			const entries = [];
 
@@ -63,25 +65,29 @@ export function create_builder({ cwd, config, build_data, log }) {
 					}
 				}
 
-				entries.push({
-					id,
-					data,
-					generateManifest: ({ relativePath }) => {
-						generated_manifest = true;
-						return generate_manifest(build_data, relativePath, group.filter(not_prerendered));
-					}
-				});
+				const filtered = group.filter(not_prerendered);
+
+				if (filtered.length > 0) {
+					entries.push({
+						id,
+						data,
+						generateManifest: ({ relativePath, format }) => {
+							return generate_manifest(build_data, relativePath, filtered, format);
+						}
+					});
+				}
 			}
 
 			return entries;
 		},
 
-		generateManifest: ({ relativePath }) => {
+		generateManifest: ({ relativePath, format }) => {
 			generated_manifest = true;
 			return generate_manifest(
 				build_data,
 				relativePath,
-				build_data.manifest_data.routes.filter(not_prerendered)
+				build_data.manifest_data.routes.filter(not_prerendered),
+				format
 			);
 		},
 
@@ -119,7 +125,9 @@ export function create_builder({ cwd, config, build_data, log }) {
 
 		async prerender({ all = false, dest, fallback }) {
 			if (generated_manifest) {
-				throw new Error('Adapters must call prerender(...) before generateManifest(...)');
+				throw new Error(
+					'Adapters must call prerender(...) before createEntries(...) or generateManifest(...)'
+				);
 			}
 
 			const prerendered = await prerender({
