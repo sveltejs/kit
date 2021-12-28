@@ -48,7 +48,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
+		service_worker_register: config.kit.serviceWorker.register
 	};
 
 	const client_manifest = await build_client(options);
@@ -85,6 +86,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   service_worker_register: boolean;
  * }} options
  */
 async function build_client({
@@ -193,6 +195,7 @@ async function build_client({
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   service_worker_register: boolean;
  * }} options
  * @param {import('vite').Manifest} client_manifest
  * @param {string} runtime
@@ -206,7 +209,8 @@ async function build_server(
 		build_dir,
 		output_dir,
 		client_entry_file,
-		service_worker_entry_file
+		service_worker_entry_file,
+		service_worker_register
 	},
 	client_manifest,
 	runtime
@@ -332,7 +336,7 @@ async function build_server(
 					prerender: ${config.kit.prerender.enabled},
 					read: settings.read,
 					root,
-					service_worker: ${service_worker_entry_file ? "'/service-worker.js'" : 'null'},
+					service_worker: ${service_worker_entry_file && service_worker_register ? "'/service-worker.js'" : 'null'},
 					router: ${s(config.kit.router)},
 					ssr: ${s(config.kit.ssr)},
 					target: ${s(config.kit.target)},
@@ -493,6 +497,7 @@ async function build_server(
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   service_worker_register: boolean;
  * }} options
  * @param {import('vite').Manifest} client_manifest
  */

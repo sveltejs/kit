@@ -163,6 +163,7 @@ const options = object(
 			router: boolean(true),
 
 			serviceWorker: object({
+				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
