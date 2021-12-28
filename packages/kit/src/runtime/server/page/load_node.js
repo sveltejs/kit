@@ -3,11 +3,6 @@ import { Headers } from 'node-fetch';
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
-import {
-	ensure_headers_class,
-	ensure_headers_plain_object,
-	clone_headers
-} from '../../../utils/http.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 
 const s = JSON.stringify;
@@ -108,7 +103,8 @@ export async function load_node({
 						...opts
 					};
 				}
-				opts.headers = ensure_headers_class(opts.headers ?? {});
+
+				opts.headers = new Headers(opts.headers);
 
 				const resolved = resolve(request.path, url.split('?')[0]);
 
@@ -138,16 +134,16 @@ export async function load_node({
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 
-					const headers = clone_headers(/** @type {Headers} */ (opts.headers ?? new Headers()));
-
 					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
-						headers.set('cookie', request.headers.cookie);
+						if (request.headers.cookie) {
+							opts.headers.set('cookie', request.headers.cookie);
+						}
 
-						if (!headers.has('authorization')) {
-							headers.set('authorization', request.headers.authorization);
+						if (request.headers.authorization && !opts.headers.has('authorization')) {
+							opts.headers.set('authorization', request.headers.authorization);
 						}
 					}
 
@@ -165,7 +161,7 @@ export async function load_node({
 						{
 							host: request.host,
 							method: opts.method || 'GET',
-							headers: ensure_headers_plain_object(headers),
+							headers: Object.fromEntries(opts.headers),
 							path: relative,
 							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
 							query: new URLSearchParams(search)
@@ -235,7 +231,7 @@ export async function load_node({
 
 								/** @type {import('types/helper').ResponseHeaders} */
 								const headers = {};
-								for (const [key, value] of ensure_headers_class(response.headers)) {
+								for (const [key, value] of response.headers) {
 									if (key === 'set-cookie') {
 										set_cookie_headers = set_cookie_headers.concat(value);
 									} else if (key !== 'etag') {
