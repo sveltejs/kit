@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.204
+
+### Patch Changes
+
+- fix `<Route> received an unexpected slot "default"` warning ([#3115](https://github.com/sveltejs/kit/pull/3115))
+
 ## 1.0.0-next.203
 
 ### Patch Changes
