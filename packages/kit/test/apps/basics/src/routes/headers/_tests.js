@@ -11,7 +11,7 @@ export default function (test) {
 		'allows headers to be sent as a Headers class instead of a POJO',
 		'/headers/class',
 		async ({ page }) => {
-			assert.equal(await page.innerHTML('pre'), JSON.stringify({ foo: 'bar' }));
+			assert.equal(await page.innerHTML('p'), 'bar');
 		}
 	);
 }

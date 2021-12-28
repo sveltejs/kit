@@ -5,17 +5,19 @@
 			headers: new Headers({ foo: 'bar' })
 		});
 
+		const { foo } = await res.json();
+
 		return {
 			props: {
-				headers: await res.json()
+				foo
 			}
 		};
 	}
 </script>
 
 <script>
-	/** @type {Record<string, string>} */
-	export let headers;
+	/** @type {string} */
+	export let foo;
 </script>
 
-<pre>{JSON.stringify(headers)}</pre>
+<p>{foo}</p>
