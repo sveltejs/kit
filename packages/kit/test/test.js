@@ -125,7 +125,7 @@ async function setup({ port }) {
 			prefetchRoutes: (urls) => pages.js.evaluate((urls) => prefetchRoutes(urls), urls),
 
 			/**
-			 * @param {(url:URL) => Promise<boolean>} fn
+			 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
 			 * @returns {Promise<void>}
 			 */
 			onBeforeNavigate: (fn) => pages.js.evaluate((fn) => onBeforeNavigate(fn), fn),

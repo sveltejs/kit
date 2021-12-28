@@ -18,7 +18,7 @@ declare global {
 
 	const invalidate: (url: string) => Promise<void>;
 	const prefetch: (url: string) => Promise<void>;
-	const onBeforeNavigate: (fn: (url: URL) => Promise<boolean>) => void;
+	const onBeforeNavigate: (fn: (url: URL) => void | boolean | Promise<void | boolean>) => void;
 	const onNavigate: (fn: () => void) => void;
 	const prefetchRoutes: (urls?: string[]) => Promise<void>;
 }

@@ -60,7 +60,7 @@ export class Router {
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		this.current_history_index = 0;
 
-		/** @type {((url:URL) => Promise<boolean>)[]} */
+		/** @type {((url: URL) => void | boolean | Promise<void | boolean>)[]} */
 		this.on_before_navigate_callbacks = [];
 	}
 
@@ -169,6 +169,7 @@ export class Router {
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
 			if (!this.owns(url)) return;
+
 			event.preventDefault();
 
 			const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
@@ -320,7 +321,7 @@ export class Router {
 	}
 
 	/**
-	 * @param {(url:URL) => Promise<boolean>} fn
+	 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
 	 */
 	on_before_navigate(fn) {
 		onMount(() => {

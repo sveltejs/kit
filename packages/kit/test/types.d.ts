@@ -32,7 +32,7 @@ export interface TestContext {
 		invalidate(url: string): Promise<void>;
 		prefetch(url: string): Promise<void>;
 		prefetchRoutes(urls?: string[]): Promise<void>;
-		onBeforeNavigate(fn: (url: URL) => Promise<boolean>): void;
+		onBeforeNavigate(fn: (url: URL) => void | boolean | Promise<void | boolean>): void;
 		onNavigate(fn: () => void): void;
 	};
 
