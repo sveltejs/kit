@@ -230,6 +230,113 @@ export default function (test, is_dev) {
 		assert.equal(page.url(), 'https://www.google.com/');
 	});
 
+
+	test('history index gets set on first render', '/routing/history/a', async ({ js, page }) => {
+		if (js) {
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 0);
+		}
+	});
+
+	test('history index increases after navigating by clicking a link', '/routing/history/a', async ({ js, page, clicknav }) => {
+		if (js) {
+			await clicknav('[href="/routing/history/b"]');
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+		}
+	});
+
+	test('history index increases after navigating by using goto', '/routing/history/a', async ({ js, app, base, page }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/b');
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+		}
+	});
+
+	test('history index stays after navigating by using goto with replaceState', '/routing/history/a', async ({ js, app, base, page }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/b', { replaceState: true });
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 0);
+		}
+	});
+
+	test('history index stays after fixing tralingSlash', '/routing/history/a', async ({ js, app, base, page }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/b/');
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+		}
+	})
+
+	test('history index decreases after navigating back', '/routing/history/a', async ({ js, clicknav, app, base, page }) => {
+		if (js) {
+			await clicknav('[href="/routing/history/b"]');
+			await app.goto(base + '/routing/history/c');
+			await page.goBack();
+			const state1 = await page.evaluate('history.state');
+			assert.equal(state1?.['sveltekit:index'], 1);
+			await clicknav('button');
+			const state2 = await page.evaluate('history.state');
+			assert.equal(state2?.['sveltekit:index'], 0);
+			await clicknav('[href="/routing/history/b"]');
+			const state3 = await page.evaluate('history.state');
+			assert.equal(state3?.['sveltekit:index'], 1);
+		}
+	});
+
+	test('history index survives a reload', '/routing/history/a', async ({ js, clicknav, app, base, page }) => {
+		if (js) {
+			await clicknav('[href="/routing/history/b"]');
+			await page.reload({ waitUntil: 'networkidle' });
+			await app.goto(base + '/routing/history/c');
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 2);
+		}
+	});
+
+	test('onBeforeNavigate can prevent navigation by clicking a link', '/routing/history/a', async ({ js, clicknav, page, app, base }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/prevent-navigation');
+
+			try {
+				await clicknav('[href="/routing/history/b"]');
+				assert.unreachable('should have thrown');
+			} catch (err) {
+				assert.instance(err, Error);
+				assert.match(err.message, 'Timed out');
+			}
+
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+			assert.equal(page.url(), base + '/routing/history/prevent-navigation');
+			assert.equal(await page.innerHTML('pre'), 'true', 'onBeforeNavigate not triggered');
+		}
+	});
+
+	test('onBeforeNavigate can prevent navigation by using goto', '/routing/history/a', async ({ js, page, app, base }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/prevent-navigation-promise');
+			await app.goto(base + '/routing/history/b');
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+			assert.equal(page.url(), base + '/routing/history/prevent-navigation-promise');
+			assert.equal(await page.innerHTML('pre'), 'true', 'onBeforeNavigate not triggered');
+		}
+	});
+
+	test('onBeforeNavigate can prevent navigation using the browser controls', '/routing/history/a', async ({ js, page, app, base }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/prevent-navigation');
+			await page.goBack();
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 1);
+			assert.equal(page.url(), base + '/routing/history/prevent-navigation');
+			assert.equal(await page.innerHTML('pre'), 'true', 'onBeforeNavigate not triggered');
+		}
+	});
+
 	// skipping this test because it causes a bunch of failures locally
 	test.skip('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {
 		if (!is_dev || js) {

@@ -371,7 +371,7 @@ export class Router {
 
 			if (incorrect) {
 				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
-				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
+				history.replaceState(history.state || {}, '', `${this.base}${info.path}${location.search}`);
 			}
 		}
 

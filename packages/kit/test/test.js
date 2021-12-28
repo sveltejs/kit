@@ -102,9 +102,10 @@ async function setup({ port }) {
 		app: {
 			/**
 			 * @param {string} url
+			 * @param {{ replaceState?: boolean; noScroll?: boolean }} opts
 			 * @returns {Promise<void>}
 			 */
-			goto: (url) => pages.js.evaluate((url) => goto(url), url),
+			goto: (url, opts = {}) => pages.js.evaluate(({ url, opts }) => goto(url, opts), { url, opts }),
 
 			/**
 			 * @param {string} url
