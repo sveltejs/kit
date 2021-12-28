@@ -2,7 +2,10 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { queue } from './queue.js';
 
-const sleep = (ms) => new Promise((f) => setTimeout(f, ms));
+/** @param {number} ms */
+function sleep(ms) {
+	return new Promise((f) => setTimeout(f, ms));
+}
 
 test('q.add resolves to the correct value', async () => {
 	const q = queue(1);
@@ -22,7 +25,7 @@ test('q.add rejects if task rejects', async () => {
 
 		assert.ok(false);
 	} catch (e) {
-		assert.equal(e.message, 'nope');
+		assert.equal(/** @type {Error} */ (e).message, 'nope');
 	}
 });
 
@@ -104,7 +107,7 @@ test('q.done() rejects if task rejects', async () => {
 		await q.done();
 		assert.ok(false);
 	} catch (e) {
-		assert.equal(e.message, 'nope');
+		assert.equal(/** @type {Error} */ (e).message, 'nope');
 	}
 });
 
