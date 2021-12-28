@@ -43,7 +43,8 @@ export default function ({ split = false } = {}) {
 
 			builder.writeServer('.netlify/server');
 
-			// for esbuild, use ESM; for zip-it-and-ship-it, use CJS
+			// for esbuild, use ESM
+			// for zip-it-and-ship-it, use CJS until https://github.com/netlify/zip-it-and-ship-it/issues/750
 			const esm = netlify_config?.functions?.node_bundler === 'esbuild';
 
 			/** @type {string[]} */
