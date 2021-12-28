@@ -11,7 +11,7 @@ export interface RouteDefinition {
 
 export interface AdapterEntry {
 	/**
-	 * A string that uniquely identifies a function and is used for deduplication.
+	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
 	 * For example, `/foo/a-[b]` and `/foo/[c]` are different routes, but would both
 	 * be represented in a Netlify _redirects file as `/foo/:param`, so they share an ID
 	 */
