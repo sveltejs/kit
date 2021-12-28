@@ -170,7 +170,7 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			if (this.on_before_navigate_callbacks.length != 0) {
+			if (this.on_before_navigate_callbacks.length !== 0) {
 				event.preventDefault();
 				const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
 				if (!allow_navigation) {
