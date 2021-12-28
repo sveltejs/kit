@@ -40,9 +40,9 @@ suite('copy files', () => {
 
 	/** @type {import('types/internal').BuildData} */
 	const build_data = {
-		// @ts-ignore
+		// @ts-expect-error
 		client: {},
-		// @ts-ignore
+		// @ts-expect-error
 		server: {},
 		static: [],
 		entries: []
@@ -107,9 +107,9 @@ suite('prerender', async () => {
 
 	/** @type {import('types/internal').BuildData} */
 	const build_data = {
-		// @ts-ignore
+		// @ts-expect-error
 		client: { assets: [], chunks: [] },
-		// @ts-ignore
+		// @ts-expect-error
 		server: { chunks: [] },
 		static: [],
 		entries: ['/nested']
