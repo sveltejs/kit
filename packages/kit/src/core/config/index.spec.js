@@ -37,7 +37,7 @@ test('fills in defaults', () => {
 				emitTypes: true
 			},
 			serviceWorker: {
-				inject: true
+				register: true
 			},
 			paths: {
 				base: '',
@@ -139,7 +139,7 @@ test('fills in partial blanks', () => {
 				emitTypes: true
 			},
 			serviceWorker: {
-				inject: true
+				register: true
 			},
 			paths: {
 				base: '',

@@ -83,8 +83,8 @@ export interface Config {
 		};
 		router?: boolean;
 		serviceWorker?: {
-			inject?: boolean;
-			files?(filepath: string): boolean;
+			register?: boolean;
+			files?: (filepath: string) => boolean;
 		};
 		ssr?: boolean;
 		target?: string;

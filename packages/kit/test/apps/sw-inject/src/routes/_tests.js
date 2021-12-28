@@ -19,7 +19,7 @@ export default function (test) {
 	);
 
 	test(
-		'does not inject /service-worker.js',
+		'does not register /service-worker.js',
 		'/',
 		async ({ page }) => {
 			assert.not.match(await page.content(), /navigator\.serviceWorker/);

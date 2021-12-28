@@ -42,7 +42,7 @@ async function testLoadDefaultConfig(path) {
 				emitTypes: true
 			},
 			serviceWorker: {
-				inject: true
+				register: true
 			},
 			paths: { base: '', assets: '' },
 			prerender: {

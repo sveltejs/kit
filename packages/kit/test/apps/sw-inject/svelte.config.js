@@ -2,7 +2,7 @@
 const config = {
 	kit: {
 		serviceWorker: {
-			inject: false
+			register: false
 		}
 	}
 };

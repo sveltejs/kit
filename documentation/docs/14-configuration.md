@@ -48,7 +48,7 @@ const config = {
 		},
 		router: true,
 		serviceWorker: {
-			inject: true,
+			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
 		ssr: true,
@@ -56,7 +56,7 @@ const config = {
 		trailingSlash: 'never',
 		vite: () => ({})
 	},
-	
+
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
 	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
