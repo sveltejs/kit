@@ -6,6 +6,7 @@ import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
+import { queue } from './queue.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -141,16 +142,27 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		return path;
 	}
 
+	const q = queue(config.kit.prerender.concurrency);
+
 	/**
 	 * @param {string} decoded_path
 	 * @param {string?} referrer
 	 */
-	async function visit(decoded_path, referrer) {
+	function enqueue(decoded_path, referrer) {
 		const path = encodeURI(normalize(decoded_path));
 
 		if (seen.has(path)) return;
 		seen.add(path);
 
+		return q.add(() => visit(path, decoded_path, referrer));
+	}
+
+	/**
+	 * @param {string} path
+	 * @param {string} decoded_path
+	 * @param {string?} referrer
+	 */
+	async function visit(path, decoded_path, referrer) {
 		/** @type {Map<string, import('types/hooks').ServerResponse>} */
 		const dependencies = new Map();
 
@@ -195,7 +207,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
-						await visit(resolved, path);
+						enqueue(resolved, path);
 					}
 				} else {
 					log.warn(`location header missing on redirect received from ${decoded_path}`);
@@ -282,7 +294,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(pathname, path);
+					enqueue(pathname, path);
 				}
 			}
 		}
@@ -292,12 +304,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
-					await visit(entry, null);
+					enqueue(entry, null);
 				}
 			} else {
-				await visit(entry, null);
+				enqueue(entry, null);
 			}
 		}
+
+		await q.done();
 	}
 
 	if (fallback) {

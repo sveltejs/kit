@@ -42,6 +42,7 @@ test('fills in defaults', () => {
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -142,6 +143,7 @@ test('fills in partial blanks', () => {
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
