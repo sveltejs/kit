@@ -173,9 +173,7 @@ export class Router {
 			event.preventDefault();
 
 			const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
-			if (!allow_navigation) {
-				return;
-			}
+			if (!allow_navigation) return;
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
 
