@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.207
+
+### Patch Changes
+
+- Add serviceWorker.register option ([#2988](https://github.com/sveltejs/kit/pull/2988))
+
 ## 1.0.0-next.206
 
 ### Patch Changes
