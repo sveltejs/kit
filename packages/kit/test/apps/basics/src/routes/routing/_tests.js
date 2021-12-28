@@ -254,13 +254,6 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test('history index stays after navigating by using goto with replaceState', '/routing/history/a', async ({ js, app, base, page }) => {
-		if (js) {
-			await app.goto(base + '/routing/history/b', { replaceState: true });
-			const state = await page.evaluate('history.state');
-			assert.equal(state?.['sveltekit:index'], 0);
-		}
-	});
 
 	test('history index stays after fixing tralingSlash', '/routing/history/a', async ({ js, app, base, page }) => {
 		if (js) {
@@ -268,7 +261,7 @@ export default function (test, is_dev) {
 			const state = await page.evaluate('history.state');
 			assert.equal(state?.['sveltekit:index'], 1);
 		}
-	})
+	});
 
 	test('history index decreases after navigating back', '/routing/history/a', async ({ js, clicknav, app, base, page }) => {
 		if (js) {
@@ -303,9 +296,9 @@ export default function (test, is_dev) {
 			try {
 				await clicknav('[href="/routing/history/b"]');
 				assert.unreachable('should have thrown');
-			} catch (err) {
-				assert.instance(err, Error);
-				assert.match(err.message, 'Timed out');
+			} catch (/** @type {any} */ e) {
+				assert.instance(e, Error);
+				assert.match(e.message, 'Timed out');
 			}
 
 			const state = await page.evaluate('history.state');
