@@ -53,7 +53,7 @@ class Watcher extends EventEmitter {
 		/**
 		 * @type {vite.ViteDevServer | undefined}
 		 */
-		this.server;
+		this.vite;
 
 		process.on('exit', () => {
 			this.close();
@@ -179,8 +179,8 @@ class Watcher extends EventEmitter {
 			merged_config.server.port = this.port;
 		}
 
-		this.server = await vite.createServer(merged_config);
-		await this.server.listen(this.port);
+		this.vite = await vite.createServer(merged_config);
+		await this.vite.listen(this.port);
 	}
 
 	update() {
@@ -211,10 +211,10 @@ class Watcher extends EventEmitter {
 					return async () => {
 						const url = `/${id}`;
 
-						if (!this.server) throw new Error('Vite server has not been initialized');
+						if (!this.vite) throw new Error('Vite server has not been initialized');
 
-						const module = /** @type {SSRComponent} */ (await this.server.ssrLoadModule(url));
-						const node = await this.server.moduleGraph.getModuleByUrl(url);
+						const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
+						const node = await this.vite.moduleGraph.getModuleByUrl(url);
 
 						if (!node) throw new Error(`Could not find node for ${url}`);
 
@@ -233,7 +233,7 @@ class Watcher extends EventEmitter {
 								(query.has('svelte') && query.get('type') === 'style')
 							) {
 								try {
-									const mod = await this.server.ssrLoadModule(dep.url);
+									const mod = await this.vite.ssrLoadModule(dep.url);
 									styles.add(mod.default);
 								} catch {
 									// this can happen with dynamically imported modules, I think
@@ -268,9 +268,9 @@ class Watcher extends EventEmitter {
 						pattern: route.pattern,
 						params: get_params(route.params),
 						load: async () => {
-							if (!this.server) throw new Error('Vite server has not been initialized');
+							if (!this.vite) throw new Error('Vite server has not been initialized');
 							const url = path.resolve(this.cwd, route.file);
-							return await this.server.ssrLoadModule(url);
+							return await this.vite.ssrLoadModule(url);
 						}
 					};
 				})
@@ -279,14 +279,14 @@ class Watcher extends EventEmitter {
 	}
 
 	close() {
-		if (!this.server || !this.cheapwatch) {
+		if (!this.vite || !this.cheapwatch) {
 			throw new Error('Cannot close server before it is initialized');
 		}
 
 		if (this.closed) return;
 		this.closed = true;
 
-		this.server.close();
+		this.vite.close();
 		this.cheapwatch.close();
 	}
 }
