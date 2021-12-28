@@ -169,13 +169,11 @@ export class Router {
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
 			if (!this.owns(url)) return;
+			event.preventDefault();
 
-			if (this.on_before_navigate_callbacks.length !== 0) {
-				event.preventDefault();
-				const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
-				if (!allow_navigation) {
-					return;
-				}
+			const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
+			if (!allow_navigation) {
+				return;
 			}
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
@@ -189,7 +187,6 @@ export class Router {
 				window.dispatchEvent(new HashChangeEvent('hashchange'));
 			}
 			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
-			event.preventDefault();
 		});
 
 		addEventListener('popstate', async (event) => {
