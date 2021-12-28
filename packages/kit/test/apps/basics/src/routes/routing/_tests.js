@@ -254,6 +254,13 @@ export default function (test, is_dev) {
 		}
 	});
 
+	test('history index stays after navigating by using goto with replaceState', '/routing/history/a', async ({ js, app, base, page }) => {
+		if (js) {
+			await app.goto(base + '/routing/history/b', { replaceState: true });
+			const state = await page.evaluate('history.state');
+			assert.equal(state?.['sveltekit:index'], 0);
+		}
+	});
 
 	test('history index stays after fixing tralingSlash', '/routing/history/a', async ({ js, app, base, page }) => {
 		if (js) {
