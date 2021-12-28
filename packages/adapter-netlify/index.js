@@ -53,7 +53,6 @@ export default function ({ split = false } = {}) {
 			if (esm) {
 				builder.copy(`${files}/esm`, '.netlify');
 			} else {
-				// TODO might be useful if you could specify CJS/ESM as an option to writeServer
 				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
 					const filepath = `.netlify/server/${file}`;
 					const input = readFileSync(filepath, 'utf8');
