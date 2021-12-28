@@ -14,7 +14,7 @@ _**Comparisons**_
   Cloudflare Pages
 
 > **Note:** Cloudflare Pages' new Workers integration is currently in beta.<br/>
-> Compared to `adapter-cloudflare-workers`, this adapter will be the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
+> Compared to `adapter-cloudflare-workers`, `adapter-cloudflare` is the preferred approach for most users since building on top of Pages unlocks automatic builds and deploys, preview deployments, instant rollbacks, etc.<br/>
 > From SvelteKit's perspective, there is no difference and no functionality loss when migrating to/from the Workers and the Pages adapters.
 
 ## Usage
