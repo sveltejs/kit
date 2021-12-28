@@ -41,6 +41,7 @@ const config = {
 			base: ''
 		},
 		prerender: {
+			concurrency: 1,
 			crawl: true,
 			enabled: true,
 			entries: ['*'],
@@ -55,7 +56,7 @@ const config = {
 		trailingSlash: 'never',
 		vite: () => ({})
 	},
-	
+
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
 	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
@@ -163,6 +164,7 @@ An object containing zero or more of the following `string` values:
 
 See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
 
+- `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
