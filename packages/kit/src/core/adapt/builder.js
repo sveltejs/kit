@@ -63,12 +63,39 @@ export function create_builder({ cwd, config, build_data, log }) {
 					}
 				}
 
-				const filtered = group.filter(not_prerendered);
+				const filtered = new Set(group.filter(not_prerendered));
 
-				if (filtered.length > 0) {
+				// heuristic: if /foo/[bar] is included, /foo/[bar].json should
+				// also be included, since the page likely needs the endpoint
+				filtered.forEach((route) => {
+					if (route.type === 'page') {
+						const length = route.segments.length;
+
+						const endpoint = routes.find((candidate) => {
+							if (candidate.segments.length !== length) return false;
+
+							for (let i = 0; i < length; i += 1) {
+								const a = route.segments[i];
+								const b = candidate.segments[i];
+
+								if (i === length - 1) {
+									return b.content === `${a.content}.json`;
+								}
+
+								if (a.content !== b.content) return false;
+							}
+						});
+
+						if (endpoint) {
+							filtered.add(endpoint);
+						}
+					}
+				});
+
+				if (filtered.size > 0) {
 					complete({
 						generateManifest: ({ relativePath, format }) =>
-							generate_manifest(build_data, relativePath, filtered, format)
+							generate_manifest(build_data, relativePath, Array.from(filtered), format)
 					});
 				}
 			}
