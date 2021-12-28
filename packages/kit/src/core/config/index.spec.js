@@ -42,9 +42,9 @@ test('fills in defaults', () => {
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
-				parallel: false,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',
@@ -143,9 +143,9 @@ test('fills in partial blanks', () => {
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
-				parallel: false,
 				entries: ['*'],
 				force: undefined,
 				onError: 'fail',

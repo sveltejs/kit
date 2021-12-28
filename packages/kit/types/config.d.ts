@@ -76,8 +76,8 @@ export interface Config {
 			base?: string;
 		};
 		prerender?: {
+			concurrency?: number;
 			crawl?: boolean;
-			parallel?: boolean;
 			enabled?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
