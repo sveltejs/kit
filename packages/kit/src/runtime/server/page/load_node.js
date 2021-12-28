@@ -210,12 +210,7 @@ export async function load_node({
 							opts.credentials !== 'omit'
 						) {
 							uses_credentials = true;
-
-							if (opts.headers === undefined) {
-								opts.headers = new Headers({ cookie: request.headers.cookie });
-							} else {
-								/** @type {Headers} */ (opts.headers).set('cookie', request.headers.cookie);
-							}
+							opts.headers.set('cookie', request.headers.cookie);
 						}
 					}
 
