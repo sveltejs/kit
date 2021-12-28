@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.206
+
+### Patch Changes
+
+- Handle `Headers` instance in server-side `fetch` ([#3034](https://github.com/sveltejs/kit/pull/3034))
+
 ## 1.0.0-next.205
 
 ### Patch Changes
