@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Headers from a `Headers()` class are now correctly handled by the server to avoid losing headers
+Handle `Headers` instance in server-side `fetch`
