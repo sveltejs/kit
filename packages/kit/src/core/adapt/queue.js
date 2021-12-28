@@ -24,7 +24,7 @@ export function queue(concurrency) {
 		reject = r;
 	});
 
-	done.catch((e) => {
+	done.catch(() => {
 		// this is necessary in case a catch handler is never added
 		// to the done promise by the user
 	});
