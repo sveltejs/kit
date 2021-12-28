@@ -56,7 +56,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 
 				const group = [route];
 
-				// figure out which _lower priority_ routes should be considered fallbacks
+				// figure out which lower priority routes should be considered fallbacks
 				for (let j = i + 1; j < routes.length; j += 1) {
 					if (filter(facades[j])) {
 						group.push(routes[j]);
