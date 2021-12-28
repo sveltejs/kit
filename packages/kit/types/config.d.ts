@@ -124,6 +124,7 @@ export interface Config {
 			base?: string;
 		};
 		prerender?: {
+			concurrency?: number;
 			crawl?: boolean;
 			enabled?: boolean;
 			entries?: string[];

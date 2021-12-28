@@ -47,6 +47,7 @@ async function testLoadDefaultConfig(path) {
 			serviceWorker: {},
 			paths: { base: '', assets: '' },
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],

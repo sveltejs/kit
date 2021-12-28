@@ -98,6 +98,7 @@ suite('prerender', async () => {
 			},
 			appDir: '_app',
 			prerender: {
+				concurrency: 1,
 				enabled: true,
 				entries: ['*']
 			}
@@ -129,7 +130,7 @@ suite('prerender', async () => {
 		dest
 	});
 
-	assert.equal(glob('**', { cwd: `${prerendered_files}` }), glob('**', { cwd: dest }));
+	assert.equal(glob('**', { cwd: prerendered_files }), glob('**', { cwd: dest }));
 
 	rmSync(dest, { recursive: true, force: true });
 });

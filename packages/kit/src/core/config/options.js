@@ -117,6 +117,7 @@ const options = object(
 			}),
 
 			prerender: object({
+				concurrency: number(1),
 				crawl: boolean(true),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
@@ -261,6 +262,19 @@ function string(fallback, allow_empty = true) {
 			throw new Error(`${keypath} cannot be empty`);
 		}
 
+		return input;
+	});
+}
+
+/**
+ * @param {number} fallback
+ * @returns {Validator}
+ */
+function number(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'number') {
+			throw new Error(`${keypath} should be a number, if specified`);
+		}
 		return input;
 	});
 }
