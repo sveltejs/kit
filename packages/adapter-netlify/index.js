@@ -115,7 +115,7 @@ export default function ({ split = false } = {}) {
 					? `import { init } from '../handler.js';\n\nexport const handler = init(${manifest});\n`
 					: `const { init } = require('../handler.js');\n\nexports.handler = init(${manifest});\n`;
 
-				writeFileSync(`.netlify/functions-internal/render.js`, fn);
+				writeFileSync('.netlify/functions-internal/render.js', fn);
 
 				redirects.push('* /.netlify/functions/render 200');
 			}
