@@ -1,5 +1,3 @@
-import { Headers } from 'node-fetch';
-
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
