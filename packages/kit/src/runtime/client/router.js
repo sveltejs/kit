@@ -273,11 +273,11 @@ export class Router {
 			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
 		} else if (this.trailing_slash === 'always') {
 			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
-			if (!is_file) pathname += '/';
+			if (!is_file && !pathname.endsWith('/')) pathname += '/';
 		}
 
-		const normalized_url = new URL(url.origin + pathname + url.search + url.hash);
-		history.replaceState({}, '', normalized_url);
+		info.url = new URL(url.origin + pathname + url.search + url.hash);
+		history.replaceState({}, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
