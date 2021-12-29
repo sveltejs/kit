@@ -67,13 +67,11 @@ export class Renderer {
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
-	 *   base: string;
 	 * }} opts
 	 */
-	constructor({ Root, fallback, target, session, base }) {
+	constructor({ Root, fallback, target, session }) {
 		this.Root = Root;
 		this.fallback = fallback;
-		this.base = base;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
@@ -595,15 +593,13 @@ export class Renderer {
 	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info: { url } }, no_cache) {
+	async _load({ route, info: { url, path } }, no_cache) {
 		const key = url.pathname + url.search;
 
 		if (!no_cache) {
 			const cached = this.cache.get(key);
 			if (cached) return cached;
 		}
-
-		const path = decodeURI(url.pathname).replace(this.base, '');
 
 		const [pattern, a, b, get_params] = route;
 		const params = get_params

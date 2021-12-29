@@ -4,7 +4,7 @@ export type NavigationInfo = {
 	id: string;
 	routes: CSRRoute[];
 	url: URL;
-	// decoded_path: string; TODO do we need this?
+	path: string;
 };
 
 export type NavigationCandidate = {

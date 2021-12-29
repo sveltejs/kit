@@ -36,8 +36,7 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 		Root,
 		fallback,
 		target,
-		session,
-		base: paths.base
+		session
 	});
 
 	const router = route
