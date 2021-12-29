@@ -443,11 +443,7 @@ export class Renderer {
 		}
 
 		if (!this.current.url || url.href !== this.current.url.href) {
-			result.props.url = url;
-		}
-
-		if (!this.current.params || JSON.stringify(params) !== JSON.stringify(this.current.params)) {
-			result.props.route = { params };
+			result.props.route = { url, params };
 		}
 
 		const leaf = filtered[filtered.length - 1];

@@ -20,9 +20,6 @@ export const getStores = () => {
 	const stores = getContext('__svelte__');
 
 	return {
-		url: {
-			subscribe: stores.url.subscribe
-		},
 		route: {
 			subscribe: stores.route.subscribe
 		},
@@ -39,15 +36,6 @@ export const getStores = () => {
 		},
 		session: stores.session
 	};
-};
-
-/** @type {typeof import('$app/stores').url} */
-export const url = {
-	/** @param {(value: any) => void} fn */
-	subscribe(fn) {
-		const store = getStores().url;
-		return store.subscribe(fn);
-	}
 };
 
 /** @type {typeof import('$app/stores').route} */

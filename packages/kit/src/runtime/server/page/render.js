@@ -64,13 +64,11 @@ export async function render_response({
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
-				url: writable(null),
 				route: writable(null),
 				navigating: writable(null),
 				session
 			},
-			url,
-			route: { params },
+			route: { url, params },
 			components: branch.map(({ node }) => node.module.default)
 		};
 

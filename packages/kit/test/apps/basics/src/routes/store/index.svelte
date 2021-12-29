@@ -2,7 +2,7 @@
 	import { getStores } from '$app/stores';
 	import { onMount, onDestroy } from 'svelte';
 
-	const { url, session } = getStores(); // TODO note to self: getStores() appears to be masking a bug here
+	const { route, session } = getStores(); // TODO note to self: getStores() appears to be masking a bug here
 
 	let calls = 0;
 
@@ -10,7 +10,7 @@
 		session.set(calls);
 	});
 
-	const unsubscribe = url.subscribe(() => {
+	const unsubscribe = route.subscribe(() => {
 		calls++;
 		session.set(calls);
 	});
@@ -22,4 +22,6 @@
 <h2>Calls: {calls}</h2>
 <a href="/store/result">results</a>
 
-{#if $url.pathname === '/store/result'}{console.log((window.oops = 'this should not happen'))}{/if}
+{#if $route.url.pathname === '/store/result'}{console.log(
+		(window.oops = 'this should not happen')
+	)}{/if}
