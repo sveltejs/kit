@@ -24,29 +24,24 @@ type ResponseHeaders = Record<string, string | string[]>;
 type RequestHeaders = Record<string, string>;
 
 export type RawBody = null | Uint8Array;
-export interface IncomingRequest {
-	method: string;
-	path: string;
-	query: URLSearchParams;
-	headers: RequestHeaders;
-	rawBody: RawBody;
-}
 
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
-	origin: string;
+
+export interface Request<Locals = Record<string, any>, Body = unknown> {
+	url: URL;
+	method: string;
+	headers: RequestHeaders;
+	rawBody: RawBody;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
-	locals: Locals; // populated by hooks handle
+	locals: Locals;
 }
 
 type StrictBody = string | Uint8Array;
-// ServerResponse is exported as Response
-export interface ServerResponse {
+
+export interface Response {
 	status: number;
 	headers: ResponseHeaders;
 	body?: StrictBody;
@@ -54,9 +49,9 @@ export interface ServerResponse {
 
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
-		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): ServerResponse | Promise<ServerResponse>;
-	}): ServerResponse | Promise<ServerResponse>;
+		request: Request<Locals, Body>;
+		resolve(request: Request<Locals, Body>): Response | Promise<Response>;
+	}): Response | Promise<Response>;
 }
 ```
 
@@ -91,9 +86,8 @@ If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
 // Declaration types for handleError hook
-
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
+	(input: { error: Error & { frame?: string }; request: Request<Locals, Body> }): void;
 }
 ```
 
@@ -115,9 +109,8 @@ If unimplemented, session is `{}`.
 
 ```ts
 // Declaration types for getSession hook
-
 export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
-	(request: ServerRequest<Locals, Body>): Session | Promise<Session>;
+	(request: Request<Locals, Body>): Session | Promise<Session>;
 }
 ```
 
