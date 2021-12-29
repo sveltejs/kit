@@ -7,7 +7,7 @@ export const handle: Handle = async ({ request, resolve }) => {
 	request.locals.userid = cookies.userid || uuid();
 
 	// TODO https://github.com/sveltejs/kit/issues/1046
-	const method = request.query.get('_method');
+	const method = request.url.searchParams.get('_method');
 	if (method) {
 		request.method = method.toUpperCase();
 	}
