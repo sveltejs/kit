@@ -1,13 +1,4 @@
-import esbuild from 'esbuild';
-import {
-	createReadStream,
-	createWriteStream,
-	existsSync,
-	readFileSync,
-	statSync,
-	writeFileSync
-} from 'fs';
-import { join, resolve } from 'path';
+import { createReadStream, createWriteStream, statSync, writeFileSync } from 'fs';
 import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { fileURLToPath } from 'url';
@@ -16,103 +7,55 @@ import zlib from 'zlib';
 
 const pipe = promisify(pipeline);
 
+const files = fileURLToPath(new URL('./files', import.meta.url));
+
 /**
  * @typedef {import('esbuild').BuildOptions} BuildOptions
  */
 
 /** @type {import('.')} */
 export default function ({
-	entryPoint = '.svelte-kit/node/index.js',
 	out = 'build',
 	precompress,
-	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
-	esbuild: esbuild_config
+	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {}
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
 
-		async adapt({ utils, config }) {
-			utils.rimraf(out);
+		async adapt(builder) {
+			builder.rimraf(out);
 
-			utils.log.minor('Copying assets');
-			const static_directory = join(out, 'assets');
-			utils.copy_client_files(static_directory);
-			utils.copy_static_files(static_directory);
+			builder.log.minor('Copying assets');
+			builder.writeClient(`${out}/client`);
+			builder.writeServer(`${out}/server`);
+			builder.writeStatic(`${out}/static`);
 
-			if (precompress) {
-				utils.log.minor('Compressing assets');
-				await compress(static_directory);
-			}
-
-			utils.log.minor('Building SvelteKit middleware');
-			const files = fileURLToPath(new URL('./files', import.meta.url));
-			utils.copy(files, '.svelte-kit/node');
-			writeFileSync(
-				'.svelte-kit/node/env.js',
-				`export const path = process.env[${JSON.stringify(
-					path_env
-				)}] || false;\nexport const host = process.env[${JSON.stringify(
-					host_env
-				)}] || '0.0.0.0';\nexport const port = process.env[${JSON.stringify(
-					port_env
-				)}] || (!path && 3000);`
-			);
-
-			/** @type {BuildOptions} */
-			const defaultOptions = {
-				entryPoints: ['.svelte-kit/node/middlewares.js'],
-				outfile: join(out, 'middlewares.js'),
-				bundle: true,
-				external: Object.keys(JSON.parse(readFileSync('package.json', 'utf8')).dependencies || {}),
-				format: 'esm',
-				platform: 'node',
-				target: 'node14',
-				inject: [join(files, 'shims.js')],
-				define: {
-					APP_DIR: `"/${config.kit.appDir}/"`
-				}
-			};
-			const build_options = esbuild_config ? await esbuild_config(defaultOptions) : defaultOptions;
-			await esbuild.build(build_options);
-
-			utils.log.minor('Building SvelteKit server');
-			/** @type {BuildOptions} */
-			const default_options_ref_server = {
-				entryPoints: [entryPoint],
-				outfile: join(out, 'index.js'),
-				bundle: true,
-				format: 'esm',
-				platform: 'node',
-				target: 'node14',
-				// external exclude workaround, see https://github.com/evanw/esbuild/issues/514
-				plugins: [
-					{
-						name: 'fix-middlewares-exclude',
-						setup(build) {
-							// Match an import of "middlewares.js" and mark it as external
-							const internal_middlewares_path = resolve('.svelte-kit/node/middlewares.js');
-							const build_middlewares_path = resolve(out, 'middlewares.js');
-							build.onResolve({ filter: /\/middlewares\.js$/ }, ({ path, resolveDir }) => {
-								const resolved = resolve(resolveDir, path);
-								if (resolved === internal_middlewares_path || resolved === build_middlewares_path) {
-									return { path: './middlewares.js', external: true };
-								}
-							});
-						}
-					}
-				]
-			};
-			const build_options_ref_server = esbuild_config
-				? await esbuild_config(default_options_ref_server)
-				: default_options_ref_server;
-			await esbuild.build(build_options_ref_server);
-
-			utils.log.minor('Prerendering static pages');
-			await utils.prerender({
+			builder.log.minor('Prerendering static pages');
+			await builder.prerender({
 				dest: `${out}/prerendered`
 			});
-			if (precompress && existsSync(`${out}/prerendered`)) {
-				utils.log.minor('Compressing prerendered pages');
+
+			writeFileSync(
+				`${out}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({
+					relativePath: './server'
+				})};\n`
+			);
+
+			builder.copy(files, out, {
+				replace: {
+					APP: './server/app.js',
+					MANIFEST: './manifest.js',
+					PATH_ENV: JSON.stringify(path_env),
+					HOST_ENV: JSON.stringify(host_env),
+					PORT_ENV: JSON.stringify(port_env)
+				}
+			});
+
+			if (precompress) {
+				builder.log.minor('Compressing assets');
+				await compress(`${out}/client`);
+				await compress(`${out}/static`);
 				await compress(`${out}/prerendered`);
 			}
 		}

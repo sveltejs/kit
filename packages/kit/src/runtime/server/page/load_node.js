@@ -1,9 +1,8 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
+import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
-
-const s = JSON.stringify;
 
 /**
  * @param {{
@@ -115,20 +114,24 @@ export async function load_node({
 					resolved.startsWith(prefix) ? resolved.slice(prefix.length) : resolved
 				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
-				const asset = options.manifest.assets.find(
-					(d) => d.file === filename || d.file === filename_html
-				);
 
-				if (asset) {
-					response = options.read
-						? new Response(options.read(asset.file), {
-								headers: asset.type ? { 'content-type': asset.type } : {}
-						  })
-						: await fetch(
-								// TODO we need to know what protocol to use
-								`http://${page.host}/${asset.file}`,
-								/** @type {RequestInit} */ (opts)
-						  );
+				const is_asset = options.manifest.assets.has(filename);
+				const is_asset_html = options.manifest.assets.has(filename_html);
+
+				if (is_asset || is_asset_html) {
+					const file = is_asset ? filename : filename_html;
+
+					if (options.read) {
+						const type = is_asset
+							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							: 'text/html';
+
+						response = new Response(options.read(file), {
+							headers: type ? { 'content-type': type } : {}
+						});
+					} else {
+						response = await fetch(`${page.origin}/${file}`, /** @type {RequestInit} */ (opts));
+					}
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 
@@ -157,7 +160,7 @@ export async function load_node({
 
 					const rendered = await respond(
 						{
-							host: request.host,
+							origin: request.origin,
 							method: opts.method || 'GET',
 							headers: Object.fromEntries(opts.headers),
 							path: relative,
@@ -183,6 +186,13 @@ export async function load_node({
 							status: rendered.status,
 							headers: /** @type {Record<string, string>} */ (rendered.headers)
 						});
+					} else {
+						// we can't load the endpoint from our own manifest,
+						// so we need to make an actual HTTP request
+						return fetch(request.origin + relative + search, {
+							method: opts.method || 'GET',
+							headers: opts.headers
+						});
 					}
 				} else {
 					// external
@@ -191,9 +201,9 @@ export async function load_node({
 					}
 
 					// external fetch
-					if (typeof request.host !== 'undefined') {
-						const { hostname: fetch_hostname } = new URL(url);
-						const [server_hostname] = request.host.split(':');
+					if (typeof request.origin !== 'undefined') {
+						const fetch_hostname = new URL(url).hostname;
+						const server_hostname = new URL(request.origin).hostname;
 
 						// allow cookie passthrough for "same-origin"
 						// if SvelteKit is serving my.domain.com:

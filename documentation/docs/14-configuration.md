@@ -26,8 +26,11 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
+		headers: {
+			host: null,
+			protocol: null
+		},
 		host: null,
-		hostHeader: null,
 		hydrate: true,
 		package: {
 			dir: 'package',
@@ -47,6 +50,7 @@ const config = {
 			entries: ['*'],
 			onError: 'fail'
 		},
+		protocol: null,
 		router: true,
 		serviceWorker: {
 			register: true,
@@ -103,24 +107,29 @@ Permissions-Policy: interest-cohort=()
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
-### host
+### headers
 
-A value that overrides the `Host` header when populating `page.host`
+The [`page.origin`] property is derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
 
-### hostHeader
-
-If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying host is exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) header and you should specify this in your config if you need to access `page.host`:
+If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
 
 ```js
 // svelte.config.js
 export default {
 	kit: {
-		hostHeader: 'X-Forwarded-Host'
+		headers: {
+			host: 'X-Forwarded-Host',
+			protocol: 'X-Forwarded-Proto'
+		}
 	}
 };
 ```
 
 **You should only do this if you trust the reverse proxy**, which is why it isn't the default.
+
+### host
+
+A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers-host).
 
 ### hydrate
 
@@ -193,6 +202,10 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     	}
     };
     ```
+
+### protocol
+
+The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers-protocol) is set. If necessary, you can override it here.
 
 ### router
 

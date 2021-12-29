@@ -1,63 +1,77 @@
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { relative } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-/**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
- */
+// By writing to .output, we opt in to the Vercel filesystem API:
+// https://vercel.com/docs/file-system-api
+const VERCEL_OUTPUT = '.output';
 
 /** @type {import('.')} **/
-export default function (options) {
+export default function () {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
-		async adapt({ utils }) {
-			const dir = '.vercel_build_output';
-			utils.rimraf(dir);
+		async adapt(builder) {
+			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
+			builder.rimraf(VERCEL_OUTPUT);
+			builder.rimraf(tmp);
 
-			const dirs = {
-				static: join(dir, 'static'),
-				lambda: join(dir, 'functions/node/render')
-			};
-
-			// TODO ideally we'd have something like utils.tmpdir('vercel')
-			// rather than hardcoding '.svelte-kit/vercel/entry.js', and the
-			// relative import from that file to output/server/app.js
-			// would be controlled. at the moment we're exposing
-			// implementation details that could change
-			utils.log.minor('Generating serverless function...');
-			utils.copy(join(files, 'entry.js'), '.svelte-kit/vercel/entry.js');
-
-			/** @type {BuildOptions} */
-			const default_options = {
-				entryPoints: ['.svelte-kit/vercel/entry.js'],
-				outfile: join(dirs.lambda, 'index.js'),
-				bundle: true,
-				inject: [join(files, 'shims.js')],
-				platform: 'node'
-			};
-
-			const build_options =
-				options && options.esbuild ? await options.esbuild(default_options) : default_options;
-
-			await esbuild.build(build_options);
-
-			writeFileSync(join(dirs.lambda, 'package.json'), JSON.stringify({ type: 'commonjs' }));
-
-			utils.log.minor('Prerendering static pages...');
-			await utils.prerender({
-				dest: dirs.static
+			builder.log.minor('Prerendering static pages...');
+			await builder.prerender({
+				dest: `${VERCEL_OUTPUT}/static`
 			});
 
-			utils.log.minor('Copying assets...');
-			utils.copy_static_files(dirs.static);
-			utils.copy_client_files(dirs.static);
+			builder.log.minor('Generating serverless function...');
 
-			utils.log.minor('Writing routes...');
-			utils.copy(join(files, 'routes.json'), join(dir, 'config/routes.json'));
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const relativePath = relative(tmp, builder.getServerDirectory());
+
+			builder.copy(files, tmp, {
+				replace: {
+					APP: `${relativePath}/app.js`,
+					MANIFEST: './manifest.js'
+				}
+			});
+
+			writeFileSync(
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({
+					relativePath
+				})};\n`
+			);
+
+			await esbuild.build({
+				entryPoints: [`${tmp}/entry.js`],
+				outfile: `${VERCEL_OUTPUT}/server/pages/__render.js`,
+				target: 'node14',
+				bundle: true,
+				platform: 'node'
+			});
+
+			writeFileSync(
+				`${VERCEL_OUTPUT}/server/pages/package.json`,
+				JSON.stringify({ type: 'commonjs' })
+			);
+
+			builder.log.minor('Copying assets...');
+			builder.writeClient(`${VERCEL_OUTPUT}/static`);
+			builder.writeStatic(`${VERCEL_OUTPUT}/static`);
+
+			builder.log.minor('Writing manifests...');
+			writeFileSync(
+				`${VERCEL_OUTPUT}/routes-manifest.json`,
+				JSON.stringify({
+					version: 3,
+					dynamicRoutes: [
+						{
+							page: '/__render',
+							regex: '^/.*'
+						}
+					]
+				})
+			);
 		}
 	};
 }

@@ -94,14 +94,16 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns {Promise<Array<string>>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
+ * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
-		return [];
+		return { paths: [] };
 	}
 
 	__fetch_polyfill();
+
+	mkdirp(out);
 
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
@@ -109,19 +111,29 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	/** @type {import('types/internal').AppModule} */
+	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
-	app.init({
+	override({
 		paths: config.kit.paths,
 		prerendering: true,
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
+	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
+
+	const app = new App(manifest);
+
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
-	const files = new Set([...build_data.static, ...build_data.client]);
-	const written_files = [];
+	const files = new Set([
+		...build_data.static,
+		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
+		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+	]);
+
+	/** @type {string[]} */
+	const paths = [];
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -168,7 +180,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
 				method: 'GET',
 				headers: {},
 				path,
@@ -195,15 +206,15 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			const file = `${out}${parts.join('/')}`;
-			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
 				const location = get_single_valued_header(headers, 'location');
 
 				if (location) {
+					mkdirp(dirname(file));
+
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
-					written_files.push(file);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -217,9 +228,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			if (rendered.status === 200) {
+				mkdirp(dirname(file));
+
 				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
-				written_files.push(file);
+				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
@@ -239,7 +252,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				if (result.body) {
 					writeFileSync(file, result.body);
-					written_files.push(file);
+					paths.push(dependency_path);
 				}
 
 				if (response_type === OK) {
@@ -317,7 +330,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	if (fallback) {
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
 				method: 'GET',
 				headers: {},
 				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
@@ -336,8 +348,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
-		written_files.push(file);
 	}
 
-	return written_files;
+	return {
+		paths
+	};
 }

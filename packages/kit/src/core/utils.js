@@ -74,3 +74,18 @@ export function resolve_entry(entry) {
 export function posixify(str) {
 	return str.replace(/\\/g, '/');
 }
+
+/** @param {import('./create_app/index.js').ManifestData} manifest_data */
+export function get_mime_lookup(manifest_data) {
+	/** @type {Record<string, string>} */
+	const mime = {};
+
+	manifest_data.assets.forEach((asset) => {
+		if (asset.type) {
+			const ext = path.extname(asset.file);
+			mime[ext] = asset.type;
+		}
+	});
+
+	return mime;
+}

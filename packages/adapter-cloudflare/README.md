@@ -1,7 +1,6 @@
 # adapter-cloudflare
 
-[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit
-applications on Cloudflare Pages with Workers integration.
+[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on Cloudflare Pages with Workers integration.
 
 _**Comparisons**_
 
@@ -27,34 +26,14 @@ $ npm i --save-dev @sveltejs/adapter-cloudflare@next
 You can include these changes in your `svelte.config.js` configuration file:
 
 ```js
-import cloudflare from '@sveltejs/adapter-cloudflare';
+import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
 	kit: {
 		target: '#svelte',
-		adapter: cloudflare({
-			// any esbuild options
-		})
+		adapter: adapter()
 	}
 };
-```
-
-### Options
-
-The adapter optionally accepts all
-[`esbuild.build`](https://esbuild.github.io/api/#build-api) configuration.
-
-These are the default options, of which, all but `target` and `platform` are
-enforced:
-
-```js
-target: 'es2020',
-platform: 'browser',
-entryPoints: '< input >',
-outfile: '<output>/_worker.js',
-allowOverwrite: true,
-format: 'esm',
-bundle: true,
 ```
 
 ## Deployment
@@ -73,5 +52,4 @@ When configuring your project settings, you must use the following settings:
 
 ## Changelog
 
-[The Changelog for this package is available on
-GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).

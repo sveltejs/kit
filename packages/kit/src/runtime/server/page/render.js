@@ -3,8 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
-
-const s = JSON.stringify;
+import { s } from '../../../utils/misc.js';
 
 // TODO rename this function/module
 
@@ -28,8 +27,8 @@ export async function render_response({
 	error,
 	page
 }) {
-	const css = new Set(options.entry.css);
-	const js = new Set(options.entry.js);
+	const css = new Set(options.manifest._.entry.css);
+	const js = new Set(options.manifest._.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
@@ -101,8 +100,8 @@ export async function render_response({
 			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
-				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${dep}">`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${dep}">`)
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix}${dep}">`),
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${options.prefix}${dep}">`)
 		  ].join('\n\t\t');
 
 	/** @type {string} */
@@ -119,14 +118,14 @@ export async function render_response({
 	} else if (include_js) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.entry.file)};
+			import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
 				session: ${try_serialize($session, (error) => {
 					throw new Error(`Failed to serialize session data: ${error.message}`);
 				})},
-				host: ${page && page.host ? s(page.host) : 'location.host'},
+				origin: ${page && page.origin ? s(page.origin) : 'location.origin'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
@@ -135,11 +134,11 @@ export async function render_response({
 					error: ${serialize_error(error)},
 					nodes: [
 						${(branch || [])
-						.map(({ node }) => `import(${s(node.entry)})`)
+						.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					page: {
-						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
+						origin: ${page && page.origin ? s(page.origin) : 'location.origin'}, // TODO this is redundant
 						path: ${page && page.path ? try_serialize(page.path, error => {
 							throw new Error(`Failed to serialize page.path: ${error.message}`);
 						}) : null},

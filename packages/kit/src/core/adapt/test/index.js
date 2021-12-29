@@ -3,7 +3,7 @@ import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
 import glob from 'tiny-glob/sync.js';
-import { get_utils } from '../utils.js';
+import { create_builder } from '../builder.js';
 import { fileURLToPath } from 'url';
 import { SVELTE_KIT } from '../../constants.js';
 
@@ -22,7 +22,7 @@ const log = Object.assign(logger, {
 	success: logger
 });
 
-const suite = uvu.suite('adapter utils');
+const suite = uvu.suite('adapter');
 
 suite('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
@@ -39,9 +39,16 @@ suite('copy files', () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: [] };
+	const build_data = {
+		// @ts-expect-error
+		client: {},
+		// @ts-expect-error
+		server: {},
+		static: [],
+		entries: []
+	};
 
-	const utils = get_utils({
+	const builder = create_builder({
 		cwd,
 		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
 		build_data,
@@ -51,7 +58,7 @@ suite('copy files', () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_static_files(dest);
+	builder.writeStatic(dest);
 
 	assert.equal(
 		glob('**', {
@@ -61,7 +68,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_client_files(dest);
+	builder.writeClient(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/client` }),
@@ -69,7 +76,7 @@ suite('copy files', () => {
 	);
 
 	rmSync(dest, { recursive: true, force: true });
-	utils.copy_server_files(dest);
+	builder.writeServer(dest);
 
 	assert.equal(
 		glob('**', { cwd: `${cwd}/${SVELTE_KIT}/output/server` }),
@@ -99,9 +106,16 @@ suite('prerender', async () => {
 	};
 
 	/** @type {import('types/internal').BuildData} */
-	const build_data = { client: [], server: [], static: [], entries: ['/nested'] };
+	const build_data = {
+		// @ts-expect-error
+		client: { assets: [], chunks: [] },
+		// @ts-expect-error
+		server: { chunks: [] },
+		static: [],
+		entries: ['/nested']
+	};
 
-	const utils = get_utils({
+	const builder = create_builder({
 		cwd,
 		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
 		build_data,
@@ -111,7 +125,7 @@ suite('prerender', async () => {
 	const dest = join(__dirname, 'output');
 
 	rmSync(dest, { recursive: true, force: true });
-	await utils.prerender({
+	await builder.prerender({
 		all: true,
 		dest
 	});

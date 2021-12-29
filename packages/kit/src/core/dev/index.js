@@ -19,7 +19,7 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { copy_assets, resolve_entry } from '../utils.js';
+import { copy_assets, get_mime_lookup, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
@@ -99,7 +99,7 @@ class Watcher extends EventEmitter {
 				this.config.kit.files.lib,
 				this.config.kit.files.routes,
 				path.resolve(this.cwd, 'src'),
-				path.resolve(this.cwd, '.svelte-kit'),
+				path.resolve(this.cwd, SVELTE_KIT),
 				path.resolve(this.cwd, 'node_modules'),
 				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
 			])
@@ -124,7 +124,7 @@ class Watcher extends EventEmitter {
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
-		const kit_plugin = await create_plugin(this.config, this.dir, this.cwd, () => {
+		const kit_plugin = await create_plugin(this.config, this.dir, this.https, () => {
 			if (!this.manifest) {
 				throw new Error('Manifest is not available');
 			}
@@ -196,33 +196,85 @@ class Watcher extends EventEmitter {
 			cwd: this.cwd
 		});
 
-		/** @type {import('types/internal').SSRManifest} */
+		/** @type {import('types/app').SSRManifest} */
 		this.manifest = {
-			assets: manifest_data.assets,
-			layout: manifest_data.layout,
-			error: manifest_data.error,
-			routes: manifest_data.routes.map((route) => {
-				if (route.type === 'page') {
+			appDir: this.config.kit.appDir,
+			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+			_: {
+				mime: get_mime_lookup(manifest_data),
+				entry: {
+					file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+					css: [],
+					js: []
+				},
+				nodes: manifest_data.components.map((id) => {
+					return async () => {
+						const url = `/${id}`;
+
+						if (!this.vite) throw new Error('Vite server has not been initialized');
+
+						const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
+						const node = await this.vite.moduleGraph.getModuleByUrl(url);
+
+						if (!node) throw new Error(`Could not find node for ${url}`);
+
+						const deps = new Set();
+						find_deps(node, deps);
+
+						const styles = new Set();
+
+						for (const dep of deps) {
+							const parsed = new URL(dep.url, 'http://localhost/');
+							const query = parsed.searchParams;
+
+							// TODO what about .scss files, etc?
+							if (
+								dep.file.endsWith('.css') ||
+								(query.has('svelte') && query.get('type') === 'style')
+							) {
+								try {
+									const mod = await this.vite.ssrLoadModule(dep.url);
+									styles.add(mod.default);
+								} catch {
+									// this can happen with dynamically imported modules, I think
+									// because the Vite module graph doesn't distinguish between
+									// static and dynamic imports? TODO investigate, submit fix
+								}
+							}
+						}
+
+						return {
+							module,
+							entry: url.endsWith('.svelte') ? url : url + '?import',
+							css: [],
+							js: [],
+							styles: Array.from(styles)
+						};
+					};
+				}),
+				routes: manifest_data.routes.map((route) => {
+					if (route.type === 'page') {
+						return {
+							type: 'page',
+							pattern: route.pattern,
+							params: get_params(route.params),
+							a: route.a.map((id) => manifest_data.components.indexOf(id)),
+							b: route.b.map((id) => manifest_data.components.indexOf(id))
+						};
+					}
+
 					return {
-						type: 'page',
+						type: 'endpoint',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						a: route.a,
-						b: route.b
+						load: async () => {
+							if (!this.vite) throw new Error('Vite server has not been initialized');
+							const url = path.resolve(this.cwd, route.file);
+							return await this.vite.ssrLoadModule(url);
+						}
 					};
-				}
-
-				return {
-					type: 'endpoint',
-					pattern: route.pattern,
-					params: get_params(route.params),
-					load: async () => {
-						if (!this.vite) throw new Error('Vite server has not been initialized');
-						const url = path.resolve(this.cwd, route.file);
-						return await this.vite.ssrLoadModule(url);
-					}
-				};
-			})
+				})
+			}
 		};
 	}
 
@@ -245,31 +297,15 @@ function get_params(array) {
 	// src/routes/[x]/[y]/[z]/svelte, create a function
 	// that turns a RegExpExecArray into ({ x, y, z })
 
-	// input has already been decoded by decodeURI
-	// now handle the rest that decodeURIComponent would do
-	const d = /** @param {string} s */ (s) =>
-		s
-			.replace(/%23/g, '#')
-			.replace(/%3[Bb]/g, ';')
-			.replace(/%2[Cc]/g, ',')
-			.replace(/%2[Ff]/g, '/')
-			.replace(/%3[Ff]/g, '?')
-			.replace(/%3[Aa]/g, ':')
-			.replace(/%40/g, '@')
-			.replace(/%26/g, '&')
-			.replace(/%3[Dd]/g, '=')
-			.replace(/%2[Bb]/g, '+')
-			.replace(/%24/g, '$');
-
 	/** @param {RegExpExecArray} match */
 	const fn = (match) => {
 		/** @type {Record<string, string>} */
 		const params = {};
 		array.forEach((key, i) => {
 			if (key.startsWith('...')) {
-				params[key.slice(3)] = d(match[i + 1] || '');
+				params[key.slice(3)] = match[i + 1] || '';
 			} else {
-				params[key] = d(match[i + 1]);
+				params[key] = match[i + 1];
 			}
 		});
 		return params;
@@ -281,27 +317,14 @@ function get_params(array) {
 /**
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} dir
- * @param {string} cwd
- * @param {() => import('types/internal').SSRManifest} get_manifest
+ * @param {boolean} https
+ * @param {() => import('types/app').SSRManifest} get_manifest
  */
-async function create_plugin(config, dir, cwd, get_manifest) {
+async function create_plugin(config, dir, https, get_manifest) {
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
 	const validator = config.kit.amp ? await amp_validator.getInstance() : null;
-
-	/**
-	 * @param {import('vite').ModuleNode} node
-	 * @param {Set<import('vite').ModuleNode>} deps
-	 */
-	const find_deps = (node, deps) => {
-		for (const dep of node.importedModules) {
-			if (!deps.has(dep)) {
-				deps.add(dep);
-				find_deps(dep, deps);
-			}
-		}
-	};
 
 	/**
 	 * @param {vite.ViteDevServer} vite
@@ -372,15 +395,13 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const host = /** @type {string} */ (
-					config.kit.host || req.headers[config.kit.hostHeader || 'host']
-				);
+				const origin = `${https ? 'https' : 'http'}://${req.headers.host}`;
 
 				const rendered = await respond(
 					{
 						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 						method: req.method,
-						host,
+						origin,
 						path: parsed.pathname.replace(config.kit.paths.base, ''),
 						query: parsed.searchParams,
 						rawBody: body
@@ -388,11 +409,6 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 					{
 						amp: config.kit.amp,
 						dev: true,
-						entry: {
-							file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
-							css: [],
-							js: []
-						},
 						floc: config.kit.floc,
 						get_stack: (error) => {
 							vite.ssrFixStacktrace(error);
@@ -404,52 +420,12 @@ async function create_plugin(config, dir, cwd, get_manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
+						manifest: get_manifest(),
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 						},
-						load_component: async (id) => {
-							const url = `/${id}`;
-
-							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
-							const node = await vite.moduleGraph.getModuleByUrl(url);
-
-							if (!node) throw new Error(`Could not find node for ${url}`);
-
-							const deps = new Set();
-							find_deps(node, deps);
-
-							const styles = new Set();
-
-							for (const dep of deps) {
-								const parsed = new URL(dep.url, 'http://localhost/');
-								const query = parsed.searchParams;
-
-								// TODO what about .scss files, etc?
-								if (
-									dep.file.endsWith('.css') ||
-									(query.has('svelte') && query.get('type') === 'style')
-								) {
-									try {
-										const mod = await vite.ssrLoadModule(dep.url);
-										styles.add(mod.default);
-									} catch {
-										// this can happen with dynamically imported modules, I think
-										// because the Vite module graph doesn't distinguish between
-										// static and dynamic imports? TODO investigate, submit fix
-									}
-								}
-							}
-
-							return {
-								module,
-								entry: url.endsWith('.svelte') ? url : url + '?import',
-								css: [],
-								js: [],
-								styles: Array.from(styles)
-							};
-						},
-						manifest: get_manifest(),
+						prefix: '',
 						prerender: config.kit.prerender.enabled,
 						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 						root,
@@ -561,6 +537,19 @@ function remove_html_middlewares(server) {
 		// @ts-expect-error using internals until https://github.com/vitejs/vite/pull/4640 is merged
 		if (html_middlewares.includes(server.stack[i].handle.name)) {
 			server.stack.splice(i, 1);
+		}
+	}
+}
+
+/**
+ * @param {import('vite').ModuleNode} node
+ * @param {Set<import('vite').ModuleNode>} deps
+ */
+function find_deps(node, deps) {
+	for (const dep of node.importedModules) {
+		if (!deps.has(dep)) {
+			deps.add(dep);
+			find_deps(dep, deps);
 		}
 	}
 }

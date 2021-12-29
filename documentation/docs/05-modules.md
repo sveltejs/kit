@@ -57,7 +57,7 @@ Because of that, the stores are not free-floating objects: they must be accessed
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
-- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `host`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
+- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `origin`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib
@@ -84,12 +84,12 @@ This module provides a helper function to sequence multiple `handle` calls.
 import { sequence } from '@sveltejs/kit/hooks';
 
 async function first({ request, resolve }) {
-  console.log('first');
-  return await resolve(request);
+	console.log('first');
+	return await resolve(request);
 }
 async function second({ request, resolve }) {
-  console.log('second');
-  return await resolve(request);
+	console.log('second');
+	return await resolve(request);
 }
 
 export const handle = sequence(first, second);

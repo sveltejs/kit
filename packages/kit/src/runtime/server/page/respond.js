@@ -29,7 +29,9 @@ export async function respond(opts) {
 	let nodes;
 
 	try {
-		nodes = await Promise.all(route.a.map((id) => (id ? options.load_component(id) : undefined)));
+		nodes = await Promise.all(
+			route.a.map((n) => options.manifest._.nodes[n] && options.manifest._.nodes[n]())
+		);
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
@@ -126,7 +128,7 @@ export async function respond(opts) {
 				if (error) {
 					while (i--) {
 						if (route.b[i]) {
-							const error_node = await options.load_component(route.b[i]);
+							const error_node = await options.manifest._.nodes[route.b[i]]();
 
 							/** @type {Loaded} */
 							let node_loaded;

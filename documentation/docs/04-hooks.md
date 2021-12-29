@@ -26,7 +26,6 @@ type RequestHeaders = Record<string, string>;
 export type RawBody = null | Uint8Array;
 export interface IncomingRequest {
 	method: string;
-	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;
@@ -39,6 +38,7 @@ type ParameterizedBody<Body = unknown> = Body extends FormData
 // ServerRequest is exported as Request
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
+	origin: string;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals; // populated by hooks handle
