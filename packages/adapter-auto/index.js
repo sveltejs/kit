@@ -5,12 +5,10 @@ export default function () {
 	return {
 		name: '@sveltejs/adapter-auto',
 
-		async adapt(options) {
+		async adapt(builder) {
 			for (const candidate of adapters) {
 				if (candidate.test()) {
-					options.utils.log.info(
-						`Detected environment: ${candidate.name}. Using ${candidate.module}`
-					);
+					builder.log.info(`Detected environment: ${candidate.name}. Using ${candidate.module}`);
 
 					let module;
 
@@ -30,11 +28,11 @@ export default function () {
 					}
 
 					const adapter = module.default();
-					return adapter.adapt(options);
+					return adapter.adapt(builder);
 				}
 			}
 
-			options.utils.log.warn(
+			builder.log.warn(
 				'Could not detect a supported production environment. See https://kit.svelte.dev/docs#adapters to learn how to configure your app to run on the platform of your choosing'
 			);
 		}

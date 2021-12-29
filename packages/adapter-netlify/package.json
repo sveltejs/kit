@@ -22,15 +22,24 @@
 		"index.d.ts"
 	],
 	"scripts": {
+		"dev": "rimraf files && rollup -cw",
+		"build": "rimraf files && rollup -c",
 		"lint": "eslint --ignore-path .gitignore \"**/*.{ts,js,svelte}\" && npm run check-format",
 		"format": "npm run check-format -- --write",
-		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore"
+		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
+		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"esbuild": "^0.13.15"
+		"esbuild": "^0.13.15",
+		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*"
+		"@rollup/plugin-commonjs": "^21.0.0",
+		"@rollup/plugin-json": "^4.1.0",
+		"@rollup/plugin-node-resolve": "^13.0.5",
+		"@sveltejs/kit": "workspace:*",
+		"rimraf": "^3.0.2",
+		"rollup": "^2.58.0"
 	}
 }

@@ -59,7 +59,6 @@ type RequestHeaders = Record<string, string>;
 export type RawBody = null | Uint8Array;
 export interface IncomingRequest {
 	method: string;
-	host: string;
 	path: string;
 	query: URLSearchParams;
 	headers: RequestHeaders;
@@ -72,6 +71,7 @@ type ParameterizedBody<Body = unknown> = Body extends FormData
 // ServerRequest is exported as Request
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
+	origin: string;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals; // populated by hooks handle
@@ -96,7 +96,7 @@ export interface RequestHandler<
 }
 ```
 
- For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';

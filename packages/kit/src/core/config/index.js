@@ -4,8 +4,6 @@ import * as url from 'url';
 import { logger } from '../utils.js';
 import options from './options.js';
 
-/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
-
 /**
  * @param {string} cwd
  * @param {import('types/config').ValidatedConfig} validated

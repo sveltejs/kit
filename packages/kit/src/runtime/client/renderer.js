@@ -69,13 +69,13 @@ export class Renderer {
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
-	 *   host: string;
+	 *   origin: string;
 	 * }} opts
 	 */
-	constructor({ Root, fallback, target, session, host }) {
+	constructor({ Root, fallback, target, session, origin }) {
 		this.Root = Root;
 		this.fallback = fallback;
-		this.host = host;
+		this.origin = origin;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
@@ -535,7 +535,7 @@ export class Renderer {
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				page: {
-					host: page.host,
+					origin: page.origin,
 					params,
 					get path() {
 						node.uses.path = true;
@@ -607,7 +607,7 @@ export class Renderer {
 		};
 
 		/** @type {import('types/page').Page} */
-		const page = { host: this.host, path, query, params };
+		const page = { origin: this.origin, path, query, params };
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		let branch = [];
@@ -748,7 +748,7 @@ export class Renderer {
 	 */
 	async _load_error({ status, error, path, query }) {
 		const page = {
-			host: this.host,
+			origin: this.origin,
 			path,
 			query,
 			params: {}

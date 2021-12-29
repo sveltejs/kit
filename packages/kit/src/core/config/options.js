@@ -1,4 +1,3 @@
-/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 /** @typedef {import('./types').Validator} Validator */
 
 /** @type {Validator} */
@@ -67,9 +66,12 @@ const options = object(
 
 			floc: boolean(false),
 
-			host: string(null),
+			headers: object({
+				host: string(null),
+				protocol: string(null)
+			}),
 
-			hostHeader: string(null),
+			host: string(null),
 
 			hydrate: boolean(true),
 
@@ -160,9 +162,12 @@ const options = object(
 				})
 			}),
 
+			protocol: string(null),
+
 			router: boolean(true),
 
 			serviceWorker: object({
+				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 

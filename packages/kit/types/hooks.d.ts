@@ -5,6 +5,7 @@ export type StrictBody = string | Uint8Array;
 
 export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 	extends IncomingRequest {
+	origin: string;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
@@ -25,6 +26,15 @@ export interface Handle<Locals = Record<string, any>, Body = unknown> {
 		request: ServerRequest<Locals, Body>;
 		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
+}
+
+// internally, `resolve` could return `undefined`, so we differentiate InternalHandle
+// from the public Handle type
+export interface InternalHandle<Locals = Record<string, any>, Body = unknown> {
+	(input: {
+		request: ServerRequest<Locals, Body>;
+		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse | undefined>;
+	}): MaybePromise<ServerResponse | undefined>;
 }
 
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {

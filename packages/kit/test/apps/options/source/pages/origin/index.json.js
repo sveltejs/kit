@@ -1,6 +1,6 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get({ host }) {
+export function get({ origin }) {
 	return {
-		body: { host }
+		body: { origin }
 	};
 }

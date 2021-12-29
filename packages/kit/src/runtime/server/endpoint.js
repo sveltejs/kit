@@ -1,5 +1,5 @@
 import { get_single_valued_header } from '../../utils/http.js';
-import { lowercase_keys } from './utils.js';
+import { decode_params, lowercase_keys } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -48,7 +48,7 @@ export async function render_endpoint(request, route, match) {
 		return;
 	}
 
-	const params = route.params(match);
+	const params = route.params ? decode_params(route.params(match)) : {};
 
 	const response = await handler({ ...request, params });
 	const preface = `Invalid response from route ${request.path}`;

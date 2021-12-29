@@ -1,30 +1,41 @@
-/* global ASSETS */
-import { init, render } from '../output/server/app.js';
+import { App } from '../output/server/app.js';
+import { manifest, prerendered } from './manifest.js';
 
-init();
+const app = new App(manifest);
+
+const prefix = `/${manifest.appDir}/`;
 
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
 
-		// check generated asset_set for static files
-		let pathname = url.pathname.substring(1);
+		// static assets
+		if (url.pathname.startsWith(prefix)) return env.ASSETS.fetch(req);
+
+		// prerendered pages and index.html files
+		const pathname = url.pathname.replace(/\/$/, '');
+		let file = pathname.substring(1);
+
 		try {
-			pathname = decodeURIComponent(pathname);
+			file = decodeURIComponent(file);
 		} catch (err) {
 			// ignore
 		}
 
-		if (ASSETS.has(pathname)) {
+		if (
+			manifest.assets.has(file) ||
+			manifest.assets.has(file + '/index.html') ||
+			prerendered.has(pathname || '/')
+		) {
 			return env.ASSETS.fetch(req);
 		}
 
+		// dynamically-generated pages
 		try {
-			const rendered = await render({
-				host: url.host || '',
-				path: url.pathname || '',
-				query: url.searchParams || '',
-				rawBody: await read(req),
+			const rendered = await app.render({
+				path: url.pathname,
+				query: url.searchParams,
+				rawBody: new Uint8Array(await req.arrayBuffer()),
 				headers: Object.fromEntries(req.headers),
 				method: req.method
 			});
@@ -32,7 +43,7 @@ export default {
 			if (rendered) {
 				return new Response(rendered.body, {
 					status: rendered.status,
-					headers: makeHeaders(rendered.headers)
+					headers: make_headers(rendered.headers)
 				});
 			}
 		} catch (e) {
@@ -46,11 +57,7 @@ export default {
 	}
 };
 
-async function read(request) {
-	return new Uint8Array(await request.arrayBuffer());
-}
-
-function makeHeaders(headers) {
+function make_headers(headers) {
 	const result = new Headers();
 	for (const header in headers) {
 		const value = headers[header];

@@ -1,73 +1,78 @@
-import fs from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { relative } from 'path';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
 import { fileURLToPath } from 'url';
 
-/**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
- */
-
 /** @type {import('.')} */
-export default function (options) {
+export default function () {
 	return {
 		name: '@sveltejs/adapter-cloudflare-workers',
 
-		async adapt({ utils }) {
-			const { site } = validate_config(utils);
+		async adapt(builder) {
+			const { site } = validate_config(builder);
 
 			const bucket = site.bucket;
 			const entrypoint = site['entry-point'] || 'workers-site';
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
+			const tmp = builder.getBuildDirectory('cloudflare-workers-tmp');
 
-			utils.rimraf(bucket);
-			utils.rimraf(entrypoint);
+			builder.rimraf(bucket);
+			builder.rimraf(entrypoint);
 
-			utils.log.info('Installing worker dependencies...');
-			utils.copy(`${files}/_package.json`, '.svelte-kit/cloudflare-workers/package.json');
+			builder.log.info('Prerendering static pages...');
+			await builder.prerender({
+				dest: bucket
+			});
+
+			builder.log.info('Installing worker dependencies...');
+			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
 
 			// TODO would be cool if we could make this step unnecessary somehow
-			const stdout = execSync('npm install', { cwd: '.svelte-kit/cloudflare-workers' });
-			utils.log.info(stdout.toString());
+			const stdout = execSync('npm install', { cwd: tmp });
+			builder.log.info(stdout.toString());
 
-			utils.log.minor('Generating worker...');
-			utils.copy(`${files}/entry.js`, '.svelte-kit/cloudflare-workers/entry.js');
+			builder.log.minor('Generating worker...');
+			const relativePath = relative(tmp, builder.getServerDirectory());
 
-			/** @type {BuildOptions} */
-			const default_options = {
-				entryPoints: ['.svelte-kit/cloudflare-workers/entry.js'],
+			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
+				replace: {
+					APP: `${relativePath}/app.js`
+				}
+			});
+
+			writeFileSync(
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({
+					relativePath
+				})};\n`
+			);
+
+			await esbuild.build({
+				entryPoints: [`${tmp}/entry.js`],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
 				target: 'es2020',
 				platform: 'browser'
-			};
-
-			const build_options =
-				options && options.esbuild ? await options.esbuild(default_options) : default_options;
-
-			await esbuild.build(build_options);
-
-			fs.writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
-
-			utils.log.info('Prerendering static pages...');
-			await utils.prerender({
-				dest: bucket
 			});
 
-			utils.log.minor('Copying assets...');
-			utils.copy_static_files(bucket);
-			utils.copy_client_files(bucket);
+			writeFileSync(`${entrypoint}/package.json`, JSON.stringify({ main: 'index.js' }));
+
+			builder.log.minor('Copying assets...');
+			builder.writeClient(bucket);
+			builder.writeStatic(bucket);
 		}
 	};
 }
 
-function validate_config(utils) {
-	if (fs.existsSync('wrangler.toml')) {
+function validate_config(builder) {
+	if (existsSync('wrangler.toml')) {
 		let wrangler_config;
 
 		try {
-			wrangler_config = toml.parse(fs.readFileSync('wrangler.toml', 'utf-8'));
+			wrangler_config = toml.parse(readFileSync('wrangler.toml', 'utf-8'));
 		} catch (err) {
 			err.message = `Error parsing wrangler.toml: ${err.message}`;
 			throw err;
@@ -82,11 +87,11 @@ function validate_config(utils) {
 		return wrangler_config;
 	}
 
-	utils.log.error(
+	builder.log.error(
 		'Consult https://developers.cloudflare.com/workers/platform/sites/configuration on how to setup your site'
 	);
 
-	utils.log(
+	builder.log(
 		`
 		Sample wrangler.toml:
 
