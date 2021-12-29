@@ -1,7 +1,7 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test, is_dev) {
+export default function (test) {
 	test('url store functions as expected', null, async ({ base, page, clicknav, js }) => {
 		await page.goto(`${base}/store`);
 
