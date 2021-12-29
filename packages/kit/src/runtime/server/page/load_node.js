@@ -191,7 +191,7 @@ export async function load_node({
 						// so we need to make an actual HTTP request
 						return fetch(request.origin + relative + search, {
 							method: opts.method || 'GET',
-							headers
+							headers: opts.headers
 						});
 					}
 				} else {
