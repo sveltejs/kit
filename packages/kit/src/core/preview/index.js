@@ -93,7 +93,7 @@ export async function preview({
 			const rendered =
 				initial_url.startsWith(config.kit.paths.base) &&
 				(await app.render({
-					url: `${use_https ? 'https' : 'http'}://${req.headers.host}${initial_url}`,
+					url: initial_url,
 					method: req.method,
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 					rawBody: body
