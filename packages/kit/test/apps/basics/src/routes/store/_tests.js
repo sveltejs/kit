@@ -1,8 +1,16 @@
 import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
-export default function (test) {
-	test('page store functions as expected', '/store', async ({ page, clicknav, js }) => {
+export default function (test, is_dev) {
+	test('url store functions as expected', '/store', async ({ page, clicknav, js }) => {
+		if (!is_dev) {
+			// this prevents the URL from changing on hydration
+			page.setExtraHTTPHeaders({
+				'x-forwarded-host': 'forwarded.com',
+				'x-forwarded-proto': 'https'
+			});
+		}
+
 		assert.equal(await page.textContent('h1'), 'Test');
 		assert.equal(await page.textContent('h2'), 'Calls: 1');
 
