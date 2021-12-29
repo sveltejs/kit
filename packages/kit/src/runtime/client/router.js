@@ -272,7 +272,7 @@ export class Router {
 		if (this.trailing_slash === 'never') {
 			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
 		} else if (this.trailing_slash === 'always') {
-			const is_file = (/** @type {string} */ (url.pathname.split('/').pop()).includes('.');
+			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
 			if (!is_file) pathname += '/';
 		}
 
