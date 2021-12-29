@@ -93,12 +93,11 @@ export async function preview({
 			const parsed = new URL(initial_url, 'http://localhost/');
 
 			const rendered =
-				parsed.pathname.startsWith(config.kit.paths.base) &&
+				initial_url.startsWith(config.kit.paths.base) &&
 				(await app.render({
+					url: `${use_https ? 'https' : 'http'}://${req.headers.host}${initial_url}`,
 					method: req.method,
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					path: parsed.pathname.replace(config.kit.paths.base, ''),
-					query: parsed.searchParams,
 					rawBody: body
 				}));
 

@@ -195,10 +195,9 @@ export class Router {
 			const decoded_path = decodeURI(path);
 			const routes = this.routes.filter(([pattern]) => pattern.test(decoded_path));
 
-			const query = new URLSearchParams(url.search);
-			const id = `${path}?${query}`;
+			const id = url.pathname + url.search;
 
-			return { id, routes, path, decoded_path, query };
+			return { id, routes, url };
 		}
 	}
 
@@ -269,18 +268,18 @@ export class Router {
 		this.navigating++;
 
 		// remove trailing slashes
-		if (info.path !== '/') {
-			const has_trailing_slash = info.path.endsWith('/');
+		if (url.pathname !== '/') {
+			const has_trailing_slash = url.pathname.endsWith('/');
 
 			const incorrect =
 				(has_trailing_slash && this.trailing_slash === 'never') ||
 				(!has_trailing_slash &&
 					this.trailing_slash === 'always' &&
-					!(info.path.split('/').pop() || '').includes('.'));
+					!(url.pathname.split('/').pop() || '').includes('.'));
 
 			if (incorrect) {
-				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
-				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
+				url.pathname = has_trailing_slash ? url.pathname.slice(0, -1) : url.pathname + '/';
+				history.replaceState({}, '', url);
 			}
 		}
 

@@ -1,25 +1,24 @@
 <script>
-	import { page, navigating } from '$app/stores';
+	import { url, navigating } from '$app/stores';
 	import Nav from '$lib/Nav.svelte';
 	import PreloadingIndicator from '$lib/PreloadingIndicator.svelte';
 	import ThemeToggler from '$lib/ThemeToggler.svelte';
 	import '../app.css';
 
-
-	$: section = $page.path.split('/')[1];
+	$: section = $url.pathname.split('/')[1];
 </script>
 
-<Nav {section}/>
+<Nav {section} />
 
 {#if $navigating}
-	<PreloadingIndicator/>
+	<PreloadingIndicator />
 {/if}
 
 <main>
-	<slot></slot>
+	<slot />
 </main>
 
-<ThemeToggler/>
+<ThemeToggler />
 
 <style>
 	main {

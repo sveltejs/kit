@@ -395,15 +395,11 @@ async function create_plugin(config, dir, https, get_manifest) {
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const origin = `${https ? 'https' : 'http'}://${req.headers.host}`;
-
 				const rendered = await respond(
 					{
+						url: new URL(`${https ? 'https' : 'http'}://${req.headers.host}${req.url}`),
 						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 						method: req.method,
-						origin,
-						path: parsed.pathname.replace(config.kit.paths.base, ''),
-						query: parsed.searchParams,
 						rawBody: body
 					},
 					{

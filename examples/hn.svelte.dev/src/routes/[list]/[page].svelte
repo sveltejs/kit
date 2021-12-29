@@ -1,7 +1,8 @@
 <script context="module">
 	const valid_lists = new Set(['news', 'newest', 'show', 'ask', 'jobs']);
 
-	export async function load({ page: { params }, fetch }) {
+	/** @type {import('@sveltejs/kit').Load} */
+	export async function load({ params, fetch }) {
 		const list = params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
 
 		if (!valid_lists.has(list)) {

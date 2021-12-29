@@ -130,7 +130,7 @@ function generate_app(manifest_data) {
 	while (l--) {
 		pyramid = `
 			{#if components[${l + 1}]}
-				<svelte:component this={components[${l}]} {...(props_${l} || {})}>				
+				<svelte:component this={components[${l}]} {...(props_${l} || {})}>
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
 				</svelte:component>
 			{:else}
@@ -148,22 +148,23 @@ function generate_app(manifest_data) {
 
 			// stores
 			export let stores;
-			export let page;
+			export let url;
+			export let params;
 
 			export let components;
 			${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
 
 			setContext('__svelte__', stores);
 
-			$: stores.page.set(page);
-			afterUpdate(stores.page.notify);
+			$: stores.url.set(url);
+			afterUpdate(stores.url.notify);
 
 			let mounted = false;
 			let navigated = false;
 			let title = null;
 
 			onMount(() => {
-				const unsubscribe = stores.page.subscribe(() => {
+				const unsubscribe = stores.url.subscribe(() => {
 					if (mounted) {
 						navigated = true;
 						title = document.title || 'untitled page';

@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { params } from '$app/stores';
 </script>
 
-<h2>{JSON.stringify($page.params)}</h2>
+<h2>{JSON.stringify($params)}</h2>

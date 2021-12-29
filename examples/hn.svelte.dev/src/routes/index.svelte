@@ -1,6 +1,7 @@
 <script context="module">
-	export function load({ page }) {
-		let host = page.host;
+	/** @type {import('@sveltejs/kit').Load} */
+	export function load({ url }) {
+		let host = url.host;
 		const i = host.indexOf(':');
 		if (i >= 0) {
 			host = host.substring(0, i);

@@ -23,7 +23,8 @@ import { set_paths } from '../paths.js';
  *     status: number;
  *     error: Error;
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
- *     page: import('types/page').Page;
+ *     url: URL;
+ *     params: Record<string, string>;
  *   };
  * }} opts
  */

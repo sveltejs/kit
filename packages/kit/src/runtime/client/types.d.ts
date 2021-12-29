@@ -1,12 +1,10 @@
 import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types/internal';
-import { Page } from 'types/page';
 
 export type NavigationInfo = {
 	id: string;
 	routes: CSRRoute[];
-	path: string;
-	decoded_path: string;
-	query: URLSearchParams;
+	url: URL;
+	// decoded_path: string; TODO do we need this?
 };
 
 export type NavigationCandidate = {
@@ -25,8 +23,7 @@ export type BranchNode = {
 	loaded: NormalizedLoadOutput | null;
 	uses: {
 		params: Set<string>;
-		path: boolean;
-		query: boolean;
+		url: boolean; // TODO make more granular?
 		session: boolean;
 		stuff: boolean;
 		dependencies: string[];
@@ -35,7 +32,8 @@ export type BranchNode = {
 };
 
 export type NavigationState = {
-	page: Page;
+	url: URL;
+	params: Record<string, string>;
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
 };

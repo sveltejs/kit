@@ -22,9 +22,8 @@ export type ParameterizedBody<Body = unknown> = Body extends FormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
 
 export interface IncomingRequest {
+	url: string | URL;
 	method: string;
-	path: string;
-	query: URLSearchParams;
 	headers: RequestHeaders;
 	rawBody: RawBody;
 }

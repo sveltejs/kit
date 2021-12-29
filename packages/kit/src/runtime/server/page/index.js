@@ -15,18 +15,11 @@ export async function render_page(request, route, match, options, state) {
 		return {
 			status: 404,
 			headers: {},
-			body: `Not found: ${request.path}`
+			body: `Not found: ${request.url.pathname}`
 		};
 	}
 
 	const params = route.params ? decode_params(route.params(match)) : {};
-
-	const page = {
-		origin: request.origin,
-		path: request.path,
-		query: request.query,
-		params
-	};
 
 	const $session = await options.hooks.getSession(request);
 
@@ -36,7 +29,7 @@ export async function render_page(request, route, match, options, state) {
 		state,
 		$session,
 		route,
-		page
+		params
 	});
 
 	if (response) {

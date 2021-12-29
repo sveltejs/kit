@@ -1,5 +1,5 @@
 <script>
-	import { page } from '$app/stores';
+	import { url } from '$app/stores';
 </script>
 
-<h2>{$page.path}</h2>
+<h2>{$url.pathname}</h2>

@@ -10,22 +10,23 @@ import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
-	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
-		const has_trailing_slash = incoming.path.endsWith('/');
+	if (incoming.url.pathname !== '/' && options.trailing_slash !== 'ignore') {
+		const has_trailing_slash = incoming.url.pathname.endsWith('/');
 
 		if (
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!(incoming.path.split('/').pop() || '').includes('.'))
+				!(incoming.url.pathname.split('/').pop() || '').includes('.'))
 		) {
-			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
-			const q = incoming.query.toString();
+			incoming.url.pathname = has_trailing_slash
+				? incoming.url.pathname.slice(0, -1)
+				: incoming.url.pathname + '/';
 
 			return {
 				status: 301,
 				headers: {
-					location: options.paths.base + path + (q ? `?${q}` : '')
+					location: incoming.url.pathname + incoming.url.search
 				}
 			};
 		}
@@ -46,6 +47,8 @@ export async function respond(incoming, options, state = {}) {
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
+						url: request.url,
+						params: request.params,
 						options,
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
@@ -54,7 +57,7 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.path);
+				const decoded = decodeURI(request.url.pathname); // TODO account for paths.base
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
@@ -102,7 +105,7 @@ export async function respond(incoming, options, state = {}) {
 						state,
 						$session,
 						status: 404,
-						error: new Error(`Not found: ${request.path}`)
+						error: new Error(`Not found: ${request.url.pathname}`)
 					});
 				}
 			}

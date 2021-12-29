@@ -51,7 +51,7 @@ export async function render_endpoint(request, route, match) {
 	const params = route.params ? decode_params(route.params(match)) : {};
 
 	const response = await handler({ ...request, params });
-	const preface = `Invalid response from route ${request.path}`;
+	const preface = `Invalid response from route ${request.url.pathname}`;
 
 	if (!response) {
 		return;

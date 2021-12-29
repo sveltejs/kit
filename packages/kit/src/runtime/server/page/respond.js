@@ -18,7 +18,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   state: SSRRenderState;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
- *   page: import('types/page').Page;
+ *   params: Record<string, string>;
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */
@@ -86,6 +86,7 @@ export async function respond(opts) {
 				try {
 					loaded = await load_node({
 						...opts,
+						url: request.url,
 						node,
 						stuff,
 						prerender_enabled: is_prerender_enabled(options, node, state),
@@ -142,6 +143,7 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
+										url: request.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
 										prerender_enabled: is_prerender_enabled(options, error_node, state),
@@ -199,6 +201,7 @@ export async function respond(opts) {
 		return with_cookies(
 			await render_response({
 				...opts,
+				url: request.url,
 				page_config,
 				status,
 				error,

@@ -1,8 +1,8 @@
 <script>
 	import { base } from '$app/paths';
-	import { page } from '$app/stores';
+	import { url } from '$app/stores';
 </script>
 
-<h2>{$page.path}</h2>
+<h2>{$url.pathname}</h2>
 
 <a href="{base}/slash/child">/slash/child</a>
