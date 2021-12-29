@@ -67,11 +67,13 @@ export class Renderer {
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
+	 *   base: string;
 	 * }} opts
 	 */
-	constructor({ Root, fallback, target, session }) {
+	constructor({ Root, fallback, target, session, base }) {
 		this.Root = Root;
 		this.fallback = fallback;
+		this.base = base;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
@@ -601,10 +603,12 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
+		const path = decodeURI(url.pathname).replace(this.base, '');
+
 		const [pattern, a, b, get_params] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(url.pathname))) // TODO this needs to account for paths.base
+			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
 			: {};
 
 		const changed = this.current.url && {
