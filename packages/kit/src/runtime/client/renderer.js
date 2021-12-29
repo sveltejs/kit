@@ -444,6 +444,25 @@ export class Renderer {
 
 		if (!this.current.url || url.href !== this.current.url.href) {
 			result.props.page = { url, params };
+
+			if (import.meta.env.DEV) {
+				// TODO remove this for 1.0
+				/**
+				 * @param {string} property
+				 * @param {string} replacement
+				 */
+				const print_error = (property, replacement) => {
+					Object.defineProperty(result.props.page, property, {
+						get: () => {
+							throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+						}
+					});
+				};
+
+				print_error('origin', 'origin');
+				print_error('path', 'pathname');
+				print_error('query', 'searchParams');
+			}
 		}
 
 		const leaf = filtered[filtered.length - 1];
@@ -540,12 +559,6 @@ export class Renderer {
 					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
-				},
-
-				// TODO remove this for 1.0
-				// @ts-expect-error
-				get page() {
-					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			};
 
