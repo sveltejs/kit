@@ -1,10 +1,6 @@
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		headers: {
-			host: 'x-forwarded-host',
-			protocol: 'x-forwarded-proto'
-		},
 		vite: {
 			build: {
 				minify: false
