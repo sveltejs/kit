@@ -96,7 +96,7 @@ The `load` function receives an object containing four fields — `page`, `fetch
 
 `params` is derived from `url.pathname` and the route filename.
 
-For a route filename example like `src/routes/a/[b]/[c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
 
 ```js
 {
