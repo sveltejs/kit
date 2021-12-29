@@ -53,6 +53,7 @@ const config = {
 		protocol: null,
 		router: true,
 		serviceWorker: {
+			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
 		ssr: true,

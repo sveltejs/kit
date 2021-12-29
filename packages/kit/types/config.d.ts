@@ -149,7 +149,8 @@ export interface Config {
 		protocol?: string;
 		router?: boolean;
 		serviceWorker?: {
-			files?(filepath: string): boolean;
+			register?: boolean;
+			files?: (filepath: string) => boolean;
 		};
 		ssr?: boolean;
 		target?: string;

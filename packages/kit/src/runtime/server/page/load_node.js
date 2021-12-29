@@ -101,6 +101,8 @@ export async function load_node({
 					};
 				}
 
+				opts.headers = new Headers(opts.headers);
+
 				const resolved = resolve(request.path, url.split('?')[0]);
 
 				let response;
@@ -133,18 +135,16 @@ export async function load_node({
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 
-					const headers = /** @type {import('types/helper').RequestHeaders} */ ({
-						...opts.headers
-					});
-
 					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
-						headers.cookie = request.headers.cookie;
+						if (request.headers.cookie) {
+							opts.headers.set('cookie', request.headers.cookie);
+						}
 
-						if (!headers.authorization) {
-							headers.authorization = request.headers.authorization;
+						if (request.headers.authorization && !opts.headers.has('authorization')) {
+							opts.headers.set('authorization', request.headers.authorization);
 						}
 					}
 
@@ -162,7 +162,7 @@ export async function load_node({
 						{
 							origin: request.origin,
 							method: opts.method || 'GET',
-							headers,
+							headers: Object.fromEntries(opts.headers),
 							path: relative,
 							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
 							query: new URLSearchParams(search)
@@ -218,11 +218,7 @@ export async function load_node({
 							opts.credentials !== 'omit'
 						) {
 							uses_credentials = true;
-
-							opts.headers = {
-								...opts.headers,
-								cookie: request.headers.cookie
-							};
+							opts.headers.set('cookie', request.headers.cookie);
 						}
 					}
 

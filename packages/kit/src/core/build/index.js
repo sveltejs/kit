@@ -42,7 +42,8 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 		}),
 		output_dir,
 		client_entry_file: `${SVELTE_KIT}/build/runtime/internal/start.js`,
-		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker)
+		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
+		service_worker_register: config.kit.serviceWorker.register
 	};
 
 	const client = await build_client(options);

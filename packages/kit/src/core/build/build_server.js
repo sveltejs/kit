@@ -72,7 +72,11 @@ export class App {
 			prerender: ${config.kit.prerender.enabled},
 			read,
 			root,
-			service_worker: ${config.kit.files.serviceWorker ? "'/service-worker.js'" : 'null'},
+			service_worker: ${
+				config.kit.files.serviceWorker && config.kit.serviceWorker.register
+					? "'/service-worker.js'"
+					: 'null'
+			},
 			router: ${s(config.kit.router)},
 			ssr: ${s(config.kit.ssr)},
 			target: ${s(config.kit.target)},

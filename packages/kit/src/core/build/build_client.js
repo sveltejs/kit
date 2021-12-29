@@ -17,6 +17,7 @@ import { create_build, find_deps } from './utils.js';
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
+ *   service_worker_register: boolean;
  * }} options
  */
 export async function build_client({

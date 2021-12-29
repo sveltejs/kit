@@ -44,7 +44,9 @@ async function testLoadDefaultConfig(path) {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: { base: '', assets: '' },
 			prerender: {
 				concurrency: 1,
