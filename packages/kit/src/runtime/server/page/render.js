@@ -142,7 +142,7 @@ export async function render_response({
 						.join(',\n\t\t\t\t\t\t')}
 					],
 					url: new URL(${s(url.href)}),
-					params: ${s(params)}
+					params: ${devalue(params)}
 				}` : 'null'}
 			});
 		</script>`;
