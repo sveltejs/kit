@@ -67,13 +67,11 @@ export class Renderer {
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
-	 *   origin: string;
 	 * }} opts
 	 */
-	constructor({ Root, fallback, target, session, origin }) {
+	constructor({ Root, fallback, target, session }) {
 		this.Root = Root;
 		this.fallback = fallback;
-		this.origin = origin;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
