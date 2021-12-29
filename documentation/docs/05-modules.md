@@ -45,19 +45,19 @@ import { base, assets } from '$app/paths';
 ### $app/stores
 
 ```js
-import { getStores, navigating, route, session } from '$app/stores';
+import { getStores, navigating, page, session } from '$app/stores';
 ```
 
 Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `route` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
 
 Because of that, the stores are not free-floating objects: they must be accessed during component initialisation, like anything else that would be accessed with `getContext`.
 
-- `getStores` is a convenience function around `getContext` that returns `{ navigating, route, session }`. This needs to be called at the top-level or synchronously during component or page initialisation.
+- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. This needs to be called at the top-level or synchronously during component or page initialisation.
 
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
-- `route` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL) and [`params`](#loading-input-params).
+- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL) and [`params`](#loading-input-params).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib
