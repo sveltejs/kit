@@ -22,19 +22,100 @@ import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { copy_assets, get_mime_lookup, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
-/** @typedef {{ cwd?: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
+/** @typedef {{ cwd: string, port: number, host?: string, https: boolean, config: import('types/config').ValidatedConfig }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
-export function dev(opts) {
+export async function dev(opts) {
 	__fetch_polyfill();
 
-	return new Watcher(opts).init();
+	/** @type {string} */
+	const dir = path.resolve(opts.cwd, `${SVELTE_KIT}/dev`);
+
+	const watcher = new Watcher(opts);
+	await watcher.init();
+
+	const { config } = opts;
+
+	/** @type {import('vite').UserConfig} */
+	const vite_config = (config.kit.vite && config.kit.vite()) || {};
+
+	const default_config = {
+		server: {
+			fs: {
+				allow: allowed_directories(config, opts.cwd)
+			},
+			strictPort: true
+		}
+	};
+
+	// don't warn on overriding defaults
+	const [modified_vite_config] = deep_merge(default_config, vite_config);
+
+	const kit_plugin = await create_plugin(opts, dir, () => {
+		if (!watcher.manifest) {
+			throw new Error('Manifest is not available');
+		}
+
+		return watcher.manifest;
+	});
+
+	/** @type {[any, string[]]} */
+	const [merged_config, conflicts] = deep_merge(modified_vite_config, {
+		configFile: false,
+		root: opts.cwd,
+		resolve: {
+			alias: {
+				$app: path.resolve(`${dir}/runtime/app`),
+				$lib: config.kit.files.lib
+			}
+		},
+		build: {
+			rollupOptions: {
+				// Vite dependency crawler needs an explicit JS entry point
+				// eventhough server otherwise works without it
+				input: path.resolve(`${dir}/runtime/internal/start.js`)
+			}
+		},
+		plugins: [
+			svelte({
+				extensions: config.extensions,
+				emitCss: !config.kit.amp,
+				compilerOptions: {
+					hydratable: !!config.kit.hydrate
+				}
+			}),
+			kit_plugin
+		],
+		publicDir: config.kit.files.assets,
+		base: config.kit.paths.assets.startsWith('/') ? `${config.kit.paths.assets}/` : '/'
+	});
+
+	print_config_conflicts(conflicts, 'kit.vite.');
+
+	// optional config from command-line flags
+	// these should take precedence, but not print conflict warnings
+	if (opts.host) {
+		merged_config.server.host = opts.host;
+	}
+	// https is already enabled then do nothing. it could be an object and we
+	// don't want to overwrite with a boolean
+	if (opts.https && !merged_config.server.https) {
+		merged_config.server.https = opts.https;
+	}
+	if (opts.port) {
+		merged_config.server.port = opts.port;
+	}
+
+	watcher.vite = await vite.createServer(merged_config);
+	await watcher.vite.listen(opts.port);
+
+	return watcher;
 }
 
 class Watcher extends EventEmitter {
 	/** @param {Options} opts */
-	constructor({ cwd = process.cwd(), port, host, https, config }) {
+	constructor({ cwd = process.cwd(), config }) {
 		super();
 
 		/** @type {string} */
@@ -42,10 +123,6 @@ class Watcher extends EventEmitter {
 
 		/** @type {string} */
 		this.dir = path.resolve(cwd, `${SVELTE_KIT}/dev`);
-
-		this.port = port;
-		this.host = host;
-		this.https = https;
 
 		/** @type {import('types/config').ValidatedConfig} */
 		this.config = config;
@@ -65,15 +142,6 @@ class Watcher extends EventEmitter {
 		copy_assets(this.dir);
 		process.env.VITE_SVELTEKIT_AMP = this.config.kit.amp ? 'true' : '';
 
-		await this.init_filewatcher();
-		this.update();
-
-		await this.init_server();
-
-		return this;
-	}
-
-	async init_filewatcher() {
 		this.cheapwatch = new CheapWatch({
 			dir: this.config.kit.files.routes,
 			/** @type {({ path }: { path: string }) => boolean} */
@@ -90,97 +158,8 @@ class Watcher extends EventEmitter {
 		this.cheapwatch.on('-', () => {
 			this.update();
 		});
-	}
 
-	allowed_directories() {
-		return [
-			...new Set([
-				this.config.kit.files.assets,
-				this.config.kit.files.lib,
-				this.config.kit.files.routes,
-				path.resolve(this.cwd, 'src'),
-				path.resolve(this.cwd, SVELTE_KIT),
-				path.resolve(this.cwd, 'node_modules'),
-				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
-			])
-		];
-	}
-
-	async init_server() {
-		if (!this.manifest) throw new Error('Must call init() before init_server()');
-
-		/** @type {import('vite').UserConfig} */
-		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
-
-		const default_config = {
-			server: {
-				fs: {
-					allow: this.allowed_directories()
-				},
-				strictPort: true
-			}
-		};
-
-		// don't warn on overriding defaults
-		const [modified_vite_config] = deep_merge(default_config, vite_config);
-
-		const kit_plugin = await create_plugin(this.config, this.dir, this.https, () => {
-			if (!this.manifest) {
-				throw new Error('Manifest is not available');
-			}
-
-			return this.manifest;
-		});
-
-		/** @type {[any, string[]]} */
-		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
-			configFile: false,
-			root: this.cwd,
-			resolve: {
-				alias: {
-					$app: path.resolve(`${this.dir}/runtime/app`),
-					$lib: this.config.kit.files.lib
-				}
-			},
-			build: {
-				rollupOptions: {
-					// Vite dependency crawler needs an explicit JS entry point
-					// eventhough server otherwise works without it
-					input: path.resolve(`${this.dir}/runtime/internal/start.js`)
-				}
-			},
-			plugins: [
-				svelte({
-					extensions: this.config.extensions,
-					emitCss: !this.config.kit.amp,
-					compilerOptions: {
-						hydratable: !!this.config.kit.hydrate
-					}
-				}),
-				kit_plugin
-			],
-			publicDir: this.config.kit.files.assets,
-			base: this.config.kit.paths.assets.startsWith('/') ? `${this.config.kit.paths.assets}/` : '/'
-		});
-
-		print_config_conflicts(conflicts, 'kit.vite.');
-
-		// optional config from command-line flags
-		// these should take precedence, but not print conflict warnings
-		if (this.host) {
-			merged_config.server.host = this.host;
-		}
-		// https is already enabled then do nothing. it could be an object and we
-		// don't want to overwrite with a boolean
-		if (this.https && !merged_config.server.https) {
-			merged_config.server.https = this.https;
-		}
-		if (this.port) {
-			merged_config.server.port = this.port;
-		}
-
-		this.vite = await vite.createServer(merged_config);
-		await this.vite.listen(this.port);
+		this.update();
 	}
 
 	update() {
@@ -291,6 +270,24 @@ class Watcher extends EventEmitter {
 	}
 }
 
+/**
+ * @param {import('types/config').ValidatedConfig} config
+ * @param {string} cwd
+ */
+export function allowed_directories(config, cwd) {
+	return [
+		...new Set([
+			config.kit.files.assets,
+			config.kit.files.lib,
+			config.kit.files.routes,
+			path.resolve(cwd, 'src'),
+			path.resolve(cwd, SVELTE_KIT),
+			path.resolve(cwd, 'node_modules'),
+			path.resolve(vite.searchForWorkspaceRoot(cwd), 'node_modules')
+		])
+	];
+}
+
 /** @param {string[]} array */
 function get_params(array) {
 	// given an array of params like `['x', 'y', 'z']` for
@@ -315,12 +312,13 @@ function get_params(array) {
 }
 
 /**
- * @param {import('types/config').ValidatedConfig} config
+ * @param {Options} opts
  * @param {string} dir
- * @param {boolean} https
  * @param {() => import('types/app').SSRManifest} get_manifest
  */
-async function create_plugin(config, dir, https, get_manifest) {
+async function create_plugin(opts, dir, get_manifest) {
+	const { config } = opts;
+
 	/**
 	 * @type {amp_validator.Validator?}
 	 */
@@ -395,7 +393,7 @@ async function create_plugin(config, dir, https, get_manifest) {
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				const origin = `${https ? 'https' : 'http'}://${req.headers.host}`;
+				const origin = `${opts.https ? 'https' : 'http'}://${req.headers.host}`;
 
 				const rendered = await respond(
 					{

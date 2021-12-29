@@ -88,10 +88,11 @@ prog
 		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 		const config = await get_config();
 
-		const { dev } = await import('./core/dev/index.js');
+		const { dev, allowed_directories } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, host, https, config });
+			const cwd = process.cwd();
+			const watcher = await dev({ port, host, https, config, cwd });
 
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
@@ -120,7 +121,7 @@ prog
 				https,
 				open,
 				loose: vite_config.server?.fs?.strict === false,
-				allow: watcher.allowed_directories(),
+				allow: allowed_directories(config, cwd),
 				cwd: watcher.cwd
 			});
 		} catch (error) {
