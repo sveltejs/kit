@@ -15,6 +15,7 @@ export function decode_params(params) {
 	for (const key in params) {
 		// input has already been decoded by decodeURI
 		// now handle the rest that decodeURIComponent would do
+		// TODO shouldn't we just use decodeURIComponent in the first place?
 		params[key] = params[key]
 			.replace(/%23/g, '#')
 			.replace(/%3[Bb]/g, ';')

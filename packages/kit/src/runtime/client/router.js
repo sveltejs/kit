@@ -267,21 +267,17 @@ export class Router {
 		}
 		this.navigating++;
 
-		// remove trailing slashes
-		if (url.pathname !== '/') {
-			const has_trailing_slash = url.pathname.endsWith('/');
+		let { pathname } = url;
 
-			const incorrect =
-				(has_trailing_slash && this.trailing_slash === 'never') ||
-				(!has_trailing_slash &&
-					this.trailing_slash === 'always' &&
-					!(url.pathname.split('/').pop() || '').includes('.'));
-
-			if (incorrect) {
-				url.pathname = has_trailing_slash ? url.pathname.slice(0, -1) : url.pathname + '/';
-				history.replaceState({}, '', url);
-			}
+		if (this.trailing_slash === 'never') {
+			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+		} else if (this.trailing_slash === 'always') {
+			const is_file = (/** @type {string} */ (url.pathname.split('/').pop()).includes('.');
+			if (!is_file) pathname += '/';
 		}
+
+		const normalized_url = new URL(url.origin + pathname + url.search + url.hash);
+		history.replaceState({}, '', normalized_url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 

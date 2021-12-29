@@ -23,6 +23,8 @@ export async function respond(incoming, options, state = {}) {
 				? incoming.url.pathname.slice(0, -1)
 				: incoming.url.pathname + '/';
 
+			if (incoming.url.search === '?') incoming.url.search = '';
+
 			return {
 				status: 301,
 				headers: {
@@ -57,7 +59,8 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.url.pathname); // TODO account for paths.base
+				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
+
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;

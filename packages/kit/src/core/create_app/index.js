@@ -159,6 +159,9 @@ function generate_app(manifest_data) {
 			$: stores.url.set(url);
 			afterUpdate(stores.url.notify);
 
+			$: stores.params.set(params);
+			afterUpdate(stores.params.notify);
+
 			let mounted = false;
 			let navigated = false;
 			let title = null;
