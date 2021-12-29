@@ -7,13 +7,13 @@
 </script>
 
 <script>
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 
 	/** @type {string} */
 	export let rest;
 </script>
 
-<h1>{$route.params.rest}</h1>
+<h1>{$page.params.rest}</h1>
 <h2>{rest}</h2>
 
 <a href="/routing/rest/xyz/abc/deep">deep</a>

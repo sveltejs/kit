@@ -1,11 +1,11 @@
 <script>
-	import { route, navigating } from '$app/stores';
+	import { page, navigating } from '$app/stores';
 	import Nav from '$lib/Nav.svelte';
 	import PreloadingIndicator from '$lib/PreloadingIndicator.svelte';
 	import ThemeToggler from '$lib/ThemeToggler.svelte';
 	import '../app.css';
 
-	$: section = $route.url.pathname.split('/')[1];
+	$: section = $page.url.pathname.split('/')[1];
 </script>
 
 <Nav {section} />

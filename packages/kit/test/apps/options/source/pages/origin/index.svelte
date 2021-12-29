@@ -14,7 +14,7 @@
 </script>
 
 <script>
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 
 	/** @type {string} */
 	export let origin;
@@ -24,5 +24,5 @@
 </script>
 
 <p data-source="load">{origin}</p>
-<p data-source="store">{$route.url.origin}</p>
+<p data-source="store">{$page.url.origin}</p>
 <p data-source="endpoint">{data.origin}</p>

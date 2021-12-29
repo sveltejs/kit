@@ -25,13 +25,13 @@
 </script>
 
 <script>
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 
 	/** @type {Query}*/
 	export let values;
 </script>
 
 <pre id="one">{JSON.stringify(values)}</pre>
-<pre id="two">{JSON.stringify(to_pojo($route.url.searchParams))}</pre>
+<pre id="two">{JSON.stringify(to_pojo($page.url.searchParams))}</pre>
 
 <a href="/query/echo?bar=2">?bar=2</a>

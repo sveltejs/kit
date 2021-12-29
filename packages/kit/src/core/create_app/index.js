@@ -148,22 +148,22 @@ function generate_app(manifest_data) {
 
 			// stores
 			export let stores;
-			export let route;
+			export let page;
 
 			export let components;
 			${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
 
 			setContext('__svelte__', stores);
 
-			$: stores.route.set(route);
-			afterUpdate(stores.route.notify);
+			$: stores.page.set(page);
+			afterUpdate(stores.page.notify);
 
 			let mounted = false;
 			let navigated = false;
 			let title = null;
 
 			onMount(() => {
-				const unsubscribe = stores.route.subscribe(() => {
+				const unsubscribe = stores.page.subscribe(() => {
 					if (mounted) {
 						navigated = true;
 						title = document.title || 'untitled page';

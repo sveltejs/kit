@@ -1,6 +1,6 @@
 <script>
 	import { base } from '$app/paths';
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 </script>
 
-<h2>{$route.url.pathname.replace(base, '')}</h2>
+<h2>{$page.url.pathname.replace(base, '')}</h2>

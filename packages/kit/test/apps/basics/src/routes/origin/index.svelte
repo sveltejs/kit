@@ -1,5 +1,5 @@
 <script>
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 </script>
 
-<h1>{$route.url.origin}</h1>
+<h1>{$page.url.origin}</h1>

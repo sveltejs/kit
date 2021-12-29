@@ -103,7 +103,7 @@ export class Renderer {
 
 		this.stores = {
 			url: notifiable_store({}),
-			route: notifiable_store({}),
+			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
 			session: writable(session)
 		};
@@ -443,7 +443,7 @@ export class Renderer {
 		}
 
 		if (!this.current.url || url.href !== this.current.url.href) {
-			result.props.route = { url, params };
+			result.props.page = { url, params };
 		}
 
 		const leaf = filtered[filtered.length - 1];

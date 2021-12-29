@@ -10,7 +10,7 @@
 </script>
 
 <script>
-	import { route } from '$app/stores';
+	import { page } from '$app/stores';
 
 	/** @type {string} */
 	export let path;
@@ -18,4 +18,4 @@
 
 <h1>static</h1>
 <h2>{path}</h2>
-<h3>{$route.url.pathname}</h3>
+<h3>{$page.url.pathname}</h3>
