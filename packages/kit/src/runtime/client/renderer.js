@@ -456,7 +456,7 @@ export class Renderer {
 		const maxage = leaf.loaded && leaf.loaded.maxage;
 
 		if (maxage) {
-			const key = url.origin + url.pathname; // omit hash
+			const key = url.pathname + url.search; // omit hash
 			let ready = false;
 
 			const clear = () => {
