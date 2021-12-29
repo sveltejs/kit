@@ -101,20 +101,20 @@ export async function build_client({
 	const { chunks, assets } = await create_build(merged_config);
 
 	/** @type {import('vite').Manifest} */
-	const manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
+	const vite_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
 	const entry_js = new Set();
 	const entry_css = new Set();
-	find_deps(client_entry_file, manifest, entry_js, entry_css);
+	find_deps(client_entry_file, vite_manifest, entry_js, entry_css);
 
 	return {
 		assets,
 		chunks,
 		entry: {
-			file: manifest[client_entry_file].file,
+			file: vite_manifest[client_entry_file].file,
 			js: Array.from(entry_js),
 			css: Array.from(entry_css)
 		},
-		manifest
+		vite_manifest
 	};
 }

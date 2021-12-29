@@ -208,12 +208,12 @@ export interface BuildData {
 			js: string[];
 			css: string[];
 		};
-		manifest: import('vite').Manifest;
+		vite_manifest: import('vite').Manifest;
 	};
 	server: {
 		chunks: OutputChunk[];
-		manifest: import('vite').Manifest;
 		methods: Record<string, HttpMethod[]>;
+		vite_manifest: import('vite').Manifest;
 	};
 	static: string[];
 	entries: string[];

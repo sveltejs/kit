@@ -64,13 +64,13 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 
 		const js = new Set();
 		const css = new Set();
-		find_deps(component, client.manifest, js, css);
+		find_deps(component, client.vite_manifest, js, css);
 
 		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
 
-		const node = `import * as module from '../${server.manifest[component].file}';
+		const node = `import * as module from '../${server.vite_manifest[component].file}';
 			export { module };
-			export const entry = '${client.manifest[component].file}';
+			export const entry = '${client.vite_manifest[component].file}';
 			export const js = ${JSON.stringify(Array.from(js))};
 			export const css = ${JSON.stringify(Array.from(css))};
 			${styles ? `export const styles = ${s(styles)}` : ''}
@@ -84,7 +84,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/
 			throw new Error('Cannot use service worker alongside config.kit.paths.assets');
 		}
 
-		await build_service_worker(options, client.manifest);
+		await build_service_worker(options, client.vite_manifest);
 	}
 
 	const build_data = {

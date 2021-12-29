@@ -243,7 +243,7 @@ export async function build_server(
 	return {
 		chunks,
 		/** @type {import('vite').Manifest} */
-		manifest: JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')),
+		vite_manifest: JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')),
 		methods: get_methods(cwd, chunks, manifest_data)
 	};
 }
