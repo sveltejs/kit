@@ -13,12 +13,8 @@ export interface LoadInput<
 	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > {
-	page: {
-		origin: string;
-		path: string;
-		params: PageParams;
-		query: URLSearchParams;
-	};
+	url: URL;
+	params: PageParams;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	stuff: Stuff;
@@ -90,18 +86,24 @@ It is recommended that you not store pre-request state in global variables, but 
 
 The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `stuff` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, stuff })` function will re-run every time `session` or `stuff` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
 
-#### page
+#### url
 
-`page` is an `{ origin, path, params, query }` object where `origin` is the URL's origin, `path` is its pathname, `params` is derived from `path` and the route filename, and `query` is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams). Mutating `page` does not update the current URL; you should instead navigate using [`goto`](#modules-$app-navigation).
+`url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams`.
 
-So if the example above was `src/routes/blog/[slug].svelte` and the URL was `https://example.com/blog/some-post?foo=bar&baz&bizz=a&bizz=b`, the following would be true:
+> In some environments this is derived from request headers, which you [may need to configure](#configuration-headers), during server-side rendering
 
-- `page.origin === 'https://example.com'`
-- `page.path === '/blog/some-post'`
-- `page.params.slug === 'some-post'`
-- `page.query.get('foo') === 'bar'`
-- `page.query.has('baz')`
-- `page.query.getAll('bizz') === ['a', 'b']`
+#### params
+
+`params` is derived from `url.pathname` and the route filename.
+
+For a route filename example like `src/routes/a/[b]/[c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+
+```js
+{
+	"b": "x",
+	"c": "y/z"
+}
+```
 
 #### fetch
 
