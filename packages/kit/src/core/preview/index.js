@@ -90,8 +90,6 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const parsed = new URL(initial_url, 'http://localhost/');
-
 			const rendered =
 				initial_url.startsWith(config.kit.paths.base) &&
 				(await app.render({

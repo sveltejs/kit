@@ -159,8 +159,6 @@ export async function load_node({
 						throw new Error('Request body must be a string');
 					}
 
-					const search = requested.includes('?') ? requested.slice(requested.indexOf('?') + 1) : '';
-
 					const rendered = await respond(
 						{
 							url: new URL(requested, request.url),
