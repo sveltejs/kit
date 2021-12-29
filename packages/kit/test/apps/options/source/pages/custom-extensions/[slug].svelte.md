@@ -1,3 +1,3 @@
-<script>import { params } from '$app/stores';</script>
+<script>import { route } from '$app/stores';</script>
 
-<h2>{$params.slug.toUpperCase()}</h2>
+<h2>{$route.params.slug.toUpperCase()}</h2>

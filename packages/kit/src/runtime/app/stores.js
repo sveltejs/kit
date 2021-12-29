@@ -23,8 +23,8 @@ export const getStores = () => {
 		url: {
 			subscribe: stores.url.subscribe
 		},
-		params: {
-			subscribe: stores.params.subscribe
+		route: {
+			subscribe: stores.route.subscribe
 		},
 		navigating: {
 			subscribe: stores.navigating.subscribe
@@ -50,11 +50,11 @@ export const url = {
 	}
 };
 
-/** @type {typeof import('$app/stores').url} */
-export const params = {
+/** @type {typeof import('$app/stores').route} */
+export const route = {
 	/** @param {(value: any) => void} fn */
 	subscribe(fn) {
-		const store = getStores().params;
+		const store = getStores().route;
 		return store.subscribe(fn);
 	}
 };

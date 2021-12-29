@@ -7,13 +7,13 @@
 </script>
 
 <script>
-	import { params } from '$app/stores';
+	import { route } from '$app/stores';
 
 	/** @type {string} */
 	export let rest;
 </script>
 
-<h1>{$params.rest}</h1>
+<h1>{$route.params.rest}</h1>
 <h2>{rest}</h2>
 
 <a href="/routing/rest/xyz/abc/qwe/deep.json" rel="external">deep</a>

@@ -11,7 +11,7 @@
 </script>
 
 <script>
-	import { url, params } from '$app/stores';
+	import { url, route } from '$app/stores';
 
 	/** @type {string} */
 	export let path;
@@ -22,4 +22,4 @@
 
 <h1>dynamic</h1>
 <h2>{path}: {slug}</h2>
-<h3>{$url.pathname}: {$params.slug}</h3>
+<h3>{$url.pathname}: {$route.params.slug}</h3>

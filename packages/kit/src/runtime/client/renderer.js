@@ -103,7 +103,7 @@ export class Renderer {
 
 		this.stores = {
 			url: notifiable_store({}),
-			params: notifiable_store({}),
+			route: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
 			session: writable(session)
 		};
@@ -447,7 +447,7 @@ export class Renderer {
 		}
 
 		if (!this.current.params || JSON.stringify(params) !== JSON.stringify(this.current.params)) {
-			result.props.params = params;
+			result.props.route = { params };
 		}
 
 		const leaf = filtered[filtered.length - 1];
@@ -552,6 +552,15 @@ export class Renderer {
 					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			};
+
+			if (import.meta.env.DEV) {
+				// TODO remove this for 1.0
+				Object.defineProperty(load_input, 'page', {
+					get: () => {
+						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
+					}
+				});
+			}
 
 			if (error) {
 				/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;

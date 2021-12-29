@@ -1,5 +1,5 @@
 <script>
-	import { params } from '$app/stores';
+	import { route } from '$app/stores';
 </script>
 
-<h2>{JSON.stringify($params)}</h2>
+<h2>{JSON.stringify($route.params)}</h2>

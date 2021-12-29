@@ -276,14 +276,17 @@ export async function load_node({
 					})
 				);
 			},
-			stuff: { ...stuff },
-
-			// TODO remove this for 1.0
-			// @ts-expect-error
-			get page() {
-				throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
-			}
+			stuff: { ...stuff }
 		};
+
+		if (options.dev) {
+			// TODO remove this for 1.0
+			Object.defineProperty(load_input, 'page', {
+				get: () => {
+					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
+				}
+			});
+		}
 
 		if (is_error) {
 			/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;

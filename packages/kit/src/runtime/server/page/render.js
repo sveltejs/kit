@@ -65,12 +65,12 @@ export async function render_response({
 		const props = {
 			stores: {
 				url: writable(null),
-				params: writable(null),
+				route: writable(null),
 				navigating: writable(null),
 				session
 			},
 			url,
-			params,
+			route: { params },
 			components: branch.map(({ node }) => node.module.default)
 		};
 

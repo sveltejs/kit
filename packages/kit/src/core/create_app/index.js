@@ -149,7 +149,7 @@ function generate_app(manifest_data) {
 			// stores
 			export let stores;
 			export let url;
-			export let params;
+			export let route;
 
 			export let components;
 			${levels.map((l) => `export let props_${l} = null;`).join('\n\t\t\t')}
@@ -159,8 +159,8 @@ function generate_app(manifest_data) {
 			$: stores.url.set(url);
 			afterUpdate(stores.url.notify);
 
-			$: stores.params.set(params);
-			afterUpdate(stores.params.notify);
+			$: stores.route.set(route);
+			afterUpdate(stores.route.notify);
 
 			let mounted = false;
 			let navigated = false;

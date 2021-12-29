@@ -1,5 +1,5 @@
 <script>
-	import { params } from '$app/stores';
+	import { route } from '$app/stores';
 </script>
 
-<h1 id="one">{$params.slug}</h1>
+<h1 id="one">{$route.params.slug}</h1>

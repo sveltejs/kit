@@ -1,6 +1,6 @@
 <script>
-	import { params } from '$app/stores';
+	import { route } from '$app/stores';
 </script>
 
-<h1>{$params.a}</h1>
-<h2>{$params.b}</h2>
+<h1>{$route.params.a}</h1>
+<h2>{$route.params.b}</h2>

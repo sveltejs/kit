@@ -91,7 +91,9 @@ declare module '$app/stores' {
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
 		url: Readable<URL>;
-		params: Readable<Record<string, string>>;
+		route: Readable<{
+			params: Record<string, string>;
+		}>;
 		session: Writable<Session>;
 	};
 	/**
@@ -99,9 +101,11 @@ declare module '$app/stores' {
 	 */
 	export const url: Readable<URL>;
 	/**
-	 * A readable store whose value contains the current page parameters.
+	 * A readable store whose value contains route data.
 	 */
-	export const params: Readable<Record<string, string>>;
+	export const route: Readable<{
+		params: Record<string, string>;
+	}>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is `{ from: URL, to: URL }`
