@@ -90,20 +90,18 @@ declare module '$app/stores' {
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
-		url: Readable<URL>;
 		page: Readable<{
+			url: URL;
 			params: Record<string, string>;
 		}>;
 		session: Writable<Session>;
 	};
-	/**
-	 * A readable store whose value contains the current URL.
-	 */
 	export const url: Readable<URL>;
 	/**
 	 * A readable store whose value contains page data.
 	 */
 	export const page: Readable<{
+		url: URL;
 		params: Record<string, string>;
 	}>;
 	/**
