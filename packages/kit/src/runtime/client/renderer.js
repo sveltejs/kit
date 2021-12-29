@@ -544,6 +544,12 @@ export class Renderer {
 					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
+				},
+
+				// TODO remove this for 1.0
+				// @ts-expect-error
+				get page() {
+					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
 				}
 			};
 

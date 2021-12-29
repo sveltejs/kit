@@ -43,6 +43,23 @@ export async function respond(incoming, options, state = {}) {
 		locals: {}
 	};
 
+	// TODO remove this for 1.0
+	/**
+	 * @param {string} property
+	 * @param {string} replacement
+	 */
+	function deprecate(property, replacement) {
+		Object.defineProperty(request, property, {
+			get: () => {
+				throw new Error(`request.${property} has been replaced by request.url.${replacement}`);
+			}
+		});
+	}
+
+	deprecate('origin', 'origin');
+	deprecate('path', 'pathname');
+	deprecate('query', 'searchParams');
+
 	try {
 		return await options.hooks.handle({
 			request,
