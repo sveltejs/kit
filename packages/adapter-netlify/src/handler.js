@@ -7,18 +7,15 @@ export function init(manifest) {
 	const app = new App(manifest);
 
 	return async (event) => {
-		const { path, httpMethod, headers, rawQuery, body, isBase64Encoded } = event;
-
-		const query = new URLSearchParams(rawQuery);
+		const { httpMethod, headers, rawUrl, body, isBase64Encoded } = event;
 
 		const encoding = isBase64Encoded ? 'base64' : headers['content-encoding'] || 'utf-8';
 		const rawBody = typeof body === 'string' ? Buffer.from(body, encoding) : body;
 
 		const rendered = await app.render({
+			url: rawUrl,
 			method: httpMethod,
 			headers,
-			path,
-			query,
 			rawBody
 		});
 

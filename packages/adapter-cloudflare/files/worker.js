@@ -33,8 +33,7 @@ export default {
 		// dynamically-generated pages
 		try {
 			const rendered = await app.render({
-				path: url.pathname,
-				query: url.searchParams,
+				url,
 				rawBody: new Uint8Array(await req.arrayBuffer()),
 				headers: Object.fromEntries(req.headers),
 				method: req.method

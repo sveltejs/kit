@@ -88,6 +88,11 @@ export class App {
 	render(request, {
 		prerender
 	} = {}) {
+		// TODO remove this for 1.0
+		if (Object.keys(request).sort().join() !== 'headers,method,rawBody,url') {
+			throw new Error('Adapters should call app.render({ url, method, headers, rawBody })');
+		}
+
 		const host = ${
 			config.kit.host
 				? s(config.kit.host)
