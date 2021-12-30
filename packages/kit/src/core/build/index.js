@@ -19,7 +19,7 @@ import { find_deps } from './utils.js';
  * }} [opts]
  * @returns {Promise<import('types/internal').BuildData>}
  */
-export async function build(config, { cwd = process.cwd(), runtime = '@sveltejs/kit/ssr' } = {}) {
+export async function build(config, { cwd = process.cwd(), runtime = './kit.js' } = {}) {
 	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
 
 	rimraf(build_dir);

@@ -2,6 +2,7 @@
 /node_modules
 /dist
 /assets/runtime
+/assets/kit.js
 /client/**/*.d.ts
 /test/**/.svelte-kit
 /test/**/build
