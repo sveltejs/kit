@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.34
+
+### Patch Changes
+
+- Revert to v1 filesystem API ([#3149](https://github.com/sveltejs/kit/pull/3149))
+
 ## 1.0.0-next.33
 
 ### Patch Changes
