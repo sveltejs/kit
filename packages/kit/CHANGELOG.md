@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.209
+
+### Patch Changes
+
+- Bundle SSR renderer with app ([#3144](https://github.com/sveltejs/kit/pull/3144))
+
 ## 1.0.0-next.208
 
 ### Patch Changes
