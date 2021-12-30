@@ -401,14 +401,6 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 	const server = await vite.createServer(merged_config);
 	await server.listen(port);
 
-	process.on('exit', () => {
-		if (server) {
-			server.close();
-		} else {
-			throw new Error('Cannot close server before it is initialized');
-		}
-	});
-
 	const address_info = /** @type {import('net').AddressInfo} */ (
 		/** @type {import('http').Server} */ (server.httpServer).address()
 	);
