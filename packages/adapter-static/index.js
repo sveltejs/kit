@@ -11,14 +11,14 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 	return {
 		name: '@sveltejs/adapter-static',
 
-		async adapt(builder) {
-			builder.rimraf(assets);
-			builder.rimraf(pages);
+		async adapt({ utils }) {
+			utils.rimraf(assets);
+			utils.rimraf(pages);
 
-			builder.writeStatic(assets);
-			builder.writeClient(assets);
+			utils.writeStatic(assets);
+			utils.writeClient(assets);
 
-			await builder.prerender({
+			await utils.prerender({
 				fallback,
 				all: !fallback,
 				dest: pages
@@ -26,13 +26,13 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 
 			if (precompress) {
 				if (pages === assets) {
-					builder.log.minor('Compressing assets and pages');
+					utils.log.minor('Compressing assets and pages');
 					await compress(assets);
 				} else {
-					builder.log.minor('Compressing assets');
+					utils.log.minor('Compressing assets');
 					await compress(assets);
 
-					builder.log.minor('Compressing pages');
+					utils.log.minor('Compressing pages');
 					await compress(pages);
 				}
 			}
