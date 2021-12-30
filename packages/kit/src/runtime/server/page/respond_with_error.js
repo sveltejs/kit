@@ -23,12 +23,8 @@ export async function respond_with_error({ request, options, state, $session, st
 	const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 	const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-	const page = {
-		origin: request.origin,
-		path: request.path,
-		query: request.query,
-		params: {}
-	};
+	/** @type {Record<string, string>} */
+	const params = {}; // error page has no params
 
 	// error pages don't fall through, so we know it's not undefined
 	const loaded = /** @type {Loaded} */ (
@@ -37,7 +33,8 @@ export async function respond_with_error({ request, options, state, $session, st
 			options,
 			state,
 			route: null,
-			page,
+			url: request.url, // TODO this is redundant, no?
+			params,
 			node: default_layout,
 			$session,
 			stuff: {},
@@ -55,7 +52,8 @@ export async function respond_with_error({ request, options, state, $session, st
 				options,
 				state,
 				route: null,
-				page,
+				url: request.url,
+				params,
 				node: default_error,
 				$session,
 				stuff: loaded ? loaded.stuff : {},
@@ -80,7 +78,8 @@ export async function respond_with_error({ request, options, state, $session, st
 			status,
 			error,
 			branch,
-			page
+			url: request.url,
+			params
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

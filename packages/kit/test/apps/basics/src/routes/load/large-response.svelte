@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch }) {
-		const res = await fetch(`http://localhost:${page.query.get('port')}/large-response.json`);
+	export async function load({ url, fetch }) {
+		const res = await fetch(`http://localhost:${url.searchParams.get('port')}/large-response.json`);
 		const text = await res.text();
 
 		return {

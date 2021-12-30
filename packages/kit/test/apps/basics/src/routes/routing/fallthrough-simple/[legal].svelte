@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import("@sveltejs/kit").Load} */
-	export const load = ({ page }) => {
-		if (page.path === '/valid') {
+	export const load = ({ url }) => {
+		if (url.pathname === '/valid') {
 			return {
 				props: {}
 			};

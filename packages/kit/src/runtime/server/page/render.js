@@ -15,7 +15,8 @@ import { s } from '../../../utils/misc.js';
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   page?: import('types/page').Page
+ *   url: URL;
+ *   params: Record<string, string>
  * }} opts
  */
 export async function render_response({
@@ -25,7 +26,8 @@ export async function render_response({
 	page_config,
 	status,
 	error,
-	page
+	url,
+	params
 }) {
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
@@ -66,9 +68,28 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page,
+			page: { url, params },
 			components: branch.map(({ node }) => node.module.default)
 		};
+
+		if (options.dev) {
+			// TODO remove this for 1.0
+			/**
+			 * @param {string} property
+			 * @param {string} replacement
+			 */
+			const print_error = (property, replacement) => {
+				Object.defineProperty(props.page, property, {
+					get: () => {
+						throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+					}
+				});
+			};
+
+			print_error('origin', 'origin');
+			print_error('path', 'pathname');
+			print_error('query', 'searchParams');
+		}
 
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
@@ -128,7 +149,6 @@ export async function render_response({
 				session: ${try_serialize($session, (error) => {
 					throw new Error(`Failed to serialize session data: ${error.message}`);
 				})},
-				origin: ${page && page.origin ? s(page.origin) : 'location.origin'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
@@ -140,16 +160,8 @@ export async function render_response({
 						.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
-					page: {
-						origin: ${page && page.origin ? s(page.origin) : 'location.origin'}, // TODO this is redundant
-						path: ${page && page.path ? try_serialize(page.path, error => {
-							throw new Error(`Failed to serialize page.path: ${error.message}`);
-						}) : null},
-						query: new URLSearchParams(${page && page.query ? s(page.query.toString()) : ''}),
-						params: ${page && page.params ? try_serialize(page.params, error => {
-							throw new Error(`Failed to serialize page.params: ${error.message}`);
-						}) : null}
-					}
+					url: new URL(${s(url.href)}),
+					params: ${devalue(params)}
 				}` : 'null'}
 			});
 		</script>`;

@@ -1,9 +1,9 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export function load({ page }) {
+	export function load({ url }) {
 		return {
 			props: {
-				path: page.path
+				path: url.pathname
 			}
 		};
 	}
@@ -18,4 +18,4 @@
 
 <h1>static</h1>
 <h2>{path}</h2>
-<h3>{$page.path}</h3>
+<h3>{$page.url.pathname}</h3>

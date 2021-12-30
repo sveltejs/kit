@@ -15,10 +15,10 @@
 	}
 
 	/** @type {import('@sveltejs/kit').Load} */
-	export function load({ page }) {
+	export function load({ url }) {
 		return {
 			props: {
-				values: to_pojo(page.query)
+				values: to_pojo(url.searchParams)
 			}
 		};
 	}
@@ -32,5 +32,4 @@
 </script>
 
 <pre id="one">{JSON.stringify(values)}</pre>
-<pre id="two">{JSON.stringify(to_pojo($page.query))}</pre>
-
+<pre id="two">{JSON.stringify(to_pojo($page.url.searchParams))}</pre>

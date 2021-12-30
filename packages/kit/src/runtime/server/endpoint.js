@@ -48,10 +48,13 @@ export async function render_endpoint(request, route, match) {
 		return;
 	}
 
-	const params = route.params ? decode_params(route.params(match)) : {};
+	// we're mutating `request` so that we don't have to do { ...request, params }
+	// on the next line, since that breaks the getters that replace path, query and
+	// origin. We could revert that once we remove the getters
+	request.params = route.params ? decode_params(route.params(match)) : {};
 
-	const response = await handler({ ...request, params });
-	const preface = `Invalid response from route ${request.path}`;
+	const response = await handler(request);
+	const preface = `Invalid response from route ${request.url.pathname}`;
 
 	if (!response) {
 		return;

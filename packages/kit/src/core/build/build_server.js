@@ -101,7 +101,7 @@ export class App {
 				: 'default_protocol'
 		};
 
-		return respond({ ...request, origin: protocol + '://' + host }, this.options, { prerender });
+		return respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
 	}
 }
 `;

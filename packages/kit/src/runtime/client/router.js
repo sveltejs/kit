@@ -190,15 +190,14 @@ export class Router {
 	 */
 	parse(url) {
 		if (this.owns(url)) {
-			const path = url.pathname.slice(this.base.length) || '/';
+			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
-			const decoded_path = decodeURI(path);
-			const routes = this.routes.filter(([pattern]) => pattern.test(decoded_path));
-
-			const query = new URLSearchParams(url.search);
-			const id = `${path}?${query}`;
-
-			return { id, routes, path, decoded_path, query };
+			return {
+				id: url.pathname + url.search,
+				routes: this.routes.filter(([pattern]) => pattern.test(path)),
+				url,
+				path
+			};
 		}
 	}
 
@@ -268,21 +267,17 @@ export class Router {
 		}
 		this.navigating++;
 
-		// remove trailing slashes
-		if (info.path !== '/') {
-			const has_trailing_slash = info.path.endsWith('/');
+		let { pathname } = url;
 
-			const incorrect =
-				(has_trailing_slash && this.trailing_slash === 'never') ||
-				(!has_trailing_slash &&
-					this.trailing_slash === 'always' &&
-					!(info.path.split('/').pop() || '').includes('.'));
-
-			if (incorrect) {
-				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
-				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
-			}
+		if (this.trailing_slash === 'never') {
+			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+		} else if (this.trailing_slash === 'always') {
+			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
+			if (!is_file && !pathname.endsWith('/')) pathname += '/';
 		}
+
+		info.url = new URL(url.origin + pathname + url.search + url.hash);
+		history.replaceState({}, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
