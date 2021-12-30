@@ -69,15 +69,15 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 
 	const get_manifest = () => {
 		const manifest_data = create_manifest_data({
-			config: config,
+			config,
 			output: dir,
-			cwd: cwd
+			cwd
 		});
 
 		create_app({
 			manifest_data,
 			output: dir,
-			cwd: cwd
+			cwd
 		});
 
 		/** @type {import('types/app').SSRManifest} */
@@ -405,7 +405,7 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 		if (server) {
 			server.close();
 		} else {
-			throw new Error(`Cannot close server before it is initialized`);
+			throw new Error('Cannot close server before it is initialized');
 		}
 	});
 
