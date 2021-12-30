@@ -57,10 +57,9 @@ const ssr = async (req, res) => {
 	}
 
 	const rendered = await app.render({
+		url: req.url,
 		method: req.method,
 		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-		path: parsed.pathname,
-		query: parsed.searchParams,
 		rawBody: body
 	});
 

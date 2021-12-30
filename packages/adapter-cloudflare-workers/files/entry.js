@@ -26,12 +26,10 @@ async function handle(event) {
 
 	// fall back to an app route
 	const request = event.request;
-	const request_url = new URL(request.url);
 
 	try {
 		const rendered = await app.render({
-			path: request_url.pathname,
-			query: request_url.searchParams,
+			url: request.url,
 			rawBody: await read(request),
 			headers: Object.fromEntries(request.headers),
 			method: request.method
