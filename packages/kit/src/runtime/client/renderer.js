@@ -445,24 +445,22 @@ export class Renderer {
 		if (!this.current.url || url.href !== this.current.url.href) {
 			result.props.page = { url, params };
 
-			if (import.meta.env.DEV) {
-				// TODO remove this for 1.0
-				/**
-				 * @param {string} property
-				 * @param {string} replacement
-				 */
-				const print_error = (property, replacement) => {
-					Object.defineProperty(result.props.page, property, {
-						get: () => {
-							throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
-						}
-					});
-				};
+			// TODO remove this for 1.0
+			/**
+			 * @param {string} property
+			 * @param {string} replacement
+			 */
+			const print_error = (property, replacement) => {
+				Object.defineProperty(result.props.page, property, {
+					get: () => {
+						throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+					}
+				});
+			};
 
-				print_error('origin', 'origin');
-				print_error('path', 'pathname');
-				print_error('query', 'searchParams');
-			}
+			print_error('origin', 'origin');
+			print_error('path', 'pathname');
+			print_error('query', 'searchParams');
 		}
 
 		const leaf = filtered[filtered.length - 1];
