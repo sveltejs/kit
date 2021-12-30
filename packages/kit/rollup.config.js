@@ -44,6 +44,19 @@ export default [
 	},
 
 	{
+		input: 'src/runtime/server/index.js',
+		output: {
+			format: 'esm',
+			file: 'assets/kit.js'
+		},
+		plugins: [
+			resolve({
+				extensions: ['.mjs', '.js', '.ts']
+			})
+		]
+	},
+
+	{
 		input: {
 			cli: 'src/cli.js',
 			ssr: 'src/runtime/server/index.js',
