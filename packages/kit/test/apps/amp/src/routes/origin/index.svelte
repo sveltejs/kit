@@ -1,12 +1,12 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch }) {
+	export async function load({ url, fetch }) {
 		const res = await fetch('/origin.json');
 		const data = await res.json();
 
 		return {
 			props: {
-				origin: page.origin,
+				origin: url.origin,
 				data
 			}
 		};
@@ -24,5 +24,5 @@
 </script>
 
 <p data-source="load">{origin}</p>
-<p data-source="store">{$page.origin}</p>
+<p data-source="store">{$page.url.origin}</p>
 <p data-source="endpoint">{data.origin}</p>

@@ -54,10 +54,10 @@ Because of that, the stores are not free-floating objects: they must be accessed
 
 - `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. This needs to be called at the top-level or synchronously during component or page initialisation.
 
-The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
+The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
-- `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` both mirror the `page` store value. When navigating finishes, its value reverts to `null`.
-- `page` is a readable store whose value reflects the object passed to `load` functions — it contains `origin`, `path`, `params` and `query`. See the [`page` section](#loading-input-page) above for more details.
+- `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
+- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL) and [`params`](#loading-input-params).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib

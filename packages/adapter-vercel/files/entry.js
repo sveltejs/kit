@@ -8,8 +8,6 @@ __fetch_polyfill();
 const app = new App(manifest);
 
 export default async (req, res) => {
-	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
-
 	let body;
 
 	try {
@@ -20,10 +18,9 @@ export default async (req, res) => {
 	}
 
 	const rendered = await app.render({
+		url: req.url,
 		method: req.method,
 		headers: req.headers,
-		path: pathname,
-		query: searchParams,
 		rawBody: body
 	});
 

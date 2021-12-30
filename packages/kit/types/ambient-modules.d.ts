@@ -82,8 +82,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
-	type Navigating = { from: Page; to: Page };
+	type Navigating = { from: URL; to: URL };
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
@@ -91,16 +90,23 @@ declare module '$app/stores' {
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
-		page: Readable<Page>;
+		page: Readable<{
+			url: URL;
+			params: Record<string, string>;
+		}>;
 		session: Writable<Session>;
 	};
+	export const url: Readable<URL>;
 	/**
-	 * A readable store whose value reflects the object passed to load functions.
+	 * A readable store whose value contains page data.
 	 */
-	export const page: Readable<Page>;
+	export const page: Readable<{
+		url: URL;
+		params: Record<string, string>;
+	}>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
+	 * When navigating starts, its value is `{ from: URL, to: URL }`
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigating | null>;
@@ -161,7 +167,7 @@ declare module '@sveltejs/kit/ssr' {
 	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
 
 	export interface Respond {
-		(incoming: IncomingRequest & { origin: string }, options: Options, state?: State): Promise<
+		(incoming: IncomingRequest & { url: URL }, options: Options, state?: State): Promise<
 			Response | undefined
 		>;
 	}

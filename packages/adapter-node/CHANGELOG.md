@@ -1,5 +1,15 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+- Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
 ## 1.0.0-next.56
 
 ### Patch Changes

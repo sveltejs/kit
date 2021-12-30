@@ -90,15 +90,12 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const parsed = new URL(initial_url, 'http://localhost/');
-
 			const rendered =
-				parsed.pathname.startsWith(config.kit.paths.base) &&
+				initial_url.startsWith(config.kit.paths.base) &&
 				(await app.render({
+					url: initial_url,
 					method: req.method,
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					path: parsed.pathname.replace(config.kit.paths.base, ''),
-					query: parsed.searchParams,
 					rawBody: body
 				}));
 

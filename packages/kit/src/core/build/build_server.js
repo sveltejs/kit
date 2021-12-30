@@ -88,6 +88,11 @@ export class App {
 	render(request, {
 		prerender
 	} = {}) {
+		// TODO remove this for 1.0
+		if (Object.keys(request).sort().join() !== 'headers,method,rawBody,url') {
+			throw new Error('Adapters should call app.render({ url, method, headers, rawBody })');
+		}
+
 		const host = ${
 			config.kit.host
 				? s(config.kit.host)
@@ -101,7 +106,7 @@ export class App {
 				: 'default_protocol'
 		};
 
-		return respond({ ...request, origin: protocol + '://' + host }, this.options, { prerender });
+		return respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
 	}
 }
 `;

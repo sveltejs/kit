@@ -109,7 +109,7 @@ Permissions-Policy: interest-cohort=()
 
 ### headers
 
-The [`page.origin`] property is derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
+The current page or endpoint's `url` is, in some environments, derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
 
 If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
 

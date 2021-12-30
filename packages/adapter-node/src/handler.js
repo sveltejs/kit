@@ -39,14 +39,6 @@ const serve_prerendered = sirv(path.join(__dirname, '/prerendered'), {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	let parsed;
-	try {
-		parsed = new URL(req.url || '', 'http://localhost');
-	} catch (e) {
-		res.statusCode = 400;
-		return res.end('Invalid URL');
-	}
-
 	let body;
 
 	try {
@@ -57,10 +49,9 @@ const ssr = async (req, res) => {
 	}
 
 	const rendered = await app.render({
+		url: req.url,
 		method: req.method,
 		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-		path: parsed.pathname,
-		query: parsed.searchParams,
 		rawBody: body
 	});
 
