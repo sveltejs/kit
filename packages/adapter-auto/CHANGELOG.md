@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.6
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Updated dependencies [[`ecb423b5`](https://github.com/sveltejs/kit/commit/ecb423b54d459be8c0693c723799be4171369afd), [`ecb423b5`](https://github.com/sveltejs/kit/commit/ecb423b54d459be8c0693c723799be4171369afd), [`c096899f`](https://github.com/sveltejs/kit/commit/c096899f12c96de34811b6f9ebfc1601d39daa2e), [`ecb423b5`](https://github.com/sveltejs/kit/commit/ecb423b54d459be8c0693c723799be4171369afd), [`ecb423b5`](https://github.com/sveltejs/kit/commit/ecb423b54d459be8c0693c723799be4171369afd)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.5
+  - @sveltejs/adapter-netlify@1.0.0-next.37
+  - @sveltejs/adapter-vercel@1.0.0-next.33
+
 ## 1.0.0-next.5
 
 ### Patch Changes
