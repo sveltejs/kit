@@ -91,8 +91,25 @@ prog
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const settings = await dev({ port, host, https, open, config });
-			welcome(settings);
+			const cwd = process.cwd();
+
+			const { address_info, server_config, allow } = await dev({
+				cwd,
+				port,
+				host,
+				https,
+				config
+			});
+
+			welcome({
+				port: address_info.port,
+				host: address_info.address,
+				https: !!(https || server_config?.https),
+				open: open || !!server_config?.open,
+				loose: server_config?.fs?.strict === false,
+				allow,
+				cwd
+			});
 		} catch (error) {
 			handle_error(error);
 		}

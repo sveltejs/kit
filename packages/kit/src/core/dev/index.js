@@ -21,17 +21,16 @@ import { copy_assets, get_mime_lookup, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @typedef {{
- *    cwd?: string,
+ *   cwd: string,
  *   port: number,
  *   host?: string,
  *   https: boolean,
- *   open: boolean,
  *   config: import('types/config').ValidatedConfig
  * }} Options */
 /** @typedef {import('types/internal').SSRComponent} SSRComponent */
 
 /** @param {Options} opts */
-export async function dev({ cwd = process.cwd(), port, host, https, open, config }) {
+export async function dev({ cwd, port, host, https, config }) {
 	__fetch_polyfill();
 
 	const dir = path.resolve(cwd, `${SVELTE_KIT}/dev`);
@@ -371,7 +370,7 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 			kit_plugin
 		],
 		publicDir: config.kit.files.assets,
-		base: config.kit.paths.assets.startsWith('/') ? `${config.kit.paths.assets}/` : '/'
+		base: '/'
 	});
 
 	print_config_conflicts(conflicts, 'kit.vite.');
@@ -381,7 +380,8 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 	if (host) {
 		merged_config.server.host = host;
 	}
-	// https is already enabled then do nothing. it could be an object and we
+
+	// if https is already enabled then do nothing. it could be an object and we
 	// don't want to overwrite with a boolean
 	if (https && !merged_config.server.https) {
 		merged_config.server.https = https;
@@ -399,11 +399,8 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 	);
 
 	return {
-		port: address_info.port,
-		host: address_info.address,
-		https: !!(https || vite_config.server?.https),
-		open: open || !!vite_config.server?.open,
-		loose: vite_config.server?.fs?.strict === false,
+		address_info,
+		server_config: vite_config.server,
 		allow,
 		cwd
 	};
