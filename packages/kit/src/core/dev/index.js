@@ -5,7 +5,6 @@ import { URL } from 'url';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import amp_validator from 'amphtml-validator';
-import CheapWatch from 'cheap-watch';
 import colors from 'kleur';
 import vite from 'vite';
 
@@ -65,31 +64,9 @@ class Watcher extends EventEmitter {
 		copy_assets(this.dir);
 		process.env.VITE_SVELTEKIT_AMP = this.config.kit.amp ? 'true' : '';
 
-		await this.init_filewatcher();
-		this.update();
-
 		await this.init_server();
 
 		return this;
-	}
-
-	async init_filewatcher() {
-		this.cheapwatch = new CheapWatch({
-			dir: this.config.kit.files.routes,
-			/** @type {({ path }: { path: string }) => boolean} */
-			filter: ({ path }) => path.split('/').every((part) => part[0] !== '_' || part[1] === '_')
-		});
-
-		await this.cheapwatch.init();
-
-		// not sure why TS doesn't understand that CheapWatch extends EventEmitter
-		this.cheapwatch.on('+', ({ isNew }) => {
-			if (isNew) this.update();
-		});
-
-		this.cheapwatch.on('-', () => {
-			this.update();
-		});
 	}
 
 	allowed_directories() {
@@ -107,8 +84,6 @@ class Watcher extends EventEmitter {
 	}
 
 	async init_server() {
-		if (!this.manifest) throw new Error('Must call init() before init_server()');
-
 		/** @type {import('vite').UserConfig} */
 		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
@@ -125,11 +100,100 @@ class Watcher extends EventEmitter {
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
 		const kit_plugin = await create_plugin(this.config, this.dir, this.https, () => {
-			if (!this.manifest) {
-				throw new Error('Manifest is not available');
-			}
+			const manifest_data = create_manifest_data({
+				config: this.config,
+				output: this.dir,
+				cwd: this.cwd
+			});
 
-			return this.manifest;
+			create_app({
+				manifest_data,
+				output: this.dir,
+				cwd: this.cwd
+			});
+
+			/** @type {import('types/app').SSRManifest} */
+			const manifest = {
+				appDir: this.config.kit.appDir,
+				assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+				_: {
+					mime: get_mime_lookup(manifest_data),
+					entry: {
+						file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+						css: [],
+						js: []
+					},
+					nodes: manifest_data.components.map((id) => {
+						return async () => {
+							const url = `/${id}`;
+
+							if (!this.vite) throw new Error('Vite server has not been initialized');
+
+							const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
+							const node = await this.vite.moduleGraph.getModuleByUrl(url);
+
+							if (!node) throw new Error(`Could not find node for ${url}`);
+
+							const deps = new Set();
+							find_deps(node, deps);
+
+							const styles = new Set();
+
+							for (const dep of deps) {
+								const parsed = new URL(dep.url, 'http://localhost/');
+								const query = parsed.searchParams;
+
+								// TODO what about .scss files, etc?
+								if (
+									dep.file.endsWith('.css') ||
+									(query.has('svelte') && query.get('type') === 'style')
+								) {
+									try {
+										const mod = await this.vite.ssrLoadModule(dep.url);
+										styles.add(mod.default);
+									} catch {
+										// this can happen with dynamically imported modules, I think
+										// because the Vite module graph doesn't distinguish between
+										// static and dynamic imports? TODO investigate, submit fix
+									}
+								}
+							}
+
+							return {
+								module,
+								entry: url.endsWith('.svelte') ? url : url + '?import',
+								css: [],
+								js: [],
+								styles: Array.from(styles)
+							};
+						};
+					}),
+					routes: manifest_data.routes.map((route) => {
+						if (route.type === 'page') {
+							return {
+								type: 'page',
+								pattern: route.pattern,
+								params: get_params(route.params),
+								a: route.a.map((id) => manifest_data.components.indexOf(id)),
+								b: route.b.map((id) => manifest_data.components.indexOf(id))
+							};
+						}
+
+						return {
+							type: 'endpoint',
+							pattern: route.pattern,
+							params: get_params(route.params),
+							load: async () => {
+								if (!this.vite) throw new Error('Vite server has not been initialized');
+								const url = path.resolve(this.cwd, route.file);
+								return await this.vite.ssrLoadModule(url);
+							}
+						};
+					})
+				}
+			};
+
+			return manifest;
 		});
 
 		/** @type {[any, string[]]} */
@@ -183,103 +247,8 @@ class Watcher extends EventEmitter {
 		await this.vite.listen(this.port);
 	}
 
-	update() {
-		const manifest_data = create_manifest_data({
-			config: this.config,
-			output: this.dir,
-			cwd: this.cwd
-		});
-
-		create_app({
-			manifest_data,
-			output: this.dir,
-			cwd: this.cwd
-		});
-
-		/** @type {import('types/app').SSRManifest} */
-		this.manifest = {
-			appDir: this.config.kit.appDir,
-			assets: new Set(manifest_data.assets.map((asset) => asset.file)),
-			_: {
-				mime: get_mime_lookup(manifest_data),
-				entry: {
-					file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
-					css: [],
-					js: []
-				},
-				nodes: manifest_data.components.map((id) => {
-					return async () => {
-						const url = `/${id}`;
-
-						if (!this.vite) throw new Error('Vite server has not been initialized');
-
-						const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
-						const node = await this.vite.moduleGraph.getModuleByUrl(url);
-
-						if (!node) throw new Error(`Could not find node for ${url}`);
-
-						const deps = new Set();
-						find_deps(node, deps);
-
-						const styles = new Set();
-
-						for (const dep of deps) {
-							const parsed = new URL(dep.url, 'http://localhost/');
-							const query = parsed.searchParams;
-
-							// TODO what about .scss files, etc?
-							if (
-								dep.file.endsWith('.css') ||
-								(query.has('svelte') && query.get('type') === 'style')
-							) {
-								try {
-									const mod = await this.vite.ssrLoadModule(dep.url);
-									styles.add(mod.default);
-								} catch {
-									// this can happen with dynamically imported modules, I think
-									// because the Vite module graph doesn't distinguish between
-									// static and dynamic imports? TODO investigate, submit fix
-								}
-							}
-						}
-
-						return {
-							module,
-							entry: url.endsWith('.svelte') ? url : url + '?import',
-							css: [],
-							js: [],
-							styles: Array.from(styles)
-						};
-					};
-				}),
-				routes: manifest_data.routes.map((route) => {
-					if (route.type === 'page') {
-						return {
-							type: 'page',
-							pattern: route.pattern,
-							params: get_params(route.params),
-							a: route.a.map((id) => manifest_data.components.indexOf(id)),
-							b: route.b.map((id) => manifest_data.components.indexOf(id))
-						};
-					}
-
-					return {
-						type: 'endpoint',
-						pattern: route.pattern,
-						params: get_params(route.params),
-						load: async () => {
-							if (!this.vite) throw new Error('Vite server has not been initialized');
-							const url = path.resolve(this.cwd, route.file);
-							return await this.vite.ssrLoadModule(url);
-						}
-					};
-				})
-			}
-		};
-	}
-
 	close() {
-		if (!this.vite || !this.cheapwatch) {
+		if (!this.vite) {
 			throw new Error('Cannot close server before it is initialized');
 		}
 
@@ -287,7 +256,6 @@ class Watcher extends EventEmitter {
 		this.closed = true;
 
 		this.vite.close();
-		this.cheapwatch.close();
 	}
 }
 
@@ -330,6 +298,15 @@ async function create_plugin(config, dir, https, get_manifest) {
 	 * @param {vite.ViteDevServer} vite
 	 */
 	function create_kit_middleware(vite) {
+		let manifest = get_manifest();
+
+		const update = () => {
+			manifest = get_manifest();
+		};
+
+		vite.watcher.on('add', update);
+		vite.watcher.on('remove', update);
+
 		/**
 		 * Use a named function for debugging
 		 * @type {import('connect').NextHandleFunction}
@@ -416,7 +393,7 @@ async function create_plugin(config, dir, https, get_manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
-						manifest: get_manifest(),
+						manifest,
 						paths: {
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
