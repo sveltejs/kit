@@ -1,6 +1,6 @@
 # adapter-cloudflare
 
-[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on Cloudflare Pages with Workers integration.
+[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on Cloudflare Pages with Workers integration ([Pages Functions](https://developers.cloudflare.com/pages/platform/functions)).
 
 _**Comparisons**_
 
