@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.58
+
+### Patch Changes
+
+- [fix] only add handlers for directories that exist ([#3148](https://github.com/sveltejs/kit/pull/3148))
+
 ## 1.0.0-next.57
 
 ### Patch Changes
