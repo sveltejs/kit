@@ -72,24 +72,22 @@ export async function render_response({
 			components: branch.map(({ node }) => node.module.default)
 		};
 
-		if (options.dev) {
-			// TODO remove this for 1.0
-			/**
-			 * @param {string} property
-			 * @param {string} replacement
-			 */
-			const print_error = (property, replacement) => {
-				Object.defineProperty(props.page, property, {
-					get: () => {
-						throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
-					}
-				});
-			};
+		// TODO remove this for 1.0
+		/**
+		 * @param {string} property
+		 * @param {string} replacement
+		 */
+		const print_error = (property, replacement) => {
+			Object.defineProperty(props.page, property, {
+				get: () => {
+					throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+				}
+			});
+		};
 
-			print_error('origin', 'origin');
-			print_error('path', 'pathname');
-			print_error('query', 'searchParams');
-		}
+		print_error('origin', 'origin');
+		print_error('path', 'pathname');
+		print_error('query', 'searchParams');
 
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
