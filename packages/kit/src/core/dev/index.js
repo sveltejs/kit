@@ -55,7 +55,11 @@ class Watcher extends EventEmitter {
 		this.vite;
 
 		process.on('exit', () => {
-			this.close();
+			if (this.vite) {
+				this.vite.close();
+			} else {
+				throw new Error(`Cannot close server before it is initialized`);
+			}
 		});
 	}
 
@@ -79,7 +83,9 @@ class Watcher extends EventEmitter {
 		// don't warn on overriding defaults
 		const [modified_vite_config] = deep_merge(default_config, vite_config);
 
-		const kit_plugin = await create_plugin(this.config, this.dir, this.https, () => {
+		const { config, dir, https } = this;
+
+		const get_manifest = () => {
 			const manifest_data = create_manifest_data({
 				config: this.config,
 				output: this.dir,
@@ -174,7 +180,195 @@ class Watcher extends EventEmitter {
 			};
 
 			return manifest;
-		});
+		};
+
+		const validator = this.config.kit.amp ? await amp_validator.getInstance() : null;
+
+		const kit_plugin = {
+			name: 'vite-plugin-svelte-kit',
+			/**
+			 * @param {import('vite').ViteDevServer} vite
+			 */
+			configureServer(vite) {
+				return () => {
+					remove_html_middlewares(vite.middlewares);
+
+					let manifest = get_manifest();
+
+					const update = () => {
+						manifest = get_manifest();
+					};
+
+					vite.watcher.on('add', update);
+					vite.watcher.on('remove', update);
+
+					vite.middlewares.use(async (req, res) => {
+						try {
+							if (!req.url || !req.method) throw new Error('Incomplete request');
+							if (req.url === '/favicon.ico') return not_found(res);
+
+							const parsed = new URL(req.url, 'http://localhost/');
+							if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
+
+							/** @type {Partial<import('types/internal').Hooks>} */
+							const user_hooks = resolve_entry(config.kit.files.hooks)
+								? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
+								: {};
+
+							/** @type {import('types/internal').Hooks} */
+							const hooks = {
+								getSession: user_hooks.getSession || (() => ({})),
+								handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+								handleError:
+									user_hooks.handleError ||
+									(({ /** @type {Error & { frame?: string }} */ error }) => {
+										console.error(colors.bold().red(error.message));
+										if (error.frame) {
+											console.error(colors.gray(error.frame));
+										}
+										if (error.stack) {
+											console.error(colors.gray(error.stack));
+										}
+									}),
+								externalFetch: user_hooks.externalFetch || fetch
+							};
+
+							if (/** @type {any} */ (hooks).getContext) {
+								// TODO remove this for 1.0
+								throw new Error(
+									'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
+								);
+							}
+
+							if (/** @type {any} */ (hooks).serverFetch) {
+								// TODO remove this for 1.0
+								throw new Error('The serverFetch hook has been renamed to externalFetch.');
+							}
+
+							const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
+
+							const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+
+							paths.set_paths({
+								base: config.kit.paths.base,
+								assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+							});
+
+							let body;
+
+							try {
+								body = await getRawBody(req);
+							} catch (/** @type {any} */ err) {
+								res.statusCode = err.status || 400;
+								return res.end(err.reason || 'Invalid request body');
+							}
+
+							const rendered = await respond(
+								{
+									url: new URL(`${https ? 'https' : 'http'}://${req.headers.host}${req.url}`),
+									headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
+									method: req.method,
+									rawBody: body
+								},
+								{
+									amp: config.kit.amp,
+									dev: true,
+									floc: config.kit.floc,
+									get_stack: (error) => {
+										vite.ssrFixStacktrace(error);
+										return error.stack;
+									},
+									handle_error: (error, request) => {
+										vite.ssrFixStacktrace(error);
+										hooks.handleError({ error, request });
+									},
+									hooks,
+									hydrate: config.kit.hydrate,
+									manifest,
+									paths: {
+										base: config.kit.paths.base,
+										assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+									},
+									prefix: '',
+									prerender: config.kit.prerender.enabled,
+									read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+									root,
+									router: config.kit.router,
+									ssr: config.kit.ssr,
+									target: config.kit.target,
+									template: ({ head, body }) => {
+										let rendered = fs
+											.readFileSync(config.kit.files.template, 'utf8')
+											.replace('%svelte.head%', () => head)
+											.replace('%svelte.body%', () => body);
+
+										if (config.kit.amp && validator) {
+											const result = validator.validateString(rendered);
+
+											if (result.status !== 'PASS') {
+												const lines = rendered.split('\n');
+
+												/** @param {string} str */
+												const escape = (str) =>
+													str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+												rendered = `<!doctype html>
+											<head>
+												<meta charset="utf-8" />
+												<meta name="viewport" content="width=device-width, initial-scale=1" />
+												<style>
+													body {
+														font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+														color: #333;
+													}
+
+													pre {
+														background: #f4f4f4;
+														padding: 1em;
+														overflow-x: auto;
+													}
+												</style>
+											</head>
+											<h1>AMP validation failed</h1>
+
+											${result.errors
+												.map(
+													(error) => `
+												<h2>${error.severity}</h2>
+												<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
+														error.code
+													}</a>)</p>
+												<pre>${escape(lines[error.line - 1])}</pre>
+											`
+												)
+												.join('\n\n')}
+										`;
+											}
+										}
+
+										return rendered;
+									},
+									trailing_slash: config.kit.trailingSlash
+								}
+							);
+
+							if (rendered) {
+								res.writeHead(rendered.status, rendered.headers);
+								if (rendered.body) res.write(rendered.body);
+								res.end();
+							} else {
+								not_found(res);
+							}
+						} catch (e) {
+							const error = coalesce_to_error(e);
+							vite.ssrFixStacktrace(error);
+							res.statusCode = 500;
+							res.end(error.stack);
+						}
+					});
+				};
+			}
+		};
 
 		/** @type {[any, string[]]} */
 		const [merged_config, conflicts] = deep_merge(modified_vite_config, {
@@ -242,17 +436,6 @@ class Watcher extends EventEmitter {
 			])
 		];
 	}
-
-	close() {
-		if (!this.vite) {
-			throw new Error('Cannot close server before it is initialized');
-		}
-
-		if (this.closed) return;
-		this.closed = true;
-
-		this.vite.close();
-	}
 }
 
 /** @param {string[]} array */
@@ -276,205 +459,6 @@ function get_params(array) {
 	};
 
 	return fn;
-}
-
-/**
- * @param {import('types/config').ValidatedConfig} config
- * @param {string} dir
- * @param {boolean} https
- * @param {() => import('types/app').SSRManifest} get_manifest
- */
-async function create_plugin(config, dir, https, get_manifest) {
-	/**
-	 * @type {amp_validator.Validator?}
-	 */
-	const validator = config.kit.amp ? await amp_validator.getInstance() : null;
-
-	return {
-		name: 'vite-plugin-svelte-kit',
-		/**
-		 * @param {import('vite').ViteDevServer} vite
-		 */
-		configureServer(vite) {
-			return () => {
-				remove_html_middlewares(vite.middlewares);
-
-				let manifest = get_manifest();
-
-				const update = () => {
-					manifest = get_manifest();
-				};
-
-				vite.watcher.on('add', update);
-				vite.watcher.on('remove', update);
-
-				vite.middlewares.use(async (req, res) => {
-					try {
-						if (!req.url || !req.method) throw new Error('Incomplete request');
-						if (req.url === '/favicon.ico') return not_found(res);
-
-						const parsed = new URL(req.url, 'http://localhost/');
-						if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
-
-						/** @type {Partial<import('types/internal').Hooks>} */
-						const user_hooks = resolve_entry(config.kit.files.hooks)
-							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
-							: {};
-
-						/** @type {import('types/internal').Hooks} */
-						const hooks = {
-							getSession: user_hooks.getSession || (() => ({})),
-							handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
-							handleError:
-								user_hooks.handleError ||
-								(({ /** @type {Error & { frame?: string }} */ error }) => {
-									console.error(colors.bold().red(error.message));
-									if (error.frame) {
-										console.error(colors.gray(error.frame));
-									}
-									if (error.stack) {
-										console.error(colors.gray(error.stack));
-									}
-								}),
-							externalFetch: user_hooks.externalFetch || fetch
-						};
-
-						if (/** @type {any} */ (hooks).getContext) {
-							// TODO remove this for 1.0
-							throw new Error(
-								'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
-							);
-						}
-
-						if (/** @type {any} */ (hooks).serverFetch) {
-							// TODO remove this for 1.0
-							throw new Error('The serverFetch hook has been renamed to externalFetch.');
-						}
-
-						const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
-
-						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
-
-						paths.set_paths({
-							base: config.kit.paths.base,
-							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-						});
-
-						let body;
-
-						try {
-							body = await getRawBody(req);
-						} catch (/** @type {any} */ err) {
-							res.statusCode = err.status || 400;
-							return res.end(err.reason || 'Invalid request body');
-						}
-
-						const rendered = await respond(
-							{
-								url: new URL(`${https ? 'https' : 'http'}://${req.headers.host}${req.url}`),
-								headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-								method: req.method,
-								rawBody: body
-							},
-							{
-								amp: config.kit.amp,
-								dev: true,
-								floc: config.kit.floc,
-								get_stack: (error) => {
-									vite.ssrFixStacktrace(error);
-									return error.stack;
-								},
-								handle_error: (error, request) => {
-									vite.ssrFixStacktrace(error);
-									hooks.handleError({ error, request });
-								},
-								hooks,
-								hydrate: config.kit.hydrate,
-								manifest,
-								paths: {
-									base: config.kit.paths.base,
-									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-								},
-								prefix: '',
-								prerender: config.kit.prerender.enabled,
-								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-								root,
-								router: config.kit.router,
-								ssr: config.kit.ssr,
-								target: config.kit.target,
-								template: ({ head, body }) => {
-									let rendered = fs
-										.readFileSync(config.kit.files.template, 'utf8')
-										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body);
-
-									if (config.kit.amp && validator) {
-										const result = validator.validateString(rendered);
-
-										if (result.status !== 'PASS') {
-											const lines = rendered.split('\n');
-
-											/** @param {string} str */
-											const escape = (str) =>
-												str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-											rendered = `<!doctype html>
-										<head>
-											<meta charset="utf-8" />
-											<meta name="viewport" content="width=device-width, initial-scale=1" />
-											<style>
-												body {
-													font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-													color: #333;
-												}
-
-												pre {
-													background: #f4f4f4;
-													padding: 1em;
-													overflow-x: auto;
-												}
-											</style>
-										</head>
-										<h1>AMP validation failed</h1>
-
-										${result.errors
-											.map(
-												(error) => `
-											<h2>${error.severity}</h2>
-											<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
-													error.code
-												}</a>)</p>
-											<pre>${escape(lines[error.line - 1])}</pre>
-										`
-											)
-											.join('\n\n')}
-									`;
-										}
-									}
-
-									return rendered;
-								},
-								trailing_slash: config.kit.trailingSlash
-							}
-						);
-
-						if (rendered) {
-							res.writeHead(rendered.status, rendered.headers);
-							if (rendered.body) res.write(rendered.body);
-							res.end();
-						} else {
-							not_found(res);
-						}
-					} catch (e) {
-						const error = coalesce_to_error(e);
-						vite.ssrFixStacktrace(error);
-						res.statusCode = 500;
-						res.end(error.stack);
-					}
-				});
-			};
-		}
-	};
 }
 
 /** @param {import('http').ServerResponse} res */
