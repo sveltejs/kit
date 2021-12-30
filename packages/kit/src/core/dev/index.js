@@ -290,134 +290,135 @@ async function create_plugin(config, dir, https, get_manifest) {
 	 */
 	const validator = config.kit.amp ? await amp_validator.getInstance() : null;
 
-	/**
-	 * @param {vite.ViteDevServer} vite
-	 */
-	function create_kit_middleware(vite) {
-		let manifest = get_manifest();
-
-		const update = () => {
-			manifest = get_manifest();
-		};
-
-		vite.watcher.on('add', update);
-		vite.watcher.on('remove', update);
-
+	return {
+		name: 'vite-plugin-svelte-kit',
 		/**
-		 * Use a named function for debugging
-		 * @type {import('connect').NextHandleFunction}
+		 * @param {import('vite').ViteDevServer} vite
 		 */
-		return async function svelteKitMiddleware(req, res) {
-			try {
-				if (!req.url || !req.method) throw new Error('Incomplete request');
-				if (req.url === '/favicon.ico') return not_found(res);
+		configureServer(vite) {
+			return () => {
+				remove_html_middlewares(vite.middlewares);
 
-				const parsed = new URL(req.url, 'http://localhost/');
-				if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
+				let manifest = get_manifest();
 
-				/** @type {Partial<import('types/internal').Hooks>} */
-				const user_hooks = resolve_entry(config.kit.files.hooks)
-					? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
-					: {};
-
-				/** @type {import('types/internal').Hooks} */
-				const hooks = {
-					getSession: user_hooks.getSession || (() => ({})),
-					handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
-					handleError:
-						user_hooks.handleError ||
-						(({ /** @type {Error & { frame?: string }} */ error }) => {
-							console.error(colors.bold().red(error.message));
-							if (error.frame) {
-								console.error(colors.gray(error.frame));
-							}
-							if (error.stack) {
-								console.error(colors.gray(error.stack));
-							}
-						}),
-					externalFetch: user_hooks.externalFetch || fetch
+				const update = () => {
+					manifest = get_manifest();
 				};
 
-				if (/** @type {any} */ (hooks).getContext) {
-					// TODO remove this for 1.0
-					throw new Error(
-						'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
-					);
-				}
+				vite.watcher.on('add', update);
+				vite.watcher.on('remove', update);
 
-				if (/** @type {any} */ (hooks).serverFetch) {
-					// TODO remove this for 1.0
-					throw new Error('The serverFetch hook has been renamed to externalFetch.');
-				}
+				vite.middlewares.use(async (req, res) => {
+					try {
+						if (!req.url || !req.method) throw new Error('Incomplete request');
+						if (req.url === '/favicon.ico') return not_found(res);
 
-				const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
+						const parsed = new URL(req.url, 'http://localhost/');
+						if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
 
-				const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+						/** @type {Partial<import('types/internal').Hooks>} */
+						const user_hooks = resolve_entry(config.kit.files.hooks)
+							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
+							: {};
 
-				paths.set_paths({
-					base: config.kit.paths.base,
-					assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-				});
+						/** @type {import('types/internal').Hooks} */
+						const hooks = {
+							getSession: user_hooks.getSession || (() => ({})),
+							handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+							handleError:
+								user_hooks.handleError ||
+								(({ /** @type {Error & { frame?: string }} */ error }) => {
+									console.error(colors.bold().red(error.message));
+									if (error.frame) {
+										console.error(colors.gray(error.frame));
+									}
+									if (error.stack) {
+										console.error(colors.gray(error.stack));
+									}
+								}),
+							externalFetch: user_hooks.externalFetch || fetch
+						};
 
-				let body;
+						if (/** @type {any} */ (hooks).getContext) {
+							// TODO remove this for 1.0
+							throw new Error(
+								'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
+							);
+						}
 
-				try {
-					body = await getRawBody(req);
-				} catch (/** @type {any} */ err) {
-					res.statusCode = err.status || 400;
-					return res.end(err.reason || 'Invalid request body');
-				}
+						if (/** @type {any} */ (hooks).serverFetch) {
+							// TODO remove this for 1.0
+							throw new Error('The serverFetch hook has been renamed to externalFetch.');
+						}
 
-				const rendered = await respond(
-					{
-						url: new URL(`${https ? 'https' : 'http'}://${req.headers.host}${req.url}`),
-						headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-						method: req.method,
-						rawBody: body
-					},
-					{
-						amp: config.kit.amp,
-						dev: true,
-						floc: config.kit.floc,
-						get_stack: (error) => {
-							vite.ssrFixStacktrace(error);
-							return error.stack;
-						},
-						handle_error: (error, request) => {
-							vite.ssrFixStacktrace(error);
-							hooks.handleError({ error, request });
-						},
-						hooks,
-						hydrate: config.kit.hydrate,
-						manifest,
-						paths: {
+						const root = (await vite.ssrLoadModule(`/${dir}/generated/root.svelte`)).default;
+
+						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+
+						paths.set_paths({
 							base: config.kit.paths.base,
 							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
-						},
-						prefix: '',
-						prerender: config.kit.prerender.enabled,
-						read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-						root,
-						router: config.kit.router,
-						ssr: config.kit.ssr,
-						target: config.kit.target,
-						template: ({ head, body }) => {
-							let rendered = fs
-								.readFileSync(config.kit.files.template, 'utf8')
-								.replace('%svelte.head%', () => head)
-								.replace('%svelte.body%', () => body);
+						});
 
-							if (config.kit.amp && validator) {
-								const result = validator.validateString(rendered);
+						let body;
 
-								if (result.status !== 'PASS') {
-									const lines = rendered.split('\n');
+						try {
+							body = await getRawBody(req);
+						} catch (/** @type {any} */ err) {
+							res.statusCode = err.status || 400;
+							return res.end(err.reason || 'Invalid request body');
+						}
 
-									/** @param {string} str */
-									const escape = (str) =>
-										str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+						const rendered = await respond(
+							{
+								url: new URL(`${https ? 'https' : 'http'}://${req.headers.host}${req.url}`),
+								headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
+								method: req.method,
+								rawBody: body
+							},
+							{
+								amp: config.kit.amp,
+								dev: true,
+								floc: config.kit.floc,
+								get_stack: (error) => {
+									vite.ssrFixStacktrace(error);
+									return error.stack;
+								},
+								handle_error: (error, request) => {
+									vite.ssrFixStacktrace(error);
+									hooks.handleError({ error, request });
+								},
+								hooks,
+								hydrate: config.kit.hydrate,
+								manifest,
+								paths: {
+									base: config.kit.paths.base,
+									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+								},
+								prefix: '',
+								prerender: config.kit.prerender.enabled,
+								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+								root,
+								router: config.kit.router,
+								ssr: config.kit.ssr,
+								target: config.kit.target,
+								template: ({ head, body }) => {
+									let rendered = fs
+										.readFileSync(config.kit.files.template, 'utf8')
+										.replace('%svelte.head%', () => head)
+										.replace('%svelte.body%', () => body);
 
-									rendered = `<!doctype html>
+									if (config.kit.amp && validator) {
+										const result = validator.validateString(rendered);
+
+										if (result.status !== 'PASS') {
+											const lines = rendered.split('\n');
+
+											/** @param {string} str */
+											const escape = (str) =>
+												str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+											rendered = `<!doctype html>
 										<head>
 											<meta charset="utf-8" />
 											<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -448,40 +449,29 @@ async function create_plugin(config, dir, https, get_manifest) {
 											)
 											.join('\n\n')}
 									`;
-								}
+										}
+									}
+
+									return rendered;
+								},
+								trailing_slash: config.kit.trailingSlash
 							}
+						);
 
-							return rendered;
-						},
-						trailing_slash: config.kit.trailingSlash
+						if (rendered) {
+							res.writeHead(rendered.status, rendered.headers);
+							if (rendered.body) res.write(rendered.body);
+							res.end();
+						} else {
+							not_found(res);
+						}
+					} catch (e) {
+						const error = coalesce_to_error(e);
+						vite.ssrFixStacktrace(error);
+						res.statusCode = 500;
+						res.end(error.stack);
 					}
-				);
-
-				if (rendered) {
-					res.writeHead(rendered.status, rendered.headers);
-					if (rendered.body) res.write(rendered.body);
-					res.end();
-				} else {
-					not_found(res);
-				}
-			} catch (e) {
-				const error = coalesce_to_error(e);
-				vite.ssrFixStacktrace(error);
-				res.statusCode = 500;
-				res.end(error.stack);
-			}
-		};
-	}
-
-	return {
-		name: 'vite-plugin-svelte-kit',
-		/**
-		 * @param {import('vite').ViteDevServer} vite
-		 */
-		configureServer(vite) {
-			return () => {
-				remove_html_middlewares(vite.middlewares);
-				vite.middlewares.use(create_kit_middleware(vite));
+				});
 			};
 		}
 	};
