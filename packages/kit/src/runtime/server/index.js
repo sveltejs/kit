@@ -61,7 +61,7 @@ export async function respond(incoming, options, state = {}) {
 
 					const response =
 						route.type === 'endpoint'
-							? await render_endpoint(request, route, match)
+							? await render_endpoint(request, route, match, options)
 							: await render_page(request, route, match, options, state);
 
 					if (response) {

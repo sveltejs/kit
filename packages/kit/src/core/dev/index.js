@@ -107,10 +107,25 @@ export async function dev(opts) {
 		merged_config.server.port = opts.port;
 	}
 
-	watcher.vite = await vite.createServer(merged_config);
-	await watcher.vite.listen(opts.port);
+	const vite_server = await vite.createServer(merged_config);
+	await vite_server.listen(opts.port);
 
-	return watcher;
+	let closed = false;
+	process.on('exit', () => {
+		if (!vite_server || !watcher.cheapwatch) {
+			throw new Error('Cannot close server before it is initialized');
+		}
+
+		if (closed) return;
+		closed = true;
+
+		vite_server.close();
+
+		// TODO: can we create the watcher in the plugin and close it in closeBundle
+		watcher.cheapwatch.close();
+	});
+
+	return { watcher, vite: vite_server };
 }
 
 class Watcher extends EventEmitter {
@@ -126,15 +141,6 @@ class Watcher extends EventEmitter {
 
 		/** @type {import('types/config').ValidatedConfig} */
 		this.config = config;
-
-		/**
-		 * @type {vite.ViteDevServer | undefined}
-		 */
-		this.vite;
-
-		process.on('exit', () => {
-			this.close();
-		});
 	}
 
 	async init() {
@@ -186,51 +192,7 @@ class Watcher extends EventEmitter {
 					css: [],
 					js: []
 				},
-				nodes: manifest_data.components.map((id) => {
-					return async () => {
-						const url = `/${id}`;
-
-						if (!this.vite) throw new Error('Vite server has not been initialized');
-
-						const module = /** @type {SSRComponent} */ (await this.vite.ssrLoadModule(url));
-						const node = await this.vite.moduleGraph.getModuleByUrl(url);
-
-						if (!node) throw new Error(`Could not find node for ${url}`);
-
-						const deps = new Set();
-						find_deps(node, deps);
-
-						const styles = new Set();
-
-						for (const dep of deps) {
-							const parsed = new URL(dep.url, 'http://localhost/');
-							const query = parsed.searchParams;
-
-							// TODO what about .scss files, etc?
-							if (
-								dep.file.endsWith('.css') ||
-								(query.has('svelte') && query.get('type') === 'style')
-							) {
-								try {
-									const mod = await this.vite.ssrLoadModule(dep.url);
-									styles.add(mod.default);
-								} catch {
-									// this can happen with dynamically imported modules, I think
-									// because the Vite module graph doesn't distinguish between
-									// static and dynamic imports? TODO investigate, submit fix
-								}
-							}
-						}
-
-						return {
-							module,
-							entry: url.endsWith('.svelte') ? url : url + '?import',
-							css: [],
-							js: [],
-							styles: Array.from(styles)
-						};
-					};
-				}),
+				nodes: manifest_data.components,
 				routes: manifest_data.routes.map((route) => {
 					if (route.type === 'page') {
 						return {
@@ -246,27 +208,11 @@ class Watcher extends EventEmitter {
 						type: 'endpoint',
 						pattern: route.pattern,
 						params: get_params(route.params),
-						load: async () => {
-							if (!this.vite) throw new Error('Vite server has not been initialized');
-							const url = path.resolve(this.cwd, route.file);
-							return await this.vite.ssrLoadModule(url);
-						}
+						file: route.file
 					};
 				})
 			}
 		};
-	}
-
-	close() {
-		if (!this.vite || !this.cheapwatch) {
-			throw new Error('Cannot close server before it is initialized');
-		}
-
-		if (this.closed) return;
-		this.closed = true;
-
-		this.vite.close();
-		this.cheapwatch.close();
 	}
 }
 
@@ -418,6 +364,54 @@ async function create_plugin(opts, dir, get_manifest) {
 						},
 						hooks,
 						hydrate: config.kit.hydrate,
+						load_component: async (id) => {
+							const url = `/${id}`;
+
+							if (!vite) throw new Error('Vite server has not been initialized');
+
+							const module = /** @type {SSRComponent} */ (await vite.ssrLoadModule(url));
+							const node = await vite.moduleGraph.getModuleByUrl(url);
+
+							if (!node) throw new Error(`Could not find node for ${url}`);
+
+							const deps = new Set();
+							find_deps(node, deps);
+
+							const styles = new Set();
+
+							for (const dep of deps) {
+								const parsed = new URL(dep.url, 'http://localhost/');
+								const query = parsed.searchParams;
+
+								// TODO what about .scss files, etc?
+								if (
+									dep.file.endsWith('.css') ||
+									(query.has('svelte') && query.get('type') === 'style')
+								) {
+									try {
+										const mod = await vite.ssrLoadModule(dep.url);
+										styles.add(mod.default);
+									} catch {
+										// this can happen with dynamically imported modules, I think
+										// because the Vite module graph doesn't distinguish between
+										// static and dynamic imports? TODO investigate, submit fix
+									}
+								}
+							}
+
+							return {
+								module,
+								entry: url.endsWith('.svelte') ? url : url + '?import',
+								css: [],
+								js: [],
+								styles: Array.from(styles)
+							};
+						},
+						load_endpoint: async (file) => {
+							if (!vite) throw new Error('Vite server has not been initialized');
+							const url = path.resolve(opts.cwd, file);
+							return await vite.ssrLoadModule(url);
+						},
 						manifest: get_manifest(),
 						paths: {
 							base: config.kit.paths.base,

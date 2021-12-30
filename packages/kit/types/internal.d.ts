@@ -93,16 +93,12 @@ export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: GetParams;
-	load(): Promise<{
-		[method: string]: RequestHandler;
-	}>;
+	file: string;
 }
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
 export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
-
-export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
@@ -131,6 +127,10 @@ export interface SSRRenderOptions {
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
+	load_component: (id: string) => Promise<SSRNode>;
+	load_endpoint: (file: string) => Promise<{
+		[method: string]: RequestHandler;
+	}>;
 	manifest: SSRManifest;
 	paths: {
 		base: string;

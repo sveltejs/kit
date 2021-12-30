@@ -1,6 +1,6 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { ServerResponse } from './hooks';
-import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
+import { PrerenderOptions, SSRRoute } from './internal';
 
 export class App {
 	constructor(manifest: SSRManifest);
@@ -40,7 +40,7 @@ export interface SSRManifest {
 			js: string[];
 			css: string[];
 		};
-		nodes: SSRNodeLoader[];
+		nodes: Array<string | undefined>;
 		routes: SSRRoute[];
 	};
 }

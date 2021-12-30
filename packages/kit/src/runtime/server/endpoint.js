@@ -36,10 +36,11 @@ function is_content_type_textual(content_type) {
  * @param {import('types/hooks').ServerRequest} request
  * @param {import('types/internal').SSREndpoint} route
  * @param {RegExpExecArray} match
+ * @param {import('types/internal').SSRRenderOptions} options
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_endpoint(request, route, match) {
-	const mod = await route.load();
+export async function render_endpoint(request, route, match, options) {
+	const mod = await options.load_endpoint(route.file);
 
 	/** @type {import('types/endpoint').RequestHandler} */
 	const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word

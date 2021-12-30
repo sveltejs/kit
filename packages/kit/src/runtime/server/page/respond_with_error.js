@@ -20,8 +20,12 @@ import { coalesce_to_error } from '../../../utils/error.js';
  * }} opts
  */
 export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-	const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
+	const default_layout = await options.load_component(
+		/** @type {string} */ (options.manifest._.nodes[0]) // 0 is always the root layout
+	);
+	const default_error = await options.load_component(
+		/** @type {string} */ (options.manifest._.nodes[1]) // 1 is always the root error
+	);
 
 	const page = {
 		origin: request.origin,

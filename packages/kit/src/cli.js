@@ -92,7 +92,7 @@ prog
 
 		try {
 			const cwd = process.cwd();
-			const watcher = await dev({ port, host, https, config, cwd });
+			const { watcher, vite } = await dev({ port, host, https, config, cwd });
 
 			watcher.on('stdout', (data) => {
 				process.stdout.write(data);
@@ -102,13 +102,11 @@ prog
 				process.stderr.write(data);
 			});
 
-			if (!watcher.vite || !watcher.vite.httpServer) {
+			if (!vite || !vite.httpServer) {
 				throw Error('Could not find server');
 			}
 			// we never start the server on a socket path, so address will be of type AddressInfo
-			const address_info = /** @type {import('net').AddressInfo} */ (
-				watcher.vite.httpServer.address()
-			);
+			const address_info = /** @type {import('net').AddressInfo} */ (vite.httpServer.address());
 
 			const vite_config = config.kit.vite();
 
