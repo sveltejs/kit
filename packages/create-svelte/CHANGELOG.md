@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.92
+
+### Patch Changes
+
+- Update template to use new page/request APIs ([#3146](https://github.com/sveltejs/kit/pull/3146))
+
 ## 2.0.0-next.91
 
 ### Patch Changes
