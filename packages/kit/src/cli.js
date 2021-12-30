@@ -91,31 +91,8 @@ prog
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, host, https, config });
-
-			if (!watcher.vite || !watcher.vite.httpServer) {
-				throw Error('Could not find server');
-			}
-
-			// we never start the server on a socket path, so address will be of type AddressInfo
-			const address_info = /** @type {import('net').AddressInfo} */ (
-				watcher.vite.httpServer.address()
-			);
-
-			const vite_config = config.kit.vite();
-
-			https = https || !!vite_config.server?.https;
-			open = open || !!vite_config.server?.open;
-
-			welcome({
-				port: address_info.port,
-				host: address_info.address,
-				https,
-				open,
-				loose: vite_config.server?.fs?.strict === false,
-				allow: watcher.allowed_directories(),
-				cwd: watcher.cwd
-			});
+			const settings = await dev({ port, host, https, open, config });
+			welcome(settings);
 		} catch (error) {
 			handle_error(error);
 		}
