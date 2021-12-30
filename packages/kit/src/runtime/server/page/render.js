@@ -100,8 +100,11 @@ export async function render_response({
 			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
 			: ''
 		: [
-				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix}${dep}">`),
-				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${options.prefix}${dep}">`)
+				// From https://web.dev/priority-hints/:
+				// Generally, preloads will load in the order the parser gets to them for anything above "Medium" priority
+				// Thus, we should list CSS first
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${options.prefix}${dep}">`),
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix}${dep}">`)
 		  ].join('\n\t\t');
 
 	/** @type {string} */
