@@ -9,10 +9,6 @@ const pipe = promisify(pipeline);
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
 
-/**
- * @typedef {import('esbuild').BuildOptions} BuildOptions
- */
-
 /** @type {import('.')} */
 export default function ({
 	out = 'build',
