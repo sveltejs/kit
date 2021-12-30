@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.210
+
+### Patch Changes
+
+- Add path/query error getters in prod mode ([#3151](https://github.com/sveltejs/kit/pull/3151))
+
 ## 1.0.0-next.209
 
 ### Patch Changes
