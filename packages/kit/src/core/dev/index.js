@@ -360,13 +360,6 @@ export async function dev({ cwd = process.cwd(), port, host, https, open, config
 				$lib: config.kit.files.lib
 			}
 		},
-		build: {
-			rollupOptions: {
-				// Vite dependency crawler needs an explicit JS entry point
-				// eventhough server otherwise works without it
-				input: path.resolve(`${dir}/runtime/internal/start.js`)
-			}
-		},
 		plugins: [
 			svelte({
 				extensions: config.extensions,
