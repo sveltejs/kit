@@ -1,5 +1,21 @@
 # @sveltejs/kit
 
+## 1.0.0-next.208
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Replace config.kit.hostHeader with config.kit.headers.host, add config.kit.headers.protocol ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Replace page.host with page.origin ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* [fix] load CSS before JS preloads
+
+- Error if adapter provides wrong input to app.render ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+* Replace [request|page].[origin|path|query] with url object ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
 ## 1.0.0-next.207
 
 ### Patch Changes

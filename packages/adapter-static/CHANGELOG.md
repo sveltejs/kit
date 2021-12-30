@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.24
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
 ## 1.0.0-next.23
 
 ### Minor Changes
