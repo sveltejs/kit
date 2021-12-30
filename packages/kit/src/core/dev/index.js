@@ -402,7 +402,9 @@ export async function dev({ cwd, port, host, https, config }) {
 		address_info,
 		server_config: vite_config.server,
 		allow,
-		cwd
+		cwd,
+
+		close: () => server.close()
 	};
 }
 
