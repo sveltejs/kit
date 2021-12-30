@@ -93,7 +93,7 @@ prog
 		try {
 			const cwd = process.cwd();
 
-			const { address_info, server_config, allow } = await dev({
+			const { address_info, server_config } = await dev({
 				cwd,
 				port,
 				host,
@@ -104,10 +104,10 @@ prog
 			welcome({
 				port: address_info.port,
 				host: address_info.address,
-				https: !!(https || server_config?.https),
-				open: open || !!server_config?.open,
-				loose: server_config?.fs?.strict === false,
-				allow,
+				https: !!(https || server_config.https),
+				open: open || !!server_config.open,
+				loose: server_config.fs.strict === false,
+				allow: server_config.fs.allow,
 				cwd
 			});
 		} catch (error) {
