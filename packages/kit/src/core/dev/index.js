@@ -64,26 +64,6 @@ class Watcher extends EventEmitter {
 		copy_assets(this.dir);
 		process.env.VITE_SVELTEKIT_AMP = this.config.kit.amp ? 'true' : '';
 
-		await this.init_server();
-
-		return this;
-	}
-
-	allowed_directories() {
-		return [
-			...new Set([
-				this.config.kit.files.assets,
-				this.config.kit.files.lib,
-				this.config.kit.files.routes,
-				path.resolve(this.cwd, 'src'),
-				path.resolve(this.cwd, SVELTE_KIT),
-				path.resolve(this.cwd, 'node_modules'),
-				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
-			])
-		];
-	}
-
-	async init_server() {
 		/** @type {import('vite').UserConfig} */
 		const vite_config = (this.config.kit.vite && this.config.kit.vite()) || {};
 
@@ -245,6 +225,22 @@ class Watcher extends EventEmitter {
 
 		this.vite = await vite.createServer(merged_config);
 		await this.vite.listen(this.port);
+
+		return this;
+	}
+
+	allowed_directories() {
+		return [
+			...new Set([
+				this.config.kit.files.assets,
+				this.config.kit.files.lib,
+				this.config.kit.files.routes,
+				path.resolve(this.cwd, 'src'),
+				path.resolve(this.cwd, SVELTE_KIT),
+				path.resolve(this.cwd, 'node_modules'),
+				path.resolve(vite.searchForWorkspaceRoot(this.cwd), 'node_modules')
+			])
+		];
 	}
 
 	close() {
