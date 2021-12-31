@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { mkdirp } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { posixify, resolve_entry } from '../utils.js';
-import { create_build } from './utils.js';
+import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
 
@@ -121,10 +122,12 @@ export class App {
  *   output_dir: string;
  * }} options
  * @param {string} runtime
+ * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
 export async function build_server(
 	{ cwd, assets_base, config, manifest_data, build_dir, output_dir },
-	runtime
+	runtime,
+	client
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
 	if (!hooks_file || !fs.existsSync(hooks_file)) {
@@ -245,10 +248,42 @@ export async function build_server(
 		}
 	});
 
+	/** @type {import('vite').Manifest} */
+	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
+
+	const styles_lookup = new Map();
+	if (config.kit.amp) {
+		client.assets.forEach((asset) => {
+			if (asset.fileName.endsWith('.css')) {
+				styles_lookup.set(asset.fileName, asset.source);
+			}
+		});
+	}
+
+	mkdirp(`${output_dir}/server/nodes`);
+	manifest_data.components.forEach((component, i) => {
+		const file = `${output_dir}/server/nodes/${i}.js`;
+
+		const js = new Set();
+		const css = new Set();
+		find_deps(component, client.vite_manifest, js, css);
+
+		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
+
+		const node = `import * as module from '../${vite_manifest[component].file}';
+			export { module };
+			export const entry = '${client.vite_manifest[component].file}';
+			export const js = ${JSON.stringify(Array.from(js))};
+			export const css = ${JSON.stringify(Array.from(css))};
+			${styles ? `export const styles = ${s(styles)}` : ''}
+			`.replace(/^\t\t\t/gm, '');
+
+		fs.writeFileSync(file, node);
+	});
+
 	return {
 		chunks,
-		/** @type {import('vite').Manifest} */
-		vite_manifest: JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8')),
+		vite_manifest,
 		methods: get_methods(cwd, chunks, manifest_data)
 	};
 }

@@ -1,15 +1,13 @@
-import fs, { writeFileSync } from 'fs';
+import fs from 'fs';
 import path from 'path';
-import { mkdirp, rimraf } from '../../utils/filesystem.js';
+import { rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
 import { posixify, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
-import { s } from '../../utils/misc.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
 import { build_server } from './build_server.js';
-import { find_deps } from './utils.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -47,37 +45,7 @@ export async function build(config, { cwd = process.cwd(), runtime = './kit.js' 
 	};
 
 	const client = await build_client(options);
-	const server = await build_server(options, runtime);
-
-	const styles_lookup = new Map();
-	if (options.config.kit.amp) {
-		client.assets.forEach((asset) => {
-			if (asset.fileName.endsWith('.css')) {
-				styles_lookup.set(asset.fileName, asset.source);
-			}
-		});
-	}
-
-	mkdirp(`${output_dir}/server/nodes`);
-	options.manifest_data.components.forEach((component, i) => {
-		const file = `${output_dir}/server/nodes/${i}.js`;
-
-		const js = new Set();
-		const css = new Set();
-		find_deps(component, client.vite_manifest, js, css);
-
-		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
-
-		const node = `import * as module from '../${server.vite_manifest[component].file}';
-			export { module };
-			export const entry = '${client.vite_manifest[component].file}';
-			export const js = ${JSON.stringify(Array.from(js))};
-			export const css = ${JSON.stringify(Array.from(css))};
-			${styles ? `export const styles = ${s(styles)}` : ''}
-			`.replace(/^\t\t\t/gm, '');
-
-		writeFileSync(file, node);
-	});
+	const server = await build_server(options, runtime, client);
 
 	if (options.service_worker_entry_file) {
 		if (config.kit.paths.assets) {
