@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.211
+
+### Patch Changes
+
+- Use Vite's filewatcher in dev mode instead of creating a new one
+
 ## 1.0.0-next.210
 
 ### Patch Changes
