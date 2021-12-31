@@ -1,13 +1,13 @@
+import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 import { getRawBody } from '@sveltejs/kit/node';
+import { App } from 'APP';
+import { manifest } from 'MANIFEST';
 
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
+__fetch_polyfill();
 
-init();
+const app = new App(manifest);
 
 export default async (req, res) => {
-	const { pathname, searchParams } = new URL(req.url || '', 'http://localhost');
-
 	let body;
 
 	try {
@@ -17,11 +17,10 @@ export default async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await render({
+	const rendered = await app.render({
+		url: req.url,
 		method: req.method,
 		headers: req.headers,
-		path: pathname,
-		query: searchParams,
 		rawBody: body
 	});
 

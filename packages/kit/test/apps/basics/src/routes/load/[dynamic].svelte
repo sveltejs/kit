@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch }) {
-		const res = await fetch(`/load/${page.params.dynamic}.json`);
+	export async function load({ params, fetch }) {
+		const res = await fetch(`/load/${params.dynamic}.json`);
 		return {
 			props: await res.json()
 		};

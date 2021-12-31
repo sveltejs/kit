@@ -1,8 +1,8 @@
-// TODO hardcoding the relative location makes this brittle
-import { init, render } from '../output/server/app.js';
+import { App } from 'APP';
+import { manifest } from './manifest.js';
 import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
 
-init();
+const app = new App(manifest);
 
 addEventListener('fetch', (event) => {
 	event.respondWith(handle(event));
@@ -26,13 +26,10 @@ async function handle(event) {
 
 	// fall back to an app route
 	const request = event.request;
-	const request_url = new URL(request.url);
 
 	try {
-		const rendered = await render({
-			host: request_url.host,
-			path: request_url.pathname,
-			query: request_url.searchParams,
+		const rendered = await app.render({
+			url: request.url,
 			rawBody: await read(request),
 			headers: Object.fromEntries(request.headers),
 			method: request.method

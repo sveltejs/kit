@@ -1,5 +1,21 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.5
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.4
+
+### Patch Changes
+
+- Updated Cloudflare adapter to allow static files with spaces (eg. "Example File.pdf") to be accessed. ([#3047](https://github.com/sveltejs/kit/pull/3047))
+
 ## 1.0.0-next.3
 
 ### Patch Changes

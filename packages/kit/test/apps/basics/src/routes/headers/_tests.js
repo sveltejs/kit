@@ -6,4 +6,12 @@ export default function (test) {
 		const headers = response.headers();
 		assert.equal(headers['permissions-policy'], 'interest-cohort=()');
 	});
+
+	test(
+		'allows headers to be sent as a Headers class instead of a POJO',
+		'/headers/class',
+		async ({ page }) => {
+			assert.equal(await page.innerHTML('p'), 'bar');
+		}
+	);
 }

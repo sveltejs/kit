@@ -25,4 +25,11 @@ export default function (test) {
 			'rgb(255, 0, 0)'
 		);
 	});
+
+	test('sets params correctly', '/path-base/base/one', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('h2'), 'one');
+
+		await clicknav('[href="/path-base/base/two"]');
+		assert.equal(await page.textContent('h2'), 'two');
+	});
 }

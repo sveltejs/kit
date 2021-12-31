@@ -1,12 +1,12 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page }) {
+	export async function load({ params }) {
 		return {
 			stuff: {
-				y: page.params.y
+				y: params.y
 			}
 		};
 	}
 </script>
 
-<slot></slot>
+<slot />

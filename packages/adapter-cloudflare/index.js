@@ -1,48 +1,47 @@
-import { join } from 'path';
+import { writeFileSync } from 'fs';
+import { relative } from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync } from 'fs';
 import * as esbuild from 'esbuild';
 
-/**
- * @param {esbuild.BuildOptions} [options]
- */
+/** @type {import('.')} */
 export default function (options = {}) {
 	return {
 		name: '@sveltejs/adapter-cloudflare',
-		async adapt({ utils, config }) {
+		async adapt(builder) {
 			const files = fileURLToPath(new URL('./files', import.meta.url));
-			const target_dir = join(process.cwd(), '.svelte-kit', 'cloudflare');
-			utils.rimraf(target_dir);
+			const dest = builder.getBuildDirectory('cloudflare');
+			const tmp = builder.getBuildDirectory('cloudflare-tmp');
 
-			const static_files = utils
-				.copy(config.kit.files.assets, target_dir)
-				.map((f) => f.replace(`${target_dir}/`, ''));
+			builder.rimraf(dest);
+			builder.rimraf(tmp);
+			builder.mkdirp(tmp);
 
-			const client_files = utils
-				.copy(`${process.cwd()}/.svelte-kit/output/client`, target_dir)
-				.map((f) => f.replace(`${target_dir}/`, ''));
+			builder.writeStatic(dest);
+			builder.writeClient(dest);
 
-			// returns nothing, very sad
-			// TODO(future) get/save output
-			await utils.prerender({
-				dest: `${target_dir}/`
+			const { paths } = await builder.prerender({ dest });
+
+			const relativePath = relative(tmp, builder.getServerDirectory());
+
+			writeFileSync(
+				`${tmp}/manifest.js`,
+				`export const manifest = ${builder.generateManifest({
+					relativePath
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(paths)});\n`
+			);
+
+			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
+				replace: {
+					APP: `${relativePath}/app.js`
+				}
 			});
-
-			const static_assets = [...static_files, ...client_files];
-			const assets = `const ASSETS = new Set(${JSON.stringify(static_assets)});\n`;
-
-			const worker = readFileSync(join(files, 'worker.js'), { encoding: 'utf-8' });
-
-			const target_worker = join(target_dir, '_worker.js');
-
-			writeFileSync(target_worker, assets + worker);
 
 			await esbuild.build({
 				target: 'es2020',
 				platform: 'browser',
 				...options,
-				entryPoints: [target_worker],
-				outfile: target_worker,
+				entryPoints: [`${tmp}/_worker.js`],
+				outfile: `${dest}/_worker.js`,
 				allowOverwrite: true,
 				format: 'esm',
 				bundle: true

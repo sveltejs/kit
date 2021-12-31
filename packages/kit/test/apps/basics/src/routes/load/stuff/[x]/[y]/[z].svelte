@@ -1,10 +1,10 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, stuff }) {
+	export async function load({ params, stuff }) {
 		return {
 			props: {
 				...stuff,
-				z: page.params.z
+				z: params.z
 			}
 		};
 	}
@@ -25,4 +25,4 @@
 </script>
 
 <h1>message: {message}</h1>
-<pre>{JSON.stringify({x, y, z})}</pre>
+<pre>{JSON.stringify({ x, y, z })}</pre>

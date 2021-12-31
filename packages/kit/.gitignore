@@ -2,7 +2,8 @@
 /node_modules
 /dist
 /assets/runtime
+/assets/kit.js
 /client/**/*.d.ts
 /test/**/.svelte-kit
 /test/**/build
-!/src/api/adapt/test/fixtures/*/.svelte-kit
+!/src/core/adapt/test/fixtures/*/.svelte-kit

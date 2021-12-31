@@ -1,3 +1,4 @@
+import { decode_params } from '../utils.js';
 import { respond } from './respond.js';
 
 /**
@@ -14,18 +15,11 @@ export async function render_page(request, route, match, options, state) {
 		return {
 			status: 404,
 			headers: {},
-			body: `Not found: ${request.path}`
+			body: `Not found: ${request.url.pathname}`
 		};
 	}
 
-	const params = route.params(match);
-
-	const page = {
-		host: request.host,
-		path: request.path,
-		query: request.query,
-		params
-	};
+	const params = route.params ? decode_params(route.params(match)) : {};
 
 	const $session = await options.hooks.getSession(request);
 
@@ -35,7 +29,7 @@ export async function render_page(request, route, match, options, state) {
 		state,
 		$session,
 		route,
-		page
+		params
 	});
 
 	if (response) {

@@ -6,6 +6,7 @@ import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT } from '../constants.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { is_root_relative, resolve } from '../../utils/url.js';
+import { queue } from './queue.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -93,14 +94,16 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns {Promise<Array<string>>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
+ * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
 	if (!config.kit.prerender.enabled && !fallback) {
-		return [];
+		return { paths: [] };
 	}
 
 	__fetch_polyfill();
+
+	mkdirp(out);
 
 	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
@@ -108,19 +111,29 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(dir);
 
-	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	/** @type {import('types/internal').AppModule} */
+	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 
-	app.init({
+	override({
 		paths: config.kit.paths,
 		prerendering: true,
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
+	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
+
+	const app = new App(manifest);
+
 	const error = chooseErrorHandler(log, config.kit.prerender.onError);
 
-	const files = new Set([...build_data.static, ...build_data.client]);
-	const written_files = [];
+	const files = new Set([
+		...build_data.static,
+		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
+		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
+	]);
+
+	/** @type {string[]} */
+	const paths = [];
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -141,27 +154,36 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		return path;
 	}
 
+	const q = queue(config.kit.prerender.concurrency);
+
 	/**
 	 * @param {string} decoded_path
 	 * @param {string?} referrer
 	 */
-	async function visit(decoded_path, referrer) {
+	function enqueue(decoded_path, referrer) {
 		const path = encodeURI(normalize(decoded_path));
 
 		if (seen.has(path)) return;
 		seen.add(path);
 
+		return q.add(() => visit(path, decoded_path, referrer));
+	}
+
+	/**
+	 * @param {string} path
+	 * @param {string} decoded_path
+	 * @param {string?} referrer
+	 */
+	async function visit(path, decoded_path, referrer) {
 		/** @type {Map<string, import('types/hooks').ServerResponse>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
+				url: `${config.kit.protocol || 'sveltekit'}://${config.kit.host || 'prerender'}${path}`,
 				method: 'GET',
 				headers: {},
-				path,
-				rawBody: null,
-				query: new URLSearchParams()
+				rawBody: null
 			},
 			{
 				prerender: {
@@ -183,19 +205,19 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			const file = `${out}${parts.join('/')}`;
-			mkdirp(dirname(file));
 
 			if (response_type === REDIRECT) {
 				const location = get_single_valued_header(headers, 'location');
 
 				if (location) {
+					mkdirp(dirname(file));
+
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
 					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
-					written_files.push(file);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
-						await visit(resolved, path);
+						enqueue(resolved, path);
 					}
 				} else {
 					log.warn(`location header missing on redirect received from ${decoded_path}`);
@@ -205,9 +227,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			if (rendered.status === 200) {
+				mkdirp(dirname(file));
+
 				log.info(`${rendered.status} ${decoded_path}`);
 				writeFileSync(file, rendered.body || '');
-				written_files.push(file);
+				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
@@ -227,7 +251,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				if (result.body) {
 					writeFileSync(file, result.body);
-					written_files.push(file);
+					paths.push(dependency_path);
 				}
 
 				if (response_type === OK) {
@@ -282,7 +306,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						// TODO warn that query strings have no effect on statically-exported pages
 					}
 
-					await visit(pathname, path);
+					enqueue(pathname, path);
 				}
 			}
 		}
@@ -292,23 +316,23 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
-					await visit(entry, null);
+					enqueue(entry, null);
 				}
 			} else {
-				await visit(entry, null);
+				enqueue(entry, null);
 			}
 		}
+
+		await q.done();
 	}
 
 	if (fallback) {
 		const rendered = await app.render(
 			{
-				host: config.kit.host,
+				url: `${config.kit.host || 'sveltekit'}://${config.kit.host || 'prerender'}/[fallback]`,
 				method: 'GET',
 				headers: {},
-				path: '[fallback]', // this doesn't matter, but it's easiest if it's a string
-				rawBody: null,
-				query: new URLSearchParams()
+				rawBody: null
 			},
 			{
 				prerender: {
@@ -322,8 +346,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
 		writeFileSync(file, rendered.body || '');
-		written_files.push(file);
 	}
 
-	return written_files;
+	return {
+		paths
+	};
 }

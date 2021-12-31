@@ -76,7 +76,7 @@ export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
 	return {
 		name: 'adapter-package-name',
-		async adapt({ utils, config }) {
+		async adapt(builder) {
 			// adapter implementation
 		}
 	};
@@ -88,15 +88,15 @@ The types for `Adapter` and its parameters are available in [types/config.d.ts](
 Within the `adapt` method, there are a number of things that an adapter should do:
 
 - Clear out the build directory
+- Call `builder.prerender({ dest })` to prerender pages
 - Output code that:
-  - Imports `init` and `render` from `.svelte-kit/output/server/app.js`
-  - Calls `init`, which configures the app
+  - Imports `App` from `${builder.getServerDirectory()}/app.js`
+  - Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
   - Listens for requests from the platform, converts them to a a [SvelteKit request](#hooks-handle), calls the `render` function to generate a [SvelteKit response](#hooks-handle) and responds with it
   - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
-- Bundle the output to avoid needing to install dependencies on the target platform, if desired
-- Call `utils.prerender`
+- Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
-If possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
 
 > The adapter API may change before 1.0.

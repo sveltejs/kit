@@ -1,5 +1,69 @@
 # @sveltejs/kit
 
+## 1.0.0-next.210
+
+### Patch Changes
+
+- Add path/query error getters in prod mode ([#3151](https://github.com/sveltejs/kit/pull/3151))
+
+## 1.0.0-next.209
+
+### Patch Changes
+
+- Bundle SSR renderer with app ([#3144](https://github.com/sveltejs/kit/pull/3144))
+
+## 1.0.0-next.208
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Replace config.kit.hostHeader with config.kit.headers.host, add config.kit.headers.protocol ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Replace page.host with page.origin ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* [fix] load CSS before JS preloads
+
+- Error if adapter provides wrong input to app.render ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+* Replace [request|page].[origin|path|query] with url object ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.207
+
+### Patch Changes
+
+- Add serviceWorker.register option ([#2988](https://github.com/sveltejs/kit/pull/2988))
+
+## 1.0.0-next.206
+
+### Patch Changes
+
+- Handle `Headers` instance in server-side `fetch` ([#3034](https://github.com/sveltejs/kit/pull/3034))
+
+## 1.0.0-next.205
+
+### Patch Changes
+
+- Add `config.kit.prerender.concurrency` setting ([#3120](https://github.com/sveltejs/kit/pull/3120))
+
+## 1.0.0-next.204
+
+### Patch Changes
+
+- fix `<Route> received an unexpected slot "default"` warning ([#3115](https://github.com/sveltejs/kit/pull/3115))
+
+## 1.0.0-next.203
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.32 ([#3048](https://github.com/sveltejs/kit/pull/3048))
+
+* fix `sveltekit:prefetch` mouse detection ([#2995](https://github.com/sveltejs/kit/pull/2995))
+
+- Sort rest routes alphabetically ([#3093](https://github.com/sveltejs/kit/pull/3093))
+
+* Fix invalid amp-install-serviceworker ([#3075](https://github.com/sveltejs/kit/pull/3075))
+
 ## 1.0.0-next.202
 
 ### Patch Changes

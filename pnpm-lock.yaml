@@ -30,7 +30,7 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_d9525e585486a10ae6317f3f61e9597f
       '@typescript-eslint/eslint-plugin': 5.5.0_15fb0f7dd5018b02e6608eb3a323af2f
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.4.4
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/e238bd8fcb7c96b683534eff14f3c7283d6a85c2
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3
       dotenv: 10.0.0
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
@@ -99,13 +99,25 @@ importers:
   packages/adapter-netlify:
     specifiers:
       '@iarna/toml': ^2.2.5
+      '@rollup/plugin-commonjs': ^21.0.0
+      '@rollup/plugin-json': ^4.1.0
+      '@rollup/plugin-node-resolve': ^13.0.5
       '@sveltejs/kit': workspace:*
       esbuild: ^0.13.15
+      rimraf: ^3.0.2
+      rollup: ^2.58.0
+      tiny-glob: ^0.2.9
     dependencies:
       '@iarna/toml': 2.2.5
       esbuild: 0.13.15
+      tiny-glob: 0.2.9
     devDependencies:
+      '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
+      '@rollup/plugin-json': 4.1.0_rollup@2.60.2
+      '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
       '@sveltejs/kit': link:../kit
+      rimraf: 3.0.2
+      rollup: 2.60.2
 
   packages/adapter-node:
     specifiers:
@@ -114,15 +126,14 @@ importers:
       '@types/compression': ^1.7.2
       c8: ^7.10.0
       compression: ^1.7.4
-      esbuild: ^0.13.15
       node-fetch: ^3.1.0
       polka: ^1.0.0-next.22
+      rimraf: ^3.0.2
       rollup: ^2.60.2
       sirv: ^1.0.19
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
     dependencies:
-      esbuild: 0.13.15
       tiny-glob: 0.2.9
     devDependencies:
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
@@ -132,6 +143,7 @@ importers:
       compression: 1.7.4
       node-fetch: 3.1.0
       polka: 1.0.0-next.22
+      rimraf: 3.0.2
       rollup: 2.60.2
       sirv: 1.0.19
       uvu: 0.5.2
@@ -227,7 +239,6 @@ importers:
       '@types/node': ^16.11.11
       '@types/sade': ^1.7.3
       amphtml-validator: ^1.0.35
-      cheap-watch: ^1.0.4
       cookie: ^0.4.1
       devalue: ^2.0.1
       eslint: ^8.3.0
@@ -249,7 +260,6 @@ importers:
       vite: ^2.7.2
     dependencies:
       '@sveltejs/vite-plugin-svelte': 1.0.0-next.32_svelte@3.44.2+vite@2.7.2
-      cheap-watch: 1.0.4
       sade: 1.7.4
       vite: 2.7.2
     devDependencies:
@@ -1365,11 +1375,6 @@ packages:
   /chardet/0.7.0:
     resolution: {integrity: sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==}
     dev: true
-
-  /cheap-watch/1.0.4:
-    resolution: {integrity: sha512-QR/9FrtRL5fjfUJBhAKCdi0lSRQ3rVRRum3GF9wDKp2TJbEIMGhUEr2yU8lORzm9Isdjx7/k9S0DFDx+z5VGtw==}
-    engines: {node: '>=8'}
-    dev: false
 
   /chokidar/3.5.2:
     resolution: {integrity: sha512-ekGhOnNVPgT77r4K/U3GDhu+FQ2S8TnK/s2KbIGXi0SZWuwkZ2QNyfWdZW+TVfn84DpEP7rLeCt2UI6bJ8GwbQ==}
@@ -4637,8 +4642,8 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/e238bd8fcb7c96b683534eff14f3c7283d6a85c2:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/e238bd8fcb7c96b683534eff14f3c7283d6a85c2}
+  github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true

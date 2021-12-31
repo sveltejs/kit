@@ -22,7 +22,8 @@ const config = {
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
-		}
+		},
+		protocol: 'https'
 	}
 };
 
