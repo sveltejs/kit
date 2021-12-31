@@ -25,7 +25,7 @@ function validate_template(cwd, validated) {
 	}
 }
 
-export async function load_config({ cwd = process.cwd() } = {}) {
+export async function load_config({ cwd = process.cwd(), check_template = true } = {}) {
 	const config_file_esm = path.join(cwd, 'svelte.config.js');
 	const config_file = fs.existsSync(config_file_esm)
 		? config_file_esm
@@ -41,7 +41,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
 
-	validate_template(cwd, validated);
+	if (check_template) {
+		validate_template(cwd, validated);
+	}
 
 	// TODO check all the `files` exist when the config is loaded?
 

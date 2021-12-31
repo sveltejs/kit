@@ -7,7 +7,7 @@ import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
 import { coalesce_to_error, has_error_code } from './utils/error.js';
 
-async function get_config() {
+async function get_config({ check_template = true } = {}) {
 	// TODO this is temporary, for the benefit of early adopters
 	if (existsSync('svelte.config.cjs')) {
 		// prettier-ignore
@@ -24,7 +24,7 @@ async function get_config() {
 	}
 
 	try {
-		return await load_config();
+		return await load_config({ check_template });
 	} catch (err) {
 		const error = coalesce_to_error(err);
 		let message = error.message;
@@ -179,7 +179,7 @@ prog
 	.describe('Create a package')
 	.option('-d, --dir', 'Destination directory', 'package')
 	.action(async () => {
-		const config = await get_config();
+		const config = await get_config({ check_template: false });
 
 		const { make_package } = await import('./packaging/index.js');
 
