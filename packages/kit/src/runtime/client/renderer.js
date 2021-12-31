@@ -180,7 +180,7 @@ export class Renderer {
 
 			result = error_args
 				? await this._load_error(error_args)
-				: await this._get_navigation_result_from_branch({ url, params, branch });
+				: await this._get_navigation_result_from_branch({ url, params, branch, status, error });
 		} catch (e) {
 			if (error) throw e;
 
@@ -417,9 +417,11 @@ export class Renderer {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
+	 *   status: number;
+	 *   error?: Error;
 	 * }} opts
 	 */
-	async _get_navigation_result_from_branch({ url, params, branch }) {
+	async _get_navigation_result_from_branch({ url, params, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
@@ -443,7 +445,7 @@ export class Renderer {
 		}
 
 		if (!this.current.url || url.href !== this.current.url.href) {
-			result.props.page = { url, params };
+			result.props.page = { url, params, status, error };
 
 			// TODO remove this for 1.0
 			/**
@@ -737,12 +739,12 @@ export class Renderer {
 			}
 		}
 
-		return await this._get_navigation_result_from_branch({ url, params, branch });
+		return await this._get_navigation_result_from_branch({ url, params, branch, status, error });
 	}
 
 	/**
 	 * @param {{
-	 *   status?: number;
+	 *   status: number;
 	 *   error: Error;
 	 *   url: URL;
 	 * }} opts
@@ -770,6 +772,6 @@ export class Renderer {
 			})
 		];
 
-		return await this._get_navigation_result_from_branch({ url, params, branch });
+		return await this._get_navigation_result_from_branch({ url, params, branch, status, error });
 	}
 }
