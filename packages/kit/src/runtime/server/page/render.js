@@ -68,7 +68,7 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page: { url, params },
+			page: { url, params, status, error },
 			components: branch.map(({ node }) => node.module.default)
 		};
 

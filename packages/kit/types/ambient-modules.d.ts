@@ -93,6 +93,8 @@ declare module '$app/stores' {
 		page: Readable<{
 			url: URL;
 			params: Record<string, string>;
+			status: number;
+			error: Error | null;
 		}>;
 		session: Writable<Session>;
 	};
@@ -103,6 +105,8 @@ declare module '$app/stores' {
 	export const page: Readable<{
 		url: URL;
 		params: Record<string, string>;
+		status: number;
+		error: Error | null;
 	}>;
 	/**
 	 * A readable store.
