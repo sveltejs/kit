@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from 'utils.js';
+import { test } from '../../../utils.js';
 
 test('amp is true', async ({ page, baseURL }) => {
 	await page.goto(`${baseURL}/valid`);
