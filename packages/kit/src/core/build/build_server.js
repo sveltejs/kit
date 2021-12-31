@@ -278,7 +278,7 @@ export async function build_server(
 			${styles ? `export const styles = ${s(styles)}` : ''}
 			`.replace(/^\t\t\t/gm, '');
 
-		writeFileSync(file, node);
+		fs.writeFileSync(file, node);
 	});
 
 	return {
