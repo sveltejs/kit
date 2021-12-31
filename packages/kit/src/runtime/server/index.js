@@ -133,7 +133,28 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.handle_error(e, request);
+		const handle_error_output = await options.handle_error(e, request);
+		if (handle_error_output && handle_error_output.redirect) {
+			return handle_error_output.redirect !== request.url.pathname
+				? {
+						status:
+							handle_error_output.status && Math.floor(handle_error_output.status / 100) === 3
+								? handle_error_output.status
+								: 301,
+						headers: {
+							location: handle_error_output.redirect
+						}
+				  }
+				: await render_response({
+						url: request.url,
+						params: request.params,
+						options,
+						$session: await options.hooks.getSession(request),
+						page_config: { ssr: false, router: true, hydrate: true },
+						status: 200,
+						branch: []
+				  });
+		}
 
 		return {
 			status: 500,

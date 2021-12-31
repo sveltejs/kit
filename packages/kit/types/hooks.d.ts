@@ -19,6 +19,11 @@ export interface ServerResponse {
 	body?: StrictBody;
 }
 
+export interface HandleErrorResponse {
+	status?: number;
+	redirect?: string;
+}
+
 export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
 	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
 }
@@ -40,7 +45,10 @@ export interface InternalHandle<Locals = Record<string, any>, Body = unknown> {
 }
 
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
+	(input: {
+		error: Error & { frame?: string };
+		request: ServerRequest<Locals, Body>;
+	}): MaybePromise<HandleErrorResponse> | void;
 }
 
 export interface ExternalFetch {

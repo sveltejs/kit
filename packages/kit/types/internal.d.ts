@@ -1,13 +1,16 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
 import { InternalApp, SSRManifest } from './app';
+import { MaybePromise } from './helper';
+
 import {
 	ExternalFetch,
 	GetSession,
 	HandleError,
 	InternalHandle,
 	ServerRequest,
-	ServerResponse
+	ServerResponse,
+	HandleErrorResponse
 } from './hooks';
 import { Load } from './page';
 
@@ -128,7 +131,10 @@ export interface SSRRenderOptions {
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
+	handle_error(
+		error: Error & { frame?: string },
+		request: ServerRequest<any>
+	): MaybePromise<HandleErrorResponse> | void;
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;
