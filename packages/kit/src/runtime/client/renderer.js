@@ -105,8 +105,7 @@ export class Renderer {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: writable(session),
-			error: writable(/** @type {Error | null} */ null)
+			session: writable(session)
 		};
 
 		this.$session = null;
@@ -226,7 +225,6 @@ export class Renderer {
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
 	async update(info, chain, no_cache, opts) {
-		this.stores.error.set(null);
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
@@ -752,8 +750,6 @@ export class Renderer {
 	async _load_error({ status, error, url }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
-
-		this.stores.error.set(error);
 
 		const node = await this._load_node({
 			module: await this.fallback[0],

@@ -34,10 +34,7 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		session: stores.session,
-		error: {
-			subscribe: stores.error
-		}
+		session: stores.session
 	};
 };
 
@@ -54,14 +51,6 @@ export const page = {
 export const navigating = {
 	subscribe(fn) {
 		const store = getStores().navigating;
-		return store.subscribe(fn);
-	}
-};
-
-/** @type {typeof import('$app/stores').error} */
-export const error = {
-	subscribe(fn) {
-		const store = getStores().error;
 		return store.subscribe(fn);
 	}
 };

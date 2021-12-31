@@ -95,7 +95,6 @@ declare module '$app/stores' {
 			params: Record<string, string>;
 		}>;
 		session: Writable<Session>;
-		error: Readable<Error | null>;
 	};
 	export const url: Readable<URL>;
 	/**
@@ -116,10 +115,6 @@ declare module '$app/stores' {
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<any>;
-	/**
-	 * A readable store.
-	 */
-	export const error: Readable<Error | null>;
 }
 
 declare module '$service-worker' {
