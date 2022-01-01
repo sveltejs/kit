@@ -1,3 +1,5 @@
+import fs from 'fs';
+import { format } from 'util';
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
@@ -53,12 +55,23 @@ export const test = base.extend({
 		}
 
 		use(clicknav);
+	},
+
+	// @ts-expect-error
+	read_errors: ({}, use) => {
+		/** @param {string} path */
+		function read_errors(path) {
+			const errors = JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
+			return errors[path];
+		}
+
+		use(read_errors);
 	}
 });
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
-	timeout: 2000,
+	timeout: 5000,
 	webServer: {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
 		port: 3000,
@@ -66,13 +79,13 @@ export const config = {
 	},
 	projects: [
 		{
-			name: '+js',
+			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
 			use: {
 				javaScriptEnabled: true
 			}
 		},
 		{
-			name: '-js',
+			name: `${process.env.DEV ? 'dev' : 'build'}-js`,
 			use: {
 				javaScriptEnabled: false
 			}

@@ -11,6 +11,7 @@ export const test: TestType<
 		PlaywrightTestOptions & {
 			is_in_viewport: (selector: string) => Promise<boolean>;
 			clicknav: (selector: string) => Promise<void>;
+			read_errors: (href: string) => string;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
