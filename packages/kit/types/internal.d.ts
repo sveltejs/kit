@@ -141,7 +141,7 @@ export interface SSRRenderOptions {
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
-	service_worker: string | null;
+	service_worker?: string;
 	ssr: boolean;
 	target: string;
 	template({ head, body }: { head: string; body: string }): string;
