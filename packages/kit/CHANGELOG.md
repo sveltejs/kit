@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.212
+
+### Patch Changes
+
+- Add status and error to page store ([#3096](https://github.com/sveltejs/kit/pull/3096))
+
+* Fix dev prebundling scanner ([#3169](https://github.com/sveltejs/kit/pull/3169))
+
+- Sort rest endpoints before pages ([#3168](https://github.com/sveltejs/kit/pull/3168))
+
 ## 1.0.0-next.211
 
 ### Patch Changes

@@ -200,6 +200,20 @@ test('sorts routes correctly', () => {
 	);
 });
 
+test('sorts routes with rest correctly', () => {
+	const { routes } = create('samples/rest');
+
+	assert.equal(
+		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
+		[
+			'samples/rest/a/[...rest].js',
+			[layout, 'samples/rest/a/[...rest].svelte'],
+			'samples/rest/b/[...rest].ts',
+			[layout, 'samples/rest/b/[...rest].svelte']
+		]
+	);
+});
+
 test('disallows rest parameters inside segments', () => {
 	assert.throws(
 		() => {
