@@ -30,7 +30,7 @@ export const handle = sequence(
 );
 
 /** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({ error, request }) {
+export async function handleError({ error }) {
 	console.error(error.message);
 	if (error.frame) {
 		console.error(error.frame);
@@ -39,11 +39,12 @@ export async function handleError({ error, request }) {
 		console.error(error.stack);
 	}
 
-	if (error.message === '"Testing hook exception"')
+	if (error.message === '"Testing hook exception"') {
 		return {
 			status: 301,
 			redirect: '/errors/errorpage'
 		};
+	}
 }
 
 /** @type {import('@sveltejs/kit').ExternalFetch} */
