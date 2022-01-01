@@ -780,12 +780,11 @@ test.describe.parallel('Load', () => {
 	});
 
 	test('load function is only called when necessary', async ({ app, page, javaScriptEnabled }) => {
-		await page.goto('/load/change-detection/one/a');
-
-		expect(await page.textContent('h1')).toBe('layout loads: 1');
-		expect(await page.textContent('h2')).toBe('x: a: 1');
-
 		if (javaScriptEnabled) {
+			await page.goto('/load/change-detection/one/a');
+			expect(await page.textContent('h1')).toBe('layout loads: 1');
+			expect(await page.textContent('h2')).toBe('x: a: 1');
+
 			await app.goto('/load/change-detection/one/a?unused=whatever');
 			expect(await page.textContent('h2')).toBe('x: a: 1');
 
@@ -865,7 +864,7 @@ test.describe.parallel('Load', () => {
 
 	test('handles external api', async ({ page }) => {
 		await page.goto('/load');
-		const port = await ports.find(4000);
+		const port = await ports.find(5000);
 
 		/** @type {string[]} */
 		const requested_urls = [];
@@ -1487,8 +1486,10 @@ test.describe.parallel('Routing', () => {
 
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
 		await page.goto('/routing');
-		await page.click('[href="https://www.google.com"]');
-		expect(page.url()).toBe('https://www.google.com/');
+		await Promise.all([
+			page.click('[href="https://www.google.com"]'),
+			page.waitForURL('https://www.google.com/')
+		]);
 	});
 
 	// skipping this test because it causes a bunch of failures locally
