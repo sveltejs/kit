@@ -3,12 +3,14 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "../../../svelte-kit.js dev",
-		"build": "../../../svelte-kit.js build",
-		"preview": "../../../svelte-kit.js preview"
+		"dev": "node ../../../src/cli.js dev",
+		"build": "node ../../../src/cli.js build",
+		"preview": "node ../../../src/cli.js preview",
+		"test": "npm run test:dev && npm run test:build",
+		"test:dev": "DEV=true playwright test",
+		"test:build": "playwright test"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-node": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.43.0"
 	},
