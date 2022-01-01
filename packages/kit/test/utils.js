@@ -115,6 +115,7 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
+	// eslint-disable-next-line
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
