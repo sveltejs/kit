@@ -241,6 +241,7 @@ importers:
       '@types/sade': ^1.7.3
       amphtml-validator: ^1.0.35
       cookie: ^0.4.1
+      cross-env: ^7.0.3
       devalue: ^2.0.1
       eslint: ^8.3.0
       kleur: ^4.1.4
@@ -274,6 +275,7 @@ importers:
       '@types/sade': 1.7.3
       amphtml-validator: 1.0.35
       cookie: 0.4.1
+      cross-env: 7.0.3
       devalue: 2.0.1
       eslint: 8.3.0
       kleur: 4.1.4
@@ -2131,6 +2133,14 @@ packages:
   /cookie/0.4.1:
     resolution: {integrity: sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==}
     engines: {node: '>= 0.6'}
+
+  /cross-env/7.0.3:
+    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
+    dependencies:
+      cross-spawn: 7.0.3
+    dev: true
 
   /cross-spawn/5.1.0:
     resolution: {integrity: sha1-6L0O/uWPz/b4+UUQoKVUu/ojVEk=}

@@ -7,7 +7,7 @@
 		"build": "node ../../../src/cli.js build",
 		"preview": "node ../../../src/cli.js preview",
 		"test": "npm run test:dev && npm run test:build",
-		"test:dev": "DEV=true playwright test",
+		"test:dev": "cross-env DEV=true playwright test",
 		"test:build": "playwright test"
 	},
 	"devDependencies": {
