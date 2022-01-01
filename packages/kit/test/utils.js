@@ -80,7 +80,7 @@ export const test = base.extend({
 				});
 
 				await Promise.all([
-					page.waitForNavigation({ waitUntil: 'networkidle' }),
+					// page.waitForNavigation({ waitUntil: 'networkidle' }),
 					page.click(selector),
 					page.evaluate(() => window.navigated)
 				]);
@@ -93,9 +93,9 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	is_in_viewport: async ({ page }, use) => {
+	visible_ratio: async ({ page }, use) => {
 		/** @param {string} selector */
-		async function is_in_viewport(selector) {
+		async function visible_ratio(selector) {
 			// @ts-expect-error
 			return page.$eval(selector, async (element) => {
 				const visibleRatio = await new Promise((resolve) => {
@@ -107,11 +107,11 @@ export const test = base.extend({
 					// Firefox doesn't call IntersectionObserver callback unless there are rafs
 					requestAnimationFrame(() => {});
 				});
-				return visibleRatio > 0;
+				return visibleRatio;
 			});
 		}
 
-		use(is_in_viewport);
+		use(visible_ratio);
 	},
 
 	// @ts-expect-error
