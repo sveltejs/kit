@@ -18,7 +18,7 @@ export const handle = sequence(
 	},
 	async ({ request, resolve }) => {
 		const response = await resolve(request);
-
+		if (request.url.pathname === '/hooks/test-errorhandling') throw 'Testing hook exception';
 		return {
 			...response,
 			headers: {
@@ -28,6 +28,15 @@ export const handle = sequence(
 		};
 	}
 );
+
+/** @type {import('@sveltejs/kit').HandleError} */
+export async function handleError({ error, request }) {
+	if (error.message === '"Testing hook exception"')
+		return {
+			status: 301,
+			redirect: '/hooks/errorpage'
+		};
+}
 
 /** @type {import('@sveltejs/kit').ExternalFetch} */
 export async function externalFetch(request) {
