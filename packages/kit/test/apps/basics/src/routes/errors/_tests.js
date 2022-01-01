@@ -241,4 +241,15 @@ export default function (test, is_dev) {
 			}
 		}
 	);
+
+	test(
+		'custom error page is rendered if handle hook throws an error',
+		'/errors/test-hooks-errorhandling',
+		async ({ js, page, base }) => {
+			if (js) {
+				assert.equal(page.url(), `${base}/errors/errorpage`);
+				assert.equal(await page.textContent('#error-message'), 'This is custom a errorpage');
+			}
+		}
+	);
 }

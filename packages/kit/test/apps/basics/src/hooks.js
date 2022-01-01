@@ -18,7 +18,7 @@ export const handle = sequence(
 	},
 	async ({ request, resolve }) => {
 		const response = await resolve(request);
-		if (request.url.pathname === '/hooks/test-errorhandling') throw 'Testing hook exception';
+		if (request.url.pathname === '/errors/test-hooks-errorhandling') throw 'Testing hook exception';
 		return {
 			...response,
 			headers: {
@@ -31,10 +31,18 @@ export const handle = sequence(
 
 /** @type {import('@sveltejs/kit').HandleError} */
 export async function handleError({ error, request }) {
+	console.error(error.message);
+	if (error.frame) {
+		console.error(error.frame);
+	}
+	if (error.stack) {
+		console.error(error.stack);
+	}
+
 	if (error.message === '"Testing hook exception"')
 		return {
 			status: 301,
-			redirect: '/hooks/errorpage'
+			redirect: '/errors/errorpage'
 		};
 }
 
