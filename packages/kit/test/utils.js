@@ -113,7 +113,7 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	read_errors: (_, use) => {
+	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =
