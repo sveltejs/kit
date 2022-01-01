@@ -3,7 +3,7 @@ import { test as base } from '@playwright/test';
 
 export const test = base.extend({
 	// @ts-expect-error
-	app: async ({ page, javaScriptEnabled }, use) => {
+	app: async ({ page }, use) => {
 		// these are assumed to have been put in the global scope by the layout
 		use({
 			/**
@@ -91,7 +91,7 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	is_in_viewport: async ({ page, javaScriptEnabled }, use) => {
+	is_in_viewport: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function is_in_viewport(selector) {
 			// @ts-expect-error
@@ -113,7 +113,7 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	read_errors: ({}, use) => {
+	read_errors: (_, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
 			const errors =

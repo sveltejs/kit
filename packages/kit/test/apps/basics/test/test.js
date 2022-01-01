@@ -696,7 +696,7 @@ test.describe.parallel('Load', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
-		await page.goto(`/load/serialization`);
+		await page.goto('/load/serialization');
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
@@ -716,7 +716,7 @@ test.describe.parallel('Load', () => {
 		const requests = [];
 		page.on('request', (r) => requests.push(r.url()));
 
-		await page.goto(`/load/serialization-post`);
+		await page.goto('/load/serialization-post');
 
 		expect(await page.textContent('h1')).toBe('a: X');
 		expect(await page.textContent('h2')).toBe('b: Y');
@@ -1072,7 +1072,7 @@ test.describe.parallel('Page options', () => {
 
 test.describe.parallel('$app/paths', () => {
 	test('includes paths', async ({ page }) => {
-		await page.goto(`/paths`);
+		await page.goto('/paths');
 
 		expect(await page.innerHTML('pre')).toBe(
 			JSON.stringify({
@@ -1085,12 +1085,12 @@ test.describe.parallel('$app/paths', () => {
 
 test.describe.parallel('$app/stores', () => {
 	test('can access page.url', async ({ baseURL, page }) => {
-		await page.goto(`/origin`);
+		await page.goto('/origin');
 		expect(await page.textContent('h1')).toBe(baseURL);
 	});
 
 	test('page store functions as expected', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto(`/store`);
+		await page.goto('/store');
 
 		expect(await page.textContent('h1')).toBe('Test');
 		expect(await page.textContent('h2')).toBe('Calls: 1');
@@ -1175,7 +1175,7 @@ test.describe.parallel('Redirects', () => {
 
 		await clicknav('[href="/redirect/a"]');
 
-		await page.waitForURL(`/redirect/c`);
+		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
 	});
 

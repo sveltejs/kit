@@ -62,15 +62,15 @@ test.describe.parallel('Custom extensions', () => {
 		await page.goto('/path-base/custom-extensions/const');
 		expect(await page.textContent('h2')).toBe('Tremendous!');
 
-		await page.goto(`/path-base/custom-extensions/a`);
+		await page.goto('/path-base/custom-extensions/a');
 
 		expect(await page.textContent('h2')).toBe('a');
 
-		await page.goto(`/path-base/custom-extensions/test-slug`);
+		await page.goto('/path-base/custom-extensions/test-slug');
 
 		expect(await page.textContent('h2')).toBe('TEST-SLUG');
 
-		await page.goto(`/path-base/custom-extensions/unsafe-replacement`);
+		await page.goto('/path-base/custom-extensions/unsafe-replacement');
 
 		expect(await page.textContent('h2')).toBe('Bazooom!');
 	});
