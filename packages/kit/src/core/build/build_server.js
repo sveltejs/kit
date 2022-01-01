@@ -14,11 +14,11 @@ import { s } from '../../utils/misc.js';
  *   runtime: string,
  *   hooks: string,
  *   config: import('types/config').ValidatedConfig,
- *   service_worker: string | null
+ *   has_service_worker: boolean
  * }} opts
  * @returns
  */
-const template = ({ config, hooks, runtime, service_worker }) => `
+const template = ({ config, hooks, runtime, has_service_worker }) => `
 import { respond } from '${runtime}';
 import root from './generated/root.svelte';
 import { set_paths, assets, base } from './runtime/paths.js';
@@ -74,7 +74,7 @@ export class App {
 			prerender: ${config.kit.prerender.enabled},
 			read,
 			root,
-			service_worker: ${JSON.stringify(service_worker)},
+			service_worker: ${has_service_worker ? "'/service-worker.js'" : 'null'},
 			router: ${s(config.kit.router)},
 			ssr: ${s(config.kit.ssr)},
 			target: ${s(config.kit.target)},
@@ -182,7 +182,7 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			runtime,
-			service_worker: service_worker_register ? service_worker_entry_file : null
+			has_service_worker: service_worker_register && !!service_worker_entry_file
 		})
 	);
 
