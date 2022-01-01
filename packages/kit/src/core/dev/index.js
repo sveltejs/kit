@@ -61,6 +61,13 @@ export async function dev({ cwd, port, host, https, config }) {
 				$lib: config.kit.files.lib
 			}
 		},
+		build: {
+			rollupOptions: {
+				// Vite dependency crawler needs an explicit JS entry point
+				// eventhough server otherwise works without it
+				input: path.resolve(`${output}/runtime/internal/start.js`)
+			}
+		},
 		plugins: [
 			svelte({
 				extensions: config.extensions,
