@@ -50,7 +50,7 @@ test('prints validation errors', async ({ page, baseURL }) => {
 });
 
 test('sets origin', async ({ baseURL, page }) => {
-	const { origin } = new URL(baseURL);
+	const { origin } = new URL(/** @type {string} */ (baseURL));
 
 	await page.goto(`${baseURL}/origin`);
 
