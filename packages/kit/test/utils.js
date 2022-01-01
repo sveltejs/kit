@@ -59,9 +59,11 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	clicknav: async ({ page, javaScriptEnabled }, use) => {
+	clicknav: async ({ page, javaScriptEnabled, started }, use) => {
 		/** @param {string} selector */
 		async function clicknav(selector) {
+			await started();
+
 			if (javaScriptEnabled) {
 				await page.evaluate(() => {
 					window.navigated = new Promise((fulfil, reject) => {
