@@ -1,3 +1,5 @@
+import http from 'http';
+import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
@@ -35,6 +37,16 @@ test.describe.parallel('a11y', () => {
 			expect(await page.innerHTML('[aria-live]')).toBe('b'); // TODO i18n
 		} else {
 			expect(has_live_region).toBeFalsy();
+		}
+	});
+
+	test('keepfocus works', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/keepfocus');
+
+		if (javaScriptEnabled) {
+			await page.type('#input', 'bar');
+			expect(page.url()).toMatch('?foo=bar');
+			expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 		}
 	});
 });
@@ -114,8 +126,14 @@ test.describe.parallel('URL fragments', () => {
 	});
 });
 
-// https://github.com/sveltejs/kit/issues/461
-test.describe.parallel('Asset imports', () => {
+test.describe.parallel('Imports', () => {
+	test('imports from node_modules', async ({ page, clicknav }) => {
+		await page.goto('/imports');
+		await clicknav('[href="/imports/markdown"]');
+		expect(await page.innerHTML('p')).toBe('this is some <strong>markdown</strong>');
+	});
+
+	// https://github.com/sveltejs/kit/issues/461
 	test('handles static asset imports', async ({ baseURL, page }) => {
 		await page.goto('/asset-import');
 
@@ -334,7 +352,7 @@ test.describe.parallel('Encoded paths', () => {
 	});
 });
 
-test.describe('Errors', () => {
+test.describe.parallel('Errors', () => {
 	if (process.env.DEV) {
 		// TODO these probably shouldn't have the full render treatment,
 		// given that they will never be user-visible in prod
@@ -348,6 +366,8 @@ test.describe('Errors', () => {
 		});
 
 		test('server-side module context errors', async ({ page }) => {
+			test.fixme();
+
 			await page.goto('/errors/module-scope-server');
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
@@ -527,6 +547,595 @@ test.describe('Errors', () => {
 			expect(await page.textContent('footer')).toBe('Custom layout');
 			expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
 			expect(await page.innerHTML('h1')).toBe('401');
+		}
+	});
+});
+
+test.describe.parallel('ETags', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('generates etag/304 for text body', async ({ request }) => {
+		const r1 = await request.get('/etag/text');
+		const etag = r1.headers()['etag'];
+		expect(etag).toBeTruthy();
+
+		const r2 = await request.get('/etag/text', {
+			headers: {
+				'if-none-match': etag
+			}
+		});
+
+		expect(r2.status()).toBe(304);
+	});
+
+	test('generates etag/304 for binary body', async ({ request }) => {
+		const r1 = await request.get('/etag/binary');
+		const etag = r1.headers()['etag'];
+		expect(etag).toBeTruthy();
+
+		const r2 = await request.get('/etag/binary', {
+			headers: {
+				'if-none-match': etag
+			}
+		});
+
+		expect(r2.status()).toBe(304);
+	});
+
+	test('support W/ etag prefix', async ({ request }) => {
+		const r1 = await request.get('/etag/text');
+		const etag = r1.headers()['etag'];
+		expect(etag).toBeTruthy();
+
+		const r2 = await request.get('/etag/text', {
+			headers: {
+				'if-none-match': `W/${etag}`
+			}
+		});
+
+		expect(r2.status()).toBe(304);
+	});
+});
+
+test.describe.parallel('Headers', () => {
+	test('disables floc by default', async ({ page }) => {
+		const response = await page.goto('/headers');
+		const headers = response.headers();
+		expect(headers['permissions-policy']).toBe('interest-cohort=()');
+	});
+
+	test('allows headers to be sent as a Headers class instead of a POJO', async ({ page }) => {
+		await page.goto('/headers/class');
+		expect(await page.innerHTML('p')).toBe('bar');
+	});
+});
+
+test.describe.parallel('Load', () => {
+	test('loads', async ({ page }) => {
+		await page.goto('/load');
+		expect(await page.textContent('h1')).toBe('bar == bar?');
+	});
+
+	test('GET fetches are serialized', async ({ page, javaScriptEnabled }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto(`/load/serialization`);
+
+		if (!javaScriptEnabled) {
+			// by the time JS has run, hydration will have nuked these scripts
+			const script_contents = await page.innerHTML('script[data-type="svelte-data"]');
+
+			const payload =
+				'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
+
+			expect(script_contents).toBe(payload);
+		}
+
+		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+	});
+
+	test('POST fetches are serialized', async ({ page, javaScriptEnabled }) => {
+		/** @type {string[]} */
+		const requests = [];
+		page.on('request', (r) => requests.push(r.url()));
+
+		await page.goto(`/load/serialization-post`);
+
+		expect(await page.textContent('h1')).toBe('a: X');
+		expect(await page.textContent('h2')).toBe('b: Y');
+
+		const payload_a =
+			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"X"}';
+
+		const payload_b =
+			'{"status":200,"statusText":"","headers":{"content-type":"text/plain;charset=UTF-8"},"body":"Y"}';
+
+		if (!javaScriptEnabled) {
+			// by the time JS has run, hydration will have nuked these scripts
+			const script_contents_a = await page.innerHTML(
+				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t25"]'
+			);
+
+			const script_contents_b = await page.innerHTML(
+				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t24"]'
+			);
+
+			expect(script_contents_a).toBe(payload_a);
+			expect(script_contents_b).toBe(payload_b);
+		}
+
+		expect(requests.some((r) => r.endsWith('/load/serialization.json'))).toBe(false);
+	});
+
+	test('json string is returned', async ({ page }) => {
+		await page.goto('/load/relay');
+		expect(await page.textContent('h1')).toBe('42');
+	});
+
+	test('prefers static data over endpoint', async ({ page }) => {
+		await page.goto('/load/foo');
+		expect(await page.textContent('h1')).toBe('static file');
+	});
+
+	test('stuff is inherited', async ({ page, javaScriptEnabled, app }) => {
+		await page.goto('/load/stuff/a/b/c');
+		expect(await page.textContent('h1')).toBe('message: original + new');
+		expect(await page.textContent('pre')).toBe(
+			JSON.stringify({
+				x: 'a',
+				y: 'b',
+				z: 'c'
+			})
+		);
+
+		if (javaScriptEnabled) {
+			await app.goto('/load/stuff/d/e/f');
+
+			expect(await page.textContent('h1')).toBe('message: original + new');
+			expect(await page.textContent('pre')).toBe(
+				JSON.stringify({
+					x: 'd',
+					y: 'e',
+					z: 'f'
+				})
+			);
+		}
+	});
+
+	test('load function is only called when necessary', async ({ app, page, javaScriptEnabled }) => {
+		await page.goto('/load/change-detection/one/a');
+
+		expect(await page.textContent('h1')).toBe('layout loads: 1');
+		expect(await page.textContent('h2')).toBe('x: a: 1');
+
+		if (javaScriptEnabled) {
+			await app.goto('/load/change-detection/one/a?unused=whatever');
+			expect(await page.textContent('h2')).toBe('x: a: 1');
+
+			await app.goto('/load/change-detection/two/b');
+			expect(await page.textContent('h2')).toBe('y: b: 1');
+
+			await app.goto('/load/change-detection/one/a');
+			expect(await page.textContent('h2')).toBe('x: a: 1');
+
+			await app.goto('/load/change-detection/one/b');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('/load/change-detection/data.json');
+			expect(await page.textContent('h1')).toBe('layout loads: 2');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+
+			await app.invalidate('/load/change-detection/data.json');
+			expect(await page.textContent('h1')).toBe('layout loads: 3');
+			expect(await page.textContent('h2')).toBe('x: b: 2');
+		}
+	});
+
+	test('fetch accepts a Request object', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-request"]');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
+	test('handles large responses', async ({ page }) => {
+		await page.goto('/load');
+		const port = await ports.find(4000);
+
+		const chunk_size = 50000;
+		const chunk_count = 100;
+		const total_size = chunk_size * chunk_count;
+
+		let chunk = '';
+		for (let i = 0; i < chunk_size; i += 1) {
+			chunk += String(i % 10);
+		}
+
+		let times_responded = 0;
+
+		const server = http.createServer(async (req, res) => {
+			if (req.url === '/large-response.json') {
+				times_responded += 1;
+
+				res.writeHead(200, {
+					'Access-Control-Allow-Origin': '*'
+				});
+
+				for (let i = 0; i < chunk_count; i += 1) {
+					if (!res.write(chunk)) {
+						await new Promise((fulfil) => {
+							res.once('drain', () => {
+								fulfil(undefined);
+							});
+						});
+					}
+				}
+
+				res.end();
+			}
+		});
+
+		await new Promise((fulfil) => {
+			server.listen(port, () => fulfil(undefined));
+		});
+
+		await page.goto(`/load/large-response?port=${port}`);
+		expect(await page.textContent('h1')).toBe(`text.length is ${total_size}`);
+
+		expect(times_responded).toBe(1);
+
+		server.close();
+	});
+
+	test('handles external api', async ({ page }) => {
+		await page.goto('/load');
+		const port = await ports.find(4000);
+
+		/** @type {string[]} */
+		const requested_urls = [];
+
+		const server = http.createServer(async (req, res) => {
+			if (!req.url) throw new Error('Incomplete request');
+			requested_urls.push(req.url);
+
+			if (req.url === '/server-fetch-request-modified.json') {
+				res.writeHead(200, {
+					'Access-Control-Allow-Origin': '*',
+					'content-type': 'application/json'
+				});
+
+				res.end(JSON.stringify({ answer: 42 }));
+			} else {
+				res.statusCode = 404;
+				res.end('not found');
+			}
+		});
+
+		await new Promise((fulfil) => {
+			server.listen(port, () => fulfil(undefined));
+		});
+
+		await page.goto(`/load/server-fetch-request?port=${port}`);
+
+		expect(requested_urls).toEqual(['/server-fetch-request-modified.json']);
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+
+		server.close();
+	});
+
+	test('makes credentialed fetches to endpoints by default', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-credentialed"]');
+		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
+	});
+
+	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/raw-body"]');
+
+		expect(await page.innerHTML('.parsed')).toBe('{"oddly":{"formatted":"json"}}');
+		expect(await page.innerHTML('.raw')).toBe('{ "oddly" : { "formatted" : "json" } }');
+	});
+
+	test('does not leak props to other pages', async ({ page, clicknav }) => {
+		await page.goto('/load/props/about');
+		expect(await page.textContent('p')).toBe('Data: undefined');
+		await clicknav('[href="/load/props/"]');
+		expect(await page.textContent('p')).toBe('Data: Hello from Index!');
+		await clicknav('[href="/load/props/about"]');
+		expect(await page.textContent('p')).toBe('Data: undefined');
+	});
+});
+
+test.describe.parallel('Nested layouts', () => {
+	test('renders a nested layout', async ({ page }) => {
+		await page.goto('/nested-layout');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('p')).toBe('This is a nested layout component');
+		expect(await page.textContent('h1')).toBe('Hello from inside the nested layout component');
+	});
+
+	test('renders errors in the right layout', async ({ page }) => {
+		await page.goto('/nested-layout/error');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error"'
+		);
+		expect(await page.textContent('h1')).toBe('500');
+	});
+
+	test('renders errors in the right layout after client navigation', async ({ page, clicknav }) => {
+		await page.goto('/nested-layout/');
+		await clicknav('[href="/nested-layout/error"]');
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBe(null);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error"'
+		);
+		expect(await page.textContent('h1')).toBe('500');
+	});
+
+	test('renders deeply-nested errors in the right layout', async ({ page }) => {
+		await page.goto('/nested-layout/foo/bar/nope');
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.evaluate(() => document.querySelector('p#nested'))).toBeTruthy();
+		expect(await page.evaluate(() => document.querySelector('p#nested-foo'))).toBeTruthy();
+		expect(await page.evaluate(() => document.querySelector('p#nested-bar'))).toBeTruthy();
+		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+	});
+});
+
+test.describe.parallel('Page options', () => {
+	test('does not hydrate page with hydrate=false', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/no-hydrate');
+
+		await page.click('button');
+		expect(await page.textContent('button')).toBe('clicks: 0');
+
+		if (javaScriptEnabled) {
+			await Promise.all([page.click('[href="/no-hydrate/other"]'), page.waitForNavigation()]);
+			await Promise.all([page.click('[href="/no-hydrate"]'), page.waitForNavigation()]);
+
+			await page.click('button');
+			expect(await page.textContent('button')).toBe('clicks: 1');
+		} else {
+			// ensure data wasn't inlined
+			expect(
+				await page.evaluate(
+					() => document.querySelectorAll('script[data-type="svelte-data"]').length
+				)
+			).toBe(0);
+		}
+	});
+
+	test('does not include modulepreload links if JS is completely disabled', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		if (!javaScriptEnabled) {
+			await page.goto('/no-hydrate/no-js');
+			expect(await page.textContent('h1')).toBe('look ma no javascript');
+			expect(
+				await page.evaluate(() => document.querySelectorAll('link[rel="modulepreload"]').length)
+			).toBe(0);
+		}
+	});
+
+	test('disables router if router=false', async ({ page, clicknav, javaScriptEnabled }) => {
+		await page.goto('/no-router/a');
+
+		if (javaScriptEnabled) {
+			await page.click('button');
+			expect(await page.textContent('button')).toBe('clicks: 1');
+
+			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			expect(await page.textContent('button')).toBe('clicks: 0');
+
+			await page.click('button');
+			expect(await page.textContent('button')).toBe('clicks: 1');
+
+			await clicknav('[href="/no-router/a"]');
+			expect(await page.textContent('button')).toBe('clicks: 1');
+
+			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			expect(await page.textContent('button')).toBe('clicks: 0');
+		}
+	});
+
+	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/no-ssr');
+
+		if (javaScriptEnabled) {
+			expect(await page.textContent('h1')).toBe('content was rendered');
+		} else {
+			expect(await page.evaluate(() => document.querySelector('h1'))).toBe(null);
+			expect(await page.evaluate(() => document.querySelector('style[data-svelte]'))).toBe(null);
+		}
+	});
+
+	test('applies generated component styles with ssr=false (hides announcer)', async ({
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/no-ssr');
+
+			await clicknav('[href="/no-ssr/other"]');
+
+			expect(
+				await page.evaluate(() => {
+					const el = document.querySelector('#svelte-announcer');
+					return el && getComputedStyle(el).position;
+				})
+			).toBe('absolute');
+		}
+	});
+});
+
+test.describe.parallel('$app/paths', () => {
+	test('includes paths', async ({ page }) => {
+		await page.goto(`/paths`);
+
+		expect(await page.innerHTML('pre')).toBe(
+			JSON.stringify({
+				base: '',
+				assets: ''
+			})
+		);
+	});
+});
+
+test.describe.parallel('$app/stores', () => {
+	test('can access page.url', async ({ baseURL, page }) => {
+		await page.goto(`/origin`);
+		expect(await page.textContent('h1')).toBe(baseURL);
+	});
+
+	test('page store functions as expected', async ({ page, clicknav, javaScriptEnabled }) => {
+		await page.goto(`/store`);
+
+		expect(await page.textContent('h1')).toBe('Test');
+		expect(await page.textContent('h2')).toBe('Calls: 1');
+
+		await clicknav('a[href="/store/result"]');
+		expect(await page.textContent('h1')).toBe('Result');
+		expect(await page.textContent('h2')).toBe(javaScriptEnabled ? 'Calls: 1' : 'Calls: 0');
+
+		const oops = await page.evaluate(() => window.oops);
+		expect(oops).toBeUndefined();
+	});
+
+	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
+		await page.goto('/store/navigating/a');
+
+		expect(await page.textContent('#navigating')).toBe('not currently navigating');
+
+		if (javaScriptEnabled) {
+			await app.prefetchRoutes(['/store/navigating/b']);
+			await page.click('a[href="/store/navigating/b"]');
+
+			expect(await page.textContent('#navigating')).toBe(
+				'navigating from /store/navigating/a to /store/navigating/b'
+			);
+
+			await page.waitForSelector('#not-navigating');
+			expect(await page.textContent('#navigating')).toBe('not currently navigating');
+		}
+	});
+});
+
+test.describe.parallel('searchParams', () => {
+	const tests = [
+		{
+			description: 'exposes query string parameters',
+			search: '?foo=1',
+			expected: { foo: ['1'] }
+		},
+		{
+			description: 'value-less query parameter',
+			search: '?foo',
+			expected: { foo: [''] }
+		},
+		{
+			description: 'duplicated query parameter',
+			search: '?key=one&key=two',
+			expected: { key: ['one', 'two'] }
+		},
+		{
+			description: 'encoded query parameter',
+			search: '?key=%26a=b',
+			expected: { key: ['&a=b'] }
+		}
+	];
+
+	tests.forEach(({ description, search, expected }) => {
+		test(description, async ({ page }) => {
+			await page.goto(`/query/echo${search}`);
+
+			const json = JSON.stringify(expected);
+
+			expect(await page.textContent('#one')).toBe(json);
+			expect(await page.textContent('#two')).toBe(json);
+		});
+	});
+
+	test('updates page on client-side nav', async ({ page, clicknav }) => {
+		await page.goto('/query/echo?foo=1');
+
+		await clicknav('[href="/query/echo?bar=2"]');
+
+		const json = JSON.stringify({ bar: ['2'] });
+
+		expect(await page.textContent('#one')).toBe(json);
+		expect(await page.textContent('#two')).toBe(json);
+	});
+});
+
+test.describe.parallel('Redirects', () => {
+	test('redirect', async ({ page, clicknav }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/a"]');
+
+		await page.waitForURL(`/redirect/c`);
+		expect(await page.textContent('h1')).toBe('c');
+	});
+
+	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
+		await page.goto('/redirect');
+
+		await page.click('[href="/redirect/loopy/a"]');
+
+		if (javaScriptEnabled) {
+			await page.waitForSelector('#message');
+			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
+			expect(await page.textContent('h1')).toBe('500');
+			expect(await page.textContent('#message')).toBe(
+				'This is your custom error page saying: "Redirect loop"'
+			);
+		} else {
+			// there's not a lot we can do to handle server-side redirect loops
+			expect(page.url()).toBe('chrome-error://chromewebdata/');
+		}
+	});
+
+	test('errors on missing status', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/missing-status/a"]');
+
+		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+		);
+	});
+
+	test('errors on invalid status', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/redirect');
+
+		await clicknav('[href="/redirect/missing-status/b"]');
+
+		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
+		expect(await page.textContent('h1')).toBe('500');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: ""redirect" property returned from load() must be accompanied by a 3xx status code"'
+		);
+	});
+
+	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
+		await page.goto('/redirect-on-load');
+
+		if (javaScriptEnabled) {
+			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
+			expect(await page.textContent('h1')).toBe('Hazaa!');
+		} else {
+			expect(page.url()).toBe(`${baseURL}/redirect-on-load`);
 		}
 	});
 });

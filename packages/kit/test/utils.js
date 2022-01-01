@@ -1,28 +1,36 @@
 import fs from 'fs';
-import { format } from 'util';
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
 	// @ts-expect-error
-	is_in_viewport: async ({ page, javaScriptEnabled }, use) => {
-		/** @param {string} selector */
-		async function is_in_viewport(selector) {
-			// @ts-expect-error
-			return page.$eval(selector, async (element) => {
-				const visibleRatio = await new Promise((resolve) => {
-					const observer = new IntersectionObserver((entries) => {
-						resolve(entries[0].intersectionRatio);
-						observer.disconnect();
-					});
-					observer.observe(element);
-					// Firefox doesn't call IntersectionObserver callback unless there are rafs
-					requestAnimationFrame(() => {});
-				});
-				return visibleRatio > 0;
-			});
-		}
+	app: async ({ page, javaScriptEnabled }, use) => {
+		// these are assumed to have been put in the global scope by the layout
+		use({
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
+			goto: (url) => page.evaluate((/** @type {string} */ url) => goto(url), url),
 
-		use(is_in_viewport);
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
+			invalidate: (url) => page.evaluate((/** @type {string} */ url) => invalidate(url), url),
+
+			/**
+			 * @param {string} url
+			 * @returns {Promise<void>}
+			 */
+			prefetch: (url) => page.evaluate((/** @type {string} */ url) => prefetch(url), url),
+
+			/**
+			 * @param {string[]} [urls]
+			 * @returns {Promise<void>}
+			 */
+			prefetchRoutes: (urls) =>
+				page.evaluate((/** @type {string[]} */ urls) => prefetchRoutes(urls), urls)
+		});
 	},
 
 	// @ts-expect-error
@@ -55,6 +63,28 @@ export const test = base.extend({
 		}
 
 		use(clicknav);
+	},
+
+	// @ts-expect-error
+	is_in_viewport: async ({ page, javaScriptEnabled }, use) => {
+		/** @param {string} selector */
+		async function is_in_viewport(selector) {
+			// @ts-expect-error
+			return page.$eval(selector, async (element) => {
+				const visibleRatio = await new Promise((resolve) => {
+					const observer = new IntersectionObserver((entries) => {
+						resolve(entries[0].intersectionRatio);
+						observer.disconnect();
+					});
+					observer.observe(element);
+					// Firefox doesn't call IntersectionObserver callback unless there are rafs
+					requestAnimationFrame(() => {});
+				});
+				return visibleRatio > 0;
+			});
+		}
+
+		use(is_in_viewport);
 	},
 
 	// @ts-expect-error
