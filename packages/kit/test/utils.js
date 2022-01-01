@@ -61,7 +61,9 @@ export const test = base.extend({
 	read_errors: ({}, use) => {
 		/** @param {string} path */
 		function read_errors(path) {
-			const errors = JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
+			const errors =
+				fs.existsSync('test/errors.json') &&
+				JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
 			return errors[path];
 		}
 

@@ -13,7 +13,9 @@ export const handleError = ({ request, error }) => {
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
 	// is trickier when things run concurrently
-	const errors = JSON.parse(fs.readFileSync('test/errors.json', 'utf8'));
+	const errors = fs.existsSync('test/errors.json')
+		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
+		: {};
 	errors[request.url.pathname] = error.stack || error.message;
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
 };
