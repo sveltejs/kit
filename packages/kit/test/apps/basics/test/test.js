@@ -347,6 +347,22 @@ test.describe.parallel('Endpoints', () => {
 		expect(response.headers()['content-type']).toBe('application/xml');
 		expect(await response.text()).toBe('<foo />');
 	});
+
+	test('endpoints can shadow pages', async ({ page }) => {
+		await page.goto('/routing/shadow');
+
+		const random = String(Math.random());
+
+		await page.evaluate((random) => {
+			const el = document.querySelector('input');
+			if (!el) throw new Error('Could not find input');
+			el.value = random;
+		}, random);
+
+		await page.click('button');
+
+		expect(await page.textContent('h1')).toBe(random);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
@@ -946,6 +962,25 @@ test.describe.parallel('Nested layouts', () => {
 		expect(await page.evaluate(() => document.querySelector('p#nested-bar'))).toBeTruthy();
 		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
 	});
+
+	test('resets layout', async ({ page }) => {
+		await page.goto('/nested-layout/reset');
+
+		expect(await page.evaluate(() => document.querySelector('footer'))).toBe(null);
+		expect(await page.evaluate(() => document.querySelector('p'))).toBe(null);
+		expect(await page.textContent('h1')).toBe('Layout reset');
+		expect(await page.textContent('h2')).toBe('Hello');
+	});
+
+	test('renders the closest error page', async ({ page, clicknav }) => {
+		await page.goto('/errors/nested-error-page');
+
+		await clicknav('[href="/errors/nested-error-page/nope"]');
+
+		expect(await page.textContent('h1')).toBe('Nested error page');
+		expect(await page.textContent('#nested-error-status')).toBe('status: 500');
+		expect(await page.textContent('#nested-error-message')).toBe('error.message: nope');
+	});
 });
 
 test.describe.parallel('Page options', () => {
@@ -1480,6 +1515,66 @@ test.describe.parallel('Routing', () => {
 			fs.unlinkSync(filePath);
 		}
 	});
+
+	test('navigates to ...rest', async ({ page, clicknav }) => {
+		await page.goto('/routing/rest/abc/xyz');
+
+		expect(await page.textContent('h1')).toBe('abc/xyz');
+
+		await clicknav('[href="/routing/rest/xyz/abc/def/ghi"]');
+		expect(await page.textContent('h1')).toBe('xyz/abc/def/ghi');
+		expect(await page.textContent('h2')).toBe('xyz/abc/def/ghi');
+
+		await clicknav('[href="/routing/rest/xyz/abc/def"]');
+		expect(await page.textContent('h1')).toBe('xyz/abc/def');
+		expect(await page.textContent('h2')).toBe('xyz/abc/def');
+
+		await clicknav('[href="/routing/rest/xyz/abc"]');
+		expect(await page.textContent('h1')).toBe('xyz/abc');
+		expect(await page.textContent('h2')).toBe('xyz/abc');
+
+		await clicknav('[href="/routing/rest"]');
+		expect(await page.textContent('h1')).toBe('');
+		expect(await page.textContent('h2')).toBe('');
+
+		await clicknav('[href="/routing/rest/xyz/abc/deep"]');
+		expect(await page.textContent('h1')).toBe('xyz/abc');
+		expect(await page.textContent('h2')).toBe('xyz/abc');
+
+		await page.click('[href="/routing/rest/xyz/abc/qwe/deep.json"]');
+		expect(await page.textContent('body')).toBe('xyz/abc/qwe');
+	});
+
+	test('rest parameters do not swallow characters', async ({ page, clicknav, back }) => {
+		await page.goto('/routing/rest/non-greedy');
+
+		await clicknav('[href="/routing/rest/non-greedy/foo/one/two"]');
+		expect(await page.textContent('h1')).toBe('non-greedy');
+		expect(await page.textContent('h2')).toBe('{"rest":"one/two"}');
+
+		await clicknav('[href="/routing/rest/non-greedy/food/one/two"]');
+		expect(await page.textContent('h1')).not.toBe('non-greedy');
+
+		await back();
+
+		await clicknav('[href="/routing/rest/non-greedy/one-bar/two/three"]');
+		expect(await page.textContent('h1')).toBe('non-greedy');
+		expect(await page.textContent('h2')).toBe('{"dynamic":"one","rest":"two/three"}');
+
+		await clicknav('[href="/routing/rest/non-greedy/one-bard/two/three"]');
+		expect(await page.textContent('h1')).not.toBe('non-greedy');
+	});
+
+	test('reloads when navigating between ...rest pages', async ({ page, clicknav }) => {
+		await page.goto('/routing/rest/path/one');
+		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/one');
+
+		await clicknav('[href="/routing/rest/path/two"]');
+		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/two');
+
+		await clicknav('[href="/routing/rest/path/three"]');
+		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/three');
+	});
 });
 
 test.describe.parallel('Session', () => {
@@ -1493,6 +1588,35 @@ test.describe.parallel('Session', () => {
 			await page.click('button');
 			expect(await page.innerHTML('h1')).toBe('answer via props: 43');
 			expect(await page.innerHTML('h2')).toBe('answer via store: 43');
+		}
+	});
+});
+
+test.describe.parallel('Shadow DOM', () => {
+	test('client router captures anchors in shadow dom', async ({
+		app,
+		page,
+		clicknav,
+		javaScriptEnabled,
+		started
+	}) => {
+		await page.goto('/routing/shadow-dom');
+
+		if (javaScriptEnabled) {
+			await started();
+			await app.prefetchRoutes(['/routing/a']).catch((e) => {
+				// from error handler tests; ignore
+				if (!e.message.includes('Crashing now')) throw e;
+			});
+
+			/** @type {string[]} */
+			const requests = [];
+			page.on('request', (r) => requests.push(r.url()));
+
+			await clicknav('div[id="clickme"]');
+			expect(await page.textContent('h1')).toBe('a');
+
+			expect(requests).toEqual([]);
 		}
 	});
 });
