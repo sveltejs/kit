@@ -1,7 +1,12 @@
+import fs from 'fs';
+import path from 'path';
 import http from 'http';
 import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
+import { fileURLToPath } from 'url';
+
+/** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('a11y', () => {
 	test('resets focus', async ({ page, clicknav }) => {
@@ -252,19 +257,19 @@ test.describe.parallel('Endpoints', () => {
 
 	test('200 status on empty endpoint', async ({ request }) => {
 		const response = await request.get('/endpoint-output/empty');
-		expect(response.status()).toBe(200);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(await response.json()).toEqual({});
 	});
 
 	test('set-cookie without body', async ({ request }) => {
 		const response = await request.get('/endpoint-output/headers');
-		expect(response.status()).toBe(200);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(response.headers()['set-cookie']).toBeDefined();
 	});
 
 	test('200 status by default', async ({ request }) => {
 		const response = await request.get('/endpoint-output/body');
-		expect(response.status()).toBe(200);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(await response.text()).toBe('{}');
 	});
 
@@ -276,7 +281,7 @@ test.describe.parallel('Endpoints', () => {
 
 	test('null body returns null json value', async ({ request }) => {
 		const response = await request.get('/endpoint-output/null');
-		expect(response.status()).toBe(200);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(await response.json()).toBe(null);
 	});
 
@@ -422,7 +427,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Not found: /why/would/anyone/fetch/this/url"'
 		);
-		expect(response.status()).toBe(404);
+		expect(/** @type {Response} */ (response).status()).toBe(404);
 	});
 
 	test('server-side error from load() is a string', async ({ page }) => {
@@ -432,7 +437,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Not found"'
 		);
-		expect(response.status()).toBe(555);
+		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
 	test('client-side error from load() is a string', async ({ page, javaScriptEnabled }) => {
@@ -454,7 +459,7 @@ test.describe.parallel('Errors', () => {
 		expect(await page.textContent('#message')).toBe(
 			'This is your custom error page saying: "Not found"'
 		);
-		expect(response.status()).toBe(555);
+		expect(/** @type {Response} */ (response).status()).toBe(555);
 	});
 
 	test('client-side error from load() is an Error', async ({ page, javaScriptEnabled }) => {
@@ -494,7 +499,7 @@ test.describe.parallel('Errors', () => {
 	test('invalid route response is handled', async ({ request }) => {
 		const response = await request.get('/errors/invalid-route-response');
 
-		expect(response.status()).toBe(500);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(500);
 		expect(await response.text()).toMatch('expected an object');
 	});
 
@@ -504,7 +509,7 @@ test.describe.parallel('Errors', () => {
 	test.skip('unhandled http method', async ({ request }) => {
 		const response = await request.put('/errors/invalid-route-response');
 
-		expect(response.status()).toBe(501);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(501);
 		expect(await response.text()).toMatch('PUT is not implemented');
 	});
 
@@ -537,7 +542,7 @@ test.describe.parallel('Errors', () => {
 
 		expect(await page.textContent('footer')).toBe('Custom layout');
 		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
-		expect(response.status()).toBe(401);
+		expect(/** @type {Response} */ (response).status()).toBe(401);
 	});
 
 	test('client-side 4xx status without error from load()', async ({ page, javaScriptEnabled }) => {
@@ -600,7 +605,7 @@ test.describe.parallel('ETags', () => {
 test.describe.parallel('Headers', () => {
 	test('disables floc by default', async ({ page }) => {
 		const response = await page.goto('/headers');
-		const headers = response.headers();
+		const headers = /** @type {Response} */ (response).headers();
 		expect(headers['permissions-policy']).toBe('interest-cohort=()');
 	});
 
@@ -1128,14 +1133,294 @@ test.describe.parallel('Redirects', () => {
 		);
 	});
 
-	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
+	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled, started }) => {
 		await page.goto('/redirect-on-load');
 
 		if (javaScriptEnabled) {
+			await started();
 			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
 			expect(await page.textContent('h1')).toBe('Hazaa!');
 		} else {
 			expect(page.url()).toBe(`${baseURL}/redirect-on-load`);
+		}
+	});
+});
+
+test.describe.parallel('Routing', () => {
+	test('redirects from /routing/ to /routing', async ({
+		baseURL,
+		page,
+		clicknav,
+		app,
+		javaScriptEnabled,
+		started
+	}) => {
+		await page.goto('/routing/slashes');
+
+		await clicknav('a[href="/routing/"]');
+		expect(page.url()).toBe(`${baseURL}/routing`);
+		expect(await page.textContent('h1')).toBe('Great success!');
+
+		if (javaScriptEnabled) {
+			await page.goto(`${baseURL}/routing/slashes`);
+			await started();
+			await app.goto('/routing/');
+			expect(page.url()).toBe(`${baseURL}/routing`);
+			expect(await page.textContent('h1')).toBe('Great success!');
+		}
+	});
+
+	test('redirects from /routing/? to /routing', async ({
+		baseURL,
+		page,
+		clicknav,
+		app,
+		javaScriptEnabled,
+		started
+	}) => {
+		await page.goto('/routing/slashes');
+
+		await clicknav('a[href="/routing/?"]');
+		expect(page.url()).toBe(`${baseURL}/routing`);
+		expect(await page.textContent('h1')).toBe('Great success!');
+
+		if (javaScriptEnabled) {
+			await page.goto(`${baseURL}/routing/slashes`);
+			await started();
+			await app.goto('/routing/?');
+			expect(page.url()).toBe(`${baseURL}/routing`);
+			expect(await page.textContent('h1')).toBe('Great success!');
+		}
+	});
+
+	test('redirects from /routing/?foo=bar to /routing?foo=bar', async ({
+		baseURL,
+		page,
+		clicknav,
+		app,
+		javaScriptEnabled,
+		started
+	}) => {
+		await page.goto('/routing/slashes');
+
+		await clicknav('a[href="/routing/?foo=bar"]');
+		expect(page.url()).toBe(`${baseURL}/routing?foo=bar`);
+		expect(await page.textContent('h1')).toBe('Great success!');
+
+		if (javaScriptEnabled) {
+			await page.goto(`${baseURL}/routing/slashes`);
+			await started();
+			await app.goto('/routing/?foo=bar');
+			expect(page.url()).toBe(`${baseURL}/routing?foo=bar`);
+			expect(await page.textContent('h1')).toBe('Great success!');
+		}
+	});
+
+	test('serves static route', async ({ page }) => {
+		await page.goto('/routing/a');
+		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('serves static route from dir/index.html file', async ({ page }) => {
+		await page.goto('/routing/b');
+		expect(await page.textContent('h1')).toBe('b');
+	});
+
+	test('serves static route under client directory', async ({ baseURL, page }) => {
+		await page.goto('/routing/client/foo');
+
+		expect(await page.textContent('h1')).toBe('foo');
+
+		await page.goto(`${baseURL}/routing/client/bar`);
+		expect(await page.textContent('h1')).toBe('bar');
+
+		await page.goto(`${baseURL}/routing/client/bar/b`);
+		expect(await page.textContent('h1')).toBe('b');
+	});
+
+	test('serves dynamic route', async ({ page }) => {
+		await page.goto('/routing/test-slug');
+		expect(await page.textContent('h1')).toBe('test-slug');
+	});
+
+	test('navigates to a new page without reloading', async ({
+		app,
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing');
+			await app.prefetchRoutes(['/routing/a']).catch((e) => {
+				// from error handler tests; ignore
+				if (!e.message.includes('Crashing now')) throw e;
+			});
+
+			/** @type {string[]} */
+			const requests = [];
+			page.on('request', (r) => requests.push(r.url()));
+
+			await clicknav('a[href="/routing/a"]');
+			expect(await page.textContent('h1')).toBe('a');
+
+			expect(requests).toEqual([]);
+		}
+	});
+
+	test('navigates programmatically', async ({ page, app, javaScriptEnabled, started }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+			await started();
+			await app.goto('/routing/b');
+			expect(await page.textContent('h1')).toBe('b');
+		}
+	});
+
+	test('prefetches programmatically', async ({
+		baseURL,
+		page,
+		app,
+		javaScriptEnabled,
+		started
+	}) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/a');
+			await started();
+
+			/** @type {string[]} */
+			let requests = [];
+			page.on('request', (r) => requests.push(r.url()));
+
+			await app.prefetch('/routing/prefetched');
+			expect(requests.length).toBe(2);
+			expect(requests[1]).toBe(`${baseURL}/routing/prefetched.json`);
+
+			requests = [];
+			await app.goto('/routing/prefetched');
+			expect(requests).toEqual([]);
+
+			try {
+				await app.prefetch('https://example.com');
+				throw new Error('Error was not thrown');
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch('Attempted to prefetch a URL that does not belong to this app');
+			}
+		}
+	});
+
+	test('does not attempt client-side navigation to server routes', async ({ page }) => {
+		await page.goto('/routing');
+		await page.click('[href="/routing/ambiguous/ok.json"]');
+		expect(await page.textContent('body')).toBe('ok');
+	});
+
+	test('allows reserved words as route names', async ({ page }) => {
+		await page.goto('/routing/const');
+		expect(await page.textContent('h1')).toBe('reserved words are okay as routes');
+	});
+
+	test('resets the active element after navigation', async ({ page, clicknav }) => {
+		await page.goto('/routing');
+		await clicknav('[href="/routing/a"]');
+		await page.waitForFunction(() => (document.activeElement || {}).nodeName == 'BODY');
+	});
+
+	test('navigates between routes with empty parts', async ({ page, clicknav }) => {
+		await page.goto('/routing/dirs/foo');
+		expect(await page.textContent('h1')).toBe('foo');
+		await clicknav('[href="bar"]');
+		expect(await page.textContent('h1')).toBe('bar');
+	});
+
+	test('navigates between dynamic routes with same segments', async ({ page, clicknav }) => {
+		await page.goto('/routing/dirs/bar/xyz');
+		expect(await page.textContent('h1')).toBe('A page');
+
+		await clicknav('[href="/routing/dirs/foo/xyz"]');
+		expect(await page.textContent('h1')).toBe('B page');
+	});
+
+	test('invalidates page when a segment is skipped', async ({ page, clicknav }) => {
+		await page.goto('/routing/skipped/x/1');
+		expect(await page.textContent('h1')).toBe('x/1');
+
+		await clicknav('#goto-y1');
+		expect(await page.textContent('h1')).toBe('y/1');
+	});
+
+	test('back button returns to initial route', async ({ page, clicknav, back }) => {
+		await page.goto('/routing');
+		await clicknav('[href="/routing/a"]');
+
+		await back();
+		expect(await page.textContent('h1')).toBe('Great success!');
+	});
+
+	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
+		page,
+		clicknav,
+		back
+	}) => {
+		await page.goto('/routing/hashes/a');
+
+		await clicknav('[href="#hash-target"]');
+		await clicknav('[href="/routing/hashes/b"]');
+
+		await back();
+		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('fallthrough', async ({ page }) => {
+		await page.goto('/routing/fallthrough-simple/invalid');
+		expect(await page.textContent('h1')).toBe('Page');
+	});
+
+	test('dynamic fallthrough of pages and endpoints', async ({ page, clicknav }) => {
+		await page.goto('/routing/fallthrough-advanced/borax');
+		expect(await page.textContent('h1')).toBe('borax is a mineral');
+
+		await clicknav('[href="/routing/fallthrough-advanced/camel"]');
+		expect(await page.textContent('h1')).toBe('camel is an animal');
+
+		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
+	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
+		await page.goto('/routing/split-params');
+		await clicknav('[href="/routing/split-params/x-y-z"]');
+		expect(await page.textContent('h1')).toBe('x');
+		expect(await page.textContent('h2')).toBe('y-z');
+	});
+
+	test('ignores navigation to URLs the app does not own', async ({ page }) => {
+		await page.goto('/routing');
+		await page.click('[href="https://www.google.com"]');
+		expect(page.url()).toBe('https://www.google.com/');
+	});
+
+	// skipping this test because it causes a bunch of failures locally
+	test.skip('watch new route in dev', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/routing');
+
+		if (!process.env.DEV || javaScriptEnabled) {
+			return;
+		}
+
+		// hash the filename so that it won't conflict with
+		// future test file that has the same name
+		const route = 'bar' + new Date().valueOf();
+		const content = 'Hello new route';
+		const __dirname = path.dirname(fileURLToPath(import.meta.url));
+		const filePath = path.join(__dirname, `${route}.svelte`);
+
+		try {
+			fs.writeFileSync(filePath, `<h1>${content}</h1>`);
+			await page.goto(`/routing/${route}`);
+
+			expect(await page.textContent('h1')).toBe(content);
+		} finally {
+			fs.unlinkSync(filePath);
 		}
 	});
 });

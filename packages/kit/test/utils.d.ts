@@ -15,9 +15,11 @@ export const test: TestType<
 				prefetch: (url: string) => Promise<void>;
 				prefetchRoutes: (urls: string[]) => Promise<void>;
 			};
+			back: () => Promise<void>;
 			clicknav: (selector: string) => Promise<void>;
 			is_in_viewport: (selector: string) => Promise<boolean>;
 			read_errors: (href: string) => string;
+			started: () => Promise<void>;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
