@@ -303,6 +303,9 @@ function comparator(a, b) {
 		if (!b_sub_part) return -1;
 
 		if (a_sub_part.rest && b_sub_part.rest) {
+			if (a.is_page !== b.is_page) {
+				return a.is_page ? 1 : -1;
+			}
 			// sort alphabetically
 			return a_sub_part.content < b_sub_part.content ? -1 : 1;
 		}
