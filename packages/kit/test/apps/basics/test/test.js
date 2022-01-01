@@ -54,9 +54,38 @@ test.describe.parallel('a11y', () => {
 			expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 		}
 	});
+
+	test('reset selection', async ({ page, clicknav }) => {
+		await page.goto('/selection/a');
+
+		expect(
+			await page.evaluate(() => {
+				const range = document.createRange();
+				range.selectNodeContents(document.body);
+				const selection = getSelection();
+				if (selection) {
+					selection.removeAllRanges();
+					selection.addRange(range);
+					return selection.rangeCount;
+				}
+				return 0;
+			})
+		).toBe(1);
+
+		await clicknav('[href="/selection/b"]');
+		expect(
+			await page.evaluate(() => {
+				const selection = getSelection();
+				if (selection) {
+					return selection.rangeCount;
+				}
+				return 1;
+			})
+		).toBe(0);
+	});
 });
 
-test.describe.parallel('URL fragments', () => {
+test.describe.parallel('Scrolling', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('url-supplied anchor works on direct page load', async ({ page, is_in_viewport }) => {
@@ -128,6 +157,26 @@ test.describe.parallel('URL fragments', () => {
 		await page.goto('/anchor-with-manual-scroll');
 		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
 		expect(await is_in_viewport('#abcde')).toBeTruthy();
+	});
+
+	test('app-supplied scroll and focus work on direct page load', async ({
+		page,
+		is_in_viewport
+	}) => {
+		await page.goto('/use-action/focus-and-scroll');
+		expect(await is_in_viewport('#input')).toBe(true);
+		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
+	});
+
+	test('app-supplied scroll and focus work on navigation to page', async ({
+		page,
+		clicknav,
+		is_in_viewport
+	}) => {
+		await page.goto('/use-action');
+		await clicknav('[href="/use-action/focus-and-scroll"]');
+		expect(await is_in_viewport('#input')).toBe(true);
+		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
 });
 
@@ -616,6 +665,11 @@ test.describe.parallel('Headers', () => {
 });
 
 test.describe.parallel('Load', () => {
+	test('fetch in root index.svelte works', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.textContent('h1')).toBe('the answer is 42');
+	});
+
 	test('loads', async ({ page }) => {
 		await page.goto('/load');
 		expect(await page.textContent('h1')).toBe('bar == bar?');
@@ -1247,10 +1301,13 @@ test.describe.parallel('Routing', () => {
 		app,
 		page,
 		clicknav,
-		javaScriptEnabled
+		javaScriptEnabled,
+		started
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/routing');
+
+			await started();
 			await app.prefetchRoutes(['/routing/a']).catch((e) => {
 				// from error handler tests; ignore
 				if (!e.message.includes('Crashing now')) throw e;
@@ -1422,5 +1479,67 @@ test.describe.parallel('Routing', () => {
 		} finally {
 			fs.unlinkSync(filePath);
 		}
+	});
+});
+
+test.describe.parallel('Session', () => {
+	test('session is available', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/session');
+
+		expect(await page.innerHTML('h1')).toBe('answer via props: 42');
+		expect(await page.innerHTML('h2')).toBe('answer via store: 42');
+
+		if (javaScriptEnabled) {
+			await page.click('button');
+			expect(await page.innerHTML('h1')).toBe('answer via props: 43');
+			expect(await page.innerHTML('h2')).toBe('answer via store: 43');
+		}
+	});
+});
+
+test.describe.parallel('Static files', () => {
+	test('static files', async ({ request }) => {
+		let response = await request.get('/static.json');
+		expect(await response.json()).toBe('static file');
+
+		response = await request.get('/subdirectory/static.json');
+		expect(await response.json()).toBe('subdirectory file');
+	});
+});
+
+test.describe.parallel('XSS', () => {
+	test('replaces %svelte.xxx% tags safely', async ({ page }) => {
+		await page.goto('/unsafe-replacement');
+
+		const content = await page.textContent('body');
+		expect(content).toMatch('$& $&');
+	});
+
+	test('escapes inline data', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/xss');
+
+		expect(await page.textContent('h1')).toBe(
+			'user.name is </script><script>window.pwned = 1</script>'
+		);
+
+		if (!javaScriptEnabled) {
+			// @ts-expect-error - check global injected variable
+			expect(await page.evaluate(() => window.pwned)).toBeUndefined();
+		}
+	});
+
+	const uri_xss_payload = encodeURIComponent('</script><script>window.pwned=1</script>');
+	test('no xss via dynamic route path', async ({ page }) => {
+		await page.goto(`/xss/${uri_xss_payload}`);
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
+	});
+
+	test('no xss via query param', async ({ page }) => {
+		await page.goto(`/xss/query?key=${uri_xss_payload}`);
+
+		// @ts-expect-error - check global injected variable
+		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
 	});
 });
