@@ -58,7 +58,7 @@ export class Router {
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
 
-		if (history.state?.['sveltekit:index'] == 0) {
+		if (history.state?.['sveltekit:index'] === 0) {
 			// create initial history entry, so we can return here
 			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 		}
