@@ -10,4 +10,13 @@ export default function (test, is_dev) {
 			`Hello from the ${js ? 'client' : 'server'} in ${is_dev ? 'dev' : 'prod'} mode!`
 		);
 	});
+
+	test(
+		'does not register service worker if none created',
+		'/path-base/',
+		async ({ page }) => {
+			assert.not.match(await page.content(), /navigator\.serviceWorker/);
+		},
+		{ dev: false, js: false }
+	);
 }
