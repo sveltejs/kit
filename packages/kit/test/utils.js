@@ -163,6 +163,7 @@ export const config = {
 		port: 3000,
 		timeout: 10000
 	},
+	workers: 8,
 	projects: [
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
