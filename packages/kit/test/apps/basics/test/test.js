@@ -85,7 +85,7 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
-test.describe.only('Scrolling', () => {
+test.describe('Scrolling', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('url-supplied anchor works on direct page load', async ({ page, in_view }) => {
