@@ -8,6 +8,10 @@ A component that defines a page or a layout can export a `load` function that ru
 // Declaration types for Loading
 // * declarations that are not exported are for internal use
 
+// type of string[] is only for set-cookie
+// everything else must be a type of string
+type ResponseHeaders = Record<string, string | string[]>;
+
 export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Stuff extends Record<string, any> = Record<string, any>,
@@ -30,6 +34,7 @@ export interface LoadOutput<
 	props?: Props;
 	stuff?: Stuff;
 	maxage?: number;
+	headers?: ResponseHeaders;
 }
 ```
 
@@ -154,3 +159,9 @@ If the `load` function returns a `props` object, the props will be passed to the
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
 This only applies to layout components, _not_ page components.
+
+#### headers
+
+Custom headers that are added to the response when a page component is requested. `headers` are only considered when the load function runs on the server-side.
+
+This only applies to page components, _not_ layout components.
