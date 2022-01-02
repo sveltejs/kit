@@ -86,7 +86,10 @@ test.describe.parallel('a11y', () => {
 });
 
 test.describe('Scrolling', () => {
-	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+	// skip these tests if
+	// a) JS is disabled, since we're testing client-side behaviour, or
+	// b) we're in CI, because for unknown reasons the tests are flaky as hell there
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.CI);
 
 	test('url-supplied anchor works on direct page load', async ({ page, in_view }) => {
 		await page.goto('/anchor/anchor#go-to-element');
