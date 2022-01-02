@@ -293,48 +293,6 @@ importers:
       tiny-glob: 0.2.9
       uvu: 0.5.2
 
-  packages/kit/test/apps/amp:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-    devDependencies:
-      '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-
-  packages/kit/test/apps/basics:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-    devDependencies:
-      '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-
-  packages/kit/test/apps/options:
-    specifiers:
-      '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-    devDependencies:
-      '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-
-  packages/kit/test/apps/options-2:
-    specifiers:
-      '@sveltejs/adapter-node': workspace:*
-      '@sveltejs/kit': workspace:*
-      cross-env: ^7.0.3
-      svelte: ^3.43.0
-    devDependencies:
-      '@sveltejs/adapter-node': link:../../../../adapter-node
-      '@sveltejs/kit': link:../../..
-      cross-env: 7.0.3
-      svelte: 3.44.2
-
 packages:
 
   /@actions/core/1.6.0:
