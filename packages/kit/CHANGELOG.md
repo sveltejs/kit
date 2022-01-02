@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.213
+
+### Patch Changes
+
+- Don't register service worker if there is none ([#3170](https://github.com/sveltejs/kit/pull/3170))
+
+* Fix url pathname for prerenders ([#3178](https://github.com/sveltejs/kit/pull/3178))
+
 ## 1.0.0-next.212
 
 ### Patch Changes

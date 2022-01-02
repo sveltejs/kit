@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Fix types ([#3181](https://github.com/sveltejs/kit/pull/3181))
+
+* Check if directory exists, before compressing ([#3179](https://github.com/sveltejs/kit/pull/3179))
+
 ## 1.0.0-next.58
 
 ### Patch Changes
