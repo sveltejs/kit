@@ -131,7 +131,10 @@ export class Renderer {
 		if (import.meta.env.DEV && this.started && !this.updating) {
 			throw new Error(`Can only disable scroll handling during navigation`);
 		}
-		this.autoscroll = false;
+
+		if (this.updating || !this.started) {
+			this.autoscroll = false;
+		}
 	}
 
 	/**
