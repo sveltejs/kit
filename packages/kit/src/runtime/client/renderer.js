@@ -128,9 +128,9 @@ export class Renderer {
 	}
 
 	disable_scroll_handling() {
-		// if (import.meta.env.DEV && this.started && !this.updating) {
-		// 	throw new Error(`Can only disable scroll handling during navigation`);
-		// }
+		if (import.meta.env.DEV && this.started && !this.updating) {
+			throw new Error(`Can only disable scroll handling during navigation`);
+		}
 		this.autoscroll = false;
 	}
 

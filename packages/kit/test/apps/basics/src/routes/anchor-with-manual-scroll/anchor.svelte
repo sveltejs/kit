@@ -3,7 +3,7 @@
 	import { disableScrollHandling } from '$app/navigation';
 
 	onMount(() => {
-		// disableScrollHandling();
+		disableScrollHandling();
 		document.getElementById('abcde')?.scrollIntoView();
 	});
 </script>
