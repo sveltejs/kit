@@ -1224,6 +1224,7 @@ test.describe.parallel('Redirects', () => {
 
 		if (javaScriptEnabled) {
 			await started();
+			await page.waitForTimeout(50); // TODO investigate why this test is flaky
 			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
 			expect(await page.textContent('h1')).toBe('Hazaa!');
 		} else {
