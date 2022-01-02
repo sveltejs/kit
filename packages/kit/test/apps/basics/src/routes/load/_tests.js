@@ -239,4 +239,9 @@ export default function (test) {
 		await clicknav('[href="/load/props/about"]');
 		assert.equal(await page.textContent('p'), 'Data: undefined');
 	});
+
+	test('load returns response headers', null, async ({ fetch }) => {
+		const loadReq = await fetch('/load/headers');
+		assert.equal(loadReq.headers.get('potato'), 'potahto');
+	});
 }

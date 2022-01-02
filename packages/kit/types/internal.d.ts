@@ -10,6 +10,7 @@ import {
 	ServerResponse
 } from './hooks';
 import { Load } from './page';
+import { ResponseHeaders } from './helper';
 
 type PageId = string;
 
@@ -226,6 +227,7 @@ export interface NormalizedLoadOutput {
 	props?: Record<string, any> | Promise<Record<string, any>>;
 	stuff?: Record<string, any>;
 	maxage?: number;
+	headers?: ResponseHeaders;
 }
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';

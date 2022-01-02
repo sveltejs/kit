@@ -40,6 +40,7 @@ export async function render_response({
 
 	let is_private = false;
 	let maxage;
+	let loadHeaders;
 
 	if (error) {
 		error.stack = options.get_stack(error);
@@ -57,6 +58,7 @@ export async function render_response({
 			if (uses_credentials) is_private = true;
 
 			maxage = loaded.maxage;
+			loadHeaders = loaded.headers;
 		});
 
 		const session = writable($session);
@@ -211,6 +213,12 @@ export async function render_response({
 
 	if (!options.floc) {
 		headers['permissions-policy'] = 'interest-cohort=()';
+	}
+
+	if (loadHeaders) {
+		for (const header of Object.keys(loadHeaders)) {
+			headers[header] = loadHeaders[header];
+		}
 	}
 
 	return {

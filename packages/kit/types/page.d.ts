@@ -1,4 +1,4 @@
-import { InferValue, MaybePromise, Rec } from './helper';
+import { InferValue, MaybePromise, Rec, ResponseHeaders } from './helper';
 
 export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
@@ -28,6 +28,7 @@ export interface LoadOutput<Props extends Rec = Rec, Stuff extends Rec = Rec> {
 	props?: Props;
 	stuff?: Stuff;
 	maxage?: number;
+	headers?: ResponseHeaders;
 }
 
 interface LoadInputExtends {
