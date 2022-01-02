@@ -88,29 +88,25 @@ test.describe.parallel('a11y', () => {
 test.describe.only('Scrolling', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
-	test('url-supplied anchor works on direct page load', async ({ page, visible_ratio }) => {
+	test('url-supplied anchor works on direct page load', async ({ page, in_view }) => {
 		await page.goto('/anchor/anchor#go-to-element');
-		expect(await visible_ratio('#go-to-element')).toBe(1);
+		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
-	test('url-supplied anchor works on navigation to page', async ({
-		page,
-		visible_ratio,
-		clicknav
-	}) => {
+	test('url-supplied anchor works on navigation to page', async ({ page, in_view, clicknav }) => {
 		await page.goto('/anchor');
 		await clicknav('#first-anchor');
-		expect(await visible_ratio('#go-to-element')).toBe(1);
+		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('url-supplied anchor works when navigated from scrolled page', async ({
 		page,
 		clicknav,
-		visible_ratio
+		in_view
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#second-anchor');
-		expect(await visible_ratio('#go-to-element')).toBe(1);
+		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('no-anchor url will scroll to top when navigated from scrolled page', async ({
@@ -125,11 +121,11 @@ test.describe.only('Scrolling', () => {
 	test('url-supplied anchor works when navigated from bottom of page', async ({
 		page,
 		clicknav,
-		visible_ratio
+		in_view
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor');
-		expect(await visible_ratio('#go-to-element')).toBe(1);
+		expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('no-anchor url will scroll to top when navigated from bottom of page', async ({
@@ -143,41 +139,38 @@ test.describe.only('Scrolling', () => {
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
-		visible_ratio,
+		in_view,
 		started
 	}) => {
 		await page.goto('/anchor-with-manual-scroll/anchor#go-to-element');
 		await started();
-		expect(await visible_ratio('#abcde')).toBe(1);
+		expect(await in_view('#abcde')).toBe(true);
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
-		visible_ratio
+		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
 		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
-		expect(await visible_ratio('#abcde')).toBe(1);
+		expect(await in_view('#abcde')).toBe(true);
 	});
 
-	test('app-supplied scroll and focus work on direct page load', async ({
-		page,
-		visible_ratio
-	}) => {
+	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
 		await page.goto('/use-action/focus-and-scroll');
-		expect(await visible_ratio('#input')).toBe(1);
+		expect(await in_view('#input')).toBe(true);
 		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
 
 	test('app-supplied scroll and focus work on navigation to page', async ({
 		page,
 		clicknav,
-		visible_ratio
+		in_view
 	}) => {
 		await page.goto('/use-action');
 		await clicknav('[href="/use-action/focus-and-scroll"]');
-		expect(await visible_ratio('#input')).toBe(1);
+		expect(await in_view('#input')).toBe(true);
 		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
 });

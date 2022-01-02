@@ -18,7 +18,7 @@ export const test: TestType<
 			};
 			back: () => Promise<void>;
 			clicknav: (selector: string) => Promise<void>;
-			visible_ratio: (selector: string) => Promise<number>;
+			in_view: (selector: string) => Promise<boolean>;
 			read_errors: (href: string) => string;
 			started: () => Promise<void>;
 		},

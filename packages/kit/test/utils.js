@@ -93,25 +93,26 @@ export const test = base.extend({
 	},
 
 	// @ts-expect-error
-	visible_ratio: async ({ page }, use) => {
+	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
-		async function visible_ratio(selector) {
+		async function in_view(selector) {
 			// @ts-expect-error
 			return page.$eval(selector, async (element) => {
-				const visibleRatio = await new Promise((resolve) => {
-					const observer = new IntersectionObserver((entries) => {
-						resolve(entries[0].intersectionRatio);
-						observer.disconnect();
-					});
-					observer.observe(element);
-					// Firefox doesn't call IntersectionObserver callback unless there are rafs
-					requestAnimationFrame(() => {});
-				});
-				return visibleRatio;
+				const { top, bottom } = element.getBoundingClientRect();
+
+				if (top > window.innerHeight || bottom < 0) {
+					// slightly more useful feedback than true/false
+					return {
+						top,
+						bottom
+					};
+				}
+
+				return true;
 			});
 		}
 
-		use(visible_ratio);
+		use(in_view);
 	},
 
 	// @ts-expect-error
