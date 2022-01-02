@@ -180,7 +180,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		const rendered = await app.render(
 			{
-				url: `${config.kit.protocol || 'sveltekit'}://${config.kit.host || 'prerender'}${path}`,
+				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`,
 				method: 'GET',
 				headers: {},
 				rawBody: null
@@ -329,7 +329,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	if (fallback) {
 		const rendered = await app.render(
 			{
-				url: `${config.kit.host || 'sveltekit'}://${config.kit.host || 'prerender'}/[fallback]`,
+				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`,
 				method: 'GET',
 				headers: {},
 				rawBody: null
