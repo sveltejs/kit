@@ -55,22 +55,19 @@ export class Router {
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
-		// create initial history entry, so we can return here
-		history.replaceState(history.state || {}, '', location.href);
 		// keeping track of the history index in order to prevent popstate navigation events if needed
-		this.current_history_index = 0;
+		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
+
+		if (history.state?.['sveltekit:index'] == 0) {
+			// create initial history entry, so we can return here
+			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+		}
 
 		/** @type {((url: URL) => void | boolean | Promise<void | boolean>)[]} */
 		this.on_before_navigate_callbacks = [];
 	}
 
 	init_listeners() {
-		if (history.state['sveltekit:index'] >= 0) {
-			this.current_history_index = history.state['sveltekit:index'];
-		} else {
-			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
-		}
-
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
 		}
