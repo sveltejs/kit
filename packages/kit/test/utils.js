@@ -175,5 +175,8 @@ export const config = {
 				javaScriptEnabled: false
 			}
 		}
-	]
+	],
+	use: {
+		screenshot: 'only-on-failure'
+	}
 };
