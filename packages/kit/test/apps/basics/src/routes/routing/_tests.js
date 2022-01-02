@@ -188,12 +188,61 @@ export default function (test, is_dev) {
 	test(
 		'back button returns to previous route when previous route has been navigated to via hash anchor',
 		'/routing/hashes/a',
-		async ({ page, clicknav, back }) => {
-			await clicknav('[href="#hash-target"]');
+		async ({ page, clicknav }) => {
+			await page.click('[href="#hash-target"]');
 			await clicknav('[href="/routing/hashes/b"]');
 
-			await back();
+			await page.goBack();
 			assert.equal(await page.textContent('h1'), 'a');
+		}
+	);
+
+	test(
+		'focus works if page load has hash',
+		'/routing/hashes/target#p2',
+		async ({ page }) => {
+			await page.keyboard.press('Tab');
+			assert.equal(
+				await page.evaluate(() => (document.activeElement || {}).textContent),
+				'next focus element'
+			);
+		},
+		// Does not work in nojs
+		{ nojs: false }
+	);
+
+	test(
+		'focus works when navigating to a hash on the same page',
+		'/routing/hashes/target',
+		async ({ page }) => {
+			await page.click('[href="#p2"]');
+			await page.keyboard.press('Tab');
+			assert.equal(
+				await page.evaluate(() => (document.activeElement || {}).textContent),
+				'next focus element'
+			);
+		}
+	);
+
+	test(
+		':target pseudo-selector works when navigating to a hash on the same page',
+		'/routing/hashes/target#p1',
+		async ({ page }) => {
+			assert.equal(
+				await page.evaluate(() => {
+					const el = document.getElementById('p1');
+					return el && getComputedStyle(el).color;
+				}),
+				'rgb(255, 0, 0)'
+			);
+			await page.click('[href="#p2"]');
+			assert.equal(
+				await page.evaluate(() => {
+					const el = document.getElementById('p2');
+					return el && getComputedStyle(el).color;
+				}),
+				'rgb(255, 0, 0)'
+			);
 		}
 	);
 
