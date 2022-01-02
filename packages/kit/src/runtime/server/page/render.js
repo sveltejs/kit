@@ -177,6 +177,7 @@ export async function render_response({
 		${Array.from(styles).join('\n')}
 		${options.amp || options.inline_css ? rendered.css.code : ''}
 	`.trim();
+
 	const head = [
 		rendered.head,
 		inlined_style
