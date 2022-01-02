@@ -83,6 +83,8 @@ export class Renderer {
 		this.session_id = 1;
 		this.invalid = new Set();
 		this.invalidating = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
@@ -123,6 +125,13 @@ export class Renderer {
 			if (info) this.update(info, [], true);
 		});
 		ready = true;
+	}
+
+	disable_scroll_handling() {
+		// if (import.meta.env.DEV && this.started && !this.updating) {
+		// 	throw new Error(`Can only disable scroll handling during navigation`);
+		// }
+		this.autoscroll = false;
 	}
 
 	/**
@@ -254,6 +263,8 @@ export class Renderer {
 			}
 		}
 
+		this.updating = true;
+
 		if (this.started) {
 			this.current = navigation_result.state;
 
@@ -274,16 +285,18 @@ export class Renderer {
 
 			await 0;
 
-			const deep_linked = hash && document.getElementById(hash.slice(1));
-			if (scroll) {
-				scrollTo(scroll.x, scroll.y);
-			} else if (deep_linked) {
-				// Here we use `scrollIntoView` on the element instead of `scrollTo`
-				// because it natively supports the `scroll-margin` and `scroll-behavior`
-				// CSS properties.
-				deep_linked.scrollIntoView();
-			} else {
-				scrollTo(0, 0);
+			if (this.autoscroll) {
+				const deep_linked = hash && document.getElementById(hash.slice(1));
+				if (scroll) {
+					scrollTo(scroll.x, scroll.y);
+				} else if (deep_linked) {
+					// Here we use `scrollIntoView` on the element instead of `scrollTo`
+					// because it natively supports the `scroll-margin` and `scroll-behavior`
+					// CSS properties.
+					deep_linked.scrollIntoView();
+				} else {
+					scrollTo(0, 0);
+				}
 			}
 		} else {
 			// ...they will not be supplied if we're simply invalidating
@@ -292,6 +305,8 @@ export class Renderer {
 
 		this.loading.promise = null;
 		this.loading.id = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		if (!this.router) return;
 

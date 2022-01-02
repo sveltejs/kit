@@ -151,7 +151,7 @@ test.describe.only('Scrolling', () => {
 		expect(await visible_ratio('#abcde')).toBe(1);
 	});
 
-	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
+	test.only('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
 		visible_ratio
