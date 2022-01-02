@@ -1,10 +1,8 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ params, fetch }) {
+	export async function load() {
 		return { headers: { potato: 'potahto' } };
 	}
 </script>
 
-<div>
-  Never gonna give you up
-</div>
+<div>Never gonna give you up</div>
