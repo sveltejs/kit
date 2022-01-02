@@ -108,3 +108,12 @@ test.describe.parallel('trailingSlash', () => {
 		expect(await page.textContent('h2')).toBe('/slash/child/');
 	});
 });
+
+test.describe.parallel('serviceWorker', () => {
+	if (!process.env.DEV) {
+		test('does not register service worker if none created', async ({ page }) => {
+			await page.goto('/path-base/');
+			expect(await page.content()).not.toMatch('navigator.serviceWorker');
+		});
+	}
+});
