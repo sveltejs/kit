@@ -272,6 +272,8 @@ export class Renderer {
 				document.body.focus();
 			}
 
+			await 0;
+
 			const deep_linked = hash && document.getElementById(hash.slice(1));
 			if (scroll) {
 				scrollTo(scroll.x, scroll.y);
