@@ -290,8 +290,6 @@ export class Renderer {
 			await 0;
 		}
 
-		await 0;
-
 		this.loading.promise = null;
 		this.loading.id = null;
 
