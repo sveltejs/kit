@@ -1,5 +1,27 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.26
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 1.0.0-next.25
+
+### Patch Changes
+
+- [chore] upgrade `@cloudflare/kv-asset-handler` ([#2650](https://github.com/sveltejs/kit/pull/2650))
+
 ## 1.0.0-next.24
 
 ### Patch Changes

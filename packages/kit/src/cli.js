@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
@@ -90,25 +91,25 @@ prog
 		const { dev } = await import('./core/dev/index.js');
 
 		try {
-			const watcher = await dev({ port, host, https, config });
+			const cwd = process.cwd();
 
-			watcher.on('stdout', (data) => {
-				process.stdout.write(data);
+			const { address_info, server_config } = await dev({
+				cwd,
+				port,
+				host,
+				https,
+				config
 			});
 
-			watcher.on('stderr', (data) => {
-				process.stderr.write(data);
+			welcome({
+				port: address_info.port,
+				host: address_info.address,
+				https: !!(https || server_config.https),
+				open: open || !!server_config.open,
+				loose: server_config.fs.strict === false,
+				allow: server_config.fs.allow,
+				cwd
 			});
-
-			if (!watcher.vite || !watcher.vite.httpServer) {
-				throw Error('Could not find server');
-			}
-			// we never start the server on a socket path, so address will be of type AddressInfo
-			const chosen_port = /** @type {import('net').AddressInfo} */ (
-				watcher.vite.httpServer.address()
-			).port;
-
-			welcome({ port: chosen_port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -218,9 +219,12 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   loose?: boolean;
+ *   allow?: string[];
+ *   cwd?: string;
  * }} param0
  */
-function welcome({ port, host, https, open }) {
+function welcome({ port, host, https, open, loose, allow, cwd }) {
 	if (open) launch(port, https);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
@@ -241,6 +245,11 @@ function welcome({ port, host, https, open }) {
 
 				if (exposed) {
 					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
+					if (loose) {
+						console.log(`\n  ${colors.yellow('Serving with vite.server.fs.strict: false. Note that all files on your machine will be accessible to anyone on your network.')}`);
+					} else if (allow?.length && cwd) {
+						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
+					}
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}

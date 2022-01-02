@@ -1,5 +1,67 @@
 # create-svelte
 
+## 2.0.0-next.92
+
+### Patch Changes
+
+- Update template to use new page/request APIs ([#3146](https://github.com/sveltejs/kit/pull/3146))
+
+## 2.0.0-next.91
+
+### Patch Changes
+
+- Make demo app complies with TypeScript strict mode ([#3095](https://github.com/sveltejs/kit/pull/3095))
+
+## 2.0.0-next.90
+
+### Patch Changes
+
+- bump eslint ecmaVersion to 2020 ([#2985](https://github.com/sveltejs/kit/pull/2985))
+
+* include missing .npmrc in templates ([#2990](https://github.com/sveltejs/kit/pull/2990))
+
+- Do not gitignore `.env.example` ([#2926](https://github.com/sveltejs/kit/pull/2926))
+
+* update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 2.0.0-next.89
+
+### Patch Changes
+
+- Git ignore files with a .env. prefix ([#2905](https://github.com/sveltejs/kit/pull/2905))
+
+## 2.0.0-next.88
+
+### Patch Changes
+
+- Improve project scaffolding language ([#2895](https://github.com/sveltejs/kit/pull/2895))
+
+## 2.0.0-next.87
+
+### Patch Changes
+
+- Add adapter-auto to template configs ([#2885](https://github.com/sveltejs/kit/pull/2885))
+
+## 2.0.0-next.86
+
+### Patch Changes
+
+- Add adapter-auto ([#2867](https://github.com/sveltejs/kit/pull/2867))
+
+* Add an npm run package command to templates ([#2882](https://github.com/sveltejs/kit/pull/2882))
+
+## 2.0.0-next.85
+
+### Patch Changes
+
+- feat: added .env to gitignore for skeleton and default starters ([#2732](https://github.com/sveltejs/kit/pull/2732))
+
+## 2.0.0-next.84
+
+### Patch Changes
+
+- Add explicit types in `_api.ts` and `form.ts` for TypeScript and ESLint integration example ([#2657](https://github.com/sveltejs/kit/pull/2657))
+
 ## 2.0.0-next.83
 
 ### Patch Changes

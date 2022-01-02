@@ -1,4 +1,3 @@
-/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 /** @typedef {import('./types').Validator} Validator */
 
 /** @type {Validator} */
@@ -67,9 +66,12 @@ const options = object(
 
 			floc: boolean(false),
 
-			host: string(null),
+			headers: object({
+				host: string(null),
+				protocol: string(null)
+			}),
 
-			hostHeader: string(null),
+			host: string(null),
 
 			hydrate: boolean(true),
 
@@ -117,6 +119,7 @@ const options = object(
 			}),
 
 			prerender: object({
+				concurrency: number(1),
 				crawl: boolean(true),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
@@ -161,9 +164,12 @@ const options = object(
 				})
 			}),
 
+			protocol: string(null),
+
 			router: boolean(true),
 
 			serviceWorker: object({
+				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
@@ -259,6 +265,19 @@ function string(fallback, allow_empty = true) {
 			throw new Error(`${keypath} cannot be empty`);
 		}
 
+		return input;
+	});
+}
+
+/**
+ * @param {number} fallback
+ * @returns {Validator}
+ */
+function number(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'number') {
+			throw new Error(`${keypath} should be a number, if specified`);
+		}
 		return input;
 	});
 }

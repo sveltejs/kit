@@ -2,13 +2,13 @@
 	let count = 0;
 
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page }) {
+	export async function load({ params }) {
 		count += 1;
 
 		return {
 			maxage: 5,
 			props: {
-				x: page.params.x,
+				x: params.x,
 				loads: count
 			}
 		};

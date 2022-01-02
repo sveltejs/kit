@@ -2,7 +2,9 @@ import * as assert from 'uvu/assert';
 
 /** @type {import('test').TestMaker} */
 export default function (test) {
-	test('page store functions as expected', '/store', async ({ page, clicknav, js }) => {
+	test('page store functions as expected', null, async ({ base, page, clicknav, js }) => {
+		await page.goto(`${base}/store`);
+
 		assert.equal(await page.textContent('h1'), 'Test');
 		assert.equal(await page.textContent('h2'), 'Calls: 1');
 
@@ -29,7 +31,7 @@ export default function (test) {
 					'navigating from /store/navigating/a to /store/navigating/b'
 				);
 
-				await page.waitForTimeout(100);
+				await page.waitForSelector('#not-navigating');
 				assert.equal(await page.textContent('#navigating'), 'not currently navigating');
 			}
 		}

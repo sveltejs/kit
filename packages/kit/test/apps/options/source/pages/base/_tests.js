@@ -26,7 +26,10 @@ export default function (test) {
 		);
 	});
 
-	test('inlines CSS', '/path-base/base/', async ({ page }) => {
-		assert.ok(await page.evaluate(() => document.querySelector('link[rel="stylesheet"]') === null));
+	test('sets params correctly', '/path-base/base/one', async ({ page, clicknav }) => {
+		assert.equal(await page.textContent('h2'), 'one');
+
+		await clicknav('[href="/path-base/base/two"]');
+		assert.equal(await page.textContent('h2'), 'two');
 	});
 }

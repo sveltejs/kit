@@ -1,5 +1,233 @@
 # @sveltejs/kit
 
+## 1.0.0-next.213
+
+### Patch Changes
+
+- Don't register service worker if there is none ([#3170](https://github.com/sveltejs/kit/pull/3170))
+
+* Fix url pathname for prerenders ([#3178](https://github.com/sveltejs/kit/pull/3178))
+
+## 1.0.0-next.212
+
+### Patch Changes
+
+- Add status and error to page store ([#3096](https://github.com/sveltejs/kit/pull/3096))
+
+* Fix dev prebundling scanner ([#3169](https://github.com/sveltejs/kit/pull/3169))
+
+- Sort rest endpoints before pages ([#3168](https://github.com/sveltejs/kit/pull/3168))
+
+## 1.0.0-next.211
+
+### Patch Changes
+
+- Use Vite's filewatcher in dev mode instead of creating a new one
+
+## 1.0.0-next.210
+
+### Patch Changes
+
+- Add path/query error getters in prod mode ([#3151](https://github.com/sveltejs/kit/pull/3151))
+
+## 1.0.0-next.209
+
+### Patch Changes
+
+- Bundle SSR renderer with app ([#3144](https://github.com/sveltejs/kit/pull/3144))
+
+## 1.0.0-next.208
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Replace config.kit.hostHeader with config.kit.headers.host, add config.kit.headers.protocol ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Replace page.host with page.origin ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* [fix] load CSS before JS preloads
+
+- Error if adapter provides wrong input to app.render ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+* Replace [request|page].[origin|path|query] with url object ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.207
+
+### Patch Changes
+
+- Add serviceWorker.register option ([#2988](https://github.com/sveltejs/kit/pull/2988))
+
+## 1.0.0-next.206
+
+### Patch Changes
+
+- Handle `Headers` instance in server-side `fetch` ([#3034](https://github.com/sveltejs/kit/pull/3034))
+
+## 1.0.0-next.205
+
+### Patch Changes
+
+- Add `config.kit.prerender.concurrency` setting ([#3120](https://github.com/sveltejs/kit/pull/3120))
+
+## 1.0.0-next.204
+
+### Patch Changes
+
+- fix `<Route> received an unexpected slot "default"` warning ([#3115](https://github.com/sveltejs/kit/pull/3115))
+
+## 1.0.0-next.203
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.32 ([#3048](https://github.com/sveltejs/kit/pull/3048))
+
+* fix `sveltekit:prefetch` mouse detection ([#2995](https://github.com/sveltejs/kit/pull/2995))
+
+- Sort rest routes alphabetically ([#3093](https://github.com/sveltejs/kit/pull/3093))
+
+* Fix invalid amp-install-serviceworker ([#3075](https://github.com/sveltejs/kit/pull/3075))
+
+## 1.0.0-next.202
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.7 ([#3018](https://github.com/sveltejs/kit/pull/3018))
+
+* Allow absolute file paths given to package.dir ([#3012](https://github.com/sveltejs/kit/pull/3012))
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 1.0.0-next.201
+
+### Patch Changes
+
+- Ignore mailto: and tel: links ([#2915](https://github.com/sveltejs/kit/pull/2915))
+
+## 1.0.0-next.200
+
+### Patch Changes
+
+- Follow redirects when prerendering ([#2832](https://github.com/sveltejs/kit/pull/2832))
+
+* Fix types reference in exports in package.json ([#2896](https://github.com/sveltejs/kit/pull/2896))
+
+## 1.0.0-next.199
+
+### Patch Changes
+
+- [fix] support etag W/ prefix ([#2709](https://github.com/sveltejs/kit/pull/2709))
+
+* [fix] revert #2819 and add code comment ([#2883](https://github.com/sveltejs/kit/pull/2883))
+
+- Don't create empty dirs when packaging ([#2831](https://github.com/sveltejs/kit/pull/2831))
+
+* [feat] Use `event.composedPath` to find anchors for prefetching and routing ([#2769](https://github.com/sveltejs/kit/pull/2769))
+
+## 1.0.0-next.198
+
+### Patch Changes
+
+- Register custom service worker for AMP ([#2265](https://github.com/sveltejs/kit/pull/2265))
+
+## 1.0.0-next.197
+
+### Patch Changes
+
+- [fix] prevent text unselection for keepfocus ([#2857](https://github.com/sveltejs/kit/pull/2857))
+
+* [fix] use defaults when no opts passed to router ([#2819](https://github.com/sveltejs/kit/pull/2819))
+
+## 1.0.0-next.196
+
+### Patch Changes
+
+- remove all selection before navigating to the next page ([#2755](https://github.com/sveltejs/kit/pull/2755))
+
+* [fix] properly scroll if body has margin ([#2761](https://github.com/sveltejs/kit/pull/2761))
+
+## 1.0.0-next.195
+
+### Patch Changes
+
+- [fix] increase scroll debounce timeout ([#2749](https://github.com/sveltejs/kit/pull/2749))
+
+* [fix] do not set inlineDynamicImports ([#2753](https://github.com/sveltejs/kit/pull/2753))
+
+## 1.0.0-next.194
+
+### Patch Changes
+
+- [fix] correct message when serving with strict:false ([#2726](https://github.com/sveltejs/kit/pull/2726))
+
+* [fix] reset scroll when navigated from scrolled page ([#2735](https://github.com/sveltejs/kit/pull/2735))
+
+## 1.0.0-next.193
+
+### Patch Changes
+
+- [fix] upgrade minor deps. fetch-blob 3.1.3 needed for Netlify deploys ([#2714](https://github.com/sveltejs/kit/pull/2714))
+
+* [fix] scroll to elements provided via URL hash ([#2668](https://github.com/sveltejs/kit/pull/2668))
+
+## 1.0.0-next.192
+
+### Patch Changes
+
+- [fix] allow overriding inlineDynamicImports ([#2702](https://github.com/sveltejs/kit/pull/2702))
+
+## 1.0.0-next.191
+
+### Patch Changes
+
+- Return the copied files from the adapter's copy\_ utils. ([#2674](https://github.com/sveltejs/kit/pull/2674))
+
+* [fix] avoid infinite loop if no routes found ([#2614](https://github.com/sveltejs/kit/pull/2614))
+
+- [security] upgrade to Vite 2.6.12, specify allow list, and print warning ([#2691](https://github.com/sveltejs/kit/pull/2691))
+
+## 1.0.0-next.190
+
+### Patch Changes
+
+- [fix] upgrade to Vite 2.6.11 ([#2683](https://github.com/sveltejs/kit/pull/2683))
+
+* Return an array of written files when prerendering. ([#2675](https://github.com/sveltejs/kit/pull/2675))
+
+## 1.0.0-next.189
+
+### Patch Changes
+
+- [breaking] only route pages on the client-side ([#2656](https://github.com/sveltejs/kit/pull/2656))
+
+## 1.0.0-next.188
+
+### Patch Changes
+
+- [fix] fire navigation-end event only at end of navigation ([#2649](https://github.com/sveltejs/kit/pull/2649))
+
+* [fix] allow passing certificates via config ([#2622](https://github.com/sveltejs/kit/pull/2622))
+
+## 1.0.0-next.187
+
+### Patch Changes
+
+- Fix prerendering when paths.base but not paths.assets is specified ([#2643](https://github.com/sveltejs/kit/pull/2643))
+
+## 1.0.0-next.186
+
+### Patch Changes
+
+- [chore] upgrade to Vite 2.6.10 ([#2634](https://github.com/sveltejs/kit/pull/2634))
+
+## 1.0.0-next.185
+
+### Patch Changes
+
+- Update vite-plugin-svelte to 1.0.0-next.30 ([#2626](https://github.com/sveltejs/kit/pull/2626))
+
+* [fix] allow users to override build target ([#2618](https://github.com/sveltejs/kit/pull/2618))
+
 ## 1.0.0-next.184
 
 ### Patch Changes

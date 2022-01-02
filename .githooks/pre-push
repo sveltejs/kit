@@ -2,6 +2,6 @@
 
 set -e
 
-pnpm i
+pnpm install --frozen-lockfile
 pnpm lint
 pnpm check

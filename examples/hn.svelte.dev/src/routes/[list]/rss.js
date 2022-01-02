@@ -34,20 +34,17 @@ const render = (list, items) => `<?xml version="1.0" encoding="UTF-8" ?>
 /**
  * @type {import('@sveltejs/kit').RequestHandler}
  */
-export function get({ params }) {
+export async function get({ params }) {
 	const list =
 		params.list === 'top' ? 'news' : params.list === 'new' ? 'newest' : params.list;
-
-	fetch(`https://api.hnpwa.com/v0/${list}/1.json`)
-		.then((r) => r.json())
-		.then((items) => {
-			const feed = render(list, items);
-			return {
-				body: feed,
-				headers: {
-					'Cache-Control': `max-age=0, s-max-age=${600}`, // 10 minutes
-					'Content-Type': 'application/rss+xml'
-				}
-			};
-		});
+	const res = await fetch(`https://api.hnpwa.com/v0/${list}/1.json`);
+	const items = await res.json();
+	const feed = render(list, items);
+	return {
+		body: feed,
+		headers: {
+			'Cache-Control': `max-age=0, s-max-age=${600}`, // 10 minutes
+			'Content-Type': 'application/rss+xml'
+		}
+	};
 }

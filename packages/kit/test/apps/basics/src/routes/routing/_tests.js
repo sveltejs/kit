@@ -95,10 +95,6 @@ export default function (test, is_dev) {
 					if (!e.message.includes('Crashing now')) throw e;
 				});
 
-				// // weird flakiness — without this, some requests are
-				// // reported after prefetchRoutes has finished
-				// await page.waitForTimeout(500);
-
 				const requests = await capture_requests(async () => {
 					await clicknav('a[href="/routing/a"]');
 					assert.equal(await page.textContent('h1'), 'a');
@@ -136,14 +132,10 @@ export default function (test, is_dev) {
 		}
 	});
 
-	test(
-		'does not attempt client-side navigation to server routes',
-		'/routing',
-		async ({ page, clicknav }) => {
-			await clicknav('[href="/routing/ambiguous/ok.json"]');
-			assert.equal(await page.textContent('body'), 'ok');
-		}
-	);
+	test('does not attempt client-side navigation to server routes', '/routing', async ({ page }) => {
+		await page.click('[href="/routing/ambiguous/ok.json"]');
+		assert.equal(await page.textContent('body'), 'ok');
+	});
 
 	test('allows reserved words as route names', '/routing/const', async ({ page }) => {
 		assert.equal(await page.textContent('h1'), 'reserved words are okay as routes');
@@ -196,11 +188,11 @@ export default function (test, is_dev) {
 	test(
 		'back button returns to previous route when previous route has been navigated to via hash anchor',
 		'/routing/hashes/a',
-		async ({ page, clicknav }) => {
+		async ({ page, clicknav, back }) => {
 			await clicknav('[href="#hash-target"]');
 			await clicknav('[href="/routing/hashes/b"]');
 
-			await page.goBack();
+			await back();
 			assert.equal(await page.textContent('h1'), 'a');
 		}
 	);
@@ -233,14 +225,10 @@ export default function (test, is_dev) {
 		}
 	);
 
-	test(
-		'ignores navigation to URLs the app does not own',
-		'/routing',
-		async ({ page, clicknav }) => {
-			await clicknav('[href="https://www.google.com"]');
-			assert.equal(page.url(), 'https://www.google.com/');
-		}
-	);
+	test('ignores navigation to URLs the app does not own', '/routing', async ({ page }) => {
+		await page.click('[href="https://www.google.com"]');
+		assert.equal(page.url(), 'https://www.google.com/');
+	});
 
 	// skipping this test because it causes a bunch of failures locally
 	test.skip('watch new route in dev', '/routing', async ({ page, base, js, watcher }) => {

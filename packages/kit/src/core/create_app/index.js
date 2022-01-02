@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { s } from '../../utils/misc.js';
 import { mkdirp } from '../../utils/filesystem.js';
 
 /** @type {Map<string, string>} */
@@ -16,8 +17,6 @@ export function write_if_changed(file, code) {
 		fs.writeFileSync(file, code);
 	}
 }
-
-const s = JSON.stringify;
 
 /** @typedef {import('types/internal').ManifestData} ManifestData */
 
@@ -88,8 +87,6 @@ function generate_client_manifest(manifest_data, base) {
 					if (params) tuple.push(params);
 
 					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
-				} else {
-					return `// ${route.file}\n\t\t[${route.pattern}]`;
 				}
 			})
 			.join(',\n\n\t\t')}
@@ -117,7 +114,8 @@ function generate_app(manifest_data) {
 	const max_depth = Math.max(
 		...manifest_data.routes.map((route) =>
 			route.type === 'page' ? route.a.filter(Boolean).length : 0
-		)
+		),
+		1
 	);
 
 	const levels = [];
@@ -131,11 +129,13 @@ function generate_app(manifest_data) {
 
 	while (l--) {
 		pyramid = `
-			<svelte:component this={components[${l}]} {...(props_${l} || {})}>
-				{#if components[${l + 1}]}
+			{#if components[${l + 1}]}
+				<svelte:component this={components[${l}]} {...(props_${l} || {})}>
 					${pyramid.replace(/\n/g, '\n\t\t\t\t\t')}
-				{/if}
-			</svelte:component>
+				</svelte:component>
+			{:else}
+				<svelte:component this={components[${l}]} {...(props_${l} || {})} />
+			{/if}
 		`
 			.replace(/^\t\t\t/gm, '')
 			.trim();

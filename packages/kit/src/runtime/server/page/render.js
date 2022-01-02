@@ -3,8 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
-
-const s = JSON.stringify;
+import { s } from '../../../utils/misc.js';
 
 // TODO rename this function/module
 
@@ -16,7 +15,8 @@ const s = JSON.stringify;
  *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
  *   status: number;
  *   error?: Error,
- *   page?: import('types/page').Page
+ *   url: URL;
+ *   params: Record<string, string>
  * }} opts
  */
 export async function render_response({
@@ -26,10 +26,11 @@ export async function render_response({
 	page_config,
 	status,
 	error,
-	page
+	url,
+	params
 }) {
-	const css = new Set(options.entry.css);
-	const js = new Set(options.entry.js);
+	const css = new Set(options.manifest._.entry.css);
+	const js = new Set(options.manifest._.entry.js);
 	const styles = new Set();
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
@@ -67,9 +68,26 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page,
+			page: { url, params, status, error },
 			components: branch.map(({ node }) => node.module.default)
 		};
+
+		// TODO remove this for 1.0
+		/**
+		 * @param {string} property
+		 * @param {string} replacement
+		 */
+		const print_error = (property, replacement) => {
+			Object.defineProperty(props.page, property, {
+				get: () => {
+					throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+				}
+			});
+		};
+
+		print_error('origin', 'origin');
+		print_error('path', 'pathname');
+		print_error('query', 'searchParams');
 
 		// props_n (instead of props[n]) makes it easy to avoid
 		// unnecessary updates for layout components
@@ -96,20 +114,17 @@ export async function render_response({
 	if (!include_js) js.clear();
 
 	// TODO strip the AMP stuff out of the build if not relevant
-	const links = `${
-		options.amp
-			? ''
-			: Array.from(js)
-					.map((dep) => `<link rel="modulepreload" href="${dep}">`)
-					.join('\n\t\t')
-	}
-		${
-			options.amp || options.inline_css
-				? ''
-				: Array.from(css)
-						.map((dep) => `<link rel="stylesheet" href="${dep}">`)
-						.join('\n\t\t')
-		}`;
+	const links = options.amp
+		? styles.size > 0 || rendered.css.code.length > 0
+			? `<style amp-custom>${Array.from(styles).concat(rendered.css.code).join('\n')}</style>`
+			: ''
+		: [
+				// From https://web.dev/priority-hints/:
+				// Generally, preloads will load in the order the parser gets to them for anything above "Medium" priority
+				// Thus, we should list CSS first
+				...Array.from(css).map((dep) => `<link rel="stylesheet" href="${options.prefix}${dep}">`),
+				...Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix}${dep}">`)
+		  ].join('\n\t\t');
 
 	/** @type {string} */
 	let init = '';
@@ -119,17 +134,19 @@ export async function render_response({
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
+		init += options.service_worker
+			? '<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>'
+			: '';
 	} else if (include_js) {
 		// prettier-ignore
 		init = `<script type="module">
-			import { start } from ${s(options.entry.file)};
+			import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 			start({
 				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
 				paths: ${s(options.paths)},
 				session: ${try_serialize($session, (error) => {
 					throw new Error(`Failed to serialize session data: ${error.message}`);
 				})},
-				host: ${page && page.host ? s(page.host) : 'location.host'},
 				route: ${!!page_config.router},
 				spa: ${!page_config.ssr},
 				trailing_slash: ${s(options.trailing_slash)},
@@ -138,25 +155,17 @@ export async function render_response({
 					error: ${serialize_error(error)},
 					nodes: [
 						${(branch || [])
-						.map(({ node }) => `import(${s(node.entry)})`)
+						.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
 						.join(',\n\t\t\t\t\t\t')}
 					],
-					page: {
-						host: ${page && page.host ? s(page.host) : 'location.host'}, // TODO this is redundant
-						path: ${page && page.path ? try_serialize(page.path, error => {
-							throw new Error(`Failed to serialize page.path: ${error.message}`);
-						}) : null},
-						query: new URLSearchParams(${page && page.query ? s(page.query.toString()) : ''}),
-						params: ${page && page.params ? try_serialize(page.params, error => {
-							throw new Error(`Failed to serialize page.params: ${error.message}`);
-						}) : null}
-					}
+					url: new URL(${s(url.href)}),
+					params: ${devalue(params)}
 				}` : 'null'}
 			});
 		</script>`;
 	}
 
-	if (options.service_worker) {
+	if (options.service_worker && !options.amp) {
 		init += `<script>
 			if ('serviceWorker' in navigator) {
 				navigator.serviceWorker.register('${options.service_worker}');
@@ -177,21 +186,23 @@ export async function render_response({
 		init
 	].join('\n\n\t\t');
 
-	const body = options.amp
-		? rendered.html
-		: `${rendered.html}
+	let body = rendered.html;
+	if (options.amp) {
+		if (options.service_worker) {
+			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
+		}
+	} else {
+		body += serialized_data
+			.map(({ url, body, json }) => {
+				let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
+					url
+				)}`;
+				if (body) attributes += ` data-body="${hash(body)}"`;
 
-			${serialized_data
-				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
-						url
-					)}`;
-					if (body) attributes += ` data-body="${hash(body)}"`;
-
-					return `<script ${attributes}>${json}</script>`;
-				})
-				.join('\n\n\t')}
-		`;
+				return `<script ${attributes}>${json}</script>`;
+			})
+			.join('\n\n\t');
+	}
 
 	/** @type {import('types/helper').ResponseHeaders} */
 	const headers = {

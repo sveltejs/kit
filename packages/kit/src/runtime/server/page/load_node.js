@@ -1,8 +1,8 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
+import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
-
-const s = JSON.stringify;
+import { is_root_relative, resolve } from '../../../utils/url.js';
 
 /**
  * @param {{
@@ -10,7 +10,8 @@ const s = JSON.stringify;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage | null;
- *   page: import('types/page').Page;
+ *   url: URL;
+ *   params: Record<string, string>;
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
@@ -27,7 +28,8 @@ export async function load_node({
 	options,
 	state,
 	route,
-	page,
+	url,
+	params,
 	node,
 	$session,
 	stuff,
@@ -57,9 +59,9 @@ export async function load_node({
 
 	let loaded;
 
-	const page_proxy = new Proxy(page, {
+	const url_proxy = new Proxy(url, {
 		get: (target, prop, receiver) => {
-			if (prop === 'query' && prerender_enabled) {
+			if (prerender_enabled && (prop === 'search' || prop === 'searchParams')) {
 				throw new Error('Cannot access query on a page with prerendering enabled');
 			}
 			return Reflect.get(target, prop, receiver);
@@ -69,7 +71,8 @@ export async function load_node({
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			page: page_proxy,
+			url: url_proxy,
+			params,
 			get session() {
 				uses_credentials = true;
 				return $session;
@@ -80,12 +83,12 @@ export async function load_node({
 			 */
 			fetch: async (resource, opts = {}) => {
 				/** @type {string} */
-				let url;
+				let requested;
 
 				if (typeof resource === 'string') {
-					url = resource;
+					requested = resource;
 				} else {
-					url = resource.url;
+					requested = resource.url;
 
 					opts = {
 						method: resource.method,
@@ -101,43 +104,50 @@ export async function load_node({
 					};
 				}
 
-				const resolved = resolve(request.path, url.split('?')[0]);
+				opts.headers = new Headers(opts.headers);
+
+				const resolved = resolve(request.url.pathname, requested.split('?')[0]);
 
 				let response;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
-				const filename = resolved.replace(options.paths.assets, '').slice(1);
+				const prefix = options.paths.assets || options.paths.base;
+				const filename = (
+					resolved.startsWith(prefix) ? resolved.slice(prefix.length) : resolved
+				).slice(1);
 				const filename_html = `${filename}/index.html`; // path may also match path/index.html
-				const asset = options.manifest.assets.find(
-					(d) => d.file === filename || d.file === filename_html
-				);
 
-				if (asset) {
-					response = options.read
-						? new Response(options.read(asset.file), {
-								headers: asset.type ? { 'content-type': asset.type } : {}
-						  })
-						: await fetch(
-								// TODO we need to know what protocol to use
-								`http://${page.host}/${asset.file}`,
-								/** @type {RequestInit} */ (opts)
-						  );
-				} else if (resolved.startsWith('/') && !resolved.startsWith('//')) {
+				const is_asset = options.manifest.assets.has(filename);
+				const is_asset_html = options.manifest.assets.has(filename_html);
+
+				if (is_asset || is_asset_html) {
+					const file = is_asset ? filename : filename_html;
+
+					if (options.read) {
+						const type = is_asset
+							? options.manifest._.mime[filename.slice(filename.lastIndexOf('.'))]
+							: 'text/html';
+
+						response = new Response(options.read(file), {
+							headers: type ? { 'content-type': type } : {}
+						});
+					} else {
+						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
+					}
+				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
-
-					const headers = /** @type {import('types/helper').RequestHeaders} */ ({
-						...opts.headers
-					});
 
 					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
-						headers.cookie = request.headers.cookie;
+						if (request.headers.cookie) {
+							opts.headers.set('cookie', request.headers.cookie);
+						}
 
-						if (!headers.authorization) {
-							headers.authorization = request.headers.authorization;
+						if (request.headers.authorization && !opts.headers.has('authorization')) {
+							opts.headers.set('authorization', request.headers.authorization);
 						}
 					}
 
@@ -149,20 +159,16 @@ export async function load_node({
 						throw new Error('Request body must be a string');
 					}
 
-					const search = url.includes('?') ? url.slice(url.indexOf('?') + 1) : '';
-
 					const rendered = await respond(
 						{
-							host: request.host,
+							url: new URL(requested, request.url),
 							method: opts.method || 'GET',
-							headers,
-							path: relative,
-							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body),
-							query: new URLSearchParams(search)
+							headers: Object.fromEntries(opts.headers),
+							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body)
 						},
 						options,
 						{
-							fetched: url,
+							fetched: requested,
 							initiator: route
 						}
 					);
@@ -179,40 +185,40 @@ export async function load_node({
 							status: rendered.status,
 							headers: /** @type {Record<string, string>} */ (rendered.headers)
 						});
+					} else {
+						// we can't load the endpoint from our own manifest,
+						// so we need to make an actual HTTP request
+						return fetch(new URL(requested, request.url).href, {
+							method: opts.method || 'GET',
+							headers: opts.headers
+						});
 					}
 				} else {
 					// external
 					if (resolved.startsWith('//')) {
-						throw new Error(`Cannot request protocol-relative URL (${url}) in server-side fetch`);
+						throw new Error(
+							`Cannot request protocol-relative URL (${requested}) in server-side fetch`
+						);
 					}
 
 					// external fetch
-					if (typeof request.host !== 'undefined') {
-						const { hostname: fetch_hostname } = new URL(url);
-						const [server_hostname] = request.host.split(':');
-
-						// allow cookie passthrough for "same-origin"
-						// if SvelteKit is serving my.domain.com:
-						// -        domain.com WILL NOT receive cookies
-						// -     my.domain.com WILL receive cookies
-						// -    api.domain.dom WILL NOT receive cookies
-						// - sub.my.domain.com WILL receive cookies
-						// ports do not affect the resolution
-						// leading dot prevents mydomain.com matching domain.com
-						if (
-							`.${fetch_hostname}`.endsWith(`.${server_hostname}`) &&
-							opts.credentials !== 'omit'
-						) {
-							uses_credentials = true;
-
-							opts.headers = {
-								...opts.headers,
-								cookie: request.headers.cookie
-							};
-						}
+					// allow cookie passthrough for "same-origin"
+					// if SvelteKit is serving my.domain.com:
+					// -        domain.com WILL NOT receive cookies
+					// -     my.domain.com WILL receive cookies
+					// -    api.domain.dom WILL NOT receive cookies
+					// - sub.my.domain.com WILL receive cookies
+					// ports do not affect the resolution
+					// leading dot prevents mydomain.com matching domain.com
+					if (
+						`.${new URL(requested).hostname}`.endsWith(`.${request.url.hostname}`) &&
+						opts.credentials !== 'omit'
+					) {
+						uses_credentials = true;
+						opts.headers.set('cookie', request.headers.cookie);
 					}
 
-					const external_request = new Request(url, /** @type {RequestInit} */ (opts));
+					const external_request = new Request(requested, /** @type {RequestInit} */ (opts));
 					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
@@ -235,7 +241,7 @@ export async function load_node({
 								if (!opts.body || typeof opts.body === 'string') {
 									// prettier-ignore
 									fetched.push({
-										url,
+										url: requested,
 										body: /** @type {string} */ (opts.body),
 										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_string_in_html(body)}"}`
 									});
@@ -273,6 +279,15 @@ export async function load_node({
 			stuff: { ...stuff }
 		};
 
+		if (options.dev) {
+			// TODO remove this for 1.0
+			Object.defineProperty(load_input, 'page', {
+				get: () => {
+					throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
+				}
+			});
+		}
+
 		if (is_error) {
 			/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
 			/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
@@ -299,35 +314,4 @@ export async function load_node({
 		set_cookie_headers,
 		uses_credentials
 	};
-}
-
-const absolute = /^([a-z]+:)?\/?\//;
-
-/**
- * @param {string} base
- * @param {string} path
- */
-export function resolve(base, path) {
-	const base_match = absolute.exec(base);
-	const path_match = absolute.exec(path);
-
-	if (!base_match) {
-		throw new Error(`bad base path: "${base}"`);
-	}
-
-	const baseparts = path_match ? [] : base.slice(base_match[0].length).split('/');
-	const pathparts = path_match ? path.slice(path_match[0].length).split('/') : path.split('/');
-
-	baseparts.pop();
-
-	for (let i = 0; i < pathparts.length; i += 1) {
-		const part = pathparts[i];
-		if (part === '.') continue;
-		else if (part === '..') baseparts.pop();
-		else baseparts.push(part);
-	}
-
-	const prefix = (path_match && path_match[0]) || (base_match && base_match[0]) || '';
-
-	return `${prefix}${baseparts.join('/')}`;
 }

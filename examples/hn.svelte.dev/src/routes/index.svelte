@@ -1,6 +1,9 @@
 <script context="module">
-	import {dev} from '$app/env';
-	export function load() {
-		return { redirect: '/top/1', status: dev ? 302 : 301 };
+	/** @type {import('@sveltejs/kit').Load} */
+	export function load({ url }) {
+		return {
+			redirect: '/top/1',
+			status: url.hostname === 'localhost' || url.hostname === '127.0.0.1' ? 302 : 301
+		};
 	}
 </script>

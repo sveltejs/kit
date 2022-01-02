@@ -1,10 +1,11 @@
+import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { App as PublicApp, IncomingRequest } from './app';
+import { InternalApp, SSRManifest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
-	Handle,
 	HandleError,
+	InternalHandle,
 	ServerRequest,
 	ServerResponse
 } from './hooks';
@@ -18,22 +19,18 @@ export interface PrerenderOptions {
 	dependencies: Map<string, ServerResponse>;
 }
 
-export interface App extends PublicApp {
-	init(options?: {
+export interface AppModule {
+	App: typeof InternalApp;
+
+	override(options: {
 		paths: {
 			base: string;
 			assets: string;
 		};
 		prerendering: boolean;
+		protocol?: 'http' | 'https';
 		read(file: string): Buffer;
 	}): void;
-
-	render(
-		incoming: IncomingRequest,
-		options?: {
-			prerender: PrerenderOptions;
-		}
-	): Promise<ServerResponse>;
 }
 
 export interface Logger {
@@ -84,12 +81,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: PageId[];
+	a: number[];
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: PageId[];
+	b: number[];
 }
 
 export interface SSREndpoint {
@@ -103,54 +100,48 @@ export interface SSREndpoint {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
-export type CSREndpoint = [RegExp];
-
-export type CSRRoute = CSREndpoint | CSRPage;
-
-export interface SSRManifest {
-	assets: Asset[];
-	layout: string;
-	error: string;
-	routes: SSRRoute[];
-}
+export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: Handle;
+	handle: InternalHandle;
 	handleError: HandleError;
 }
 
 export interface SSRNode {
 	module: SSRComponent;
-	entry: string; // client-side module corresponding to this component
+	/** client-side module URL for this component */
+	entry: string;
+	/** external CSS files */
 	css: string[];
+	/** external JS files */
 	js: string[];
+	/** inlined styles */
 	styles: string[];
 }
 
 export interface SSRRenderOptions {
 	amp: boolean;
 	dev: boolean;
-	entry: {
-		file: string;
-		css: string[];
-		js: string[];
-	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
+<<<<<<< HEAD
 	inline_css: boolean;
 	load_component(id: PageId): Promise<SSRNode>;
+=======
+>>>>>>> master
 	manifest: SSRManifest;
 	paths: {
 		base: string;
 		assets: string;
 	};
+	prefix: string;
 	prerender: boolean;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
@@ -175,8 +166,17 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface RouteSegment {
+	content: string;
+	dynamic: boolean;
+	rest: boolean;
+}
+
+export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
+
 export interface PageData {
 	type: 'page';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	path: string;
@@ -186,6 +186,7 @@ export interface PageData {
 
 export interface EndpointData {
 	type: 'endpoint';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	file: string;
@@ -202,8 +203,23 @@ export interface ManifestData {
 }
 
 export interface BuildData {
-	client: string[];
-	server: string[];
+	app_dir: string;
+	manifest_data: ManifestData;
+	client: {
+		assets: OutputAsset[];
+		chunks: OutputChunk[];
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
+		vite_manifest: import('vite').Manifest;
+	};
+	server: {
+		chunks: OutputChunk[];
+		methods: Record<string, HttpMethod[]>;
+		vite_manifest: import('vite').Manifest;
+	};
 	static: string[];
 	entries: string[];
 }

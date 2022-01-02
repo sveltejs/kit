@@ -5,7 +5,7 @@ export default function (test) {
 	test('redirect', '/redirect', async ({ base, page, clicknav }) => {
 		await clicknav('[href="/redirect/a"]');
 
-		assert.equal(page.url(), `${base}/redirect/c`);
+		await page.waitForURL(`${base}/redirect/c`);
 		assert.equal(await page.textContent('h1'), 'c');
 	});
 
@@ -13,7 +13,7 @@ export default function (test) {
 		await page.click('[href="/redirect/loopy/a"]');
 
 		if (js) {
-			await page.waitForTimeout(100);
+			await page.waitForSelector('#message');
 			assert.equal(page.url(), `${base}/redirect/loopy/a`);
 			assert.equal(await page.textContent('h1'), '500');
 			assert.equal(

@@ -57,24 +57,19 @@ type ResponseHeaders = Record<string, string | string[]>;
 type RequestHeaders = Record<string, string>;
 
 export type RawBody = null | Uint8Array;
-export interface IncomingRequest {
-	method: string;
-	host: string;
-	path: string;
-	query: URLSearchParams;
-	headers: RequestHeaders;
-	rawBody: RawBody;
-}
 
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+
+export interface Request<Locals = Record<string, any>, Body = unknown> {
+	url: URL;
+	method: string;
+	headers: RequestHeaders;
+	rawBody: RawBody;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
-	locals: Locals; // populated by hooks handle
+	locals: Locals;
 }
 
 type DefaultBody = JSONResponse | Uint8Array;
@@ -89,21 +84,19 @@ export interface RequestHandler<
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: ServerRequest<Locals, Input>):
+	(request: Request<Locals, Input>):
 		| void
 		| EndpointOutput<Output>
 		| Promise<void | EndpointOutput<Output>>;
 }
 ```
 
- For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';
 
-/**
- * @type {import('@sveltejs/kit').RequestHandler}
- */
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ params }) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
@@ -129,8 +122,6 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `3xx` — redirection (should be accompanied by a `location` header)
 - `4xx` — client error
 - `5xx` — server error
-
-> For successful responses, SvelteKit will generate 304s automatically.
 
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 

@@ -8,11 +8,17 @@
 </script>
 
 <script>
+	import { page } from '$app/stores';
+
 	/** @type {number} */
 	export let status;
 
 	/** @type {Error} */
 	export let error;
+
+	if ($page.error !== error || $page.status !== status) {
+		throw new Error('page store contains incorrect values');
+	}
 </script>
 
 <svelte:head>
