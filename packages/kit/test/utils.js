@@ -156,7 +156,7 @@ export const test = base.extend({
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
-	timeout: 5000,
+	timeout: 15000, // needs to be high because the AMP validator takes a stupid about of time to initialise
 	webServer: {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
 		port: 3000,
