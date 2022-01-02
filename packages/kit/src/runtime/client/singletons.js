@@ -4,10 +4,12 @@ export let router;
 /** @type {import('./renderer').Renderer} */
 export let renderer;
 
-/** @param {{
+/**
+ * @param {{
  *   router: import('./router').Router?;
  *   renderer: import('./renderer').Renderer;
- * }} opts */
+ * }} opts
+ */
 export function init(opts) {
 	router = opts.router;
 	renderer = opts.renderer;
