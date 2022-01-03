@@ -1452,16 +1452,55 @@ test.describe.parallel('Routing', () => {
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
 		page,
-		clicknav,
-		back
+		clicknav
 	}) => {
 		await page.goto('/routing/hashes/a');
 
-		await clicknav('[href="#hash-target"]');
+		await page.click('[href="#hash-target"]');
 		await clicknav('[href="/routing/hashes/b"]');
 
-		await back();
+		await page.goBack();
 		expect(await page.textContent('h1')).toBe('a');
+	});
+
+	test('focus works if page load has hash', async ({ page }) => {
+		await page.goto('/routing/hashes/target#p2');
+
+		await page.keyboard.press('Tab');
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
+			'next focus element'
+		);
+	});
+
+	test('focus works when navigating to a hash on the same page', async ({ page }) => {
+		await page.goto('/routing/hashes/target');
+
+		await page.click('[href="#p2"]');
+		await page.keyboard.press('Tab');
+
+		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe(
+			'next focus element'
+		);
+	});
+
+	test(':target pseudo-selector works when navigating to a hash on the same page', async ({
+		page
+	}) => {
+		await page.goto('/routing/hashes/target#p1');
+
+		expect(
+			await page.evaluate(() => {
+				const el = document.getElementById('p1');
+				return el && getComputedStyle(el).color;
+			})
+		).toBe('rgb(255, 0, 0)');
+		await page.click('[href="#p2"]');
+		expect(
+			await page.evaluate(() => {
+				const el = document.getElementById('p2');
+				return el && getComputedStyle(el).color;
+			})
+		).toBe('rgb(255, 0, 0)');
 	});
 
 	test('fallthrough', async ({ page }) => {

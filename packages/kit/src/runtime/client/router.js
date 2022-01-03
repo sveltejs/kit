@@ -157,16 +157,17 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const noscroll = a.hasAttribute('sveltekit:noscroll');
-
-			const i1 = url_string.indexOf('#');
-			const i2 = location.href.indexOf('#');
-			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
-			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
-			if (u1 === u2) {
-				window.dispatchEvent(new HashChangeEvent('hashchange'));
+			// Check if new url only differs by hash
+			if (url.href.split('#')[0] === location.href.split('#')[0]) {
+				// Call `pushState` to add url to history so going back works.
+				// Also make a delay, otherwise the browser default behaviour would not kick in
+				setTimeout(() => history.pushState({}, '', url.href));
+				return;
 			}
+
+			history.pushState({}, '', url.href);
+
+			const noscroll = a.hasAttribute('sveltekit:noscroll');
 			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
 		});
