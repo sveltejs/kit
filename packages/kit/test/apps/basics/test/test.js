@@ -50,7 +50,7 @@ test.describe.parallel('a11y', () => {
 
 		if (javaScriptEnabled) {
 			await page.type('#input', 'bar');
-			expect(page.url()).toMatch('?foo=bar');
+			await page.waitForFunction(() => window.location.search === '?foo=bar');
 			expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 		}
 	});

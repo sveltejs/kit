@@ -79,11 +79,7 @@ export const test = base.extend({
 					});
 				});
 
-				await Promise.all([
-					// page.waitForNavigation({ waitUntil: 'networkidle' }),
-					page.click(selector),
-					page.evaluate(() => window.navigated)
-				]);
+				await Promise.all([page.click(selector), page.evaluate(() => window.navigated)]);
 			} else {
 				await page.click(selector);
 			}
