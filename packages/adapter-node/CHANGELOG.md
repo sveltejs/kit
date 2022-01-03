@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Don't cache non-hashed static assets in adapter-node ([#3193](https://github.com/sveltejs/kit/pull/3193))
+
+* Only set cache-control: immutable when appropriate ([#3196](https://github.com/sveltejs/kit/pull/3196))
+
 ## 1.0.0-next.59
 
 ### Patch Changes

@@ -7,3 +7,4 @@
 /test/**/.svelte-kit
 /test/**/build
 !/src/core/adapt/test/fixtures/*/.svelte-kit
+!/test/node_modules

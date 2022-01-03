@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.215
+
+### Patch Changes
+
+- Fix hash change focus behaviour ([#3177](https://github.com/sveltejs/kit/pull/3177))
+
+## 1.0.0-next.214
+
+### Patch Changes
+
+- Breaking: Add disableScrollHandling function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+
 ## 1.0.0-next.213
 
 ### Patch Changes

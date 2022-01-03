@@ -19,9 +19,10 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 ### $app/navigation
 
 ```js
-import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
+import { disableScrollHandling, goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
 ```
 
+- `disableScrollHandling` will, if called when the page is being updated following a navigation (in `onMount` or an action, for example), prevent SvelteKit from applying its normal scroll management. You should generally avoid this, as breaking user expectations of scroll behaviour can be disorienting.
 - `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
   - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`
   - `noscroll` (boolean, default `false`) If `true`, the browser will maintain its scroll position rather than scrolling to the top of the page after navigation
