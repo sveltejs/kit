@@ -1586,8 +1586,8 @@ test.describe.parallel('Session', () => {
 
 		if (javaScriptEnabled) {
 			await page.click('button');
-			expect(await page.innerHTML('h1')).toBe('answer via props: 43');
-			expect(await page.innerHTML('h2')).toBe('answer via store: 43');
+			expect(await page.innerHTML('h3')).toBe('answer via props is 43');
+			expect(await page.innerHTML('h4')).toBe('answer via store is 43');
 		}
 	});
 });
