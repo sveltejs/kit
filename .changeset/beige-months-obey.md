@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add disableScrollHandling function
+Breaking: Add disableScrollHandling function (see https://kit.svelte.dev/docs#modules-$app-navigation)
