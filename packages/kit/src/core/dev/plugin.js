@@ -205,6 +205,7 @@ export function create_plugin(config, output, cwd, amp) {
 								},
 								hooks,
 								hydrate: config.kit.hydrate,
+								inline_css: false,
 								manifest,
 								paths: {
 									base: config.kit.paths.base,
