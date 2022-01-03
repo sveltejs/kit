@@ -81,7 +81,7 @@ function sequence(handlers) {
 export const handler = sequence(
 	[
 		serve(path.join(__dirname, '/client'), 31536000),
-		serve(path.join(__dirname, '/static'), 31536000),
+		serve(path.join(__dirname, '/static'), 0),
 		serve(path.join(__dirname, '/prerendered'), 0),
 		ssr
 	].filter(Boolean)
