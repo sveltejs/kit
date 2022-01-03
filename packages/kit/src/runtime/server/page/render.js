@@ -118,14 +118,14 @@ export async function render_response({
 		options.amp
 			? ''
 			: Array.from(js)
-					.map((dep) => `<link rel="modulepreload" href="${dep}">`)
+					.map((dep) => `<link rel="modulepreload" href="${options.prefix + dep}">`)
 					.join('\n\t\t')
 	}
 		${
 			options.amp || options.inline_css
 				? ''
 				: Array.from(css)
-						.map((dep) => `<link rel="stylesheet" href="${dep}">`)
+						.map((dep) => `<link rel="stylesheet" href="${options.prefix + dep}">`)
 						.join('\n\t\t')
 		}`;
 
