@@ -18,14 +18,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /**
  * @param {string} path
  * @param {number} max_age
+ * @param {boolean} immutable
  */
-function serve(path, max_age) {
+function serve(path, max_age, immutable = false) {
 	return (
 		fs.existsSync(path) &&
 		sirv(path, {
 			etag: true,
 			maxAge: max_age,
-			immutable: true,
+			immutable,
 			gzip: true,
 			brotli: true
 		})
@@ -80,7 +81,7 @@ function sequence(handlers) {
 
 export const handler = sequence(
 	[
-		serve(path.join(__dirname, '/client'), 31536000),
+		serve(path.join(__dirname, '/client'), 31536000, true),
 		serve(path.join(__dirname, '/static'), 0),
 		serve(path.join(__dirname, '/prerendered'), 0),
 		ssr
