@@ -655,8 +655,6 @@ export class Renderer {
 						stuff
 					});
 
-					const is_leaf = i === a.length - 1;
-
 					if (node && node.loaded) {
 						if (node.loaded.error) {
 							status = node.loaded.status;
@@ -674,8 +672,8 @@ export class Renderer {
 						if (node.loaded.stuff) {
 							stuff_changed = true;
 						}
-					} else if (is_leaf && module.load) {
-						// if the leaf node has a `load` function
+					} else if (module.load) {
+						// if the node has a `load` function
 						// that returns nothing, fall through
 						return;
 					}
