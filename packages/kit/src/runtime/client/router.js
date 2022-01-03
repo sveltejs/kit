@@ -159,7 +159,8 @@ export class Router {
 
 			// Check if new url only differs by hash
 			if (url.href.split('#')[0] === location.href.split('#')[0]) {
-				// Delay pushState, otherwise the browser default behaviour would not kick in
+				// Call `pushState` to add url to history so going back works.
+				// Also make a delay, otherwise the browser default behaviour would not kick in
 				setTimeout(() => history.pushState({}, '', url.href));
 				return;
 			}
