@@ -160,6 +160,7 @@ export const config = {
 		timeout: 10000
 	},
 	workers: 8,
+	retries: 3,
 	projects: [
 		{
 			name: `${process.env.DEV ? 'dev' : 'build'}+js`,
