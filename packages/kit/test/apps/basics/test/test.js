@@ -1104,18 +1104,20 @@ test.describe.parallel('$app/stores', () => {
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
-		expect(await page.textContent('#navigating')).toBe('not currently navigating');
+		expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 
 		if (javaScriptEnabled) {
 			await app.prefetchRoutes(['/store/navigating/b']);
-			await page.click('a[href="/store/navigating/b"]');
 
-			expect(await page.textContent('#navigating')).toBe(
-				'navigating from /store/navigating/a to /store/navigating/b'
-			);
+			const res = await Promise.all([
+				page.click('a[href="/store/navigating/b"]'),
+				page.textContent('#navigating')
+			]);
+
+			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b');
 
 			await page.waitForSelector('#not-navigating');
-			expect(await page.textContent('#navigating')).toBe('not currently navigating');
+			expect(await page.textContent('#nav-status')).toBe('not currently navigating');
 		}
 	});
 });

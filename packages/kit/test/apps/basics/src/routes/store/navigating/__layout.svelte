@@ -4,9 +4,9 @@
 
 <nav><a href="/store/navigating/a">a</a> <a href="/store/navigating/b">b</a></nav>
 
-<div id="navigating">
+<div id="nav-status">
 	{#if $navigating}
-		<p>navigating from {$navigating.from.pathname} to {$navigating.to.pathname}</p>
+		<p id="navigating">navigating from {$navigating.from.pathname} to {$navigating.to.pathname}</p>
 	{:else}
 		<p id="not-navigating">not currently navigating</p>
 	{/if}
