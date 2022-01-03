@@ -28,7 +28,7 @@ test.describe.parallel('base path', () => {
 
 		if (javaScriptEnabled) {
 			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
+			expect(await page.innerHTML('h2')).toBe('button has been clicked 1 time');
 		}
 	});
 
