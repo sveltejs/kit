@@ -138,7 +138,9 @@ Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with 
 
 ### inlineCss
 
-Inline CSS inside a `<style>` block at the head of the HTML. When this option is `true`, all CSS files needed for the page are merged and inlined in a `<style>` block. This can reduce round trips on the first request and improve [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, this generates more HTML output, increases initial payload and reduces browser caching.
+Inline CSS inside a `<style>` block at the head of the HTML. When this option is `true`, all CSS files needed for the page are merged and inlined in a `<style>` block.
+
+> This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
 
 ### package
 
