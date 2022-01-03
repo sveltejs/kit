@@ -68,6 +68,7 @@ export class App {
 			},
 			hooks,
 			hydrate: ${s(config.kit.hydrate)},
+			inline_css: ${s(config.kit.inlineCss)},
 			manifest,
 			paths: { base, assets },
 			prefix: assets + '/${config.kit.appDir}/',
@@ -277,7 +278,13 @@ export async function build_server(
 		const css = new Set();
 		find_deps(component, client.vite_manifest, js, css);
 
-		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
+		const styles =
+			config.kit.amp || config.kit.inlineCss
+				? Array.from(css).map((file) => {
+						const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
+						return fs.readFileSync(resolved, 'utf-8');
+				  })
+				: [];
 
 		const node = `import * as module from '../${vite_manifest[component].file}';
 			export { module };

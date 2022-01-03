@@ -19,4 +19,8 @@ export default function (test, is_dev) {
 		},
 		{ dev: false, js: false }
 	);
+
+	test('inlines CSS', '/path-base/', async ({ page }) => {
+		assert.equal(await page.evaluate(() => document.querySelector('link[rel="stylesheet"]')), null);
+	});
 }
