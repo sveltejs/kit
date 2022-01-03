@@ -49,8 +49,10 @@ test.describe.parallel('a11y', () => {
 		await page.goto('/keepfocus');
 
 		if (javaScriptEnabled) {
-			await page.type('#input', 'bar');
-			await page.waitForFunction(() => window.location.search === '?foo=bar');
+			await Promise.all([
+				page.type('#input', 'bar'),
+				page.waitForFunction(() => window.location.search === '?foo=bar')
+			]);
 			expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 		}
 	});
