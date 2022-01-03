@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.215
+
+### Patch Changes
+
+- Fix hash change focus behaviour ([#3177](https://github.com/sveltejs/kit/pull/3177))
+
 ## 1.0.0-next.214
 
 ### Patch Changes
