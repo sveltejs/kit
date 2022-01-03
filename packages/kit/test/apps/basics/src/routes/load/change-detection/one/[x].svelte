@@ -1,9 +1,13 @@
 <script context="module">
+	import { browser } from '$app/env';
+
 	let count = 0;
 
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ params }) {
-		count += 1;
+		if (browser) {
+			count += 1;
+		}
 
 		return {
 			maxage: 5,

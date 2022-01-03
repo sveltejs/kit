@@ -15,6 +15,7 @@
 		"vite": "^2.7.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.17.1",
 		"@rollup/plugin-replace": "^3.0.0",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.1",
@@ -24,6 +25,7 @@
 		"@types/sade": "^1.7.3",
 		"amphtml-validator": "^1.0.35",
 		"cookie": "^0.4.1",
+		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
 		"eslint": "^8.3.0",
 		"kleur": "^4.1.4",
@@ -64,7 +66,11 @@
 		"test": "npm run test:unit && npm run test:packaging && npm run test:integration",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
-		"test:integration": "uvu test test.js"
+		"test:integration": "pnpm test:integration:amp && pnpm test:integration:basics && pnpm test:integration:options && pnpm test:integration:options-2",
+		"test:integration:amp": "cd test/apps/amp && pnpm test",
+		"test:integration:basics": "cd test/apps/basics && pnpm test",
+		"test:integration:options": "cd test/apps/options && pnpm test",
+		"test:integration:options-2": "cd test/apps/options-2 && pnpm test"
 	},
 	"exports": {
 		"./package.json": "./package.json",
