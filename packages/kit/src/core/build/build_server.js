@@ -262,7 +262,7 @@ export async function build_server(
 	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
 
 	const styles_lookup = new Map();
-	if (config.kit.amp) {
+	if (config.kit.amp || config.kit.inlineCss) {
 		client.assets.forEach((asset) => {
 			if (asset.fileName.endsWith('.css')) {
 				styles_lookup.set(asset.fileName, asset.source);
@@ -280,10 +280,7 @@ export async function build_server(
 
 		const styles =
 			config.kit.amp || config.kit.inlineCss
-				? Array.from(css).map((file) => {
-						const resolved = `${output_dir}/client/${config.kit.appDir}/${file}`;
-						return fs.readFileSync(resolved, 'utf-8');
-				  })
+				? Array.from(css).map((file) => styles_lookup.get(file))
 				: [];
 
 		const node = `import * as module from '../${vite_manifest[component].file}';
