@@ -110,104 +110,87 @@ export async function render_response({
 		rendered = { head: '', html: '', css: { code: '', map: null } };
 	}
 
-	const include_js = page_config.router || page_config.hydrate;
-	if (!include_js) js.clear();
+	let { head, html: body } = rendered;
 
-	// TODO strip the AMP stuff out of the build if not relevant
-	const links = `${
-		options.amp
-			? ''
-			: Array.from(js)
-					.map((dep) => `<link rel="modulepreload" href="${options.prefix + dep}">`)
-					.join('\n\t\t')
-	}
-		${
-			options.amp || options.inline_css
-				? ''
-				: Array.from(css)
-						.map((dep) => `<link rel="stylesheet" href="${options.prefix + dep}">`)
-						.join('\n\t\t')
-		}`;
-
-	/** @type {string} */
-	let init = '';
+	const inlined_style = Array.from(styles).join('\n');
 
 	if (options.amp) {
-		init = `
+		head += `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
-		<script async src="https://cdn.ampproject.org/v0.js"></script>`;
-		init += options.service_worker
-			? '<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>'
-			: '';
-	} else if (include_js) {
-		// prettier-ignore
-		init = `<script type="module">
-			import { start } from ${s(options.prefix + options.manifest._.entry.file)};
-			start({
-				target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-				paths: ${s(options.paths)},
-				session: ${try_serialize($session, (error) => {
-					throw new Error(`Failed to serialize session data: ${error.message}`);
-				})},
-				route: ${!!page_config.router},
-				spa: ${!page_config.ssr},
-				trailing_slash: ${s(options.trailing_slash)},
-				hydrate: ${page_config.ssr && page_config.hydrate ? `{
-					status: ${status},
-					error: ${serialize_error(error)},
-					nodes: [
-						${(branch || [])
-						.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-						.join(',\n\t\t\t\t\t\t')}
-					],
-					url: new URL(${s(url.href)}),
-					params: ${devalue(params)}
-				}` : 'null'}
-			});
-		</script>`;
-	}
+		<script async src="https://cdn.ampproject.org/v0.js"></script>
 
-	if (options.service_worker && !options.amp) {
-		init += `<script>
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.register('${options.service_worker}');
-			}
-		</script>`;
-	}
+		<style amp-custom>${inlined_style}\n${rendered.css.code}</style>`;
 
-	const inlined_style = `
-		${Array.from(styles).join('\n')}
-		${options.amp || options.inline_css ? rendered.css.code : ''}
-	`.trim();
-
-	const head = [
-		rendered.head,
-		inlined_style
-			? `<style ${
-					options.amp ? 'amp-custom' : options.dev ? 'data-svelte' : ''
-			  }>${inlined_style}</style>`
-			: '',
-		links,
-		init
-	].join('\n\n\t\t');
-
-	let body = rendered.html;
-	if (options.amp) {
 		if (options.service_worker) {
+			head +=
+				'<script async custom-element="amp-install-serviceworker" src="https://cdn.ampproject.org/v0/amp-install-serviceworker-0.1.js"></script>';
+
 			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
 		}
 	} else {
-		body += serialized_data
-			.map(({ url, body, json }) => {
-				let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
-					url
-				)}`;
-				if (body) attributes += ` data-body="${hash(body)}"`;
+		if (page_config.ssr) {
+			if (options.dev) {
+				head += `<style data-svelte>${inlined_style}</style>`;
+			} else if (options.inline_css) {
+				head += `<style>${inlined_style}</style>
 
-				return `<script ${attributes}>${json}</script>`;
-			})
-			.join('\n\n\t');
+				${Array.from(css)
+					.map((dep) => `<link disabled rel="stylesheet" href="${options.prefix + dep}">`)
+					.join('\n\t\t')}`;
+			} else {
+				head += Array.from(css)
+					.map((dep) => `<link rel="stylesheet" href="${options.prefix + dep}">`)
+					.join('\n\t\t');
+			}
+		}
+
+		if (page_config.router || page_config.hydrate) {
+			// prettier-ignore
+			head += `${Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix + dep}">`).join('\n\t\t')}
+
+			<script type="module">
+				import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+				start({
+					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+					paths: ${s(options.paths)},
+					session: ${try_serialize($session, (error) => {
+						throw new Error(`Failed to serialize session data: ${error.message}`);
+					})},
+					route: ${!!page_config.router},
+					spa: ${!page_config.ssr},
+					trailing_slash: ${s(options.trailing_slash)},
+					hydrate: ${page_config.ssr && page_config.hydrate ? `{
+						status: ${status},
+						error: ${serialize_error(error)},
+						nodes: [
+							${(branch || [])
+							.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+							.join(',\n\t\t\t\t\t\t')}
+						],
+						url: new URL(${s(url.href)}),
+						params: ${devalue(params)}
+					}` : 'null'}
+				});
+
+				${options.service_worker ? `<script>
+					if ('serviceWorker' in navigator) {
+						navigator.serviceWorker.register('${options.service_worker}');
+					}
+				</script>` : ''}
+			</script>`;
+
+			body += serialized_data
+				.map(({ url, body, json }) => {
+					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
+						url
+					)}`;
+					if (body) attributes += ` data-body="${hash(body)}"`;
+
+					return `<script ${attributes}>${json}</script>`;
+				})
+				.join('\n\n\t');
+		}
 	}
 
 	/** @type {import('types/helper').ResponseHeaders} */
