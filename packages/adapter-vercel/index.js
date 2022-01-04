@@ -1,5 +1,5 @@
 import { writeFileSync } from 'fs';
-import { relative } from 'path';
+import { relative } from 'path/posix';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
