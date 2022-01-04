@@ -18,6 +18,20 @@ export const handleError = ({ request, error }) => {
 		: {};
 	errors[request.url.pathname] = error.stack || error.message;
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	console.error(error.message);
+	if (error.frame) {
+		console.error(error.frame);
+	}
+	if (error.stack) {
+		console.error(error.stack);
+	}
+
+	if (error.message === '"Testing hook exception"') {
+		return {
+			status: 301,
+			redirect: '/errors/errorpage'
+		};
+	}
 };
 
 export const handle = sequence(
@@ -42,24 +56,6 @@ export const handle = sequence(
 		};
 	}
 );
-
-/** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({ error }) {
-	console.error(error.message);
-	if (error.frame) {
-		console.error(error.frame);
-	}
-	if (error.stack) {
-		console.error(error.stack);
-	}
-
-	if (error.message === '"Testing hook exception"') {
-		return {
-			status: 301,
-			redirect: '/errors/errorpage'
-		};
-	}
-}
 
 /** @type {import('@sveltejs/kit').ExternalFetch} */
 export async function externalFetch(request) {
