@@ -1452,6 +1452,7 @@ test.describe.parallel('Routing', () => {
 
 	test('back button returns to previous route when previous route has been navigated to via hash anchor', async ({
 		page,
+		back,
 		clicknav
 	}) => {
 		await page.goto('/routing/hashes/a');
@@ -1459,7 +1460,7 @@ test.describe.parallel('Routing', () => {
 		await page.click('[href="#hash-target"]');
 		await clicknav('[href="/routing/hashes/b"]');
 
-		await page.goBack();
+		await back();
 		expect(await page.textContent('h1')).toBe('a');
 	});
 
