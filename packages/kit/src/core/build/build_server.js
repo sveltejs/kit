@@ -3,7 +3,7 @@ import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirp } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
-import { print_config_conflicts } from '../config/index.js';
+import { load_template, print_config_conflicts } from '../config/index.js';
 import { posixify, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
@@ -11,20 +11,21 @@ import { s } from '../../utils/misc.js';
 
 /**
  * @param {{
- *   runtime: string,
- *   hooks: string,
- *   config: import('types/config').ValidatedConfig
+ *   cwd: string;
+ *   runtime: string;
+ *   hooks: string;
+ *   config: import('types/config').ValidatedConfig;
  * }} opts
  * @returns
  */
-const template = ({ config, hooks, runtime }) => `
+const template = ({ cwd, config, hooks, runtime }) => `
 import { respond } from '${runtime}';
 import root from './generated/root.svelte';
 import { set_paths, assets, base } from './runtime/paths.js';
 import { set_prerendering } from './runtime/env.js';
 import * as user_hooks from ${s(hooks)};
 
-const template = ({ head, body }) => ${s(fs.readFileSync(config.kit.files.template, 'utf-8'))
+const template = ({ head, body }) => ${s(load_template(cwd, config))
 	.replace('%svelte.head%', '" + head + "')
 	.replace('%svelte.body%', '" + body + "')};
 
@@ -171,6 +172,7 @@ export async function build_server(
 	fs.writeFileSync(
 		input.app,
 		template({
+			cwd,
 			config,
 			hooks: app_relative(hooks_file),
 			runtime
