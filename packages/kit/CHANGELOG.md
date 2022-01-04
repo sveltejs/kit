@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.216
+
+### Patch Changes
+
+- make html template optional for `svelte-kit package` ([#3161](https://github.com/sveltejs/kit/pull/3161))
+
+* Allow multiple different headers returned from one endpoint ([#3201](https://github.com/sveltejs/kit/pull/3201))
+
 ## 1.0.0-next.215
 
 ### Patch Changes
