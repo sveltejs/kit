@@ -5,6 +5,7 @@ import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 import { fileURLToPath } from 'url';
+import { start_server } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -815,7 +816,6 @@ test.describe.parallel('Load', () => {
 
 	test('handles large responses', async ({ page }) => {
 		await page.goto('/load');
-		const port = await ports.find(4000);
 
 		const chunk_size = 50000;
 		const chunk_count = 100;
@@ -828,7 +828,7 @@ test.describe.parallel('Load', () => {
 
 		let times_responded = 0;
 
-		const server = http.createServer(async (req, res) => {
+		const { port, server } = await start_server(async (req, res) => {
 			if (req.url === '/large-response.json') {
 				times_responded += 1;
 
@@ -848,10 +848,6 @@ test.describe.parallel('Load', () => {
 
 				res.end();
 			}
-		});
-
-		await new Promise((fulfil) => {
-			server.listen(port, () => fulfil(undefined));
 		});
 
 		await page.goto(`/load/large-response?port=${port}`);
@@ -1528,11 +1524,15 @@ test.describe.parallel('Routing', () => {
 	});
 
 	test('ignores navigation to URLs the app does not own', async ({ page }) => {
-		await page.goto('/routing');
+		const { port, server } = await start_server((req, res) => res.end('ok'));
+
+		await page.goto(`/routing?port=${port}`);
 		await Promise.all([
-			page.click('[href="https://www.google.com"]'),
-			page.waitForURL('https://www.google.com/')
+			page.click(`[href="http://localhost:${port}"]`),
+			page.waitForURL(`http://localhost:${port}/`)
 		]);
+
+		server.close();
 	});
 
 	// skipping this test because it causes a bunch of failures locally

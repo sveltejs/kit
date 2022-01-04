@@ -1,4 +1,6 @@
 import fs from 'fs';
+import http from 'http';
+import * as ports from 'port-authority';
 import { test as base } from '@playwright/test';
 
 export const test = base.extend({
@@ -180,3 +182,21 @@ export const config = {
 		screenshot: 'only-on-failure'
 	}
 };
+
+/**
+ *
+ * @param {(req: http.IncomingMessage, res: http.ServerResponse) => void} handler
+ * @param {number} [start]
+ * @returns
+ */
+export async function start_server(handler, start = 4000) {
+	const port = await ports.find(start);
+
+	const server = http.createServer(handler);
+
+	await new Promise((fulfil) => {
+		server.listen(port, () => fulfil(undefined));
+	});
+
+	return { port, server };
+}
