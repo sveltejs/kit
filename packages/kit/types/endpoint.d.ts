@@ -5,7 +5,7 @@ type DefaultBody = JSONString | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
-	headers?: ResponseHeaders;
+	headers?: Partial<ResponseHeaders>;
 	body?: Body;
 }
 

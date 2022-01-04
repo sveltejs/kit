@@ -1,5 +1,5 @@
 import { writeFileSync } from 'fs';
-import { relative } from 'path';
+import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
@@ -31,7 +31,7 @@ export default function () {
 
 			builder.log.minor('Generating serverless function...');
 
-			const relativePath = relative(tmp, builder.getServerDirectory());
+			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 			builder.copy(files, tmp, {
 				replace: {

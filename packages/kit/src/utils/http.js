@@ -1,5 +1,5 @@
 /**
- * @param {Record<string, string | string[]>} headers
+ * @param {Record<string, string | string[] | undefined>} headers
  * @param {string} key
  * @returns {string | undefined}
  * @throws {Error}
