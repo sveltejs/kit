@@ -44,8 +44,10 @@ test.describe.parallel('base path', () => {
 	});
 
 	test('inlines CSS', async ({ page }) => {
-		await page.goto('/path-base');
-		expect(await page.evaluate(() => document.querySelector('link[rel="stylesheet"]'))).toBe(null);
+		await page.goto('/path-base/base');
+		expect(
+			await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
+		).toBe(null);
 	});
 
 	test('sets params correctly', async ({ page, clicknav }) => {
