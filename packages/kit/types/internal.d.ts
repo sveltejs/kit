@@ -120,7 +120,7 @@ export interface SSRNode {
 	/** external JS files */
 	js: string[];
 	/** inlined styles */
-	styles: string[];
+	styles?: Record<string, string>;
 }
 
 export interface SSRRenderOptions {
@@ -131,7 +131,6 @@ export interface SSRRenderOptions {
 	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
 	hooks: Hooks;
 	hydrate: boolean;
-	inline_css: boolean;
 	manifest: SSRManifest;
 	paths: {
 		base: string;

@@ -31,7 +31,8 @@ export async function render_response({
 }) {
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
-	const styles = new Set();
+	/** @type {Map<string, string>} */
+	const styles = new Map();
 
 	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];
@@ -49,7 +50,7 @@ export async function render_response({
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));
 			if (node.js) node.js.forEach((url) => js.add(url));
-			if (node.styles) node.styles.forEach((content) => styles.add(content));
+			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
@@ -112,7 +113,7 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const inlined_style = Array.from(styles).join('\n');
+	const inlined_style = Array.from(styles.values()).join('\n');
 
 	if (options.amp) {
 		head += `
@@ -129,26 +130,20 @@ export async function render_response({
 			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
 		}
 	} else {
-		if (page_config.ssr) {
-			if (options.dev) {
-				head += `<style data-svelte>${inlined_style}</style>`;
-			} else if (options.inline_css) {
-				head += `<style>${inlined_style}</style>
-
-				${Array.from(css)
-					.map((dep) => `<link disabled rel="stylesheet" href="${options.prefix + dep}">`)
-					.join('\n\t\t')}`;
-			} else {
-				head += Array.from(css)
-					.map((dep) => `<link rel="stylesheet" href="${options.prefix + dep}">`)
-					.join('\n\t\t');
-			}
+		if (inlined_style) {
+			head += `\n\t<style${options.dev ? ' data-svelte' : ''}>${inlined_style}</style>`;
 		}
+		// prettier-ignore
+		head += Array.from(css)
+				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
+				.join('');
 
 		if (page_config.router || page_config.hydrate) {
+			head += Array.from(js)
+				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
+				.join('');
 			// prettier-ignore
-			head += `${Array.from(js).map((dep) => `<link rel="modulepreload" href="${options.prefix + dep}">`).join('\n\t\t')}
-
+			head += `
 			<script type="module">
 				import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 				start({
@@ -172,13 +167,12 @@ export async function render_response({
 						params: ${devalue(params)}
 					}` : 'null'}
 				});
-
-				${options.service_worker ? `<script>
-					if ('serviceWorker' in navigator) {
-						navigator.serviceWorker.register('${options.service_worker}');
-					}
-				</script>` : ''}
-			</script>`;
+			</script>${options.service_worker ? `
+			<script>
+				if ('serviceWorker' in navigator) {
+					navigator.serviceWorker.register('${options.service_worker}');
+				}
+			</script>` : ''}`;
 
 			body += serialized_data
 				.map(({ url, body, json }) => {

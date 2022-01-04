@@ -57,7 +57,8 @@ export function create_plugin(config, output, cwd, amp) {
 								const deps = new Set();
 								find_deps(node, deps);
 
-								const styles = new Set();
+								/** @type {Record<string, string>} */
+								const styles = {};
 
 								for (const dep of deps) {
 									const parsed = new URL(dep.url, 'http://localhost/');
@@ -70,7 +71,7 @@ export function create_plugin(config, output, cwd, amp) {
 									) {
 										try {
 											const mod = await vite.ssrLoadModule(dep.url);
-											styles.add(mod.default);
+											styles[dep.url] = mod.default;
 										} catch {
 											// this can happen with dynamically imported modules, I think
 											// because the Vite module graph doesn't distinguish between
@@ -84,7 +85,7 @@ export function create_plugin(config, output, cwd, amp) {
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
-									styles: Array.from(styles)
+									styles
 								};
 							};
 						}),
@@ -205,7 +206,6 @@ export function create_plugin(config, output, cwd, amp) {
 								},
 								hooks,
 								hydrate: config.kit.hydrate,
-								inline_css: false,
 								manifest,
 								paths: {
 									base: config.kit.paths.base,

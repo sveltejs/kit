@@ -129,7 +129,7 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
-		inlineCss?: boolean;
+		inlineCss?: number;
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;

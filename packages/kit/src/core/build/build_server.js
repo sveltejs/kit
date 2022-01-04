@@ -68,7 +68,6 @@ export class App {
 			},
 			hooks,
 			hydrate: ${s(config.kit.hydrate)},
-			inline_css: ${s(config.kit.inlineCss)},
 			manifest,
 			paths: { base, assets },
 			prefix: assets + '/${config.kit.appDir}/',
@@ -280,15 +279,21 @@ export async function build_server(
 
 		const styles =
 			config.kit.amp || config.kit.inlineCss
-				? Array.from(css).map((file) => styles_lookup.get(file))
-				: [];
+				? Object.fromEntries(
+						Array.from(css)
+							.filter(
+								(file) => config.kit.amp || styles_lookup.get(file).length < config.kit.inlineCss
+							)
+							.map((file) => [file, styles_lookup.get(file)])
+				  )
+				: {};
 
 		const node = `import * as module from '../${vite_manifest[component].file}';
 			export { module };
 			export const entry = '${client.vite_manifest[component].file}';
 			export const js = ${JSON.stringify(Array.from(js))};
 			export const css = ${JSON.stringify(Array.from(css))};
-			${styles ? `export const styles = ${s(styles)}` : ''}
+			${Object.keys(styles).length ? `export const styles = ${s(styles)}` : ''}
 			`.replace(/^\t\t\t/gm, '');
 
 		fs.writeFileSync(file, node);

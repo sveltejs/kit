@@ -75,7 +75,7 @@ const options = object(
 
 			hydrate: boolean(true),
 
-			inlineCss: boolean(false),
+			inlineCss: number(0),
 
 			package: object({
 				dir: string('package'),

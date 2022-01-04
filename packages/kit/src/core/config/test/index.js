@@ -40,7 +40,7 @@ async function testLoadDefaultConfig(path) {
 			},
 			host: null,
 			hydrate: true,
-			inlineCss: false,
+			inlineCss: 0,
 			package: {
 				dir: 'package',
 				emitTypes: true
