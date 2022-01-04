@@ -27,6 +27,11 @@ declare module '$app/env' {
 
 declare module '$app/navigation' {
 	/**
+	 * Disable SvelteKit's built-in scroll handling for the current navigation, in case you need to manually control the scroll position.
+	 * This is generally discouraged, since it breaks user expectations.
+	 */
+	export function disableScrollHandling(): void;
+	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to

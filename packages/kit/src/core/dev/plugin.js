@@ -10,6 +10,7 @@ import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { load_template } from '../config/index.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -218,8 +219,7 @@ export function create_plugin(config, output, cwd, amp) {
 								ssr: config.kit.ssr,
 								target: config.kit.target,
 								template: ({ head, body }) => {
-									let rendered = fs
-										.readFileSync(config.kit.files.template, 'utf8')
+									let rendered = load_template(cwd, config)
 										.replace('%svelte.head%', () => head)
 										.replace('%svelte.body%', () => body);
 

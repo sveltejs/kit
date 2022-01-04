@@ -1,4 +1,4 @@
-import { createReadStream, createWriteStream, statSync, writeFileSync } from 'fs';
+import { createReadStream, createWriteStream, existsSync, statSync, writeFileSync } from 'fs';
 import { pipeline } from 'stream';
 import glob from 'tiny-glob';
 import { fileURLToPath } from 'url';
@@ -62,6 +62,10 @@ export default function ({
  * @param {string} directory
  */
 async function compress(directory) {
+	if (!existsSync(directory)) {
+		return;
+	}
+
 	const files = await glob('**/*.{html,js,json,css,svg,xml}', {
 		cwd: directory,
 		dot: true,

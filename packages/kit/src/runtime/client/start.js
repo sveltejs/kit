@@ -48,7 +48,7 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 		  })
 		: null;
 
-	init(router);
+	init({ router, renderer });
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);

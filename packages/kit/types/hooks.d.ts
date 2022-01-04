@@ -15,7 +15,7 @@ export interface ServerRequest<Locals = Record<string, any>, Body = unknown> {
 
 export interface ServerResponse {
 	status: number;
-	headers: ResponseHeaders;
+	headers: Partial<ResponseHeaders>;
 	body?: StrictBody;
 }
 

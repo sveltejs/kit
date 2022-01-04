@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 1.0.0-next.216
+
+### Patch Changes
+
+- make html template optional for `svelte-kit package` ([#3161](https://github.com/sveltejs/kit/pull/3161))
+
+* Allow multiple different headers returned from one endpoint ([#3201](https://github.com/sveltejs/kit/pull/3201))
+
+## 1.0.0-next.215
+
+### Patch Changes
+
+- Fix hash change focus behaviour ([#3177](https://github.com/sveltejs/kit/pull/3177))
+
+## 1.0.0-next.214
+
+### Patch Changes
+
+- Breaking: Add disableScrollHandling function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+
+## 1.0.0-next.213
+
+### Patch Changes
+
+- Don't register service worker if there is none ([#3170](https://github.com/sveltejs/kit/pull/3170))
+
+* Fix url pathname for prerenders ([#3178](https://github.com/sveltejs/kit/pull/3178))
+
 ## 1.0.0-next.212
 
 ### Patch Changes

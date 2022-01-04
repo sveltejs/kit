@@ -6,10 +6,10 @@ import options from './options.js';
 
 /**
  * @param {string} cwd
- * @param {import('types/config').ValidatedConfig} validated
+ * @param {import('types/config').ValidatedConfig} config
  */
-function validate_template(cwd, validated) {
-	const { template } = validated.kit.files;
+export function load_template(cwd, config) {
+	const { template } = config.kit.files;
 	const relative = path.relative(cwd, template);
 
 	if (fs.existsSync(template)) {
@@ -23,6 +23,8 @@ function validate_template(cwd, validated) {
 	} else {
 		throw new Error(`${relative} does not exist`);
 	}
+
+	return fs.readFileSync(template, 'utf-8');
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
@@ -40,10 +42,6 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	validated.kit.files.routes = path.resolve(cwd, validated.kit.files.routes);
 	validated.kit.files.serviceWorker = path.resolve(cwd, validated.kit.files.serviceWorker);
 	validated.kit.files.template = path.resolve(cwd, validated.kit.files.template);
-
-	validate_template(cwd, validated);
-
-	// TODO check all the `files` exist when the config is loaded?
 
 	return validated;
 }
