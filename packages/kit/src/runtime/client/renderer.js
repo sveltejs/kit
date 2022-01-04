@@ -83,6 +83,8 @@ export class Renderer {
 		this.session_id = 1;
 		this.invalid = new Set();
 		this.invalidating = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
@@ -123,6 +125,16 @@ export class Renderer {
 			if (info) this.update(info, [], true);
 		});
 		ready = true;
+	}
+
+	disable_scroll_handling() {
+		if (import.meta.env.DEV && this.started && !this.updating) {
+			throw new Error('Can only disable scroll handling during navigation');
+		}
+
+		if (this.updating || !this.started) {
+			this.autoscroll = false;
+		}
 	}
 
 	/**
@@ -254,6 +266,8 @@ export class Renderer {
 			}
 		}
 
+		this.updating = true;
+
 		if (this.started) {
 			this.current = navigation_result.state;
 
@@ -272,26 +286,9 @@ export class Renderer {
 				document.body.focus();
 			}
 
-			const old_page_y_offset = Math.round(pageYOffset);
-			const old_max_page_y_offset = document.documentElement.scrollHeight - innerHeight;
-
 			await 0;
 
-			const new_page_y_offset = Math.round(pageYOffset);
-			const new_max_page_y_offset = document.documentElement.scrollHeight - innerHeight;
-
-			// After `await 0`, the `onMount()` function in the component executed.
-			// Check if no scrolling happened on mount.
-			const no_scroll_happened =
-				// In most cases, we can compare whether `pageYOffset` changed between navigation
-				new_page_y_offset === Math.min(old_page_y_offset, new_max_page_y_offset) ||
-				// But if the page is scrolled to/near the bottom, the browser would also scroll
-				// to/near the bottom of the new page on navigation. Since we can't detect when this
-				// behaviour happens, we naively compare by the y offset from the bottom of the page.
-				old_max_page_y_offset - old_page_y_offset === new_max_page_y_offset - new_page_y_offset;
-
-			// If there was no scrolling, we run on our custom scroll handling
-			if (no_scroll_happened) {
+			if (this.autoscroll) {
 				const deep_linked = hash && document.getElementById(hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
@@ -311,6 +308,8 @@ export class Renderer {
 
 		this.loading.promise = null;
 		this.loading.id = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		if (!this.router) return;
 

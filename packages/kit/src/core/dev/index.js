@@ -9,14 +9,16 @@ import { SVELTE_KIT } from '../constants.js';
 import { copy_assets } from '../utils.js';
 import { create_plugin } from './plugin.js';
 
-/** @typedef {{
+/**
+ * @typedef {{
  *   cwd: string,
  *   port: number,
  *   host?: string,
  *   https: boolean,
  *   config: import('types/config').ValidatedConfig
- * }} Options */
-/** @typedef {import('types/internal').SSRComponent} SSRComponent */
+ * }} Options
+ * @typedef {import('types/internal').SSRComponent} SSRComponent
+ */
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
@@ -57,6 +59,13 @@ export async function dev({ cwd, port, host, https, config }) {
 			alias: {
 				$app: path.resolve(`${output}/runtime/app`),
 				$lib: config.kit.files.lib
+			}
+		},
+		build: {
+			rollupOptions: {
+				// Vite dependency crawler needs an explicit JS entry point
+				// eventhough server otherwise works without it
+				input: path.resolve(`${output}/runtime/internal/start.js`)
 			}
 		},
 		plugins: [

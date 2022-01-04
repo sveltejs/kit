@@ -26,6 +26,9 @@
 
 <button on:click={() => n += 1}>clicks: {n}</button>
 
+{#if n === 1}
+	<h2>button has been clicked 1 time</h2>
+{/if}
 
 <style>
 	p {
