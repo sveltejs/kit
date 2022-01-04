@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-add in a check_template option to config loaders
+make html template optional for `svelte-kit package`
