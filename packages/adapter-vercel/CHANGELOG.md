@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.35
+
+### Patch Changes
+
+- Use path.posix to resolve routes for esmodules ([#3200](https://github.com/sveltejs/kit/pull/3200))
+
 ## 1.0.0-next.34
 
 ### Patch Changes
