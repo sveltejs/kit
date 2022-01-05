@@ -44,10 +44,23 @@ test.describe.parallel('base path', () => {
 	});
 
 	test('inlines CSS', async ({ page }) => {
-		await page.goto('/path-base/base');
-		expect(
-			await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
-		).toBe(null);
+		await page.goto('/path-base/base/');
+		if (process.env.DEV) {
+			expect(
+				await page.evaluate(() => document.querySelector('style[data-svelte]'))
+			).not.toBeNull();
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]'))
+			).toBeNull();
+		} else {
+			expect(await page.evaluate(() => document.querySelector('style'))).not.toBeNull();
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][disabled]'))
+			).not.toBeNull();
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
+			).not.toBeNull();
+		}
 	});
 
 	test('sets params correctly', async ({ page, clicknav }) => {

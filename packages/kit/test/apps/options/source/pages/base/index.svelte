@@ -15,11 +15,15 @@
 </script>
 
 <script>
+	import SvelteLogo from '$lib/SvelteLogo.svelte';
+
 	/** @type {any} */
 	export let data;
 
 	let n = 0;
 </script>
+
+<SvelteLogo />
 
 <p data-source="base">{data.base}</p>
 <p data-source="assets">{data.assets}</p>
