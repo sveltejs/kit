@@ -3,9 +3,8 @@ import path from 'path';
 import http from 'http';
 import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
 import { fileURLToPath } from 'url';
-import { start_server } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -1492,6 +1491,17 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('camel is an animal');
 
 		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
+	test.only('dynamic fallthrough of layout', async ({ page, clicknav }) => {
+		await page.goto('/routing/fallthrough-layout/okay');
+		expect(await page.textContent('h1')).toBe('foo is okay');
+
+		await clicknav('[href="/routing/fallthrough-layout/ok"]');
+		expect(await page.textContent('h1')).toBe('xyz is ok');
+
+		await clicknav('[href="/routing/fallthrough-layout/notok"]');
 		expect(await page.textContent('h1')).toBe('404');
 	});
 
