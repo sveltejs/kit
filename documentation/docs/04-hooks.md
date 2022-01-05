@@ -101,7 +101,7 @@ export async function handleError({ error, request }) {
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, { request });
 
-	//Optionally return a status and redirect destination
+	// Optionally return a status and redirect destination
 	return {
 		status:301,
 		redirect: "/custom-error-page"
