@@ -89,10 +89,8 @@ test.describe.parallel('a11y', () => {
 });
 
 test.describe('Scrolling', () => {
-	// skip these tests if
-	// a) JS is disabled, since we're testing client-side behaviour, or
-	// b) we're in CI, because for unknown reasons the tests are flaky as hell there
-	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !!process.env.CI);
+	// skip these tests if JS is disabled, since we're testing client-side behaviour
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('url-supplied anchor works on direct page load', async ({ page, in_view }) => {
 		await page.goto('/anchor/anchor#go-to-element');
@@ -145,11 +143,9 @@ test.describe('Scrolling', () => {
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
 		page,
-		in_view,
-		started
+		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll/anchor#go-to-element');
-		await started();
 		expect(await in_view('#abcde')).toBe(true);
 	});
 
@@ -1219,11 +1215,10 @@ test.describe.parallel('Redirects', () => {
 		);
 	});
 
-	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled, started }) => {
+	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
 		await page.goto('/redirect-on-load');
 
 		if (javaScriptEnabled) {
-			await started();
 			await page.waitForTimeout(50); // TODO investigate why this test is flaky
 			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
 			expect(await page.textContent('h1')).toBe('Hazaa!');
@@ -1239,8 +1234,7 @@ test.describe.parallel('Routing', () => {
 		page,
 		clicknav,
 		app,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		await page.goto('/routing/slashes');
 
@@ -1250,7 +1244,6 @@ test.describe.parallel('Routing', () => {
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
-			await started();
 			await app.goto('/routing/');
 			expect(page.url()).toBe(`${baseURL}/routing`);
 			expect(await page.textContent('h1')).toBe('Great success!');
@@ -1262,8 +1255,7 @@ test.describe.parallel('Routing', () => {
 		page,
 		clicknav,
 		app,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		await page.goto('/routing/slashes');
 
@@ -1273,7 +1265,6 @@ test.describe.parallel('Routing', () => {
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
-			await started();
 			await app.goto('/routing/?');
 			expect(page.url()).toBe(`${baseURL}/routing`);
 			expect(await page.textContent('h1')).toBe('Great success!');
@@ -1285,8 +1276,7 @@ test.describe.parallel('Routing', () => {
 		page,
 		clicknav,
 		app,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		await page.goto('/routing/slashes');
 
@@ -1296,7 +1286,6 @@ test.describe.parallel('Routing', () => {
 
 		if (javaScriptEnabled) {
 			await page.goto(`${baseURL}/routing/slashes`);
-			await started();
 			await app.goto('/routing/?foo=bar');
 			expect(page.url()).toBe(`${baseURL}/routing?foo=bar`);
 			expect(await page.textContent('h1')).toBe('Great success!');
@@ -1334,13 +1323,11 @@ test.describe.parallel('Routing', () => {
 		app,
 		page,
 		clicknav,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		if (javaScriptEnabled) {
 			await page.goto('/routing');
 
-			await started();
 			await app.prefetchRoutes(['/routing/a']).catch((e) => {
 				// from error handler tests; ignore
 				if (!e.message.includes('Crashing now')) throw e;
@@ -1357,25 +1344,17 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('navigates programmatically', async ({ page, app, javaScriptEnabled, started }) => {
+	test('navigates programmatically', async ({ page, app, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			await page.goto('/routing/a');
-			await started();
 			await app.goto('/routing/b');
 			expect(await page.textContent('h1')).toBe('b');
 		}
 	});
 
-	test('prefetches programmatically', async ({
-		baseURL,
-		page,
-		app,
-		javaScriptEnabled,
-		started
-	}) => {
+	test('prefetches programmatically', async ({ baseURL, page, app, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
 			await page.goto('/routing/a');
-			await started();
 
 			/** @type {string[]} */
 			let requests = [];
@@ -1641,13 +1620,11 @@ test.describe.parallel('Shadow DOM', () => {
 		app,
 		page,
 		clicknav,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		await page.goto('/routing/shadow-dom');
 
 		if (javaScriptEnabled) {
-			await started();
 			await app.prefetchRoutes(['/routing/a']).catch((e) => {
 				// from error handler tests; ignore
 				if (!e.message.includes('Crashing now')) throw e;

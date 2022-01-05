@@ -21,7 +21,6 @@ export const test: TestType<
 			clicknav: (selector: string) => Promise<void>;
 			in_view: (selector: string) => Promise<boolean>;
 			read_errors: (href: string) => string;
-			started: () => Promise<void>;
 		},
 	PlaywrightWorkerArgs & PlaywrightWorkerOptions
 >;
