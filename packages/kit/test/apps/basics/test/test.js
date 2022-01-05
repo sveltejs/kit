@@ -1494,7 +1494,7 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('404');
 	});
 
-	test.only('dynamic fallthrough of layout', async ({ page, clicknav }) => {
+	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
 		await page.goto('/routing/fallthrough-layout/okay');
 		expect(await page.textContent('h1')).toBe('foo is okay');
 
