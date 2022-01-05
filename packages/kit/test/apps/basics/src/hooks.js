@@ -18,13 +18,6 @@ export const handleError = ({ request, error }) => {
 		: {};
 	errors[request.url.pathname] = error.stack || error.message;
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
-	console.error(error.message);
-	if (error.frame) {
-		console.error(error.frame);
-	}
-	if (error.stack) {
-		console.error(error.stack);
-	}
 
 	if (error.message === '"Testing hook exception"') {
 		return {
