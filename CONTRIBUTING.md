@@ -51,9 +51,9 @@ You can run the tests for only a single package by first moving to that director
 
 You must rebuild each time before running the tests if you've made code changes.
 
-To run a single integration test, provide the `FILTER` env var with the test name. E.g. `FILTER="includes paths" pnpm test:integration`. You can also open up the file and change `test` to `test.only`.
+To run a single integration test or otherwise control the running of the tests locally see [the Playwright CLI docs](https://playwright.dev/docs/test-cli). Note that you will need to run these commands from the test project directory such as `packages/kit/test/apps/basics`.
 
-You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser.
+You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev` to hit it with your browser. The Playwright Inspector offers similar functionality.
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { relative } from 'path';
+import { posix } from 'path';
 import { execSync } from 'child_process';
 import esbuild from 'esbuild';
 import toml from '@iarna/toml';
@@ -35,7 +35,7 @@ export default function () {
 			builder.log.info(stdout.toString());
 
 			builder.log.minor('Generating worker...');
-			const relativePath = relative(tmp, builder.getServerDirectory());
+			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
