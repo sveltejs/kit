@@ -621,9 +621,9 @@ test.describe.parallel('Errors', () => {
 	});
 
 	test('custom error page is rendered if handle hook throws an error', async ({
-		javaScriptEnabled,
-		page,
 		baseURL,
+		page,
+		javaScriptEnabled,
 		started
 	}) => {
 		await page.goto('/errors/test-hooks-errorhandling');
