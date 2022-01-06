@@ -4,9 +4,8 @@ import { test } from '../../../utils.js';
 /** @typedef {import('@playwright/test').Response} Response */
 
 test.describe.parallel('base path', () => {
-	test('serves /', async ({ page, started, javaScriptEnabled }) => {
+	test('serves /', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/path-base/');
-		await started();
 
 		expect(await page.textContent('h1')).toBe('I am in the template');
 		expect(await page.textContent('h2')).toBe("We're on index.svelte");
