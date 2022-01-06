@@ -134,7 +134,7 @@ export default function ({ split = false } = {}) {
 			builder.copy('_headers', headers_file);
 			appendFileSync(
 				headers_file,
-				`\n\n/${builder.appDir}/*\n  cache-control: public;\n  cache-control: immutable;\n  cache-control: max-age=31536000;\n`
+				`\n\n/${builder.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
 			);
 		}
 	};
