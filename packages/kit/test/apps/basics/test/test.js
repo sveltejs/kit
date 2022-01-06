@@ -619,13 +619,10 @@ test.describe.parallel('Errors', () => {
 	test('custom error page is rendered if handle hook throws an error', async ({
 		baseURL,
 		page,
-		javaScriptEnabled,
-		started
+		javaScriptEnabled
 	}) => {
 		await page.goto('/errors/test-hooks-errorhandling');
 		if (javaScriptEnabled) {
-			await started();
-			await page.waitForTimeout(50); // TODO investigate why this test is flaky
 			expect(page.url()).toEqual(`${baseURL}/errors/errorpage`);
 			expect(await page.textContent('#error-message')).toEqual('This is custom a errorpage');
 		}
