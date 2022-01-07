@@ -15,21 +15,24 @@ function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
 }
 
+const text_types = new Set([
+	'application/xml',
+	'application/json',
+	'application/x-www-form-urlencoded',
+	'multipart/form-data'
+]);
+
 /**
  * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
  *
  * @param {string | undefined | null} content_type The `content-type` header of a request/response.
  * @returns {boolean}
  */
-function is_content_type_textual(content_type) {
+export function is_text(content_type) {
 	if (!content_type) return true; // defaults to json
-	const [type] = content_type.split(';'); // get the mime type
-	return (
-		type === 'text/plain' ||
-		type === 'application/json' ||
-		type === 'application/x-www-form-urlencoded' ||
-		type === 'multipart/form-data'
-	);
+	const type = content_type.split(';')[0].toLowerCase(); // get the mime type
+
+	return type.startsWith('text/') || type.endsWith('+xml') || text_types.has(type);
 }
 
 /**
@@ -68,9 +71,7 @@ export async function render_endpoint(request, route, match) {
 	headers = lowercase_keys(headers);
 	const type = get_single_valued_header(headers, 'content-type');
 
-	const is_type_textual = is_content_type_textual(type);
-
-	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
+	if (!is_text(type) && !(body instanceof Uint8Array || is_string(body))) {
 		return error(
 			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
 		);
