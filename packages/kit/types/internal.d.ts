@@ -144,7 +144,7 @@ export interface SSRRenderOptions {
 	service_worker?: string;
 	ssr: boolean;
 	target: string;
-	template({ head, body }: { head: string; body: string }): string;
+	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
 	trailing_slash: TrailingSlash;
 }
 
