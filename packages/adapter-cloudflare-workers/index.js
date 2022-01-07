@@ -67,11 +67,7 @@ export default function () {
 	};
 }
 
-/**
- *
- * @param {import('@sveltejs/kit').Builder} builder
- * @returns
- */
+/** @param {import('@sveltejs/kit').Builder} builder */
 function validate_config(builder) {
 	if (existsSync('wrangler.toml')) {
 		let wrangler_config;

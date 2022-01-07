@@ -11,7 +11,6 @@ addEventListener('fetch', (/** @type {FetchEvent} */ event) => {
 });
 
 /**
- *
  * @param {FetchEvent} event
  * @returns {Promise<Response>}
  */
@@ -79,9 +78,7 @@ async function read(request) {
 	return new Uint8Array(await request.arrayBuffer());
 }
 
-/**
- * @param {Record<string, string | string[]>} headers
- */
+/** @param {Record<string, string | string[]>} headers */
 function make_headers(headers) {
 	const result = new Headers();
 	for (const header in headers) {
