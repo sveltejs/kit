@@ -3,8 +3,8 @@ import path from 'path';
 import http from 'http';
 import * as ports from 'port-authority';
 import { expect } from '@playwright/test';
-import { start_server, test } from '../../../utils.js';
 import { fileURLToPath } from 'url';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
