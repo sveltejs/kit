@@ -258,6 +258,7 @@ importers:
       sirv: ^1.0.19
       svelte: ^3.44.2
       svelte-check: ^2.2.10
+      svelte-preprocess: ^4.9.8
       svelte2tsx: ~0.4.10
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
@@ -291,6 +292,7 @@ importers:
       sirv: 1.0.19
       svelte: 3.44.2
       svelte-check: 2.2.10_svelte@3.44.2
+      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.4.4
       svelte2tsx: 0.4.10_svelte@3.44.2+typescript@4.4.4
       tiny-glob: 0.2.9
       uvu: 0.5.2
