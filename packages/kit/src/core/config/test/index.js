@@ -75,7 +75,7 @@ test('errors on loading config with incorrect default export', async () => {
 
 	assert.equal(
 		message,
-		'Unexpected config type "string", make sure your default export is an object.'
+		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs#configuration'
 	);
 });
 
