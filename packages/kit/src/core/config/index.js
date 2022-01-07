@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import * as url from 'url';
-import colors from 'kleur';
 import { logger } from '../utils.js';
 import options from './options.js';
 
@@ -34,17 +33,11 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 
 	if (!fs.existsSync(config_file)) {
 		if (fs.existsSync(config_file_cjs)) {
-			// TODO this is temporary, for the benefit of early adopters
-			// prettier-ignore
-			console.error(colors.bold().red(
-				'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
-			));
 			config_file = config_file_cjs;
 		} else {
-			// prettier-ignore
-			console.error(colors.bold().red(
+			throw new Error(
 				'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs#configuration'
-			));
+			);
 		}
 	}
 
