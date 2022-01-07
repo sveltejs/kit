@@ -5,17 +5,9 @@ import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
-import { coalesce_to_error, has_error_code } from './utils/error.js';
+import { coalesce_to_error } from './utils/error.js';
 
 async function get_config() {
-	// TODO this is temporary, for the benefit of early adopters
-	if (existsSync('svelte.config.cjs')) {
-		// prettier-ignore
-		console.error(colors.bold().red(
-			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
-		));
-	}
-
 	if (existsSync('vite.config.js')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
@@ -27,21 +19,18 @@ async function get_config() {
 		return await load_config();
 	} catch (err) {
 		const error = coalesce_to_error(err);
-		let message = error.message;
 
-		if (
-			has_error_code(error, 'MODULE_NOT_FOUND') &&
-			/Cannot find module svelte\.config\./.test(error.message)
-		) {
-			message = 'Missing svelte.config.js';
-		} else if (error.name === 'SyntaxError') {
-			message = 'Malformed svelte.config.js';
+		if (error.name === 'SyntaxError') {
+			// prettier-ignore
+			console.error(colors.bold().red(
+				'Malformed svelte.config.js'
+			));
 		}
 
-		console.error(colors.bold().red(message));
 		if (error.stack) {
 			console.error(colors.grey(error.stack));
 		}
+
 		process.exit(1);
 	}
 }
