@@ -64,7 +64,7 @@ export class App {
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
 			handle_error: (error, request) => {
-				hooks.handleError({ error, request });
+				return hooks.handleError({ error, request });
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,

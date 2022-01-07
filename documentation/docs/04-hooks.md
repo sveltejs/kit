@@ -78,16 +78,20 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 ### handleError
 
-If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console. If the `renderError` return value is set to `true` an [error page](#layouts-error-pages) will be rendered. Otherwise the error message with a stack trace is displayed.
 
 During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
 
 If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
+export interface HandleErrorResponse {
+	renderError?: boolean;
+}
+
 // Declaration types for handleError hook
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: Request<Locals, Body> }): void;
+	(input: { error: Error & { frame?: string }; request: Request<Locals, Body> }): void | Promise<HandleErrorResponse>;
 }
 ```
 
@@ -96,6 +100,11 @@ export interface HandleError<Locals = Record<string, any>, Body = unknown> {
 export async function handleError({ error, request }) {
 	// example integration with https://sentry.io/
 	Sentry.captureException(error, { request });
+
+	// Optionally render an error page
+	return {
+		renderError: true
+	}
 }
 ```
 

@@ -615,6 +615,36 @@ test.describe.parallel('Errors', () => {
 			expect(await page.innerHTML('h1')).toBe('401');
 		}
 	});
+
+	test('custom error page is rendered if handleError hook returns renderError', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		const res = await page.goto('/errors/test-hooks-errorhandling');
+		expect(res && res.status()).toBe(500);
+		if (javaScriptEnabled) {
+			expect(await page.textContent('#message')).toEqual(
+				'This is your custom error page saying: "Testing hook exception for /errors/test-hooks-errorhandling"'
+			);
+		}
+	});
+
+	test('stack trace is rendered if handleError hook does not return renderError', async ({
+		request,
+		read_errors
+	}) => {
+		const res = await request.get('/errors/test-hooks-errorhandling-stack');
+		expect(res && res.status()).toBe(500);
+
+		const lines = read_errors('/errors/test-hooks-errorhandling-stack').split('\n');
+		expect(lines[0]).toMatch(
+			'Error: Testing hook exception for /errors/test-hooks-errorhandling-stack'
+		);
+
+		expect(await res.text()).toMatch(
+			'Testing hook exception for /errors/test-hooks-errorhandling-stack'
+		);
+	});
 });
 
 test.describe.parallel('ETags', () => {

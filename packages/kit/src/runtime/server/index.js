@@ -133,7 +133,25 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ err) {
 		const e = coalesce_to_error(err);
 
-		options.handle_error(e, request);
+		const handle_error_response = await options.handle_error(e, request);
+		if (handle_error_response?.renderError) {
+			let $session;
+			// getSession could be responsible for the error
+			try {
+				$session = await options.hooks.getSession(request);
+			} catch {
+				$session = null;
+			}
+
+			return await respond_with_error({
+				request,
+				options,
+				state,
+				$session,
+				status: 500,
+				error: e
+			});
+		}
 
 		return {
 			status: 500,

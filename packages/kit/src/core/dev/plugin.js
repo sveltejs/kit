@@ -202,7 +202,7 @@ export function create_plugin(config, output, cwd, amp) {
 								},
 								handle_error: (error, request) => {
 									vite.ssrFixStacktrace(error);
-									hooks.handleError({ error, request });
+									return hooks.handleError({ error, request });
 								},
 								hooks,
 								hydrate: config.kit.hydrate,

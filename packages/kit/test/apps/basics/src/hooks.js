@@ -18,6 +18,9 @@ export const handleError = ({ request, error }) => {
 		: {};
 	errors[request.url.pathname] = error.stack || error.message;
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+	if (error.message === 'Testing hook exception for /errors/test-hooks-errorhandling') {
+		return { renderError: true };
+	}
 };
 
 export const handle = sequence(
@@ -32,6 +35,9 @@ export const handle = sequence(
 	},
 	async ({ request, resolve }) => {
 		const response = await resolve(request);
+		if (request.url.pathname.startsWith('/errors/test-hooks-errorhandling')) {
+			throw new Error(`Testing hook exception for ${request.url.pathname}`);
+		}
 
 		return {
 			...response,
