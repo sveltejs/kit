@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
 ## 1.0.0-next.37
 
 ### Patch Changes
