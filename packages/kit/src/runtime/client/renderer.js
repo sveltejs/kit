@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
@@ -277,7 +278,7 @@ export class Renderer {
 			this._init(navigation_result);
 		}
 
-		// opts must be passed if we're navigating...
+		// opts must be passed if we're navigating
 		if (opts) {
 			const { hash, scroll, keepfocus } = opts;
 
@@ -286,7 +287,8 @@ export class Renderer {
 				document.body.focus();
 			}
 
-			await 0;
+			// need to render the DOM before we can scroll to the rendered elements
+			await tick();
 
 			if (this.autoscroll) {
 				const deep_linked = hash && document.getElementById(hash.slice(1));
@@ -302,8 +304,8 @@ export class Renderer {
 				}
 			}
 		} else {
-			// ...they will not be supplied if we're simply invalidating
-			await 0;
+			// in this case we're simply invalidating
+			await tick();
 		}
 
 		this.loading.promise = null;
