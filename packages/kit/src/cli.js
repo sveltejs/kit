@@ -1,4 +1,3 @@
-import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
 import { relative } from 'path';
