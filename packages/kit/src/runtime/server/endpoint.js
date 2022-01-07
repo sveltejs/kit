@@ -28,7 +28,7 @@ const text_types = new Set([
  * @param {string | undefined | null} content_type The `content-type` header of a request/response.
  * @returns {boolean}
  */
-export function is_content_type_textual(content_type) {
+export function is_text(content_type) {
 	if (!content_type) return true; // defaults to json
 	const type = content_type.split(';')[0].toLowerCase(); // get the mime type
 
@@ -71,7 +71,7 @@ export async function render_endpoint(request, route, match) {
 	headers = lowercase_keys(headers);
 	const type = get_single_valued_header(headers, 'content-type');
 
-	if (!is_content_type_textual(type) && !(body instanceof Uint8Array || is_string(body))) {
+	if (!is_text(type) && !(body instanceof Uint8Array || is_string(body))) {
 		return error(
 			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
 		);
