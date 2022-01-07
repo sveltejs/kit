@@ -8,6 +8,14 @@ import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
 
 async function get_config() {
+	// TODO this is temporary, for the benefit of early adopters
+	if (existsSync('svelte.config.cjs')) {
+		// prettier-ignore
+		console.error(colors.bold().red(
+			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
+		));
+	}
+
 	if (existsSync('vite.config.js')) {
 		// prettier-ignore
 		console.error(colors.bold().red(
@@ -19,13 +27,13 @@ async function get_config() {
 		return await load_config();
 	} catch (err) {
 		const error = coalesce_to_error(err);
+		let message = error.message;
 
 		if (error.name === 'SyntaxError') {
-			// prettier-ignore
-			console.error(colors.bold().red(
-				'Malformed svelte.config.js'
-			));
+			message = 'Malformed svelte.config.js';
 		}
+
+		console.error(colors.bold().red(message));
 
 		if (error.stack) {
 			console.error(colors.grey(error.stack));

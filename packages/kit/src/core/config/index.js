@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import * as url from 'url';
-import colors from 'kleur';
 import { logger } from '../utils.js';
 import options from './options.js';
 
@@ -32,10 +31,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
 
 	if (!fs.existsSync(config_file)) {
-		// prettier-ignore
-		console.error(colors.bold().red(
+		throw new Error(
 			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs#configuration'
-		));
+		);
 	}
 
 	const config = await import(url.pathToFileURL(config_file).href);
