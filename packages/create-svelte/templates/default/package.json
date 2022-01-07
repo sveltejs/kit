@@ -4,12 +4,11 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
+		"preview": "svelte-kit preview",
 		"start": "svelte-kit start"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-cloudflare-workers": "next",
-		"@sveltejs/adapter-netlify": "next",
-		"@sveltejs/adapter-vercel": "next",
+		"@sveltejs/adapter-auto": "next",
 		"@sveltejs/kit": "next",
 		"svelte": "^3.44.0",
 		"svelte-preprocess": "^4.9.8",

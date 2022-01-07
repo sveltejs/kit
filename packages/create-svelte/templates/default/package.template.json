@@ -4,11 +4,13 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
+		"package": "svelte-kit package",
 		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
-		"@sveltejs/kit": "workspace:*",
-		"svelte": "^3.34.0"
+		"@sveltejs/adapter-auto": "next",
+		"@sveltejs/kit": "next",
+		"svelte": "^3.44.0"
 	},
 	"type": "module",
 	"dependencies": {

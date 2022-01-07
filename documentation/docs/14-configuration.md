@@ -26,8 +26,11 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
+		headers: {
+			host: null,
+			protocol: null
+		},
 		host: null,
-		hostHeader: null,
 		hydrate: true,
 		package: {
 			dir: 'package',
@@ -41,13 +44,16 @@ const config = {
 			base: ''
 		},
 		prerender: {
+			concurrency: 1,
 			crawl: true,
 			enabled: true,
 			entries: ['*'],
 			onError: 'fail'
 		},
+		protocol: null,
 		router: true,
 		serviceWorker: {
+			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
 		ssr: true,
@@ -55,7 +61,7 @@ const config = {
 		trailingSlash: 'never',
 		vite: () => ({})
 	},
-	
+
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
 	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
@@ -101,24 +107,29 @@ Permissions-Policy: interest-cohort=()
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
-### host
+### headers
 
-A value that overrides the `Host` header when populating `page.host`
+The current page or endpoint's `url` is, in some environments, derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
 
-### hostHeader
-
-If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying host is exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) header and you should specify this in your config if you need to access `page.host`:
+If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
 
 ```js
 // svelte.config.js
 export default {
 	kit: {
-		hostHeader: 'X-Forwarded-Host'
+		headers: {
+			host: 'X-Forwarded-Host',
+			protocol: 'X-Forwarded-Proto'
+		}
 	}
 };
 ```
 
 **You should only do this if you trust the reverse proxy**, which is why it isn't the default.
+
+### host
+
+A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers-host).
 
 ### hydrate
 
@@ -163,6 +174,7 @@ An object containing zero or more of the following `string` values:
 
 See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
 
+- `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
@@ -190,6 +202,10 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
     	}
     };
     ```
+
+### protocol
+
+The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers-protocol) is set. If necessary, you can override it here.
 
 ### router
 
@@ -221,4 +237,4 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 ### vite
 
-A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
+A [Vite config object](https://vitejs.dev/config), or a function that returns one. You can pass [Vite and Rollup plugins](https://github.com/vitejs/awesome-vite#plugins) via [the `plugins` option](https://vitejs.dev/config/#plugins) to customize your build in advanced ways such as supporting image optimization, Tauri, WASM, Workbox, and more. SvelteKit will prevent you from setting certain build-related options since it depends on certain configuration values.

@@ -85,10 +85,6 @@ onMount(() => {
 });
 ```
 
-### How do I use Firebase?
-
-Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
-
 ### Does it work with Yarn 2?
 
 Sort of. The Plug'n'Play feature, aka 'pnp', is broken (it deviates from the Node module resolution algorithm, and [doesn't yet work with native JavaScript modules](https://github.com/yarnpkg/berry/issues/638) which SvelteKit — along with an [increasing number of packages](https://blog.sindresorhus.com/get-ready-for-esm-aa53530b3f77) — uses). You can use `nodeLinker: 'node-modules'` in your [`.yarnrc.yml`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) file to disable pnp, but it's probably easier to just use npm or [pnpm](https://pnpm.io/), which is similarly fast and efficient but without the compatibility headaches.

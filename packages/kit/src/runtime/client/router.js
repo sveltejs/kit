@@ -8,12 +8,14 @@ function scroll_state() {
 }
 
 /**
- * @param {Node | null} node
- * @returns {HTMLAnchorElement | SVGAElement | null}
+ * @param {Event} event
+ * @returns {HTMLAnchorElement | SVGAElement | undefined}
  */
-function find_anchor(node) {
-	while (node && node.nodeName.toUpperCase() !== 'A') node = node.parentNode; // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement} */ (node);
+function find_anchor(event) {
+	const node = event
+		.composedPath()
+		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
+	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
 }
 
 /**
@@ -92,9 +94,9 @@ export class Router {
 			}, 200);
 		});
 
-		/** @param {MouseEvent|TouchEvent} event */
+		/** @param {Event} event */
 		const trigger_prefetch = (event) => {
-			const a = find_anchor(/** @type {Node} */ (event.target));
+			const a = find_anchor(event);
 			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
 				this.prefetch(get_href(a));
 			}
@@ -107,12 +109,17 @@ export class Router {
 		const handle_mousemove = (event) => {
 			clearTimeout(mousemove_timeout);
 			mousemove_timeout = setTimeout(() => {
-				trigger_prefetch(event);
+				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
+				// add a layer of indirection to address that
+				event.target?.dispatchEvent(
+					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+				);
 			}, 20);
 		};
 
 		addEventListener('touchstart', trigger_prefetch);
 		addEventListener('mousemove', handle_mousemove);
+		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
@@ -124,7 +131,7 @@ export class Router {
 			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 			if (event.defaultPrevented) return;
 
-			const a = find_anchor(/** @type {Node} */ (event.target));
+			const a = find_anchor(event);
 			if (!a) return;
 
 			if (!a.href) return;
@@ -150,16 +157,17 @@ export class Router {
 
 			if (!this.owns(url)) return;
 
-			const noscroll = a.hasAttribute('sveltekit:noscroll');
-
-			const i1 = url_string.indexOf('#');
-			const i2 = location.href.indexOf('#');
-			const u1 = i1 >= 0 ? url_string.substring(0, i1) : url_string;
-			const u2 = i2 >= 0 ? location.href.substring(0, i2) : location.href;
-			history.pushState({}, '', url.href);
-			if (u1 === u2) {
-				window.dispatchEvent(new HashChangeEvent('hashchange'));
+			// Check if new url only differs by hash
+			if (url.href.split('#')[0] === location.href.split('#')[0]) {
+				// Call `pushState` to add url to history so going back works.
+				// Also make a delay, otherwise the browser default behaviour would not kick in
+				setTimeout(() => history.pushState({}, '', url.href));
+				return;
 			}
+
+			history.pushState({}, '', url.href);
+
+			const noscroll = a.hasAttribute('sveltekit:noscroll');
 			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
 			event.preventDefault();
 		});
@@ -183,15 +191,14 @@ export class Router {
 	 */
 	parse(url) {
 		if (this.owns(url)) {
-			const path = url.pathname.slice(this.base.length) || '/';
+			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
-			const decoded_path = decodeURI(path);
-			const routes = this.routes.filter(([pattern]) => pattern.test(decoded_path));
-
-			const query = new URLSearchParams(url.search);
-			const id = `${path}?${query}`;
-
-			return { id, routes, path, decoded_path, query };
+			return {
+				id: url.pathname + url.search,
+				routes: this.routes.filter(([pattern]) => pattern.test(path)),
+				url,
+				path
+			};
 		}
 	}
 
@@ -261,21 +268,17 @@ export class Router {
 		}
 		this.navigating++;
 
-		// remove trailing slashes
-		if (info.path !== '/') {
-			const has_trailing_slash = info.path.endsWith('/');
+		let { pathname } = url;
 
-			const incorrect =
-				(has_trailing_slash && this.trailing_slash === 'never') ||
-				(!has_trailing_slash &&
-					this.trailing_slash === 'always' &&
-					!(info.path.split('/').pop() || '').includes('.'));
-
-			if (incorrect) {
-				info.path = has_trailing_slash ? info.path.slice(0, -1) : info.path + '/';
-				history.replaceState({}, '', `${this.base}${info.path}${location.search}`);
-			}
+		if (this.trailing_slash === 'never') {
+			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+		} else if (this.trailing_slash === 'always') {
+			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
+			if (!is_file && !pathname.endsWith('/')) pathname += '/';
 		}
+
+		info.url = new URL(url.origin + pathname + url.search + url.hash);
+		history.replaceState({}, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 

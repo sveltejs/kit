@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import("@sveltejs/kit").Load} */
-	export async function load({ page, fetch }) {
-		const res = await fetch(`/routing/fallthrough-advanced/${page.params.animal}.json`);
+	export async function load({ params, fetch }) {
+		const res = await fetch(`/routing/fallthrough-advanced/${params.animal}.json`);
 
 		if (res.ok) {
 			const { type } = await res.json();
@@ -9,7 +9,7 @@
 			if (type === 'animal') {
 				return {
 					props: {
-						animal: page.params.animal
+						animal: params.animal
 					}
 				};
 			}

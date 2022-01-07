@@ -34,9 +34,12 @@ export async function preview({
 	__fetch_polyfill();
 
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
+	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
 
-	/** @type {import('types/internal').App} */
-	const app = await import(pathToFileURL(app_file).href);
+	/** @type {import('types/internal').AppModule} */
+	const { App, override } = await import(pathToFileURL(app_file).href);
+
+	const { manifest } = await import(pathToFileURL(manifest_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
 	const static_handler = fs.existsSync(config.kit.files.assets)
@@ -53,14 +56,17 @@ export async function preview({
 
 	const has_asset_path = !!config.kit.paths.assets;
 
-	app.init({
+	override({
 		paths: {
 			base: config.kit.paths.base,
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
 		},
 		prerendering: false,
+		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
+
+	const app = new App(manifest);
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
@@ -84,18 +90,12 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const parsed = new URL(initial_url, 'http://localhost/');
-
 			const rendered =
-				parsed.pathname.startsWith(config.kit.paths.base) &&
+				initial_url.startsWith(config.kit.paths.base) &&
 				(await app.render({
-					host: /** @type {string} */ (
-						config.kit.host || req.headers[config.kit.hostHeader || 'host']
-					),
+					url: initial_url,
 					method: req.method,
 					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					path: parsed.pathname.replace(config.kit.paths.base, ''),
-					query: parsed.searchParams,
 					rawBody: body
 				}));
 

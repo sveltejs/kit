@@ -27,6 +27,11 @@ declare module '$app/env' {
 
 declare module '$app/navigation' {
 	/**
+	 * Disable SvelteKit's built-in scroll handling for the current navigation, in case you need to manually control the scroll position.
+	 * This is generally discouraged, since it breaks user expectations.
+	 */
+	export function disableScrollHandling(): void;
+	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to
@@ -82,8 +87,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
-	type Navigating = { from: Page; to: Page };
+	type Navigating = { from: URL; to: URL };
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
@@ -91,16 +95,27 @@ declare module '$app/stores' {
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
-		page: Readable<Page>;
+		page: Readable<{
+			url: URL;
+			params: Record<string, string>;
+			status: number;
+			error: Error | null;
+		}>;
 		session: Writable<Session>;
 	};
+	export const url: Readable<URL>;
 	/**
-	 * A readable store whose value reflects the object passed to load functions.
+	 * A readable store whose value contains page data.
 	 */
-	export const page: Readable<Page>;
+	export const page: Readable<{
+		url: URL;
+		params: Record<string, string>;
+		status: number;
+		error: Error | null;
+	}>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
+	 * When navigating starts, its value is `{ from: URL, to: URL }`
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigating | null>;
@@ -161,7 +176,9 @@ declare module '@sveltejs/kit/ssr' {
 	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
 
 	export interface Respond {
-		(incoming: IncomingRequest, options: Options, state?: State): Promise<Response>;
+		(incoming: IncomingRequest & { url: URL }, options: Options, state?: State): Promise<
+			Response | undefined
+		>;
 	}
 	export const respond: Respond;
 }

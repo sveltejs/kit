@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { posixify } from '../core/utils.js';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -17,32 +18,69 @@ export function rimraf(path) {
 }
 
 /**
- * @param {string} from
- * @param {string} to
- * @param {(basename: string) => boolean} filter
+ * @param {string} source
+ * @param {string} target
+ * @param {{
+ *   filter?: (basename: string) => boolean;
+ *   replace?: Record<string, string>;
+ * }} opts
  */
-export function copy(from, to, filter = () => true) {
-	if (!fs.existsSync(from)) return [];
-	if (!filter(path.basename(from))) return [];
+export function copy(source, target, opts = {}) {
+	if (!fs.existsSync(source)) return [];
 
+	/** @type {string[]} */
 	const files = [];
-	const stats = fs.statSync(from);
 
-	if (stats.isDirectory()) {
-		fs.readdirSync(from).forEach((file) => {
-			files.push(...copy(path.join(from, file), path.join(to, file)));
-		});
-	} else {
-		mkdirp(path.dirname(to));
-		fs.copyFileSync(from, to);
-		files.push(to);
+	const prefix = posixify(target) + '/';
+
+	const regex = opts.replace
+		? new RegExp(`\\b(${Object.keys(opts.replace).join('|')})\\b`, 'g')
+		: null;
+
+	/**
+	 * @param {string} from
+	 * @param {string} to
+	 */
+	function go(from, to) {
+		if (opts.filter && !opts.filter(path.basename(from))) return;
+
+		const stats = fs.statSync(from);
+
+		if (stats.isDirectory()) {
+			fs.readdirSync(from).forEach((file) => {
+				go(path.join(from, file), path.join(to, file));
+			});
+		} else {
+			mkdirp(path.dirname(to));
+
+			if (opts.replace) {
+				const data = fs.readFileSync(from, 'utf-8');
+				fs.writeFileSync(
+					to,
+					data.replace(
+						/** @type {RegExp} */ (regex),
+						(match, key) => /** @type {Record<string, string>} */ (opts.replace)[key]
+					)
+				);
+			} else {
+				fs.copyFileSync(from, to);
+			}
+
+			files.push(to === target ? posixify(path.basename(to)) : posixify(to).replace(prefix, ''));
+		}
 	}
+
+	go(source, target);
 
 	return files;
 }
 
-/** @param {string} cwd */
-export function walk(cwd) {
+/**
+ * Get a list of all files in a directory
+ * @param {string} cwd - the directory to walk
+ * @param {boolean} [dirs] - whether to include directories in the result
+ */
+export function walk(cwd, dirs = false) {
 	/** @type {string[]} */
 	const all_files = [];
 
@@ -54,6 +92,7 @@ export function walk(cwd) {
 			const joined = path.join(dir, file);
 			const stats = fs.statSync(path.join(cwd, joined));
 			if (stats.isDirectory()) {
+				if (dirs) all_files.push(joined);
 				walk_dir(joined);
 			} else {
 				all_files.push(joined);

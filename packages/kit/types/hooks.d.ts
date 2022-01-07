@@ -1,10 +1,13 @@
-import { IncomingRequest, ParameterizedBody } from './app';
-import { MaybePromise, ResponseHeaders } from './helper';
+import { ParameterizedBody, RawBody } from './app';
+import { MaybePromise, RequestHeaders, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown> {
+	url: URL;
+	method: string;
+	headers: RequestHeaders;
+	rawBody: RawBody;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
@@ -12,7 +15,7 @@ export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 
 export interface ServerResponse {
 	status: number;
-	headers: ResponseHeaders;
+	headers: Partial<ResponseHeaders>;
 	body?: StrictBody;
 }
 
@@ -25,6 +28,15 @@ export interface Handle<Locals = Record<string, any>, Body = unknown> {
 		request: ServerRequest<Locals, Body>;
 		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
+}
+
+// internally, `resolve` could return `undefined`, so we differentiate InternalHandle
+// from the public Handle type
+export interface InternalHandle<Locals = Record<string, any>, Body = unknown> {
+	(input: {
+		request: ServerRequest<Locals, Body>;
+		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse | undefined>;
+	}): MaybePromise<ServerResponse | undefined>;
 }
 
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {
