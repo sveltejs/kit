@@ -15,6 +15,13 @@ function is_string(s) {
 	return typeof s === 'string' || s instanceof String;
 }
 
+const text_types = new Set([
+	'application/xml',
+	'application/json',
+	'application/x-www-form-urlencoded',
+	'multipart/form-data'
+]);
+
 /**
  * Decides how the body should be parsed based on its mime type. Should match what's in parse_body
  *
@@ -23,15 +30,9 @@ function is_string(s) {
  */
 export function is_content_type_textual(content_type) {
 	if (!content_type) return true; // defaults to json
-	const [type] = content_type.split(';'); // get the mime type
-	return [
-		'text/plain',
-		'text/html',
-		'application/xml',
-		'application/json',
-		'application/x-www-form-urlencoded',
-		'multipart/form-data'
-	].includes(type.toLowerCase());
+	const type = content_type.split(';')[0].toLowerCase(); // get the mime type
+
+	return type.startsWith('text/') || type.endsWith('+xml') || text_types.has(type);
 }
 
 /**
@@ -70,9 +71,7 @@ export async function render_endpoint(request, route, match) {
 	headers = lowercase_keys(headers);
 	const type = get_single_valued_header(headers, 'content-type');
 
-	const is_type_textual = is_content_type_textual(type);
-
-	if (!is_type_textual && !(body instanceof Uint8Array || is_string(body))) {
+	if (!is_content_type_textual(type) && !(body instanceof Uint8Array || is_string(body))) {
 		return error(
 			`${preface}: body must be an instance of string or Uint8Array if content-type is not a supported textual content-type`
 		);
