@@ -8,8 +8,8 @@ import { networkInterfaces, release } from 'os';
 import { coalesce_to_error } from './utils/error.js';
 
 async function get_config() {
+	// TODO this is temporary, for the benefit of early adopters
 	if (existsSync('svelte.config.cjs')) {
-		// TODO this is temporary, for the benefit of early adopters
 		// prettier-ignore
 		console.error(colors.bold().red(
 			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
