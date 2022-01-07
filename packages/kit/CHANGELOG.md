@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.217
+
+### Patch Changes
+
+- Improve error message when svelte.config.js is not found ([#3219](https://github.com/sveltejs/kit/pull/3219))
+
+* Support more text content types ([#2781](https://github.com/sveltejs/kit/pull/2781))
+
 ## 1.0.0-next.216
 
 ### Patch Changes
