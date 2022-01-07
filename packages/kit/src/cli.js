@@ -1,58 +1,22 @@
-import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
 import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
-import { coalesce_to_error, has_error_code } from './utils/error.js';
+import { coalesce_to_error } from './utils/error.js';
 
-async function get_config() {
-	// TODO this is temporary, for the benefit of early adopters
-	if (existsSync('svelte.config.cjs')) {
-		// prettier-ignore
-		console.error(colors.bold().red(
-			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
-		));
+/** @param {unknown} e */
+function handle_error(e) {
+	const error = coalesce_to_error(e);
+
+	if (error.name === 'SyntaxError') throw error;
+
+	console.log(colors.bold().red(`> ${error.message}`));
+	if (error.stack) {
+		console.log(colors.gray(error.stack.split('\n').slice(1).join('\n')));
 	}
 
-	if (existsSync('vite.config.js')) {
-		// prettier-ignore
-		console.error(colors.bold().red(
-			'Please remove vite.config.js and put Vite config in svelte.config.js: https://kit.svelte.dev/docs#configuration-vite'
-		));
-	}
-
-	try {
-		return await load_config();
-	} catch (err) {
-		const error = coalesce_to_error(err);
-		let message = error.message;
-
-		if (
-			has_error_code(error, 'MODULE_NOT_FOUND') &&
-			/Cannot find module svelte\.config\./.test(error.message)
-		) {
-			message = 'Missing svelte.config.js';
-		} else if (error.name === 'SyntaxError') {
-			message = 'Malformed svelte.config.js';
-		}
-
-		console.error(colors.bold().red(message));
-		if (error.stack) {
-			console.error(colors.grey(error.stack));
-		}
-		process.exit(1);
-	}
-}
-
-/** @param {unknown} error */
-function handle_error(error) {
-	const err = coalesce_to_error(error);
-	console.log(colors.bold().red(`> ${err.message}`));
-	if (err.stack) {
-		console.log(colors.gray(err.stack));
-	}
 	process.exit(1);
 }
 
@@ -85,12 +49,12 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate')
 	.option('-o, --open', 'Open a browser tab')
 	.action(async ({ port, host, https, open }) => {
-		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-		const config = await get_config();
-
-		const { dev } = await import('./core/dev/index.js');
-
 		try {
+			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+			const config = await load_config();
+
+			const { dev } = await import('./core/dev/index.js');
+
 			const cwd = process.cwd();
 
 			const { address_info, server_config } = await dev({
@@ -120,10 +84,10 @@ prog
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
-		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-		const config = await get_config();
-
 		try {
+			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+			const config = await load_config();
+
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
 
@@ -158,14 +122,14 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
-		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-		const config = await get_config();
-
-		const { preview } = await import('./core/preview/index.js');
-
 		try {
+			await check_port(port);
+
+			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+			const config = await load_config();
+
+			const { preview } = await import('./core/preview/index.js');
+
 			await preview({ port, host, config, https });
 
 			welcome({ port, host, https, open });
@@ -179,11 +143,11 @@ prog
 	.describe('Create a package')
 	.option('-d, --dir', 'Destination directory', 'package')
 	.action(async () => {
-		const config = await get_config();
-
-		const { make_package } = await import('./packaging/index.js');
-
 		try {
+			const config = await load_config();
+
+			const { make_package } = await import('./packaging/index.js');
+
 			await make_package(config);
 		} catch (error) {
 			handle_error(error);

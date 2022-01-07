@@ -28,10 +28,14 @@ export function load_template(cwd, config) {
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
-	const config_file_esm = path.join(cwd, 'svelte.config.js');
-	const config_file = fs.existsSync(config_file_esm)
-		? config_file_esm
-		: path.join(cwd, 'svelte.config.cjs');
+	const config_file = path.join(cwd, 'svelte.config.js');
+
+	if (!fs.existsSync(config_file)) {
+		throw new Error(
+			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs#configuration'
+		);
+	}
+
 	const config = await import(url.pathToFileURL(config_file).href);
 
 	const validated = validate_config(config.default);
@@ -51,17 +55,9 @@ export async function load_config({ cwd = process.cwd() } = {}) {
  * @returns {import('types/config').ValidatedConfig}
  */
 export function validate_config(config) {
-	const type = typeof config;
-
-	if (type === 'undefined') {
+	if (typeof config !== 'object') {
 		throw new Error(
-			'Your config is missing default exports. Make sure to include "export default config;"'
-		);
-	}
-
-	if (type !== 'object') {
-		throw new Error(
-			`Unexpected config type "${type}", make sure your default export is an object.`
+			'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs#configuration'
 		);
 	}
 

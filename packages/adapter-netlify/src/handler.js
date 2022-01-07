@@ -3,13 +3,19 @@ import { App } from './server/app.js';
 
 __fetch_polyfill();
 
+/**
+ *
+ * @param {import('@sveltejs/kit').SSRManifest} manifest
+ * @returns {import('@netlify/functions').Handler}
+ */
 export function init(manifest) {
+	/** @type {import('@sveltejs/kit').App} */
 	const app = new App(manifest);
 
 	return async (event) => {
 		const { httpMethod, headers, rawUrl, body, isBase64Encoded } = event;
 
-		const encoding = isBase64Encoded ? 'base64' : headers['content-encoding'] || 'utf-8';
+		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
 		const rawBody = typeof body === 'string' ? Buffer.from(body, encoding) : body;
 
 		const rendered = await app.render({
