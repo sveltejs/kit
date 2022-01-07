@@ -29,23 +29,13 @@ export function load_template(cwd, config) {
 }
 
 export async function load_config({ cwd = process.cwd() } = {}) {
-	let config_file = path.join(cwd, 'svelte.config.js');
-	const config_file_cjs = path.join(cwd, 'svelte.config.cjs');
+	const config_file = path.join(cwd, 'svelte.config.js');
 
 	if (!fs.existsSync(config_file)) {
-		if (fs.existsSync(config_file_cjs)) {
-			// TODO this is temporary, for the benefit of early adopters
-			// prettier-ignore
-			console.error(colors.bold().red(
-				'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
-			));
-			config_file = config_file_cjs;
-		} else {
-			// prettier-ignore
-			console.error(colors.bold().red(
-				'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs#configuration'
-			));
-		}
+		// prettier-ignore
+		console.error(colors.bold().red(
+			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs#configuration'
+		));
 	}
 
 	const config = await import(url.pathToFileURL(config_file).href);
