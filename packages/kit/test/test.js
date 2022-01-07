@@ -285,7 +285,6 @@ function duplicate(test_fn, config, is_build) {
 }
 
 /**
- *
  * @param {*} app string
  */
 function getCwd(app) {
