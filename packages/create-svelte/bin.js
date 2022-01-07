@@ -134,7 +134,7 @@ async function main() {
  */
 function write_template_files(template, typescript, name, cwd) {
 	const dir = dist(`templates/${template}`);
-	copy(`${dir}/assets`, cwd, (name) => name.replace('gitignore', '.gitignore'));
+	copy(`${dir}/assets`, cwd, (name) => name.replace('DOT-', '.'));
 	copy(`${dir}/package.json`, `${cwd}/package.json`);
 
 	const manifest = `${dir}/files.${typescript ? 'ts' : 'js'}.json`;

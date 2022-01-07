@@ -1,8 +1,8 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch }) {
+	export async function load({ url, fetch }) {
 		const res = await fetch('/caching/private/uses-fetch.json', {
-			credentials: /** @type {RequestCredentials} */ (page.query.get('credentials'))
+			credentials: /** @type {RequestCredentials} */ (url.searchParams.get('credentials'))
 		});
 
 		return {

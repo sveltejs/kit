@@ -1,6 +1,7 @@
 <script context="module">
-	export async function load({ page, fetch }) {
-		const res = await fetch(`https://api.hnpwa.com/v0/item/${page.params.id}.json`);
+	/** @type {import('@sveltejs/kit').Load} */
+	export async function load({ params, fetch }) {
+		const res = await fetch(`https://api.hnpwa.com/v0/item/${params.id}.json`);
 		const item = await res.json();
 
 		return { props: { item } };
@@ -24,7 +25,10 @@
 			{#if item.domain}<small>{item.domain}</small>{/if}
 		</a>
 
-		<p class="meta">{item.points} points by <a href="/user/{item.user}">{item.user}</a> {item.time_ago}</p>
+		<p class="meta">
+			{item.points} points by <a href="/user/{item.user}">{item.user}</a>
+			{item.time_ago}
+		</p>
 
 		{#if item.content}
 			{@html item.content}
@@ -33,7 +37,7 @@
 
 	<div class="comments">
 		{#each item.comments as comment}
-			<Comment comment='{comment}'/>
+			<Comment {comment} />
 		{/each}
 	</div>
 </div>
@@ -44,13 +48,13 @@
 	}
 
 	.item {
-		border-bottom: 1em solid rgba(0,0,0,0.1);
+		border-bottom: 1em solid rgba(0, 0, 0, 0.1);
 		margin: 0 -2em 2em -2em;
 		padding: 0 2em 2em 2em;
 	}
 
 	:global(html).dark .item {
-		border-bottom: 1em solid rgba(255,255,255,0.1);;
+		border-bottom: 1em solid rgba(255, 255, 255, 0.1);
 	}
 
 	.main-link {

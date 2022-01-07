@@ -11,22 +11,25 @@ import { ReadOnlyFormData } from './parse_body/read_only_form_data.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
-	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
-		const has_trailing_slash = incoming.path.endsWith('/');
+	if (incoming.url.pathname !== '/' && options.trailing_slash !== 'ignore') {
+		const has_trailing_slash = incoming.url.pathname.endsWith('/');
 
 		if (
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!(incoming.path.split('/').pop() || '').includes('.'))
+				!(incoming.url.pathname.split('/').pop() || '').includes('.'))
 		) {
-			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
-			const q = incoming.query.toString();
+			incoming.url.pathname = has_trailing_slash
+				? incoming.url.pathname.slice(0, -1)
+				: incoming.url.pathname + '/';
+
+			if (incoming.url.search === '?') incoming.url.search = '';
 
 			return {
 				status: 301,
 				headers: {
-					location: options.paths.base + path + (q ? `?${q}` : '')
+					location: incoming.url.pathname + incoming.url.search
 				}
 			};
 		}
@@ -41,8 +44,8 @@ export async function respond(incoming, options, state = {}) {
 		locals: {}
 	};
 
-	if (options.methodOverride.enabled && request.method.toUpperCase() === 'POST') {
-		const { strategy = '', key: method_key = '', allowedMethods = [] } = options.methodOverride;
+	if (options.method_override.enabled && request.method.toUpperCase() === 'POST') {
+		const { strategy = '', key: method_key = '', allowedMethods = [] } = options.method_override;
 		let new_request_method;
 
 		if (
@@ -53,8 +56,10 @@ export async function respond(incoming, options, state = {}) {
 			new_request_method = /** @type {string} */ (request.body.get(method_key)).toUpperCase();
 		}
 
-		if (['both', 'url_parameter'].includes(strategy) && incoming.query.has(method_key)) {
-			new_request_method = /** @type {string} */ (incoming.query.get(method_key)).toUpperCase();
+		if (['both', 'url_parameter'].includes(strategy) && incoming.url.searchParams.has(method_key)) {
+			new_request_method = /** @type {string} */ (
+				incoming.url.searchParams.get(method_key)
+			).toUpperCase();
 		}
 
 		if (new_request_method) {
@@ -72,12 +77,31 @@ export async function respond(incoming, options, state = {}) {
 		}
 	}
 
+	// TODO remove this for 1.0
+	/**
+	 * @param {string} property
+	 * @param {string} replacement
+	 */
+	const print_error = (property, replacement) => {
+		Object.defineProperty(request, property, {
+			get: () => {
+				throw new Error(`request.${property} has been replaced by request.url.${replacement}`);
+			}
+		});
+	};
+
+	print_error('origin', 'origin');
+	print_error('path', 'pathname');
+	print_error('query', 'searchParams');
+
 	try {
 		return await options.hooks.handle({
 			request,
 			resolve: async (request) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
+						url: request.url,
+						params: request.params,
 						options,
 						$session: await options.hooks.getSession(request),
 						page_config: { ssr: false, router: true, hydrate: true },
@@ -86,8 +110,9 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.path);
-				for (const route of options.manifest.routes) {
+				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
+
+				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 
@@ -124,15 +149,19 @@ export async function respond(incoming, options, state = {}) {
 					}
 				}
 
-				const $session = await options.hooks.getSession(request);
-				return await respond_with_error({
-					request,
-					options,
-					state,
-					$session,
-					status: 404,
-					error: new Error(`Not found: ${request.path}`)
-				});
+				// if this request came direct from the user, rather than
+				// via a `fetch` in a `load`, render a 404 page
+				if (!state.initiator) {
+					const $session = await options.hooks.getSession(request);
+					return await respond_with_error({
+						request,
+						options,
+						state,
+						$session,
+						status: 404,
+						error: new Error(`Not found: ${request.url.pathname}`)
+					});
+				}
 			}
 		});
 	} catch (/** @type {unknown} */ err) {

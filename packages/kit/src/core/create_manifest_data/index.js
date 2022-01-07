@@ -9,7 +9,7 @@ import { posixify } from '../utils.js';
  * @typedef {{
  *   content: string;
  *   dynamic: boolean;
- *   spread: boolean;
+ *   rest: boolean;
  * }} Part
  * @typedef {{
  *   basename: string;
@@ -116,7 +116,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				basename,
 				ext,
 				parts,
-				file: posixify(file),
+				file,
 				is_dir,
 				is_index,
 				is_page,
@@ -137,13 +137,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						if (last_part.dynamic) {
 							last_segment.push({
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: item.route_suffix
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: `${last_part.content}${item.route_suffix}`
 							};
 						}
@@ -159,6 +159,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 			const params = parent_params.slice();
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
+
+			// TODO seems slightly backwards to derive the simple segment representation
+			// from the more complex form, rather than vice versa — maybe swap it round
+			const simple_segments = segments.map((segment) => {
+				return {
+					dynamic: segment.some((part) => part.dynamic),
+					rest: segment.some((part) => part.rest),
+					content: segment
+						.map((part) => (part.dynamic ? `[${part.content}]` : part.content))
+						.join('')
+				};
+			});
 
 			if (item.is_dir) {
 				const layout_reset = find_layout('__layout.reset', item.file);
@@ -209,6 +221,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'page',
+					segments: simple_segments,
 					pattern,
 					params,
 					path,
@@ -220,6 +233,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'endpoint',
+					segments: simple_segments,
 					pattern,
 					file: item.file,
 					params
@@ -288,13 +302,16 @@ function comparator(a, b) {
 		if (!a_sub_part) return 1; // b is more specific, so goes first
 		if (!b_sub_part) return -1;
 
-		// if spread && index, order later
-		if (a_sub_part.spread && b_sub_part.spread) {
-			return a.is_index ? 1 : -1;
+		if (a_sub_part.rest && b_sub_part.rest) {
+			if (a.is_page !== b.is_page) {
+				return a.is_page ? 1 : -1;
+			}
+			// sort alphabetically
+			return a_sub_part.content < b_sub_part.content ? -1 : 1;
 		}
 
-		// If one is ...spread order it later
-		if (a_sub_part.spread !== b_sub_part.spread) return a_sub_part.spread ? 1 : -1;
+		// If one is ...rest order it later
+		if (a_sub_part.rest !== b_sub_part.rest) return a_sub_part.rest ? 1 : -1;
 
 		if (a_sub_part.dynamic !== b_sub_part.dynamic) {
 			return a_sub_part.dynamic ? 1 : -1;
@@ -336,7 +353,7 @@ function get_parts(part, file) {
 		result.push({
 			content,
 			dynamic,
-			spread: dynamic && /^\.{3}.+$/.test(content)
+			rest: dynamic && /^\.{3}.+$/.test(content)
 		});
 	});
 
@@ -350,7 +367,7 @@ function get_parts(part, file) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment[0].spread
+			return segment[0].rest
 				? '(?:\\/(.*))?'
 				: '\\/' +
 						segment

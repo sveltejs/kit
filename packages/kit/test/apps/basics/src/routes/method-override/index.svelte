@@ -1,9 +1,9 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page }) {
+	export async function load({ url }) {
 		return {
 			props: {
-				method: page.query.get('method') || ''
+				method: url.searchParams.get('method') || ''
 			}
 		};
 	}

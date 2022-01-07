@@ -10,11 +10,8 @@ import { load_config } from '../index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-/**
- * @param {string} path
- */
-async function testLoadDefaultConfig(path) {
-	const cwd = join(__dirname, 'fixtures', path);
+test('load default config (esm)', async () => {
+	const cwd = join(__dirname, 'fixtures/default');
 
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
@@ -34,8 +31,11 @@ async function testLoadDefaultConfig(path) {
 				template: join(cwd, 'src/app.html')
 			},
 			floc: false,
+			headers: {
+				host: null,
+				protocol: null
+			},
 			host: null,
-			hostHeader: null,
 			hydrate: true,
 			methodOverride: {
 				enabled: false,
@@ -47,9 +47,12 @@ async function testLoadDefaultConfig(path) {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: { base: '', assets: '' },
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -57,34 +60,28 @@ async function testLoadDefaultConfig(path) {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,
 			trailingSlash: 'never'
 		}
 	});
-}
-
-test('load default config (cjs)', async () => {
-	await testLoadDefaultConfig('default-cjs');
-});
-
-test('load default config (esm)', async () => {
-	await testLoadDefaultConfig('default-esm');
 });
 
 test('errors on loading config with incorrect default export', async () => {
-	let errorMessage = null;
+	let message = null;
+
 	try {
 		const cwd = join(__dirname, 'fixtures', 'export-string');
 		await load_config({ cwd });
 	} catch (/** @type {any} */ e) {
-		errorMessage = e.message;
+		message = e.message;
 	}
 
 	assert.equal(
-		errorMessage,
-		'Unexpected config type "string", make sure your default export is an object.'
+		message,
+		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs#configuration'
 	);
 });
 

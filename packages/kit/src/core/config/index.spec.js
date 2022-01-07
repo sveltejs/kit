@@ -29,8 +29,11 @@ test('fills in defaults', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
+			headers: {
+				host: null,
+				protocol: null
+			},
 			host: null,
-			hostHeader: null,
 			hydrate: true,
 			methodOverride: {
 				enabled: false,
@@ -42,12 +45,15 @@ test('fills in defaults', () => {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: {
 				base: '',
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -55,6 +61,7 @@ test('fills in defaults', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,
@@ -135,8 +142,11 @@ test('fills in partial blanks', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
+			headers: {
+				host: null,
+				protocol: null
+			},
 			host: null,
-			hostHeader: null,
 			hydrate: true,
 			methodOverride: {
 				enabled: false,
@@ -148,12 +158,15 @@ test('fills in partial blanks', () => {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: {
 				base: '',
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -161,6 +174,7 @@ test('fills in partial blanks', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: null,
 			router: true,
 			ssr: true,
 			target: null,

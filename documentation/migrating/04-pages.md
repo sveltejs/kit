@@ -33,7 +33,7 @@ import { stores } from '@sapper/app';
 const { preloading, page, session } = stores();
 ```
 
-The `page` and `session` stores still exist; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties.
+The `page` and `session` stores still exist; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
 You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, `page` and `session` directly from [`$app/stores`](/docs#modules-$app-stores).
 

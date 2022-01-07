@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2.0.1
         with:
-          version: 6
+          version: 6.23.2
       - name: Setup Node.js 12.x
         uses: actions/setup-node@v2
         with:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@master
+        uses: changesets/action@v1
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish: pnpm release

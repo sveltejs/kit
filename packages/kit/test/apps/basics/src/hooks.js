@@ -1,10 +1,24 @@
-import { sequence } from '../../../../src/runtime/hooks';
+import fs from 'fs';
 import cookie from 'cookie';
+import { sequence } from '../../../../src/runtime/hooks';
 
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
 	return request.locals;
 }
+
+/** @type {import('@sveltejs/kit').HandleError} */
+export const handleError = ({ request, error }) => {
+	// TODO we do this because there's no other way (that i'm aware of)
+	// to communicate errors back to the test suite. even if we could
+	// capture stderr, attributing an error to a specific request
+	// is trickier when things run concurrently
+	const errors = fs.existsSync('test/errors.json')
+		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
+		: {};
+	errors[request.url.pathname] = error.stack || error.message;
+	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
+};
 
 export const handle = sequence(
 	({ request, resolve }) => {

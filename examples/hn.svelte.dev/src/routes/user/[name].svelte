@@ -1,13 +1,14 @@
 <script context="module">
 	export const hydrate = false;
 
-	export async function load({ page, fetch }) {
-		const res = await fetch(`https://api.hnpwa.com/v0/user/${page.params.name}.json`);
+	/** @type {import('@sveltejs/kit').Load} */
+	export async function load({ params, fetch }) {
+		const res = await fetch(`https://api.hnpwa.com/v0/user/${params.name}.json`);
 		const user = await res.json();
 
 		return {
 			props: {
-				name: page.params.name,
+				name: params.name,
 				user
 			}
 		};
@@ -39,7 +40,7 @@
 
 	{#if user.about}
 		<div class="about">
-			{@html '<p>' + user.about }
+			{@html '<p>' + user.about}
 		</div>
 	{/if}
 </div>

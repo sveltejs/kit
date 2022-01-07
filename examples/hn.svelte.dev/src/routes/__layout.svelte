@@ -5,21 +5,20 @@
 	import ThemeToggler from '$lib/ThemeToggler.svelte';
 	import '../app.css';
 
-
-	$: section = $page.path.split('/')[1];
+	$: section = $page.url.pathname.split('/')[1];
 </script>
 
-<Nav {section}/>
+<Nav {section} />
 
 {#if $navigating}
-	<PreloadingIndicator/>
+	<PreloadingIndicator />
 {/if}
 
 <main>
-	<slot></slot>
+	<slot />
 </main>
 
-<ThemeToggler/>
+<ThemeToggler />
 
 <style>
 	main {
