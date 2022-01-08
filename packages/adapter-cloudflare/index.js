@@ -45,7 +45,10 @@ export default function (options = {}) {
 				outfile: target_worker,
 				allowOverwrite: true,
 				format: 'esm',
-				bundle: true
+				bundle: true,
+				define: {
+					GENERATE_NONCES: config.kit.cspNonce.toString()
+				}
 			});
 		}
 	};

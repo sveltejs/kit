@@ -1,4 +1,4 @@
-/* global ASSETS */
+/* global ASSETS, GENERATE_NONCES */
 import { init, render } from '../output/server/app.js';
 
 init();
@@ -18,7 +18,8 @@ export default {
 				query: url.searchParams || '',
 				rawBody: await read(req),
 				headers: Object.fromEntries(req.headers),
-				method: req.method
+				method: req.method,
+				nonce: GENERATE_NONCES && btoa(crypto.getRandomValues(new Uint32Array(2)))
 			});
 
 			if (rendered) {
