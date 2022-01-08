@@ -165,17 +165,15 @@ export class Router {
 				return;
 			}
 
-			history.pushState({}, '', url.href);
-
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
-			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash);
+			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash, {}, 'pushState');
 			event.preventDefault();
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], false, []);
+				this._navigate(url, event.state['sveltekit:scroll'], false, [], url.hash, null, null);
 			}
 		});
 	}
@@ -217,8 +215,15 @@ export class Router {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled && this.owns(url)) {
-			history[replaceState ? 'replaceState' : 'pushState'](state, '', href);
-			return this._navigate(url, noscroll ? scroll_state() : null, keepfocus, chain, url.hash);
+			return this._navigate(
+				url,
+				noscroll ? scroll_state() : null,
+				keepfocus,
+				chain,
+				url.hash,
+				state,
+				replaceState ? 'replaceState' : 'pushState'
+			);
 		}
 
 		location.href = url.href;
@@ -254,9 +259,11 @@ export class Router {
 	 * @param {{ x: number, y: number }?} scroll
 	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
-	 * @param {string} [hash]
+	 * @param {string} hash
+	 * @param {any} state
+	 * @param {'pushState' | 'replaceState' | null} method
 	 */
-	async _navigate(url, scroll, keepfocus, chain, hash) {
+	async _navigate(url, scroll, keepfocus, chain, hash, state, method) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -278,13 +285,13 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
-		history.replaceState({}, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
 		this.navigating--;
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+			if (method) history[method](state, '', info.url);
 		}
 	}
 }
