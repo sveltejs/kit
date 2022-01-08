@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Layout components now support fallthrough
+Fallthrough is now explicit and layout components now also support fallthrough
