@@ -10,6 +10,7 @@ import {
 	ServerResponse
 } from './hooks';
 import { Load } from './page';
+import { Either, Fallthrough } from './helper';
 
 type PageId = string;
 
@@ -219,13 +220,16 @@ export interface BuildData {
 	entries: string[];
 }
 
-export interface NormalizedLoadOutput {
-	status: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	maxage?: number;
-}
+export type NormalizedLoadOutput = Either<
+	{
+		status: number;
+		error?: Error;
+		redirect?: string;
+		props?: Record<string, any> | Promise<Record<string, any>>;
+		stuff?: Record<string, any>;
+		maxage?: number;
+	},
+	Fallthrough
+>;
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';

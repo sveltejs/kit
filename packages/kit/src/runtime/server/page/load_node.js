@@ -296,9 +296,9 @@ export async function load_node({
 		loaded = {};
 	}
 
-	// if node (i.e. page component or layout component) has a load function
-	// that returns nothing, we fall through to the next one
-	if (!loaded && !is_error) return;
+	if (loaded.fallthrough && !is_error) {
+		return;
+	}
 
 	if (!loaded) {
 		throw new Error(`${node.entry} - load must return a value except for page fall through`);

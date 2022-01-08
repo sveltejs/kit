@@ -59,7 +59,7 @@ export async function render_endpoint(request, route, match) {
 	const response = await handler(request);
 	const preface = `Invalid response from route ${request.url.pathname}`;
 
-	if (!response) {
+	if (response.fallthrough) {
 		return;
 	}
 	if (typeof response !== 'object') {

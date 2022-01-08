@@ -579,9 +579,6 @@ export class Renderer {
 
 			const loaded = await module.load.call(null, load_input);
 
-			// if the page component returns nothing from load, fall through
-			if (!loaded) return;
-
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 		}
@@ -658,6 +655,9 @@ export class Renderer {
 					});
 
 					if (node && node.loaded) {
+						if (node.loaded.fallthrough) {
+							return;
+						}
 						if (node.loaded.error) {
 							status = node.loaded.status;
 							error = node.loaded.error;
@@ -674,10 +674,6 @@ export class Renderer {
 						if (node.loaded.stuff) {
 							stuff_changed = true;
 						}
-					} else if (module.load) {
-						// if the node has a `load` function
-						// that returns nothing, fall through
-						return;
 					}
 				} else {
 					node = previous;

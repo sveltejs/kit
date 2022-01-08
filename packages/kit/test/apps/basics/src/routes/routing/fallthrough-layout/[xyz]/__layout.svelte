@@ -3,7 +3,7 @@
 
 	export async function load({ params }) {
 		if (params.xyz !== 'ok') {
-			return;
+			return { fallthrough: true };
 		}
 		return {};
 	}
