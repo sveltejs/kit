@@ -301,7 +301,7 @@ export async function load_node({
 	}
 
 	if (!loaded) {
-		throw new Error(`${node.entry} - load must return a value except for page fall through`);
+		throw new Error(`${node.entry} - load must return a value`);
 	}
 
 	return {
