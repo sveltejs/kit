@@ -218,10 +218,11 @@ export function create_plugin(config, output, cwd, amp) {
 								router: config.kit.router,
 								ssr: config.kit.ssr,
 								target: config.kit.target,
-								template: ({ head, body }) => {
+								template: ({ head, body, assets }) => {
 									let rendered = load_template(cwd, config)
 										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body);
+										.replace('%svelte.body%', () => body)
+										.replace(/%svelte\.assets%/g, assets);
 
 									if (amp) {
 										const result = amp.validateString(rendered);

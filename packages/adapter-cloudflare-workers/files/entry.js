@@ -1,32 +1,54 @@
 import { App } from 'APP';
-import { manifest } from './manifest.js';
-import { getAssetFromKV, NotFoundError } from '@cloudflare/kv-asset-handler';
+import { manifest, prerendered } from './manifest.js';
+import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 const app = new App(manifest);
 
-addEventListener('fetch', (event) => {
+const prefix = `/${manifest.appDir}/`;
+
+addEventListener('fetch', (/** @type {FetchEvent} */ event) => {
 	event.respondWith(handle(event));
 });
 
+/**
+ * @param {FetchEvent} event
+ * @returns {Promise<Response>}
+ */
 async function handle(event) {
-	// try static files first
-	if (event.request.method == 'GET') {
-		try {
-			// TODO rather than attempting to get an asset,
-			// use the asset manifest to see if it exists
-			return await getAssetFromKV(event);
-		} catch (e) {
-			if (!(e instanceof NotFoundError)) {
-				return new Response('Error loading static asset:' + (e.message || e.toString()), {
-					status: 500
-				});
+	const { request } = event;
+
+	const url = new URL(request.url);
+
+	// generated assets
+	if (url.pathname.startsWith(prefix)) {
+		const res = await getAssetFromKV(event);
+		return new Response(res.body, {
+			headers: {
+				'cache-control': 'public, immutable, max-age=31536000',
+				'content-type': res.headers.get('content-type')
 			}
-		}
+		});
 	}
 
-	// fall back to an app route
-	const request = event.request;
+	// prerendered pages and index.html files
+	const pathname = url.pathname.replace(/\/$/, '');
+	let file = pathname.substring(1);
 
+	try {
+		file = decodeURIComponent(file);
+	} catch (err) {
+		// ignore
+	}
+
+	if (
+		manifest.assets.has(file) ||
+		manifest.assets.has(file + '/index.html') ||
+		prerendered.has(pathname || '/')
+	) {
+		return await getAssetFromKV(event);
+	}
+
+	// dynamically-generated pages
 	try {
 		const rendered = await app.render({
 			url: request.url,
@@ -38,14 +60,14 @@ async function handle(event) {
 		if (rendered) {
 			return new Response(rendered.body, {
 				status: rendered.status,
-				headers: makeHeaders(rendered.headers)
+				headers: make_headers(rendered.headers)
 			});
 		}
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
 	}
 
-	return new Response({
+	return new Response('Not Found', {
 		status: 404,
 		statusText: 'Not Found'
 	});
@@ -56,11 +78,8 @@ async function read(request) {
 	return new Uint8Array(await request.arrayBuffer());
 }
 
-/**
- * @param {Record<string, string | string[]>} headers
- * @returns {Request}
- */
-function makeHeaders(headers) {
+/** @param {Record<string, string | string[]>} headers */
+function make_headers(headers) {
 	const result = new Headers();
 	for (const header in headers) {
 		const value = headers[header];

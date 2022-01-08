@@ -1072,6 +1072,17 @@ test.describe.parallel('$app/paths', () => {
 			})
 		);
 	});
+
+	test('replaces %svelte.assets% in template with relative path', async ({ page }) => {
+		await page.goto('/');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+
+		await page.goto('/routing');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('./favicon.png');
+
+		await page.goto('/routing/rest/foo/bar/baz');
+		expect(await page.getAttribute('link[rel=icon]', 'href')).toBe('../../../../favicon.png');
+	});
 });
 
 test.describe.parallel('$app/stores', () => {

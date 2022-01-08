@@ -47,7 +47,7 @@ Now you should get some details from Cloudflare. You should get your:
 1. Account ID
 2. And your Zone-ID (Optional)
 
-Get them by visiting your Cloudflare-Dashboard and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
+Get them by visiting your [Cloudflare dashboard](https://dash.cloudflare.com) and click on any domain. There, you can scroll down and on the left, you can see your details under **API**.
 
 Then configure your sites build directory and your account-details in the config file:
 
