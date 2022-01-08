@@ -165,8 +165,7 @@ export const config = {
 	timeout: process.env.CI ? (process.platform === 'win32' ? 45000 : 30000) : 10000,
 	webServer: {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
-		port: 3000,
-		timeout: 15000 // AMP validator needs a long time to get moving
+		port: 3000
 	},
 	workers: 8,
 	retries: process.env.CI ? 5 : 0,

@@ -16,7 +16,7 @@ import { load_template } from '../config/index.js';
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} output
  * @param {string} cwd
- * @param {import('amphtml-validator').Validator | false} amp
+ * @param {import('amphtml-validator').Validator | undefined} amp
  * @returns {import('vite').Plugin}
  */
 export function create_plugin(config, output, cwd, amp) {

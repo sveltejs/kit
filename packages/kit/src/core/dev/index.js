@@ -1,6 +1,5 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import amp_validator from 'amphtml-validator';
 import vite from 'vite';
 import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
@@ -27,7 +26,11 @@ export async function dev({ cwd, port, host, https, config }) {
 	rimraf(output);
 	copy_assets(output);
 
-	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
+	let amp_validator;
+	if (config.kit.amp) {
+		process.env.VITE_SVELTEKIT_AMP = 'true';
+		amp_validator = await (await import('amphtml-validator')).getInstance();
+	}
 
 	const [vite_config] = deep_merge(
 		{
@@ -76,7 +79,7 @@ export async function dev({ cwd, port, host, https, config }) {
 					hydratable: !!config.kit.hydrate
 				}
 			}),
-			create_plugin(config, output, cwd, config.kit.amp && (await amp_validator.getInstance()))
+			create_plugin(config, output, cwd, amp_validator)
 		],
 		publicDir: config.kit.files.assets,
 		base: '/'
