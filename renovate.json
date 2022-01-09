@@ -2,10 +2,12 @@
 	"extends": [
 		"config:base",
 		":preserveSemverRanges"
+    "group:allNonMajor"
 	],
 	"pin": false,
    "ignoreDeps": [
-    "esbuild"
+     "esbuild",
+		 "typescript"
   ],
   "ignorePaths": ["**/create-svelte/shared/**", "**/create-svelte/templates/**"]
 }
