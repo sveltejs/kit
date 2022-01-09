@@ -34,16 +34,16 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
-		"@rollup/plugin-json": "^4.1.0",
+		"@rollup/plugin-json": "4.1.0",
 		"@sveltejs/kit": "workspace:*",
-		"@types/compression": "^1.7.2",
-		"c8": "^7.10.0",
-		"compression": "^1.7.4",
-		"node-fetch": "^3.1.0",
-		"polka": "^1.0.0-next.22",
-		"rimraf": "^3.0.2",
-		"rollup": "^2.60.2",
-		"sirv": "^1.0.19",
-		"uvu": "^0.5.2"
+		"@types/compression": "1.7.2",
+		"c8": "7.11.0",
+		"compression": "1.7.4",
+		"node-fetch": "3.1.0",
+		"polka": "1.0.0-next.22",
+		"rimraf": "3.0.2",
+		"rollup": "2.63.0",
+		"sirv": "1.0.19",
+		"uvu": "0.5.3"
 	}
 }

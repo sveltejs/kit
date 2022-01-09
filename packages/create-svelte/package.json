@@ -10,21 +10,21 @@
 	"homepage": "https://kit.svelte.dev",
 	"bin": "./bin.js",
 	"dependencies": {
-		"kleur": "^4.1.4",
-		"prompts": "^2.4.2"
+		"kleur": "4.1.4",
+		"prompts": "2.4.2"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"@types/gitignore-parser": "^0.0.0",
-		"@types/prettier": "^2.4.2",
-		"@types/prompts": "^2.0.14",
-		"gitignore-parser": "^0.0.2",
-		"prettier": "^2.5.0",
-		"prettier-plugin-svelte": "^2.5.0",
-		"sucrase": "^3.20.3",
-		"svelte": "^3.44.2",
-		"svelte-preprocess": "^4.9.8",
-		"tiny-glob": "^0.2.9"
+		"@types/gitignore-parser": "0.0.0",
+		"@types/prettier": "2.4.2",
+		"@types/prompts": "2.0.14",
+		"gitignore-parser": "0.0.2",
+		"prettier": "2.5.1",
+		"prettier-plugin-svelte": "2.5.1",
+		"sucrase": "3.20.3",
+		"svelte": "3.45.0",
+		"svelte-preprocess": "4.10.1",
+		"tiny-glob": "0.2.9"
 	},
 	"scripts": {
 		"build": "node scripts/build-templates",
