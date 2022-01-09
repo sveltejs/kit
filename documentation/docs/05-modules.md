@@ -58,7 +58,7 @@ Because of that, the stores are not free-floating objects: they must be accessed
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
-- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL) and [`params`](#loading-input-params).
+- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](#loading-input-params) and [`stuff`](#loading-output-stuff).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib
