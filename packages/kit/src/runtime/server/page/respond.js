@@ -19,14 +19,29 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
+ *   resolve_opts: Required<import('types/hooks').ResolveOpts>;
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route } = opts;
+	const { request, options, state, $session, route, resolve_opts } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
+
+	if (!resolve_opts.ssr) {
+		return await render_response({
+			...opts,
+			branch: [],
+			page_config: {
+				hydrate: true,
+				router: true,
+				ssr: false
+			},
+			status: 200,
+			url: request.url
+		});
+	}
 
 	try {
 		nodes = await Promise.all(
@@ -43,7 +58,8 @@ export async function respond(opts) {
 			state,
 			$session,
 			status: 500,
-			error
+			error,
+			resolve_opts
 		});
 	}
 
@@ -181,7 +197,8 @@ export async function respond(opts) {
 							state,
 							$session,
 							status,
-							error
+							error,
+							resolve_opts
 						}),
 						set_cookie_headers
 					);
@@ -231,7 +248,7 @@ export async function respond(opts) {
  */
 function get_page_config(leaf, options) {
 	return {
-		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
+		ssr: true,
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};

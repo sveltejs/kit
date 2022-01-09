@@ -63,7 +63,7 @@ export async function respond(incoming, options, state = {}) {
 	try {
 		return await options.hooks.handle({
 			request,
-			resolve: async (request) => {
+			resolve: async (request, opts) => {
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						url: request.url,
@@ -76,6 +76,7 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
+				const resolve_opts = get_resolve_opts(opts);
 				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
 
 				for (const route of options.manifest._.routes) {
@@ -85,7 +86,7 @@ export async function respond(incoming, options, state = {}) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route, match)
-							: await render_page(request, route, match, options, state);
+							: await render_page(request, route, match, options, state, resolve_opts);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -125,7 +126,8 @@ export async function respond(incoming, options, state = {}) {
 						state,
 						$session,
 						status: 404,
-						error: new Error(`Not found: ${request.url.pathname}`)
+						error: new Error(`Not found: ${request.url.pathname}`),
+						resolve_opts
 					});
 				}
 			}
@@ -155,4 +157,16 @@ export async function respond(incoming, options, state = {}) {
 			};
 		}
 	}
+}
+
+/**
+ * @param {import('types/hooks').ResolveOpts | undefined} opts
+ * @returns {Required<import('types/hooks').ResolveOpts>}
+ */
+function get_resolve_opts(opts) {
+	/** @type {Required<import('types/hooks').ResolveOpts>} */
+	const defaults = {
+		ssr: true
+	};
+	return Object.assign(defaults, opts);
 }

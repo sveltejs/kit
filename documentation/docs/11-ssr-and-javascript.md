@@ -14,13 +14,20 @@ Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKi
 
 > In most situations this is not recommended: see [the discussion in the appendix](#appendix-ssr). Consider whether it's truly appropriate to disable and don't simply disable SSR because you've hit an issue with it.
 
-You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr), or a page-level `ssr` export:
+You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr), or on a page-basis passing the `ssr` option to `resolve`:
 
 ```html
-<script context="module">
-	export const ssr = false;
-</script>
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ request, resolve }) {
+	const response = await resolve(request, {
+		ssr: !request.path.startsWith('/admin')
+	});
+
+	return response;
+}
 ```
+
+You can also prevent pages from loading on the server with the [`handle` hook](#hooks-handle).
 
 ### router
 

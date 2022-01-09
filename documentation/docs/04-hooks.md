@@ -47,11 +47,18 @@ export interface Response {
 	body?: StrictBody;
 }
 
+export interface ResolveOpts {
+	ssr?: boolean;
+}
+
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
-		request: Request<Locals, Body>;
-		resolve(request: Request<Locals, Body>): Response | Promise<Response>;
-	}): Response | Promise<Response>;
+		request: ServerRequest<Locals, Body>;
+		resolve(
+			request: ServerRequest<Locals, Body>,
+			opts?: ResolveOpts
+		): MaybePromise<ServerResponse>;
+	}): MaybePromise<ServerResponse>;
 }
 ```
 
@@ -75,6 +82,22 @@ export async function handle({ request, resolve }) {
 ```
 
 You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
+
+`resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
+
+- `ssr` — specifies whether the page will be loaded on the server. Unlike [`config.kit.ssr`](#configuration-ssr) this option does not load pages on the server, thus preventing errors that come from the use of nonexistent variables such as `window` or `document`.
+
+
+```js
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ request, resolve }) {
+	const response = await resolve(request, {
+		ssr: !request.path.startsWith('/admin')
+	});
+
+	return response;
+}
+```
 
 ### handleError
 
