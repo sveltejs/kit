@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.93
+
+### Patch Changes
+
+- Update template files to include %svelte.assets% ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
 ## 2.0.0-next.92
 
 ### Patch Changes

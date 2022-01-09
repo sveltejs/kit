@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
 ## 1.0.0-next.35
 
 ### Patch Changes

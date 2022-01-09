@@ -213,10 +213,18 @@ export async function render_response({
 		headers['permissions-policy'] = 'interest-cohort=()';
 	}
 
+	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
+	const assets =
+		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
+
 	return {
 		status,
 		headers,
-		body: options.template({ head, body })
+		body: options.template({
+			head,
+			body,
+			assets
+		})
 	};
 }
 

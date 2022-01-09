@@ -70,11 +70,11 @@ importers:
     specifiers:
       '@sveltejs/kit': workspace:*
       rollup: ^2.58.0
-      sirv: ^1.0.17
+      sirv: ^2.0.0
     devDependencies:
       '@sveltejs/kit': link:../kit
       rollup: 2.60.2
-      sirv: 1.0.19
+      sirv: 2.0.0
 
   packages/adapter-cloudflare:
     specifiers:
@@ -87,6 +87,8 @@ importers:
 
   packages/adapter-cloudflare-workers:
     specifiers:
+      '@cloudflare/kv-asset-handler': ^0.2.0
+      '@cloudflare/workers-types': ^3.3.0
       '@iarna/toml': ^2.2.5
       '@sveltejs/kit': workspace:*
       esbuild: ^0.13.15
@@ -94,6 +96,8 @@ importers:
       '@iarna/toml': 2.2.5
       esbuild: 0.13.15
     devDependencies:
+      '@cloudflare/kv-asset-handler': 0.2.0
+      '@cloudflare/workers-types': 3.3.0
       '@sveltejs/kit': link:../kit
 
   packages/adapter-netlify:
@@ -132,7 +136,7 @@ importers:
       polka: ^1.0.0-next.22
       rimraf: ^3.0.2
       rollup: ^2.60.2
-      sirv: ^1.0.19
+      sirv: ^2.0.0
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
     dependencies:
@@ -147,7 +151,7 @@ importers:
       polka: 1.0.0-next.22
       rimraf: 3.0.2
       rollup: 2.60.2
-      sirv: 1.0.19
+      sirv: 2.0.0
       uvu: 0.5.2
 
   packages/adapter-static:
@@ -155,7 +159,7 @@ importers:
       '@sveltejs/kit': workspace:*
       playwright-chromium: ^1.17.0
       port-authority: ^1.1.2
-      sirv: ^1.0.19
+      sirv: ^2.0.0
       svelte: ^3.44.2
       tiny-glob: ^0.2.9
       uvu: ^0.5.2
@@ -165,7 +169,7 @@ importers:
       '@sveltejs/kit': link:../kit
       playwright-chromium: 1.17.0
       port-authority: 1.1.2
-      sirv: 1.0.19
+      sirv: 2.0.0
       svelte: 3.44.2
       uvu: 0.5.2
 
@@ -255,7 +259,7 @@ importers:
       rollup: ^2.60.2
       sade: ^1.7.4
       selfsigned: ^1.10.11
-      sirv: ^1.0.19
+      sirv: ^2.0.0
       svelte: ^3.44.2
       svelte-check: ^2.2.10
       svelte-preprocess: ^4.9.8
@@ -289,7 +293,7 @@ importers:
       port-authority: 1.1.2
       rollup: 2.60.2
       selfsigned: 1.10.11
-      sirv: 1.0.19
+      sirv: 2.0.0
       svelte: 3.44.2
       svelte-check: 2.2.10_svelte@3.44.2
       svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.4.4
@@ -1047,6 +1051,16 @@ packages:
       fs-extra: 7.0.1
       human-id: 1.0.2
       prettier: 1.19.1
+    dev: true
+
+  /@cloudflare/kv-asset-handler/0.2.0:
+    resolution: {integrity: sha512-MVbXLbTcAotOPUj0pAMhVtJ+3/kFkwJqc5qNOleOZTv6QkZZABDMS21dSrSlVswEHwrpWC03e4fWytjqKvuE2A==}
+    dependencies:
+      mime: 3.0.0
+    dev: true
+
+  /@cloudflare/workers-types/3.3.0:
+    resolution: {integrity: sha512-3v3bm/hOuzNtHgDqPowrRE63H0GEn40LfhLMVpzS5yeg5tlE5nEQ0qobmGOJBCvJJ1LhgRRHZTJszXHs1DXQWg==}
     dev: true
 
   /@eslint/eslintrc/1.0.4:
@@ -4643,13 +4657,13 @@ packages:
     resolution: {integrity: sha512-sDl4qMFpijcGw22U5w63KmD3cZJfBuFlVNbVMKje2keoKML7X2UzWbc4XrmEbDwg0NXJc3yv4/ox7b+JWb57kQ==}
     dev: true
 
-  /sirv/1.0.19:
-    resolution: {integrity: sha512-JuLThK3TnZG1TAKDwNIqNq6QA2afLOCcm+iE8D1Kj3GA40pSPsxQjjJl0J8X3tsR7T+CP1GavpzLwYkgVLWrZQ==}
+  /sirv/2.0.0:
+    resolution: {integrity: sha512-TT+4+zSM9LR8soWT5/4gOYHfB5a5XEOSV2LtmBRN5MUxi8kh7BSRGuoRYjeBaqhR4w+yx+k6t0OibDNgoLfF7w==}
     engines: {node: '>= 10'}
     dependencies:
       '@polka/url': 1.0.0-next.21
       mrmime: 1.0.0
-      totalist: 1.1.0
+      totalist: 2.0.0
     dev: true
 
   /sisteransi/1.0.5:
@@ -5088,11 +5102,6 @@ packages:
     engines: {node: '>=8.0'}
     dependencies:
       is-number: 7.0.0
-    dev: true
-
-  /totalist/1.1.0:
-    resolution: {integrity: sha512-gduQwd1rOdDMGxFG1gEvhV88Oirdo2p+KjoYFU7k2g+i7n6AFFbDQ5kMPUsW0pNbfQsB/cwXvT1i4Bue0s9g5g==}
-    engines: {node: '>=6'}
     dev: true
 
   /totalist/2.0.0:

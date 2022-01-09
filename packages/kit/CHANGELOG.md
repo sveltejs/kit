@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.218
+
+### Patch Changes
+
+- Expose appDir to adapters ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+* Replace %svelte.assets% with relative path ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
 ## 1.0.0-next.217
 
 ### Patch Changes

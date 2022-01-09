@@ -129,7 +129,13 @@ export default function ({ split = false } = {}) {
 			builder.copy('_redirects', redirect_file);
 			appendFileSync(redirect_file, `\n\n${redirects.join('\n')}`);
 
-			// TODO write a _headers file that makes client-side assets immutable
+			builder.log.minor('Writing custom headers...');
+			const headers_file = join(publish, '_headers');
+			builder.copy('_headers', headers_file);
+			appendFileSync(
+				headers_file,
+				`\n\n/${builder.appDir}/*\n  cache-control: public\n  cache-control: immutable\n  cache-control: max-age=31536000\n`
+			);
 		}
 	};
 }
