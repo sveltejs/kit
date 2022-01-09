@@ -18,6 +18,7 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			builder.writeStatic(assets);
 			builder.writeClient(assets);
 
+			builder.log(`Prerendering pages to directory: ${pages}`);
 			await builder.prerender({
 				fallback,
 				all: !fallback,
@@ -26,13 +27,13 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 
 			if (precompress) {
 				if (pages === assets) {
-					builder.log.minor('Compressing assets and pages');
+					builder.log(`Compressing assets and pages to directory: ${assets}`);
 					await compress(assets);
 				} else {
-					builder.log.minor('Compressing assets');
+					builder.log(`Compressing assets to directory: ${assets}`);
 					await compress(assets);
 
-					builder.log.minor('Compressing pages');
+					builder.log(`Compressing pages to directory: ${assets}`);
 					await compress(pages);
 				}
 			}
