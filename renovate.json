@@ -3,5 +3,9 @@
 		"config:base",
 		":preserveSemverRanges"
 	],
-	"pin": false
+	"pin": false,
+   "ignoreDeps": [
+    "esbuild"
+  ],
+  "ignorePaths": ["**/create-svelte/shared/**", "**/create-svelte/templates/**"]
 }
