@@ -582,6 +582,10 @@ export class Renderer {
 
 			const loaded = await module.load.call(null, load_input);
 
+			if (!loaded) {
+				throw new Error(`load function must return a value`);
+			}
+
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
 		}

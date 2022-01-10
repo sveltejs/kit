@@ -294,7 +294,7 @@ export async function load_node({
 		loaded = await module.load.call(null, load_input);
 
 		if (!loaded) {
-			throw new Error(`${node.entry} - load must return a value`);
+			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
 		}
 	} else {
 		loaded = {};
