@@ -60,10 +60,15 @@ export async function respond(incoming, options, state = {}) {
 	print_error('path', 'pathname');
 	print_error('query', 'searchParams');
 
+	/** @type {Required<import('types/hooks').ResolveOpts>} */
+	let resolve_opts = { ssr: true };
+
 	try {
 		return await options.hooks.handle({
 			request,
 			resolve: async (request, opts) => {
+				Object.assign(resolve_opts, opts);
+
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						url: request.url,
@@ -76,7 +81,6 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const resolve_opts = get_resolve_opts(opts);
 				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
 
 				for (const route of options.manifest._.routes) {
@@ -145,7 +149,8 @@ export async function respond(incoming, options, state = {}) {
 				state,
 				$session,
 				status: 500,
-				error
+				error,
+				resolve_opts
 			});
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);
@@ -157,16 +162,4 @@ export async function respond(incoming, options, state = {}) {
 			};
 		}
 	}
-}
-
-/**
- * @param {import('types/hooks').ResolveOpts | undefined} opts
- * @returns {Required<import('types/hooks').ResolveOpts>}
- */
-function get_resolve_opts(opts) {
-	/** @type {Required<import('types/hooks').ResolveOpts>} */
-	const defaults = {
-		ssr: true
-	};
-	return Object.assign(defaults, opts);
 }
