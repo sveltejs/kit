@@ -292,16 +292,16 @@ export async function load_node({
 		}
 
 		loaded = await module.load.call(null, load_input);
+
+		if (!loaded) {
+			throw new Error(`${node.entry} - load must return a value`);
+		}
 	} else {
 		loaded = {};
 	}
 
 	if (loaded.fallthrough && !is_error) {
 		return;
-	}
-
-	if (!loaded) {
-		throw new Error(`${node.entry} - load must return a value`);
 	}
 
 	return {
