@@ -27,8 +27,6 @@ export interface ResolveOpts {
 	ssr?: boolean;
 }
 
-export type RequiredResolveParams = Required<ResolveOpts>;
-
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
