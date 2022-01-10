@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.219
+
+### Patch Changes
+
+- Render error page if error happens in handle hook ([#3239](https://github.com/sveltejs/kit/pull/3239))
+
+* [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
 ## 1.0.0-next.218
 
 ### Patch Changes
