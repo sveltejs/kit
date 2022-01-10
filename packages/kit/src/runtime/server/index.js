@@ -61,7 +61,7 @@ export async function respond(incoming, options, state = {}) {
 	print_error('query', 'searchParams');
 
 	/** @type {Required<import('types/hooks').ResolveOpts>} */
-	let resolve_opts = { ssr: true };
+	const resolve_opts = { ssr: true };
 
 	try {
 		return await options.hooks.handle({
