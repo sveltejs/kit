@@ -1,3 +1,6 @@
 [build]
   command = "npm run build"
   publish = "build"
+
+[build.environment]
+  NPM_FLAGS="--prefix=/dev/null"
