@@ -57,7 +57,6 @@ test('fills in defaults', () => {
 			},
 			protocol: null,
 			router: true,
-			ssr: true,
 			target: null,
 			trailingSlash: 'never'
 		}
@@ -164,7 +163,6 @@ test('fills in partial blanks', () => {
 			},
 			protocol: null,
 			router: true,
-			ssr: true,
 			target: null,
 			trailingSlash: 'never'
 		}

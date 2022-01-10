@@ -143,7 +143,6 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
 	target: string;
 	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
 	trailing_slash: TrailingSlash;

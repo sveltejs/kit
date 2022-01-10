@@ -223,7 +223,6 @@ export async function create_plugin(config, output, cwd) {
 								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 								root,
 								router: config.kit.router,
-								ssr: config.kit.ssr,
 								target: config.kit.target,
 								template: ({ head, body, assets }) => {
 									let rendered = load_template(cwd, config)

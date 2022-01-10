@@ -171,8 +171,6 @@ const options = object(
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
-			ssr: boolean(true),
-
 			target: string(null),
 
 			trailingSlash: list(['never', 'always', 'ignore']),

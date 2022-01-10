@@ -154,7 +154,6 @@ export interface Config {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
 		};
-		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);
