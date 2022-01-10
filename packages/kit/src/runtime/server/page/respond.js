@@ -19,24 +19,23 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
- *   resolve_opts: Required<import('types/hooks').ResolveOpts>;
+ *   ssr: boolean;
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route, resolve_opts } = opts;
+	const { request, options, state, $session, route, ssr } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
-	if (!resolve_opts.ssr) {
+	if (!ssr) {
 		return await render_response({
 			...opts,
 			branch: [],
 			page_config: {
 				hydrate: true,
-				router: true,
-				ssr: false
+				router: true
 			},
 			status: 200,
 			url: request.url
@@ -59,7 +58,7 @@ export async function respond(opts) {
 			$session,
 			status: 500,
 			error,
-			resolve_opts
+			ssr
 		});
 	}
 
@@ -89,7 +88,7 @@ export async function respond(opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	ssr: if (page_config.ssr) {
+	ssr: if (ssr) {
 		let stuff = {};
 
 		for (let i = 0; i < nodes.length; i += 1) {
@@ -196,7 +195,7 @@ export async function respond(opts) {
 							$session,
 							status,
 							error,
-							resolve_opts
+							ssr
 						}),
 						set_cookie_headers
 					);
@@ -245,8 +244,14 @@ export async function respond(opts) {
  * @param {SSRRenderOptions} options
  */
 function get_page_config(leaf, options) {
+	// TODO remove for 1.0
+	if ('ssr' in leaf) {
+		throw new Error(
+			`\`export const ssr\` has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle`
+		);
+	}
+
 	return {
-		ssr: true,
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};

@@ -7,10 +7,10 @@ import { respond } from './respond.js';
  * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
- * @param {Required<import('types/hooks').ResolveOpts>} resolve_opts
+ * @param {boolean} ssr
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_page(request, route, match, options, state, resolve_opts) {
+export async function render_page(request, route, match, options, state, ssr) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
@@ -31,7 +31,7 @@ export async function render_page(request, route, match, options, state, resolve
 		$session,
 		route,
 		params,
-		resolve_opts
+		ssr
 	});
 
 	if (response) {

@@ -60,14 +60,13 @@ export async function respond(incoming, options, state = {}) {
 	print_error('path', 'pathname');
 	print_error('query', 'searchParams');
 
-	/** @type {Required<import('types/hooks').ResolveOpts>} */
-	const resolve_opts = { ssr: true };
+	let ssr = true;
 
 	try {
 		return await options.hooks.handle({
 			request,
 			resolve: async (request, opts) => {
-				Object.assign(resolve_opts, opts);
+				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -75,9 +74,10 @@ export async function respond(incoming, options, state = {}) {
 						params: request.params,
 						options,
 						$session: await options.hooks.getSession(request),
-						page_config: { ssr: false, router: true, hydrate: true },
+						page_config: { router: true, hydrate: true },
 						status: 200,
-						branch: []
+						branch: [],
+						ssr: false
 					});
 				}
 
@@ -90,7 +90,7 @@ export async function respond(incoming, options, state = {}) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route, match)
-							: await render_page(request, route, match, options, state, resolve_opts);
+							: await render_page(request, route, match, options, state, ssr);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -131,7 +131,7 @@ export async function respond(incoming, options, state = {}) {
 						$session,
 						status: 404,
 						error: new Error(`Not found: ${request.url.pathname}`),
-						resolve_opts
+						ssr
 					});
 				}
 			}
@@ -150,7 +150,7 @@ export async function respond(incoming, options, state = {}) {
 				$session,
 				status: 500,
 				error,
-				resolve_opts
+				ssr
 			});
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);
