@@ -75,6 +75,7 @@ export async function respond(incoming, options, state = {}) {
 						options,
 						$session: await options.hooks.getSession(request),
 						page_config: { router: true, hydrate: true },
+						stuff: {},
 						status: 200,
 						branch: [],
 						ssr: false

@@ -18,6 +18,7 @@ import { s } from '../../../utils/misc.js';
  *   url: URL;
  *   params: Record<string, string>;
  *   ssr: boolean;
+ *   stuff: Record<string, any>;
  * }} opts
  */
 export async function render_response({
@@ -29,7 +30,8 @@ export async function render_response({
 	error,
 	url,
 	params,
-	ssr
+	ssr,
+	stuff
 }) {
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
@@ -70,7 +72,7 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page: { url, params, status, error },
+			page: { url, params, status, error, stuff },
 			components: branch.map(({ node }) => node.module.default)
 		};
 

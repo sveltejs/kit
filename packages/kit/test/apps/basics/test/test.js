@@ -1115,6 +1115,29 @@ test.describe.parallel('$app/stores', () => {
 		expect(oops).toBeUndefined();
 	});
 
+	test('page store contains stuff', async ({ page, clicknav }) => {
+		await page.goto('/store/stuff/www');
+
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'www' })
+		);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'zzz' })
+		);
+
+		await clicknav('a[href="/store/stuff/xxx"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = xxx' })
+		);
+
+		await clicknav('a[href="/store/stuff/yyy"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
+		);
+	});
+
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
