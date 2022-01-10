@@ -172,7 +172,7 @@ const options = object(
 			}),
 
 			// TODO remove this for 1.0
-			ssr: validate(null, (input, keypath) => {
+			ssr: validate(null, (input) => {
 				if (input !== undefined) {
 					throw new Error(
 						'config.kit.ssr has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
