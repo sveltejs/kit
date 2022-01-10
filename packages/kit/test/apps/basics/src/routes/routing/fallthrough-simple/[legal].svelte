@@ -5,9 +5,8 @@
 			return {
 				props: {}
 			};
-		} else {
-			return;
 		}
+		return { fallthrough: true };
 	};
 </script>
 

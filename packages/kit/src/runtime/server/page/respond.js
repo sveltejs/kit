@@ -106,7 +106,6 @@ export async function respond(opts) {
 						node,
 						stuff,
 						prerender_enabled: is_prerender_enabled(options, node, state),
-						is_leaf: i === nodes.length - 1,
 						is_error: false
 					});
 
@@ -163,7 +162,6 @@ export async function respond(opts) {
 										node: error_node,
 										stuff: node_loaded.stuff,
 										prerender_enabled: is_prerender_enabled(options, error_node, state),
-										is_leaf: false,
 										is_error: true,
 										status,
 										error

@@ -1,5 +1,5 @@
 import { ServerRequest } from './hooks';
-import { JSONString, MaybePromise, ResponseHeaders } from './helper';
+import { JSONString, MaybePromise, ResponseHeaders, Either, Fallthrough } from './helper';
 
 type DefaultBody = JSONString | Uint8Array;
 
@@ -14,5 +14,7 @@ export interface RequestHandler<
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: ServerRequest<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
+	(request: ServerRequest<Locals, Input>): MaybePromise<
+		Either<EndpointOutput<Output>, Fallthrough>
+	>;
 }
