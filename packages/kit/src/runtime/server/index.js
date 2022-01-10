@@ -130,15 +130,29 @@ export async function respond(incoming, options, state = {}) {
 				}
 			}
 		});
-	} catch (/** @type {unknown} */ err) {
-		const e = coalesce_to_error(err);
+	} catch (/** @type {unknown} */ e) {
+		const error = coalesce_to_error(e);
 
-		options.handle_error(e, request);
+		options.handle_error(error, request);
 
-		return {
-			status: 500,
-			headers: {},
-			body: options.dev ? e.stack : e.message
-		};
+		try {
+			const $session = await options.hooks.getSession(request);
+			return await respond_with_error({
+				request,
+				options,
+				state,
+				$session,
+				status: 500,
+				error
+			});
+		} catch (/** @type {unknown} */ e) {
+			const error = coalesce_to_error(e);
+
+			return {
+				status: 500,
+				headers: {},
+				body: options.dev ? error.stack : error.message
+			};
+		}
 	}
 }
