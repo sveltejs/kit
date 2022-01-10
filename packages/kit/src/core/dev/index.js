@@ -26,12 +26,6 @@ export async function dev({ cwd, port, host, https, config }) {
 	rimraf(output);
 	copy_assets(output);
 
-	let amp_validator;
-	if (config.kit.amp) {
-		process.env.VITE_SVELTEKIT_AMP = 'true';
-		amp_validator = await (await import('amphtml-validator')).getInstance();
-	}
-
 	const [vite_config] = deep_merge(
 		{
 			server: {
@@ -79,7 +73,7 @@ export async function dev({ cwd, port, host, https, config }) {
 					hydratable: !!config.kit.hydrate
 				}
 			}),
-			create_plugin(config, output, cwd, amp_validator)
+			await create_plugin(config, output, cwd)
 		],
 		publicDir: config.kit.files.assets,
 		base: '/'
