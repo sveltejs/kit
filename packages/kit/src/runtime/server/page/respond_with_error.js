@@ -39,7 +39,6 @@ export async function respond_with_error({ request, options, state, $session, st
 				$session,
 				stuff: {},
 				prerender_enabled: is_prerender_enabled(options, default_error, state),
-				is_leaf: false,
 				is_error: false
 			})
 		);
@@ -56,7 +55,6 @@ export async function respond_with_error({ request, options, state, $session, st
 				$session,
 				stuff: layout_loaded ? layout_loaded.stuff : {},
 				prerender_enabled: is_prerender_enabled(options, default_error, state),
-				is_leaf: false,
 				is_error: true,
 				status,
 				error

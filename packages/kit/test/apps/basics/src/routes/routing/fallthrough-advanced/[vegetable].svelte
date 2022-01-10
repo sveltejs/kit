@@ -14,6 +14,7 @@
 				};
 			}
 		}
+		return { fallthrough: true };
 	}
 </script>
 

@@ -7,4 +7,5 @@ export function get({ params }) {
 			body: { type: 'mineral' }
 		};
 	}
+	return { fallthrough: true };
 }
