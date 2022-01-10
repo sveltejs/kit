@@ -1637,6 +1637,11 @@ test.describe.parallel('Routing', () => {
 		await clicknav('[href="/routing/rest/path/three"]');
 		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/three');
 	});
+
+	test('allows rest routes to have prefixes and suffixes', async ({ page }) => {
+		await page.goto('/routing/rest/complex/prefix-one/two/three');
+		expect(await page.textContent('h1')).toBe('parts: one/two/three');
+	});
 });
 
 test.describe.parallel('Session', () => {

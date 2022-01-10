@@ -103,10 +103,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				throw new Error(`Invalid route ${file} — brackets are unbalanced`);
 			}
 
-			if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment)) {
-				throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
-			}
-
 			const parts = get_parts(segment, file);
 			const is_index = is_dir ? false : basename.startsWith('index.');
 			const is_page = config.extensions.indexOf(ext) !== -1;
@@ -367,31 +363,37 @@ function get_parts(part, file) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment[0].rest
-				? '(?:\\/(.*))?'
-				: '\\/' +
-						segment
-							.map((part) => {
-								return part.dynamic
-									? '([^/]+?)'
-									: // allow users to specify characters on the file system in an encoded manner
-									  part.content
-											.normalize()
-											// We use [ and ] to denote parameters, so users must encode these on the file
-											// system to match against them. We don't decode all characters since others
-											// can already be epressed and so that '%' can be easily used directly in filenames
-											.replace(/%5[Bb]/g, '[')
-											.replace(/%5[Dd]/g, ']')
-											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
-											// They will not be touched by decodeURI so need to be encoded here, so
-											// that we can match against them.
-											// We skip '/' since you can't create a file with it on any OS
-											.replace(/#/g, '%23')
-											.replace(/\?/g, '%3F')
-											// escape characters that have special meaning in regex
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-							})
-							.join('');
+			if (segment.length === 1 && segment[0].rest) {
+				// special case — `src/routes/foo/[...bar]/baz` matches `/foo/baz`
+				// so we need to make the leading slash optional
+				return '(?:\\/(.*))?';
+			}
+
+			const parts = segment.map((part) => {
+				if (part.rest) return '(.*?)';
+				if (part.dynamic) return '([^/]+?)';
+
+				return (
+					part.content
+						// allow users to specify characters on the file system in an encoded manner
+						.normalize()
+						// We use [ and ] to denote parameters, so users must encode these on the file
+						// system to match against them. We don't decode all characters since others
+						// can already be epressed and so that '%' can be easily used directly in filenames
+						.replace(/%5[Bb]/g, '[')
+						.replace(/%5[Dd]/g, ']')
+						// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
+						// They will not be touched by decodeURI so need to be encoded here, so
+						// that we can match against them.
+						// We skip '/' since you can't create a file with it on any OS
+						.replace(/#/g, '%23')
+						.replace(/\?/g, '%3F')
+						// escape characters that have special meaning in regex
+						.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+				);
+			});
+
+			return '\\/' + parts.join('');
 		})
 		.join('');
 
