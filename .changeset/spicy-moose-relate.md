@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Adds an `ssr` parameter to `resolve` to specify whether pages should be loaded and rendered on the server.
+Remove `config.kit.ssr` and `export const ssr` in favour of `ssr` parameter for `resolve` function in `handle`
