@@ -95,6 +95,8 @@ export async function handle({ request, resolve }) {
 }
 ```
 
+> Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). In most situations this is not recommended ([see appendix](#appendix-ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
+
 ### handleError
 
 If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
