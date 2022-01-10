@@ -3,7 +3,6 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "svelte-kit dev",
-		"prebuild": "test \"$CI\" = true && npx pnpm install -r --store=node_modules/.pnpm-store || echo skipping pnpm install && npx pnpm build -r",
 		"build": "svelte-kit build --verbose",
 		"preview": "svelte-kit preview",
 		"start": "svelte-kit start"
