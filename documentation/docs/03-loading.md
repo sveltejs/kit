@@ -157,4 +157,4 @@ If the `load` function returns a `props` object, the props will be passed to the
 
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
-This only applies to layout components, _not_ page components.
+The combined `stuff` is available to components using the [page store](#modules-$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.

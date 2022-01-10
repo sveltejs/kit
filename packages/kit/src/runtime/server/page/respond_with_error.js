@@ -27,8 +27,7 @@ export async function respond_with_error({ request, options, state, $session, st
 		/** @type {Record<string, string>} */
 		const params = {}; // error page has no params
 
-		// error pages don't fall through, so we know it's not undefined
-		const loaded = /** @type {Loaded} */ (
+		const layout_loaded = /** @type {Loaded} */ (
 			await load_node({
 				request,
 				options,
@@ -44,26 +43,23 @@ export async function respond_with_error({ request, options, state, $session, st
 			})
 		);
 
-		const branch = [
-			loaded,
-			/** @type {Loaded} */ (
-				await load_node({
-					request,
-					options,
-					state,
-					route: null,
-					url: request.url,
-					params,
-					node: default_error,
-					$session,
-					stuff: loaded ? loaded.stuff : {},
-					prerender_enabled: is_prerender_enabled(options, default_error, state),
-					is_error: true,
-					status,
-					error
-				})
-			)
-		];
+		const error_loaded = /** @type {Loaded} */ (
+			await load_node({
+				request,
+				options,
+				state,
+				route: null,
+				url: request.url,
+				params,
+				node: default_error,
+				$session,
+				stuff: layout_loaded ? layout_loaded.stuff : {},
+				prerender_enabled: is_prerender_enabled(options, default_error, state),
+				is_error: true,
+				status,
+				error
+			})
+		);
 
 		return await render_response({
 			options,
@@ -73,9 +69,10 @@ export async function respond_with_error({ request, options, state, $session, st
 				router: options.router,
 				ssr: options.ssr
 			},
+			stuff: error_loaded.stuff,
 			status,
 			error,
-			branch,
+			branch: [layout_loaded, error_loaded],
 			url: request.url,
 			params
 		});

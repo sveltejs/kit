@@ -73,9 +73,9 @@ export async function respond(opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	ssr: if (page_config.ssr) {
-		let stuff = {};
+	let stuff = {};
 
+	ssr: if (page_config.ssr) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -158,6 +158,7 @@ export async function respond(opts) {
 
 								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
+								stuff = { ...node_loaded.stuff, ...error_loaded.stuff };
 								break ssr;
 							} catch (err) {
 								const e = coalesce_to_error(err);
@@ -199,6 +200,7 @@ export async function respond(opts) {
 		return with_cookies(
 			await render_response({
 				...opts,
+				stuff,
 				url: request.url,
 				page_config,
 				status,
