@@ -1499,6 +1499,25 @@ test.describe.parallel('Routing', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
+	test('$page.url.hash is correctly set on page load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/hashes/pagestore#target');
+			expect(await page.textContent('#window-hash')).toBe('#target');
+			expect(await page.textContent('#page-url-hash')).toBe('#target');
+		}
+	});
+
+	test('$page.url.hash is correctly set on navigation', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/hashes/pagestore');
+			expect(await page.textContent('#window-hash')).toBe('');
+			expect(await page.textContent('#page-url-hash')).toBe('');
+			await page.click('[href="#target"]');
+			expect(await page.textContent('#window-hash')).toBe('#target');
+			expect(await page.textContent('#page-url-hash')).toBe('#target');
+		}
+	});
+
 	test('fallthrough', async ({ page }) => {
 		await page.goto('/routing/fallthrough-simple/invalid');
 		expect(await page.textContent('h1')).toBe('Page');
@@ -1617,6 +1636,11 @@ test.describe.parallel('Routing', () => {
 
 		await clicknav('[href="/routing/rest/path/three"]');
 		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/three');
+	});
+
+	test('allows rest routes to have prefixes and suffixes', async ({ page }) => {
+		await page.goto('/routing/rest/complex/prefix-one/two/three');
+		expect(await page.textContent('h1')).toBe('parts: one/two/three');
 	});
 });
 

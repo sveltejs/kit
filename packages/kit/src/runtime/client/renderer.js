@@ -159,6 +159,9 @@ export class Renderer {
 
 		let error_args;
 
+		// url.hash is empty when coming from the server
+		url.hash = window.location.hash;
+
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
