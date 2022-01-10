@@ -3,4 +3,4 @@
   publish = "build"
 
 [build.environment]
-  NPM_FLAGS = "--version"
+  NPM_FLAGS = "--version" # this prevents npm install from happening
