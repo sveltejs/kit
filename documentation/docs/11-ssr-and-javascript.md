@@ -6,28 +6,7 @@ By default, SvelteKit will render any component first on the server and send it 
 
 You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
 
-If both are specified, per-page settings override per-app settings in case of conflicts. Each setting can be controlled independently, but `ssr` and `hydrate` cannot both be `false` since that would result in nothing being rendered at all.
-
-### ssr
-
-Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa).
-
-> In most situations this is not recommended: see [the discussion in the appendix](#appendix-ssr). Consider whether it's truly appropriate to disable and don't simply disable SSR because you've hit an issue with it.
-
-You can disable SSR app-wide with the [`ssr` config option](#configuration-ssr), or on a page-basis passing the `ssr` option to `resolve`:
-
-```html
-/** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, resolve }) {
-	const response = await resolve(request, {
-		ssr: !request.path.startsWith('/admin')
-	});
-
-	return response;
-}
-```
-
-You can also prevent pages from loading on the server with the [`handle` hook](#hooks-handle).
+If both are specified, per-page settings override per-app settings in case of conflicts.
 
 ### router
 

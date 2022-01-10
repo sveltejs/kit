@@ -54,10 +54,7 @@ export interface ResolveOpts {
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(
-			request: ServerRequest<Locals, Body>,
-			opts?: ResolveOpts
-		): MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
 }
 ```
@@ -85,8 +82,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr` — specifies whether the page will be loaded on the server. Unlike [`config.kit.ssr`](#configuration-ssr) this option does not load pages on the server, thus preventing errors that come from the use of nonexistent variables such as `window` or `document`.
-
+- `ssr` — specifies whether the page will be loaded and rendered on the server.
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
