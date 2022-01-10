@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.220
+
+### Patch Changes
+
+- url hash is now properly reflected in page store ([#3273](https://github.com/sveltejs/kit/pull/3273))
+
+* Strip hash fragments from URLs during prerendering ([#3251](https://github.com/sveltejs/kit/pull/3251))
+
+- Allow prefixes and suffixes around rest parameters ([#3240](https://github.com/sveltejs/kit/pull/3240))
+
 ## 1.0.0-next.219
 
 ### Patch Changes
