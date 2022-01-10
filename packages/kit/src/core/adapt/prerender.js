@@ -281,10 +281,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (element === 'a' || element === 'link') {
 						if (is_rel_external(attrs)) continue;
 
-						const href = get_href(attrs);
-						if (href && !href.startsWith('#')) {
-							hrefs.push(href);
-						}
+						let href = get_href(attrs);
+						if (!href) continue;
+
+						const i = href.indexOf('#');
+						href = i < 0 ? href : href.substring(0, i);
+						hrefs.push(href);
 					} else {
 						if (element === 'img') {
 							hrefs.push(get_src(attrs));
