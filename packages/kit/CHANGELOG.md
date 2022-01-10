@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.221
+
+### Patch Changes
+
+- Add returned stuff from pages into \$page store ([#3252](https://github.com/sveltejs/kit/pull/3252))
+
+* Fallthrough is now explicit and layout components now also support fallthrough ([#3217](https://github.com/sveltejs/kit/pull/3217))
+
 ## 1.0.0-next.220
 
 ### Patch Changes
