@@ -36,6 +36,12 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 					await compress(pages);
 				}
 			}
+
+			if (pages === assets) {
+				builder.log(`Wrote site to "${pages}"`);
+			} else {
+				builder.log(`Wrote pages to "${pages}" and assets to "${assets}"`);
+			}
 		}
 	};
 }
