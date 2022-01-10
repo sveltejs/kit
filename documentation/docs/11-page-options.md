@@ -1,5 +1,5 @@
 ---
-title: SSR and JavaScript
+title: Page options
 ---
 
 By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](#routing) that takes over subsequent navigations.
