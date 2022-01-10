@@ -1,5 +1,5 @@
 [build]
-  command = "npx pnpm install --store=node_modules/.pnpm-store && npx pnpm build"
+  command = "npx pnpm install --store=node_modules/.pnpm-store && npx pnpm build -r"
   publish = "build"
 
 [build.environment]
