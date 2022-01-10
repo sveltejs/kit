@@ -1534,6 +1534,17 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('404');
 	});
 
+	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
+		await page.goto('/routing/fallthrough-layout/okay');
+		expect(await page.textContent('h1')).toBe('foo is okay');
+
+		await clicknav('[href="/routing/fallthrough-layout/ok"]');
+		expect(await page.textContent('h1')).toBe('xyz is ok');
+
+		await clicknav('[href="/routing/fallthrough-layout/notok"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
 	test('last parameter in a segment wins in cases of ambiguity', async ({ page, clicknav }) => {
 		await page.goto('/routing/split-params');
 		await clicknav('[href="/routing/split-params/x-y-z"]');

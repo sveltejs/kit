@@ -59,11 +59,12 @@ export async function render_endpoint(request, route, match) {
 	const response = await handler(request);
 	const preface = `Invalid response from route ${request.url.pathname}`;
 
-	if (!response) {
-		return;
-	}
 	if (typeof response !== 'object') {
 		return error(`${preface}: expected an object, got ${typeof response}`);
+	}
+
+	if (response.fallthrough) {
+		return;
 	}
 
 	let { status = 200, body, headers = {} } = response;

@@ -8,6 +8,10 @@ A component that defines a page or a layout can export a `load` function that ru
 // Declaration types for Loading
 // * declarations that are not exported are for internal use
 
+export interface Fallthrough {
+	fallthrough?: true;
+}
+
 export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Stuff extends Record<string, any> = Record<string, any>,
@@ -20,7 +24,7 @@ export interface LoadInput<
 	stuff: Stuff;
 }
 
-export interface LoadOutput<
+export type LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
 	Stuff extends Record<string, any> = Record<string, any>
 > {
@@ -30,7 +34,7 @@ export interface LoadOutput<
 	props?: Props;
 	stuff?: Stuff;
 	maxage?: number;
-}
+} | Fallthrough
 ```
 
 Our example blog page might contain a `load` function like the following:
@@ -62,7 +66,7 @@ Our example blog page might contain a `load` function like the following:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
-If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 

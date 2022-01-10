@@ -582,8 +582,9 @@ export class Renderer {
 
 			const loaded = await module.load.call(null, load_input);
 
-			// if the page component returns nothing from load, fall through
-			if (!loaded) return;
+			if (!loaded) {
+				throw new Error('load function must return a value');
+			}
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
@@ -660,9 +661,10 @@ export class Renderer {
 						stuff
 					});
 
-					const is_leaf = i === a.length - 1;
-
 					if (node && node.loaded) {
+						if (node.loaded.fallthrough) {
+							return;
+						}
 						if (node.loaded.error) {
 							status = node.loaded.status;
 							error = node.loaded.error;
@@ -679,10 +681,6 @@ export class Renderer {
 						if (node.loaded.stuff) {
 							stuff_changed = true;
 						}
-					} else if (is_leaf && module.load) {
-						// if the leaf node has a `load` function
-						// that returns nothing, fall through
-						return;
 					}
 				} else {
 					node = previous;

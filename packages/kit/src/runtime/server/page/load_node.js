@@ -16,7 +16,6 @@ import { is_root_relative, resolve } from '../../../utils/url.js';
  *   $session: any;
  *   stuff: Record<string, any>;
  *   prerender_enabled: boolean;
- *   is_leaf: boolean;
  *   is_error: boolean;
  *   status?: number;
  *   error?: Error;
@@ -34,7 +33,6 @@ export async function load_node({
 	$session,
 	stuff,
 	prerender_enabled,
-	is_leaf,
 	is_error,
 	status,
 	error
@@ -294,16 +292,16 @@ export async function load_node({
 		}
 
 		loaded = await module.load.call(null, load_input);
+
+		if (!loaded) {
+			throw new Error(`load function must return a value${options.dev ? ` (${node.entry})` : ''}`);
+		}
 	} else {
 		loaded = {};
 	}
 
-	// if leaf node (i.e. page component) has a load function
-	// that returns nothing, we fall through to the next one
-	if (!loaded && is_leaf && !is_error) return;
-
-	if (!loaded) {
-		throw new Error(`${node.entry} - load must return a value except for page fall through`);
+	if (loaded.fallthrough && !is_error) {
+		return;
 	}
 
 	return {
