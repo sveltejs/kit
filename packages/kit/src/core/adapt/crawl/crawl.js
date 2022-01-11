@@ -110,7 +110,7 @@ export function crawl(html) {
 							i += 1;
 						}
 
-						const name = html.slice(start, i);
+						const name = html.slice(start, i).toLowerCase();
 
 						while (WHITESPACE.test(html[i])) i += 1;
 
@@ -122,31 +122,31 @@ export function crawl(html) {
 								const quote = html[i++];
 
 								const start = i;
-								if (quote) {
-									let escaped = false;
+								let escaped = false;
 
-									while (i < html.length) {
-										if (!escaped) {
-											const char = html[i];
+								while (i < html.length) {
+									if (!escaped) {
+										const char = html[i];
 
-											if (html[i] === quote) {
-												break;
-											}
-
-											if (char === '\\') {
-												escaped = true;
-											}
+										if (html[i] === quote) {
+											break;
 										}
 
-										i += 1;
+										if (char === '\\') {
+											escaped = true;
+										}
 									}
-								} else {
-									while (!WHITESPACE.test(html[i])) i += 1;
+
+									i += 1;
 								}
 
-								const value = html.slice(start, i);
+								attributes.set(name, html.slice(start, i));
+							} else {
+								const start = i;
+								while (html[i] !== '>' && !WHITESPACE.test(html[i])) i += 1;
+								attributes.set(name, html.slice(start, i));
 
-								attributes.set(name.toLowerCase(), value);
+								i -= 1;
 							}
 						}
 					}
