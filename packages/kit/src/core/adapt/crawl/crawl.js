@@ -25,7 +25,7 @@ export function crawl(html) {
 
 		if (char === '<') {
 			if (html[i + 1] === '!') {
-				if (html.slice(i, DOCTYPE_OPEN.length).toUpperCase() === DOCTYPE_OPEN) {
+				if (html.substr(i, DOCTYPE_OPEN.length).toUpperCase() === DOCTYPE_OPEN) {
 					i += DOCTYPE_OPEN.length;
 					while (i < html.length) {
 						if (html[i++] === '>') {
@@ -35,10 +35,10 @@ export function crawl(html) {
 				}
 
 				// skip cdata
-				if (html.slice(i, CDATA_OPEN.length) === CDATA_OPEN) {
+				if (html.substr(i, CDATA_OPEN.length) === CDATA_OPEN) {
 					i += CDATA_OPEN.length;
 					while (i < html.length) {
-						if (html.slice(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
+						if (html.substr(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
 							i += CDATA_CLOSE.length;
 							continue main;
 						}
@@ -48,10 +48,10 @@ export function crawl(html) {
 				}
 
 				// skip comments
-				if (html.slice(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
+				if (html.substr(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
 					i += COMMENT_OPEN.length;
 					while (i < html.length) {
-						if (html.slice(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
+						if (html.substr(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
 							i += COMMENT_CLOSE.length;
 							continue main;
 						}
@@ -79,7 +79,7 @@ export function crawl(html) {
 						if (
 							html[i] === '<' &&
 							html[i + 1] === '/' &&
-							html.slice(i + 2, i + 2 + tag.length).toUpperCase() === tag
+							html.substr(i + 2, tag.length).toUpperCase() === tag
 						) {
 							continue main;
 						}

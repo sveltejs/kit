@@ -11,13 +11,13 @@ for (const fixture of fs.readdirSync(fixtures)) {
 		const input = fs.readFileSync(`${fixtures}/${fixture}/input.html`, 'utf8');
 		const expected = JSON.parse(fs.readFileSync(`${fixtures}/${fixture}/output.json`, 'utf8'));
 
-		// const start = Date.now();
+		const start = Date.now();
 
 		const output = crawl(input);
 		assert.equal(output, expected);
 
 		// uncomment to see how long it took
-		// console.error(fixture, Date.now() - start);
+		console.error(fixture, Date.now() - start);
 	});
 }
 
