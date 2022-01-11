@@ -90,8 +90,8 @@ export function crawl(html) {
 					}
 				}
 
-				/** @type {Map<string, string>} */
-				const attributes = new Map();
+				let rel = '';
+				let href = '';
 
 				while (i < html.length) {
 					const start = i;
@@ -118,6 +118,8 @@ export function crawl(html) {
 							i += 1;
 							while (WHITESPACE.test(html[i])) i += 1;
 
+							let value;
+
 							if (html[i] === "'" || html[i] === '"') {
 								const quote = html[i++];
 
@@ -140,13 +142,27 @@ export function crawl(html) {
 									i += 1;
 								}
 
-								attributes.set(name, html.slice(start, i));
+								value = html.slice(start, i);
 							} else {
 								const start = i;
 								while (html[i] !== '>' && !WHITESPACE.test(html[i])) i += 1;
-								attributes.set(name, html.slice(start, i));
+								value = html.slice(start, i);
 
 								i -= 1;
+							}
+
+							if (name === 'rel') {
+								rel = value;
+							} else if (name === 'href') {
+								href = value;
+							} else if (name === 'src') {
+								hrefs.push(value);
+							} else if (name === 'srcset') {
+								const candidates = value.split(',');
+								for (const candidate of candidates) {
+									const src = candidate.trim().split(WHITESPACE)[0];
+									hrefs.push(src);
+								}
 							}
 						}
 					}
@@ -154,22 +170,8 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				if (attributes.has('href')) {
-					if (!EXTERNAL.test(attributes.get('rel'))) {
-						hrefs.push(attributes.get('href'));
-					}
-				}
-
-				if (attributes.has('src')) {
-					hrefs.push(attributes.get('src'));
-				}
-
-				if (attributes.has('srcset')) {
-					const candidates = attributes.get('srcset').split(',');
-					for (const candidate of candidates) {
-						const src = candidate.trim().split(WHITESPACE)[0];
-						hrefs.push(src);
-					}
+				if (href && !EXTERNAL.test(rel)) {
+					hrefs.push(href);
 				}
 			}
 		}
