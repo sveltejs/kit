@@ -35,7 +35,7 @@
 		"node-fetch": "^3.1.0",
 		"port-authority": "^1.1.2",
 		"rollup": "^2.60.2",
-		"selfsigned": "^1.10.11",
+		"selfsigned": "^2.0.0",
 		"sirv": "^2.0.0",
 		"svelte": "^3.44.2",
 		"svelte-check": "^2.2.10",

@@ -258,7 +258,7 @@ importers:
       port-authority: ^1.1.2
       rollup: ^2.60.2
       sade: ^1.7.4
-      selfsigned: ^1.10.11
+      selfsigned: ^2.0.0
       sirv: ^2.0.0
       svelte: ^3.44.2
       svelte-check: ^2.2.10
@@ -292,7 +292,7 @@ importers:
       node-fetch: 3.1.0
       port-authority: 1.1.2
       rollup: 2.60.2
-      selfsigned: 1.10.11
+      selfsigned: 2.0.0
       sirv: 2.0.0
       svelte: 3.44.2
       svelte-check: 2.2.10_svelte@3.44.2
@@ -3937,9 +3937,9 @@ packages:
       formdata-polyfill: 4.0.10
     dev: true
 
-  /node-forge/0.10.0:
-    resolution: {integrity: sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==}
-    engines: {node: '>= 6.0.0'}
+  /node-forge/1.2.0:
+    resolution: {integrity: sha512-M4AsdaP0bGNaSPtatd/+f76asocI0cFaURRdeQVZvrJBrYp2Qohv5hDbGHykuNqCb1BYjWHjdS6HlN50qbztwA==}
+    engines: {node: '>= 6.13.0'}
     dev: true
 
   /node-modules-regexp/1.0.0:
@@ -4593,10 +4593,11 @@ packages:
       rimraf: 2.7.1
     dev: true
 
-  /selfsigned/1.10.11:
-    resolution: {integrity: sha512-aVmbPOfViZqOZPgRBT0+3u4yZFHpmnIghLMlAcb5/xhp5ZtB/RVnKhz5vl2M32CLXAqR4kha9zfhNg0Lf/sxKA==}
+  /selfsigned/2.0.0:
+    resolution: {integrity: sha512-cUdFiCbKoa1mZ6osuJs2uDHrs0k0oprsKveFiiaBKCNq3SYyb5gs2HxhQyDNLCmL51ZZThqi4YNDpCK6GOP1iQ==}
+    engines: {node: '>=10'}
     dependencies:
-      node-forge: 0.10.0
+      node-forge: 1.2.0
     dev: true
 
   /semver/5.7.1:
