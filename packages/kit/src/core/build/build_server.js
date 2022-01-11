@@ -270,7 +270,7 @@ export async function build_server(
 
 	client.assets.forEach((asset) => {
 		if (asset.fileName.endsWith('.css')) {
-			if (config.kit.amp || asset.source.length < config.kit.inlineCss) {
+			if (config.kit.amp || asset.source.length < config.kit.inlineStyleThreshold) {
 				const index = stylesheet_lookup.size;
 				const file = `${output_dir}/server/stylesheets/${index}.js`;
 

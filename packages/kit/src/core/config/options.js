@@ -75,7 +75,7 @@ const options = object(
 
 			hydrate: boolean(true),
 
-			inlineCss: number(0),
+			inlineStyleThreshold: number(0),
 
 			methodOverride: object({
 				parameter: string('_method'),
