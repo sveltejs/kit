@@ -1749,7 +1749,7 @@ test.describe.parallel('Routing', () => {
 				await clicknav('[href="/routing/history/b"]');
 				expect(false).toBe(true);
 			} catch (/** @type {any} */ e) {
-				expect(e.message).toBe('Timed out');
+				expect(e.message).toMatch('Timed out');
 			}
 
 			const state = await page.evaluate('history.state');
