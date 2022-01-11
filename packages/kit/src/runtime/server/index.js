@@ -44,27 +44,24 @@ export async function respond(incoming, options, state = {}) {
 	};
 
 	const { parameter, allowed } = options.method_override;
+	const method_override = incoming.url.searchParams.get(parameter)?.toUpperCase();
 
-	if (request.method.toUpperCase() === 'POST' && incoming.url.searchParams.has(parameter)) {
-		const new_request_method = /** @type {string} */ (
-			incoming.url.searchParams.get(parameter)
-		).toUpperCase();
+	if (method_override) {
+		if (request.method.toUpperCase() === 'POST') {
+			if (allowed.includes(method_override)) {
+				request.method = method_override;
+			} else {
+				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
+				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
 
-		if (allowed.includes(new_request_method)) {
-			request.method = new_request_method;
+				return {
+					status: 400,
+					headers: {},
+					body
+				};
+			}
 		} else {
-			const body =
-				new_request_method === 'GET'
-					? 'A POST request cannot be overridden with GET'
-					: `Form method override provided "${new_request_method}" is not included in list of allowed methods ("${allowed.join(
-							'", "'
-					  )}")`;
-
-			return {
-				status: 400,
-				headers: {},
-				body
-			};
+			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
 		}
 	}
 

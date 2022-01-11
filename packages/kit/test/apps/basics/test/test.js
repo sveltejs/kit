@@ -954,7 +954,9 @@ test.describe.parallel('Method overrides', () => {
 		await page.goto('/method-override');
 		await page.click('"No Override To GET"');
 
-		expect(await page.innerHTML('pre')).toBe('A POST request cannot be overridden with GET');
+		expect(await page.innerHTML('pre')).toBe(
+			'_method=GET is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+		);
 	});
 
 	test('400 response when override method not in allowed methods', async ({ page }) => {
@@ -962,7 +964,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.click('"No Override To CONNECT"');
 
 		expect(await page.innerHTML('pre')).toBe(
-			'Form method override provided "CONNECT" is not included in list of allowed methods ("PUT", "PATCH", "DELETE")'
+			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
 		);
 	});
 });
