@@ -1,7 +1,7 @@
-const DOCTYPE_OPEN = '<!DOCTYPE';
-const CDATA_OPEN = '<![CDATA[';
+const DOCTYPE = 'DOCTYPE';
+const CDATA_OPEN = '[CDATA[';
 const CDATA_CLOSE = ']]>';
-const COMMENT_OPEN = '<!--';
+const COMMENT_OPEN = '--';
 const COMMENT_CLOSE = '-->';
 
 const TAG_OPEN = /[a-zA-Z]/;
@@ -25,8 +25,10 @@ export function crawl(html) {
 
 		if (char === '<') {
 			if (html[i + 1] === '!') {
-				if (html.substr(i, DOCTYPE_OPEN.length).toUpperCase() === DOCTYPE_OPEN) {
-					i += DOCTYPE_OPEN.length;
+				i += 2;
+
+				if (html.substr(i, DOCTYPE.length).toUpperCase() === DOCTYPE) {
+					i += DOCTYPE.length;
 					while (i < html.length) {
 						if (html[i++] === '>') {
 							continue main;
