@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.222
+
+### Patch Changes
+
+- Remove `config.kit.ssr` and `export const ssr` in favour of `ssr` parameter for `resolve` function in `handle` ([#2804](https://github.com/sveltejs/kit/pull/2804))
+
 ## 1.0.0-next.221
 
 ### Patch Changes
