@@ -24,38 +24,40 @@ export function crawl(html) {
 		const char = html[i];
 
 		if (char === '<') {
-			if (html.slice(i, DOCTYPE_OPEN.length).toUpperCase() === DOCTYPE_OPEN) {
-				i += DOCTYPE_OPEN.length;
-				while (i < html.length) {
-					if (html[i++] === '>') {
-						continue main;
+			if (html[i + 1] === '!') {
+				if (html.slice(i, DOCTYPE_OPEN.length).toUpperCase() === DOCTYPE_OPEN) {
+					i += DOCTYPE_OPEN.length;
+					while (i < html.length) {
+						if (html[i++] === '>') {
+							continue main;
+						}
 					}
 				}
-			}
 
-			// skip cdata
-			if (html.slice(i, CDATA_OPEN.length) === CDATA_OPEN) {
-				i += CDATA_OPEN.length;
-				while (i < html.length) {
-					if (html.slice(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
-						i += CDATA_CLOSE.length;
-						continue main;
+				// skip cdata
+				if (html.slice(i, CDATA_OPEN.length) === CDATA_OPEN) {
+					i += CDATA_OPEN.length;
+					while (i < html.length) {
+						if (html.slice(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
+							i += CDATA_CLOSE.length;
+							continue main;
+						}
+
+						i += 1;
 					}
-
-					i += 1;
 				}
-			}
 
-			// skip comments
-			if (html.slice(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
-				i += COMMENT_OPEN.length;
-				while (i < html.length) {
-					if (html.slice(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
-						i += COMMENT_CLOSE.length;
-						continue main;
+				// skip comments
+				if (html.slice(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
+					i += COMMENT_OPEN.length;
+					while (i < html.length) {
+						if (html.slice(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
+							i += COMMENT_CLOSE.length;
+							continue main;
+						}
+
+						i += 1;
 					}
-
-					i += 1;
 				}
 			}
 
@@ -73,9 +75,12 @@ export function crawl(html) {
 				const tag = html.slice(start, i).toUpperCase();
 
 				if (tag === 'SCRIPT' || tag === 'STYLE') {
-					const close = '</' + tag;
 					while (i < html.length) {
-						if (html.slice(i, i + close.length).toUpperCase() === close) {
+						if (
+							html[i] === '<' &&
+							html[i + 1] === '/' &&
+							html.slice(i + 2, i + 2 + tag.length).toUpperCase() === tag
+						) {
 							continue main;
 						}
 
