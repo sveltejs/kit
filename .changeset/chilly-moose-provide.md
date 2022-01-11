@@ -3,4 +3,4 @@
 'create-svelte': patch
 ---
 
-[feat] add functionality to override http methods (issue #1046)
+Add methodOverride option for submitting PUT/PATCH/DELETE/etc with <form> elements
