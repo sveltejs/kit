@@ -6,7 +6,7 @@ const COMMENT_CLOSE = '-->';
 
 const TAG_OPEN = /[a-zA-Z]/;
 const TAG_CHAR = /[a-zA-Z0-9]/;
-const ATTRIBUTE_NAME = /[^\t\n\f \/>"'=]/;
+const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
 const EXTERNAL = /\bexternal\b/;
 
