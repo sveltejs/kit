@@ -954,9 +954,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.goto('/method-override');
 		await page.click('"No Override To GET"');
 
-		expect(await page.innerHTML('pre')).toBe(
-			'A POST request cannot be overridden with GET'
-		);
+		expect(await page.innerHTML('pre')).toBe('A POST request cannot be overridden with GET');
 	});
 
 	test('400 response when override method not in allowed methods', async ({ page }) => {

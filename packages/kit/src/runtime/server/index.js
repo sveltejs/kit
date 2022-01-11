@@ -53,9 +53,12 @@ export async function respond(incoming, options, state = {}) {
 		if (allowed.includes(new_request_method)) {
 			request.method = new_request_method;
 		} else {
-			const body = new_request_method === 'GET' ?
-				'A POST request cannot be overridden with GET' :
-				`Form method override provided "${new_request_method}" is not included in list of allowed methods ("${allowed.join('", "')}")`;
+			const body =
+				new_request_method === 'GET'
+					? 'A POST request cannot be overridden with GET'
+					: `Form method override provided "${new_request_method}" is not included in list of allowed methods ("${allowed.join(
+							'", "'
+					  )}")`;
 
 			return {
 				status: 400,
