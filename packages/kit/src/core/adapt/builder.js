@@ -32,6 +32,8 @@ export function create_builder({ cwd, config, build_data, log }) {
 		mkdirp,
 		copy,
 
+		appDir: config.kit.appDir,
+
 		createEntries(fn) {
 			generated_manifest = true;
 

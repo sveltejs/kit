@@ -4,4 +4,6 @@ export function get() {
 }
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function del() {}
+export function del() {
+	return { fallthrough: true };
+}

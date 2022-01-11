@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- use path/posix to resolve relative paths for esmodules ([#3212](https://github.com/sveltejs/kit/pull/3212))
+
 ## 1.0.0-next.27
 
 ### Patch Changes

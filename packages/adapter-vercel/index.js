@@ -69,6 +69,12 @@ export default function () {
 				`${dir}/config/routes.json`,
 				JSON.stringify([
 					{
+						src: `/${builder.appDir}/.+`,
+						headers: {
+							'cache-control': 'public, immutable, max-age=31536000'
+						}
+					},
+					{
 						handle: 'filesystem'
 					},
 					{

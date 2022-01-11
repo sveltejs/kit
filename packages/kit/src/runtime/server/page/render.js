@@ -12,11 +12,13 @@ import { s } from '../../../utils/misc.js';
  *   branch: Array<import('./types').Loaded>;
  *   options: import('types/internal').SSRRenderOptions;
  *   $session: any;
- *   page_config: { hydrate: boolean, router: boolean, ssr: boolean };
+ *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
- *   error?: Error,
+ *   error?: Error;
  *   url: URL;
- *   params: Record<string, string>
+ *   params: Record<string, string>;
+ *   ssr: boolean;
+ *   stuff: Record<string, any>;
  * }} opts
  */
 export async function render_response({
@@ -27,7 +29,9 @@ export async function render_response({
 	status,
 	error,
 	url,
-	params
+	params,
+	ssr,
+	stuff
 }) {
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
@@ -46,7 +50,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (page_config.ssr) {
+	if (ssr) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => css.add(url));
 			if (node.js) node.js.forEach((url) => js.add(url));
@@ -69,7 +73,7 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page: { url, params, status, error },
+			page: { url, params, status, error, stuff },
 			components: branch.map(({ node }) => node.module.default)
 		};
 
@@ -153,9 +157,9 @@ export async function render_response({
 						throw new Error(`Failed to serialize session data: ${error.message}`);
 					})},
 					route: ${!!page_config.router},
-					spa: ${!page_config.ssr},
+					spa: ${!ssr},
 					trailing_slash: ${s(options.trailing_slash)},
-					hydrate: ${page_config.ssr && page_config.hydrate ? `{
+					hydrate: ${ssr && page_config.hydrate ? `{
 						status: ${status},
 						error: ${serialize_error(error)},
 						nodes: [
@@ -200,10 +204,18 @@ export async function render_response({
 		headers['permissions-policy'] = 'interest-cohort=()';
 	}
 
+	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
+	const assets =
+		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
+
 	return {
 		status,
 		headers,
-		body: options.template({ head, body })
+		body: options.template({
+			head,
+			body,
+			assets
+		})
 	};
 }
 

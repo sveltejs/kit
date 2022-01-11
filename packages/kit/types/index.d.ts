@@ -13,5 +13,6 @@ export {
 	Handle,
 	HandleError,
 	ServerRequest as Request,
-	ServerResponse as Response
+	ServerResponse as Response,
+	ResolveOpts
 } from './hooks';

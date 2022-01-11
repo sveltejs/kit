@@ -23,7 +23,7 @@ export default function () {
 			builder.rimraf(entrypoint);
 
 			builder.log.info('Prerendering static pages...');
-			await builder.prerender({
+			const { paths } = await builder.prerender({
 				dest: bucket
 			});
 
@@ -47,7 +47,7 @@ export default function () {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(paths)});\n`
 			);
 
 			await esbuild.build({
@@ -67,6 +67,7 @@ export default function () {
 	};
 }
 
+/** @param {import('@sveltejs/kit').Builder} builder */
 function validate_config(builder) {
 	if (existsSync('wrangler.toml')) {
 		let wrangler_config;

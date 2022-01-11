@@ -1,5 +1,53 @@
 # @sveltejs/kit
 
+## 1.0.0-next.222
+
+### Patch Changes
+
+- Remove `config.kit.ssr` and `export const ssr` in favour of `ssr` parameter for `resolve` function in `handle` ([#2804](https://github.com/sveltejs/kit/pull/2804))
+
+## 1.0.0-next.221
+
+### Patch Changes
+
+- Add returned stuff from pages into \$page store ([#3252](https://github.com/sveltejs/kit/pull/3252))
+
+* Fallthrough is now explicit and layout components now also support fallthrough ([#3217](https://github.com/sveltejs/kit/pull/3217))
+
+## 1.0.0-next.220
+
+### Patch Changes
+
+- url hash is now properly reflected in page store ([#3273](https://github.com/sveltejs/kit/pull/3273))
+
+* Strip hash fragments from URLs during prerendering ([#3251](https://github.com/sveltejs/kit/pull/3251))
+
+- Allow prefixes and suffixes around rest parameters ([#3240](https://github.com/sveltejs/kit/pull/3240))
+
+## 1.0.0-next.219
+
+### Patch Changes
+
+- Render error page if error happens in handle hook ([#3239](https://github.com/sveltejs/kit/pull/3239))
+
+* [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
+## 1.0.0-next.218
+
+### Patch Changes
+
+- Expose appDir to adapters ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+* Replace %svelte.assets% with relative path ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
+## 1.0.0-next.217
+
+### Patch Changes
+
+- Improve error message when svelte.config.js is not found ([#3219](https://github.com/sveltejs/kit/pull/3219))
+
+* Support more text content types ([#2781](https://github.com/sveltejs/kit/pull/2781))
+
 ## 1.0.0-next.216
 
 ### Patch Changes

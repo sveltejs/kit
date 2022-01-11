@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.216",
+	"version": "1.0.0-next.222",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -36,9 +36,10 @@
 		"port-authority": "^1.1.2",
 		"rollup": "^2.60.2",
 		"selfsigned": "^1.10.11",
-		"sirv": "^1.0.19",
+		"sirv": "^2.0.0",
 		"svelte": "^3.44.2",
 		"svelte-check": "^2.2.10",
+		"svelte-preprocess": "^4.9.8",
 		"svelte2tsx": "~0.4.10",
 		"tiny-glob": "^0.2.9",
 		"uvu": "^0.5.2"
