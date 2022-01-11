@@ -16,10 +16,17 @@ import { load_template } from '../config/index.js';
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} output
  * @param {string} cwd
- * @param {import('amphtml-validator').Validator | false} amp
- * @returns {import('vite').Plugin}
+ * @returns {Promise<import('vite').Plugin>}
  */
-export function create_plugin(config, output, cwd, amp) {
+export async function create_plugin(config, output, cwd) {
+	/** @type {import('amphtml-validator').Validator} */
+	let amp;
+
+	if (config.kit.amp) {
+		process.env.VITE_SVELTEKIT_AMP = 'true';
+		amp = await (await import('amphtml-validator')).getInstance();
+	}
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -217,7 +224,6 @@ export function create_plugin(config, output, cwd, amp) {
 								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 								root,
 								router: config.kit.router,
-								ssr: config.kit.ssr,
 								target: config.kit.target,
 								template: ({ head, body, assets }) => {
 									let rendered = load_template(cwd, config)

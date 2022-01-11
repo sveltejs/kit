@@ -1,4 +1,4 @@
-import { InferValue, MaybePromise, Rec } from './helper';
+import { InferValue, MaybePromise, Rec, Either, Fallthrough } from './helper';
 
 export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
@@ -51,10 +51,12 @@ export interface Load<
 			InferValue<Input, 'stuff', Rec>,
 			InferValue<Input, 'session', any>
 		>
-	): MaybePromise<void | LoadOutput<
-		InferValue<Output, 'props', Rec>,
-		InferValue<Output, 'stuff', Rec>
-	>>;
+	): MaybePromise<
+		Either<
+			LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'stuff', Rec>>,
+			Fallthrough
+		>
+	>;
 }
 
 export interface ErrorLoad<

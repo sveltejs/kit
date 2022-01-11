@@ -615,6 +615,16 @@ test.describe.parallel('Errors', () => {
 			expect(await page.innerHTML('h1')).toBe('401');
 		}
 	});
+
+	test('error thrown in handle results in a rendered error page', async ({ page }) => {
+		await page.goto('/errors/error-in-handle');
+
+		expect(await page.textContent('footer')).toBe('Custom layout');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Error in handle"'
+		);
+		expect(await page.innerHTML('h1')).toBe('500');
+	});
 });
 
 test.describe.parallel('ETags', () => {
@@ -1149,6 +1159,29 @@ test.describe.parallel('$app/stores', () => {
 		expect(oops).toBeUndefined();
 	});
 
+	test('page store contains stuff', async ({ page, clicknav }) => {
+		await page.goto('/store/stuff/www');
+
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'www' })
+		);
+
+		await clicknav('a[href="/store/stuff/zzz"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 456, page: 'zzz' })
+		);
+
+		await clicknav('a[href="/store/stuff/xxx"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = xxx' })
+		);
+
+		await clicknav('a[href="/store/stuff/yyy"]');
+		expect(await page.textContent('#store-stuff')).toBe(
+			JSON.stringify({ name: 'SvelteKit', value: 789, error: 'Params = yyy' })
+		);
+	});
+
 	test('navigating store contains from and to', async ({ app, page, javaScriptEnabled }) => {
 		await page.goto('/store/navigating/a');
 
@@ -1533,6 +1566,25 @@ test.describe.parallel('Routing', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
+	test('$page.url.hash is correctly set on page load', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/hashes/pagestore#target');
+			expect(await page.textContent('#window-hash')).toBe('#target');
+			expect(await page.textContent('#page-url-hash')).toBe('#target');
+		}
+	});
+
+	test('$page.url.hash is correctly set on navigation', async ({ page, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/routing/hashes/pagestore');
+			expect(await page.textContent('#window-hash')).toBe('');
+			expect(await page.textContent('#page-url-hash')).toBe('');
+			await page.click('[href="#target"]');
+			expect(await page.textContent('#window-hash')).toBe('#target');
+			expect(await page.textContent('#page-url-hash')).toBe('#target');
+		}
+	});
+
 	test('fallthrough', async ({ page }) => {
 		await page.goto('/routing/fallthrough-simple/invalid');
 		expect(await page.textContent('h1')).toBe('Page');
@@ -1546,6 +1598,17 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('h1')).toBe('camel is an animal');
 
 		await clicknav('[href="/routing/fallthrough-advanced/potato"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
+	test('dynamic fallthrough of layout', async ({ page, clicknav }) => {
+		await page.goto('/routing/fallthrough-layout/okay');
+		expect(await page.textContent('h1')).toBe('foo is okay');
+
+		await clicknav('[href="/routing/fallthrough-layout/ok"]');
+		expect(await page.textContent('h1')).toBe('xyz is ok');
+
+		await clicknav('[href="/routing/fallthrough-layout/notok"]');
 		expect(await page.textContent('h1')).toBe('404');
 	});
 
@@ -1651,6 +1714,11 @@ test.describe.parallel('Routing', () => {
 
 		await clicknav('[href="/routing/rest/path/three"]');
 		expect(await page.textContent('h1')).toBe('path: /routing/rest/path/three');
+	});
+
+	test('allows rest routes to have prefixes and suffixes', async ({ page }) => {
+		await page.goto('/routing/rest/complex/prefix-one/two/three');
+		expect(await page.textContent('h1')).toBe('parts: one/two/three');
 	});
 });
 

@@ -159,6 +159,9 @@ export class Renderer {
 
 		let error_args;
 
+		// url.hash is empty when coming from the server
+		url.hash = window.location.hash;
+
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
@@ -193,7 +196,14 @@ export class Renderer {
 
 			result = error_args
 				? await this._load_error(error_args)
-				: await this._get_navigation_result_from_branch({ url, params, branch, status, error });
+				: await this._get_navigation_result_from_branch({
+						url,
+						params,
+						stuff,
+						branch,
+						status,
+						error
+				  });
 		} catch (e) {
 			if (error) throw e;
 
@@ -417,12 +427,13 @@ export class Renderer {
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
+	 *   stuff: Record<string, any>;
 	 *   branch: Array<import('./types').BranchNode | undefined>;
 	 *   status: number;
 	 *   error?: Error;
 	 * }} opts
 	 */
-	async _get_navigation_result_from_branch({ url, params, branch, status, error }) {
+	async _get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
@@ -446,7 +457,7 @@ export class Renderer {
 		}
 
 		if (!this.current.url || url.href !== this.current.url.href) {
-			result.props.page = { url, params, status, error };
+			result.props.page = { url, params, status, error, stuff };
 
 			// TODO remove this for 1.0
 			/**
@@ -579,8 +590,9 @@ export class Renderer {
 
 			const loaded = await module.load.call(null, load_input);
 
-			// if the page component returns nothing from load, fall through
-			if (!loaded) return;
+			if (!loaded) {
+				throw new Error('load function must return a value');
+			}
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
@@ -657,9 +669,10 @@ export class Renderer {
 						stuff
 					});
 
-					const is_leaf = i === a.length - 1;
-
 					if (node && node.loaded) {
+						if (node.loaded.fallthrough) {
+							return;
+						}
 						if (node.loaded.error) {
 							status = node.loaded.status;
 							error = node.loaded.error;
@@ -676,10 +689,6 @@ export class Renderer {
 						if (node.loaded.stuff) {
 							stuff_changed = true;
 						}
-					} else if (is_leaf && module.load) {
-						// if the leaf node has a `load` function
-						// that returns nothing, fall through
-						return;
 					}
 				} else {
 					node = previous;
@@ -715,6 +724,13 @@ export class Renderer {
 								continue;
 							}
 
+							if (error_loaded && error_loaded.loaded && error_loaded.loaded.stuff) {
+								stuff = {
+									...stuff,
+									...error_loaded.loaded.stuff
+								};
+							}
+
 							branch = branch.slice(0, j + 1).concat(error_loaded);
 							break load;
 						} catch (e) {
@@ -740,7 +756,14 @@ export class Renderer {
 			}
 		}
 
-		return await this._get_navigation_result_from_branch({ url, params, branch, status, error });
+		return await this._get_navigation_result_from_branch({
+			url,
+			params,
+			stuff,
+			branch,
+			status,
+			error
+		});
 	}
 
 	/**
@@ -760,19 +783,25 @@ export class Renderer {
 			params,
 			stuff: {}
 		});
+		const error_node = await this._load_node({
+			status,
+			error,
+			module: await this.fallback[1],
+			url,
+			params,
+			stuff: (node && node.loaded && node.loaded.stuff) || {}
+		});
 
-		const branch = [
-			node,
-			await this._load_node({
-				status,
-				error,
-				module: await this.fallback[1],
-				url,
-				params,
-				stuff: (node && node.loaded && node.loaded.stuff) || {}
-			})
-		];
+		const branch = [node, error_node];
+		const stuff = { ...node?.loaded?.stuff, ...error_node?.loaded?.stuff };
 
-		return await this._get_navigation_result_from_branch({ url, params, branch, status, error });
+		return await this._get_navigation_result_from_branch({
+			url,
+			params,
+			stuff,
+			branch,
+			status,
+			error
+		});
 	}
 }

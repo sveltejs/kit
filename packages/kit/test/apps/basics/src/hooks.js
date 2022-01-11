@@ -31,7 +31,11 @@ export const handle = sequence(
 		return resolve(request);
 	},
 	async ({ request, resolve }) => {
-		const response = await resolve(request);
+		if (request.url.pathname === '/errors/error-in-handle') {
+			throw new Error('Error in handle');
+		}
+
+		const response = await resolve(request, { ssr: !request.url.pathname.startsWith('/no-ssr') });
 
 		return {
 			...response,

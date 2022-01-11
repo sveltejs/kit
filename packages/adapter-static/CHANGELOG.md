@@ -1,5 +1,17 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.26
+
+### Patch Changes
+
+- Log adapter-static output directories ([#3274](https://github.com/sveltejs/kit/pull/3274))
+
+## 1.0.0-next.25
+
+### Patch Changes
+
+- [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
 ## 1.0.0-next.24
 
 ### Patch Changes

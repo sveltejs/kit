@@ -79,15 +79,18 @@ export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	body?: Body;
 }
 
+export type MaybePromise<T> = T | Promise<T>;
+
+export interface Fallthrough {
+	fallthrough?: true;
+}
+
 export interface RequestHandler<
 	Locals = Record<string, any>,
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: Request<Locals, Input>):
-		| void
-		| EndpointOutput<Output>
-		| Promise<void | EndpointOutput<Output>>;
+	(request: Request<Locals, Input>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
 }
 ```
 
@@ -125,7 +128,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 
-> Returning nothing is equivalent to an explicit 404 response.
+> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
