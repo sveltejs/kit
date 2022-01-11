@@ -62,8 +62,6 @@ export function crawl(html) {
 			// parse opening tags
 			const start = ++i;
 			if (TAG_OPEN.test(html[start])) {
-				let tag;
-
 				while (i < html.length) {
 					if (!TAG_CHAR.test(html[i])) {
 						break;
@@ -72,7 +70,7 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				tag = html.slice(start, i).toUpperCase();
+				const tag = html.slice(start, i).toUpperCase();
 
 				if (tag === 'SCRIPT' || tag === 'STYLE') {
 					const close = '</' + tag;
@@ -88,7 +86,7 @@ export function crawl(html) {
 				/** @type {Record<string, string>} */
 				const attributes = {};
 
-				attr: while (i < html.length) {
+				while (i < html.length) {
 					const start = i;
 
 					const char = html[start];
@@ -96,7 +94,6 @@ export function crawl(html) {
 
 					if (ATTRIBUTE_OPEN.test(char)) {
 						i += 1;
-						let name;
 
 						while (i < html.length) {
 							if (!ATTRIBUTE_CHAR.test(html[i])) {
@@ -106,7 +103,7 @@ export function crawl(html) {
 							i += 1;
 						}
 
-						name = html.slice(start, i);
+						const name = html.slice(start, i);
 
 						while (WHITESPACE.test(html[i])) i += 1;
 
