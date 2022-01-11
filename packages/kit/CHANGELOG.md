@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.225
+
+### Patch Changes
+
+- add inlineStyleThreshold option, below which stylesheets are inlined into the page ([#2620](https://github.com/sveltejs/kit/pull/2620))
+
 ## 1.0.0-next.224
 
 ### Patch Changes
