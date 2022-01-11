@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.223
+
+### Patch Changes
+
+- Add methodOverride option for submitting PUT/PATCH/DELETE/etc with <form> elements ([#2989](https://github.com/sveltejs/kit/pull/2989))
+
 ## 1.0.0-next.222
 
 ### Patch Changes
