@@ -217,8 +217,8 @@ importers:
     specifiers:
       '@fontsource/fira-mono': ^4.5.0
       '@lukeed/uuid': ^2.0.0
-      '@sveltejs/adapter-auto': next
-      '@sveltejs/kit': next
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/kit': workspace:*
       cookie: ^0.4.1
       svelte: ^3.44.0
       svelte-preprocess: ^4.9.8
