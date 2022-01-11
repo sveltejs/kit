@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.224
+
+### Patch Changes
+
+- More robust crawling of prerendered pages ([#3288](https://github.com/sveltejs/kit/pull/3288))
+
 ## 1.0.0-next.223
 
 ### Patch Changes
