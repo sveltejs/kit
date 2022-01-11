@@ -75,6 +75,21 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			methodOverride: object({
+				parameter: string('_method'),
+				allowed: validate([], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					if (input.map((i) => i.toUpperCase()).includes('GET')) {
+						throw new Error(`${keypath} cannot contain "GET"`);
+					}
+
+					return input;
+				})
+			}),
+
 			package: object({
 				dir: string('package'),
 				// excludes all .d.ts and filename starting with _

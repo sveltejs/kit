@@ -159,6 +159,29 @@ The `body` property of the request object will be provided in the case of POST r
 - Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 - All other data will be provided as a `Uint8Array`
 
+#### HTTP Method Overrides
+
+HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
+
+```js
+// svelte.config.js
+export default {
+	kit: {
+		methodOverride: {
+			allowed: ['PUT', 'PATCH', 'DELETE']
+		}
+	}
+};
+```
+
+```html
+<form method="post" action="/todos/{id}?_method=PUT">
+	<!-- form elements -->
+</form>
+```
+
+> Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
+
 ### Private modules
 
 A filename that has a segment with a leading underscore, such as `src/routes/foo/_Private.svelte` or `src/routes/bar/_utils/cool-util.js`, is hidden from the router, but can be imported by files that are not.

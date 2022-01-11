@@ -35,6 +35,10 @@ test('fills in defaults', () => {
 			},
 			host: null,
 			hydrate: true,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
@@ -142,6 +146,10 @@ test('fills in partial blanks', () => {
 			},
 			host: null,
 			hydrate: true,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true

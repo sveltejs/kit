@@ -131,6 +131,10 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
+		methodOverride?: {
+			parameter?: string;
+			allowed?: string[];
+		};
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;

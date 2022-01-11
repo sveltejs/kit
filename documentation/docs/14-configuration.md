@@ -32,6 +32,10 @@ const config = {
 		},
 		host: null,
 		hydrate: true,
+		methodOverride: {
+			parameter: '_method',
+			allowed: []
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -133,6 +137,13 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### methodOverride
+
+See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+
+- `parameter` — query parameter name to use for passing the intended method value
+- `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### package
 

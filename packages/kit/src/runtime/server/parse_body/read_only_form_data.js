@@ -19,7 +19,7 @@ export function read_only_form_data() {
 	};
 }
 
-class ReadOnlyFormData {
+export class ReadOnlyFormData {
 	/** @type {Map<string, string[]>} */
 	#map;
 

@@ -11,6 +11,9 @@ const config = {
 				// the reload confuses Playwright
 				include: ['cookie', 'marked']
 			}
+		},
+		methodOverride: {
+			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };

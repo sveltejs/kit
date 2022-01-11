@@ -71,6 +71,7 @@ export class App {
 			hooks,
 			hydrate: ${s(config.kit.hydrate)},
 			manifest,
+			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
 			prefix: assets + '/${config.kit.appDir}/',
 			prerender: ${config.kit.prerender.enabled},

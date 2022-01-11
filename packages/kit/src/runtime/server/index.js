@@ -43,6 +43,28 @@ export async function respond(incoming, options, state = {}) {
 		locals: {}
 	};
 
+	const { parameter, allowed } = options.method_override;
+	const method_override = incoming.url.searchParams.get(parameter)?.toUpperCase();
+
+	if (method_override) {
+		if (request.method.toUpperCase() === 'POST') {
+			if (allowed.includes(method_override)) {
+				request.method = method_override;
+			} else {
+				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
+				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
+
+				return {
+					status: 400,
+					headers: {},
+					body
+				};
+			}
+		} else {
+			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
+		}
+	}
+
 	// TODO remove this for 1.0
 	/**
 	 * @param {string} property
