@@ -6,9 +6,7 @@ const COMMENT_CLOSE = '-->';
 
 const TAG_OPEN = /[a-zA-Z]/;
 const TAG_CHAR = /[a-zA-Z0-9]/;
-
-const ATTRIBUTE_OPEN = TAG_OPEN;
-const ATTRIBUTE_CHAR = TAG_CHAR;
+const ATTRIBUTE_NAME = /[^\t\n\f \/>"'=]/;
 
 const EXTERNAL = /\bexternal\b/;
 
@@ -99,11 +97,11 @@ export function crawl(html) {
 					const char = html[start];
 					if (char === '>') break;
 
-					if (ATTRIBUTE_OPEN.test(char)) {
+					if (ATTRIBUTE_NAME.test(char)) {
 						i += 1;
 
 						while (i < html.length) {
-							if (!ATTRIBUTE_CHAR.test(html[i])) {
+							if (!ATTRIBUTE_NAME.test(html[i])) {
 								break;
 							}
 
