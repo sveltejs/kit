@@ -90,8 +90,8 @@ export function crawl(html) {
 					}
 				}
 
-				/** @type {Record<string, string>} */
-				const attributes = {};
+				/** @type {Map<string, string>} */
+				const attributes = new Map();
 
 				while (i < html.length) {
 					const start = i;
@@ -146,7 +146,7 @@ export function crawl(html) {
 
 								const value = html.slice(start, i);
 
-								attributes[name.toLowerCase()] = value;
+								attributes.set(name.toLowerCase(), value);
 							}
 						}
 					}
@@ -154,18 +154,18 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				if (attributes.href) {
-					if (!EXTERNAL.test(attributes.rel)) {
-						hrefs.push(attributes.href);
+				if (attributes.has('href')) {
+					if (!EXTERNAL.test(attributes.get('rel'))) {
+						hrefs.push(attributes.get('href'));
 					}
 				}
 
-				if (attributes.src) {
-					hrefs.push(attributes.src);
+				if (attributes.has('src')) {
+					hrefs.push(attributes.get('src'));
 				}
 
-				if (attributes.srcset) {
-					const candidates = attributes.srcset.split(',');
+				if (attributes.has('srcset')) {
+					const candidates = attributes.get('srcset').split(',');
 					for (const candidate of candidates) {
 						const src = candidate.trim().split(WHITESPACE)[0];
 						hrefs.push(src);
