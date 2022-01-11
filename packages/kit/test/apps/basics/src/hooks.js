@@ -35,7 +35,7 @@ export const handle = sequence(
 			throw new Error('Error in handle');
 		}
 
-		const response = await resolve(request);
+		const response = await resolve(request, { ssr: !request.url.pathname.startsWith('/no-ssr') });
 
 		return {
 			...response,

@@ -56,7 +56,6 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		ssr: true,
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -216,10 +215,6 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 An object containing zero or more of the following values:
 
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### ssr
-
-Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
 ### target
 

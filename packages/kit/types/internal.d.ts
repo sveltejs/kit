@@ -44,11 +44,9 @@ export interface Logger {
 }
 
 export interface SSRComponent {
-	ssr?: boolean;
 	router?: boolean;
 	hydrate?: boolean;
 	prerender?: boolean;
-	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
 		render(props: Record<string, any>): {
@@ -143,7 +141,6 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
 	target: string;
 	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
 	trailing_slash: TrailingSlash;

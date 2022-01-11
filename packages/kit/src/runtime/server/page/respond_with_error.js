@@ -17,9 +17,18 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   status: number;
  *   error: Error;
+ *   ssr: boolean;
  * }} opts
  */
-export async function respond_with_error({ request, options, state, $session, status, error }) {
+export async function respond_with_error({
+	request,
+	options,
+	state,
+	$session,
+	status,
+	error,
+	ssr
+}) {
 	try {
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
@@ -66,15 +75,15 @@ export async function respond_with_error({ request, options, state, $session, st
 			$session,
 			page_config: {
 				hydrate: options.hydrate,
-				router: options.router,
-				ssr: options.ssr
+				router: options.router
 			},
 			stuff: error_loaded.stuff,
 			status,
 			error,
 			branch: [layout_loaded, error_loaded],
 			url: request.url,
-			params
+			params,
+			ssr
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

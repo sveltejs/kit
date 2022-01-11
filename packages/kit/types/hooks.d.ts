@@ -23,10 +23,14 @@ export interface GetSession<Locals = Record<string, any>, Body = unknown, Sessio
 	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
 }
 
+export interface ResolveOpts {
+	ssr?: boolean;
+}
+
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
 }
 
@@ -35,7 +39,10 @@ export interface Handle<Locals = Record<string, any>, Body = unknown> {
 export interface InternalHandle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse | undefined>;
+		resolve(
+			request: ServerRequest<Locals, Body>,
+			opts?: ResolveOpts
+		): MaybePromise<ServerResponse | undefined>;
 	}): MaybePromise<ServerResponse | undefined>;
 }
 

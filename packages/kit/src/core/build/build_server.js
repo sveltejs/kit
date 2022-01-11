@@ -78,7 +78,6 @@ export class App {
 			root,
 			service_worker: ${has_service_worker ? "'/service-worker.js'" : 'null'},
 			router: ${s(config.kit.router)},
-			ssr: ${s(config.kit.ssr)},
 			target: ${s(config.kit.target)},
 			template,
 			trailing_slash: ${s(config.kit.trailingSlash)}
