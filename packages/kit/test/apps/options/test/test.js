@@ -48,6 +48,7 @@ test.describe.parallel('base path', () => {
 			const ssr_style = await page.evaluate(() => document.querySelector('style[data-svelte]'));
 
 			if (javaScriptEnabled) {
+				// <style data-svelte> is removed upon hydration
 				expect(ssr_style).toBeNull();
 			} else {
 				expect(ssr_style).not.toBeNull();
