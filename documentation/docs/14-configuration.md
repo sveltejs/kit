@@ -139,8 +139,6 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
-<<<<<<< HEAD
-
 ### inlineCss
 
 Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
@@ -153,7 +151,6 @@ See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
-  > > > > > > > master
 
 ### package
 
