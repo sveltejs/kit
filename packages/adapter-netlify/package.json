@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.36",
+	"version": "1.0.0-next.38",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -35,6 +35,7 @@
 		"tiny-glob": "^0.2.9"
 	},
 	"devDependencies": {
+		"@netlify/functions": "^0.10.0",
 		"@rollup/plugin-commonjs": "^21.0.0",
 		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^13.0.5",

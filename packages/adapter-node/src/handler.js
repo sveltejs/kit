@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
@@ -14,39 +15,26 @@ const app = new App(manifest);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const serve_client = sirv(path.join(__dirname, '/client'), {
-	etag: true,
-	maxAge: 31536000,
-	immutable: true,
-	gzip: true,
-	brotli: true
-});
-
-const serve_static = sirv(path.join(__dirname, '/static'), {
-	etag: true,
-	maxAge: 31536000,
-	immutable: true,
-	gzip: true,
-	brotli: true
-});
-
-const serve_prerendered = sirv(path.join(__dirname, '/prerendered'), {
-	etag: true,
-	maxAge: 0,
-	gzip: true,
-	brotli: true
-});
+/**
+ * @param {string} path
+ * @param {number} max_age
+ * @param {boolean} immutable
+ */
+function serve(path, max_age, immutable = false) {
+	return (
+		fs.existsSync(path) &&
+		sirv(path, {
+			etag: true,
+			maxAge: max_age,
+			immutable,
+			gzip: true,
+			brotli: true
+		})
+	);
+}
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	let parsed;
-	try {
-		parsed = new URL(req.url || '', 'http://localhost');
-	} catch (e) {
-		res.statusCode = 400;
-		return res.end('Invalid URL');
-	}
-
 	let body;
 
 	try {
@@ -57,10 +45,9 @@ const ssr = async (req, res) => {
 	}
 
 	const rendered = await app.render({
+		url: req.url,
 		method: req.method,
 		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-		path: parsed.pathname,
-		query: parsed.searchParams,
 		rawBody: body
 	});
 
@@ -92,4 +79,11 @@ function sequence(handlers) {
 	};
 }
 
-export const handler = sequence([serve_client, serve_static, serve_prerendered, ssr]);
+export const handler = sequence(
+	[
+		serve(path.join(__dirname, '/client'), 31536000, true),
+		serve(path.join(__dirname, '/static'), 0),
+		serve(path.join(__dirname, '/prerendered'), 0),
+		ssr
+	].filter(Boolean)
+);

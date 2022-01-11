@@ -200,19 +200,53 @@ test('sorts routes correctly', () => {
 	);
 });
 
-test('disallows rest parameters inside segments', () => {
-	assert.throws(
-		() => {
-			create('samples/invalid-rest');
-		},
-		/** @param {Error} e */
-		(e) => {
-			return (
-				e.message ===
-				'Invalid route samples/invalid-rest/foo-[...rest]-bar.svelte — rest parameter must be a standalone segment'
-			);
-		}
+test('sorts routes with rest correctly', () => {
+	const { routes } = create('samples/rest');
+
+	assert.equal(
+		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
+		[
+			'samples/rest/a/[...rest].js',
+			[layout, 'samples/rest/a/[...rest].svelte'],
+			'samples/rest/b/[...rest].ts',
+			[layout, 'samples/rest/b/[...rest].svelte']
+		]
 	);
+});
+
+test('disallows rest parameters inside segments', () => {
+	const { routes } = create('samples/rest-prefix-suffix');
+
+	assert.equal(routes, [
+		{
+			type: 'page',
+			segments: [
+				{
+					dynamic: true,
+					rest: true,
+					content: 'prefix-[...rest]'
+				}
+			],
+			pattern: /^\/prefix-(.*?)\/?$/,
+			params: ['...rest'],
+			path: '',
+			a: ['components/layout.svelte', 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
+			b: ['components/error.svelte']
+		},
+		{
+			type: 'endpoint',
+			segments: [
+				{
+					dynamic: true,
+					rest: true,
+					content: '[...rest].json'
+				}
+			],
+			pattern: /^\/(.*?)\.json$/,
+			file: 'samples/rest-prefix-suffix/[...rest].json.js',
+			params: ['...rest']
+		}
+	]);
 });
 
 test('ignores files and directories with leading underscores', () => {

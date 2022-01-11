@@ -1,4 +1,4 @@
-import { router as router_ } from '../client/singletons.js';
+import { router as router_, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 const router = /** @type {import('../client/router').Router} */ (router_);
@@ -12,12 +12,22 @@ function guard(name) {
 	};
 }
 
+export const disableScrollHandling = import.meta.env.SSR
+	? guard('disableScrollHandling')
+	: disableScrollHandling_;
 export const goto = import.meta.env.SSR ? guard('goto') : goto_;
 export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate_;
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
 export const onBeforeNavigate = import.meta.env.SSR ? () => {} : onBeforeNavigate_;
 export const onNavigate = import.meta.env.SSR ? () => {} : onNavigate_;
+
+/**
+ * @type {import('$app/navigation').goto}
+ */
+async function disableScrollHandling_() {
+	renderer.disable_scroll_handling();
+}
 
 /**
  * @type {import('$app/navigation').goto}

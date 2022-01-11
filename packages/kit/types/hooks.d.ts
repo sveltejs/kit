@@ -1,11 +1,13 @@
-import { IncomingRequest, ParameterizedBody } from './app';
-import { MaybePromise, ResponseHeaders } from './helper';
+import { ParameterizedBody, RawBody } from './app';
+import { MaybePromise, RequestHeaders, ResponseHeaders } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
-	origin: string;
+export interface ServerRequest<Locals = Record<string, any>, Body = unknown> {
+	url: URL;
+	method: string;
+	headers: RequestHeaders;
+	rawBody: RawBody;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
 	locals: Locals;
@@ -13,7 +15,7 @@ export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
 
 export interface ServerResponse {
 	status: number;
-	headers: ResponseHeaders;
+	headers: Partial<ResponseHeaders>;
 	body?: StrictBody;
 }
 
@@ -21,10 +23,14 @@ export interface GetSession<Locals = Record<string, any>, Body = unknown, Sessio
 	(request: ServerRequest<Locals, Body>): MaybePromise<Session>;
 }
 
+export interface ResolveOpts {
+	ssr?: boolean;
+}
+
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse>;
+		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
 	}): MaybePromise<ServerResponse>;
 }
 
@@ -33,7 +39,10 @@ export interface Handle<Locals = Record<string, any>, Body = unknown> {
 export interface InternalHandle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): MaybePromise<ServerResponse | undefined>;
+		resolve(
+			request: ServerRequest<Locals, Body>,
+			opts?: ResolveOpts
+		): MaybePromise<ServerResponse | undefined>;
 	}): MaybePromise<ServerResponse | undefined>;
 }
 

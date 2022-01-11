@@ -38,6 +38,8 @@ export interface Builder {
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
+	appDir: string;
+
 	/**
 	 * Create entry points that map to individual functions
 	 * @param fn A function that groups a set of routes into an entry point
@@ -129,6 +131,11 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
+		inlineStyleThreshold?: number;
+		methodOverride?: {
+			parameter?: string;
+			allowed?: string[];
+		};
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -152,7 +159,6 @@ export interface Config {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
 		};
-		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);

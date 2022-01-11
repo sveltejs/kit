@@ -24,39 +24,38 @@ type ResponseHeaders = Record<string, string | string[]>;
 type RequestHeaders = Record<string, string>;
 
 export type RawBody = null | Uint8Array;
-export interface IncomingRequest {
-	method: string;
-	path: string;
-	query: URLSearchParams;
-	headers: RequestHeaders;
-	rawBody: RawBody;
-}
 
 type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
-	origin: string;
+
+export interface Request<Locals = Record<string, any>, Body = unknown> {
+	url: URL;
+	method: string;
+	headers: RequestHeaders;
+	rawBody: RawBody;
 	params: Record<string, string>;
 	body: ParameterizedBody<Body>;
-	locals: Locals; // populated by hooks handle
+	locals: Locals;
 }
 
 type StrictBody = string | Uint8Array;
-// ServerResponse is exported as Response
-export interface ServerResponse {
+
+export interface Response {
 	status: number;
 	headers: ResponseHeaders;
 	body?: StrictBody;
 }
 
+export interface ResolveOpts {
+	ssr?: boolean;
+}
+
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
 		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>): ServerResponse | Promise<ServerResponse>;
-	}): ServerResponse | Promise<ServerResponse>;
+		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
+	}): MaybePromise<ServerResponse>;
 }
 ```
 
@@ -81,6 +80,23 @@ export async function handle({ request, resolve }) {
 
 You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
 
+`resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
+
+- `ssr` — specifies whether the page will be loaded and rendered on the server.
+
+```js
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ request, resolve }) {
+	const response = await resolve(request, {
+		ssr: !request.path.startsWith('/admin')
+	});
+
+	return response;
+}
+```
+
+> Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). In most situations this is not recommended ([see appendix](#appendix-ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
+
 ### handleError
 
 If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
@@ -91,9 +107,8 @@ If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
 // Declaration types for handleError hook
-
 export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: ServerRequest<Locals, Body> }): void;
+	(input: { error: Error & { frame?: string }; request: Request<Locals, Body> }): void;
 }
 ```
 
@@ -115,9 +130,8 @@ If unimplemented, session is `{}`.
 
 ```ts
 // Declaration types for getSession hook
-
 export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
-	(request: ServerRequest<Locals, Body>): Session | Promise<Session>;
+	(request: Request<Locals, Body>): Session | Promise<Session>;
 }
 ```
 

@@ -1,5 +1,27 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.7
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- use posix to resolve relative path ([#3214](https://github.com/sveltejs/kit/pull/3214))
+
+## 1.0.0-next.5
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
 ## 1.0.0-next.4
 
 ### Patch Changes

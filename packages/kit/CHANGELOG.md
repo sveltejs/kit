@@ -1,5 +1,143 @@
 # @sveltejs/kit
 
+## 1.0.0-next.225
+
+### Patch Changes
+
+- add inlineStyleThreshold option, below which stylesheets are inlined into the page ([#2620](https://github.com/sveltejs/kit/pull/2620))
+
+## 1.0.0-next.224
+
+### Patch Changes
+
+- More robust crawling of prerendered pages ([#3288](https://github.com/sveltejs/kit/pull/3288))
+
+## 1.0.0-next.223
+
+### Patch Changes
+
+- Add methodOverride option for submitting PUT/PATCH/DELETE/etc with <form> elements ([#2989](https://github.com/sveltejs/kit/pull/2989))
+
+## 1.0.0-next.222
+
+### Patch Changes
+
+- Remove `config.kit.ssr` and `export const ssr` in favour of `ssr` parameter for `resolve` function in `handle` ([#2804](https://github.com/sveltejs/kit/pull/2804))
+
+## 1.0.0-next.221
+
+### Patch Changes
+
+- Add returned stuff from pages into \$page store ([#3252](https://github.com/sveltejs/kit/pull/3252))
+
+* Fallthrough is now explicit and layout components now also support fallthrough ([#3217](https://github.com/sveltejs/kit/pull/3217))
+
+## 1.0.0-next.220
+
+### Patch Changes
+
+- url hash is now properly reflected in page store ([#3273](https://github.com/sveltejs/kit/pull/3273))
+
+* Strip hash fragments from URLs during prerendering ([#3251](https://github.com/sveltejs/kit/pull/3251))
+
+- Allow prefixes and suffixes around rest parameters ([#3240](https://github.com/sveltejs/kit/pull/3240))
+
+## 1.0.0-next.219
+
+### Patch Changes
+
+- Render error page if error happens in handle hook ([#3239](https://github.com/sveltejs/kit/pull/3239))
+
+* [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
+## 1.0.0-next.218
+
+### Patch Changes
+
+- Expose appDir to adapters ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+* Replace %svelte.assets% with relative path ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
+## 1.0.0-next.217
+
+### Patch Changes
+
+- Improve error message when svelte.config.js is not found ([#3219](https://github.com/sveltejs/kit/pull/3219))
+
+* Support more text content types ([#2781](https://github.com/sveltejs/kit/pull/2781))
+
+## 1.0.0-next.216
+
+### Patch Changes
+
+- make html template optional for `svelte-kit package` ([#3161](https://github.com/sveltejs/kit/pull/3161))
+
+* Allow multiple different headers returned from one endpoint ([#3201](https://github.com/sveltejs/kit/pull/3201))
+
+## 1.0.0-next.215
+
+### Patch Changes
+
+- Fix hash change focus behaviour ([#3177](https://github.com/sveltejs/kit/pull/3177))
+
+## 1.0.0-next.214
+
+### Patch Changes
+
+- Breaking: Add disableScrollHandling function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+
+## 1.0.0-next.213
+
+### Patch Changes
+
+- Don't register service worker if there is none ([#3170](https://github.com/sveltejs/kit/pull/3170))
+
+* Fix url pathname for prerenders ([#3178](https://github.com/sveltejs/kit/pull/3178))
+
+## 1.0.0-next.212
+
+### Patch Changes
+
+- Add status and error to page store ([#3096](https://github.com/sveltejs/kit/pull/3096))
+
+* Fix dev prebundling scanner ([#3169](https://github.com/sveltejs/kit/pull/3169))
+
+- Sort rest endpoints before pages ([#3168](https://github.com/sveltejs/kit/pull/3168))
+
+## 1.0.0-next.211
+
+### Patch Changes
+
+- Use Vite's filewatcher in dev mode instead of creating a new one
+
+## 1.0.0-next.210
+
+### Patch Changes
+
+- Add path/query error getters in prod mode ([#3151](https://github.com/sveltejs/kit/pull/3151))
+
+## 1.0.0-next.209
+
+### Patch Changes
+
+- Bundle SSR renderer with app ([#3144](https://github.com/sveltejs/kit/pull/3144))
+
+## 1.0.0-next.208
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Replace config.kit.hostHeader with config.kit.headers.host, add config.kit.headers.protocol ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Replace page.host with page.origin ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* [fix] load CSS before JS preloads
+
+- Error if adapter provides wrong input to app.render ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+* Replace [request|page].[origin|path|query] with url object ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
 ## 1.0.0-next.207
 
 ### Patch Changes

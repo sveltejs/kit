@@ -32,6 +32,11 @@ const config = {
 		},
 		host: null,
 		hydrate: true,
+		inlineStyleThreshold: 0,
+		methodOverride: {
+			parameter: '_method',
+			allowed: []
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -56,7 +61,6 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		ssr: true,
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -109,7 +113,7 @@ Permissions-Policy: interest-cohort=()
 
 ### headers
 
-The [`page.origin`] property is derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
+The current page or endpoint's `url` is, in some environments, derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
 
 If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
 
@@ -134,6 +138,19 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### inlineStyleThreshold
+
+Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+
+> # This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+
+### methodOverride
+
+See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+
+- `parameter` — query parameter name to use for passing the intended method value
+- `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### package
 
@@ -216,10 +233,6 @@ Enables or disables the client-side [router](#ssr-and-javascript-router) app-wid
 An object containing zero or more of the following values:
 
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### ssr
-
-Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
 ### target
 

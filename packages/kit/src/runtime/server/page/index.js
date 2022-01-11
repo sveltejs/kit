@@ -7,26 +7,20 @@ import { respond } from './respond.js';
  * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
+ * @param {boolean} ssr
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_page(request, route, match, options, state) {
+export async function render_page(request, route, match, options, state, ssr) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return {
 			status: 404,
 			headers: {},
-			body: `Not found: ${request.path}`
+			body: `Not found: ${request.url.pathname}`
 		};
 	}
 
 	const params = route.params ? decode_params(route.params(match)) : {};
-
-	const page = {
-		origin: request.origin,
-		path: request.path,
-		query: request.query,
-		params
-	};
 
 	const $session = await options.hooks.getSession(request);
 
@@ -36,7 +30,8 @@ export async function render_page(request, route, match, options, state) {
 		state,
 		$session,
 		route,
-		page
+		params,
+		ssr
 	});
 
 	if (response) {

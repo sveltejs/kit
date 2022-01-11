@@ -10,6 +10,7 @@ import {
 	ServerResponse
 } from './hooks';
 import { Load } from './page';
+import { Either, Fallthrough } from './helper';
 
 type PageId = string;
 
@@ -43,11 +44,9 @@ export interface Logger {
 }
 
 export interface SSRComponent {
-	ssr?: boolean;
 	router?: boolean;
 	hydrate?: boolean;
 	prerender?: boolean;
-	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
 		render(props: Record<string, any>): {
@@ -120,7 +119,7 @@ export interface SSRNode {
 	/** external JS files */
 	js: string[];
 	/** inlined styles */
-	styles: string[];
+	styles?: Record<string, string>;
 }
 
 export interface SSRRenderOptions {
@@ -132,6 +131,7 @@ export interface SSRRenderOptions {
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;
+	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
@@ -142,9 +142,8 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
 	target: string;
-	template({ head, body }: { head: string; body: string }): string;
+	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
 	trailing_slash: TrailingSlash;
 }
 
@@ -219,13 +218,20 @@ export interface BuildData {
 	entries: string[];
 }
 
-export interface NormalizedLoadOutput {
-	status: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	maxage?: number;
-}
+export type NormalizedLoadOutput = Either<
+	{
+		status: number;
+		error?: Error;
+		redirect?: string;
+		props?: Record<string, any> | Promise<Record<string, any>>;
+		stuff?: Record<string, any>;
+		maxage?: number;
+	},
+	Fallthrough
+>;
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+export interface MethodOverride {
+	parameter: string;
+	allowed: string[];
+}

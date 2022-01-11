@@ -35,6 +35,11 @@ test('fills in defaults', () => {
 			},
 			host: null,
 			hydrate: true,
+			inlineStyleThreshold: 0,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
@@ -57,7 +62,7 @@ test('fills in defaults', () => {
 			},
 			protocol: null,
 			router: true,
-			ssr: true,
+			ssr: null,
 			target: null,
 			trailingSlash: 'never'
 		}
@@ -142,6 +147,11 @@ test('fills in partial blanks', () => {
 			},
 			host: null,
 			hydrate: true,
+			inlineStyleThreshold: 0,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
@@ -164,7 +174,7 @@ test('fills in partial blanks', () => {
 			},
 			protocol: null,
 			router: true,
-			ssr: true,
+			ssr: null,
 			target: null,
 			trailingSlash: 'never'
 		}

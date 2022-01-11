@@ -1,5 +1,43 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.61
+
+### Patch Changes
+
+- [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Don't cache non-hashed static assets in adapter-node ([#3193](https://github.com/sveltejs/kit/pull/3193))
+
+* Only set cache-control: immutable when appropriate ([#3196](https://github.com/sveltejs/kit/pull/3196))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Fix types ([#3181](https://github.com/sveltejs/kit/pull/3181))
+
+* Check if directory exists, before compressing ([#3179](https://github.com/sveltejs/kit/pull/3179))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- [fix] only add handlers for directories that exist ([#3148](https://github.com/sveltejs/kit/pull/3148))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+- Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
 ## 1.0.0-next.56
 
 ### Patch Changes

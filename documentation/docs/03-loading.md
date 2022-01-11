@@ -8,23 +8,23 @@ A component that defines a page or a layout can export a `load` function that ru
 // Declaration types for Loading
 // * declarations that are not exported are for internal use
 
+export interface Fallthrough {
+	fallthrough?: true;
+}
+
 export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > {
-	page: {
-		origin: string;
-		path: string;
-		params: PageParams;
-		query: URLSearchParams;
-	};
+	url: URL;
+	params: PageParams;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	stuff: Stuff;
 }
 
-export interface LoadOutput<
+export type LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
 	Stuff extends Record<string, any> = Record<string, any>
 > {
@@ -34,7 +34,7 @@ export interface LoadOutput<
 	props?: Props;
 	stuff?: Stuff;
 	maxage?: number;
-}
+} | Fallthrough
 ```
 
 Our example blog page might contain a `load` function like the following:
@@ -42,8 +42,8 @@ Our example blog page might contain a `load` function like the following:
 ```html
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export async function load({ page, fetch, session, stuff }) {
-		const url = `/blog/${page.params.slug}.json`;
+	export async function load({ params, fetch, session, stuff }) {
+		const url = `/blog/${params.slug}.json`;
 		const res = await fetch(url);
 
 		if (res.ok) {
@@ -66,7 +66,7 @@ Our example blog page might contain a `load` function like the following:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
-If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
@@ -88,20 +88,28 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `stuff` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, stuff })` function will re-run every time `session` or `stuff` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
+The `load` function receives an object containing five fields — `url`, `params`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
-#### page
+> Note that destructuring parameters in the function declaration is enough to count as using them.
 
-`page` is an `{ origin, path, params, query }` object where `origin` is the URL's origin, `path` is its pathname, `params` is derived from `path` and the route filename, and `query` is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams). Mutating `page` does not update the current URL; you should instead navigate using [`goto`](#modules-$app-navigation).
+#### url
 
-So if the example above was `src/routes/blog/[slug].svelte` and the URL was `https://example.com/blog/some-post?foo=bar&baz&bizz=a&bizz=b`, the following would be true:
+`url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams`.
 
-- `page.origin === 'https://example.com'`
-- `page.path === '/blog/some-post'`
-- `page.params.slug === 'some-post'`
-- `page.query.get('foo') === 'bar'`
-- `page.query.has('baz')`
-- `page.query.getAll('bizz') === ['a', 'b']`
+> In some environments this is derived from request headers, which you [may need to configure](#configuration-headers), during server-side rendering
+
+#### params
+
+`params` is derived from `url.pathname` and the route filename.
+
+For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+
+```js
+{
+	"b": "x",
+	"c": "y/z"
+}
+```
 
 #### fetch
 
@@ -149,4 +157,4 @@ If the `load` function returns a `props` object, the props will be passed to the
 
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
-This only applies to layout components, _not_ page components.
+The combined `stuff` is available to components using the [page store](#modules-$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.

@@ -1,10 +1,10 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
-	export function load({ page }) {
+	export function load({ url, params }) {
 		return {
 			props: {
-				path: page.path,
-				slug: page.params.slug
+				path: url.pathname,
+				slug: params.slug
 			}
 		};
 	}
@@ -22,4 +22,4 @@
 
 <h1>dynamic</h1>
 <h2>{path}: {slug}</h2>
-<h3>{$page.path}: {$page.params.slug}</h3>
+<h3>{$page.url.pathname}: {$page.params.slug}</h3>

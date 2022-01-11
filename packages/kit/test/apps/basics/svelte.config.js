@@ -1,10 +1,6 @@
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		headers: {
-			host: 'x-forwarded-host',
-			protocol: 'x-forwarded-proto'
-		},
 		vite: {
 			build: {
 				minify: false
@@ -15,6 +11,9 @@ const config = {
 				// the reload confuses Playwright
 				include: ['cookie', 'marked']
 			}
+		},
+		methodOverride: {
+			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };

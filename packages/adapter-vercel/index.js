@@ -1,11 +1,9 @@
 import { writeFileSync } from 'fs';
-import { relative } from 'path';
+import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
 
-// By writing to .output, we opt in to the Vercel filesystem API:
-// https://vercel.com/docs/file-system-api
-const VERCEL_OUTPUT = '.output';
+const dir = '.vercel_build_output';
 
 /** @type {import('.')} **/
 export default function () {
@@ -15,18 +13,25 @@ export default function () {
 		async adapt(builder) {
 			const tmp = builder.getBuildDirectory('vercel-tmp');
 
-			builder.rimraf(VERCEL_OUTPUT);
+			builder.rimraf(dir);
 			builder.rimraf(tmp);
 
+			const files = fileURLToPath(new URL('./files', import.meta.url));
+
+			const dirs = {
+				static: `${dir}/static`,
+				lambda: `${dir}/functions/node/render`
+			};
+
 			builder.log.minor('Prerendering static pages...');
+
 			await builder.prerender({
-				dest: `${VERCEL_OUTPUT}/static`
+				dest: `${dir}/static`
 			});
 
 			builder.log.minor('Generating serverless function...');
 
-			const files = fileURLToPath(new URL('./files', import.meta.url));
-			const relativePath = relative(tmp, builder.getServerDirectory());
+			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
 			builder.copy(files, tmp, {
 				replace: {
@@ -44,33 +49,39 @@ export default function () {
 
 			await esbuild.build({
 				entryPoints: [`${tmp}/entry.js`],
-				outfile: `${VERCEL_OUTPUT}/server/pages/__render.js`,
+				outfile: `${dirs.lambda}/index.js`,
 				target: 'node14',
 				bundle: true,
 				platform: 'node'
 			});
 
-			writeFileSync(
-				`${VERCEL_OUTPUT}/server/pages/package.json`,
-				JSON.stringify({ type: 'commonjs' })
-			);
+			writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
 
 			builder.log.minor('Copying assets...');
-			builder.writeClient(`${VERCEL_OUTPUT}/static`);
-			builder.writeStatic(`${VERCEL_OUTPUT}/static`);
 
-			builder.log.minor('Writing manifests...');
+			builder.writeStatic(dirs.static);
+			builder.writeClient(dirs.static);
+
+			builder.log.minor('Writing routes...');
+
+			builder.mkdirp(`${dir}/config`);
 			writeFileSync(
-				`${VERCEL_OUTPUT}/routes-manifest.json`,
-				JSON.stringify({
-					version: 3,
-					dynamicRoutes: [
-						{
-							page: '/__render',
-							regex: '^/.*'
+				`${dir}/config/routes.json`,
+				JSON.stringify([
+					{
+						src: `/${builder.appDir}/.+`,
+						headers: {
+							'cache-control': 'public, immutable, max-age=31536000'
 						}
-					]
-				})
+					},
+					{
+						handle: 'filesystem'
+					},
+					{
+						src: '/.*',
+						dest: '.vercel/functions/render'
+					}
+				])
 			);
 		}
 	};

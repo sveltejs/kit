@@ -1,5 +1,23 @@
 # create-svelte
 
+## 2.0.0-next.94
+
+### Patch Changes
+
+- Add methodOverride option for submitting PUT/PATCH/DELETE/etc with <form> elements ([#2989](https://github.com/sveltejs/kit/pull/2989))
+
+## 2.0.0-next.93
+
+### Patch Changes
+
+- Update template files to include %svelte.assets% ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
+## 2.0.0-next.92
+
+### Patch Changes
+
+- Update template to use new page/request APIs ([#3146](https://github.com/sveltejs/kit/pull/3146))
+
 ## 2.0.0-next.91
 
 ### Patch Changes

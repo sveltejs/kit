@@ -1,18 +1,12 @@
-import { InferValue, MaybePromise, Rec } from './helper';
-
-export interface Page<Params extends Record<string, string> = Record<string, string>> {
-	origin: string;
-	path: string;
-	params: Params;
-	query: URLSearchParams;
-}
+import { InferValue, MaybePromise, Rec, Either, Fallthrough } from './helper';
 
 export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
 	Stuff extends Rec = Rec,
 	Session = any
 > {
-	page: Page<PageParams>;
+	url: URL;
+	params: PageParams;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	stuff: Stuff;
@@ -57,10 +51,12 @@ export interface Load<
 			InferValue<Input, 'stuff', Rec>,
 			InferValue<Input, 'session', any>
 		>
-	): MaybePromise<void | LoadOutput<
-		InferValue<Output, 'props', Rec>,
-		InferValue<Output, 'stuff', Rec>
-	>>;
+	): MaybePromise<
+		Either<
+			LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'stuff', Rec>>,
+			Fallthrough
+		>
+	>;
 }
 
 export interface ErrorLoad<

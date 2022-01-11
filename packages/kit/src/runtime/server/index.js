@@ -10,22 +10,25 @@ import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
-	if (incoming.path !== '/' && options.trailing_slash !== 'ignore') {
-		const has_trailing_slash = incoming.path.endsWith('/');
+	if (incoming.url.pathname !== '/' && options.trailing_slash !== 'ignore') {
+		const has_trailing_slash = incoming.url.pathname.endsWith('/');
 
 		if (
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!(incoming.path.split('/').pop() || '').includes('.'))
+				!(incoming.url.pathname.split('/').pop() || '').includes('.'))
 		) {
-			const path = has_trailing_slash ? incoming.path.slice(0, -1) : incoming.path + '/';
-			const q = incoming.query.toString();
+			incoming.url.pathname = has_trailing_slash
+				? incoming.url.pathname.slice(0, -1)
+				: incoming.url.pathname + '/';
+
+			if (incoming.url.search === '?') incoming.url.search = '';
 
 			return {
 				status: 301,
 				headers: {
-					location: options.paths.base + path + (q ? `?${q}` : '')
+					location: incoming.url.pathname + incoming.url.search
 				}
 			};
 		}
@@ -40,21 +43,69 @@ export async function respond(incoming, options, state = {}) {
 		locals: {}
 	};
 
+	const { parameter, allowed } = options.method_override;
+	const method_override = incoming.url.searchParams.get(parameter)?.toUpperCase();
+
+	if (method_override) {
+		if (request.method.toUpperCase() === 'POST') {
+			if (allowed.includes(method_override)) {
+				request.method = method_override;
+			} else {
+				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
+				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
+
+				return {
+					status: 400,
+					headers: {},
+					body
+				};
+			}
+		} else {
+			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
+		}
+	}
+
+	// TODO remove this for 1.0
+	/**
+	 * @param {string} property
+	 * @param {string} replacement
+	 */
+	const print_error = (property, replacement) => {
+		Object.defineProperty(request, property, {
+			get: () => {
+				throw new Error(`request.${property} has been replaced by request.url.${replacement}`);
+			}
+		});
+	};
+
+	print_error('origin', 'origin');
+	print_error('path', 'pathname');
+	print_error('query', 'searchParams');
+
+	let ssr = true;
+
 	try {
 		return await options.hooks.handle({
 			request,
-			resolve: async (request) => {
+			resolve: async (request, opts) => {
+				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
+
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
+						url: request.url,
+						params: request.params,
 						options,
 						$session: await options.hooks.getSession(request),
-						page_config: { ssr: false, router: true, hydrate: true },
+						page_config: { router: true, hydrate: true },
+						stuff: {},
 						status: 200,
-						branch: []
+						branch: [],
+						ssr: false
 					});
 				}
 
-				const decoded = decodeURI(request.path);
+				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
+
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
@@ -62,7 +113,7 @@ export async function respond(incoming, options, state = {}) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route, match)
-							: await render_page(request, route, match, options, state);
+							: await render_page(request, route, match, options, state, ssr);
 
 					if (response) {
 						// inject ETags for 200 responses
@@ -102,20 +153,36 @@ export async function respond(incoming, options, state = {}) {
 						state,
 						$session,
 						status: 404,
-						error: new Error(`Not found: ${request.path}`)
+						error: new Error(`Not found: ${request.url.pathname}`),
+						ssr
 					});
 				}
 			}
 		});
-	} catch (/** @type {unknown} */ err) {
-		const e = coalesce_to_error(err);
+	} catch (/** @type {unknown} */ e) {
+		const error = coalesce_to_error(e);
 
-		options.handle_error(e, request);
+		options.handle_error(error, request);
 
-		return {
-			status: 500,
-			headers: {},
-			body: options.dev ? e.stack : e.message
-		};
+		try {
+			const $session = await options.hooks.getSession(request);
+			return await respond_with_error({
+				request,
+				options,
+				state,
+				$session,
+				status: 500,
+				error,
+				ssr
+			});
+		} catch (/** @type {unknown} */ e) {
+			const error = coalesce_to_error(e);
+
+			return {
+				status: 500,
+				headers: {},
+				body: options.dev ? error.stack : error.message
+			};
+		}
 	}
 }
