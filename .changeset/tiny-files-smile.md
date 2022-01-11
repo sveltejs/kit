@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[feat] inlineCss option
+add inlineStyleThreshold option, below which stylesheets are inlined into the page
