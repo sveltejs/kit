@@ -1,64 +1,19 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, URL } from 'url';
-import { mkdirp } from '../../utils/filesystem.js';
-import { __fetch_polyfill } from '../../install-fetch.js';
-import { SVELTE_KIT } from '../constants.js';
-import { get_single_valued_header } from '../../utils/http.js';
-import { is_root_relative, resolve } from '../../utils/url.js';
+import { mkdirp } from '../../../utils/filesystem.js';
+import { __fetch_polyfill } from '../../../install-fetch.js';
+import { SVELTE_KIT } from '../../constants.js';
+import { get_single_valued_header } from '../../../utils/http.js';
+import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
+import { crawl } from './crawl.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
  * @typedef {import('types/config').PrerenderOnErrorValue} OnError
  * @typedef {import('types/internal').Logger} Logger
  */
-
-/** @param {string} html */
-function clean_html(html) {
-	return html
-		.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gm, '')
-		.replace(/(<script[\s\S]*?>)[\s\S]*?<\/script>/gm, '$1</' + 'script>')
-		.replace(/(<style[\s\S]*?>)[\s\S]*?<\/style>/gm, '$1</' + 'style>')
-		.replace(/<!--[\s\S]*?-->/gm, '');
-}
-
-/** @param {string} attrs */
-export function get_href(attrs) {
-	const match = /(?:[\s'"]|^)href\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
-	return match && (match[1] || match[2] || match[3]);
-}
-
-/** @param {string} attrs */
-function get_src(attrs) {
-	const match = /(?:[\s'"]|^)src\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/.exec(attrs);
-	return match && (match[1] || match[2] || match[3]);
-}
-
-/** @param {string} attrs */
-export function is_rel_external(attrs) {
-	const match = /rel\s*=\s*(?:["'][^>]*(external)[^>]*["']|(external))/.exec(attrs);
-	return !!match;
-}
-
-/** @param {string} attrs */
-function get_srcset_urls(attrs) {
-	const results = [];
-	// Note that the srcset allows any ASCII whitespace, including newlines.
-	const match = /([\s'"]|^)srcset\s*=\s*(?:"(.*?)"|'(.*?)'|([^\s>]*))/s.exec(attrs);
-	if (match) {
-		const attr_content = match[1] || match[2] || match[3];
-		// Parse the content of the srcset attribute.
-		// The regexp is modelled after the srcset specs (https://html.spec.whatwg.org/multipage/images.html#srcset-attribute)
-		// and should cover most reasonable cases.
-		const regex = /\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/gm;
-		let sub_matches;
-		while ((sub_matches = regex.exec(attr_content))) {
-			results.push(sub_matches[1]);
-		}
-	}
-	return results;
-}
 
 /** @type {(errorDetails: Parameters<PrerenderErrorHandler>[0] ) => string} */
 function errorDetailsToString({ status, path, referrer, referenceType }) {
@@ -267,36 +222,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				const cleaned = clean_html(/** @type {string} */ (rendered.body));
-
-				let match;
-				const pattern = /<(a|img|link|source)\s+([\s\S]+?)>/gm;
-
-				const hrefs = [];
-
-				while ((match = pattern.exec(cleaned))) {
-					const element = match[1];
-					const attrs = match[2];
-
-					if (element === 'a' || element === 'link') {
-						if (is_rel_external(attrs)) continue;
-
-						let href = get_href(attrs);
-						if (!href) continue;
-
-						const i = href.indexOf('#');
-						href = i < 0 ? href : href.substring(0, i);
-						hrefs.push(href);
-					} else {
-						if (element === 'img') {
-							hrefs.push(get_src(attrs));
-						}
-						hrefs.push(...get_srcset_urls(attrs));
-					}
-				}
-
-				for (const href of hrefs) {
-					if (!href) continue;
+				for (const href of crawl(/** @type {string} */ (rendered.body))) {
+					if (href.startsWith('data:')) continue;
 
 					const resolved = resolve(path, href);
 					if (!is_root_relative(resolved)) continue;

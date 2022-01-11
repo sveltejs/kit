@@ -923,6 +923,52 @@ test.describe.parallel('Load', () => {
 	});
 });
 
+test.describe.parallel('Method overrides', () => {
+	test('http method is overridden via URL parameter', async ({ page }) => {
+		await page.goto('/method-override');
+
+		let val;
+
+		// Check initial value
+		val = await page.textContent('h1');
+		expect('').toBe(val);
+
+		await page.click('"PATCH"');
+		val = await page.textContent('h1');
+		expect('PATCH').toBe(val);
+
+		await page.click('"DELETE"');
+		val = await page.textContent('h1');
+		expect('DELETE').toBe(val);
+	});
+
+	test('GET method is not overridden', async ({ page }) => {
+		await page.goto('/method-override');
+		await page.click('"No Override From GET"');
+
+		const val = await page.textContent('h1');
+		expect('GET').toBe(val);
+	});
+
+	test('400 response when trying to override POST with GET', async ({ page }) => {
+		await page.goto('/method-override');
+		await page.click('"No Override To GET"');
+
+		expect(await page.innerHTML('pre')).toBe(
+			'_method=GET is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+		);
+	});
+
+	test('400 response when override method not in allowed methods', async ({ page }) => {
+		await page.goto('/method-override');
+		await page.click('"No Override To CONNECT"');
+
+		expect(await page.innerHTML('pre')).toBe(
+			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+		);
+	});
+});
+
 test.describe.parallel('Nested layouts', () => {
 	test('renders a nested layout', async ({ page }) => {
 		await page.goto('/nested-layout');

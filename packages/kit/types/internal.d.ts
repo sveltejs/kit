@@ -131,6 +131,7 @@ export interface SSRRenderOptions {
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;
+	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
@@ -230,3 +231,7 @@ export type NormalizedLoadOutput = Either<
 >;
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+export interface MethodOverride {
+	parameter: string;
+	allowed: string[];
+}
