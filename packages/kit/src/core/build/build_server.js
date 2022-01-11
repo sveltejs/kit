@@ -290,7 +290,7 @@ export async function build_server(
 		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 
 		const exports = [
-			`export { module };`,
+			'export { module };',
 			`export const entry = '${client.vite_manifest[component].file}';`,
 			`export const js = ${s(Array.from(js))};`,
 			`export const css = ${s(Array.from(css))};`
