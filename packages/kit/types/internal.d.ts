@@ -231,12 +231,7 @@ export type NormalizedLoadOutput = Either<
 >;
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
-
-export type MethodOverrideStrategy = 'both' | 'url_parameter' | 'form_data';
-
 export interface MethodOverride {
-	enabled?: boolean;
-	key?: string;
-	allowedMethods?: string[];
-	strategy?: MethodOverrideStrategy;
+	parameter: string;
+	allowed: string[];
 }

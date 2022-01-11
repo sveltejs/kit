@@ -38,10 +38,8 @@ test('load default config (esm)', async () => {
 			host: null,
 			hydrate: true,
 			methodOverride: {
-				enabled: false,
-				key: '_method',
-				allowedMethods: ['PUT', 'PATCH', 'DELETE'],
-				strategy: 'both'
+				parameter: '_method',
+				allowed: []
 			},
 			package: {
 				dir: 'package',

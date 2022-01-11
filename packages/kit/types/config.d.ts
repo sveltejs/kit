@@ -1,6 +1,6 @@
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
-import { HttpMethod, Logger, MethodOverride, RouteSegment, TrailingSlash } from './internal';
+import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
 export interface RouteDefinition {
 	type: 'page' | 'endpoint';
@@ -131,7 +131,10 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
-		methodOverride?: MethodOverride;
+		methodOverride?: {
+			parameter?: string;
+			allowed?: string[];
+		};
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;

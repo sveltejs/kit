@@ -76,9 +76,8 @@ const options = object(
 			hydrate: boolean(true),
 
 			methodOverride: object({
-				enabled: boolean(false),
-				key: string('_method'),
-				allowedMethods: validate(['PUT', 'PATCH', 'DELETE'], (input, keypath) => {
+				parameter: string('_method'),
+				allowed: validate([], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
 						throw new Error(`${keypath} must be an array of strings`);
 					}
@@ -88,10 +87,6 @@ const options = object(
 					}
 
 					return input;
-				}),
-				strategy: validate('both', (input, keypath) => {
-					if (['both', 'url_parameter', 'form_data'].includes(input)) return input;
-					throw new Error(`${keypath} must be either "both", "url_parameter" or "form_data"`);
 				})
 			}),
 

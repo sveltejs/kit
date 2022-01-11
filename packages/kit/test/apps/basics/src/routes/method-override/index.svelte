@@ -31,12 +31,12 @@
 	<button>No Override From GET</button>
 </form>
 
-<form action="/method-override/fetch.json" method="POST">
-	<input type="hidden" name="_method" value="PATCH" />
-	<button>PATCH Via Hidden Input</button>
+<form action="/method-override/fetch.json?_method=GET" method="POST">
+	<input name="methodoverride" />
+	<button>No Override To GET</button>
 </form>
 
-<form action="/method-override/fetch.json" method="GET">
-	<input type="hidden" name="_method" value="POST" />
-	<button>No Override From GET Via Hidden Input</button>
+<form action="/method-override/fetch.json?_method=CONNECT" method="POST">
+	<input name="methodoverride" />
+	<button>No Override To CONNECT</button>
 </form>

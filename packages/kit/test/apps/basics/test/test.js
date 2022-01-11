@@ -944,26 +944,28 @@ test.describe.parallel('Method overrides', () => {
 
 	test('GET method is not overridden', async ({ page }) => {
 		await page.goto('/method-override');
-
 		await page.click('"No Override From GET"');
+
 		const val = await page.textContent('h1');
 		expect('GET').toBe(val);
 	});
 
-	test('http method is overridden via hidden input', async ({ page }) => {
+	test('400 response when trying to override POST with GET', async ({ page }) => {
 		await page.goto('/method-override');
+		await page.click('"No Override To GET"');
 
-		await page.click('"PATCH Via Hidden Input"');
-		const val = await page.textContent('h1');
-		expect('PATCH').toBe(val);
+		expect(await page.innerHTML('pre')).toBe(
+			'A POST request cannot be overridden with GET'
+		);
 	});
 
-	test('GET method is not overridden via hidden input', async ({ page }) => {
+	test('400 response when override method not in allowed methods', async ({ page }) => {
 		await page.goto('/method-override');
+		await page.click('"No Override To CONNECT"');
 
-		await page.click('"No Override From GET Via Hidden Input"');
-		const val = await page.textContent('h1');
-		expect('GET').toBe(val);
+		expect(await page.innerHTML('pre')).toBe(
+			'Form method override provided "CONNECT" is not included in list of allowed methods ("PUT", "PATCH", "DELETE")'
+		);
 	});
 });
 

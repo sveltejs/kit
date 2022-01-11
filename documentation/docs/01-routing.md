@@ -163,40 +163,23 @@ The `body` property of the request object will be provided in the case of POST r
 
 In contrast to `fetch` the only valid methods for a `<form>` are GET and POST. Svelte allows you to override the `<form>` method to workaround this limitation if you need to. By using fetch and `<form>` interchangeably with the same endpoint, your application can continue to work when JavaScript fails or is disabled.
 
-- Disabled by default to prevent unintended behavior for those who don't need it
-- The original method on the form must be `POST` and cannot be overridden with `GET`
-- There are 2 different strategies available for overriding form methods
-  - `url_parameter`: Pass the key and desired method as a query string
-  - `form_data`: Pass as a hidden field within the form where the field name is the key and the field value is the desired method
-- `strategy: 'both'` will enable both methods (`url_parameter` takes precendence in the event that both strategies are used within the same form)
+Specify the override method via a query string value, with the key being what's defined in the [`parameter`](#configuration-methodoverride) config option. The original method on the form must be `POST` and cannot be overridden with `GET`. Define which methods can override the `POST` using the [`allowed`](#configuration-methodoverride) config option. Default is an empty array
 
 ```js
 // svelte.config.js
 export default {
 	kit: {
 		methodOverride: {
-			enabled: true,
-			key: '_method',
-			allowedMethods: ['PUT', 'PATCH', 'DELETE'],
-			strategy: 'both'
+			parameter: '_method',
+			allowed: ['PUT', 'PATCH', 'DELETE'],
 		},
 	}
 };
 ```
 
 ```html
-<!-- strategy: url_parameter -->
 <form method="post" action="/todos/{id}?_method=PUT">
   <!-- form elements -->
-</form>
-```
-
-OR
-
-```html
-<!-- strategy: form_data -->
-<form method="post" action="/todos/{id}">
-	<input type="hidden" name="_method" value="PUT">
 </form>
 ```
 

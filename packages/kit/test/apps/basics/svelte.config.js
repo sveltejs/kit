@@ -13,7 +13,7 @@ const config = {
 			}
 		},
 		methodOverride: {
-			enabled: true
+			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };

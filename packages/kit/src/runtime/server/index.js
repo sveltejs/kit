@@ -7,7 +7,6 @@ import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
-import { ReadOnlyFormData } from './parse_body/read_only_form_data.js';
 
 /** @type {import('@sveltejs/kit/ssr').Respond} */
 export async function respond(incoming, options, state = {}) {
@@ -44,36 +43,25 @@ export async function respond(incoming, options, state = {}) {
 		locals: {}
 	};
 
-	if (options.method_override.enabled && request.method.toUpperCase() === 'POST') {
-		const { strategy = '', key: method_key = '', allowedMethods = [] } = options.method_override;
-		let new_request_method;
+	const { parameter, allowed } = options.method_override;
 
-		if (
-			['both', 'form_data'].includes(strategy) &&
-			request.body instanceof ReadOnlyFormData &&
-			request.body.has(method_key)
-		) {
-			new_request_method = /** @type {string} */ (request.body.get(method_key)).toUpperCase();
-		}
+	if (request.method.toUpperCase() === 'POST' && incoming.url.searchParams.has(parameter)) {
+		const new_request_method = /** @type {string} */ (
+			incoming.url.searchParams.get(parameter)
+		).toUpperCase();
 
-		if (['both', 'url_parameter'].includes(strategy) && incoming.url.searchParams.has(method_key)) {
-			new_request_method = /** @type {string} */ (
-				incoming.url.searchParams.get(method_key)
-			).toUpperCase();
-		}
+		if (allowed.includes(new_request_method)) {
+			request.method = new_request_method;
+		} else {
+			const body = new_request_method === 'GET' ?
+				'A POST request cannot be overridden with GET' :
+				`Form method override provided "${new_request_method}" is not included in list of allowed methods ("${allowed.join('", "')}")`;
 
-		if (new_request_method) {
-			if (allowedMethods.includes(new_request_method)) {
-				request.method = new_request_method;
-			} else {
-				return {
-					status: 400,
-					headers: {},
-					body: `Form method override provided ("${new_request_method}") is not included in list of allowed methods ("${allowedMethods.join(
-						'", "'
-					)}")`
-				};
-			}
+			return {
+				status: 400,
+				headers: {},
+				body
+			};
 		}
 	}
 
