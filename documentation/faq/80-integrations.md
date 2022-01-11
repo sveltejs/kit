@@ -40,9 +40,7 @@ See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#con
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
-Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. [This currently occurs even when SSR is disabled](https://github.com/sveltejs/kit/issues/754).
-
-If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
+If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
 ```js
 import { browser } from '$app/env';
