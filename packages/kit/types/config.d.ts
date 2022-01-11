@@ -131,6 +131,7 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
+		inlineStyleThreshold?: number;
 		methodOverride?: {
 			parameter?: string;
 			allowed?: string[];

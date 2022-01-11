@@ -263,16 +263,23 @@ export async function build_server(
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
 
-	const styles_lookup = new Map();
-	if (config.kit.amp) {
-		client.assets.forEach((asset) => {
-			if (asset.fileName.endsWith('.css')) {
-				styles_lookup.set(asset.fileName, asset.source);
-			}
-		});
-	}
-
 	mkdirp(`${output_dir}/server/nodes`);
+	mkdirp(`${output_dir}/server/stylesheets`);
+
+	const stylesheet_lookup = new Map();
+
+	client.assets.forEach((asset) => {
+		if (asset.fileName.endsWith('.css')) {
+			if (config.kit.amp || asset.source.length < config.kit.inlineStyleThreshold) {
+				const index = stylesheet_lookup.size;
+				const file = `${output_dir}/server/stylesheets/${index}.js`;
+
+				fs.writeFileSync(file, `// ${asset.fileName}\nexport default ${s(asset.source)};`);
+				stylesheet_lookup.set(asset.fileName, index);
+			}
+		}
+	});
+
 	manifest_data.components.forEach((component, i) => {
 		const file = `${output_dir}/server/nodes/${i}.js`;
 
@@ -280,17 +287,32 @@ export async function build_server(
 		const css = new Set();
 		find_deps(component, client.vite_manifest, js, css);
 
-		const styles = config.kit.amp && Array.from(css).map((file) => styles_lookup.get(file));
+		const imports = [`import * as module from '../${vite_manifest[component].file}';`];
 
-		const node = `import * as module from '../${vite_manifest[component].file}';
-			export { module };
-			export const entry = '${client.vite_manifest[component].file}';
-			export const js = ${JSON.stringify(Array.from(js))};
-			export const css = ${JSON.stringify(Array.from(css))};
-			${styles ? `export const styles = ${s(styles)}` : ''}
-			`.replace(/^\t\t\t/gm, '');
+		const exports = [
+			'export { module };',
+			`export const entry = '${client.vite_manifest[component].file}';`,
+			`export const js = ${s(Array.from(js))};`,
+			`export const css = ${s(Array.from(css))};`
+		];
 
-		fs.writeFileSync(file, node);
+		/** @type {string[]} */
+		const styles = [];
+
+		css.forEach((file) => {
+			if (stylesheet_lookup.has(file)) {
+				const index = stylesheet_lookup.get(file);
+				const name = `stylesheet_${index}`;
+				imports.push(`import ${name} from '../stylesheets/${index}.js';`);
+				styles.push(`\t${s(file)}: ${name}`);
+			}
+		});
+
+		if (styles.length > 0) {
+			exports.push(`export const styles = {\n${styles.join(',\n')}\n};`);
+		}
+
+		fs.writeFileSync(file, `${imports.join('\n')}\n\n${exports.join('\n')}\n`);
 	});
 
 	return {

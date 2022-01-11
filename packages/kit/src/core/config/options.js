@@ -75,6 +75,8 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			inlineStyleThreshold: number(0),
+
 			methodOverride: object({
 				parameter: string('_method'),
 				allowed: validate([], (input, keypath) => {

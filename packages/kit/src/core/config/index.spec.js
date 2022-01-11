@@ -35,6 +35,7 @@ test('fills in defaults', () => {
 			},
 			host: null,
 			hydrate: true,
+			inlineStyleThreshold: 0,
 			methodOverride: {
 				parameter: '_method',
 				allowed: []
@@ -146,6 +147,7 @@ test('fills in partial blanks', () => {
 			},
 			host: null,
 			hydrate: true,
+			inlineStyleThreshold: 0,
 			methodOverride: {
 				parameter: '_method',
 				allowed: []

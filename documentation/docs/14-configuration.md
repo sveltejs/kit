@@ -32,6 +32,7 @@ const config = {
 		},
 		host: null,
 		hydrate: true,
+		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
 			allowed: []
@@ -137,6 +138,12 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 ### hydrate
 
 Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### inlineStyleThreshold
+
+Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+
+> # This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
 
 ### methodOverride
 

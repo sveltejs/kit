@@ -119,7 +119,7 @@ export interface SSRNode {
 	/** external JS files */
 	js: string[];
 	/** inlined styles */
-	styles: string[];
+	styles?: Record<string, string>;
 }
 
 export interface SSRRenderOptions {

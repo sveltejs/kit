@@ -14,6 +14,7 @@ const config = {
 		floc: true,
 		target: '#content-goes-here',
 		host: 'example.com',
+		inlineStyleThreshold: 1024,
 		trailingSlash: 'always',
 		vite: {
 			build: {
