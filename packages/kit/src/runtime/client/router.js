@@ -1,4 +1,3 @@
-import { getStores } from '$app/stores';
 import { onMount } from 'svelte';
 import { get_base_uri } from './utils';
 
@@ -308,7 +307,7 @@ export class Router {
 			this.callbacks.after_navigate.push(fn);
 
 			return () => {
-				let i = this.callbacks.after_navigate.indexOf(fn);
+				const i = this.callbacks.after_navigate.indexOf(fn);
 				this.callbacks.after_navigate.splice(i, 1);
 			};
 		});
@@ -322,7 +321,7 @@ export class Router {
 			this.callbacks.before_navigate.push(fn);
 
 			return () => {
-				let i = this.callbacks.before_navigate.indexOf(fn);
+				const i = this.callbacks.before_navigate.indexOf(fn);
 				this.callbacks.before_navigate.splice(i, 1);
 			};
 		});
