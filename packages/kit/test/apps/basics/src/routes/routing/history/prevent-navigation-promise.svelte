@@ -2,7 +2,7 @@
 	import { beforeNavigate } from '$app/navigation';
 
 	let triggered = false;
-	beforeNavigate(async () => {
+	beforeNavigate(() => {
 		triggered = true;
 		return false;
 	});

@@ -77,7 +77,7 @@ declare module '$app/navigation' {
 	 * A navigation interceptor that triggers before we navigate to a new route.
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
 	 */
-	export function beforeNavigate(fn: (url: URL) => void | boolean | Promise<void | boolean>): any;
+	export function beforeNavigate(fn: (url: URL) => void | boolean): any;
 
 	/**
 	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.

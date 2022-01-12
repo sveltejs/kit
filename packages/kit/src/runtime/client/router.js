@@ -64,7 +64,7 @@ export class Router {
 		}
 
 		/** @type {((url: URL) => void | boolean | Promise<void | boolean>)[]} */
-		this.on_before_navigate_callbacks = [];
+		this.before_navigate_callbacks = [];
 	}
 
 	init_listeners() {
@@ -181,7 +181,7 @@ export class Router {
 
 			event.preventDefault();
 
-			const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
+			const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
 			if (!allow_navigation) return;
 
 			history.pushState({ 'sveltekit:index': ++this.current_history_index }, '', url.href);
@@ -197,7 +197,7 @@ export class Router {
 				const delta = this.current_history_index - event.state['sveltekit:index'];
 				// the delta check is used in order to prevent the double execution of the popstate event when we prevent the navigation from completing
 				if (delta !== 0) {
-					const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
+					const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
 					if (!allow_navigation) {
 						// "disabling" the back/forward browser button click
 						history.go(delta);
@@ -213,14 +213,14 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {Promise<boolean>}
+	 * @returns {boolean}
 	 */
-	async trigger_on_before_navigate_callbacks(url) {
-		if (this.on_before_navigate_callbacks.length == 0) return true;
+	trigger_on_before_navigate_callbacks(url) {
+		if (this.before_navigate_callbacks.length == 0) return true;
 
-		const allow_navigation = !(
-			await Promise.all(this.on_before_navigate_callbacks.map((callback) => callback(url)))
-		).some((result) => result === false);
+		const allow_navigation = !this.before_navigate_callbacks
+			.map((callback) => callback(url))
+			.some((result) => result === false);
 
 		return allow_navigation;
 	}
@@ -261,7 +261,7 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const allow_navigation = await this.trigger_on_before_navigate_callbacks(url);
+		const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
 		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
@@ -301,7 +301,7 @@ export class Router {
 	}
 
 	/** @param {() => void} fn */
-	on_navigate(fn) {
+	after_navigate(fn) {
 		let mounted = false;
 
 		const unsubscribe = getStores().page.subscribe(() => {
@@ -322,20 +322,20 @@ export class Router {
 	/**
 	 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
 	 */
-	on_before_navigate(fn) {
+	before_navigate(fn) {
 		onMount(() => {
-			const existing_on_before_navigate_callback = this.on_before_navigate_callbacks.find(
+			const existing_on_before_navigate_callback = this.before_navigate_callbacks.find(
 				(cb) => cb === fn
 			);
 
 			if (!existing_on_before_navigate_callback) {
-				this.on_before_navigate_callbacks.push(fn);
+				this.before_navigate_callbacks.push(fn);
 			}
 
 			return () => {
-				const index = this.on_before_navigate_callbacks.findIndex((cb) => cb === fn);
+				const index = this.before_navigate_callbacks.findIndex((cb) => cb === fn);
 				if (index !== -1) {
-					this.on_before_navigate_callbacks.splice(index, 1);
+					this.before_navigate_callbacks.splice(index, 1);
 				}
 			};
 		});
