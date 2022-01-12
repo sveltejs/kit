@@ -156,9 +156,22 @@ export function crawl(html) {
 							} else if (name === 'src') {
 								hrefs.push(value);
 							} else if (name === 'srcset') {
-								const candidates = value.split(',');
+								const candidates = [];
+								let insideURL = true;
+								value = value.trim();
+								for (let i = 0; i < value.length; i++) {
+									if (value[i] === ',' && (!insideURL || (insideURL && value[i + 1] === ' '))) {
+										candidates.push(value.slice(0, i));
+										value = value.substring(i + 1).trim();
+										i = 0;
+										insideURL = true;
+									} else if (value[i] === ' ') {
+										insideURL = false;
+									}
+								}
+								candidates.push(value);
 								for (const candidate of candidates) {
-									const src = candidate.trim().split(WHITESPACE)[0];
+									const src = candidate.split(WHITESPACE)[0];
 									hrefs.push(src);
 								}
 							}
