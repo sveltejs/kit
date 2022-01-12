@@ -68,12 +68,12 @@ async function prefetchRoutes_(pathnames) {
  * @type {import('$app/navigation').beforeNavigate}
  */
 function beforeNavigate_(fn) {
-	return router.before_navigate(fn);
+	if (router) router.before_navigate(fn);
 }
 
 /**
  * @type {import('$app/navigation').afterNavigate}
  */
 function afterNavigate_(fn) {
-	return router.after_navigate(fn);
+	if (router) router.after_navigate(fn);
 }
