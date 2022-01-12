@@ -185,15 +185,14 @@ export class Router {
 			if (!allow_navigation) return;
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
-			this._navigate(
+			this._navigate({
 				url,
-				noscroll ? scroll_state() : null,
-				false,
-				[],
-				url.hash,
-				{ 'sveltekit:index': ++this.current_history_index },
-				'pushState'
-			);
+				scroll: noscroll ? scroll_state() : null,
+				keepfocus: false,
+				chain: [],
+				state: { 'sveltekit:index': ++this.current_history_index },
+				method: 'pushState'
+			});
 		});
 
 		addEventListener('popstate', async (event) => {
@@ -212,7 +211,14 @@ export class Router {
 				}
 
 				this.current_history_index = event.state['sveltekit:index'];
-				this._navigate(url, event.state['sveltekit:scroll'], false, [], url.hash, null, null);
+				this._navigate({
+					url,
+					scroll: event.state['sveltekit:scroll'],
+					keepfocus: false,
+					chain: [],
+					state: null,
+					method: null
+				});
 			}
 		});
 	}
@@ -231,7 +237,10 @@ export class Router {
 		return allow_navigation;
 	}
 
-	/** @param {URL} url */
+	/**
+	 * Returns true if `url` has the same origin and basepath as the app
+	 * @param {URL} url
+	 */
 	owns(url) {
 		return url.origin === location.origin && url.pathname.startsWith(this.base);
 	}
@@ -275,15 +284,14 @@ export class Router {
 				? this.current_history_index
 				: ++this.current_history_index;
 
-			return this._navigate(
+			return this._navigate({
 				url,
-				noscroll ? scroll_state() : null,
+				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
 				chain,
-				url.hash,
 				state,
-				replaceState ? 'replaceState' : 'pushState'
-			);
+				method: replaceState ? 'replaceState' : 'pushState'
+			});
 		}
 
 		location.href = url.href;
@@ -356,15 +364,16 @@ export class Router {
 	}
 
 	/**
-	 * @param {URL} url
-	 * @param {{ x: number, y: number }?} scroll
-	 * @param {boolean} keepfocus
-	 * @param {string[]} chain
-	 * @param {string} hash
-	 * @param {any} state
-	 * @param {'pushState' | 'replaceState' | null} method
+	 * @param {{
+	 *   url: URL;
+	 *   scroll: { x: number, y: number } | null;
+	 *   keepfocus: boolean;
+	 *   chain: string[];
+	 *   state: any;
+	 *   method: 'pushState' | 'replaceState' | null
+	 * }} opts
 	 */
-	async _navigate(url, scroll, keepfocus, chain, hash, state, method) {
+	async _navigate({ url, scroll, keepfocus, chain, state, method }) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -388,7 +397,11 @@ export class Router {
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 		if (method) history[method](state, '', info.url);
 
-		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
+		await this.renderer.handle_navigation(info, chain, false, {
+			hash: url.hash,
+			scroll,
+			keepfocus
+		});
 
 		this.navigating--;
 		if (!this.navigating) {
