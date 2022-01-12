@@ -8,6 +8,6 @@
 	});
 </script>
 
-<h1>prevent navigation promise</h1>
-<a href="/routing/history/b">b</a>
+<h1>prevent navigation</h1>
+<a href="/before-navigate/b">b</a>
 <pre>{triggered}</pre>

@@ -87,6 +87,64 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
+test.describe.parallel('beforeNavigate', () => {
+	test('beforeNavigate can prevent navigation by clicking a link', async ({
+		javaScriptEnabled,
+		clicknav,
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/before-navigate/a');
+
+		if (javaScriptEnabled) {
+			await app.goto('/before-navigate/prevent-navigation');
+
+			try {
+				await clicknav('[href="/before-navigate/b"]');
+				expect(false).toBe(true);
+			} catch (/** @type {any} */ e) {
+				expect(e.message).toMatch('Timed out');
+			}
+
+			expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+			expect(await page.innerHTML('pre')).toBe('true');
+		}
+	});
+
+	test('beforeNavigate can prevent navigation by using goto', async ({
+		javaScriptEnabled,
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/before-navigate/a');
+
+		if (javaScriptEnabled) {
+			await app.goto(baseURL + '/before-navigate/prevent-navigation-promise');
+			await app.goto(baseURL + '/before-navigate/b');
+			expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation-promise');
+			expect(await page.innerHTML('pre')).toBe('true');
+		}
+	});
+
+	test('beforeNavigate can prevent navigation using the browser controls', async ({
+		javaScriptEnabled,
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/before-navigate/a');
+
+		if (javaScriptEnabled) {
+			await app.goto('/before-navigate/prevent-navigation');
+			await page.goBack();
+			expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+			expect(await page.innerHTML('pre')).toBe('true');
+		}
+	});
+});
+
 test.describe('Scrolling', () => {
 	// skip these tests if JS is disabled, since we're testing client-side behaviour
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
@@ -1631,62 +1689,6 @@ test.describe.parallel('Routing', () => {
 		]);
 
 		server.close();
-	});
-
-	test('beforeNavigate can prevent navigation by clicking a link', async ({
-		javaScriptEnabled,
-		clicknav,
-		page,
-		app,
-		baseURL
-	}) => {
-		await page.goto('/routing/history/a');
-
-		if (javaScriptEnabled) {
-			await app.goto('/routing/history/prevent-navigation');
-
-			try {
-				await clicknav('[href="/routing/history/b"]');
-				expect(false).toBe(true);
-			} catch (/** @type {any} */ e) {
-				expect(e.message).toMatch('Timed out');
-			}
-
-			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation');
-			expect(await page.innerHTML('pre')).toBe('true');
-		}
-	});
-
-	test('beforeNavigate can prevent navigation by using goto', async ({
-		javaScriptEnabled,
-		page,
-		app,
-		baseURL
-	}) => {
-		await page.goto('/routing/history/a');
-
-		if (javaScriptEnabled) {
-			await app.goto(baseURL + '/routing/history/prevent-navigation-promise');
-			await app.goto(baseURL + '/routing/history/b');
-			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation-promise');
-			expect(await page.innerHTML('pre')).toBe('true');
-		}
-	});
-
-	test('beforeNavigate can prevent navigation using the browser controls', async ({
-		javaScriptEnabled,
-		page,
-		app,
-		baseURL
-	}) => {
-		await page.goto('/routing/history/a');
-
-		if (javaScriptEnabled) {
-			await app.goto('/routing/history/prevent-navigation');
-			await page.goBack();
-			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation');
-			expect(await page.innerHTML('pre')).toBe('true');
-		}
 	});
 
 	// skipping this test because it causes a bunch of failures locally
