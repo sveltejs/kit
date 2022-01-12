@@ -8,8 +8,9 @@ export function read_only_form_data() {
 		 * @param {string} value
 		 */
 		append(key, value) {
-			if (map.has(key)) {
-				(map.get(key) || []).push(value);
+			const existing_values = map.get(key);
+			if (existing_values) {
+				existing_values.push(value);
 			} else {
 				map.set(key, [value]);
 			}
@@ -31,12 +32,15 @@ class ReadOnlyFormData {
 	/** @param {string} key */
 	get(key) {
 		const value = this.#map.get(key);
-		return value && value[0];
+		if (!value) {
+			return null;
+		}
+		return value[0];
 	}
 
 	/** @param {string} key */
 	getAll(key) {
-		return this.#map.get(key);
+		return this.#map.get(key) || [];
 	}
 
 	/** @param {string} key */

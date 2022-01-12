@@ -265,10 +265,11 @@ export class Renderer {
 				});
 			} else {
 				if (this.router) {
-					this.router.goto(navigation_result.redirect, { replaceState: true }, [
-						...chain,
-						info.url.pathname
-					]);
+					this.router.goto(
+						new URL(navigation_result.redirect, info.url).href,
+						{ replaceState: true },
+						[...chain, info.url.pathname]
+					);
 				} else {
 					location.href = new URL(navigation_result.redirect, location.href).href;
 				}
