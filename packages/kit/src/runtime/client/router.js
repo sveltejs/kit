@@ -63,7 +63,7 @@ export class Router {
 		}
 
 		this.callbacks = {
-			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL, cancel: () => void }) => void>} */
+			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
 			before_navigate: [],
 
 			/** @type {Array<({ from, to }: { from: URL, to: URL }) => void>} */
@@ -80,8 +80,23 @@ export class Router {
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
 		// and back-navigation from other pages to use the browser to restore the
 		// scrolling position.
-		addEventListener('beforeunload', () => {
-			history.scrollRestoration = 'auto';
+		addEventListener('beforeunload', (e) => {
+			let should_block = false;
+
+			const intent = {
+				from: this.renderer.current.url,
+				to: null,
+				cancel: () => (should_block = true)
+			};
+
+			this.callbacks.before_navigate.forEach((fn) => fn(intent));
+
+			if (should_block) {
+				e.preventDefault();
+				e.returnValue = '';
+			} else {
+				history.scrollRestoration = 'auto';
+			}
 		});
 
 		// Setting scrollRestoration to manual again when returning to this page.

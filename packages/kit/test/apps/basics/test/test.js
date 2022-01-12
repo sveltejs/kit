@@ -119,6 +119,20 @@ test.describe.parallel.only('beforeNavigate', () => {
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
 	});
+
+	test('prevents unload', async ({ page }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		const type = new Promise((fulfil) => {
+			page.on('dialog', async (dialog) => {
+				fulfil(dialog.type());
+				await dialog.dismiss();
+			});
+		});
+
+		await page.close({ runBeforeUnload: true });
+		expect(await type).toBe('beforeunload');
+	});
 });
 
 test.describe('Scrolling', () => {
