@@ -189,8 +189,9 @@ export class Router {
 				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 				keepfocus: false,
 				chain: [],
-				state: { 'sveltekit:index': ++this.current_history_index },
-				method: 'pushState'
+				state: {},
+				method: 'pushState',
+				index_change: 1
 			});
 		});
 
@@ -216,7 +217,8 @@ export class Router {
 					keepfocus: false,
 					chain: [],
 					state: null,
-					method: null
+					method: null,
+					index_change: 0
 				});
 			}
 		});
@@ -279,17 +281,14 @@ export class Router {
 		if (!allow_navigation) return;
 
 		if (this.enabled && this.owns(url)) {
-			state['sveltekit:index'] = replaceState
-				? this.current_history_index
-				: ++this.current_history_index;
-
 			return this._navigate({
 				url,
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
 				chain,
 				state,
-				method: replaceState ? 'replaceState' : 'pushState'
+				method: replaceState ? 'replaceState' : 'pushState',
+				index_change: replaceState ? 0 : 1
 			});
 		}
 
@@ -370,9 +369,10 @@ export class Router {
 	 *   chain: string[];
 	 *   state: any;
 	 *   method: 'pushState' | 'replaceState' | null;
+	 *   index_change: number;
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, state, method }) {
+	async _navigate({ url, scroll, keepfocus, chain, state, method, index_change }) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -394,7 +394,10 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
-		if (method) history[method](state, '', info.url);
+		if (method) {
+			state['sveltekit:index'] = this.current_history_index += index_change;
+			history[method](state, '', info.url);
+		}
 
 		await this.renderer.handle_navigation(info, chain, false, {
 			scroll,
