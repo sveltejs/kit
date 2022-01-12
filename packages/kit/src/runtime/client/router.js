@@ -177,13 +177,6 @@ export class Router {
 				return;
 			}
 
-			if (!this.owns(url)) return;
-
-			event.preventDefault();
-
-			const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
-			if (!allow_navigation) return;
-
 			this._navigate({
 				url,
 				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
@@ -192,7 +185,9 @@ export class Router {
 				details: {
 					state: {},
 					replaceState: false
-				}
+				},
+				accepted: () => event.preventDefault(),
+				blocked: () => event.preventDefault()
 			});
 		});
 
@@ -202,22 +197,19 @@ export class Router {
 				// with history.go, which means we end up back here, hence this check
 				if (event.state['sveltekit:index'] === this.current_history_index) return;
 
-				const url = new URL(location.href);
-
-				const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
-				if (!allow_navigation) {
-					const delta = this.current_history_index - event.state['sveltekit:index'];
-					history.go(delta);
-					return;
-				}
-
-				this.current_history_index = event.state['sveltekit:index'];
 				this._navigate({
-					url,
+					url: new URL(location.href),
 					scroll: event.state['sveltekit:scroll'],
 					keepfocus: false,
 					chain: [],
-					details: null
+					details: null,
+					accepted: () => {
+						this.current_history_index = event.state['sveltekit:index'];
+					},
+					blocked: () => {
+						const delta = this.current_history_index - event.state['sveltekit:index'];
+						history.go(delta);
+					}
 				});
 			}
 		});
@@ -276,10 +268,7 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
-		if (!allow_navigation) return;
-
-		if (this.enabled && this.owns(url)) {
+		if (this.enabled) {
 			return this._navigate({
 				url,
 				scroll: noscroll ? scroll_state() : null,
@@ -288,7 +277,9 @@ export class Router {
 				details: {
 					state,
 					replaceState
-				}
+				},
+				accepted: () => {},
+				blocked: () => {}
 			});
 		}
 
@@ -370,15 +361,22 @@ export class Router {
 	 *   details: {
 	 *     replaceState: boolean;
 	 *     state: any;
-	 *   } | null
+	 *   } | null;
+	 *   accepted: () => void;
+	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, details }) {
-		const info = this.parse(url);
-
-		if (!info) {
-			throw new Error('Attempted to navigate to a URL that does not belong to this app');
+	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
+		const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
+		if (!allow_navigation) {
+			blocked();
+			return;
 		}
+
+		const info = this.parse(url);
+		if (!info) return;
+
+		accepted();
 
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
