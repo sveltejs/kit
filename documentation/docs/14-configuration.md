@@ -137,7 +137,7 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 
 ### hydrate
 
-Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+Whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
 ### inlineStyleThreshold
 
@@ -189,7 +189,7 @@ An object containing zero or more of the following `string` values:
 
 ### prerender
 
-See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
+See [Prerendering](#page-options-prerender). An object containing zero or more of the following:
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
@@ -226,7 +226,7 @@ The protocol is assumed to be `'https'` (unless you're developing locally withou
 
 ### router
 
-Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
+Enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### serviceWorker
 

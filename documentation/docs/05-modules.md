@@ -14,7 +14,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 - `browser` is `true` or `false` depending on whether the app is running in the browser or on the server
 - `dev` is `true` in development mode, `false` in production
 - `mode` is the [Vite mode](https://vitejs.dev/guide/env-and-mode.html#modes), which is `development` in dev mode or `production` during build unless configured otherwise in `config.kit.vite.mode`.
-- `prerendering` is `true` when [prerendering](#ssr-and-javascript-prerender), `false` otherwise
+- `prerendering` is `true` when [prerendering](#page-options-prerender), `false` otherwise
 
 ### $app/navigation
 
