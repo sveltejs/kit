@@ -157,15 +157,19 @@ export function crawl(html) {
 								hrefs.push(value);
 							} else if (name === 'srcset') {
 								const candidates = [];
-								// Parse the content of the srcset attribute.
-								// The regexp is modelled after the srcset specs (https://html.spec.whatwg.org/multipage/images.html#srcset-attribute)
-								// and should cover most reasonable cases.
-								const regex =
-									/\s*([^\s,]\S+[^\s,])\s*((?:\d+w)|(?:-?\d+(?:\.\d+)?(?:[eE]-?\d+)?x))?/gm;
-								let sub_matches;
-								while ((sub_matches = regex.exec(value))) {
-									candidates.push(sub_matches[1]);
+								let insideURL = true;
+								value = value.trim();
+								for (let i = 0; i < value.length; i++) {
+									if (value[i] === ',' && (!insideURL || (insideURL && value[i + 1] === ' '))) {
+										candidates.push(value.slice(0, i));
+										value = value.substring(i + 1).trim();
+										i = 0;
+										insideURL = true;
+									} else if (value[i] === ' ') {
+										insideURL = false;
+									}
 								}
+								candidates.push(value);
 								for (const candidate of candidates) {
 									const src = candidate.trim().split(WHITESPACE)[0];
 									hrefs.push(src);
