@@ -1652,8 +1652,6 @@ test.describe.parallel('Routing', () => {
 				expect(e.message).toMatch('Timed out');
 			}
 
-			const state = await page.evaluate('history.state');
-			expect(state?.['sveltekit:index']).toBe(1);
 			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation');
 			expect(await page.innerHTML('pre')).toBe('true');
 		}
@@ -1670,8 +1668,6 @@ test.describe.parallel('Routing', () => {
 		if (javaScriptEnabled) {
 			await app.goto(baseURL + '/routing/history/prevent-navigation-promise');
 			await app.goto(baseURL + '/routing/history/b');
-			const state = await page.evaluate('history.state');
-			expect(state?.['sveltekit:index']).toBe(1);
 			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation-promise');
 			expect(await page.innerHTML('pre')).toBe('true');
 		}
@@ -1688,8 +1684,6 @@ test.describe.parallel('Routing', () => {
 		if (javaScriptEnabled) {
 			await app.goto('/routing/history/prevent-navigation');
 			await page.goBack();
-			const state = await page.evaluate('history.state');
-			expect(state?.['sveltekit:index']).toBe(1);
 			expect(page.url()).toBe(baseURL + '/routing/history/prevent-navigation');
 			expect(await page.innerHTML('pre')).toBe('true');
 		}
