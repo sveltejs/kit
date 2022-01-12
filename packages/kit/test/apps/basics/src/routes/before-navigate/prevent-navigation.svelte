@@ -9,5 +9,5 @@
 </script>
 
 <h1>prevent navigation</h1>
-<a href="/before-navigate/b">b</a>
+<a href="/before-navigate/a">a</a>
 <pre>{triggered}</pre>
