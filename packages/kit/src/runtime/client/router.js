@@ -63,8 +63,13 @@ export class Router {
 			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 		}
 
-		/** @type {((url: URL) => void | boolean | Promise<void | boolean>)[]} */
-		this.before_navigate_callbacks = [];
+		this.callbacks = {
+			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL, cancel: () => void }) => void>} */
+			before_navigate: [],
+
+			/** @type {Array<({ from, to }: { from: URL, to: URL }) => void>} */
+			after_navigate: []
+		};
 	}
 
 	init_listeners() {
@@ -216,20 +221,6 @@ export class Router {
 	}
 
 	/**
-	 * @param {URL} url
-	 * @returns {boolean}
-	 */
-	trigger_on_before_navigate_callbacks(url) {
-		if (this.before_navigate_callbacks.length == 0) return true;
-
-		const allow_navigation = !this.before_navigate_callbacks
-			.map((callback) => callback(url))
-			.some((result) => result === false);
-
-		return allow_navigation;
-	}
-
-	/**
 	 * Returns true if `url` has the same origin and basepath as the app
 	 * @param {URL} url
 	 */
@@ -313,41 +304,26 @@ export class Router {
 
 	/** @param {() => void} fn */
 	after_navigate(fn) {
-		let mounted = false;
-
-		const unsubscribe = getStores().page.subscribe(() => {
-			if (mounted) fn();
-		});
-
 		onMount(() => {
-			mounted = true;
-			fn();
+			this.callbacks.after_navigate.push(fn);
 
 			return () => {
-				unsubscribe();
-				mounted = false;
+				let i = this.callbacks.after_navigate.indexOf(fn);
+				this.callbacks.after_navigate.splice(i, 1);
 			};
 		});
 	}
 
 	/**
-	 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
+	 * @param {({ from, to, cancel }: { from: URL, to: URL, cancel: () => void }) => void} fn
 	 */
 	before_navigate(fn) {
 		onMount(() => {
-			const existing_on_before_navigate_callback = this.before_navigate_callbacks.find(
-				(cb) => cb === fn
-			);
-
-			if (!existing_on_before_navigate_callback) {
-				this.before_navigate_callbacks.push(fn);
-			}
+			this.callbacks.before_navigate.push(fn);
 
 			return () => {
-				const index = this.before_navigate_callbacks.findIndex((cb) => cb === fn);
-				if (index !== -1) {
-					this.before_navigate_callbacks.splice(index, 1);
-				}
+				let i = this.callbacks.before_navigate.indexOf(fn);
+				this.callbacks.before_navigate.splice(i, 1);
 			};
 		});
 	}
@@ -367,8 +343,18 @@ export class Router {
 	 * }} opts
 	 */
 	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
-		const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
-		if (!allow_navigation) {
+		const from = this.renderer.current.url;
+		let should_block = false;
+
+		const intent = {
+			from,
+			to: url,
+			cancel: () => (should_block = true)
+		};
+
+		this.callbacks.before_navigate.forEach((fn) => fn(intent));
+
+		if (should_block) {
 			blocked();
 			return;
 		}
@@ -408,6 +394,9 @@ export class Router {
 		this.navigating--;
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+
+			const navigation = { from, to: url };
+			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
 	}
 }

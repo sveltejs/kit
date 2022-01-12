@@ -2,9 +2,9 @@
 	import { beforeNavigate } from '$app/navigation';
 
 	let triggered = false;
-	beforeNavigate(() => {
+	beforeNavigate(({ cancel }) => {
 		triggered = true;
-		return false;
+		cancel();
 	});
 </script>
 
