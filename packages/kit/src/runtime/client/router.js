@@ -270,8 +270,6 @@ export class Router {
 			throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		}
 
-		if (method) history[method](state, '', info.url);
-
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 		}
@@ -287,6 +285,7 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
+		if (method) history[method](state, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
