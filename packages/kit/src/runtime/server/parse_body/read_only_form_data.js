@@ -32,12 +32,15 @@ class ReadOnlyFormData {
 	/** @param {string} key */
 	get(key) {
 		const value = this.#map.get(key);
-		return value && value[0];
+		if (!value) {
+			return null;
+		}
+		return value[0];
 	}
 
 	/** @param {string} key */
 	getAll(key) {
-		return this.#map.get(key);
+		return this.#map.get(key) || [];
 	}
 
 	/** @param {string} key */

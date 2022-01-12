@@ -1,5 +1,5 @@
 interface ReadOnlyFormData {
-	get(key: string): string;
+	get(key: string): string | null;
 	getAll(key: string): string[];
 	has(key: string): boolean;
 	entries(): Generator<[string, string], void>;
