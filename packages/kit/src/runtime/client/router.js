@@ -211,11 +211,7 @@ export class Router {
 	 * @param {GotoParams[1]} opts
 	 * @param {string[]} chain
 	 */
-	async goto(
-		href,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
-		chain
-	) {
+	async goto(href, { noscroll = false, replaceState = false, keepfocus = false } = {}, chain) {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled && this.owns(url)) {
@@ -225,7 +221,7 @@ export class Router {
 				keepfocus,
 				chain,
 				url.hash,
-				state,
+				{},
 				replaceState ? 'replaceState' : 'pushState'
 			);
 		}
