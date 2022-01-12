@@ -170,14 +170,14 @@ export class Router {
 			}
 
 			const noscroll = a.hasAttribute('sveltekit:noscroll');
-			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash, {}, 'pushState');
+			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash, 'pushState');
 			event.preventDefault();
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], false, [], url.hash, null, null);
+				this._navigate(url, event.state['sveltekit:scroll'], false, [], url.hash, null);
 			}
 		});
 	}
@@ -221,7 +221,6 @@ export class Router {
 				keepfocus,
 				chain,
 				url.hash,
-				{},
 				replaceState ? 'replaceState' : 'pushState'
 			);
 		}
@@ -260,10 +259,9 @@ export class Router {
 	 * @param {boolean} keepfocus
 	 * @param {string[]} chain
 	 * @param {string} hash
-	 * @param {any} state
 	 * @param {'pushState' | 'replaceState' | null} method
 	 */
-	async _navigate(url, scroll, keepfocus, chain, hash, state, method) {
+	async _navigate(url, scroll, keepfocus, chain, hash, method) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -285,7 +283,7 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
-		if (method) history[method](state, '', info.url);
+		if (method) history[method]({}, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
 
