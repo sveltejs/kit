@@ -316,7 +316,7 @@ export class Router {
 		return this.renderer.load(info);
 	}
 
-	/** @param {() => void} fn */
+	/** @param {({ from, to }: { from: URL, to: URL }) => void} fn */
 	after_navigate(fn) {
 		onMount(() => {
 			this.callbacks.after_navigate.push(fn);
@@ -329,7 +329,7 @@ export class Router {
 	}
 
 	/**
-	 * @param {({ from, to, cancel }: { from: URL, to: URL, cancel: () => void }) => void} fn
+	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
 	 */
 	before_navigate(fn) {
 		onMount(() => {
