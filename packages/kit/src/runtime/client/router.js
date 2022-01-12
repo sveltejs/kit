@@ -210,7 +210,7 @@ export class Router {
 			});
 		});
 
-		addEventListener('popstate', async (event) => {
+		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
 				// if a popstate-driven navigation is cancelled, we need to counteract it
 				// with history.go, which means we end up back here, hence this check
