@@ -171,7 +171,7 @@ export function crawl(html) {
 								}
 								candidates.push(value);
 								for (const candidate of candidates) {
-									const src = candidate.trim().split(WHITESPACE)[0];
+									const src = candidate.split(WHITESPACE)[0];
 									hrefs.push(src);
 								}
 							}
