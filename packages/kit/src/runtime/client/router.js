@@ -189,9 +189,10 @@ export class Router {
 				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 				keepfocus: false,
 				chain: [],
-				state: {},
-				method: 'pushState',
-				index_change: 1
+				details: {
+					state: {},
+					replaceState: false
+				}
 			});
 		});
 
@@ -216,9 +217,7 @@ export class Router {
 					scroll: event.state['sveltekit:scroll'],
 					keepfocus: false,
 					chain: [],
-					state: null,
-					method: null,
-					index_change: 0
+					details: null
 				});
 			}
 		});
@@ -286,9 +285,10 @@ export class Router {
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
 				chain,
-				state,
-				method: replaceState ? 'replaceState' : 'pushState',
-				index_change: replaceState ? 0 : 1
+				details: {
+					state,
+					replaceState
+				}
 			});
 		}
 
@@ -367,12 +367,13 @@ export class Router {
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
 	 *   chain: string[];
-	 *   state: any;
-	 *   method: 'pushState' | 'replaceState' | null;
-	 *   index_change: number;
+	 *   details: {
+	 *     replaceState: boolean;
+	 *     state: any;
+	 *   } | null
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, state, method, index_change }) {
+	async _navigate({ url, scroll, keepfocus, chain, details }) {
 		const info = this.parse(url);
 
 		if (!info) {
@@ -394,9 +395,11 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
-		if (method) {
-			state['sveltekit:index'] = this.current_history_index += index_change;
-			history[method](state, '', info.url);
+
+		if (details) {
+			const change = details.replaceState ? 0 : 1;
+			details.state['sveltekit:index'] = this.current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
 		}
 
 		await this.renderer.handle_navigation(info, chain, false, {
