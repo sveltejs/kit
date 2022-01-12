@@ -1,8 +1,8 @@
 <script>
-	import { onBeforeNavigate } from '$app/navigation';
+	import { beforeNavigate } from '$app/navigation';
 
 	let triggered = false;
-	onBeforeNavigate(async () => {
+	beforeNavigate(async () => {
 		triggered = true;
 		return false;
 	});

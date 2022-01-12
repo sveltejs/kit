@@ -30,14 +30,14 @@ export const test = base.extend({
 			 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
 			 * @returns {Promise<void>}
 			 */
-			onBeforeNavigate: (fn) =>
-				page.evaluate((/** @type {(url: URL) => any} */ fn) => onBeforeNavigate(fn), fn),
+			beforeNavigate: (fn) =>
+				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
 
 			/**
 			 * @param {() => void} fn
 			 * @returns {Promise<void>}
 			 */
-			onNavigate: () => page.evaluate(() => onNavigate(() => {})),
+			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
 			 * @param {string} url

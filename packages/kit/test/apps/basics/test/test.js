@@ -1733,7 +1733,7 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('onBeforeNavigate can prevent navigation by clicking a link', async ({
+	test('beforeNavigate can prevent navigation by clicking a link', async ({
 		javaScriptEnabled,
 		clicknav,
 		page,
@@ -1759,7 +1759,7 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('onBeforeNavigate can prevent navigation by using goto', async ({
+	test('beforeNavigate can prevent navigation by using goto', async ({
 		javaScriptEnabled,
 		page,
 		app,
@@ -1777,7 +1777,7 @@ test.describe.parallel('Routing', () => {
 		}
 	});
 
-	test('onBeforeNavigate can prevent navigation using the browser controls', async ({
+	test('beforeNavigate can prevent navigation using the browser controls', async ({
 		javaScriptEnabled,
 		page,
 		app,

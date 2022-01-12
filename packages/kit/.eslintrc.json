@@ -9,7 +9,7 @@
 		"invalidate": true,
 		"prefetch": true,
 		"prefetchRoutes": true,
-		"onBeforeNavigate": true,
-		"onNavigate": true
+		"beforeNavigate": true,
+		"afterNavigate": true
 	}
 }

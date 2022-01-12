@@ -2,4 +2,4 @@
 '@sveltejs/kit': minor
 ---
 
-Adds a "onBeforeNavigate" navigation interceptor and a "onNavigate" lifecycle function
+Adds beforeNavigate/afterNavigate lifecycle function

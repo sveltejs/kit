@@ -14,8 +14,8 @@ export const test: TestType<
 			app: {
 				goto: (url: string, opts?: { replaceState?: boolean }) => Promise<void>;
 				invalidate: (url: string) => Promise<void>;
-				onBeforeNavigate: (url: URL) => void | boolean | Promise<void | boolean>;
-				onNavigate: (url: URL) => void | Promise<void>;
+				beforeNavigate: (url: URL) => void | boolean | Promise<void | boolean>;
+				afterNavigate: (url: URL) => void | Promise<void>;
 				prefetch: (url: string) => Promise<void>;
 				prefetchRoutes: (urls: string[]) => Promise<void>;
 			};
