@@ -165,8 +165,6 @@ export class Router {
 			// Ignore if <a> has a target
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
-			if (!this.owns(url)) return;
-
 			// Check if new url only differs by hash
 			if (url.href.split('#')[0] === location.href.split('#')[0]) {
 				// Call `pushState` to add url to history so going back works.
@@ -179,15 +177,16 @@ export class Router {
 				return;
 			}
 
+			if (!this.owns(url)) return;
+
 			event.preventDefault();
 
 			const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
 			if (!allow_navigation) return;
 
-			const noscroll = a.hasAttribute('sveltekit:noscroll');
 			this._navigate({
 				url,
-				scroll: noscroll ? scroll_state() : null,
+				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 				keepfocus: false,
 				chain: [],
 				state: { 'sveltekit:index': ++this.current_history_index },
@@ -197,17 +196,17 @@ export class Router {
 
 		addEventListener('popstate', async (event) => {
 			if (event.state && this.enabled) {
+				// if a popstate-driven navigation is cancelled, we need to counteract it
+				// with history.go, which means we end up back here, hence this check
+				if (event.state['sveltekit:index'] === this.current_history_index) return;
+
 				const url = new URL(location.href);
 
-				const delta = this.current_history_index - event.state['sveltekit:index'];
-				// the delta check is used in order to prevent the double execution of the popstate event when we prevent the navigation from completing
-				if (delta !== 0) {
-					const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
-					if (!allow_navigation) {
-						// "disabling" the back/forward browser button click
-						history.go(delta);
-						return;
-					}
+				const allow_navigation = this.trigger_on_before_navigate_callbacks(url);
+				if (!allow_navigation) {
+					const delta = this.current_history_index - event.state['sveltekit:index'];
+					history.go(delta);
+					return;
 				}
 
 				this.current_history_index = event.state['sveltekit:index'];
