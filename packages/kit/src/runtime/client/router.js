@@ -374,7 +374,12 @@ export class Router {
 		}
 
 		const info = this.parse(url);
-		if (!info) return;
+		if (!info) {
+			location.href = url.href;
+			return new Promise(() => {
+				// never resolves
+			});
+		}
 
 		accepted();
 
