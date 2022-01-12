@@ -90,11 +90,7 @@ test.describe.parallel('a11y', () => {
 test.describe.parallel.only('beforeNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
-	test('beforeNavigate can prevent navigation by clicking a link', async ({
-		clicknav,
-		page,
-		baseURL
-	}) => {
+	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		try {
@@ -108,18 +104,14 @@ test.describe.parallel.only('beforeNavigate', () => {
 		expect(await page.innerHTML('pre')).toBe('true');
 	});
 
-	test('beforeNavigate can prevent navigation by using goto', async ({ page, app, baseURL }) => {
+	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/prevent-navigation');
 		await app.goto('/before-navigate/a');
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
 		expect(await page.innerHTML('pre')).toBe('true');
 	});
 
-	test('beforeNavigate can prevent navigation using the browser controls', async ({
-		page,
-		app,
-		baseURL
-	}) => {
+	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
 		await page.goto('/before-navigate/a');
 
 		await app.goto('/before-navigate/prevent-navigation');
