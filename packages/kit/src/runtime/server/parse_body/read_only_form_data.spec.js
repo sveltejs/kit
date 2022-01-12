@@ -2,6 +2,12 @@ import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { read_only_form_data } from './read_only_form_data.js';
 
+test('ro-fd get returns null and getAll an empty array for no values at given key', () => {
+	const { data } = read_only_form_data();
+	assert.is(data.get('foo'), null);
+	assert.equal(data.getAll('foo'), []);
+});
+
 const { data, append } = read_only_form_data();
 append('foo', '1'), append('foo', '2'), append('foo', '3');
 append('bar', '2'), append('bar', '1');
