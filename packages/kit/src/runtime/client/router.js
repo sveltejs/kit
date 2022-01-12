@@ -369,7 +369,7 @@ export class Router {
 	 *   keepfocus: boolean;
 	 *   chain: string[];
 	 *   state: any;
-	 *   method: 'pushState' | 'replaceState' | null
+	 *   method: 'pushState' | 'replaceState' | null;
 	 * }} opts
 	 */
 	async _navigate({ url, scroll, keepfocus, chain, state, method }) {
@@ -397,7 +397,6 @@ export class Router {
 		if (method) history[method](state, '', info.url);
 
 		await this.renderer.handle_navigation(info, chain, false, {
-			hash: url.hash,
 			scroll,
 			keepfocus
 		});

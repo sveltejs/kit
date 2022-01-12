@@ -87,7 +87,7 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
-test.describe.parallel.only('beforeNavigate', () => {
+test.describe.parallel('beforeNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
