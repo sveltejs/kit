@@ -270,6 +270,8 @@ export class Router {
 			throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		}
 
+		if (method) history[method](state, '', info.url);
+
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
 		}
@@ -291,7 +293,6 @@ export class Router {
 		this.navigating--;
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
-			if (method) history[method](state, '', info.url);
 		}
 	}
 }
