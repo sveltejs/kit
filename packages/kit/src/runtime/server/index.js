@@ -127,15 +127,14 @@ export async function respond(incoming, options, state = {}) {
 								}
 
 								const etag = `"${hash(response.body || '')}"`;
+								response.headers['etag'] = etag;
 
 								if (if_none_match_value === etag) {
 									return {
 										status: 304,
-										headers: {}
+										headers: response.headers
 									};
 								}
-
-								response.headers['etag'] = etag;
 							}
 						}
 
