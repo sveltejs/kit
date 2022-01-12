@@ -1,6 +1,6 @@
 [
 	"header.png",
-	"https://url-with-commas.com/w_200,q_100/header.png",
+	"https://example.com/w_200,q_100/header.png",
 	"header640.png",
 	"header960.png",
 	"header1024.png",
