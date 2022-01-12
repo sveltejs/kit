@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': minor
+'@sveltejs/kit': patch
 ---
 
 Adds beforeNavigate/afterNavigate lifecycle function
