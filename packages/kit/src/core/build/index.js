@@ -19,7 +19,7 @@ import { build_server } from './build_server.js';
  */
 export async function build(
 	config,
-	{ cwd = process.cwd(), runtime = `${modules}/server/index.js` } = {}
+	{ cwd = process.cwd(), runtime = path.resolve(modules, 'server/index.js') } = {}
 ) {
 	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
 	rimraf(build_dir);
