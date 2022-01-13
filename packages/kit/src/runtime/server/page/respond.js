@@ -1,6 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
-import { is_prerender_enabled, respond_with_error } from './respond_with_error.js';
+import { respond_with_error } from './respond_with_error.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -105,7 +105,6 @@ export async function respond(opts) {
 						url: request.url,
 						node,
 						stuff,
-						prerender_enabled: is_prerender_enabled(options, node, state),
 						is_error: false
 					});
 
@@ -160,7 +159,6 @@ export async function respond(opts) {
 										url: request.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
-										prerender_enabled: is_prerender_enabled(options, error_node, state),
 										is_error: true,
 										status,
 										error
