@@ -1,7 +1,6 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import vite from 'vite';
-import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { SVELTE_KIT } from '../constants.js';
