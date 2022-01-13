@@ -24,7 +24,7 @@ export async function dev({ cwd, port, host, https, config }) {
 	const output = path.resolve(cwd, `${SVELTE_KIT}/dev`);
 
 	rimraf(output);
-	copy_assets(output);
+	copy_assets(`${SVELTE_KIT}/modules`);
 
 	const [vite_config] = deep_merge(
 		{
@@ -54,7 +54,7 @@ export async function dev({ cwd, port, host, https, config }) {
 		root: cwd,
 		resolve: {
 			alias: {
-				$app: path.resolve(`${output}/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},

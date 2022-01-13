@@ -6,6 +6,7 @@ import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
 import { copy_assets, posixify } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /**
  * @param {{
@@ -13,7 +14,6 @@ import { create_build, find_deps } from './utils.js';
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest_data: import('types/internal').ManifestData
- *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
@@ -25,17 +25,16 @@ export async function build_client({
 	assets_base,
 	config,
 	manifest_data,
-	build_dir,
 	output_dir,
 	client_entry_file
 }) {
 	create_app({
 		manifest_data,
-		output: build_dir,
+		output: `${SVELTE_KIT}/modules`,
 		cwd
 	});
 
-	copy_assets(build_dir);
+	copy_assets(`${SVELTE_KIT}/modules`);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 
@@ -81,7 +80,7 @@ export async function build_client({
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		},

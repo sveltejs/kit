@@ -232,7 +232,7 @@ export async function build_server(
 		],
 		resolve: {
 			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
 				$lib: config.kit.files.lib
 			}
 		}

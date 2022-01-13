@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
 import { posixify } from '../utils.js';
+import { SVELTE_KIT } from '../constants.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -49,8 +50,12 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
-	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
-	const default_error = posixify(path.relative(cwd, `${output}/components/error.svelte`));
+	const default_layout = posixify(
+		path.relative(cwd, `${SVELTE_KIT}/modules/components/layout.svelte`)
+	);
+	const default_error = posixify(
+		path.relative(cwd, `${SVELTE_KIT}/modules/components/error.svelte`)
+	);
 
 	/**
 	 * @param {string} dir

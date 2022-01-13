@@ -39,7 +39,7 @@ export async function create_plugin(config, output, cwd) {
 			function update_manifest() {
 				const manifest_data = create_manifest_data({ config, output, cwd });
 
-				create_app({ manifest_data, output, cwd });
+				create_app({ manifest_data, output: `${SVELTE_KIT}/modules`, cwd });
 
 				manifest = {
 					appDir: config.kit.appDir,
@@ -47,7 +47,7 @@ export async function create_plugin(config, output, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/${SVELTE_KIT}/dev/runtime/internal/start.js`,
+							file: `/${SVELTE_KIT}/modules/runtime/internal/start.js`,
 							css: [],
 							js: []
 						},
@@ -173,9 +173,10 @@ export async function create_plugin(config, output, cwd) {
 							throw new Error('The serverFetch hook has been renamed to externalFetch.');
 						}
 
-						const root = (await vite.ssrLoadModule(`/${output}/generated/root.svelte`)).default;
+						const root = (await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/generated/root.svelte`))
+							.default;
 
-						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/dev/runtime/paths.js`);
+						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/runtime/paths.js`);
 
 						paths.set_paths({
 							base: config.kit.paths.base,
