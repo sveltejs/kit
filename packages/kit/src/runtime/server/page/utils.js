@@ -1,14 +1,3 @@
-/**
- * @param {import('types/internal').SSRRenderOptions} options
- * @param {import('types/internal').SSRNode} node
- * @param {import('types/internal').SSRRenderState} state
- */
-export function is_prerender_enabled(options, node, state) {
-	return (
-		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
-	);
-}
-
 /** @param {URL} url */
 export function create_url_proxy(url) {
 	return new Proxy(url, {

@@ -1,7 +1,6 @@
 import { render_response } from './render.js';
 import { load_node } from './load_node.js';
 import { coalesce_to_error } from '../../../utils/error.js';
-import { is_prerender_enabled } from './utils.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
@@ -47,7 +46,6 @@ export async function respond_with_error({
 				node: default_layout,
 				$session,
 				stuff: {},
-				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_error: false
 			})
 		);
@@ -63,7 +61,6 @@ export async function respond_with_error({
 				node: default_error,
 				$session,
 				stuff: layout_loaded ? layout_loaded.stuff : {},
-				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_error: true,
 				status,
 				error

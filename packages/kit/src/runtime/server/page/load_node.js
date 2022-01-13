@@ -3,7 +3,7 @@ import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
-import { create_url_proxy, is_prerender_enabled } from './utils.js';
+import { create_url_proxy } from './utils.js';
 
 /**
  * @param {{
@@ -16,7 +16,6 @@ import { create_url_proxy, is_prerender_enabled } from './utils.js';
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
- *   prerender_enabled: boolean;
  *   is_error: boolean;
  *   status?: number;
  *   error?: Error;
@@ -33,7 +32,6 @@ export async function load_node({
 	node,
 	$session,
 	stuff,
-	prerender_enabled,
 	is_error,
 	status,
 	error
