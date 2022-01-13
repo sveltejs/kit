@@ -3,7 +3,7 @@ import path from 'path';
 import { mkdirp, rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { get_start, posixify, resolve_entry } from '../utils.js';
+import { modules, posixify, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
@@ -17,7 +17,10 @@ import { build_server } from './build_server.js';
  * }} [opts]
  * @returns {Promise<import('types/internal').BuildData>}
  */
-export async function build(config, { cwd = process.cwd(), runtime = '../modules/kit.js' } = {}) {
+export async function build(
+	config,
+	{ cwd = process.cwd(), runtime = `${modules}/server/index.js` } = {}
+) {
 	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
 	rimraf(build_dir);
 	mkdirp(build_dir);
@@ -40,7 +43,7 @@ export async function build(config, { cwd = process.cwd(), runtime = '../modules
 			cwd
 		}),
 		output_dir,
-		client_entry_file: path.relative(cwd, get_start()),
+		client_entry_file: path.relative(cwd, `${modules}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		service_worker_register: config.kit.serviceWorker.register
 	};

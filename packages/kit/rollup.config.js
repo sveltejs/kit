@@ -47,7 +47,7 @@ export default [
 		input: 'src/runtime/server/index.js',
 		output: {
 			format: 'esm',
-			file: 'assets/kit.js'
+			file: 'assets/server/index.js'
 		},
 		plugins: [
 			resolve({

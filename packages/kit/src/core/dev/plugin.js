@@ -8,7 +8,7 @@ import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../node/index.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { get_mime_lookup, get_start, resolve_entry } from '../utils.js';
+import { get_mime_lookup, modules, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 
@@ -46,7 +46,7 @@ export async function create_plugin(config, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/@fs${get_start()}`,
+							file: `/@fs${modules}/client/start.js`,
 							css: [],
 							js: []
 						},

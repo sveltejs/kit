@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { posixify } from '../utils.js';
-import { SVELTE_KIT } from '../constants.js';
+import { modules, posixify } from '../utils.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -36,7 +35,7 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${SVELTE_KIT}/modules/components`,
+	fallback = `${modules}/components`,
 	cwd = process.cwd()
 }) {
 	/**
