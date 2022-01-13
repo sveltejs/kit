@@ -23,7 +23,7 @@ export default {
 };
 ```
 
-Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docspage-options-prerender) option is set.
+Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs#page-options-prerender) option is set.
 
 ## Options
 
@@ -64,7 +64,7 @@ export default {
 };
 ```
 
-When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docspage-options-prerender) option set will be prerendered.
+When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#page-options-prerender) option set will be prerendered.
 
 ## GitHub Pages
 
