@@ -1,7 +1,8 @@
 .DS_Store
 /node_modules
 /dist
-/assets/runtime
+/assets/*
+!/assets/components
 /assets/kit.js
 /client/**/*.d.ts
 /test/**/.svelte-kit

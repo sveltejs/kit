@@ -17,8 +17,8 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			'internal/start': 'src/runtime/client/start.js',
-			'internal/singletons': 'src/runtime/client/singletons.js',
+			'client/start': 'src/runtime/client/start.js',
+			'client/singletons': 'src/runtime/client/singletons.js',
 			'app/navigation': 'src/runtime/app/navigation.js',
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
@@ -27,12 +27,12 @@ export default [
 			env: 'src/runtime/env.js'
 		},
 		output: {
-			dir: 'assets/runtime',
+			dir: 'assets',
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js',
 			paths: {
-				ROOT: '../../generated/root.svelte',
-				MANIFEST: '../../generated/manifest.js'
+				ROOT: '../generated/root.svelte',
+				MANIFEST: '../generated/manifest.js'
 			}
 		},
 		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],

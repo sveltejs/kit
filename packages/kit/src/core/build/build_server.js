@@ -22,8 +22,8 @@ import { s } from '../../utils/misc.js';
 const template = ({ cwd, config, hooks, runtime, has_service_worker }) => `
 import { respond } from '${runtime}';
 import root from '../modules/generated/root.svelte';
-import { set_paths, assets, base } from '../modules/runtime/paths.js';
-import { set_prerendering } from '../modules/runtime/env.js';
+import { set_paths, assets, base } from '../modules/paths.js';
+import { set_prerendering } from '../modules/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets }) => ${s(load_template(cwd, config))
@@ -232,7 +232,7 @@ export async function build_server(
 		],
 		resolve: {
 			alias: {
-				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/app`),
 				$lib: config.kit.files.lib
 			}
 		}

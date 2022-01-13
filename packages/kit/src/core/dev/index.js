@@ -51,7 +51,7 @@ export async function dev({ cwd, port, host, https, config }) {
 		root: cwd,
 		resolve: {
 			alias: {
-				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/app`),
 				$lib: config.kit.files.lib
 			}
 		},
@@ -59,7 +59,7 @@ export async function dev({ cwd, port, host, https, config }) {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: path.resolve(`${cwd}/${SVELTE_KIT}/modules/runtime/internal/start.js`)
+				input: path.resolve(`${cwd}/${SVELTE_KIT}/modules/client/start.js`)
 			}
 		},
 		plugins: [

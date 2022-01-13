@@ -80,7 +80,7 @@ export async function build_client({
 		},
 		resolve: {
 			alias: {
-				$app: path.resolve(`${SVELTE_KIT}/modules/runtime/app`),
+				$app: path.resolve(`${SVELTE_KIT}/modules/app`),
 				$lib: config.kit.files.lib
 			}
 		},

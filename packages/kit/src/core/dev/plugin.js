@@ -46,7 +46,7 @@ export async function create_plugin(config, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/${SVELTE_KIT}/modules/runtime/internal/start.js`,
+							file: `/${SVELTE_KIT}/modules/client/start.js`,
 							css: [],
 							js: []
 						},
@@ -175,7 +175,7 @@ export async function create_plugin(config, cwd) {
 						const root = (await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/generated/root.svelte`))
 							.default;
 
-						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/runtime/paths.js`);
+						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/paths.js`);
 
 						paths.set_paths({
 							base: config.kit.paths.base,
