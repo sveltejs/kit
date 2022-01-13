@@ -99,6 +99,10 @@ export async function build_client({
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
+	// temporary windows debugging stuff
+	console.error('client_entry_file', client_entry_file);
+	console.error(vite_manifest);
+
 	const entry_js = new Set();
 	const entry_css = new Set();
 	find_deps(client_entry_file, vite_manifest, entry_js, entry_css);
