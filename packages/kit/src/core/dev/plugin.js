@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath, URL } from 'url';
+import { URL } from 'url';
 import colors from 'kleur';
 import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
