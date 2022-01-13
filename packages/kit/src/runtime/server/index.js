@@ -130,9 +130,25 @@ export async function respond(incoming, options, state = {}) {
 								const etag = `"${hash(response.body || '')}"`;
 
 								if (if_none_match_value === etag) {
+									/** @type {import('types/helper').ResponseHeaders} */
+									const headers = { etag };
+
+									// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+									for (const key of [
+										'cache-control',
+										'content-location',
+										'date',
+										'expires',
+										'vary'
+									]) {
+										if (key in response.headers) {
+											headers[key] = /** @type {string} */ (response.headers[key]);
+										}
+									}
+
 									return {
 										status: 304,
-										headers: {}
+										headers
 									};
 								}
 
