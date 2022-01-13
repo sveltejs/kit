@@ -31,8 +31,11 @@ export function logger({ verbose }) {
 	/** @type {import('types/internal').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
+	/** @param {string} msg */
+	const err = (msg) => console.error(msg.replace(/^/gm, '  '));
+
 	log.success = (msg) => log(colors.green(`✔ ${msg}`));
-	log.error = (msg) => log(colors.bold().red(msg));
+	log.error = (msg) => err(colors.bold().red(msg));
 	log.warn = (msg) => log(colors.bold().yellow(msg));
 
 	log.minor = verbose ? (msg) => log(colors.grey(msg)) : noop;
