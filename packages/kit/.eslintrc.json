@@ -8,6 +8,8 @@
 		"goto": true,
 		"invalidate": true,
 		"prefetch": true,
-		"prefetchRoutes": true
+		"prefetchRoutes": true,
+		"beforeNavigate": true,
+		"afterNavigate": true
 	}
 }

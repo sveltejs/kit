@@ -87,6 +87,66 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
+test.describe.parallel('afterNavigate', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('calls callback', async ({ page, clicknav }) => {
+		await page.goto('/after-navigate/a');
+		expect(await page.textContent('h1')).toBe('undefined -> /after-navigate/a');
+
+		await clicknav('[href="/after-navigate/b"]');
+		expect(await page.textContent('h1')).toBe('/after-navigate/a -> /after-navigate/b');
+	});
+});
+
+test.describe.parallel('beforeNavigate', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('prevents navigation triggered by link click', async ({ clicknav, page, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		try {
+			await clicknav('[href="/before-navigate/a"]');
+			expect(false).toBe(true);
+		} catch (/** @type {any} */ e) {
+			expect(e.message).toMatch('Timed out');
+		}
+
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('true');
+	});
+
+	test('prevents navigation triggered by goto', async ({ page, app, baseURL }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+		await app.goto('/before-navigate/a');
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('true');
+	});
+
+	test('prevents navigation triggered by back button', async ({ page, app, baseURL }) => {
+		await page.goto('/before-navigate/a');
+
+		await app.goto('/before-navigate/prevent-navigation');
+		await page.goBack();
+		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
+		expect(await page.innerHTML('pre')).toBe('true');
+	});
+
+	test('prevents unload', async ({ page }) => {
+		await page.goto('/before-navigate/prevent-navigation');
+
+		const type = new Promise((fulfil) => {
+			page.on('dialog', async (dialog) => {
+				fulfil(dialog.type());
+				await dialog.dismiss();
+			});
+		});
+
+		await page.close({ runBeforeUnload: true });
+		expect(await type).toBe('beforeunload');
+	});
+});
+
 test.describe('Scrolling', () => {
 	// skip these tests if JS is disabled, since we're testing client-side behaviour
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);

@@ -1,3 +1,4 @@
+import { onMount } from 'svelte';
 import { get_base_uri } from './utils';
 
 function scroll_state() {
@@ -53,8 +54,21 @@ export class Router {
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
-		// create initial history entry, so we can return here
-		history.replaceState(history.state || {}, '', location.href);
+		// keeping track of the history index in order to prevent popstate navigation events if needed
+		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
+
+		if (this.current_history_index === 0) {
+			// create initial history entry, so we can return here
+			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+		}
+
+		this.callbacks = {
+			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+			before_navigate: [],
+
+			/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
+			after_navigate: []
+		};
 	}
 
 	init_listeners() {
@@ -66,8 +80,23 @@ export class Router {
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
 		// and back-navigation from other pages to use the browser to restore the
 		// scrolling position.
-		addEventListener('beforeunload', () => {
-			history.scrollRestoration = 'auto';
+		addEventListener('beforeunload', (e) => {
+			let should_block = false;
+
+			const intent = {
+				from: this.renderer.current.url,
+				to: null,
+				cancel: () => (should_block = true)
+			};
+
+			this.callbacks.before_navigate.forEach((fn) => fn(intent));
+
+			if (should_block) {
+				e.preventDefault();
+				e.returnValue = '';
+			} else {
+				history.scrollRestoration = 'auto';
+			}
 		});
 
 		// Setting scrollRestoration to manual again when returning to this page.
@@ -122,7 +151,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
+		addEventListener('click', async (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js
@@ -155,8 +184,6 @@ export class Router {
 			// Ignore if <a> has a target
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
-			if (!this.owns(url)) return;
-
 			// Check if new url only differs by hash
 			if (url.href.split('#')[0] === location.href.split('#')[0]) {
 				// Call `pushState` to add url to history so going back works.
@@ -169,20 +196,48 @@ export class Router {
 				return;
 			}
 
-			const noscroll = a.hasAttribute('sveltekit:noscroll');
-			this._navigate(url, noscroll ? scroll_state() : null, false, [], url.hash, {}, 'pushState');
-			event.preventDefault();
+			this._navigate({
+				url,
+				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+				keepfocus: false,
+				chain: [],
+				details: {
+					state: {},
+					replaceState: false
+				},
+				accepted: () => event.preventDefault(),
+				blocked: () => event.preventDefault()
+			});
 		});
 
 		addEventListener('popstate', (event) => {
 			if (event.state && this.enabled) {
-				const url = new URL(location.href);
-				this._navigate(url, event.state['sveltekit:scroll'], false, [], url.hash, null, null);
+				// if a popstate-driven navigation is cancelled, we need to counteract it
+				// with history.go, which means we end up back here, hence this check
+				if (event.state['sveltekit:index'] === this.current_history_index) return;
+
+				this._navigate({
+					url: new URL(location.href),
+					scroll: event.state['sveltekit:scroll'],
+					keepfocus: false,
+					chain: [],
+					details: null,
+					accepted: () => {
+						this.current_history_index = event.state['sveltekit:index'];
+					},
+					blocked: () => {
+						const delta = this.current_history_index - event.state['sveltekit:index'];
+						history.go(delta);
+					}
+				});
 			}
 		});
 	}
 
-	/** @param {URL} url */
+	/**
+	 * Returns true if `url` has the same origin and basepath as the app
+	 * @param {URL} url
+	 */
 	owns(url) {
 		return url.origin === location.origin && url.pathname.startsWith(this.base);
 	}
@@ -218,16 +273,19 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		if (this.enabled && this.owns(url)) {
-			return this._navigate(
+		if (this.enabled) {
+			return this._navigate({
 				url,
-				noscroll ? scroll_state() : null,
+				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
 				chain,
-				url.hash,
-				state,
-				replaceState ? 'replaceState' : 'pushState'
-			);
+				details: {
+					state,
+					replaceState
+				},
+				accepted: () => {},
+				blocked: () => {}
+			});
 		}
 
 		location.href = url.href;
@@ -258,21 +316,72 @@ export class Router {
 		return this.renderer.load(info);
 	}
 
-	/**
-	 * @param {URL} url
-	 * @param {{ x: number, y: number }?} scroll
-	 * @param {boolean} keepfocus
-	 * @param {string[]} chain
-	 * @param {string} hash
-	 * @param {any} state
-	 * @param {'pushState' | 'replaceState' | null} method
-	 */
-	async _navigate(url, scroll, keepfocus, chain, hash, state, method) {
-		const info = this.parse(url);
+	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
+	after_navigate(fn) {
+		onMount(() => {
+			this.callbacks.after_navigate.push(fn);
 
-		if (!info) {
-			throw new Error('Attempted to navigate to a URL that does not belong to this app');
+			return () => {
+				const i = this.callbacks.after_navigate.indexOf(fn);
+				this.callbacks.after_navigate.splice(i, 1);
+			};
+		});
+	}
+
+	/**
+	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
+	 */
+	before_navigate(fn) {
+		onMount(() => {
+			this.callbacks.before_navigate.push(fn);
+
+			return () => {
+				const i = this.callbacks.before_navigate.indexOf(fn);
+				this.callbacks.before_navigate.splice(i, 1);
+			};
+		});
+	}
+
+	/**
+	 * @param {{
+	 *   url: URL;
+	 *   scroll: { x: number, y: number } | null;
+	 *   keepfocus: boolean;
+	 *   chain: string[];
+	 *   details: {
+	 *     replaceState: boolean;
+	 *     state: any;
+	 *   } | null;
+	 *   accepted: () => void;
+	 *   blocked: () => void;
+	 * }} opts
+	 */
+	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
+		const from = this.renderer.current.url;
+		let should_block = false;
+
+		const intent = {
+			from,
+			to: url,
+			cancel: () => (should_block = true)
+		};
+
+		this.callbacks.before_navigate.forEach((fn) => fn(intent));
+
+		if (should_block) {
+			blocked();
+			return;
 		}
+
+		const info = this.parse(url);
+		if (!info) {
+			location.href = url.href;
+			return new Promise(() => {
+				// never resolves
+			});
+		}
+
+		accepted();
 
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
@@ -289,13 +398,24 @@ export class Router {
 		}
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
-		if (method) history[method](state, '', info.url);
 
-		await this.renderer.handle_navigation(info, chain, false, { hash, scroll, keepfocus });
+		if (details) {
+			const change = details.replaceState ? 0 : 1;
+			details.state['sveltekit:index'] = this.current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
+		}
+
+		await this.renderer.handle_navigation(info, chain, false, {
+			scroll,
+			keepfocus
+		});
 
 		this.navigating--;
 		if (!this.navigating) {
 			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+
+			const navigation = { from, to: url };
+			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
 	}
 }
