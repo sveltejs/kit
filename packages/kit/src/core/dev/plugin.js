@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
-import { respond } from '../../runtime/server/index.js';
+import { respond } from '../../modules/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
