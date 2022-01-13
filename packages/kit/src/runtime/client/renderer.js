@@ -160,9 +160,8 @@ export class Renderer {
 		let error_args;
 
 		// url.hash is empty when coming from the server
-		url.hash = window.location.hash;
 		// in some cases the protcol is not set correctly by the server
-		url.protocol = window.location.protocol;
+		url = { ...url, hash: window.location.hash, protocol: window.location.protocol };
 
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
