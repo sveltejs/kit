@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.228
+
+### Patch Changes
+
+- Throw on accessing url.search/searchParams from page store during prerendering ([#3314](https://github.com/sveltejs/kit/pull/3314))
+
+* Preserve relevant headers when serving 304s ([#3313](https://github.com/sveltejs/kit/pull/3313))
+
 ## 1.0.0-next.227
 
 ### Patch Changes
