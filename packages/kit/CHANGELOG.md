@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.227
+
+### Patch Changes
+
+- Adds beforeNavigate/afterNavigate lifecycle functions ([#3293](https://github.com/sveltejs/kit/pull/3293))
+
 ## 1.0.0-next.226
 
 ### Patch Changes
