@@ -94,9 +94,17 @@ export function get_mime_lookup(manifest_data) {
 /** @param {import('@sveltejs/kit').ValidatedConfig} config */
 export function get_aliases(config) {
 	return {
+		__ROOT__: path.resolve(`${SVELTE_KIT}/generated/root.svelte`),
+		__MANIFEST__: path.resolve(`${SVELTE_KIT}/generated/manifest.js`),
 		$app: process.env.BUILD
 			? path.resolve(`${SVELTE_KIT}/modules/app`)
 			: path.resolve(__dirname, '../runtime/app'),
 		$lib: config.kit.files.lib
 	};
+}
+
+export function get_start() {
+	return process.env.BUILD
+		? `${SVELTE_KIT}/modules/client/start.js`
+		: path.resolve(__dirname, '../runtime/client/start.js');
 }

@@ -8,6 +8,7 @@ import { get_aliases, posixify, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
+import { fileURLToPath } from 'url';
 
 /**
  * @param {{
@@ -16,14 +17,15 @@ import { s } from '../../utils/misc.js';
  *   hooks: string;
  *   config: import('types/config').ValidatedConfig;
  *   has_service_worker: boolean;
+ *   modules: string;
  * }} opts
  * @returns
  */
-const template = ({ cwd, config, hooks, runtime, has_service_worker }) => `
+const template = ({ cwd, config, hooks, runtime, has_service_worker, modules }) => `
 import { respond } from '${runtime}';
-import root from '../modules/generated/root.svelte';
-import { set_paths, assets, base } from '../modules/paths.js';
-import { set_prerendering } from '../modules/env.js';
+import root from '../generated/root.svelte';
+import { set_paths, assets, base } from '${modules}/paths.js';
+import { set_prerendering } from '${modules}/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets }) => ${s(load_template(cwd, config))
@@ -185,7 +187,8 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			runtime,
-			has_service_worker: service_worker_register && !!service_worker_entry_file
+			has_service_worker: service_worker_register && !!service_worker_entry_file,
+			modules: process.env.BUILD ? '../modules' : fileURLToPath(new URL('../../runtime', import.meta.url))
 		})
 	);
 

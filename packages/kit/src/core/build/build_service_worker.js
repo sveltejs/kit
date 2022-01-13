@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import vite from 'vite';
 import { s } from '../../utils/misc.js';
 import { deep_merge } from '../../utils/object.js';
@@ -12,15 +11,13 @@ import { SVELTE_KIT } from '../constants.js';
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest_data: import('types/internal').ManifestData
- *   build_dir: string;
  *   output_dir: string;
- *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
  * }} options
  * @param {import('vite').Manifest} client_manifest
  */
 export async function build_service_worker(
-	{ cwd, assets_base, config, manifest_data, build_dir, output_dir, service_worker_entry_file },
+	{ cwd, assets_base, config, manifest_data, output_dir, service_worker_entry_file },
 	client_manifest
 ) {
 	// TODO add any assets referenced in template .html file, e.g. favicon?
@@ -35,7 +32,7 @@ export async function build_service_worker(
 		}
 	}
 
-	const service_worker = `${cwd}/${SVELTE_KIT}/modules/generated/service-worker.js`;
+	const service_worker = `${cwd}/${SVELTE_KIT}/generated/service-worker.js`;
 
 	fs.writeFileSync(
 		service_worker,

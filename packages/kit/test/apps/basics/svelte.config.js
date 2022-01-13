@@ -1,3 +1,5 @@
+import path from 'path';
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
@@ -10,6 +12,11 @@ const config = {
 				// for CI, we need to explicitly prebundle deps, since
 				// the reload confuses Playwright
 				include: ['cookie', 'marked']
+			},
+			server: {
+				fs: {
+					allow: [path.resolve('../../../src')]
+				}
 			}
 		},
 		methodOverride: {

@@ -31,11 +31,11 @@ export default [
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js',
 			paths: {
-				ROOT: '../../generated/root.svelte',
-				MANIFEST: '../../generated/manifest.js'
+				__ROOT__: '../../generated/root.svelte',
+				__MANIFEST__: '../../generated/manifest.js'
 			}
 		},
-		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],
+		external: ['svelte', 'svelte/store', '__ROOT__', '__MANIFEST__'],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']

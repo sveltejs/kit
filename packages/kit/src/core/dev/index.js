@@ -5,7 +5,7 @@ import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { copy_assets, get_aliases } from '../utils.js';
+import { copy_assets, get_aliases, get_start } from '../utils.js';
 import { create_plugin } from './plugin.js';
 
 /**
@@ -56,7 +56,7 @@ export async function dev({ cwd, port, host, https, config }) {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: path.resolve(`${cwd}/${SVELTE_KIT}/modules/client/start.js`)
+				input: get_start()
 			}
 		},
 		plugins: [
