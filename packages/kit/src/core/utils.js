@@ -94,7 +94,9 @@ export function get_mime_lookup(manifest_data) {
 /** @param {import('@sveltejs/kit').ValidatedConfig} config */
 export function get_aliases(config) {
 	return {
-		$app: path.resolve(`${SVELTE_KIT}/modules/app`),
+		$app: process.env.BUILD
+			? path.resolve(`${SVELTE_KIT}/modules/app`)
+			: path.resolve(__dirname, '../runtime/app'),
 		$lib: config.kit.files.lib
 	};
 }

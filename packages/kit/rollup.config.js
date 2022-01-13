@@ -76,7 +76,8 @@ export default [
 			replace({
 				preventAssignment: true,
 				values: {
-					__VERSION__: pkg.version
+					__VERSION__: pkg.version,
+					'process.env.BUILD': 'true'
 				}
 			}),
 			resolve({
