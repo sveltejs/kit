@@ -84,7 +84,7 @@ declare module '$app/navigation' {
 	/**
 	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
 	 */
-	export function afterNavigate(fn: ({ from, to }: { from: URL; to: URL }) => void): any;
+	export function afterNavigate(fn: ({ from, to }: { from: URL | null; to: URL }) => void): any;
 }
 
 declare module '$app/paths' {

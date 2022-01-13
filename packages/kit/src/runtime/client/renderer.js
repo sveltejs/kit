@@ -378,6 +378,11 @@ export class Renderer {
 		});
 
 		this.started = true;
+
+		if (this.router) {
+			const navigation = { from: null, to: new URL(location.href) };
+			this.router.callbacks.after_navigate.forEach((fn) => fn(navigation));
+		}
 	}
 
 	/**

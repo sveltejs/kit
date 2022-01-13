@@ -66,7 +66,7 @@ export class Router {
 			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
 			before_navigate: [],
 
-			/** @type {Array<({ from, to }: { from: URL, to: URL }) => void>} */
+			/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
 			after_navigate: []
 		};
 	}
@@ -316,7 +316,7 @@ export class Router {
 		return this.renderer.load(info);
 	}
 
-	/** @param {({ from, to }: { from: URL, to: URL }) => void} fn */
+	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
 	after_navigate(fn) {
 		onMount(() => {
 			this.callbacks.after_navigate.push(fn);

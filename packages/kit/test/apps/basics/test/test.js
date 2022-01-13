@@ -87,6 +87,18 @@ test.describe.parallel('a11y', () => {
 	});
 });
 
+test.describe.parallel('afterNavigate', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('calls callback', async ({ page, clicknav }) => {
+		await page.goto('/after-navigate/a');
+		expect(await page.textContent('h1')).toBe('undefined -> /after-navigate/a');
+
+		await clicknav('[href="/after-navigate/b"]');
+		expect(await page.textContent('h1')).toBe('/after-navigate/a -> /after-navigate/b');
+	});
+});
+
 test.describe.parallel('beforeNavigate', () => {
 	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
