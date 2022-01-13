@@ -30,7 +30,7 @@ export async function build_client({
 }) {
 	create_app({
 		manifest_data,
-		output: `${SVELTE_KIT}/modules`,
+		output: `${SVELTE_KIT}/generated`,
 		cwd
 	});
 

@@ -31,8 +31,8 @@ export default [
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js',
 			paths: {
-				ROOT: '../generated/root.svelte',
-				MANIFEST: '../generated/manifest.js'
+				ROOT: '../../generated/root.svelte',
+				MANIFEST: '../../generated/manifest.js'
 			}
 		},
 		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],

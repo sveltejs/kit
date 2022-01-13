@@ -28,11 +28,10 @@ export function write_if_changed(file, code) {
  * }} options
  */
 export function create_app({ manifest_data, output, cwd = process.cwd() }) {
-	const dir = `${output}/generated`;
-	const base = path.relative(cwd, dir);
+	const base = path.relative(cwd, output);
 
-	write_if_changed(`${dir}/manifest.js`, generate_client_manifest(manifest_data, base));
-	write_if_changed(`${dir}/root.svelte`, generate_app(manifest_data));
+	write_if_changed(`${output}/manifest.js`, generate_client_manifest(manifest_data, base));
+	write_if_changed(`${output}/root.svelte`, generate_app(manifest_data));
 }
 
 /**
