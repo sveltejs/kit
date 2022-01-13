@@ -1,7 +1,7 @@
 <script>
 	import { afterNavigate } from '$app/navigation';
 
-	/** @type {URL} */
+	/** @type {URL | null} */
 	let from;
 
 	/** @type {URL} */
