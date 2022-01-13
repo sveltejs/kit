@@ -46,7 +46,7 @@ export async function create_plugin(config, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/@fs${get_start(cwd)}`,
+							file: `/@fs${get_start()}`,
 							css: [],
 							js: []
 						},
