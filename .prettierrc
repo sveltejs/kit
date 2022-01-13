@@ -5,19 +5,21 @@
 	"printWidth": 100,
 	"overrides": [
 		{
-			"files": [
-				"*.svelte"
-			],
+			"files": ["*.svelte"],
 			"options": {
 				"svelteBracketNewLine": true
 			}
 		},
 		{
-			"files": [
-				"packages/kit/src/packaging/test/fixtures/**/expected/**/*"
-			],
+			"files": ["packages/kit/src/packaging/test/fixtures/**/expected/**/*"],
 			"options": {
-				requirePragma: true
+				"requirePragma": true
+			}
+		},
+		{
+			"files": ["packages/kit/src/core/adapt/prerender/fixtures/**/*"],
+			"options": {
+				"requirePragma": true
 			}
 		}
 	]

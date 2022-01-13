@@ -110,6 +110,7 @@ declare module '$app/stores' {
 	export const page: Readable<{
 		url: URL;
 		params: Record<string, string>;
+		stuff: Record<string, any>;
 		status: number;
 		error: Error | null;
 	}>;

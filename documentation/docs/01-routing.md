@@ -10,7 +10,7 @@ There are two types of route — **pages** and **endpoints**.
 
 Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
 
-Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
+Endpoints run only on the server (or when you build your site, if [prerendering](#page-options-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
 
 ### Pages
 
@@ -79,15 +79,18 @@ export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	body?: Body;
 }
 
+export type MaybePromise<T> = T | Promise<T>;
+
+export interface Fallthrough {
+	fallthrough?: true;
+}
+
 export interface RequestHandler<
 	Locals = Record<string, any>,
 	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: Request<Locals, Input>):
-		| void
-		| EndpointOutput<Output>
-		| Promise<void | EndpointOutput<Output>>;
+	(request: Request<Locals, Input>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
 }
 ```
 
@@ -125,7 +128,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 
-> Returning nothing is equivalent to an explicit 404 response.
+> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
@@ -155,6 +158,29 @@ The `body` property of the request object will be provided in the case of POST r
 - JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
 - Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 - All other data will be provided as a `Uint8Array`
+
+#### HTTP Method Overrides
+
+HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
+
+```js
+// svelte.config.js
+export default {
+	kit: {
+		methodOverride: {
+			allowed: ['PUT', 'PATCH', 'DELETE']
+		}
+	}
+};
+```
+
+```html
+<form method="post" action="/todos/{id}?_method=PUT">
+	<!-- form elements -->
+</form>
+```
+
+> Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
 
 ### Private modules
 

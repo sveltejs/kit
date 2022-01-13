@@ -75,6 +75,23 @@ const options = object(
 
 			hydrate: boolean(true),
 
+			inlineStyleThreshold: number(0),
+
+			methodOverride: object({
+				parameter: string('_method'),
+				allowed: validate([], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					if (input.map((i) => i.toUpperCase()).includes('GET')) {
+						throw new Error(`${keypath} cannot contain "GET"`);
+					}
+
+					return input;
+				})
+			}),
+
 			package: object({
 				dir: string('package'),
 				// excludes all .d.ts and filename starting with _
@@ -171,7 +188,14 @@ const options = object(
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
-			ssr: boolean(true),
+			// TODO remove this for 1.0
+			ssr: validate(null, (input) => {
+				if (input !== undefined) {
+					throw new Error(
+						'config.kit.ssr has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+					);
+				}
+			}),
 
 			target: string(null),
 

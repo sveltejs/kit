@@ -17,36 +17,42 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   status: number;
  *   error: Error;
+ *   ssr: boolean;
  * }} opts
  */
-export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
-	const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
+export async function respond_with_error({
+	request,
+	options,
+	state,
+	$session,
+	status,
+	error,
+	ssr
+}) {
+	try {
+		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-	/** @type {Record<string, string>} */
-	const params = {}; // error page has no params
+		/** @type {Record<string, string>} */
+		const params = {}; // error page has no params
 
-	// error pages don't fall through, so we know it's not undefined
-	const loaded = /** @type {Loaded} */ (
-		await load_node({
-			request,
-			options,
-			state,
-			route: null,
-			url: request.url, // TODO this is redundant, no?
-			params,
-			node: default_layout,
-			$session,
-			stuff: {},
-			prerender_enabled: is_prerender_enabled(options, default_error, state),
-			is_leaf: false,
-			is_error: false
-		})
-	);
+		const layout_loaded = /** @type {Loaded} */ (
+			await load_node({
+				request,
+				options,
+				state,
+				route: null,
+				url: request.url, // TODO this is redundant, no?
+				params,
+				node: default_layout,
+				$session,
+				stuff: {},
+				prerender_enabled: is_prerender_enabled(options, default_error, state),
+				is_error: false
+			})
+		);
 
-	const branch = [
-		loaded,
-		/** @type {Loaded} */ (
+		const error_loaded = /** @type {Loaded} */ (
 			await load_node({
 				request,
 				options,
@@ -56,30 +62,28 @@ export async function respond_with_error({ request, options, state, $session, st
 				params,
 				node: default_error,
 				$session,
-				stuff: loaded ? loaded.stuff : {},
+				stuff: layout_loaded ? layout_loaded.stuff : {},
 				prerender_enabled: is_prerender_enabled(options, default_error, state),
-				is_leaf: false,
 				is_error: true,
 				status,
 				error
 			})
-		)
-	];
+		);
 
-	try {
 		return await render_response({
 			options,
 			$session,
 			page_config: {
 				hydrate: options.hydrate,
-				router: options.router,
-				ssr: options.ssr
+				router: options.router
 			},
+			stuff: error_loaded.stuff,
 			status,
 			error,
-			branch,
+			branch: [layout_loaded, error_loaded],
 			url: request.url,
-			params
+			params,
+			ssr
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

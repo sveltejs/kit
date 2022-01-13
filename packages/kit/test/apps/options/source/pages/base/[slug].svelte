@@ -1,6 +1,9 @@
 <script>
 	import { page } from '$app/stores';
+	import SvelteLogo from '$lib/SvelteLogo.svelte';
 </script>
+
+<SvelteLogo />
 
 <h2>{$page.params.slug}</h2>
 

@@ -1,5 +1,5 @@
 interface ReadOnlyFormData {
-	get(key: string): string;
+	get(key: string): string | null;
 	getAll(key: string): string[];
 	has(key: string): boolean;
 	entries(): Generator<[string, string], void>;
@@ -39,3 +39,15 @@ export type RecursiveRequired<T> = {
 		? Extract<T[K], Function> // only take the Function type.
 		: T[K]; // Use the exact type for everything else
 };
+
+type Only<T, U> = {
+	[P in keyof T]: T[P];
+} & {
+	[P in keyof U]?: never;
+};
+
+export type Either<T, U> = Only<T, U> | Only<U, T>;
+
+export interface Fallthrough {
+	fallthrough: true;
+}

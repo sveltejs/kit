@@ -1,6 +1,6 @@
 import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
-import { prerender } from './prerender.js';
+import { prerender } from './prerender/prerender.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 
 /**

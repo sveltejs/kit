@@ -162,6 +162,10 @@ export class Router {
 				// Call `pushState` to add url to history so going back works.
 				// Also make a delay, otherwise the browser default behaviour would not kick in
 				setTimeout(() => history.pushState({}, '', url.href));
+				const info = this.parse(url);
+				if (info) {
+					return this.renderer.update(info, [], false);
+				}
 				return;
 			}
 

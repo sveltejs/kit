@@ -19,14 +19,29 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
+ *   ssr: boolean;
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route } = opts;
+	const { request, options, state, $session, route, ssr } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
+
+	if (!ssr) {
+		return await render_response({
+			...opts,
+			branch: [],
+			page_config: {
+				hydrate: true,
+				router: true
+			},
+			status: 200,
+			url: request.url,
+			stuff: {}
+		});
+	}
 
 	try {
 		nodes = await Promise.all(
@@ -43,7 +58,8 @@ export async function respond(opts) {
 			state,
 			$session,
 			status: 500,
-			error
+			error,
+			ssr
 		});
 	}
 
@@ -73,9 +89,9 @@ export async function respond(opts) {
 	/** @type {string[]} */
 	let set_cookie_headers = [];
 
-	ssr: if (page_config.ssr) {
-		let stuff = {};
+	let stuff = {};
 
+	ssr: if (ssr) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -90,7 +106,6 @@ export async function respond(opts) {
 						node,
 						stuff,
 						prerender_enabled: is_prerender_enabled(options, node, state),
-						is_leaf: i === nodes.length - 1,
 						is_error: false
 					});
 
@@ -139,7 +154,6 @@ export async function respond(opts) {
 							}
 
 							try {
-								// there's no fallthough on an error page, so we know it's not undefined
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
@@ -147,7 +161,6 @@ export async function respond(opts) {
 										node: error_node,
 										stuff: node_loaded.stuff,
 										prerender_enabled: is_prerender_enabled(options, error_node, state),
-										is_leaf: false,
 										is_error: true,
 										status,
 										error
@@ -160,6 +173,7 @@ export async function respond(opts) {
 
 								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
+								stuff = { ...node_loaded.stuff, ...error_loaded.stuff };
 								break ssr;
 							} catch (err) {
 								const e = coalesce_to_error(err);
@@ -181,7 +195,8 @@ export async function respond(opts) {
 							state,
 							$session,
 							status,
-							error
+							error,
+							ssr
 						}),
 						set_cookie_headers
 					);
@@ -201,6 +216,7 @@ export async function respond(opts) {
 		return with_cookies(
 			await render_response({
 				...opts,
+				stuff,
 				url: request.url,
 				page_config,
 				status,
@@ -230,8 +246,14 @@ export async function respond(opts) {
  * @param {SSRRenderOptions} options
  */
 function get_page_config(leaf, options) {
+	// TODO remove for 1.0
+	if ('ssr' in leaf) {
+		throw new Error(
+			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+		);
+	}
+
 	return {
-		ssr: 'ssr' in leaf ? !!leaf.ssr : options.ssr,
 		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};

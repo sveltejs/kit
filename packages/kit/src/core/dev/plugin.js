@@ -16,10 +16,17 @@ import { load_template } from '../config/index.js';
  * @param {import('types/config').ValidatedConfig} config
  * @param {string} output
  * @param {string} cwd
- * @param {import('amphtml-validator').Validator | false} amp
- * @returns {import('vite').Plugin}
+ * @returns {Promise<import('vite').Plugin>}
  */
-export function create_plugin(config, output, cwd, amp) {
+export async function create_plugin(config, output, cwd) {
+	/** @type {import('amphtml-validator').Validator} */
+	let amp;
+
+	if (config.kit.amp) {
+		process.env.VITE_SVELTEKIT_AMP = 'true';
+		amp = await (await import('amphtml-validator')).getInstance();
+	}
+
 	return {
 		name: 'vite-plugin-svelte-kit',
 
@@ -58,7 +65,8 @@ export function create_plugin(config, output, cwd, amp) {
 								const deps = new Set();
 								find_deps(node, deps);
 
-								const styles = new Set();
+								/** @type {Record<string, string>} */
+								const styles = {};
 
 								for (const dep of deps) {
 									const parsed = new URL(dep.url, 'http://localhost/');
@@ -71,7 +79,7 @@ export function create_plugin(config, output, cwd, amp) {
 									) {
 										try {
 											const mod = await vite.ssrLoadModule(dep.url);
-											styles.add(mod.default);
+											styles[dep.url] = mod.default;
 										} catch {
 											// this can happen with dynamically imported modules, I think
 											// because the Vite module graph doesn't distinguish between
@@ -85,7 +93,7 @@ export function create_plugin(config, output, cwd, amp) {
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
-									styles: Array.from(styles)
+									styles
 								};
 							};
 						}),
@@ -207,6 +215,7 @@ export function create_plugin(config, output, cwd, amp) {
 								hooks,
 								hydrate: config.kit.hydrate,
 								manifest,
+								method_override: config.kit.methodOverride,
 								paths: {
 									base: config.kit.paths.base,
 									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
@@ -216,7 +225,6 @@ export function create_plugin(config, output, cwd, amp) {
 								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 								root,
 								router: config.kit.router,
-								ssr: config.kit.ssr,
 								target: config.kit.target,
 								template: ({ head, body, assets }) => {
 									let rendered = load_template(cwd, config)

@@ -14,7 +14,7 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 - `browser` is `true` or `false` depending on whether the app is running in the browser or on the server
 - `dev` is `true` in development mode, `false` in production
 - `mode` is the [Vite mode](https://vitejs.dev/guide/env-and-mode.html#modes), which is `development` in dev mode or `production` during build unless configured otherwise in `config.kit.vite.mode`.
-- `prerendering` is `true` when [prerendering](#ssr-and-javascript-prerender), `false` otherwise
+- `prerendering` is `true` when [prerendering](#page-options-prerender), `false` otherwise
 
 ### $app/navigation
 
@@ -58,7 +58,7 @@ Because of that, the stores are not free-floating objects: they must be accessed
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
-- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL) and [`params`](#loading-input-params).
+- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](#loading-input-params) and [`stuff`](#loading-output-stuff).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
 ### $lib

@@ -131,6 +131,11 @@ export interface Config {
 		};
 		host?: string;
 		hydrate?: boolean;
+		inlineStyleThreshold?: number;
+		methodOverride?: {
+			parameter?: string;
+			allowed?: string[];
+		};
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -154,7 +159,6 @@ export interface Config {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
 		};
-		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);

@@ -8,7 +8,7 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#ssr-and-javascript-prerender) — and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#page-options-prerender) — and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
@@ -47,11 +47,15 @@ export interface Response {
 	body?: StrictBody;
 }
 
+export interface ResolveOpts {
+	ssr?: boolean;
+}
+
 export interface Handle<Locals = Record<string, any>, Body = unknown> {
 	(input: {
-		request: Request<Locals, Body>;
-		resolve(request: Request<Locals, Body>): Response | Promise<Response>;
-	}): Response | Promise<Response>;
+		request: ServerRequest<Locals, Body>;
+		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
+	}): MaybePromise<ServerResponse>;
 }
 ```
 
@@ -75,6 +79,23 @@ export async function handle({ request, resolve }) {
 ```
 
 You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
+
+`resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
+
+- `ssr` — specifies whether the page will be loaded and rendered on the server.
+
+```js
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ request, resolve }) {
+	const response = await resolve(request, {
+		ssr: !request.path.startsWith('/admin')
+	});
+
+	return response;
+}
+```
+
+> Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). In most situations this is not recommended ([see appendix](#appendix-ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
 
 ### handleError
 

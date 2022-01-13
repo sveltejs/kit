@@ -42,6 +42,32 @@ test.describe.parallel('base path', () => {
 		).toBe('rgb(255, 0, 0)');
 	});
 
+	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/path-base/base/');
+		if (process.env.DEV) {
+			const ssr_style = await page.evaluate(() => document.querySelector('style[data-svelte]'));
+
+			if (javaScriptEnabled) {
+				// <style data-svelte> is removed upon hydration
+				expect(ssr_style).toBeNull();
+			} else {
+				expect(ssr_style).not.toBeNull();
+			}
+
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]'))
+			).toBeNull();
+		} else {
+			expect(await page.evaluate(() => document.querySelector('style'))).not.toBeNull();
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][disabled]'))
+			).not.toBeNull();
+			expect(
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
+			).not.toBeNull();
+		}
+	});
+
 	test('sets params correctly', async ({ page, clicknav }) => {
 		await page.goto('/path-base/base/one');
 

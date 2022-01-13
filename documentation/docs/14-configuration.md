@@ -32,6 +32,11 @@ const config = {
 		},
 		host: null,
 		hydrate: true,
+		inlineStyleThreshold: 0,
+		methodOverride: {
+			parameter: '_method',
+			allowed: []
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -56,7 +61,6 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		ssr: true,
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
@@ -133,7 +137,20 @@ A value that overrides the one derived from [`config.kit.headers.host`](#configu
 
 ### hydrate
 
-Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+Whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### inlineStyleThreshold
+
+Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+
+> This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+
+### methodOverride
+
+See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+
+- `parameter` — query parameter name to use for passing the intended method value
+- `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### package
 
@@ -172,7 +189,7 @@ An object containing zero or more of the following `string` values:
 
 ### prerender
 
-See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
+See [Prerendering](#page-options-prerender). An object containing zero or more of the following:
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
@@ -209,17 +226,13 @@ The protocol is assumed to be `'https'` (unless you're developing locally withou
 
 ### router
 
-Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
+Enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### serviceWorker
 
 An object containing zero or more of the following values:
 
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### ssr
-
-Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
 ### target
 
