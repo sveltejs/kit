@@ -21,9 +21,9 @@ import { s } from '../../utils/misc.js';
  */
 const template = ({ cwd, config, hooks, runtime, has_service_worker }) => `
 import { respond } from '${runtime}';
-import root from './generated/root.svelte';
-import { set_paths, assets, base } from './runtime/paths.js';
-import { set_prerendering } from './runtime/env.js';
+import root from '../modules/generated/root.svelte';
+import { set_paths, assets, base } from '../modules/runtime/paths.js';
+import { set_prerendering } from '../modules/runtime/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets }) => ${s(load_template(cwd, config))

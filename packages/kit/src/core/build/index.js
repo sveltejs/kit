@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { rimraf } from '../../utils/filesystem.js';
+import { mkdirp, rimraf } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
 import { posixify, resolve_entry } from '../utils.js';
@@ -17,12 +17,14 @@ import { build_server } from './build_server.js';
  * }} [opts]
  * @returns {Promise<import('types/internal').BuildData>}
  */
-export async function build(config, { cwd = process.cwd(), runtime = './kit.js' } = {}) {
+export async function build(config, { cwd = process.cwd(), runtime = '../modules/kit.js' } = {}) {
 	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
-
 	rimraf(build_dir);
+	mkdirp(build_dir);
 
 	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
+	rimraf(output_dir);
+	mkdirp(output_dir);
 
 	const options = {
 		cwd,
@@ -35,7 +37,6 @@ export async function build(config, { cwd = process.cwd(), runtime = './kit.js' 
 		assets_base: `${config.kit.paths.assets || config.kit.paths.base}/${config.kit.appDir}/`,
 		manifest_data: create_manifest_data({
 			config,
-			output: build_dir,
 			cwd
 		}),
 		output_dir,

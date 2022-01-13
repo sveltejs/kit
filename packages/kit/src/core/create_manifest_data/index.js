@@ -29,12 +29,16 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
 /**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
- *   output: string;
+ *   fallback?: string;
  *   cwd?: string;
  * }} opts
  * @returns {import('types/internal').ManifestData}
  */
-export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
+export default function create_manifest_data({
+	config,
+	fallback = `${SVELTE_KIT}/modules/components`,
+	cwd = process.cwd()
+}) {
 	/**
 	 * @param {string} file_name
 	 * @param {string} dir
@@ -50,12 +54,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
-	const default_layout = posixify(
-		path.relative(cwd, `${SVELTE_KIT}/modules/components/layout.svelte`)
-	);
-	const default_error = posixify(
-		path.relative(cwd, `${SVELTE_KIT}/modules/components/error.svelte`)
-	);
+	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
 	/**
 	 * @param {string} dir
