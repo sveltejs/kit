@@ -3,6 +3,7 @@ import path from 'path';
 import colors from 'kleur';
 import { copy } from '../utils/filesystem.js';
 import { fileURLToPath } from 'url';
+import { SVELTE_KIT } from './constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,4 +89,12 @@ export function get_mime_lookup(manifest_data) {
 	});
 
 	return mime;
+}
+
+/** @param {import('@sveltejs/kit').ValidatedConfig} config */
+export function get_aliases(config) {
+	return {
+		$app: path.resolve(`${SVELTE_KIT}/modules/app`),
+		$lib: config.kit.files.lib
+	};
 }

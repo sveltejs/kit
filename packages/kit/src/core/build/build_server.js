@@ -4,7 +4,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirp } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { load_template, print_config_conflicts } from '../config/index.js';
-import { posixify, resolve_entry } from '../utils.js';
+import { get_aliases, posixify, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
@@ -231,10 +231,7 @@ export async function build_server(
 			})
 		],
 		resolve: {
-			alias: {
-				$app: path.resolve(`${SVELTE_KIT}/modules/app`),
-				$lib: config.kit.files.lib
-			}
+			alias: get_aliases(config)
 		}
 	});
 
