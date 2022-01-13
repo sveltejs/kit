@@ -173,7 +173,7 @@ export async function create_plugin(config, cwd) {
 						}
 
 						const root = (await vite.ssrLoadModule(`/${SVELTE_KIT}/generated/root.svelte`)).default;
-						const paths = await vite.ssrLoadModule(`${modules}/paths.js`);
+						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/paths.js`);
 
 						paths.set_paths({
 							base: config.kit.paths.base,

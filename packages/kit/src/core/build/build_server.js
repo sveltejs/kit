@@ -8,7 +8,6 @@ import { get_aliases, posixify, resolve_entry } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
 import { s } from '../../utils/misc.js';
-import { fileURLToPath } from 'url';
 
 /**
  * @param {{
@@ -188,7 +187,7 @@ export async function build_server(
 			hooks: app_relative(hooks_file),
 			runtime,
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			modules: process.env.BUNDLED ? '../modules' : fileURLToPath(new URL('../../runtime', import.meta.url))
+			modules: '../modules'
 		})
 	);
 
