@@ -4,7 +4,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
-import { create_url_proxy } from './utils.js';
+import { create_prerendering_url_proxy } from './utils.js';
 
 // TODO rename this function/module
 
@@ -77,7 +77,7 @@ export async function render_response({
 				session
 			},
 			page: {
-				url: state.prerender ? create_url_proxy(url) : url,
+				url: state.prerender ? create_prerendering_url_proxy(url) : url,
 				params,
 				status,
 				error,

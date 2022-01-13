@@ -3,7 +3,7 @@ import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
-import { create_url_proxy } from './utils.js';
+import { create_prerendering_url_proxy } from './utils.js';
 
 /**
  * @param {{
@@ -59,7 +59,7 @@ export async function load_node({
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			url: state.prerender ? create_url_proxy(url) : url,
+			url: state.prerender ? create_prerendering_url_proxy(url) : url,
 			params,
 			get session() {
 				uses_credentials = true;

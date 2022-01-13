@@ -1,5 +1,5 @@
 /** @param {URL} url */
-export function create_url_proxy(url) {
+export function create_prerendering_url_proxy(url) {
 	return new Proxy(url, {
 		get: (target, prop, receiver) => {
 			if (prop === 'search' || prop === 'searchParams') {
