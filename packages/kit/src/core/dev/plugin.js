@@ -6,7 +6,7 @@ import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { getRawBody } from '../node/index.js';
+import { getRawBody } from '../../node.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, modules, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';

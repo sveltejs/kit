@@ -4,7 +4,7 @@ import https from 'https';
 import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRawBody } from '../node/index.js';
+import { getRawBody } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 

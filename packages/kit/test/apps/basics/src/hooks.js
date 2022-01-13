@@ -1,6 +1,6 @@
 import fs from 'fs';
 import cookie from 'cookie';
-import { sequence } from '../../../../src/runtime/hooks';
+import { sequence } from '../../../../src/hooks';
 
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {

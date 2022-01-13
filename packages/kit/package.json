@@ -78,9 +78,6 @@
 		".": {
 			"types": "./types/index.d.ts"
 		},
-		"./ssr": {
-			"import": "./dist/ssr.js"
-		},
 		"./node": {
 			"import": "./dist/node.js"
 		},

@@ -59,9 +59,8 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			ssr: 'src/runtime/server/index.js',
-			node: 'src/core/node/index.js',
-			hooks: 'src/runtime/hooks.js',
+			node: 'src/node.js',
+			hooks: 'src/hooks.js',
 			'install-fetch': 'src/install-fetch.js'
 		},
 		output: {
@@ -70,7 +69,7 @@ export default [
 			chunkFileNames: 'chunks/[name].js'
 		},
 		external: (id) => {
-			return external.includes(id);
+			return id.startsWith('node:') || external.includes(id);
 		},
 		plugins: [
 			replace({
