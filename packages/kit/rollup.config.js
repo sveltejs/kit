@@ -77,7 +77,7 @@ export default [
 				preventAssignment: true,
 				values: {
 					__VERSION__: pkg.version,
-					'process.env.BUILD': 'true'
+					'process.env.BUNDLED': 'true'
 				}
 			}),
 			resolve({

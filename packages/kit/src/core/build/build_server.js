@@ -188,7 +188,7 @@ export async function build_server(
 			hooks: app_relative(hooks_file),
 			runtime,
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			modules: process.env.BUILD ? '../modules' : fileURLToPath(new URL('../../runtime', import.meta.url))
+			modules: process.env.BUNDLED ? '../modules' : fileURLToPath(new URL('../../runtime', import.meta.url))
 		})
 	);
 
