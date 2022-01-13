@@ -11,21 +11,16 @@ import { build_server } from './build_server.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
- * @param {{
- *   cwd?: string;
- *   runtime?: string;
- * }} [opts]
  * @returns {Promise<import('types/internal').BuildData>}
  */
-export async function build(
-	config,
-	{ cwd = process.cwd(), runtime = path.resolve(modules, 'server/index.js') } = {}
-) {
-	const build_dir = path.resolve(cwd, `${SVELTE_KIT}/build`);
+export async function build(config) {
+	const cwd = process.cwd(); // TODO is this necessary?
+
+	const build_dir = path.resolve(`${SVELTE_KIT}/build`);
 	rimraf(build_dir);
 	mkdirp(build_dir);
 
-	const output_dir = path.resolve(cwd, `${SVELTE_KIT}/output`);
+	const output_dir = path.resolve(`${SVELTE_KIT}/output`);
 	rimraf(output_dir);
 	mkdirp(output_dir);
 
@@ -49,7 +44,7 @@ export async function build(
 	};
 
 	const client = await build_client(options);
-	const server = await build_server(options, runtime, client);
+	const server = await build_server(options, client);
 
 	if (options.service_worker_entry_file) {
 		if (config.kit.paths.assets) {

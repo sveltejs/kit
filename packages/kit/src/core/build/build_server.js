@@ -12,7 +12,6 @@ import { s } from '../../utils/misc.js';
 /**
  * @param {{
  *   cwd: string;
- *   runtime: string;
  *   hooks: string;
  *   config: import('types/config').ValidatedConfig;
  *   has_service_worker: boolean;
@@ -20,8 +19,8 @@ import { s } from '../../utils/misc.js';
  * }} opts
  * @returns
  */
-const template = ({ cwd, config, hooks, runtime, has_service_worker, modules }) => `
-import { respond } from '${runtime}';
+const template = ({ cwd, config, hooks, has_service_worker, modules }) => `
+import { respond } from '${modules}/server/index.js';
 import root from '../generated/root.svelte';
 import { set_paths, assets, base } from '${modules}/paths.js';
 import { set_prerendering } from '${modules}/env.js';
@@ -123,7 +122,6 @@ export class App {
  *   service_worker_entry_file: string | null;
  *   service_worker_register: boolean;
  * }} options
- * @param {string} runtime
  * @param {{ vite_manifest: import('vite').Manifest, assets: import('rollup').OutputAsset[] }} client
  */
 export async function build_server(
@@ -137,7 +135,6 @@ export async function build_server(
 		service_worker_entry_file,
 		service_worker_register
 	},
-	runtime,
 	client
 ) {
 	let hooks_file = resolve_entry(config.kit.files.hooks);
@@ -185,7 +182,6 @@ export async function build_server(
 			cwd,
 			config,
 			hooks: app_relative(hooks_file),
-			runtime,
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
 			modules: '../modules'
 		})
