@@ -3,6 +3,7 @@ import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
 import { escape_json_string_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
+import { create_prerendering_url_proxy } from './utils.js';
 
 /**
  * @param {{
@@ -15,7 +16,6 @@ import { is_root_relative, resolve } from '../../../utils/url.js';
  *   node: import('types/internal').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
- *   prerender_enabled: boolean;
  *   is_error: boolean;
  *   status?: number;
  *   error?: Error;
@@ -32,7 +32,6 @@ export async function load_node({
 	node,
 	$session,
 	stuff,
-	prerender_enabled,
 	is_error,
 	status,
 	error
@@ -57,19 +56,10 @@ export async function load_node({
 
 	let loaded;
 
-	const url_proxy = new Proxy(url, {
-		get: (target, prop, receiver) => {
-			if (prerender_enabled && (prop === 'search' || prop === 'searchParams')) {
-				throw new Error('Cannot access query on a page with prerendering enabled');
-			}
-			return Reflect.get(target, prop, receiver);
-		}
-	});
-
 	if (module.load) {
 		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 		const load_input = {
-			url: url_proxy,
+			url: state.prerender ? create_prerendering_url_proxy(url) : url,
 			params,
 			get session() {
 				uses_credentials = true;

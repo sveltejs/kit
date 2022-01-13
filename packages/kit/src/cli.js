@@ -12,9 +12,9 @@ function handle_error(e) {
 
 	if (error.name === 'SyntaxError') throw error;
 
-	console.log(colors.bold().red(`> ${error.message}`));
+	console.error(colors.bold().red(`> ${error.message}`));
 	if (error.stack) {
-		console.log(colors.gray(error.stack.split('\n').slice(1).join('\n')));
+		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
 	}
 
 	process.exit(1);
@@ -161,16 +161,16 @@ async function check_port(port) {
 	if (await ports.check(port)) {
 		return;
 	}
-	console.log(colors.bold().red(`Port ${port} is occupied`));
+	console.error(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
 	if (n) {
 		// prettier-ignore
-		console.log(
+		console.error(
 			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
 		);
 	} else {
 		// prettier-ignore
-		console.log(
+		console.error(
 			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
 		);
 	}

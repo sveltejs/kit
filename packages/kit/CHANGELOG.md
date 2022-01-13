@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.229
+
+### Patch Changes
+
+- The path to a service worker is now rebased to the app's base path ([#3319](https://github.com/sveltejs/kit/pull/3319))
+
+## 1.0.0-next.228
+
+### Patch Changes
+
+- Throw on accessing url.search/searchParams from page store during prerendering ([#3314](https://github.com/sveltejs/kit/pull/3314))
+
+* Preserve relevant headers when serving 304s ([#3313](https://github.com/sveltejs/kit/pull/3313))
+
 ## 1.0.0-next.227
 
 ### Patch Changes

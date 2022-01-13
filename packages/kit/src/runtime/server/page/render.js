@@ -4,6 +4,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
+import { create_prerendering_url_proxy } from './utils.js';
 
 // TODO rename this function/module
 
@@ -11,6 +12,7 @@ import { s } from '../../../utils/misc.js';
  * @param {{
  *   branch: Array<import('./types').Loaded>;
  *   options: import('types/internal').SSRRenderOptions;
+ *   state: import('types/internal').SSRRenderState;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
@@ -24,6 +26,7 @@ import { s } from '../../../utils/misc.js';
 export async function render_response({
 	branch,
 	options,
+	state,
 	$session,
 	page_config,
 	status,
@@ -73,7 +76,13 @@ export async function render_response({
 				navigating: writable(null),
 				session
 			},
-			page: { url, params, status, error, stuff },
+			page: {
+				url: state.prerender ? create_prerendering_url_proxy(url) : url,
+				params,
+				status,
+				error,
+				stuff
+			},
 			components: branch.map(({ node }) => node.module.default)
 		};
 

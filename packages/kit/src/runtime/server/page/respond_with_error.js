@@ -4,7 +4,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
  */
@@ -47,7 +46,6 @@ export async function respond_with_error({
 				node: default_layout,
 				$session,
 				stuff: {},
-				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_error: false
 			})
 		);
@@ -63,7 +61,6 @@ export async function respond_with_error({
 				node: default_error,
 				$session,
 				stuff: layout_loaded ? layout_loaded.stuff : {},
-				prerender_enabled: is_prerender_enabled(options, default_error, state),
 				is_error: true,
 				status,
 				error
@@ -72,6 +69,7 @@ export async function respond_with_error({
 
 		return await render_response({
 			options,
+			state,
 			$session,
 			page_config: {
 				hydrate: options.hydrate,
@@ -96,15 +94,4 @@ export async function respond_with_error({
 			body: error.stack
 		};
 	}
-}
-
-/**
- * @param {SSRRenderOptions} options
- * @param {SSRNode} node
- * @param {SSRRenderState} state
- */
-export function is_prerender_enabled(options, node, state) {
-	return (
-		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
-	);
 }
