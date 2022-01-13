@@ -76,11 +76,6 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-/** @param {string} str */
-export function posixify(str) {
-	return str.replace(/\\/g, '/');
-}
-
 /** @param {import('./create_app/index.js').ManifestData} manifest_data */
 export function get_mime_lookup(manifest_data) {
 	/** @type {Record<string, string>} */

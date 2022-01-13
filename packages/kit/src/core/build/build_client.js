@@ -4,9 +4,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
-import { copy_assets, get_aliases, posixify } from '../utils.js';
+import { copy_assets, get_aliases } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
 import { SVELTE_KIT } from '../constants.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * @param {{

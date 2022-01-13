@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { mkdirp, rimraf } from '../../utils/filesystem.js';
+import { mkdirp, rimraf, posixify } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { modules, posixify, resolve_entry } from '../utils.js';
+import { modules, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
