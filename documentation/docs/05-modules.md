@@ -19,9 +19,19 @@ import { amp, browser, dev, mode, prerendering } from '$app/env';
 ### $app/navigation
 
 ```js
-import { disableScrollHandling, goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
+import {
+	disableScrollHandling,
+	goto,
+	invalidate,
+	prefetch,
+	prefetchRoutes,
+	beforeNavigate,
+	afterNavigate
+} from '$app/navigation';
 ```
 
+- `afterNavigate(({ from, to }: { from: URL, to: URL }) => void)` - a lifecycle function that runs when the components mounts, and after subsequent navigations while the component remains mounted
+- `beforeNavigate(({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void)` — a function that runs whenever navigation is triggered whether by clicking a link, calling `goto`, or using the browser back/forward controls. This includes navigation to external sites. `to` will be `null` if the user is closing the page. Calling `cancel` will prevent the navigation from proceeding
 - `disableScrollHandling` will, if called when the page is being updated following a navigation (in `onMount` or an action, for example), prevent SvelteKit from applying its normal scroll management. You should generally avoid this, as breaking user expectations of scroll behaviour can be disorienting.
 - `goto(href, { replaceState, noscroll, keepfocus, state })` returns a `Promise` that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified `href`. The second argument is optional:
   - `replaceState` (boolean, default `false`) If `true`, will replace the current `history` entry rather than creating a new one with `pushState`

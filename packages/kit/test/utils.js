@@ -10,15 +10,34 @@ export const test = base.extend({
 		use({
 			/**
 			 * @param {string} url
+			 * @param {{ replaceState?: boolean }} opts
 			 * @returns {Promise<void>}
 			 */
-			goto: (url) => page.evaluate((/** @type {string} */ url) => goto(url), url),
+			goto: (url, opts) =>
+				page.evaluate(
+					(/** @type {{ url: string, opts: { replaceState?: boolean } }} */ { url, opts }) =>
+						goto(url, opts),
+					{ url, opts }
+				),
 
 			/**
 			 * @param {string} url
 			 * @returns {Promise<void>}
 			 */
 			invalidate: (url) => page.evaluate((/** @type {string} */ url) => invalidate(url), url),
+
+			/**
+			 * @param {(url: URL) => void | boolean | Promise<void | boolean>} fn
+			 * @returns {Promise<void>}
+			 */
+			beforeNavigate: (fn) =>
+				page.evaluate((/** @type {(url: URL) => any} */ fn) => beforeNavigate(fn), fn),
+
+			/**
+			 * @param {() => void} fn
+			 * @returns {Promise<void>}
+			 */
+			afterNavigate: () => page.evaluate(() => afterNavigate(() => {})),
 
 			/**
 			 * @param {string} url

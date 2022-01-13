@@ -291,7 +291,7 @@ export class Renderer {
 
 		// opts must be passed if we're navigating
 		if (opts) {
-			const { hash, scroll, keepfocus } = opts;
+			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
 				getSelection()?.removeAllRanges();
@@ -302,7 +302,7 @@ export class Renderer {
 			await tick();
 
 			if (this.autoscroll) {
-				const deep_linked = hash && document.getElementById(hash.slice(1));
+				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -378,6 +378,11 @@ export class Renderer {
 		});
 
 		this.started = true;
+
+		if (this.router) {
+			const navigation = { from: null, to: new URL(location.href) };
+			this.router.callbacks.after_navigate.forEach((fn) => fn(navigation));
+		}
 	}
 
 	/**
