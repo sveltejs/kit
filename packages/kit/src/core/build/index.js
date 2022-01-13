@@ -43,7 +43,7 @@ export async function build(
 			cwd
 		}),
 		output_dir,
-		client_entry_file: path.posix.relative(cwd, `${modules}/client/start.js`),
+		client_entry_file: path.relative(cwd, `${modules}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		service_worker_register: config.kit.serviceWorker.register
 	};

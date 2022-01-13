@@ -105,7 +105,7 @@ export async function build_client({
 
 	const entry_js = new Set();
 	const entry_css = new Set();
-	find_deps(client_entry_file, vite_manifest, entry_js, entry_css);
+	find_deps(posixify(client_entry_file), vite_manifest, entry_js, entry_css);
 
 	return {
 		assets,
