@@ -21,9 +21,6 @@ import { create_plugin } from './plugin.js';
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
-	const output = path.resolve(cwd, `${SVELTE_KIT}/dev`);
-
-	rimraf(output);
 	copy_assets(`${SVELTE_KIT}/modules`);
 
 	const [vite_config] = deep_merge(
@@ -62,7 +59,7 @@ export async function dev({ cwd, port, host, https, config }) {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: path.resolve(`${output}/runtime/internal/start.js`)
+				input: path.resolve(`${cwd}/${SVELTE_KIT}/modules/runtime/internal/start.js`)
 			}
 		},
 		plugins: [
@@ -73,7 +70,7 @@ export async function dev({ cwd, port, host, https, config }) {
 					hydratable: !!config.kit.hydrate
 				}
 			}),
-			await create_plugin(config, output, cwd)
+			await create_plugin(config, cwd)
 		],
 		publicDir: config.kit.files.assets,
 		base: '/'

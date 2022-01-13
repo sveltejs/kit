@@ -14,11 +14,10 @@ import { load_template } from '../config/index.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
- * @param {string} output
  * @param {string} cwd
  * @returns {Promise<import('vite').Plugin>}
  */
-export async function create_plugin(config, output, cwd) {
+export async function create_plugin(config, cwd) {
 	/** @type {import('amphtml-validator').Validator} */
 	let amp;
 
