@@ -111,13 +111,17 @@ test.describe.parallel('Headers', () => {
 });
 
 test.describe.parallel('Origin', () => {
-	test('sets origin', async ({ baseURL, page }) => {
+	test('sets origin', async ({ baseURL, page, javaScriptEnabled }) => {
 		await page.goto('/path-base/origin/');
 
 		const origin = process.env.DEV ? baseURL : 'https://example.com';
 
-		expect(await page.textContent('[data-source="load"]')).toBe(origin);
-		expect(await page.textContent('[data-source="store"]')).toBe(origin);
+		expect(await page.textContent('[data-source="load"]')).toBe(
+			javaScriptEnabled ? origin?.replace('https', 'http') : origin
+		);
+		expect(await page.textContent('[data-source="store"]')).toBe(
+			javaScriptEnabled ? origin?.replace('https', 'http') : origin
+		);
 		expect(await page.textContent('[data-source="endpoint"]')).toBe(origin);
 	});
 });
