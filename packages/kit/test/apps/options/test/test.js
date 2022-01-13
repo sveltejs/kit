@@ -114,7 +114,7 @@ test.describe.parallel('Origin', () => {
 	test('sets origin', async ({ baseURL, page }) => {
 		await page.goto('/path-base/origin/');
 
-		const origin = process.env.DEV ? baseURL : 'http://example.com';
+		const origin = process.env.DEV ? baseURL : 'https://example.com';
 
 		expect(await page.textContent('[data-source="load"]')).toBe(origin);
 		expect(await page.textContent('[data-source="store"]')).toBe(origin);
