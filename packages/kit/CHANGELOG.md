@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.229
+
+### Patch Changes
+
+- The path to a service worker is now rebased to the app's base path ([#3319](https://github.com/sveltejs/kit/pull/3319))
+
 ## 1.0.0-next.228
 
 ### Patch Changes
