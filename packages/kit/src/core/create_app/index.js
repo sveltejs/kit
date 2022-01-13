@@ -88,6 +88,7 @@ function generate_client_manifest(manifest_data, base) {
 					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
 				}
 			})
+			.filter(Boolean)
 			.join(',\n\n\t\t')}
 	]`.replace(/^\t/gm, '');
 
