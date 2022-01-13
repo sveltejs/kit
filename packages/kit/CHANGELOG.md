@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.226
+
+### Patch Changes
+
+- Fix srcset parsing ([#3301](https://github.com/sveltejs/kit/pull/3301))
+
+* Change ReadOnlyFormData behavior to mimic the spec's FormData interface ([#3302](https://github.com/sveltejs/kit/pull/3302))
+
 ## 1.0.0-next.225
 
 ### Patch Changes
