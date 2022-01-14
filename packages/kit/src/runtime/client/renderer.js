@@ -279,7 +279,7 @@ export class Renderer {
 		}
 
 		this.updating = true;
-
+		document.title = '';
 		if (this.started) {
 			this.current = navigation_result.state;
 
