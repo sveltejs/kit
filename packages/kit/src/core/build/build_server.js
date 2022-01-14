@@ -20,7 +20,7 @@ import { s } from '../../utils/misc.js';
  * @returns
  */
 const template = ({ cwd, config, hooks, has_service_worker }) => `
-import root from '__ROOT__';
+import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';

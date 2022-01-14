@@ -10,7 +10,13 @@ const __dirname = path.dirname(__filename);
 
 export const runtime = process.env.BUNDLED
 	? path.posix.resolve(`${SVELTE_KIT}/runtime`)
-	: path.posix.resolve(fileURLToPath(new URL('../runtime', import.meta.url)));
+	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
+
+/** @param {string} str */
+function posixify_path(str) {
+	const parsed = path.parse(str);
+	return `/${parsed.dir.slice(parsed.root.length).split(path.sep).join('/')}/${parsed.base}`;
+}
 
 /** @param {string} dest */
 export function copy_assets(dest) {
@@ -97,10 +103,11 @@ export function get_mime_lookup(manifest_data) {
 
 /** @param {import('@sveltejs/kit').ValidatedConfig} config */
 export function get_aliases(config) {
-	return {
-		__ROOT__: path.resolve(`${SVELTE_KIT}/generated/root.svelte`),
-		__MANIFEST__: path.resolve(`${SVELTE_KIT}/generated/manifest.js`),
+	const alias = {
+		__GENERATED__: path.posix.resolve(`${SVELTE_KIT}/generated`),
 		$app: `${runtime}/app`,
 		$lib: config.kit.files.lib
 	};
+
+	return alias;
 }
