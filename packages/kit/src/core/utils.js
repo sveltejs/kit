@@ -12,6 +12,8 @@ export const runtime = process.env.BUNDLED
 	? posixify_path(path.resolve(`${SVELTE_KIT}/runtime`))
 	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
+console.error({ runtime });
+
 /** @param {string} str */
 function posixify_path(str) {
 	const parsed = path.parse(str);
