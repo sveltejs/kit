@@ -702,6 +702,7 @@ test.describe.parallel('ETags', () => {
 		});
 
 		expect(r2.status()).toBe(304);
+		expect(r2.headers()['expires']).toBe('yesterday');
 	});
 
 	test('generates etag/304 for binary body', async ({ request }) => {
