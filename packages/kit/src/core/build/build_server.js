@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { mkdirp, posixify } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
@@ -183,7 +184,7 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			runtime: '../runtime'
+			runtime: process.env.BUNDLED ? '../runtime' : fileURLToPath(new URL('../../runtime', import.meta.url))
 		})
 	);
 

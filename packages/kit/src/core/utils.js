@@ -8,23 +8,27 @@ import { SVELTE_KIT } from './constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const runtime = path.posix.resolve(`${SVELTE_KIT}/runtime`);
+export const runtime = process.env.BUNDLED
+	? path.posix.resolve(`${SVELTE_KIT}/runtime`)
+	: path.posix.resolve(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} dest */
 export function copy_assets(dest) {
-	let prefix = '..';
-	do {
-		// we jump through these hoops so that this function
-		// works whether or not it's been bundled
-		const resolved = path.resolve(__dirname, `${prefix}/assets`);
+	if (process.env.BUNDLED) {
+		let prefix = '..';
+		do {
+			// we jump through these hoops so that this function
+			// works whether or not it's been bundled
+			const resolved = path.resolve(__dirname, `${prefix}/assets`);
 
-		if (fs.existsSync(resolved)) {
-			copy(resolved, dest);
-			return;
-		}
+			if (fs.existsSync(resolved)) {
+				copy(resolved, dest);
+				return;
+			}
 
-		prefix = `../${prefix}`;
-	} while (true); // eslint-disable-line
+			prefix = `../${prefix}`;
+		} while (true); // eslint-disable-line
+	}
 }
 
 function noop() {}
