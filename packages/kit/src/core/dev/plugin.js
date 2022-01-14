@@ -46,7 +46,7 @@ export async function create_plugin(config, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/@fs${runtime}/client/start.js`,
+							file: `/${SVELTE_KIT}/runtime/client/start.js`,
 							css: [],
 							js: []
 						},
