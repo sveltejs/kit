@@ -229,7 +229,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					if (!is_root_relative(resolved)) continue;
 
 					const parsed = new URL(resolved, 'http://localhost');
-					const pathname = decodeURI(parsed.pathname).replace(config.kit.paths.base, '');
+
+					if (!parsed.pathname.startsWith(config.kit.paths.base)) continue;
+					const pathname = decodeURI(parsed.pathname).slice(config.kit.paths.base.length) || '/';
 
 					const file = pathname.slice(1);
 					if (files.has(file)) continue;

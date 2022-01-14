@@ -90,6 +90,8 @@ export async function respond(incoming, options, state = {}) {
 			resolve: async (request, opts) => {
 				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
 
+				if (!request.url.pathname.startsWith(options.paths.base)) return;
+
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
 						url: request.url,
@@ -105,7 +107,7 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '') || '/';
+				const decoded = decodeURI(request.url.pathname).slice(options.paths.base.length) || '/';
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
