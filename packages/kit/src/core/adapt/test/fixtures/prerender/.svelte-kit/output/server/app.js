@@ -1,19 +1,19 @@
 function redirectResponse() {
-	const urlSearchParams = new URLSearchParams({ 'redirect': 'https://kit.svelte.dev/docs' })
+	const urlSearchParams = new URLSearchParams({ redirect: 'https://kit.svelte.dev/docs' });
 
-	const redirectTo = `https://my.server.com/?${urlSearchParams.toString()}`
+	const redirectTo = `https://my.server.com/?${urlSearchParams.toString()}`;
 
 	return {
 		status: 302,
 		headers: {
 			location: redirectTo
 		}
-	}
+	};
 }
 
 export class App {
 	render({ url }) {
-		if (url === 'http://prerender/redirect-url-encoding') return redirectResponse()
+		if (url === 'http://prerender/redirect-url-encoding') return redirectResponse();
 
 		return {
 			status: 200,
@@ -25,4 +25,4 @@ export class App {
 	}
 }
 
-export function override() { }
+export function override() {}

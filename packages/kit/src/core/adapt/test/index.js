@@ -137,7 +137,7 @@ suite('prerender', async () => {
 	assert.equal(expectedFiles, actualFiles);
 
 	// check each file if content is correct
-	for (const file of expectedFiles.filter(file => file.endsWith('.html'))) {
+	for (const file of expectedFiles.filter((file) => file.endsWith('.html'))) {
 		const expectedContent = readFileSync(join(prerendered_files, file));
 		const actualContent = readFileSync(join(dest, file));
 
