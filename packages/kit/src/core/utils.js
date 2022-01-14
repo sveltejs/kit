@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const runtime = process.env.BUNDLED
-	? path.posix.resolve(`${SVELTE_KIT}/runtime`)
+	? posixify_path(path.resolve(`${SVELTE_KIT}/runtime`))
 	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
 
 /** @param {string} str */
