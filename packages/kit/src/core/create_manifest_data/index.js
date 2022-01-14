@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { modules } from '../utils.js';
+import { runtime } from '../utils.js';
 import { posixify } from '../../utils/filesystem.js';
 
 /**
@@ -36,7 +36,7 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
  */
 export default function create_manifest_data({
 	config,
-	fallback = `${modules}/components`,
+	fallback = `${runtime}/components`,
 	cwd = process.cwd()
 }) {
 	/**

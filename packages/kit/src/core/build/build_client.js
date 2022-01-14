@@ -35,7 +35,7 @@ export async function build_client({
 		cwd
 	});
 
-	copy_assets(`${SVELTE_KIT}/modules`);
+	copy_assets(`${SVELTE_KIT}/runtime`);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 

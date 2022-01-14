@@ -3,7 +3,7 @@ import path from 'path';
 import { mkdirp, rimraf, posixify } from '../../utils/filesystem.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { modules, resolve_entry } from '../utils.js';
+import { runtime, resolve_entry } from '../utils.js';
 import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
@@ -38,7 +38,7 @@ export async function build(config) {
 			cwd
 		}),
 		output_dir,
-		client_entry_file: path.relative(cwd, `${modules}/client/start.js`),
+		client_entry_file: path.relative(cwd, `${runtime}/client/start.js`),
 		service_worker_entry_file: resolve_entry(config.kit.files.serviceWorker),
 		service_worker_register: config.kit.serviceWorker.register
 	};

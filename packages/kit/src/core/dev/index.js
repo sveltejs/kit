@@ -4,7 +4,7 @@ import vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { copy_assets, get_aliases, modules } from '../utils.js';
+import { copy_assets, get_aliases, runtime } from '../utils.js';
 import { create_plugin } from './plugin.js';
 
 /**
@@ -20,7 +20,7 @@ import { create_plugin } from './plugin.js';
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
-	copy_assets(`${SVELTE_KIT}/modules`);
+	copy_assets(`${SVELTE_KIT}/runtime`);
 
 	const [vite_config] = deep_merge(
 		{
@@ -55,7 +55,7 @@ export async function dev({ cwd, port, host, https, config }) {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: `${modules}/client/start.js`
+				input: `${runtime}/client/start.js`
 			}
 		},
 		plugins: [

@@ -8,7 +8,7 @@ import { SVELTE_KIT } from './constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const modules = path.posix.resolve(`${SVELTE_KIT}/modules`);
+export const runtime = path.posix.resolve(`${SVELTE_KIT}/runtime`);
 
 /** @param {string} dest */
 export function copy_assets(dest) {
@@ -96,7 +96,7 @@ export function get_aliases(config) {
 	return {
 		__ROOT__: path.resolve(`${SVELTE_KIT}/generated/root.svelte`),
 		__MANIFEST__: path.resolve(`${SVELTE_KIT}/generated/manifest.js`),
-		$app: `${modules}/app`,
+		$app: `${runtime}/app`,
 		$lib: config.kit.files.lib
 	};
 }

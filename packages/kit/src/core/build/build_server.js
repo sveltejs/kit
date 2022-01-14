@@ -15,15 +15,15 @@ import { s } from '../../utils/misc.js';
  *   hooks: string;
  *   config: import('types/config').ValidatedConfig;
  *   has_service_worker: boolean;
- *   modules: string;
+ *   runtime: string;
  * }} opts
  * @returns
  */
-const template = ({ cwd, config, hooks, has_service_worker, modules }) => `
-import { respond } from '${modules}/server/index.js';
+const template = ({ cwd, config, hooks, has_service_worker, runtime }) => `
+import { respond } from '${runtime}/server/index.js';
 import root from '../generated/root.svelte';
-import { set_paths, assets, base } from '${modules}/paths.js';
-import { set_prerendering } from '${modules}/env.js';
+import { set_paths, assets, base } from '${runtime}/paths.js';
+import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets }) => ${s(load_template(cwd, config))
@@ -183,7 +183,7 @@ export async function build_server(
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
-			modules: '../modules'
+			runtime: '../runtime'
 		})
 	);
 

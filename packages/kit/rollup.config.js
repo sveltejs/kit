@@ -17,14 +17,14 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			'client/start': 'src/modules/client/start.js',
-			'client/singletons': 'src/modules/client/singletons.js',
-			'app/navigation': 'src/modules/app/navigation.js',
-			'app/stores': 'src/modules/app/stores.js',
-			'app/paths': 'src/modules/app/paths.js',
-			'app/env': 'src/modules/app/env.js',
-			paths: 'src/modules/paths.js',
-			env: 'src/modules/env.js'
+			'client/start': 'src/runtime/client/start.js',
+			'client/singletons': 'src/runtime/client/singletons.js',
+			'app/navigation': 'src/runtime/app/navigation.js',
+			'app/stores': 'src/runtime/app/stores.js',
+			'app/paths': 'src/runtime/app/paths.js',
+			'app/env': 'src/runtime/app/env.js',
+			paths: 'src/runtime/paths.js',
+			env: 'src/runtime/env.js'
 		},
 		output: {
 			dir: 'assets',
@@ -44,7 +44,7 @@ export default [
 	},
 
 	{
-		input: 'src/modules/server/index.js',
+		input: 'src/runtime/server/index.js',
 		output: {
 			format: 'esm',
 			file: 'assets/server/index.js'

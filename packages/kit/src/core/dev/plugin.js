@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
-import { respond } from '../../modules/server/index.js';
+import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRawBody } from '../../node.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { get_mime_lookup, modules, resolve_entry } from '../utils.js';
+import { get_mime_lookup, runtime, resolve_entry } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 
@@ -46,7 +46,7 @@ export async function create_plugin(config, cwd) {
 					_: {
 						mime: get_mime_lookup(manifest_data),
 						entry: {
-							file: `/@fs${modules}/client/start.js`,
+							file: `/@fs${runtime}/client/start.js`,
 							css: [],
 							js: []
 						},
@@ -173,7 +173,7 @@ export async function create_plugin(config, cwd) {
 						}
 
 						const root = (await vite.ssrLoadModule(`/${SVELTE_KIT}/generated/root.svelte`)).default;
-						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/modules/paths.js`);
+						const paths = await vite.ssrLoadModule(`/${SVELTE_KIT}/runtime/paths.js`);
 
 						paths.set_paths({
 							base: config.kit.paths.base,
