@@ -8,23 +8,33 @@ import { SVELTE_KIT } from './constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const runtime = path.posix.resolve(`${SVELTE_KIT}/runtime`);
+export const runtime = process.env.BUNDLED
+	? posixify_path(path.resolve(`${SVELTE_KIT}/runtime`))
+	: posixify_path(fileURLToPath(new URL('../runtime', import.meta.url)));
+
+/** @param {string} str */
+function posixify_path(str) {
+	const parsed = path.parse(str);
+	return `/${parsed.dir.slice(parsed.root.length).split(path.sep).join('/')}/${parsed.base}`;
+}
 
 /** @param {string} dest */
 export function copy_assets(dest) {
-	let prefix = '..';
-	do {
-		// we jump through these hoops so that this function
-		// works whether or not it's been bundled
-		const resolved = path.resolve(__dirname, `${prefix}/assets`);
+	if (process.env.BUNDLED) {
+		let prefix = '..';
+		do {
+			// we jump through these hoops so that this function
+			// works whether or not it's been bundled
+			const resolved = path.resolve(__dirname, `${prefix}/assets`);
 
-		if (fs.existsSync(resolved)) {
-			copy(resolved, dest);
-			return;
-		}
+			if (fs.existsSync(resolved)) {
+				copy(resolved, dest);
+				return;
+			}
 
-		prefix = `../${prefix}`;
-	} while (true); // eslint-disable-line
+			prefix = `../${prefix}`;
+		} while (true); // eslint-disable-line
+	}
 }
 
 function noop() {}
@@ -93,10 +103,11 @@ export function get_mime_lookup(manifest_data) {
 
 /** @param {import('@sveltejs/kit').ValidatedConfig} config */
 export function get_aliases(config) {
-	return {
-		__ROOT__: path.resolve(`${SVELTE_KIT}/generated/root.svelte`),
-		__MANIFEST__: path.resolve(`${SVELTE_KIT}/generated/manifest.js`),
+	const alias = {
+		__GENERATED__: path.posix.resolve(`${SVELTE_KIT}/generated`),
 		$app: `${runtime}/app`,
 		$lib: config.kit.files.lib
 	};
+
+	return alias;
 }
