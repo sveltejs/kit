@@ -179,7 +179,7 @@ export async function create_plugin(config, output, cwd) {
 
 						paths.set_paths({
 							base: config.kit.paths.base,
-							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : ''
+							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 						});
 
 						let body;
@@ -218,7 +218,7 @@ export async function create_plugin(config, output, cwd) {
 								method_override: config.kit.methodOverride,
 								paths: {
 									base: config.kit.paths.base,
-									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : ''
+									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
 								},
 								prefix: '',
 								prerender: config.kit.prerender.enabled,
