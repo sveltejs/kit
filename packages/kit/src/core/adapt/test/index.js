@@ -1,4 +1,4 @@
-import { rmSync } from 'fs';
+import { readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import * as uvu from 'uvu';
 import * as assert from 'uvu/assert';
@@ -112,7 +112,7 @@ suite('prerender', async () => {
 		// @ts-expect-error
 		server: { chunks: [] },
 		static: [],
-		entries: ['/nested']
+		entries: ['/nested', '/redirect-url-encoding']
 	};
 
 	const builder = create_builder({
@@ -130,7 +130,19 @@ suite('prerender', async () => {
 		dest
 	});
 
-	assert.equal(glob('**', { cwd: prerendered_files }), glob('**', { cwd: dest }));
+	const expectedFiles = glob('**', { cwd: prerendered_files });
+	const actualFiles = glob('**', { cwd: dest });
+
+	// test if all files are present
+	assert.equal(expectedFiles, actualFiles);
+
+	// check each file if content is correct
+	for (const file of expectedFiles.filter(file => file.endsWith('.html'))) {
+		const expectedContent = readFileSync(join(prerendered_files, file));
+		const actualContent = readFileSync(join(dest, file));
+
+		assert.equal(actualContent.toString(), expectedContent.toString());
+	}
 
 	rmSync(dest, { recursive: true, force: true });
 });

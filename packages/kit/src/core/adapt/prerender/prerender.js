@@ -167,8 +167,16 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				if (location) {
 					mkdirp(dirname(file));
 
+					let url;
+					try {
+						url = new URL(location);
+					} catch (error) {
+						log.error(`'${location}' is not a valid URL`);
+						url = location;
+					}
+
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${url.toString()}">`);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -222,7 +230,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */ (rendered.body))) {
+				for (const href of crawl(/** @type {string} */(rendered.body))) {
 					if (href.startsWith('data:')) continue;
 
 					const resolved = resolve(path, href);

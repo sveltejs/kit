@@ -1,5 +1,20 @@
+function redirectResponse() {
+	const urlSearchParams = new URLSearchParams({ 'redirect': 'https://kit.svelte.dev/docs' })
+
+	const redirectTo = `https://my.server.com/?${urlSearchParams.toString()}`
+
+	return {
+		status: 302,
+		headers: {
+			location: redirectTo
+		}
+	}
+}
+
 export class App {
-	render() {
+	render({ url }) {
+		if (url === 'http://prerender/redirect-url-encoding') return redirectResponse()
+
 		return {
 			status: 200,
 			headers: {
@@ -10,4 +25,4 @@ export class App {
 	}
 }
 
-export function override() {}
+export function override() { }
