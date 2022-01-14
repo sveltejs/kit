@@ -8,6 +8,11 @@ test.describe.parallel('paths.base', () => {
 		await page.goto('/basepath');
 		expect(await page.textContent('h1')).toBe('Hello');
 	});
+
+	test('serves assets from /basepath', async ({ request }) => {
+		const response = await request.get('/basepath/answer.txt');
+		expect(await response.text()).toBe('42');
+	});
 });
 
 test.describe.parallel('Service worker', () => {
