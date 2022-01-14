@@ -1,7 +1,9 @@
 <script context="module">
+	import { base } from '$app/paths';
+
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ url, fetch }) {
-		const res = await fetch('/origin.json');
+		const res = await fetch(`${base}/origin.json`);
 		const data = await res.json();
 
 		return {
