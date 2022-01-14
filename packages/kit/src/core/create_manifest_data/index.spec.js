@@ -29,13 +29,13 @@ const create = (dir, extensions = ['.svelte']) => {
 
 	return create_manifest_data({
 		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
-		cwd,
-		output: cwd
+		fallback: cwd,
+		cwd
 	});
 };
 
-const layout = 'components/layout.svelte';
-const error = 'components/error.svelte';
+const layout = 'layout.svelte';
+const error = 'error.svelte';
 
 test('creates routes', () => {
 	const { components, routes } = create('samples/basic');
@@ -230,8 +230,8 @@ test('disallows rest parameters inside segments', () => {
 			pattern: /^\/prefix-(.*?)\/?$/,
 			params: ['...rest'],
 			path: '',
-			a: ['components/layout.svelte', 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
-			b: ['components/error.svelte']
+			a: [layout, 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
+			b: [error]
 		},
 		{
 			type: 'endpoint',

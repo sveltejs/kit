@@ -57,7 +57,7 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c",
+		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components",
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check --ignore \"src/packaging/test\"",
@@ -77,9 +77,6 @@
 		"./package.json": "./package.json",
 		".": {
 			"types": "./types/index.d.ts"
-		},
-		"./ssr": {
-			"import": "./dist/ssr.js"
 		},
 		"./node": {
 			"import": "./dist/node.js"

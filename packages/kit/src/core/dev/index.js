@@ -1,11 +1,10 @@
 import path from 'path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import vite from 'vite';
-import { rimraf } from '../../utils/filesystem.js';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { SVELTE_KIT } from '../constants.js';
-import { copy_assets } from '../utils.js';
+import { copy_assets, get_aliases, runtime } from '../utils.js';
 import { create_plugin } from './plugin.js';
 
 /**
@@ -21,10 +20,7 @@ import { create_plugin } from './plugin.js';
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
-	const output = path.resolve(cwd, `${SVELTE_KIT}/dev`);
-
-	rimraf(output);
-	copy_assets(output);
+	copy_assets(`${SVELTE_KIT}/runtime`);
 
 	const [vite_config] = deep_merge(
 		{
@@ -53,16 +49,13 @@ export async function dev({ cwd, port, host, https, config }) {
 		configFile: false,
 		root: cwd,
 		resolve: {
-			alias: {
-				$app: path.resolve(`${output}/runtime/app`),
-				$lib: config.kit.files.lib
-			}
+			alias: get_aliases(config)
 		},
 		build: {
 			rollupOptions: {
 				// Vite dependency crawler needs an explicit JS entry point
 				// eventhough server otherwise works without it
-				input: path.resolve(`${output}/runtime/internal/start.js`)
+				input: `${runtime}/client/start.js`
 			}
 		},
 		plugins: [
@@ -73,7 +66,7 @@ export async function dev({ cwd, port, host, https, config }) {
 					hydratable: !!config.kit.hydrate
 				}
 			}),
-			await create_plugin(config, output, cwd)
+			await create_plugin(config, cwd)
 		],
 		publicDir: config.kit.files.assets,
 		base: '/'

@@ -3,9 +3,12 @@ import path from 'path';
 import colors from 'kleur';
 import { copy } from '../utils/filesystem.js';
 import { fileURLToPath } from 'url';
+import { SVELTE_KIT } from './constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+export const runtime = path.posix.resolve(`${SVELTE_KIT}/runtime`);
 
 /** @param {string} dest */
 export function copy_assets(dest) {
@@ -73,11 +76,6 @@ export function resolve_entry(entry) {
 	return null;
 }
 
-/** @param {string} str */
-export function posixify(str) {
-	return str.replace(/\\/g, '/');
-}
-
 /** @param {import('./create_app/index.js').ManifestData} manifest_data */
 export function get_mime_lookup(manifest_data) {
 	/** @type {Record<string, string>} */
@@ -91,4 +89,14 @@ export function get_mime_lookup(manifest_data) {
 	});
 
 	return mime;
+}
+
+/** @param {import('@sveltejs/kit').ValidatedConfig} config */
+export function get_aliases(config) {
+	return {
+		__ROOT__: path.resolve(`${SVELTE_KIT}/generated/root.svelte`),
+		__MANIFEST__: path.resolve(`${SVELTE_KIT}/generated/manifest.js`),
+		$app: `${runtime}/app`,
+		$lib: config.kit.files.lib
+	};
 }

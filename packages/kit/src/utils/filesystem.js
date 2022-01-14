@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { posixify } from '../core/utils.js';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -101,4 +100,9 @@ export function walk(cwd, dirs = false) {
 	}
 
 	return walk_dir(''), all_files;
+}
+
+/** @param {string} str */
+export function posixify(str) {
+	return str.replace(/\\/g, '/');
 }

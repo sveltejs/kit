@@ -4,7 +4,7 @@ import replace from '@rollup/plugin-replace';
 import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
 
-(fs.rmSync || fs.rmdirSync)('assets/runtime', { recursive: true, force: true });
+(fs.rmSync || fs.rmdirSync)('assets', { recursive: true, force: true });
 
 const external = [].concat(
 	Object.keys(pkg.dependencies || {}),
@@ -17,8 +17,8 @@ const external = [].concat(
 export default [
 	{
 		input: {
-			'internal/start': 'src/runtime/client/start.js',
-			'internal/singletons': 'src/runtime/client/singletons.js',
+			'client/start': 'src/runtime/client/start.js',
+			'client/singletons': 'src/runtime/client/singletons.js',
 			'app/navigation': 'src/runtime/app/navigation.js',
 			'app/stores': 'src/runtime/app/stores.js',
 			'app/paths': 'src/runtime/app/paths.js',
@@ -27,15 +27,15 @@ export default [
 			env: 'src/runtime/env.js'
 		},
 		output: {
-			dir: 'assets/runtime',
+			dir: 'assets',
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js',
 			paths: {
-				ROOT: '../../generated/root.svelte',
-				MANIFEST: '../../generated/manifest.js'
+				__ROOT__: '../../generated/root.svelte',
+				__MANIFEST__: '../../generated/manifest.js'
 			}
 		},
-		external: ['svelte', 'svelte/store', 'ROOT', 'MANIFEST'],
+		external: ['svelte', 'svelte/store', '__ROOT__', '__MANIFEST__'],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
@@ -47,7 +47,7 @@ export default [
 		input: 'src/runtime/server/index.js',
 		output: {
 			format: 'esm',
-			file: 'assets/kit.js'
+			file: 'assets/server/index.js'
 		},
 		plugins: [
 			resolve({
@@ -59,9 +59,8 @@ export default [
 	{
 		input: {
 			cli: 'src/cli.js',
-			ssr: 'src/runtime/server/index.js',
-			node: 'src/core/node/index.js',
-			hooks: 'src/runtime/hooks.js',
+			node: 'src/node.js',
+			hooks: 'src/hooks.js',
 			'install-fetch': 'src/install-fetch.js'
 		},
 		output: {
@@ -70,13 +69,14 @@ export default [
 			chunkFileNames: 'chunks/[name].js'
 		},
 		external: (id) => {
-			return external.includes(id);
+			return id.startsWith('node:') || external.includes(id);
 		},
 		plugins: [
 			replace({
 				preventAssignment: true,
 				values: {
-					__VERSION__: pkg.version
+					__VERSION__: pkg.version,
+					'process.env.BUNDLED': 'true'
 				}
 			}),
 			resolve({

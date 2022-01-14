@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { posixify } from '../utils.js';
+import { runtime } from '../utils.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -28,12 +29,16 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
 /**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
- *   output: string;
+ *   fallback?: string;
  *   cwd?: string;
  * }} opts
  * @returns {import('types/internal').ManifestData}
  */
-export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
+export default function create_manifest_data({
+	config,
+	fallback = `${runtime}/components`,
+	cwd = process.cwd()
+}) {
 	/**
 	 * @param {string} file_name
 	 * @param {string} dir
@@ -49,8 +54,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
-	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
-	const default_error = posixify(path.relative(cwd, `${output}/components/error.svelte`));
+	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
 	/**
 	 * @param {string} dir
