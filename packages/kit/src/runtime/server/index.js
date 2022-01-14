@@ -105,8 +105,12 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				if (!request.url.pathname.startsWith(options.paths.base)) return;
-				const decoded = decodeURI(request.url.pathname).slice(options.paths.base.length) || '/';
+				let decoded = decodeURI(request.url.pathname);
+
+				if (options.paths.base) {
+					if (!decoded.startsWith(options.paths.base)) return;
+					decoded = decoded.slice(options.paths.base.length) || '/';
+				}
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
