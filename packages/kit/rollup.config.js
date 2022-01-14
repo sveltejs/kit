@@ -29,7 +29,7 @@ export default [
 		output: {
 			dir: 'assets',
 			format: 'esm',
-			chunkFileNames: 'chunks/[name].js',
+			chunkFileNames: 'chunks/[name].js'
 		},
 		external: ['svelte', 'svelte/store', '__GENERATED__'],
 		plugins: [
