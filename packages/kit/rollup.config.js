@@ -31,7 +31,7 @@ export default [
 			format: 'esm',
 			chunkFileNames: 'chunks/[name].js'
 		},
-		external: ['svelte', 'svelte/store', '__GENERATED__'],
+		external: ['svelte', 'svelte/store', '__GENERATED__/root.svelte', '__GENERATED__/manifest.js'],
 		plugins: [
 			resolve({
 				extensions: ['.mjs', '.js', '.ts']
