@@ -105,7 +105,7 @@ export async function respond(incoming, options, state = {}) {
 					});
 				}
 
-				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '');
+				const decoded = decodeURI(request.url.pathname).replace(options.paths.base, '') || '/';
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
