@@ -11,4 +11,4 @@
 <script>
     export let username
 </script>
-<h1>Welcome {username}, you are authenticated!</h1>
+<h1>Welcome {username} , you are authenticated!</h1>
