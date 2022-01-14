@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.230
+
+### Patch Changes
+
+- Log errors to stderr rather than stdout ([#3328](https://github.com/sveltejs/kit/pull/3328))
+
 ## 1.0.0-next.229
 
 ### Patch Changes
