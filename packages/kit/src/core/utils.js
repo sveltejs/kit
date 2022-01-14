@@ -8,7 +8,7 @@ import { SVELTE_KIT } from './constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const modules = path.resolve(`${SVELTE_KIT}/modules`);
+export const modules = path.posix.resolve(`${SVELTE_KIT}/modules`);
 
 /** @param {string} dest */
 export function copy_assets(dest) {
