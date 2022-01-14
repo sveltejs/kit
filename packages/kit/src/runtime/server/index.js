@@ -152,7 +152,9 @@ export async function respond(incoming, options, state = {}) {
 									};
 								}
 
-								if (!response.headers['etag']) response.headers['etag'] = etag;
+								if (!response.headers['etag']) {
+									response.headers['etag'] = etag;
+								}
 							}
 						}
 
