@@ -13,7 +13,7 @@ importers:
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       action-deploy-docs: github:sveltejs/action-deploy-docs#main
-      dotenv: ^11.0.0
+      dotenv: ^12.0.0
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
@@ -30,8 +30,8 @@ importers:
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_d9525e585486a10ae6317f3f61e9597f
       '@typescript-eslint/eslint-plugin': 5.5.0_15fb0f7dd5018b02e6608eb3a323af2f
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.4.4
-      action-deploy-docs: github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3
-      dotenv: 11.0.0
+      action-deploy-docs: github.com/sveltejs/action-deploy-docs/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91
+      dotenv: 12.0.1
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
@@ -2331,8 +2331,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /dotenv/11.0.0:
-    resolution: {integrity: sha512-Fp/b504Y5W+e+FpCxTFMUZ7ZEQkQYF0rx+KZtmwixJxGQbLHrhCwo3FjZgNC8vIfrSi29PABNbMoCGD9YoiXbQ==}
+  /dotenv/12.0.1:
+    resolution: {integrity: sha512-y7t4pLtT2AzgTfmjN5JZXFzDCpYRrqIqPba3OkxngiC1CsibsTcUs86nF7KMmCt1/fYVK1a3VyZ5jnvrADWpWw==}
     engines: {node: '>=12'}
     dev: true
 
@@ -5498,8 +5498,8 @@ packages:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}
     dev: true
 
-  github.com/sveltejs/action-deploy-docs/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3:
-    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/b907399e6bf74c9cc8f246ba38d2a392c77c8fc3}
+  github.com/sveltejs/action-deploy-docs/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91:
+    resolution: {tarball: https://codeload.github.com/sveltejs/action-deploy-docs/tar.gz/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91}
     name: action-deploy-docs
     version: 1.0.0
     hasBin: true

@@ -14,8 +14,7 @@ We've written and published a few different SvelteKit sites as examples:
 
 - [The examples directory](https://github.com/sveltejs/kit/tree/master/examples) in the GitHub repo contains a HackerNews clone
 - [`sveltejs/realworld`](https://github.com/sveltejs/realworld) contains an example blog site
-- [`sveltejs/sites`](https://github.com/sveltejs/sites) contains the code for this site
-- [The site directory in the `sveltejs/svelte` repo](https://github.com/sveltejs/svelte/tree/master/site) contains the code for svelte.dev
+- [`sveltejs/sites`](https://github.com/sveltejs/sites) contains the code for this site and [svelte.dev](https//svelte.dev/)
 
 ### Integrations
 
