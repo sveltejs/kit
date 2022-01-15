@@ -143,17 +143,19 @@ export async function create_plugin(config, cwd) {
 						if (!req.url || !req.method) throw new Error('Incomplete request');
 						if (req.url === '/favicon.ico') return not_found(res);
 
-						const decoded = decodeURI(new URL(req.url, 'http://localhost').pathname);
+						const url = new URL(
+							`${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}${req.url}`
+						);
+
+						const decoded = decodeURI(url.pathname);
+
 						if (decoded.startsWith(assets_path)) {
-							const initial_url = req.url;
-							/* Static asset server doesn't care about query or hash - no need to pass them on */
-							req.url = encodeURI(decoded.slice(assets_path.length));
-							await new Promise((/** @type {(val: void) => void} */ resolve, reject) =>
-								asset_server(req, res, (/** @type {unknown} */ err) =>
-									err ? reject(err) : resolve()
-								)
-							);
-							req.url = initial_url;
+							const filepath = decoded.slice(assets_path.length);
+							if (filepath && fs.existsSync(config.kit.files.assets) + filepath) {
+								req.url = encodeURI(filepath); // don't need query/hash
+								asset_server(req, res);
+								return;
+							}
 						}
 
 						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
@@ -214,9 +216,7 @@ export async function create_plugin(config, cwd) {
 
 						const rendered = await respond(
 							{
-								url: new URL(
-									`${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}${req.url}`
-								),
+								url,
 								headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
 								method: req.method,
 								rawBody: body
