@@ -151,7 +151,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', async (event) => {
+		addEventListener('click', (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js

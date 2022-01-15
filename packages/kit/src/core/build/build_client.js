@@ -4,8 +4,10 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
 import { create_app } from '../create_app/index.js';
-import { copy_assets, posixify } from '../utils.js';
+import { copy_assets, get_aliases } from '../utils.js';
 import { create_build, find_deps } from './utils.js';
+import { SVELTE_KIT } from '../constants.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * @param {{
@@ -13,7 +15,6 @@ import { create_build, find_deps } from './utils.js';
  *   assets_base: string;
  *   config: import('types/config').ValidatedConfig
  *   manifest_data: import('types/internal').ManifestData
- *   build_dir: string;
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;
@@ -25,17 +26,16 @@ export async function build_client({
 	assets_base,
 	config,
 	manifest_data,
-	build_dir,
 	output_dir,
 	client_entry_file
 }) {
 	create_app({
 		manifest_data,
-		output: build_dir,
+		output: `${SVELTE_KIT}/generated`,
 		cwd
 	});
 
-	copy_assets(build_dir);
+	copy_assets(`${SVELTE_KIT}/runtime`);
 
 	process.env.VITE_SVELTEKIT_AMP = config.kit.amp ? 'true' : '';
 
@@ -80,10 +80,7 @@ export async function build_client({
 			}
 		},
 		resolve: {
-			alias: {
-				$app: path.resolve(`${build_dir}/runtime/app`),
-				$lib: config.kit.files.lib
-			}
+			alias: get_aliases(config)
 		},
 		plugins: [
 			svelte({
@@ -103,15 +100,16 @@ export async function build_client({
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(fs.readFileSync(`${client_out_dir}/manifest.json`, 'utf-8'));
 
+	const entry = posixify(client_entry_file);
 	const entry_js = new Set();
 	const entry_css = new Set();
-	find_deps(client_entry_file, vite_manifest, entry_js, entry_css);
+	find_deps(entry, vite_manifest, entry_js, entry_css);
 
 	return {
 		assets,
 		chunks,
 		entry: {
-			file: vite_manifest[client_entry_file].file,
+			file: vite_manifest[entry].file,
 			js: Array.from(entry_js),
 			css: Array.from(entry_css)
 		},
