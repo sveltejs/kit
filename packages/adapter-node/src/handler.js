@@ -70,7 +70,7 @@ function sequence(handlers) {
 		/** @param {number} i */
 		function handle(i) {
 			handlers[i](req, res, () => {
-				if (i < handlers.length) handle(i + 1);
+				if (i + 1 < handlers.length) handle(i + 1);
 				else next();
 			});
 		}
