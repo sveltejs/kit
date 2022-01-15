@@ -75,7 +75,6 @@ export async function dev({ cwd, port, host, https, config }) {
 			}),
 			await create_plugin(config, output, cwd)
 		],
-		publicDir: config.kit.files.assets,
 		base: '/'
 	});
 

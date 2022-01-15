@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
+import sirv from 'sirv';
 import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
@@ -127,6 +128,14 @@ export async function create_plugin(config, output, cwd) {
 			vite.watcher.on('add', update_manifest);
 			vite.watcher.on('remove', update_manifest);
 
+			const assets_path = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
+			const asset_server = sirv(config.kit.files.assets, {
+				dev: true,
+				etag: true,
+				maxAge: 0,
+				extensions: []
+			});
+
 			return () => {
 				remove_html_middlewares(vite.middlewares);
 
@@ -135,8 +144,20 @@ export async function create_plugin(config, output, cwd) {
 						if (!req.url || !req.method) throw new Error('Incomplete request');
 						if (req.url === '/favicon.ico') return not_found(res);
 
-						const parsed = new URL(req.url, 'http://localhost/');
-						if (!parsed.pathname.startsWith(config.kit.paths.base)) return not_found(res);
+						const decoded = decodeURI(new URL(req.url, 'http://localhost').pathname);
+						if (decoded.startsWith(assets_path)) {
+							const initial_url = req.url;
+							/* Static asset server doesn't care about query or hash - no need to pass them on */
+							req.url = encodeURI(decoded.slice(assets_path.length));
+							await new Promise((/** @type {(val: void) => void} */ resolve, reject) =>
+								asset_server(req, res, (/** @type {unknown} */ err) =>
+									err ? reject(err) : resolve()
+								)
+							);
+							req.url = initial_url;
+						}
+
+						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
 
 						/** @type {Partial<import('types/internal').Hooks>} */
 						const user_hooks = resolve_entry(config.kit.files.hooks)
@@ -179,7 +200,7 @@ export async function create_plugin(config, output, cwd) {
 
 						paths.set_paths({
 							base: config.kit.paths.base,
-							assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+							assets: assets_path
 						});
 
 						let body;
@@ -218,7 +239,7 @@ export async function create_plugin(config, output, cwd) {
 								method_override: config.kit.methodOverride,
 								paths: {
 									base: config.kit.paths.base,
-									assets: config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base
+									assets: assets_path
 								},
 								prefix: '',
 								prerender: config.kit.prerender.enabled,
