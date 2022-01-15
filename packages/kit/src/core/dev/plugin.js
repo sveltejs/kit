@@ -151,7 +151,7 @@ export async function create_plugin(config, cwd) {
 
 						if (decoded.startsWith(assets)) {
 							const filepath = decoded.slice(assets.length);
-							if (filepath && fs.existsSync(config.kit.files.assets) + filepath) {
+							if (filepath.length > 1 && fs.existsSync(config.kit.files.assets + filepath)) {
 								req.url = encodeURI(filepath); // don't need query/hash
 								asset_server(req, res);
 								return;
