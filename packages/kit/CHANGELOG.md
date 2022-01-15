@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.231
+
+### Patch Changes
+
+- Handle requests for /basepath ([#3345](https://github.com/sveltejs/kit/pull/3345))
+
+* Allow \_\_fetch_polyfill() to run several times ([#3357](https://github.com/sveltejs/kit/pull/3357))
+
+- Handle static assets with /basepath in svelte-kit dev ([#3346](https://github.com/sveltejs/kit/pull/3346))
+
 ## 1.0.0-next.230
 
 ### Patch Changes
