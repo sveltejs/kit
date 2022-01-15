@@ -7,7 +7,10 @@ import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
 import { App } from 'APP';
+// @ts-ignore
 import { manifest } from 'MANIFEST';
+
+/* global HANDLE_404 */
 
 __fetch_polyfill();
 
@@ -34,7 +37,7 @@ function serve(path, max_age, immutable = false) {
 }
 
 /** @type {import('polka').Middleware} */
-const ssr = async (req, res) => {
+const ssr = async (req, res, next) => {
 	let body;
 
 	try {
@@ -50,6 +53,10 @@ const ssr = async (req, res) => {
 		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
 		rawBody: body
 	});
+
+	if (!HANDLE_404 && (!rendered || rendered.status === 404)) {
+		return next();
+	}
 
 	if (rendered) {
 		res.writeHead(rendered.status, rendered.headers);

@@ -13,7 +13,8 @@ const files = fileURLToPath(new URL('./files', import.meta.url));
 export default function ({
 	out = 'build',
 	precompress,
-	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {}
+	env: { path: path_env = 'SOCKET_PATH', host: host_env = 'HOST', port: port_env = 'PORT' } = {},
+	handle404 = true
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-node',
@@ -44,7 +45,8 @@ export default function ({
 					MANIFEST: './manifest.js',
 					PATH_ENV: JSON.stringify(path_env),
 					HOST_ENV: JSON.stringify(host_env),
-					PORT_ENV: JSON.stringify(port_env)
+					PORT_ENV: JSON.stringify(port_env),
+					HANDLE_404: JSON.stringify(handle404)
 				}
 			});
 

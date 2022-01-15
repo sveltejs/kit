@@ -56,6 +56,24 @@ env: {
 MY_HOST_VARIABLE=127.0.0.1 MY_PORT_VARIABLE=4000 node build
 ```
 
+### handle404
+
+Note: this option is meant to be used when building for Custom Servers, see below.
+
+By default, the `handler` middleware catches HTTP errors to render [custom error pages](https://kit.svelte.dev/docs#layouts-error-pages). You can set `handle404` to `false` to turn off this behavior, and make `handler` invoke the next middleware on 404 errors.
+
+Consider the following code:
+
+```js
+import { handler } from './build/handler.js';
+
+const app = express();
+app.use(handler, otherMiddleware);
+```
+
+- When `handle404` is set to `true` (by default), `otherMiddleware` will never be called.
+- When `handle404` is set to `false`, `otherMiddleware` will be called when your SvelteKit site does not have a matching route.
+
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.

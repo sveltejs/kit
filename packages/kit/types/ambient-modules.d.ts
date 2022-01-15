@@ -200,5 +200,6 @@ declare module '@sveltejs/kit/ssr' {
 declare module '@sveltejs/kit/install-fetch' {
 	import fetch, { Headers, Request, Response } from 'node-fetch';
 
+	export function __fetch_polyfill(): void;
 	export { fetch, Headers, Request, Response };
 }

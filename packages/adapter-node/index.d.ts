@@ -8,6 +8,7 @@ interface AdapterOptions {
 		host?: string;
 		port?: string;
 	};
+	handle404?: boolean;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;
