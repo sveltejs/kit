@@ -127,7 +127,7 @@ export async function create_plugin(config, cwd) {
 			vite.watcher.on('add', update_manifest);
 			vite.watcher.on('remove', update_manifest);
 
-			const assets_path = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
+			const assets = config.kit.paths.assets ? SVELTE_KIT_ASSETS : config.kit.paths.base;
 			const asset_server = sirv(config.kit.files.assets, {
 				dev: true,
 				etag: true,
@@ -149,8 +149,8 @@ export async function create_plugin(config, cwd) {
 
 						const decoded = decodeURI(url.pathname);
 
-						if (decoded.startsWith(assets_path)) {
-							const filepath = decoded.slice(assets_path.length);
+						if (decoded.startsWith(assets)) {
+							const filepath = decoded.slice(assets.length);
 							if (filepath && fs.existsSync(config.kit.files.assets) + filepath) {
 								req.url = encodeURI(filepath); // don't need query/hash
 								asset_server(req, res);
@@ -202,7 +202,7 @@ export async function create_plugin(config, cwd) {
 
 						paths.set_paths({
 							base: config.kit.paths.base,
-							assets: assets_path
+							assets
 						});
 
 						let body;
@@ -239,7 +239,7 @@ export async function create_plugin(config, cwd) {
 								method_override: config.kit.methodOverride,
 								paths: {
 									base: config.kit.paths.base,
-									assets: assets_path
+									assets
 								},
 								prefix: '',
 								prerender: config.kit.prerender.enabled,
