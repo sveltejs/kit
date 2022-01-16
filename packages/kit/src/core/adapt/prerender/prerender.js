@@ -223,7 +223,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			if (is_html && config.kit.prerender.crawl) {
 				for (const href of crawl(/** @type {string} */ (rendered.body))) {
-					if (href.startsWith('data:')) continue;
+					if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 					const resolved = resolve(path, href);
 					if (!is_root_relative(resolved)) continue;
