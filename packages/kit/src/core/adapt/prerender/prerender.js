@@ -98,6 +98,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	/**
 	 * @param {string} path
+	 * @returns string
 	 */
 	function normalize(path) {
 		if (config.kit.trailingSlash === 'always') {
@@ -109,6 +110,28 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		return path;
 	}
 
+	/**
+	 * @param {string} path
+	 * @returns string
+	 */
+	function remove_query_string(path) {
+		return path.split('?')[0];
+	}
+
+
+	/** @type {(location: string) => string} */
+	function encode_location(location) {
+		const is_relative_url = location.startsWith('.') || location.startsWith('/');
+		if (is_relative_url) {
+
+			const protocol = 'http://';
+			return new URL(protocol + location).toString().substring(protocol.length);
+		}
+
+		return new URL(location).toString();
+	}
+
+
 	const q = queue(config.kit.prerender.concurrency);
 
 	/**
@@ -116,12 +139,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	function enqueue(decoded_path, referrer) {
-		const path = encodeURI(normalize(decoded_path));
+		const decoded_path_without_query_string = remove_query_string(decoded_path);
+		const path = encodeURI(normalize(decoded_path_without_query_string));
 
 		if (seen.has(path)) return;
 		seen.add(path);
 
-		return q.add(() => visit(path, decoded_path, referrer));
+		return q.add(() => visit(path, decoded_path_without_query_string, referrer));
 	}
 
 	/**
@@ -167,16 +191,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				if (location) {
 					mkdirp(dirname(file));
 
-					let url;
-					try {
-						url = new URL(location);
-					} catch (error) {
-						log.error(`'${location}' is not a valid URL`);
-						url = location;
-					}
+					const encoded_location = encode_location(location);
 
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${url.toString()}">`);
+					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encoded_location}">`);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -214,7 +232,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				if (result.body) {
 					writeFileSync(file, result.body);
-					paths.push(dependency_path);
+					paths.push(normalize(dependency_path));
 				}
 
 				if (response_type === OK) {
@@ -230,7 +248,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */ (rendered.body))) {
+				for (const href of crawl(/** @type {string} */(rendered.body))) {
 					if (href.startsWith('data:')) continue;
 
 					const resolved = resolve(path, href);

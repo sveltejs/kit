@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
 /** @param {string} _msg */
-const logger = (_msg) => {};
+const logger = (_msg) => { };
 
 /** @type {import('types/internal').Logger} */
 const log = Object.assign(logger, {
@@ -112,7 +112,15 @@ suite('prerender', async () => {
 		// @ts-expect-error
 		server: { chunks: [] },
 		static: [],
-		entries: ['/nested', '/redirect-url-encoding']
+		entries: [
+			'/nested',
+			'/redirects/absolute-url/no-encoding',
+			'/redirects/absolute-url/encoding',
+			'/redirects/path-url/no-encoding',
+			'/redirects/path-url/encoding',
+			'/redirects/relative-url/no-encoding',
+			'/redirects/relative-url/encoding'
+		]
 	};
 
 	const builder = create_builder({
@@ -134,14 +142,14 @@ suite('prerender', async () => {
 	const actualFiles = glob('**', { cwd: dest });
 
 	// test if all files are present
-	assert.equal(expectedFiles, actualFiles);
+	assert.equal(actualFiles, expectedFiles);
 
 	// check each file if content is correct
 	for (const file of expectedFiles.filter((file) => file.endsWith('.html'))) {
-		const expectedContent = readFileSync(join(prerendered_files, file));
-		const actualContent = readFileSync(join(dest, file));
+		const expected_content = readFileSync(join(prerendered_files, file));
+		const actual_content = readFileSync(join(dest, file));
 
-		assert.equal(actualContent.toString(), expectedContent.toString());
+		assert.equal(actual_content.toString(), expected_content.toString(), `content of '${file}' is not equal`);
 	}
 
 	rmSync(dest, { recursive: true, force: true });
