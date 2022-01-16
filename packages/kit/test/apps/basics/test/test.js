@@ -732,6 +732,20 @@ test.describe.parallel('ETags', () => {
 
 		expect(r2.status()).toBe(304);
 	});
+
+	test('custom etag', async ({ request }) => {
+		const r1 = await request.get('/etag/custom');
+		const etag = r1.headers()['etag'];
+		expect(etag).toBe('@1234@');
+
+		const r2 = await request.get('/etag/custom', {
+			headers: {
+				'if-none-match': '@1234@'
+			}
+		});
+
+		expect(r2.status()).toBe(304);
+	});
 });
 
 test.describe.parallel('Headers', () => {
