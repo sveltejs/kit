@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
 /** @param {string} _msg */
-const logger = (_msg) => { };
+const logger = (_msg) => {};
 
 /** @type {import('types/internal').Logger} */
 const log = Object.assign(logger, {
@@ -149,7 +149,11 @@ suite('prerender', async () => {
 		const expected_content = readFileSync(join(prerendered_files, file));
 		const actual_content = readFileSync(join(dest, file));
 
-		assert.equal(actual_content.toString(), expected_content.toString(), `content of '${file}' is not equal`);
+		assert.equal(
+			actual_content.toString(),
+			expected_content.toString(),
+			`content of '${file}' is not equal`
+		);
 	}
 
 	rmSync(dest, { recursive: true, force: true });

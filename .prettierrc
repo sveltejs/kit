@@ -21,6 +21,14 @@
 			"options": {
 				"requirePragma": true
 			}
+		},
+		{
+			"files": [
+				"packages/kit/src/core/adapt/test/fixtures/**/*.html"
+			],
+			"options": {
+				"requirePragma": true
+			}
 		}
 	]
 }

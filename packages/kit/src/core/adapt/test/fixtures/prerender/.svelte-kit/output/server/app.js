@@ -1,17 +1,21 @@
 function get_redirect_response(url) {
-	const [, , , , url_type, encoding_style] = url.split('/')
+	const [, , , , url_type, encoding_style] = url.split('/');
 
 	const base_url = (() => {
 		switch (url_type) {
-			case 'absolute-url': return 'https://my.server.com/';
-			case 'path-url': return './../../redirected';
-			case 'relative-url': return '/redirected';
+			case 'absolute-url':
+				return 'https://my.server.com/';
+			case 'path-url':
+				return './../../redirected';
+			case 'relative-url':
+				return '/redirected';
 		}
-	})()
+	})();
 
-	const search_params = encoding_style === 'encoding'
-		? new URLSearchParams({ redirect: 'https://kit.svelte.dev/docs' }).toString()
-		: 'redirect=https://kit.svelte.dev/docs';
+	const search_params =
+		encoding_style === 'encoding'
+			? new URLSearchParams({ redirect: 'https://kit.svelte.dev/docs' }).toString()
+			: 'redirect=https://kit.svelte.dev/docs';
 
 	return {
 		status: 302,
@@ -23,7 +27,7 @@ function get_redirect_response(url) {
 
 export class App {
 	render({ url }) {
-		if (url.startsWith('http://prerender/redirects/')) return get_redirect_response(url)
+		if (url.startsWith('http://prerender/redirects/')) return get_redirect_response(url);
 
 		return {
 			status: 200,
@@ -35,4 +39,4 @@ export class App {
 	}
 }
 
-export function override() { }
+export function override() {}

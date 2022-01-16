@@ -118,19 +118,16 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		return path.split('?')[0];
 	}
 
-
 	/** @type {(location: string) => string} */
 	function encode_location(location) {
 		const is_relative_url = location.startsWith('.') || location.startsWith('/');
 		if (is_relative_url) {
-
 			const protocol = 'http://';
 			return new URL(protocol + location).toString().substring(protocol.length);
 		}
 
 		return new URL(location).toString();
 	}
-
 
 	const q = queue(config.kit.prerender.concurrency);
 
@@ -248,7 +245,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */(rendered.body))) {
+				for (const href of crawl(/** @type {string} */ (rendered.body))) {
 					if (href.startsWith('data:')) continue;
 
 					const resolved = resolve(path, href);
