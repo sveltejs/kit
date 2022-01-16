@@ -138,14 +138,14 @@ suite('prerender', async () => {
 		dest
 	});
 
-	const expectedFiles = glob('**', { cwd: prerendered_files });
-	const actualFiles = glob('**', { cwd: dest });
+	const expected = glob('**', { cwd: prerendered_files });
+	const files = glob('**', { cwd: dest });
 
 	// test if all files are present
-	assert.equal(actualFiles, expectedFiles);
+	assert.equal(files, expected);
 
 	// check each file if content is correct
-	for (const file of expectedFiles.filter((file) => file.endsWith('.html'))) {
+	for (const file of expected.filter((file) => file.endsWith('.html'))) {
 		const expected_content = readFileSync(join(prerendered_files, file));
 		const actual_content = readFileSync(join(dest, file));
 
