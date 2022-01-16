@@ -16,7 +16,7 @@ We've written and published a few different SvelteKit sites as examples:
 - [`sveltejs/realworld`](https://github.com/sveltejs/realworld) contains an example blog site
 - [`sveltejs/sites`](https://github.com/sveltejs/sites) contains the code for this site and [svelte.dev](https//svelte.dev/)
 
-SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics. Note that these have not been vetted by the maintainers.
+SvelteKit users have also published plenty of examples on GitHub, under the [#sveltekit](https://github.com/topics/sveltekit) and [#sveltekit-template](https://github.com/topics/sveltekit-template) topics, as well as on [the Svelte Society site](https://sveltesociety.dev/templates). Note that these have not been vetted by the maintainers and may not be up to date.
 
 ### Integrations
 
