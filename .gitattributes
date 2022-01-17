@@ -1,2 +1,2 @@
 * text=auto eol=lf
-test -linguist-detectable
+test/** -linguist-detectable
