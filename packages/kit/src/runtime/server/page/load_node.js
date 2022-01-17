@@ -148,12 +148,7 @@ export async function load_node({
 					}
 
 					const rendered = await respond(
-						{
-							url: new URL(requested, request.url),
-							method: opts.method || 'GET',
-							headers: Object.fromEntries(opts.headers),
-							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body)
-						},
+						new Request(new URL(requested, request.url).href, opts),
 						options,
 						{
 							fetched: requested,

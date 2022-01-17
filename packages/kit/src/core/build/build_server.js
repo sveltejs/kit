@@ -87,25 +87,11 @@ export class App {
 	async render(request, {
 		prerender
 	} = {}) {
-		// TODO remove this for 1.0
-		if (Object.keys(request).sort().join() !== 'headers,method,rawBody,url') {
-			throw new Error('Adapters should call app.render({ url, method, headers, rawBody })');
+		if (!(request instanceof Request)) {
+			throw new Error('The first argument to app.render must be a Request object');
 		}
 
-		const host = ${
-			config.kit.host
-				? s(config.kit.host)
-				: `request.headers[${s(config.kit.headers.host || 'host')}]`
-		};
-		const protocol = ${
-			config.kit.protocol
-				? s(config.kit.protocol)
-				: config.kit.headers.protocol
-				? `request.headers[${s(config.kit.headers.protocol)}] || default_protocol`
-				: 'default_protocol'
-		};
-
-		const { status, headers, body } = await respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
+		const { status, headers, body } = await respond(request, this.options, { prerender });
 		return new Response(body, { status, headers });
 	}
 }

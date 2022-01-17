@@ -1,6 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { IncomingRequest, InternalApp, SSRManifest } from './app';
+import { InternalApp, SSRManifest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -237,9 +237,7 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(
-		incoming: IncomingRequest & { url: URL },
-		options: SSRRenderOptions,
-		state?: SSRRenderState
-	): Promise<ServerResponse | undefined>;
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
+		ServerResponse | undefined
+	>;
 }

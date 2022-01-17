@@ -133,12 +133,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const dependencies = new Map();
 
 		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
+			new Request(`${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`),
 			{
 				prerender: {
 					all,
@@ -264,12 +259,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	if (fallback) {
 		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
+			new Request(
+				`${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`
+			),
 			{
 				prerender: {
 					fallback,

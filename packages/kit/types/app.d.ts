@@ -3,12 +3,12 @@ import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(incoming: IncomingRequest): Promise<Response>;
+	render(request: Request): Promise<Response>;
 }
 
 export class InternalApp extends App {
 	render(
-		incoming: IncomingRequest,
+		request: Request,
 		options?: {
 			prerender: PrerenderOptions;
 		}
@@ -19,13 +19,6 @@ export type RawBody = null | Uint8Array;
 export type ParameterizedBody<Body = unknown> = Body extends FormData
 	? ReadOnlyFormData
 	: (string | RawBody | ReadOnlyFormData) & Body;
-
-export interface IncomingRequest {
-	url: string | URL;
-	method: string;
-	headers: RequestHeaders;
-	rawBody: RawBody;
-}
 
 export interface SSRManifest {
 	appDir: string;

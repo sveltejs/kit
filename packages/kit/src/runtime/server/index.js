@@ -3,53 +3,55 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { parse_body } from './parse_body/index.js';
-import { lowercase_keys } from './utils.js';
 import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('types/internal').Respond} */
-export async function respond(incoming, options, state = {}) {
-	if (incoming.url.pathname !== '/' && options.trailing_slash !== 'ignore') {
-		const has_trailing_slash = incoming.url.pathname.endsWith('/');
+export async function respond(request, options, state = {}) {
+	const url = new URL(request.url);
+
+	if (url.pathname !== '/' && options.trailing_slash !== 'ignore') {
+		const has_trailing_slash = url.pathname.endsWith('/');
 
 		if (
 			(has_trailing_slash && options.trailing_slash === 'never') ||
 			(!has_trailing_slash &&
 				options.trailing_slash === 'always' &&
-				!(incoming.url.pathname.split('/').pop() || '').includes('.'))
+				!(url.pathname.split('/').pop() || '').includes('.'))
 		) {
-			incoming.url.pathname = has_trailing_slash
-				? incoming.url.pathname.slice(0, -1)
-				: incoming.url.pathname + '/';
+			url.pathname = has_trailing_slash ? url.pathname.slice(0, -1) : url.pathname + '/';
 
-			if (incoming.url.search === '?') incoming.url.search = '';
+			if (url.search === '?') url.search = '';
 
 			return {
 				status: 301,
 				headers: {
-					location: incoming.url.pathname + incoming.url.search
+					location: url.pathname + url.search
 				}
 			};
 		}
 	}
 
-	const headers = lowercase_keys(incoming.headers);
-	const request = {
-		...incoming,
+	const headers = Object.fromEntries(request.headers);
+	const rawBody = new Uint8Array(await request.arrayBuffer());
+	const request_details = {
+		url,
+		method: request.method,
 		headers,
-		body: parse_body(incoming.rawBody, headers),
+		rawBody,
+		body: parse_body(rawBody, headers),
 		params: {},
 		locals: {}
 	};
 
 	const { parameter, allowed } = options.method_override;
-	const method_override = incoming.url.searchParams.get(parameter)?.toUpperCase();
+	const method_override = url.searchParams.get(parameter)?.toUpperCase();
 
 	if (method_override) {
-		if (request.method.toUpperCase() === 'POST') {
+		if (request_details.method.toUpperCase() === 'POST') {
 			if (allowed.includes(method_override)) {
-				request.method = method_override;
+				request_details.method = method_override;
 			} else {
 				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
 				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
@@ -71,7 +73,7 @@ export async function respond(incoming, options, state = {}) {
 	 * @param {string} replacement
 	 */
 	const print_error = (property, replacement) => {
-		Object.defineProperty(request, property, {
+		Object.defineProperty(request_details, property, {
 			get: () => {
 				throw new Error(`request.${property} has been replaced by request.url.${replacement}`);
 			}
@@ -86,7 +88,7 @@ export async function respond(incoming, options, state = {}) {
 
 	try {
 		return await options.hooks.handle({
-			request,
+			request: request_details,
 			resolve: async (request, opts) => {
 				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
 
@@ -185,12 +187,12 @@ export async function respond(incoming, options, state = {}) {
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 
-		options.handle_error(error, request);
+		options.handle_error(error, request_details);
 
 		try {
-			const $session = await options.hooks.getSession(request);
+			const $session = await options.hooks.getSession(request_details);
 			return await respond_with_error({
-				request,
+				request: request_details,
 				options,
 				state,
 				$session,

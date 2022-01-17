@@ -90,16 +90,22 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const rendered =
-				initial_url.startsWith(config.kit.paths.base) &&
-				(await app.render({
-					url: initial_url,
-					method: req.method,
-					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					rawBody: body
-				}));
+			if (initial_url.startsWith(config.kit.paths.base)) {
+				const protocol =
+					config.kit.protocol ||
+					(config.kit.headers.protocol && req.headers[config.kit.headers.protocol]) ||
+					(use_https ? 'https' : 'http');
 
-			if (rendered) {
+				const host = config.kit.host || req.headers[config.kit.headers.host || 'host'];
+
+				const rendered = await app.render(
+					new Request(`${protocol}://${host}${initial_url}`, {
+						method: req.method,
+						headers: get_headers(req.headers),
+						body
+					})
+				);
+
 				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
 				if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
 				res.end();
@@ -162,4 +168,21 @@ async function get_server(use_https, user_config, handler) {
 			? https.createServer(/** @type {https.ServerOptions} */ (https_options), handler)
 			: http.createServer(handler)
 	);
+}
+
+/** @param {import('http').IncomingHttpHeaders} object */
+function get_headers(object) {
+	const headers = new Headers();
+
+	for (const key in object) {
+		if (key === 'set-cookie') {
+			object[key]?.forEach((value) => {
+				headers.append(key, value);
+			});
+		} else {
+			headers.set(key, /** @type {string} */ (object[key]));
+		}
+	}
+
+	return headers;
 }
