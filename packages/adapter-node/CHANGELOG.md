@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.62
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
 ## 1.0.0-next.61
 
 ### Patch Changes
