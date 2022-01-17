@@ -174,11 +174,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				return;
 			}
 
+			const text = await rendered.text();
+
 			if (rendered.status === 200) {
 				mkdirp(dirname(file));
 
 				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, await rendered.text());
+				writeFileSync(file, text);
 				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
@@ -215,7 +217,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(await rendered.text())) {
+				for (const href of crawl(text)) {
 					if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 					const resolved = resolve(path, href);
