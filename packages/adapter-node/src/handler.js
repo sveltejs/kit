@@ -53,7 +53,7 @@ const ssr = async (req, res) => {
 
 	if (rendered) {
 		res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
-		res.write(await rendered.arrayBuffer());
+		if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
 		res.end();
 	} else {
 		res.statusCode = 404;

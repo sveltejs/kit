@@ -84,7 +84,7 @@ export class App {
 		};
 	}
 
-	render(request, {
+	async render(request, {
 		prerender
 	} = {}) {
 		// TODO remove this for 1.0
@@ -105,7 +105,7 @@ export class App {
 				: 'default_protocol'
 		};
 
-		const { status, headers, body } = respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
+		const { status, headers, body } = await respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
 		return new Response(body, { status, headers });
 	}
 }
