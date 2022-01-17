@@ -1,2 +1,2 @@
 * text=auto eol=lf
-packages/**/test/** -linguist-detectable
+*.html -linguist-detectable
