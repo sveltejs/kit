@@ -1,5 +1,15 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
+- Updated dependencies [[`7569bb27`](https://github.com/sveltejs/kit/commit/7569bb27a640c2bbff6ac02a4c44fdf456bdc227)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.39
+  - @sveltejs/adapter-vercel@1.0.0-next.37
+
 ## 1.0.0-next.10
 
 ### Patch Changes
