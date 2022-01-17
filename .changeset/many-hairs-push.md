@@ -5,4 +5,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-Allow \_\_fetchPolyfill() to run several times
+Allow `__fetchPolyfill()` to run several times
