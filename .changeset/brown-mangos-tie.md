@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] #3269 refactor navigation/singletons
+[fix] refactor navigation singletons
