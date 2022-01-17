@@ -122,8 +122,9 @@ export async function respond(incoming, options, state = {}) {
 							: await render_page(request, route, match, options, state, ssr);
 
 					if (response) {
-						// inject ETags for 200 responses
-						if (response.status === 200) {
+						// inject ETags for 200 responses, if the endpoint
+						// doesn't have its own ETag handling
+						if (response.status === 200 && !response.headers.etag) {
 							const cache_control = get_single_valued_header(response.headers, 'cache-control');
 							if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
 								let if_none_match_value = request.headers['if-none-match'];
