@@ -11,7 +11,7 @@ import { manifest } from 'MANIFEST';
 
 __fetch_polyfill();
 
-const app = new App(manifest);
+const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,15 +47,13 @@ const ssr = async (req, res) => {
 	const rendered = await app.render({
 		url: req.url,
 		method: req.method,
-		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
+		headers: req.headers,
 		rawBody: body
 	});
 
 	if (rendered) {
-		res.writeHead(rendered.status, rendered.headers);
-		if (rendered.body) {
-			res.write(rendered.body);
-		}
+		res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+		res.write(await rendered.arrayBuffer());
 		res.end();
 	} else {
 		res.statusCode = 404;

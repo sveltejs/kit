@@ -25,18 +25,12 @@ export function init(manifest) {
 			rawBody
 		});
 
-		if (!rendered) {
-			return {
-				statusCode: 404,
-				body: 'Not found'
-			};
-		}
-
 		const partial_response = {
 			statusCode: rendered.status,
 			...split_headers(rendered.headers)
 		};
 
+		// TODO this is probably wrong now?
 		if (rendered.body instanceof Uint8Array) {
 			// Function responses should be strings (or undefined), and responses with binary
 			// content should be base64 encoded and set isBase64Encoded to true.
@@ -50,14 +44,14 @@ export function init(manifest) {
 
 		return {
 			...partial_response,
-			body: rendered.body
+			body: await rendered.text()
 		};
 	};
 }
 
 /**
  * Splits headers into two categories: single value and multi value
- * @param {Record<string, string | string[]>} headers
+ * @param {Headers} headers
  * @returns {{
  *   headers: Record<string, string>,
  *   multiValueHeaders: Record<string, string[]>
@@ -70,11 +64,14 @@ function split_headers(headers) {
 	/** @type {Record<string, string[]>} */
 	const m = {};
 
-	for (const key in headers) {
-		const value = headers[key];
-		const target = Array.isArray(value) ? m : h;
-		target[key] = value;
-	}
+	headers.forEach((value, key) => {
+		if (key === 'set-cookie') {
+			m[key] = value.split(', ');
+		} else {
+			h[key] = value;
+		}
+	});
+
 	return {
 		headers: h,
 		multiValueHeaders: m

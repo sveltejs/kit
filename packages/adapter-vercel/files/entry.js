@@ -5,13 +5,13 @@ import { manifest } from 'MANIFEST';
 
 __fetch_polyfill();
 
-const app = new App(manifest);
+const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
 
 export default async (req, res) => {
-	let body;
+	let rawBody;
 
 	try {
-		body = await getRawBody(req);
+		rawBody = await getRawBody(req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
@@ -21,13 +21,9 @@ export default async (req, res) => {
 		url: req.url,
 		method: req.method,
 		headers: req.headers,
-		rawBody: body
+		rawBody
 	});
 
-	if (rendered) {
-		const { status, headers, body } = rendered;
-		return res.writeHead(status, headers).end(body);
-	}
-
-	return res.writeHead(404).end();
+	res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+	res.end(await rendered.arrayBuffer());
 };
