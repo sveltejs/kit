@@ -241,5 +241,5 @@ export interface Respond {
 		incoming: IncomingRequest & { url: URL },
 		options: SSRRenderOptions,
 		state?: SSRRenderState
-	): Promise<Response | undefined>;
+	): Promise<ServerResponse | undefined>;
 }

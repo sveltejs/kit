@@ -105,7 +105,8 @@ export class App {
 				: 'default_protocol'
 		};
 
-		return respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
+		const { status, headers, body } = respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
+		return new Response(body, { status, headers });
 	}
 }
 `;

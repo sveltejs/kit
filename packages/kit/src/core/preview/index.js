@@ -100,8 +100,8 @@ export async function preview({
 				}));
 
 			if (rendered) {
-				res.writeHead(rendered.status, rendered.headers);
-				if (rendered.body) res.write(rendered.body);
+				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+				res.write(await rendered.arrayBuffer());
 				res.end();
 			} else {
 				res.statusCode = 404;

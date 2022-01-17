@@ -1,10 +1,9 @@
 import { ReadOnlyFormData, RequestHeaders } from './helper';
-import { ServerResponse } from './hooks';
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(incoming: IncomingRequest): Promise<ServerResponse>;
+	render(incoming: IncomingRequest): Promise<Response>;
 }
 
 export class InternalApp extends App {
@@ -13,7 +12,7 @@ export class InternalApp extends App {
 		options?: {
 			prerender: PrerenderOptions;
 		}
-	): Promise<ServerResponse>;
+	): Promise<Response>;
 }
 
 export type RawBody = null | Uint8Array;

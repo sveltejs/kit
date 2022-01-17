@@ -150,8 +150,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const headers = rendered.headers;
-			const type = headers && headers['content-type'];
+			const type = rendered.headers.get('content-type');
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const parts = decoded_path.split('/');
@@ -162,7 +161,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const file = `${out}${parts.join('/')}`;
 
 			if (response_type === REDIRECT) {
-				const location = get_single_valued_header(headers, 'location');
+				const location = rendered.headers.get('location');
 
 				if (location) {
 					mkdirp(dirname(file));
@@ -185,7 +184,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, rendered.body || '');
+				writeFileSync(file, await rendered.text());
 				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
@@ -222,7 +221,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			});
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */ (rendered.body))) {
+				for (const href of crawl(await rendered.text())) {
 					if (href.startsWith('data:')) continue;
 
 					const resolved = resolve(path, href);
@@ -283,7 +282,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
-		writeFileSync(file, rendered.body || '');
+		writeFileSync(file, await rendered.text());
 	}
 
 	return {
