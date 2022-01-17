@@ -183,20 +183,6 @@ declare module '@sveltejs/kit/node' {
 	export const getRawBody: GetRawBody;
 }
 
-declare module '@sveltejs/kit/ssr' {
-	import { IncomingRequest, Response } from '@sveltejs/kit';
-	// TODO import from public types, right now its heavily coupled with internal
-	type Options = import('@sveltejs/kit/types/internal').SSRRenderOptions;
-	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
-
-	export interface Respond {
-		(incoming: IncomingRequest & { url: URL }, options: Options, state?: State): Promise<
-			Response | undefined
-		>;
-	}
-	export const respond: Respond;
-}
-
 declare module '@sveltejs/kit/install-fetch' {
 	import fetch, { Headers, Request, Response } from 'node-fetch';
 

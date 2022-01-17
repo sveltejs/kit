@@ -1,6 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { InternalApp, SSRManifest } from './app';
+import { IncomingRequest, InternalApp, SSRManifest } from './app';
 import {
 	ExternalFetch,
 	GetSession,
@@ -234,4 +234,12 @@ export type TrailingSlash = 'never' | 'always' | 'ignore';
 export interface MethodOverride {
 	parameter: string;
 	allowed: string[];
+}
+
+export interface Respond {
+	(
+		incoming: IncomingRequest & { url: URL },
+		options: SSRRenderOptions,
+		state?: SSRRenderState
+	): Promise<Response | undefined>;
 }

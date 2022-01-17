@@ -8,7 +8,7 @@ import { hash } from '../hash.js';
 import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
-/** @type {import('@sveltejs/kit/ssr').Respond} */
+/** @type {import('types/internal').Respond} */
 export async function respond(incoming, options, state = {}) {
 	if (incoming.url.pathname !== '/' && options.trailing_slash !== 'ignore') {
 		const has_trailing_slash = incoming.url.pathname.endsWith('/');
