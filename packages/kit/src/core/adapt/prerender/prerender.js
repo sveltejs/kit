@@ -4,7 +4,6 @@ import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../../install-fetch.js';
 import { SVELTE_KIT } from '../../constants.js';
-import { get_single_valued_header } from '../../../utils/http.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
