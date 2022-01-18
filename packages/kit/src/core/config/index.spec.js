@@ -146,7 +146,7 @@ test('fills in partial blanks', () => {
 				protocol: null
 			},
 			host: null,
-			hydrate: true,
+			hydrate: null,
 			inlineStyleThreshold: 0,
 			methodOverride: {
 				parameter: '_method',
@@ -173,7 +173,7 @@ test('fills in partial blanks', () => {
 				pages: undefined
 			},
 			protocol: null,
-			router: true,
+			router: null,
 			ssr: null,
 			target: null,
 			trailingSlash: 'never'
