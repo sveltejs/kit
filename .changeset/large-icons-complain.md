@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Expose standard Request object to endpoints
+Breaking: Expose standard Request object to endpoints and hooks
