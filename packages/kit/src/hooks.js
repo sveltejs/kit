@@ -12,7 +12,7 @@ export function sequence(...handlers) {
 		/**
 		 * @param {number} i
 		 * @param {import('types/hooks').RequestEvent} event
-		 * @returns {import('types/helper').MaybePromise<import('types/hooks').ServerResponse>}
+		 * @returns {import('types/helper').MaybePromise<Response>}
 		 */
 		function apply_handle(i, event) {
 			const handle = handlers[i];

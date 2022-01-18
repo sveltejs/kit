@@ -129,7 +129,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, import('types/hooks').ServerResponse>} */
+		/** @type {Map<string, Response>} */
 		const dependencies = new Map();
 
 		const rendered = await app.render(new Request(`http://sveltekit-prerender${path}`), {
@@ -183,10 +183,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
-			dependencies.forEach((result, dependency_path) => {
+			for (const [dependency_path, result] of dependencies) {
 				const response_type = Math.floor(result.status / 100);
 
-				const is_html = result.headers['content-type'] === 'text/html';
+				const is_html = result.headers.get('content-type') === 'text/html';
 
 				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -197,7 +197,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				if (result.body) {
-					writeFileSync(file, result.body);
+					writeFileSync(file, await result.text());
 					paths.push(dependency_path);
 				}
 
@@ -211,7 +211,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						referenceType: 'fetched'
 					});
 				}
-			});
+			}
 
 			if (is_html && config.kit.prerender.crawl) {
 				for (const href of crawl(text)) {

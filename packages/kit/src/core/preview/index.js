@@ -7,6 +7,7 @@ import { pathToFileURL } from 'url';
 import { getRawBody } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { to_headers } from '../../utils/http.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -97,7 +98,7 @@ export async function preview({
 				const rendered = await app.render(
 					new Request(`${protocol}://${host}${initial_url}`, {
 						method: req.method,
-						headers: get_headers(req.headers),
+						headers: to_headers(req.headers),
 						body
 					})
 				);
@@ -164,21 +165,4 @@ async function get_server(use_https, user_config, handler) {
 			? https.createServer(/** @type {https.ServerOptions} */ (https_options), handler)
 			: http.createServer(handler)
 	);
-}
-
-/** @param {import('http').IncomingHttpHeaders} object */
-function get_headers(object) {
-	const headers = new Headers();
-
-	for (const key in object) {
-		if (key === 'set-cookie') {
-			object[key]?.forEach((value) => {
-				headers.append(key, value);
-			});
-		} else {
-			headers.set(key, /** @type {string} */ (object[key]));
-		}
-	}
-
-	return headers;
 }

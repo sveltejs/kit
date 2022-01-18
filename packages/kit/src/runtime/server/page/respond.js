@@ -5,7 +5,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/hooks').ServerResponse} ServerResponse
  * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
@@ -21,7 +20,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   params: Record<string, string>;
  *   ssr: boolean;
  * }} opts
- * @returns {Promise<ServerResponse | undefined>}
+ * @returns {Promise<Response | undefined>}
  */
 export async function respond(opts) {
 	const { event, options, state, $session, route, ssr } = opts;
@@ -71,10 +70,9 @@ export async function respond(opts) {
 	if (!leaf.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
-		return {
-			status: 204,
-			headers: {}
-		};
+		return new Response(undefined, {
+			status: 204
+		});
 	}
 
 	/** @type {Array<Loaded>} */
@@ -114,12 +112,12 @@ export async function respond(opts) {
 
 					if (loaded.loaded.redirect) {
 						return with_cookies(
-							{
+							new Response(undefined, {
 								status: loaded.loaded.status,
 								headers: {
 									location: encodeURI(loaded.loaded.redirect)
 								}
-							},
+							}),
 							set_cookie_headers
 						);
 					}
@@ -258,12 +256,14 @@ function get_page_config(leaf, options) {
 }
 
 /**
- * @param {ServerResponse} response
+ * @param {Response} response
  * @param {string[]} set_cookie_headers
  */
 function with_cookies(response, set_cookie_headers) {
 	if (set_cookie_headers.length) {
-		response.headers['set-cookie'] = set_cookie_headers;
+		set_cookie_headers.forEach((value) => {
+			response.headers.append('set-cookie', value);
+		});
 	}
 	return response;
 }

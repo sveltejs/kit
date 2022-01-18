@@ -1,4 +1,4 @@
-import { MaybePromise, ResponseHeaders } from './helper';
+import { MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
@@ -7,12 +7,6 @@ export interface RequestEvent<Locals = Record<string, any>> {
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
-}
-
-export interface ServerResponse {
-	status: number;
-	headers: Partial<ResponseHeaders>;
-	body?: StrictBody;
 }
 
 export interface GetSession<Locals = Record<string, any>, Session = any> {
@@ -26,8 +20,8 @@ export interface ResolveOpts {
 export interface Handle<Locals = Record<string, any>> {
 	(input: {
 		event: RequestEvent<Locals>;
-		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
-	}): MaybePromise<ServerResponse>;
+		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<Response>;
+	}): MaybePromise<Response>;
 }
 
 // internally, `resolve` could return `undefined`, so we differentiate InternalHandle
@@ -35,11 +29,8 @@ export interface Handle<Locals = Record<string, any>> {
 export interface InternalHandle<Locals = Record<string, any>> {
 	(input: {
 		event: RequestEvent<Locals>;
-		resolve(
-			event: RequestEvent<Locals>,
-			opts?: ResolveOpts
-		): MaybePromise<ServerResponse | undefined>;
-	}): MaybePromise<ServerResponse | undefined>;
+		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<Response | undefined>;
+	}): MaybePromise<Response | undefined>;
 }
 
 export interface HandleError<Locals = Record<string, any>> {

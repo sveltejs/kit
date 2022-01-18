@@ -7,7 +7,7 @@ import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { getRawBody } from '../../node.js';
+import { getRawBody, setResponse } from '../../node.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, resolve_entry, runtime } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
@@ -314,9 +314,7 @@ export async function create_plugin(config, cwd) {
 						);
 
 						if (rendered) {
-							res.writeHead(rendered.status, rendered.headers);
-							if (rendered.body) res.write(rendered.body);
-							res.end();
+							setResponse(res, rendered);
 						} else {
 							not_found(res);
 						}

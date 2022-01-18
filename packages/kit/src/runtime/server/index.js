@@ -23,12 +23,12 @@ export async function respond(request, options, state = {}) {
 
 			if (url.search === '?') url.search = '';
 
-			return {
+			return new Response(undefined, {
 				status: 301,
 				headers: {
 					location: url.pathname + url.search
 				}
-			};
+			});
 		}
 	}
 
@@ -48,11 +48,9 @@ export async function respond(request, options, state = {}) {
 				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
 				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
 
-				return {
-					status: 400,
-					headers: {},
-					body
-				};
+				return new Response(body, {
+					status: 400
+				});
 			}
 		} else {
 			throw new Error(`${parameter}=${method_override} is only allowed with POST requests`);
@@ -136,43 +134,37 @@ export async function respond(request, options, state = {}) {
 							: await render_page(event, route, match, options, state, ssr);
 
 					if (response) {
-						// inject ETags for 200 responses, if the endpoint
-						// doesn't have its own ETag handling
-						if (response.status === 200 && !response.headers.etag) {
-							const cache_control = get_single_valued_header(response.headers, 'cache-control');
-							if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
-								let if_none_match_value = request.headers.get('if-none-match');
-								// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
-								if (if_none_match_value?.startsWith('W/"')) {
-									if_none_match_value = if_none_match_value.substring(2);
-								}
+						// respond with 304 if etag matches
+						if (response.status === 200 && response.headers.has('etag')) {
+							let if_none_match_value = request.headers.get('if-none-match');
 
-								const etag = `"${hash(response.body || '')}"`;
+							// ignore W/ prefix https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match#directives
+							if (if_none_match_value?.startsWith('W/"')) {
+								if_none_match_value = if_none_match_value.substring(2);
+							}
 
-								if (if_none_match_value === etag) {
-									/** @type {import('types/helper').ResponseHeaders} */
-									const headers = { etag };
+							const etag = /** @type {string} */ (response.headers.get('etag'));
 
-									// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
-									for (const key of [
-										'cache-control',
-										'content-location',
-										'date',
-										'expires',
-										'vary'
-									]) {
-										if (key in response.headers) {
-											headers[key] = /** @type {string} */ (response.headers[key]);
-										}
+							if (if_none_match_value === etag) {
+								const headers = new Headers({ etag });
+
+								// https://datatracker.ietf.org/doc/html/rfc7232#section-4.1
+								for (const key of [
+									'cache-control',
+									'content-location',
+									'date',
+									'expires',
+									'vary'
+								]) {
+									if (key in response.headers) {
+										headers.set(key, /** @type {string} */ (response.headers.get(key)));
 									}
-
-									return {
-										status: 304,
-										headers
-									};
 								}
 
-								response.headers['etag'] = etag;
+								return new Response(undefined, {
+									status: 304,
+									headers
+								});
 							}
 						}
 
@@ -221,11 +213,9 @@ export async function respond(request, options, state = {}) {
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);
 
-			return {
-				status: 500,
-				headers: {},
-				body: options.dev ? error.stack : error.message
-			};
+			return new Response(options.dev ? error.stack : error.message, {
+				status: 500
+			});
 		}
 	}
 }

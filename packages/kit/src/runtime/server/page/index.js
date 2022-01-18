@@ -8,16 +8,14 @@ import { respond } from './respond.js';
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
  * @param {boolean} ssr
- * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
+ * @returns {Promise<Response | undefined>}
  */
 export async function render_page(event, route, match, options, state, ssr) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
-		return {
-			status: 404,
-			headers: {},
-			body: `Not found: ${event.url.pathname}`
-		};
+		return new Response(`Not found: ${event.url.pathname}`, {
+			status: 404
+		});
 	}
 
 	const params = route.params ? decode_params(route.params(match)) : {};
@@ -43,10 +41,8 @@ export async function render_page(event, route, match, options, state, ssr) {
 		// rather than render the error page — which could lead to an
 		// infinite loop, if the `load` belonged to the root layout,
 		// we respond with a bare-bones 500
-		return {
-			status: 500,
-			headers: {},
-			body: `Bad request in load function: failed to fetch ${state.fetched}`
-		};
+		return new Response(`Bad request in load function: failed to fetch ${state.fetched}`, {
+			status: 500
+		});
 	}
 }

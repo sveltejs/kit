@@ -5,7 +5,7 @@ type DefaultBody = JSONString | Uint8Array;
 
 export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
-	headers?: Partial<ResponseHeaders>;
+	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Body;
 }
 
@@ -13,5 +13,7 @@ export interface RequestHandler<
 	Locals = Record<string, any>,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: RequestEvent<Locals>): MaybePromise<Either<EndpointOutput<Output>, Fallthrough>>;
+	(request: RequestEvent<Locals>): MaybePromise<
+		Either<Response | EndpointOutput<Output>, Fallthrough>
+	>;
 }

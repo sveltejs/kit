@@ -80,10 +80,8 @@ export async function respond_with_error({ event, options, state, $session, stat
 
 		options.handle_error(error, event);
 
-		return {
-			status: 500,
-			headers: {},
-			body: error.stack
-		};
+		return new Response(error.stack, {
+			status: 500
+		});
 	}
 }

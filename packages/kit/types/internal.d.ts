@@ -1,14 +1,7 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
 import { InternalApp, SSRManifest } from './app';
-import {
-	ExternalFetch,
-	GetSession,
-	HandleError,
-	InternalHandle,
-	RequestEvent,
-	ServerResponse
-} from './hooks';
+import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
 import { Either, Fallthrough } from './helper';
 
@@ -17,7 +10,7 @@ type PageId = string;
 export interface PrerenderOptions {
 	fallback?: string;
 	all: boolean;
-	dependencies: Map<string, ServerResponse>;
+	dependencies: Map<string, Response>;
 }
 
 export interface AppModule {
@@ -238,6 +231,6 @@ export interface MethodOverride {
 
 export interface Respond {
 	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
-		ServerResponse | undefined
+		Response | undefined
 	>;
 }

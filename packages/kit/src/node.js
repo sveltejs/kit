@@ -1,4 +1,4 @@
-// TODO this should eventually be replaced with a ReadableStream equivalent
+import { Readable } from 'stream';
 
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
@@ -62,6 +62,14 @@ export async function getRequest(base, req) {
 /** @type {import('@sveltejs/kit/node').SetResponse} */
 export async function setResponse(res, response) {
 	res.writeHead(response.status, Object.fromEntries(response.headers));
-	if (response.body) res.write(new Uint8Array(await response.arrayBuffer()));
-	res.end();
+
+	if (response.body instanceof Readable) {
+		response.body.pipe(res);
+	} else {
+		if (response.body) {
+			res.write(await response.arrayBuffer());
+		}
+
+		res.end();
+	}
 }

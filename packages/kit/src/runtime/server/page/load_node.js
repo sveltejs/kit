@@ -164,13 +164,7 @@ export async function load_node({
 							state.prerender.dependencies.set(relative, rendered);
 						}
 
-						// Set-Cookie must be filtered out (done below) and that's the only header value that
-						// can be an array so we know we have only simple values
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-						response = new Response(rendered.body, {
-							status: rendered.status,
-							headers: /** @type {Record<string, string>} */ (rendered.headers)
-						});
+						response = rendered;
 					} else {
 						// we can't load the endpoint from our own manifest,
 						// so we need to make an actual HTTP request

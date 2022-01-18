@@ -36,14 +36,9 @@ export const handle = sequence(
 		}
 
 		const response = await resolve(event, { ssr: !event.url.pathname.startsWith('/no-ssr') });
+		response.headers.set('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
 
-		return {
-			...response,
-			headers: {
-				...response.headers,
-				'set-cookie': 'name=SvelteKit; path=/; HttpOnly'
-			}
-		};
+		return response;
 	}
 );
 

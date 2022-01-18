@@ -19,3 +19,26 @@ export function get_single_valued_header(headers, key) {
 	}
 	return value;
 }
+
+/** @param {Partial<import('types/helper').ResponseHeaders> | undefined} object */
+export function to_headers(object) {
+	const headers = new Headers();
+
+	if (object) {
+		for (const key in object) {
+			const value = object[key];
+
+			if (value) {
+				if (typeof value === 'string') {
+					headers.set(key, value);
+				} else {
+					value.forEach((value) => {
+						headers.append(key, value);
+					});
+				}
+			}
+		}
+	}
+
+	return headers;
+}
