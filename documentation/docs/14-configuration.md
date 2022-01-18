@@ -26,11 +26,6 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
-		headers: {
-			host: null,
-			protocol: null
-		},
-		host: null,
 		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
@@ -55,7 +50,6 @@ const config = {
 			entries: ['*'],
 			onError: 'fail'
 		},
-		protocol: null,
 		router: true,
 		serviceWorker: {
 			register: true,

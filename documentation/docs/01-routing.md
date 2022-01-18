@@ -54,28 +54,19 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // type of string[] is only for set-cookie
 // everything else must be a type of string
 type ResponseHeaders = Record<string, string | string[]>;
-type RequestHeaders = Record<string, string>;
 
-export type RawBody = null | Uint8Array;
-
-type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
-
-export interface Request<Locals = Record<string, any>, Body = unknown> {
+export interface RequestEvent<Locals = Record<string, any>> {
+	request: Request;
 	url: URL;
-	method: string;
-	headers: RequestHeaders;
-	rawBody: RawBody;
 	params: Record<string, string>;
-	body: ParameterizedBody<Body>;
 	locals: Locals;
 }
 
-type DefaultBody = JSONResponse | Uint8Array;
-export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
+type Body = JSONResponse | Uint8Array | string | ReadableStream | stream.Readable;
+
+export interface EndpointOutput {
 	status?: number;
-	headers?: ResponseHeaders;
+	headers?: HeadersInit;
 	body?: Body;
 }
 
@@ -103,9 +94,7 @@ import db from '$lib/database';
 export async function get({ params }) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
-	const { slug } = params;
-
-	const article = await db.get(slug);
+	const article = await db.get(params.slug);
 
 	if (article) {
 		return {
@@ -114,6 +103,10 @@ export async function get({ params }) {
 			}
 		};
 	}
+
+	return {
+		status: 404
+	};
 }
 ```
 
@@ -152,12 +145,13 @@ return {
 
 #### Body parsing
 
-The `body` property of the request object will be provided in the case of POST requests:
+The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
-- Text data (with content-type `text/plain`) will be parsed to a `string`
-- JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
-- Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
-- All other data will be provided as a `Uint8Array`
+```js
+export async function post({ request }) {
+	const data = await request.formData(); // or .json(), or .text(), etc
+}
+```
 
 #### HTTP Method Overrides
 

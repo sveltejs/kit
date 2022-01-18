@@ -94,13 +94,13 @@ This module provides a helper function to sequence multiple `handle` calls.
 ```js
 import { sequence } from '@sveltejs/kit/hooks';
 
-async function first({ request, resolve }) {
+async function first({ event, resolve }) {
 	console.log('first');
-	return await resolve(request);
+	return await resolve(event);
 }
-async function second({ request, resolve }) {
+async function second({ event, resolve }) {
 	console.log('second');
-	return await resolve(request);
+	return await resolve(event);
 }
 
 export const handle = sequence(first, second);
