@@ -18,7 +18,10 @@ export default function ({
 		host: host_env = 'HOST',
 		port: port_env = 'PORT',
 		base: base_env,
-		headers: { protocol: protocol_header_env, host: host_header_env = 'host' }
+		headers: {
+			protocol: protocol_header_env = 'PROTOCOL_HEADER',
+			host: host_header_env = 'HOST_HEADER'
+		}
 	} = {}
 } = {}) {
 	return {
