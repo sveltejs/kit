@@ -19,11 +19,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
- *   resolve_opts: {
- *     hydrate: boolean;
- *     router: boolean;
- *     ssr: boolean;
- *   }
+ *   resolve_opts: Required<import('types/hooks').ResolveOpts>
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */

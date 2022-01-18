@@ -16,11 +16,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   status: number;
  *   error: Error;
- *   resolve_opts: {
- *     hydrate: boolean;
- *     router: boolean;
- *     ssr: boolean;
- *   }
+ *   resolve_opts: Required<import('types/hooks').ResolveOpts>
  * }} opts
  */
 export async function respond_with_error({

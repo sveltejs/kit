@@ -18,11 +18,7 @@ import { create_prerendering_url_proxy } from './utils.js';
  *   error?: Error;
  *   url: URL;
  *   params: Record<string, string>;
- *   resolve_opts: {
- *     hydrate: boolean;
- *     router: boolean;
- *     ssr: boolean;
- *   }
+ *   resolve_opts: Required<import('types/hooks').ResolveOpts>;
  *   stuff: Record<string, any>;
  * }} opts
  */

@@ -7,7 +7,7 @@ import { respond } from './respond.js';
  * @param {RegExpExecArray} match
  * @param {import('types/internal').SSRRenderOptions} options
  * @param {import('types/internal').SSRRenderState} state
- * @param {{ hydrate: boolean, router: boolean, ssr: boolean }} resolve_opts
+ * @param {Required<import('types/hooks').ResolveOpts>} resolve_opts
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
 export async function render_page(request, route, match, options, state, resolve_opts) {
