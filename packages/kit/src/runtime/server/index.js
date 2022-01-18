@@ -2,8 +2,6 @@ import { render_endpoint } from './endpoint.js';
 import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
-import { hash } from '../hash.js';
-import { get_single_valued_header } from '../../utils/http.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('types/internal').Respond} */
