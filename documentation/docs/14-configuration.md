@@ -133,7 +133,7 @@ export default {
 
 ### host
 
-A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers-host).
+A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers).
 
 ### hydrate
 
@@ -222,7 +222,7 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 
 ### protocol
 
-The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers-protocol) is set. If necessary, you can override it here.
+The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers) is set. If necessary, you can override it here.
 
 ### router
 
