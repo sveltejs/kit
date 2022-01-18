@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-Remove protocol/host configuration options from Kit to adapter-node
+Breaking: Remove protocol/host configuration options from Kit to adapter-node
