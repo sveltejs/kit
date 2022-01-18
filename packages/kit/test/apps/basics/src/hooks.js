@@ -31,15 +31,14 @@ export const handle = sequence(
 		return resolve(request);
 	},
 	async ({ request, resolve }) => {
-		if (request.url.pathname === '/errors/error-in-handle') {
+		const pathname = request.url.pathname;
+		if (pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
 		}
 
 		const response = await resolve(request, {
-			hydrate:
-				request.url.pathname !== '/no-hydrate' && request.url.pathname !== '/no-hydrate/no-js',
-			router:
-				request.url.pathname !== '/no-router/a' && request.url.pathname !== '/no-hydrate/no-js',
+			hydrate: pathname !== '/no-hydrate' && pathname !== '/no-hydrate/no-js',
+			router: pathname !== '/no-router/a' && pathname !== '/no-hydrate/no-js',
 			ssr: !request.url.pathname.startsWith('/no-ssr')
 		});
 

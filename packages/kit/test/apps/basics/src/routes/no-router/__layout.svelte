@@ -7,6 +7,6 @@
 </button>
 
 <a href="/no-router/a">a</a>
-<a href="/no-router/b">b</a>
+<a href="/no-router/b" rel="external">b</a>
 
 <slot></slot>
