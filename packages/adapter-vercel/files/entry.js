@@ -7,11 +7,15 @@ __fetch_polyfill();
 
 const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
 export default async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest(req, manifest);
+		request = await getRequest(`https://${req.headers.host}`, req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
