@@ -257,7 +257,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (fallback) {
-		const rendered = await app.render(new Request(`http://sveltekit-prerender/[fallback]`), {
+		const rendered = await app.render(new Request('http://sveltekit-prerender/[fallback]'), {
 			prerender: {
 				fallback,
 				all: false,

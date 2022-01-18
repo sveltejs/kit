@@ -1,14 +1,3 @@
-class HttpError extends Error {
-	/**
-	 * @param {string} message
-	 * @param {number} statusCode
-	 */
-	constructor(message, statusCode) {
-		super(message);
-		this.statusCode = statusCode;
-	}
-}
-
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {

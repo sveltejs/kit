@@ -14,7 +14,7 @@ import { manifest } from 'MANIFEST';
 __fetch_polyfill();
 
 const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
-const base = BASE;
+const base = BASE_ENV && process.env[BASE_ENV];
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
