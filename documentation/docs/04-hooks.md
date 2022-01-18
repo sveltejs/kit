@@ -48,6 +48,8 @@ export interface Response {
 }
 
 export interface ResolveOpts {
+	hydrate?: boolean;
+	router?: boolean;
 	ssr?: boolean;
 }
 
@@ -80,9 +82,13 @@ export async function handle({ request, resolve }) {
 
 You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
 
+#### `resolve` options
+
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr` — specifies whether the page will be loaded and rendered on the server.
+- `hydrate` — specifies whether the code to [hydrate](#appendix-hydration) the page will be included on the page.
+- `router` — specifies whether the code for the [client-side router](#appendix-routing) will be included on the page.
+- `ssr` — specifies whether the page will be loaded and [rendered on the server](#appendix-ssr).
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
@@ -96,6 +102,8 @@ export async function handle({ request, resolve }) {
 ```
 
 > Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). In most situations this is not recommended ([see appendix](#appendix-ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
+>
+> If `hydrate` is `false`, SvelteKit will not add any JavaScript to the page at all. If `ssr` is disabled, `hydrate` must be `true` or no content will be rendered.
 
 ### handleError
 

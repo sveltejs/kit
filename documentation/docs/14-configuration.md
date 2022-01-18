@@ -31,7 +31,6 @@ const config = {
 			protocol: null
 		},
 		host: null,
-		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
@@ -56,7 +55,6 @@ const config = {
 			onError: 'fail'
 		},
 		protocol: null,
-		router: true,
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
@@ -223,10 +221,6 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 ### protocol
 
 The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers) is set. If necessary, you can override it here.
-
-### router
-
-Enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### serviceWorker
 
