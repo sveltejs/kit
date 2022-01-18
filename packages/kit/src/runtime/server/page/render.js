@@ -34,7 +34,7 @@ export async function render_response({
 	resolve_opts,
 	stuff
 }) {
-	const { hydrate, ssr } = resolve_opts;
+	const { hydrate, router, ssr } = resolve_opts;
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
@@ -150,7 +150,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
 				.join('');
 
-		if (resolve_opts.router || resolve_opts.hydrate) {
+		if (router || hydrate) {
 			head += Array.from(js)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
@@ -164,7 +164,7 @@ export async function render_response({
 					session: ${try_serialize($session, (error) => {
 						throw new Error(`Failed to serialize session data: ${error.message}`);
 					})},
-					route: ${!!options.router},
+					route: ${!!router},
 					spa: ${!ssr},
 					trailing_slash: ${s(options.trailing_slash)},
 					hydrate: ${ssr && hydrate ? `{
