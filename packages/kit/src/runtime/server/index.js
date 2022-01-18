@@ -156,9 +156,8 @@ export async function respond(request, options, state = {}) {
 									'expires',
 									'vary'
 								]) {
-									if (key in response.headers) {
-										headers.set(key, /** @type {string} */ (response.headers.get(key)));
-									}
+									const value = response.headers.get(key);
+									if (value) headers.set(key, value);
 								}
 
 								return new Response(undefined, {

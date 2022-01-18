@@ -88,8 +88,10 @@ export async function render_endpoint(event, route, match) {
 		normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
 	}
 
-	// TODO or Uint8Array?
-	if (typeof normalized_body === 'string' && !headers.has('etag')) {
+	if (
+		(typeof normalized_body === 'string' || normalized_body instanceof Uint8Array) &&
+		!headers.has('etag')
+	) {
 		const cache_control = headers.get('cache-control');
 		if (!cache_control || !/(no-store|immutable)/.test(cache_control)) {
 			headers.set('etag', `"${hash(normalized_body)}"`);
@@ -105,14 +107,17 @@ export async function render_endpoint(event, route, match) {
 /** @param {any} body */
 function is_pojo(body) {
 	if (typeof body !== 'object') return false;
-	if (body instanceof Uint8Array) return false;
 
-	// body could be a node Readable, but we don't want to import
-	// node built-ins, so we use duck typing
-	if (body._readableState && body._writableState && body._events) return false;
+	if (body) {
+		if (body instanceof Uint8Array) return false;
 
-	// similarly, it could be a web ReadableStream
-	if (body[Symbol.toStringTag] === 'ReadableStream') return false;
+		// body could be a node Readable, but we don't want to import
+		// node built-ins, so we use duck typing
+		if (body._readableState && body._writableState && body._events) return false;
+
+		// similarly, it could be a web ReadableStream
+		if (body[Symbol.toStringTag] === 'ReadableStream') return false;
+	}
 
 	return true;
 }
