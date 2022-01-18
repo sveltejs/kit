@@ -170,7 +170,7 @@ export async function create_plugin(config, cwd) {
 						/** @type {import('types/internal').Hooks} */
 						const hooks = {
 							getSession: user_hooks.getSession || (() => ({})),
-							handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+							handle: user_hooks.handle || (({ event, resolve }) => resolve(event)),
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {
@@ -218,7 +218,7 @@ export async function create_plugin(config, cwd) {
 
 						const rendered = await respond(
 							new Request(url.href, {
-								headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
+								headers: /** @type {Record<string, string>} */ (req.headers),
 								method: req.method,
 								body
 							}),
@@ -230,9 +230,18 @@ export async function create_plugin(config, cwd) {
 									vite.ssrFixStacktrace(error);
 									return error.stack;
 								},
-								handle_error: (error, request) => {
+								handle_error: (error, event) => {
 									vite.ssrFixStacktrace(error);
-									hooks.handleError({ error, request });
+									hooks.handleError({
+										error,
+										event,
+
+										// TODO remove for 1.0
+										// @ts-expect-error
+										get request() {
+											throw new Error('request in handleError has been replaced with event');
+										}
+									});
 								},
 								hooks,
 								hydrate: config.kit.hydrate,

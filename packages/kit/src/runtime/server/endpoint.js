@@ -36,16 +36,16 @@ export function is_text(content_type) {
 }
 
 /**
- * @param {import('types/hooks').ServerRequest} request
+ * @param {import('types/hooks').RequestEvent} event
  * @param {import('types/internal').SSREndpoint} route
  * @param {RegExpExecArray} match
  * @returns {Promise<import('types/hooks').ServerResponse | undefined>}
  */
-export async function render_endpoint(request, route, match) {
+export async function render_endpoint(event, route, match) {
 	const mod = await route.load();
 
 	/** @type {import('types/endpoint').RequestHandler} */
-	const handler = mod[request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
+	const handler = mod[event.request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 	if (!handler) {
 		return;
@@ -54,10 +54,10 @@ export async function render_endpoint(request, route, match) {
 	// we're mutating `request` so that we don't have to do { ...request, params }
 	// on the next line, since that breaks the getters that replace path, query and
 	// origin. We could revert that once we remove the getters
-	request.params = route.params ? decode_params(route.params(match)) : {};
+	event.params = route.params ? decode_params(route.params(match)) : {};
 
-	const response = await handler(request);
-	const preface = `Invalid response from route ${request.url.pathname}`;
+	const response = await handler(event);
+	const preface = `Invalid response from route ${event.url.pathname}`;
 
 	if (typeof response !== 'object') {
 		return error(`${preface}: expected an object, got ${typeof response}`);

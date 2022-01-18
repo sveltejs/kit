@@ -21,7 +21,6 @@ export type JSONString =
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | string[]>;
-export type RequestHeaders = Record<string, string>;
 
 // Utility Types
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>

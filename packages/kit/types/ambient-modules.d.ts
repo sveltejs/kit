@@ -175,10 +175,9 @@ declare module '@sveltejs/kit/hooks' {
 
 declare module '@sveltejs/kit/node' {
 	import { IncomingMessage } from 'http';
-	import { RawBody } from '@sveltejs/kit';
 
 	export interface GetRawBody {
-		(request: IncomingMessage): Promise<RawBody>;
+		(request: IncomingMessage): Promise<Uint8Array | null>;
 	}
 	export const getRawBody: GetRawBody;
 

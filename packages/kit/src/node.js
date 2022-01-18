@@ -1,3 +1,5 @@
+// TODO this should eventually be replaced with a ReadableStream equivalent
+
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {

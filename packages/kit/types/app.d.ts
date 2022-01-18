@@ -1,4 +1,3 @@
-import { ReadOnlyFormData, RequestHeaders } from './helper';
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
 export class App {
@@ -14,11 +13,6 @@ export class InternalApp extends App {
 		}
 	): Promise<Response>;
 }
-
-export type RawBody = null | Uint8Array;
-export type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
 
 export interface SSRManifest {
 	appDir: string;

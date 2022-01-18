@@ -6,7 +6,7 @@ import {
 	GetSession,
 	HandleError,
 	InternalHandle,
-	ServerRequest,
+	RequestEvent,
 	ServerResponse
 } from './hooks';
 import { Load } from './page';
@@ -127,7 +127,7 @@ export interface SSRRenderOptions {
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;

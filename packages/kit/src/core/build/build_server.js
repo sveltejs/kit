@@ -38,7 +38,7 @@ set_paths(${s(config.kit.paths)});
 // named imports without triggering Rollup's missing import detection
 const get_hooks = hooks => ({
 	getSession: hooks.getSession || (() => ({})),
-	handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+	handle: hooks.handle || (({ event, resolve }) => resolve(event)),
 	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
 	externalFetch: hooks.externalFetch || fetch
 });
@@ -63,8 +63,17 @@ export class App {
 			dev: false,
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
-			handle_error: (error, request) => {
-				hooks.handleError({ error, request });
+			handle_error: (error, event) => {
+				hooks.handleError({
+					error,
+					event,
+
+					// TODO remove for 1.0
+					// @ts-expect-error
+					get request() {
+						throw new Error('request in handleError has been replaced with event');
+					}
+				});
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,
