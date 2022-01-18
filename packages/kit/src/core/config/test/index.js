@@ -31,11 +31,6 @@ test('load default config (esm)', async () => {
 				template: join(cwd, 'src/app.html')
 			},
 			floc: false,
-			headers: {
-				host: null,
-				protocol: null
-			},
-			host: null,
 			hydrate: true,
 			inlineStyleThreshold: 0,
 			methodOverride: {
@@ -59,7 +54,6 @@ test('load default config (esm)', async () => {
 				onError: 'fail',
 				pages: undefined
 			},
-			protocol: null,
 			router: true,
 			ssr: null,
 			target: null,

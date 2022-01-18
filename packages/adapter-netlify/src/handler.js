@@ -18,12 +18,13 @@ export function init(manifest) {
 		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
 		const rawBody = typeof body === 'string' ? Buffer.from(body, encoding) : body;
 
-		const rendered = await app.render({
-			url: rawUrl,
-			method: httpMethod,
-			headers,
-			rawBody
-		});
+		const rendered = await app.render(
+			new Request(rawUrl, {
+				method: httpMethod,
+				headers: new Headers(headers),
+				body: rawBody
+			})
+		);
 
 		const partial_response = {
 			statusCode: rendered.status,

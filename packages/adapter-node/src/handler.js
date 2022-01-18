@@ -2,16 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
-import { getRawBody } from '@sveltejs/kit/node';
+import { getRequest } from '@sveltejs/kit/node';
 import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
+/* global BASE_ENV, PROTOCOL_HEADER, HOST_HEADER */
+
 __fetch_polyfill();
 
 const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
+const base = BASE;
+const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
+const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -35,30 +40,20 @@ function serve(path, max_age, immutable = false) {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	let body;
+	let request;
 
 	try {
-		body = await getRawBody(req);
+		request = await getRequest(base || get_base(req.headers), req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await app.render({
-		url: req.url,
-		method: req.method,
-		headers: req.headers,
-		rawBody: body
-	});
+	const rendered = await app.render(request);
 
-	if (rendered) {
-		res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
-		if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
-		res.end();
-	} else {
-		res.statusCode = 404;
-		res.end('Not found');
-	}
+	res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+	if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
+	res.end();
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -75,6 +70,16 @@ function sequence(handlers) {
 
 		handle(0);
 	};
+}
+
+/**
+ * @param {import('http').IncomingHttpHeaders} headers
+ * @returns
+ */
+function get_base(headers) {
+	const protocol = (protocol_header && headers[protocol_header]) || 'https';
+	const host = headers[host_header];
+	return `${protocol}://${host}`;
 }
 
 export const handler = sequence(

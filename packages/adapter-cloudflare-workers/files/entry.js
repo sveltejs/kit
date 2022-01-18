@@ -50,18 +50,8 @@ async function handle(event) {
 
 	// dynamically-generated pages
 	try {
-		return await app.render({
-			url: request.url,
-			rawBody: await read(request),
-			headers: Object.fromEntries(request.headers),
-			method: request.method
-		});
+		return await app.render(request);
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
 	}
-}
-
-/** @param {Request} request */
-async function read(request) {
-	return new Uint8Array(await request.arrayBuffer());
 }

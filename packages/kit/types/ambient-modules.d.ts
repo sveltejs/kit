@@ -181,6 +181,11 @@ declare module '@sveltejs/kit/node' {
 		(request: IncomingMessage): Promise<RawBody>;
 	}
 	export const getRawBody: GetRawBody;
+
+	export interface GetRequest {
+		(base: string, request: IncomingMessage): Promise<Request>;
+	}
+	export const getUrl: GetRequest;
 }
 
 declare module '@sveltejs/kit/install-fetch' {

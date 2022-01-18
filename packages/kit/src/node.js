@@ -1,3 +1,14 @@
+class HttpError extends Error {
+	/**
+	 * @param {string} message
+	 * @param {number} statusCode
+	 */
+	constructor(message, statusCode) {
+		super(message);
+		this.statusCode = statusCode;
+	}
+}
+
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
@@ -45,5 +56,14 @@ export function getRawBody(req) {
 		req.on('end', () => {
 			fulfil(data);
 		});
+	});
+}
+
+/** @type {import('@sveltejs/kit/node').GetRequest} */
+export async function getRequest(base, req) {
+	return new Request(base + req.url, {
+		method: req.method,
+		headers: /** @type {Record<string, string>} */ (req.headers),
+		body: await getRawBody(req)
 	});
 }

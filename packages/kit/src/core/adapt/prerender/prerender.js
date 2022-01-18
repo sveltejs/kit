@@ -132,15 +132,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		/** @type {Map<string, import('types/hooks').ServerResponse>} */
 		const dependencies = new Map();
 
-		const rendered = await app.render(
-			new Request(`${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`),
-			{
-				prerender: {
-					all,
-					dependencies
-				}
+		const rendered = await app.render(new Request(`http://sveltekit-prerender${path}`), {
+			prerender: {
+				all,
+				dependencies
 			}
-		);
+		});
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
@@ -260,18 +257,13 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (fallback) {
-		const rendered = await app.render(
-			new Request(
-				`${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`
-			),
-			{
-				prerender: {
-					fallback,
-					all: false,
-					dependencies: new Map()
-				}
+		const rendered = await app.render(new Request(`http://sveltekit-prerender/[fallback]`), {
+			prerender: {
+				fallback,
+				all: false,
+				dependencies: new Map()
 			}
-		);
+		});
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));

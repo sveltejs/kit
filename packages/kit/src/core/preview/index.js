@@ -91,12 +91,8 @@ export async function preview({
 			}
 
 			if (initial_url.startsWith(config.kit.paths.base)) {
-				const protocol =
-					config.kit.protocol ||
-					(config.kit.headers.protocol && req.headers[config.kit.headers.protocol]) ||
-					(use_https ? 'https' : 'http');
-
-				const host = config.kit.host || req.headers[config.kit.headers.host || 'host'];
+				const protocol = use_https ? 'https' : 'http';
+				const host = req.headers['host'];
 
 				const rendered = await app.render(
 					new Request(`${protocol}://${host}${initial_url}`, {
