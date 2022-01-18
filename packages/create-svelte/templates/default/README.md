@@ -1,4 +1,4 @@
-# Default template
+# Default SvelteKit template
 
 This README isn't part of the template; it is ignored, and replaced with [the shared README](../../shared/README.md) when a project is created.
 
