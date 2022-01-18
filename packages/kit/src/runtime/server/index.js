@@ -83,7 +83,7 @@ export async function respond(incoming, options, state = {}) {
 	print_error('query', 'searchParams');
 
 	const resolve_opts = {
-		hydrate: true,
+		hydrate: options.hydrate,
 		router: true,
 		ssr: true
 	};
@@ -92,7 +92,9 @@ export async function respond(incoming, options, state = {}) {
 		return await options.hooks.handle({
 			request,
 			resolve: async (request, opts) => {
-				if (opts && 'hydrate' in opts) resolve_opts.hydrate = /** @type {boolean} */ (opts.hydrate);
+				if (resolve_opts.hydrate && opts && 'hydrate' in opts) {
+					resolve_opts.hydrate = /** @type {boolean} */ (opts.hydrate);
+				}
 				if (opts && 'router' in opts) resolve_opts.router = /** @type {boolean} */ (opts.router);
 				if (opts && 'ssr' in opts) resolve_opts.ssr = /** @type {boolean} */ (opts.ssr);
 

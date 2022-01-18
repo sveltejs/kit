@@ -73,14 +73,7 @@ const options = object(
 
 			host: string(null),
 
-			// TODO remove this for 1.0
-			hydrate: validate(null, (input) => {
-				if (input !== undefined) {
-					throw new Error(
-						'config.kit.hydrate has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
-					);
-				}
-			}),
+			hydrate: boolean(true),
 
 			inlineStyleThreshold: number(0),
 

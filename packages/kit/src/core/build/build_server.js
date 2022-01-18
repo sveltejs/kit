@@ -68,6 +68,7 @@ export class App {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,
+			hydrate: ${s(config.kit.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },

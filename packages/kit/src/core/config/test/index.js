@@ -36,7 +36,7 @@ test('load default config (esm)', async () => {
 				protocol: null
 			},
 			host: null,
-			hydrate: null,
+			hydrate: true,
 			inlineStyleThreshold: 0,
 			methodOverride: {
 				parameter: '_method',

@@ -31,6 +31,7 @@ const config = {
 			protocol: null
 		},
 		host: null,
+		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
