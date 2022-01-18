@@ -81,5 +81,37 @@ export default [
 			commonjs()
 		],
 		preserveEntrySignatures: true
+	},
+
+	{
+		input: {
+			cli: 'src/cli.js',
+			node: 'src/node.js',
+			hooks: 'src/hooks.js',
+			'install-fetch': 'src/install-fetch.js'
+		},
+		output: {
+			dir: 'dist',
+			format: 'cjs',
+			entryFileNames: '[name].cjs',
+			chunkFileNames: 'chunks/[name].cjs'
+		},
+		external: (id) => {
+			return id.startsWith('node:') || external.includes(id);
+		},
+		plugins: [
+			replace({
+				preventAssignment: true,
+				values: {
+					__VERSION__: pkg.version,
+					'process.env.BUNDLED': 'true'
+				}
+			}),
+			resolve({
+				extensions: ['.mjs', '.js', '.ts']
+			}),
+			commonjs()
+		],
+		preserveEntrySignatures: true
 	}
 ];

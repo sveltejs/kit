@@ -79,13 +79,16 @@
 			"types": "./types/index.d.ts"
 		},
 		"./node": {
-			"import": "./dist/node.js"
+			"import": "./dist/node.js",
+			"require": "./dist/node.cjs"
 		},
 		"./hooks": {
-			"import": "./dist/hooks.js"
+			"import": "./dist/hooks.js",
+			"require": "./dist/hooks.cjs"
 		},
 		"./install-fetch": {
-			"import": "./dist/install-fetch.js"
+			"import": "./dist/install-fetch.js",
+			"require": "./dist/install-fetch.cjs"
 		}
 	},
 	"types": "types/index.d.ts",
