@@ -133,7 +133,7 @@ export default {
 
 ### host
 
-A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers-host).
+A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers).
 
 ### hydrate
 
