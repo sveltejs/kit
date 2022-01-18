@@ -36,8 +36,10 @@ export const handle = sequence(
 		}
 
 		const response = await resolve(request, {
-			hydrate: request.url.pathname !== '/no-hydrate' && request.url.pathname !== '/no-hydrate/no-js',
-			router: request.url.pathname !== '/no-router/a' && request.url.pathname !== '/no-hydrate/no-js',
+			hydrate:
+				request.url.pathname !== '/no-hydrate' && request.url.pathname !== '/no-hydrate/no-js',
+			router:
+				request.url.pathname !== '/no-router/a' && request.url.pathname !== '/no-hydrate/no-js',
 			ssr: !request.url.pathname.startsWith('/no-ssr')
 		});
 
