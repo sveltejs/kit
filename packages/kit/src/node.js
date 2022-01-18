@@ -58,3 +58,10 @@ export async function getRequest(base, req) {
 		body: await getRawBody(req)
 	});
 }
+
+/** @type {import('@sveltejs/kit/node').SetResponse} */
+export async function setResponse(res, response) {
+	res.writeHead(response.status, Object.fromEntries(response.headers));
+	if (response.body) res.write(new Uint8Array(await response.arrayBuffer()));
+	res.end();
+}

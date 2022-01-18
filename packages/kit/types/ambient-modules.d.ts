@@ -174,7 +174,7 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	import { IncomingMessage } from 'http';
+	import { IncomingMessage, ServerResponse } from 'http';
 
 	export interface GetRawBody {
 		(request: IncomingMessage): Promise<Uint8Array | null>;
@@ -184,7 +184,12 @@ declare module '@sveltejs/kit/node' {
 	export interface GetRequest {
 		(base: string, request: IncomingMessage): Promise<Request>;
 	}
-	export const getUrl: GetRequest;
+	export const getRequest: GetRequest;
+
+	export interface SetResponse {
+		(res: ServerResponse, response: Response): void;
+	}
+	export const setResponse: SetResponse;
 }
 
 declare module '@sveltejs/kit/install-fetch' {

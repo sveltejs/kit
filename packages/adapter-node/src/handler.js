@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
-import { getRequest } from '@sveltejs/kit/node';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
@@ -49,11 +49,7 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await app.render(request);
-
-	res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
-	if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
-	res.end();
+	setResponse(res, await app.render(request));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
