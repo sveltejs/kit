@@ -97,7 +97,7 @@ export async function respond(incoming, options, state = {}) {
 						options,
 						state,
 						$session: await options.hooks.getSession(request),
-						page_config: { router: true, hydrate: true },
+						page_config: { hydrate: true },
 						stuff: {},
 						status: 200,
 						branch: [],

@@ -14,7 +14,7 @@ import { create_prerendering_url_proxy } from './utils.js';
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   $session: any;
- *   page_config: { hydrate: boolean, router: boolean };
+ *   page_config: { hydrate: boolean };
  *   status: number;
  *   error?: Error;
  *   url: URL;
@@ -151,7 +151,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
 				.join('');
 
-		if (page_config.router || page_config.hydrate) {
+		if (page_config.hydrate) {
 			head += Array.from(js)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
@@ -165,7 +165,6 @@ export async function render_response({
 					session: ${try_serialize($session, (error) => {
 						throw new Error(`Failed to serialize session data: ${error.message}`);
 					})},
-					route: ${!!page_config.router},
 					spa: ${!ssr},
 					trailing_slash: ${s(options.trailing_slash)},
 					hydrate: ${ssr && page_config.hydrate ? `{

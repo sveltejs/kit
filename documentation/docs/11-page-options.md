@@ -4,23 +4,7 @@ title: Page options
 
 By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](#routing) that takes over subsequent navigations.
 
-You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
-
-If both are specified, per-page settings override per-app settings in case of conflicts.
-
-### router
-
-SvelteKit includes a [client-side router](#appendix-routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
-
-In certain circumstances you might need to disable [client-side routing](#appendix-routing) with the app-wide [`router` config option](#configuration-router) or the page-level `router` export:
-
-```html
-<script context="module">
-	export const router = false;
-</script>
-```
-
-Note that this will disable client-side routing for any navigation from this page, regardless of whether the router is already active.
+Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components. If both per-page and per-app settings are specified, the per-page settings override per-app settings in case of conflicts.
 
 ### hydrate
 

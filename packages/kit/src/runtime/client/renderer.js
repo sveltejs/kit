@@ -323,15 +323,6 @@ export class Renderer {
 		this.loading.id = null;
 		this.autoscroll = true;
 		this.updating = false;
-
-		if (!this.router) return;
-
-		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		if (leaf_node && leaf_node.module.router === false) {
-			this.router.disable();
-		} else {
-			this.router.enable();
-		}
 	}
 
 	/**
