@@ -1,5 +1,4 @@
 <script context="module">
-	export const router = false;
 	export const hydrate = false;
 </script>
 
