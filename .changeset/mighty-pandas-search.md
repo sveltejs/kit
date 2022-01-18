@@ -7,4 +7,4 @@
 '@sveltejs/kit': patch
 ---
 
-change app.render signature to (request: Request) => Promise<Response>
+Breaking: change app.render signature to (request: Request) => Promise<Response>
