@@ -1140,27 +1140,6 @@ test.describe.parallel('Page options', () => {
 		}
 	});
 
-	test('disables router if router=false', async ({ page, clicknav, javaScriptEnabled }) => {
-		await page.goto('/no-router/a');
-
-		if (javaScriptEnabled) {
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
-			expect(await page.textContent('button')).toBe('clicks: 0');
-
-			await page.click('button');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await clicknav('[href="/no-router/a"]');
-			expect(await page.textContent('button')).toBe('clicks: 1');
-
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
-			expect(await page.textContent('button')).toBe('clicks: 0');
-		}
-	});
-
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/no-ssr');
 
