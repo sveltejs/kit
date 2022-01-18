@@ -151,7 +151,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
 				.join('');
 
-		if (page_config.hydrate) {
+		if (options.router || page_config.hydrate) {
 			head += Array.from(js)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
@@ -165,6 +165,7 @@ export async function render_response({
 					session: ${try_serialize($session, (error) => {
 						throw new Error(`Failed to serialize session data: ${error.message}`);
 					})},
+					route: ${!!options.router},
 					spa: ${!ssr},
 					trailing_slash: ${s(options.trailing_slash)},
 					hydrate: ${ssr && page_config.hydrate ? `{
