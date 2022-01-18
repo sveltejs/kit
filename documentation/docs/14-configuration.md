@@ -232,6 +232,7 @@ Enables or disables the client-side [router](#page-options-router) app-wide.
 
 An object containing zero or more of the following values:
 
+- `register` - set to `false` to disable automatic service worker registration
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
 
 ### target
