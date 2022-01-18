@@ -1,15 +1,13 @@
+import './shims';
 import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 import { getRawBody } from '@sveltejs/kit/node';
-import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
 // @ts-ignore
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
-
-__fetch_polyfill();
 
 const app = new App(manifest);
 

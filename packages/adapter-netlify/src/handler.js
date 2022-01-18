@@ -1,7 +1,5 @@
-import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
+import './shims';
 import { App } from './server/app.js';
-
-__fetch_polyfill();
 
 /**
  *
