@@ -19,23 +19,24 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
- *   ssr: boolean;
+ *   resolve_opts: {
+ *     hydrate: boolean;
+ *     router: boolean;
+ *     ssr: boolean;
+ *   }
  * }} opts
  * @returns {Promise<ServerResponse | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route, ssr } = opts;
+	const { request, options, state, $session, route, resolve_opts } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
-	if (!ssr) {
+	if (!resolve_opts.ssr) {
 		return await render_response({
 			...opts,
 			branch: [],
-			page_config: {
-				hydrate: true
-			},
 			status: 200,
 			url: request.url,
 			stuff: {}
@@ -58,14 +59,12 @@ export async function respond(opts) {
 			$session,
 			status: 500,
 			error,
-			ssr
+			resolve_opts
 		});
 	}
 
 	// the leaf node will be present. only layouts may be undefined
 	const leaf = /** @type {SSRNode} */ (nodes[nodes.length - 1]).module;
-
-	let page_config = get_page_config(leaf, options);
 
 	if (!leaf.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
@@ -90,7 +89,7 @@ export async function respond(opts) {
 
 	let stuff = {};
 
-	ssr: if (ssr) {
+	ssr: if (resolve_opts.ssr) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -168,7 +167,6 @@ export async function respond(opts) {
 									continue;
 								}
 
-								page_config = get_page_config(error_node.module, options);
 								branch = branch.slice(0, j + 1).concat(error_loaded);
 								stuff = { ...node_loaded.stuff, ...error_loaded.stuff };
 								break ssr;
@@ -193,7 +191,7 @@ export async function respond(opts) {
 							$session,
 							status,
 							error,
-							ssr
+							resolve_opts
 						}),
 						set_cookie_headers
 					);
@@ -215,7 +213,6 @@ export async function respond(opts) {
 				...opts,
 				stuff,
 				url: request.url,
-				page_config,
 				status,
 				error,
 				branch: branch.filter(Boolean)
@@ -236,29 +233,6 @@ export async function respond(opts) {
 			set_cookie_headers
 		);
 	}
-}
-
-/**
- * @param {import('types/internal').SSRComponent} leaf
- * @param {SSRRenderOptions} options
- */
-function get_page_config(leaf, options) {
-	// TODO remove for 1.0
-	if ('ssr' in leaf) {
-		throw new Error(
-			'`export const ssr` has been removed — use the `handle` hook instead: https://kit.svelte.dev/docs#hooks-handle'
-		);
-	}
-
-	if ('router' in leaf) {
-		throw new Error(
-			'`export const router` has been removed — use `beforeNavigate` instead: https://kit.svelte.dev/docs#modules-$app-navigation'
-		);
-	}
-
-	return {
-		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
-	};
 }
 
 /**

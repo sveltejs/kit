@@ -14,12 +14,15 @@ import { create_prerendering_url_proxy } from './utils.js';
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   $session: any;
- *   page_config: { hydrate: boolean };
  *   status: number;
  *   error?: Error;
  *   url: URL;
  *   params: Record<string, string>;
- *   ssr: boolean;
+ *   resolve_opts: {
+ *     hydrate: boolean;
+ *     router: boolean;
+ *     ssr: boolean;
+ *   }
  *   stuff: Record<string, any>;
  * }} opts
  */
@@ -28,14 +31,14 @@ export async function render_response({
 	options,
 	state,
 	$session,
-	page_config,
 	status,
 	error,
 	url,
 	params,
-	ssr,
+	resolve_opts,
 	stuff
 }) {
+	const { hydrate, ssr } = resolve_opts;
 	const css = new Set(options.manifest._.entry.css);
 	const js = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
@@ -60,7 +63,7 @@ export async function render_response({
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
-			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
+			if (fetched && hydrate) serialized_data.push(...fetched);
 
 			if (uses_credentials) is_private = true;
 
@@ -151,7 +154,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
 				.join('');
 
-		if (options.router || page_config.hydrate) {
+		if (resolve_opts.router || resolve_opts.hydrate) {
 			head += Array.from(js)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
@@ -168,7 +171,7 @@ export async function render_response({
 					route: ${!!options.router},
 					spa: ${!ssr},
 					trailing_slash: ${s(options.trailing_slash)},
-					hydrate: ${ssr && page_config.hydrate ? `{
+					hydrate: ${ssr && hydrate ? `{
 						status: ${status},
 						error: ${serialize_error(error)},
 						nodes: [

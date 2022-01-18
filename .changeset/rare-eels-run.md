@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[breaking] remove per-page `router` option
+[breaking] move `hydrate` and `router` options to `handle`

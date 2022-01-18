@@ -44,8 +44,6 @@ export interface Logger {
 }
 
 export interface SSRComponent {
-	router?: boolean;
-	hydrate?: boolean;
 	prerender?: boolean;
 	load: Load;
 	default: {

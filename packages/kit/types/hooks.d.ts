@@ -25,6 +25,8 @@ export interface GetSession<Locals = Record<string, any>, Body = unknown, Sessio
 
 export interface ResolveOpts {
 	ssr?: boolean;
+	hydrate?: boolean;
+	router?: boolean;
 }
 
 export interface Handle<Locals = Record<string, any>, Body = unknown> {

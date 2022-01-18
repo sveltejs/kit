@@ -34,7 +34,7 @@ test('fills in defaults', () => {
 				protocol: null
 			},
 			host: null,
-			hydrate: true,
+			hydrate: null,
 			inlineStyleThreshold: 0,
 			methodOverride: {
 				parameter: '_method',
@@ -61,7 +61,7 @@ test('fills in defaults', () => {
 				pages: undefined
 			},
 			protocol: null,
-			router: true,
+			router: null,
 			ssr: null,
 			target: null,
 			trailingSlash: 'never'

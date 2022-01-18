@@ -82,13 +82,19 @@ export async function respond(incoming, options, state = {}) {
 	print_error('path', 'pathname');
 	print_error('query', 'searchParams');
 
-	let ssr = true;
+	const resolve_opts = {
+		hydrate: true,
+		router: true,
+		ssr: true
+	};
 
 	try {
 		return await options.hooks.handle({
 			request,
 			resolve: async (request, opts) => {
-				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
+				if (opts && 'hydrate' in opts) resolve_opts.hydrate = /** @type {boolean} */ (opts.hydrate);
+				if (opts && 'router' in opts) resolve_opts.router = /** @type {boolean} */ (opts.router);
+				if (opts && 'ssr' in opts) resolve_opts.ssr = /** @type {boolean} */ (opts.ssr);
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -97,11 +103,14 @@ export async function respond(incoming, options, state = {}) {
 						options,
 						state,
 						$session: await options.hooks.getSession(request),
-						page_config: { hydrate: true },
 						stuff: {},
 						status: 200,
 						branch: [],
-						ssr: false
+						resolve_opts: {
+							hydrate: true,
+							router: true,
+							ssr: false
+						}
 					});
 				}
 
@@ -119,7 +128,7 @@ export async function respond(incoming, options, state = {}) {
 					const response =
 						route.type === 'endpoint'
 							? await render_endpoint(request, route, match)
-							: await render_page(request, route, match, options, state, ssr);
+							: await render_page(request, route, match, options, state, resolve_opts);
 
 					if (response) {
 						// inject ETags for 200 responses, if the endpoint
@@ -177,7 +186,7 @@ export async function respond(incoming, options, state = {}) {
 						$session,
 						status: 404,
 						error: new Error(`Not found: ${request.url.pathname}`),
-						ssr
+						resolve_opts
 					});
 				}
 			}
@@ -196,7 +205,7 @@ export async function respond(incoming, options, state = {}) {
 				$session,
 				status: 500,
 				error,
-				ssr
+				resolve_opts
 			});
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);

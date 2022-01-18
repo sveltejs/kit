@@ -73,7 +73,14 @@ const options = object(
 
 			host: string(null),
 
-			hydrate: boolean(true),
+			// TODO remove this for 1.0
+			hydrate: validate(null, (input) => {
+				if (input !== undefined) {
+					throw new Error(
+						'config.kit.hydrate has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+					);
+				}
+			}),
 
 			inlineStyleThreshold: number(0),
 
@@ -181,7 +188,14 @@ const options = object(
 
 			protocol: string(null),
 
-			router: boolean(true),
+			// TODO remove this for 1.0
+			router: validate(null, (input) => {
+				if (input !== undefined) {
+					throw new Error(
+						'config.kit.router has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+					);
+				}
+			}),
 
 			serviceWorker: object({
 				register: boolean(true),

@@ -68,7 +68,6 @@ export class App {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,
-			hydrate: ${s(config.kit.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
@@ -77,7 +76,6 @@ export class App {
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.router)},
 			target: ${s(config.kit.target)},
 			template,
 			trailing_slash: ${s(config.kit.trailingSlash)}
