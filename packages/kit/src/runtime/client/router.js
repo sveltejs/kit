@@ -49,8 +49,6 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
-		this.enabled = true;
-
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
@@ -152,8 +150,6 @@ export class Router {
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
-			if (!this.enabled) return;
-
 			// Adapted from https://github.com/visionmedia/page.js
 			// MIT license https://github.com/visionmedia/page.js#license
 			if (event.button || event.which !== 1) return;
@@ -211,26 +207,26 @@ export class Router {
 		});
 
 		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
-				// if a popstate-driven navigation is cancelled, we need to counteract it
-				// with history.go, which means we end up back here, hence this check
-				if (event.state['sveltekit:index'] === this.current_history_index) return;
+			if (!event.state) return;
 
-				this._navigate({
-					url: new URL(location.href),
-					scroll: event.state['sveltekit:scroll'],
-					keepfocus: false,
-					chain: [],
-					details: null,
-					accepted: () => {
-						this.current_history_index = event.state['sveltekit:index'];
-					},
-					blocked: () => {
-						const delta = this.current_history_index - event.state['sveltekit:index'];
-						history.go(delta);
-					}
-				});
-			}
+			// if a popstate-driven navigation is cancelled, we need to counteract it
+			// with history.go, which means we end up back here, hence this check
+			if (event.state['sveltekit:index'] === this.current_history_index) return;
+
+			this._navigate({
+				url: new URL(location.href),
+				scroll: event.state['sveltekit:scroll'],
+				keepfocus: false,
+				chain: [],
+				details: null,
+				accepted: () => {
+					this.current_history_index = event.state['sveltekit:index'];
+				},
+				blocked: () => {
+					const delta = this.current_history_index - event.state['sveltekit:index'];
+					history.go(delta);
+				}
+			});
 		});
 	}
 
@@ -273,33 +269,18 @@ export class Router {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		if (this.enabled) {
-			return this._navigate({
-				url,
-				scroll: noscroll ? scroll_state() : null,
-				keepfocus,
-				chain,
-				details: {
-					state,
-					replaceState
-				},
-				accepted: () => {},
-				blocked: () => {}
-			});
-		}
-
-		location.href = url.href;
-		return new Promise(() => {
-			/* never resolves */
+		return this._navigate({
+			url,
+			scroll: noscroll ? scroll_state() : null,
+			keepfocus,
+			chain,
+			details: {
+				state,
+				replaceState
+			},
+			accepted: () => {},
+			blocked: () => {}
 		});
-	}
-
-	enable() {
-		this.enabled = true;
-	}
-
-	disable() {
-		this.enabled = false;
 	}
 
 	/**
