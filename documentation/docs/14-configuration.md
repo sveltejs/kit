@@ -105,6 +105,34 @@ Permissions-Policy: interest-cohort=()
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
+# <<<<<<< HEAD
+
+### headers
+
+The current page or endpoint's `url` is, in some environments, derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
+
+If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
+
+```js
+// svelte.config.js
+export default {
+	kit: {
+		headers: {
+			host: 'X-Forwarded-Host',
+			protocol: 'X-Forwarded-Proto'
+		}
+	}
+};
+```
+
+**You should only do this if you trust the reverse proxy**, which is why it isn't the default.
+
+### host
+
+A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers).
+
+> > > > > > > master
+
 ### hydrate
 
 Whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)

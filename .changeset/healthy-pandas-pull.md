@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-static': minor
+'@sveltejs/adapter-static': patch
 ---
 
 add precompress option to adapter-static
