@@ -5,7 +5,6 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/hooks').ServerResponse} ServerResponse
  * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
@@ -13,7 +12,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   event: import('types/hooks').RequestEvent;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
@@ -21,10 +20,10 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   params: Record<string, string>;
  *   ssr: boolean;
  * }} opts
- * @returns {Promise<ServerResponse | undefined>}
+ * @returns {Promise<Response | undefined>}
  */
 export async function respond(opts) {
-	const { request, options, state, $session, route, ssr } = opts;
+	const { event, options, state, $session, route, ssr } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
@@ -38,7 +37,7 @@ export async function respond(opts) {
 				router: true
 			},
 			status: 200,
-			url: request.url,
+			url: event.url,
 			stuff: {}
 		});
 	}
@@ -50,10 +49,10 @@ export async function respond(opts) {
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, request);
+		options.handle_error(error, event);
 
 		return await respond_with_error({
-			request,
+			event,
 			options,
 			state,
 			$session,
@@ -71,10 +70,9 @@ export async function respond(opts) {
 	if (!leaf.prerender && state.prerender && !state.prerender.all) {
 		// if the page has `export const prerender = true`, continue,
 		// otherwise bail out at this point
-		return {
-			status: 204,
-			headers: {}
-		};
+		return new Response(undefined, {
+			status: 204
+		});
 	}
 
 	/** @type {Array<Loaded>} */
@@ -102,7 +100,7 @@ export async function respond(opts) {
 				try {
 					loaded = await load_node({
 						...opts,
-						url: request.url,
+						url: event.url,
 						node,
 						stuff,
 						is_error: false
@@ -114,12 +112,12 @@ export async function respond(opts) {
 
 					if (loaded.loaded.redirect) {
 						return with_cookies(
-							{
+							new Response(undefined, {
 								status: loaded.loaded.status,
 								headers: {
 									location: encodeURI(loaded.loaded.redirect)
 								}
-							},
+							}),
 							set_cookie_headers
 						);
 					}
@@ -130,7 +128,7 @@ export async function respond(opts) {
 				} catch (err) {
 					const e = coalesce_to_error(err);
 
-					options.handle_error(e, request);
+					options.handle_error(e, event);
 
 					status = 500;
 					error = e;
@@ -156,7 +154,7 @@ export async function respond(opts) {
 								const error_loaded = /** @type {import('./types').Loaded} */ (
 									await load_node({
 										...opts,
-										url: request.url,
+										url: event.url,
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
@@ -176,7 +174,7 @@ export async function respond(opts) {
 							} catch (err) {
 								const e = coalesce_to_error(err);
 
-								options.handle_error(e, request);
+								options.handle_error(e, event);
 
 								continue;
 							}
@@ -188,7 +186,7 @@ export async function respond(opts) {
 					// for now just return regular error page
 					return with_cookies(
 						await respond_with_error({
-							request,
+							event,
 							options,
 							state,
 							$session,
@@ -215,7 +213,7 @@ export async function respond(opts) {
 			await render_response({
 				...opts,
 				stuff,
-				url: request.url,
+				url: event.url,
 				page_config,
 				status,
 				error,
@@ -226,7 +224,7 @@ export async function respond(opts) {
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, request);
+		options.handle_error(error, event);
 
 		return with_cookies(
 			await respond_with_error({
@@ -258,12 +256,14 @@ function get_page_config(leaf, options) {
 }
 
 /**
- * @param {ServerResponse} response
+ * @param {Response} response
  * @param {string[]} set_cookie_headers
  */
 function with_cookies(response, set_cookie_headers) {
 	if (set_cookie_headers.length) {
-		response.headers['set-cookie'] = set_cookie_headers;
+		set_cookie_headers.forEach((value) => {
+			response.headers.append('set-cookie', value);
+		});
 	}
 	return response;
 }

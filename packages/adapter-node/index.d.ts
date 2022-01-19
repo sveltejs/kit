@@ -7,6 +7,11 @@ interface AdapterOptions {
 		path?: string;
 		host?: string;
 		port?: string;
+		base?: string;
+		headers?: {
+			protocol?: string;
+			host?: string;
+		};
 	};
 }
 

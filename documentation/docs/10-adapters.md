@@ -92,7 +92,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Output code that:
   - Imports `App` from `${builder.getServerDirectory()}/app.js`
   - Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
-  - Listens for requests from the platform, converts them to a a [SvelteKit request](#hooks-handle), calls the `render` function to generate a [SvelteKit response](#hooks-handle) and responds with it
+  - Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `render` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
   - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform

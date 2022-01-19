@@ -7,7 +7,7 @@ import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { getRawBody } from '../../node.js';
+import { getRawBody, setResponse } from '../../node.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, resolve_entry, runtime } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
@@ -170,7 +170,7 @@ export async function create_plugin(config, cwd) {
 						/** @type {import('types/internal').Hooks} */
 						const hooks = {
 							getSession: user_hooks.getSession || (() => ({})),
-							handle: user_hooks.handle || (({ request, resolve }) => resolve(request)),
+							handle: user_hooks.handle || (({ event, resolve }) => resolve(event)),
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {
@@ -217,12 +217,11 @@ export async function create_plugin(config, cwd) {
 						}
 
 						const rendered = await respond(
-							{
-								url,
-								headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
+							new Request(url.href, {
+								headers: /** @type {Record<string, string>} */ (req.headers),
 								method: req.method,
-								rawBody: body
-							},
+								body
+							}),
 							{
 								amp: config.kit.amp,
 								dev: true,
@@ -231,9 +230,20 @@ export async function create_plugin(config, cwd) {
 									vite.ssrFixStacktrace(error);
 									return error.stack;
 								},
-								handle_error: (error, request) => {
+								handle_error: (error, event) => {
 									vite.ssrFixStacktrace(error);
-									hooks.handleError({ error, request });
+									hooks.handleError({
+										error,
+										event,
+
+										// TODO remove for 1.0
+										// @ts-expect-error
+										get request() {
+											throw new Error(
+												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+											);
+										}
+									});
 								},
 								hooks,
 								hydrate: config.kit.hydrate,
@@ -306,9 +316,7 @@ export async function create_plugin(config, cwd) {
 						);
 
 						if (rendered) {
-							res.writeHead(rendered.status, rendered.headers);
-							if (rendered.body) res.write(rendered.body);
-							res.end();
+							setResponse(res, rendered);
 						} else {
 							not_found(res);
 						}

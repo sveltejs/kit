@@ -17,8 +17,14 @@ export default {
 			out: 'build',
 			precompress: false,
 			env: {
+				path: 'SOCKET_PATH',
 				host: 'HOST',
-				port: 'PORT'
+				port: 'PORT',
+				base: undefined,
+				headers: {
+					protocol: undefined,
+					host: 'host'
+				}
 			}
 		})
 	}
@@ -43,17 +49,39 @@ By default, the server will accept connections on `0.0.0.0` using port 3000. The
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
-You can specify different environment variables if necessary using the `env` option:
+HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `BASE` environment variable:
+
+```
+BASE=https://my.site node build
+```
+
+With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the base URL:
+
+```
+PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
+```
+
+> [`x-forwarded-proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) and [`x-forwarded-host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) are de facto standard headers that forward the original protocol and host if you're using a reverse proxy (think load balancers and CDNs). You should only set these variables if you trust the reverse proxy.
+
+All of these environment variables can be changed, if necessary, using the `env` option:
 
 ```js
 env: {
 	host: 'MY_HOST_VARIABLE',
-	port: 'MY_PORT_VARIABLE'
+	port: 'MY_PORT_VARIABLE',
+	base: 'MY_BASEURL',
+	headers: {
+		protocol: 'MY_PROTOCOL_HEADER',
+		host: 'MY_HOST_HEADER'
+	}
 }
 ```
 
 ```
-MY_HOST_VARIABLE=127.0.0.1 MY_PORT_VARIABLE=4000 node build
+MY_HOST_VARIABLE=127.0.0.1 \
+MY_PORT_VARIABLE=4000 \
+MY_BASEURL=https://my.site \
+node build
 ```
 
 ## Custom server

@@ -39,7 +39,8 @@ export default function () {
 
 			builder.copy(`${files}/entry.js`, `${tmp}/entry.js`, {
 				replace: {
-					APP: `${relativePath}/app.js`
+					APP: `${relativePath}/app.js`,
+					MANIFEST: './manifest.js'
 				}
 			});
 

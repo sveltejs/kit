@@ -26,11 +26,6 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
-		headers: {
-			host: null,
-			protocol: null
-		},
-		host: null,
 		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
@@ -55,7 +50,6 @@ const config = {
 			entries: ['*'],
 			onError: 'fail'
 		},
-		protocol: null,
 		router: true,
 		serviceWorker: {
 			register: true,
@@ -110,30 +104,6 @@ Permissions-Policy: interest-cohort=()
 ```
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
-
-### headers
-
-The current page or endpoint's `url` is, in some environments, derived from the request protocol (normally `https`) and the host, which is taken from the `Host` header by default.
-
-If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying protocol and host are exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) and [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) headers, which can be specified in your config:
-
-```js
-// svelte.config.js
-export default {
-	kit: {
-		headers: {
-			host: 'X-Forwarded-Host',
-			protocol: 'X-Forwarded-Proto'
-		}
-	}
-};
-```
-
-**You should only do this if you trust the reverse proxy**, which is why it isn't the default.
-
-### host
-
-A value that overrides the one derived from [`config.kit.headers.host`](#configuration-headers).
 
 ### hydrate
 
@@ -219,10 +189,6 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
     	}
     };
     ```
-
-### protocol
-
-The protocol is assumed to be `'https'` (unless you're developing locally without the `--https` flag) unless [`config.kit.headers.protocol`](#configuration-headers) is set. If necessary, you can override it here.
 
 ### router
 

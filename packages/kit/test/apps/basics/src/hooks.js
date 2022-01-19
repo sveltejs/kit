@@ -8,7 +8,7 @@ export function getSession(request) {
 }
 
 /** @type {import('@sveltejs/kit').HandleError} */
-export const handleError = ({ request, error }) => {
+export const handleError = ({ event, error }) => {
 	// TODO we do this because there's no other way (that i'm aware of)
 	// to communicate errors back to the test suite. even if we could
 	// capture stderr, attributing an error to a specific request
@@ -16,34 +16,29 @@ export const handleError = ({ request, error }) => {
 	const errors = fs.existsSync('test/errors.json')
 		? JSON.parse(fs.readFileSync('test/errors.json', 'utf8'))
 		: {};
-	errors[request.url.pathname] = error.stack || error.message;
+	errors[event.url.pathname] = error.stack || error.message;
 	fs.writeFileSync('test/errors.json', JSON.stringify(errors));
 };
 
 export const handle = sequence(
-	({ request, resolve }) => {
-		request.locals.answer = 42;
-		return resolve(request);
+	({ event, resolve }) => {
+		event.locals.answer = 42;
+		return resolve(event);
 	},
-	({ request, resolve }) => {
-		const cookies = cookie.parse(request.headers.cookie || '');
-		request.locals.name = cookies.name;
-		return resolve(request);
+	({ event, resolve }) => {
+		const cookies = cookie.parse(event.request.headers.get('cookie') || '');
+		event.locals.name = cookies.name;
+		return resolve(event);
 	},
-	async ({ request, resolve }) => {
-		if (request.url.pathname === '/errors/error-in-handle') {
+	async ({ event, resolve }) => {
+		if (event.url.pathname === '/errors/error-in-handle') {
 			throw new Error('Error in handle');
 		}
 
-		const response = await resolve(request, { ssr: !request.url.pathname.startsWith('/no-ssr') });
+		const response = await resolve(event, { ssr: !event.url.pathname.startsWith('/no-ssr') });
+		response.headers.set('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
 
-		return {
-			...response,
-			headers: {
-				...response.headers,
-				'set-cookie': 'name=SvelteKit; path=/; HttpOnly'
-			}
-		};
+		return response;
 	}
 );
 

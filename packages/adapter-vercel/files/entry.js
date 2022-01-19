@@ -1,31 +1,23 @@
 import './shims';
-import { getRawBody } from '@sveltejs/kit/node';
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
 const app = new App(manifest);
 
+/**
+ * @param {import('http').IncomingMessage} req
+ * @param {import('http').ServerResponse} res
+ */
 export default async (req, res) => {
-	let body;
+	let request;
 
 	try {
-		body = await getRawBody(req);
+		request = await getRequest(`https://${req.headers.host}`, req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await app.render({
-		url: req.url,
-		method: req.method,
-		headers: req.headers,
-		rawBody: body
-	});
-
-	if (rendered) {
-		const { status, headers, body } = rendered;
-		return res.writeHead(status, headers).end(body);
-	}
-
-	return res.writeHead(404).end();
+	setResponse(res, await app.render(request));
 };

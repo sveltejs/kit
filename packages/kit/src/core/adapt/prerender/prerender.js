@@ -4,7 +4,6 @@ import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../../install-fetch.js';
 import { SVELTE_KIT } from '../../constants.js';
-import { get_single_valued_header } from '../../../utils/http.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
@@ -130,28 +129,19 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, import('types/hooks').ServerResponse>} */
+		/** @type {Map<string, Response>} */
 		const dependencies = new Map();
 
-		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
-			{
-				prerender: {
-					all,
-					dependencies
-				}
+		const rendered = await app.render(new Request(`http://sveltekit-prerender${path}`), {
+			prerender: {
+				all,
+				dependencies
 			}
-		);
+		});
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const headers = rendered.headers;
-			const type = headers && headers['content-type'];
+			const type = rendered.headers.get('content-type');
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const parts = decoded_path.split('/');
@@ -162,7 +152,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			const file = `${out}${parts.join('/')}`;
 
 			if (response_type === REDIRECT) {
-				const location = get_single_valued_header(headers, 'location');
+				const location = rendered.headers.get('location');
 
 				if (location) {
 					mkdirp(dirname(file));
@@ -181,20 +171,22 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				return;
 			}
 
+			const text = await rendered.text();
+
 			if (rendered.status === 200) {
 				mkdirp(dirname(file));
 
 				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, rendered.body || '');
+				writeFileSync(file, text);
 				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
-			dependencies.forEach((result, dependency_path) => {
+			for (const [dependency_path, result] of dependencies) {
 				const response_type = Math.floor(result.status / 100);
 
-				const is_html = result.headers['content-type'] === 'text/html';
+				const is_html = result.headers.get('content-type') === 'text/html';
 
 				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -205,7 +197,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				if (result.body) {
-					writeFileSync(file, result.body);
+					writeFileSync(file, await result.text());
 					paths.push(dependency_path);
 				}
 
@@ -219,10 +211,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 						referenceType: 'fetched'
 					});
 				}
-			});
+			}
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */ (rendered.body))) {
+				for (const href of crawl(text)) {
 					if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 					const resolved = resolve(path, href);
@@ -265,25 +257,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (fallback) {
-		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
-			{
-				prerender: {
-					fallback,
-					all: false,
-					dependencies: new Map()
-				}
+		const rendered = await app.render(new Request('http://sveltekit-prerender/[fallback]'), {
+			prerender: {
+				fallback,
+				all: false,
+				dependencies: new Map()
 			}
-		);
+		});
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
-		writeFileSync(file, rendered.body || '');
+		writeFileSync(file, await rendered.text());
 	}
 
 	return {

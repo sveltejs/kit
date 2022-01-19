@@ -125,11 +125,6 @@ export interface Config {
 			template?: string;
 		};
 		floc?: boolean;
-		headers?: {
-			host?: string;
-			protocol?: string;
-		};
-		host?: string;
 		hydrate?: boolean;
 		inlineStyleThreshold?: number;
 		methodOverride?: {
@@ -153,7 +148,6 @@ export interface Config {
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
 		};
-		protocol?: string;
 		router?: boolean;
 		serviceWorker?: {
 			register?: boolean;

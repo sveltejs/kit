@@ -200,32 +200,29 @@ export async function render_response({
 		}
 	}
 
-	/** @type {import('types/helper').ResponseHeaders} */
-	const headers = {
-		'content-type': 'text/html'
-	};
-
-	if (maxage) {
-		headers['cache-control'] = `${is_private ? 'private' : 'public'}, max-age=${maxage}`;
-	}
-
-	if (!options.floc) {
-		headers['permissions-policy'] = 'interest-cohort=()';
-	}
-
 	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	return {
+	const html = options.template({ head, body, assets });
+
+	const headers = new Headers({
+		'content-type': 'text/html',
+		etag: `"${hash(html)}"`
+	});
+
+	if (maxage) {
+		headers.set('cache-control', `${is_private ? 'private' : 'public'}, max-age=${maxage}`);
+	}
+
+	if (!options.floc) {
+		headers.set('permissions-policy', 'interest-cohort=()');
+	}
+
+	return new Response(html, {
 		status,
-		headers,
-		body: options.template({
-			head,
-			body,
-			assets
-		})
-	};
+		headers
+	});
 }
 
 /**

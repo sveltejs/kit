@@ -8,11 +8,11 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 ### handle
 
-This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#page-options-prerender) — and determines the response. It receives the `request` object and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#page-options-prerender) — and determines the response. It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
 ```ts
 // Declaration types for Hooks
@@ -21,41 +21,23 @@ If unimplemented, defaults to `({ request, resolve }) => resolve(request)`.
 // type of string[] is only for set-cookie
 // everything else must be a type of string
 type ResponseHeaders = Record<string, string | string[]>;
-type RequestHeaders = Record<string, string>;
 
-export type RawBody = null | Uint8Array;
-
-type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
-
-export interface Request<Locals = Record<string, any>, Body = unknown> {
+export interface RequestEvent<Locals = Record<string, any>> {
+	request: Request;
 	url: URL;
-	method: string;
-	headers: RequestHeaders;
-	rawBody: RawBody;
 	params: Record<string, string>;
-	body: ParameterizedBody<Body>;
 	locals: Locals;
-}
-
-type StrictBody = string | Uint8Array;
-
-export interface Response {
-	status: number;
-	headers: ResponseHeaders;
-	body?: StrictBody;
 }
 
 export interface ResolveOpts {
 	ssr?: boolean;
 }
 
-export interface Handle<Locals = Record<string, any>, Body = unknown> {
+export interface Handle<Locals = Record<string, any>> {
 	(input: {
-		request: ServerRequest<Locals, Body>;
-		resolve(request: ServerRequest<Locals, Body>, opts?: ResolveOpts): MaybePromise<ServerResponse>;
-	}): MaybePromise<ServerResponse>;
+		event: RequestEvent<Locals>;
+		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<Response>;
+	}): MaybePromise<Response>;
 }
 ```
 
@@ -67,14 +49,9 @@ export async function handle({ request, resolve }) {
 	request.locals.user = await getUserInformation(request.headers.cookie);
 
 	const response = await resolve(request);
+	response.headers.set('x-custom-header', 'potato');
 
-	return {
-		...response,
-		headers: {
-			...response.headers,
-			'x-custom-header': 'potato'
-		}
-	};
+	return response;
 }
 ```
 
@@ -107,16 +84,16 @@ If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
 // Declaration types for handleError hook
-export interface HandleError<Locals = Record<string, any>, Body = unknown> {
-	(input: { error: Error & { frame?: string }; request: Request<Locals, Body> }): void;
+export interface HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals> }): void;
 }
 ```
 
 ```js
 /** @type {import('@sveltejs/kit').HandleError} */
-export async function handleError({ error, request }) {
+export async function handleError({ error, event }) {
 	// example integration with https://sentry.io/
-	Sentry.captureException(error, { request });
+	Sentry.captureException(error, { event });
 }
 ```
 
@@ -124,29 +101,29 @@ export async function handleError({ error, request }) {
 
 ### getSession
 
-This function takes the `request` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
+This function takes the `event` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
 
 If unimplemented, session is `{}`.
 
 ```ts
 // Declaration types for getSession hook
-export interface GetSession<Locals = Record<string, any>, Body = unknown, Session = any> {
-	(request: Request<Locals, Body>): Session | Promise<Session>;
+export interface GetSession<Locals = Record<string, any>, Session = any> {
+	(event: RequestEvent<Locals>): Session | Promise<Session>;
 }
 ```
 
 ```js
 /** @type {import('@sveltejs/kit').GetSession} */
-export function getSession(request) {
-	return request.locals.user
+export function getSession(event) {
+	return event.locals.user
 		? {
 				user: {
 					// only include properties needed client-side —
 					// exclude anything else attached to the user
 					// like access tokens etc
-					name: request.locals.user.name,
-					email: request.locals.user.email,
-					avatar: request.locals.user.avatar
+					name: event.locals.user.name,
+					email: event.locals.user.email,
+					avatar: event.locals.user.avatar
 				}
 		  }
 		: {};

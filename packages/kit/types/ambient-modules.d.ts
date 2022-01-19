@@ -174,27 +174,22 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	import { IncomingMessage } from 'http';
-	import { RawBody } from '@sveltejs/kit';
+	import { IncomingMessage, ServerResponse } from 'http';
 
 	export interface GetRawBody {
-		(request: IncomingMessage): Promise<RawBody>;
+		(request: IncomingMessage): Promise<Uint8Array | null>;
 	}
 	export const getRawBody: GetRawBody;
-}
 
-declare module '@sveltejs/kit/ssr' {
-	import { IncomingRequest, Response } from '@sveltejs/kit';
-	// TODO import from public types, right now its heavily coupled with internal
-	type Options = import('@sveltejs/kit/types/internal').SSRRenderOptions;
-	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
-
-	export interface Respond {
-		(incoming: IncomingRequest & { url: URL }, options: Options, state?: State): Promise<
-			Response | undefined
-		>;
+	export interface GetRequest {
+		(base: string, request: IncomingMessage): Promise<Request>;
 	}
-	export const respond: Respond;
+	export const getRequest: GetRequest;
+
+	export interface SetResponse {
+		(res: ServerResponse, response: Response): void;
+	}
+	export const setResponse: SetResponse;
 }
 
 declare module '@sveltejs/kit/install-fetch' {

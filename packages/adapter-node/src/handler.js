@@ -3,13 +3,16 @@ import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
-import { getRawBody } from '@sveltejs/kit/node';
-
-// @ts-ignore
+import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
+/* global BASE_ENV, PROTOCOL_HEADER, HOST_HEADER */
+
 const app = new App(manifest);
+const base = BASE_ENV && process.env[BASE_ENV];
+const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
+const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,32 +36,16 @@ function serve(path, max_age, immutable = false) {
 
 /** @type {import('polka').Middleware} */
 const ssr = async (req, res) => {
-	let body;
+	let request;
 
 	try {
-		body = await getRawBody(req);
+		request = await getRequest(base || get_base(req.headers), req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	const rendered = await app.render({
-		url: req.url,
-		method: req.method,
-		headers: req.headers, // TODO: what about repeated headers, i.e. string[]
-		rawBody: body
-	});
-
-	if (rendered) {
-		res.writeHead(rendered.status, rendered.headers);
-		if (rendered.body) {
-			res.write(rendered.body);
-		}
-		res.end();
-	} else {
-		res.statusCode = 404;
-		res.end('Not found');
-	}
+	setResponse(res, await app.render(request));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
@@ -75,6 +62,16 @@ function sequence(handlers) {
 
 		handle(0);
 	};
+}
+
+/**
+ * @param {import('http').IncomingHttpHeaders} headers
+ * @returns
+ */
+function get_base(headers) {
+	const protocol = (protocol_header && headers[protocol_header]) || 'https';
+	const host = headers[host_header];
+	return `${protocol}://${host}`;
 }
 
 export const handler = sequence(

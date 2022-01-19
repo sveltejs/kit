@@ -4,22 +4,22 @@
  */
 export function sequence(...handlers) {
 	const length = handlers.length;
-	if (!length) return ({ request, resolve }) => resolve(request);
+	if (!length) return ({ event, resolve }) => resolve(event);
 
-	return ({ request, resolve }) => {
-		return apply_handle(0, request);
+	return ({ event, resolve }) => {
+		return apply_handle(0, event);
 
 		/**
 		 * @param {number} i
-		 * @param {import('types/hooks').ServerRequest} request
-		 * @returns {import('types/helper').MaybePromise<import('types/hooks').ServerResponse>}
+		 * @param {import('types/hooks').RequestEvent} event
+		 * @returns {import('types/helper').MaybePromise<Response>}
 		 */
-		function apply_handle(i, request) {
+		function apply_handle(i, event) {
 			const handle = handlers[i];
 
 			return handle({
-				request,
-				resolve: i < length - 1 ? (request) => apply_handle(i + 1, request) : resolve
+				event,
+				resolve: i < length - 1 ? (event) => apply_handle(i + 1, event) : resolve
 			});
 		}
 	};

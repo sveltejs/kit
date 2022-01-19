@@ -7,7 +7,7 @@ import { create_prerendering_url_proxy } from './utils.js';
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   event: import('types/hooks').RequestEvent;
  *   options: import('types/internal').SSRRenderOptions;
  *   state: import('types/internal').SSRRenderState;
  *   route: import('types/internal').SSRPage | null;
@@ -23,7 +23,7 @@ import { create_prerendering_url_proxy } from './utils.js';
  * @returns {Promise<import('./types').Loaded | undefined>} undefined for fallthrough
  */
 export async function load_node({
-	request,
+	event,
 	options,
 	state,
 	route,
@@ -94,7 +94,7 @@ export async function load_node({
 
 				opts.headers = new Headers(opts.headers);
 
-				const resolved = resolve(request.url.pathname, requested.split('?')[0]);
+				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
 				let response;
 
@@ -130,12 +130,15 @@ export async function load_node({
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
-						if (request.headers.cookie) {
-							opts.headers.set('cookie', request.headers.cookie);
+						const cookie = event.request.headers.get('cookie');
+						const authorization = event.request.headers.get('authorization');
+
+						if (cookie) {
+							opts.headers.set('cookie', cookie);
 						}
 
-						if (request.headers.authorization && !opts.headers.has('authorization')) {
-							opts.headers.set('authorization', request.headers.authorization);
+						if (authorization && !opts.headers.has('authorization')) {
+							opts.headers.set('authorization', authorization);
 						}
 					}
 
@@ -148,12 +151,7 @@ export async function load_node({
 					}
 
 					const rendered = await respond(
-						{
-							url: new URL(requested, request.url),
-							method: opts.method || 'GET',
-							headers: Object.fromEntries(opts.headers),
-							rawBody: opts.body == null ? null : new TextEncoder().encode(opts.body)
-						},
+						new Request(new URL(requested, event.url).href, opts),
 						options,
 						{
 							fetched: requested,
@@ -166,17 +164,11 @@ export async function load_node({
 							state.prerender.dependencies.set(relative, rendered);
 						}
 
-						// Set-Cookie must be filtered out (done below) and that's the only header value that
-						// can be an array so we know we have only simple values
-						// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-						response = new Response(rendered.body, {
-							status: rendered.status,
-							headers: /** @type {Record<string, string>} */ (rendered.headers)
-						});
+						response = rendered;
 					} else {
 						// we can't load the endpoint from our own manifest,
 						// so we need to make an actual HTTP request
-						return fetch(new URL(requested, request.url).href, {
+						return fetch(new URL(requested, event.url).href, {
 							method: opts.method || 'GET',
 							headers: opts.headers
 						});
@@ -199,11 +191,13 @@ export async function load_node({
 					// ports do not affect the resolution
 					// leading dot prevents mydomain.com matching domain.com
 					if (
-						`.${new URL(requested).hostname}`.endsWith(`.${request.url.hostname}`) &&
+						`.${new URL(requested).hostname}`.endsWith(`.${event.url.hostname}`) &&
 						opts.credentials !== 'omit'
 					) {
 						uses_credentials = true;
-						opts.headers.set('cookie', request.headers.cookie);
+
+						const cookie = event.request.headers.get('cookie');
+						if (cookie) opts.headers.set('cookie', cookie);
 					}
 
 					const external_request = new Request(requested, /** @type {RequestInit} */ (opts));

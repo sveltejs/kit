@@ -1,31 +1,17 @@
-import { ReadOnlyFormData, RequestHeaders } from './helper';
-import { ServerResponse } from './hooks';
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(incoming: IncomingRequest): Promise<ServerResponse>;
+	render(request: Request): Promise<Response>;
 }
 
 export class InternalApp extends App {
 	render(
-		incoming: IncomingRequest,
+		request: Request,
 		options?: {
 			prerender: PrerenderOptions;
 		}
-	): Promise<ServerResponse>;
-}
-
-export type RawBody = null | Uint8Array;
-export type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
-
-export interface IncomingRequest {
-	url: string | URL;
-	method: string;
-	headers: RequestHeaders;
-	rawBody: RawBody;
+	): Promise<Response>;
 }
 
 export interface SSRManifest {

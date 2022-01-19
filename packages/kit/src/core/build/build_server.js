@@ -38,7 +38,7 @@ set_paths(${s(config.kit.paths)});
 // named imports without triggering Rollup's missing import detection
 const get_hooks = hooks => ({
 	getSession: hooks.getSession || (() => ({})),
-	handle: hooks.handle || (({ request, resolve }) => resolve(request)),
+	handle: hooks.handle || (({ event, resolve }) => resolve(event)),
 	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
 	externalFetch: hooks.externalFetch || fetch
 });
@@ -63,8 +63,17 @@ export class App {
 			dev: false,
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
-			handle_error: (error, request) => {
-				hooks.handleError({ error, request });
+			handle_error: (error, event) => {
+				hooks.handleError({
+					error,
+					event,
+
+					// TODO remove for 1.0
+					// @ts-expect-error
+					get request() {
+						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
+					}
+				});
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,
@@ -87,25 +96,11 @@ export class App {
 	render(request, {
 		prerender
 	} = {}) {
-		// TODO remove this for 1.0
-		if (Object.keys(request).sort().join() !== 'headers,method,rawBody,url') {
-			throw new Error('Adapters should call app.render({ url, method, headers, rawBody })');
+		if (!(request instanceof Request)) {
+			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		const host = ${
-			config.kit.host
-				? s(config.kit.host)
-				: `request.headers[${s(config.kit.headers.host || 'host')}]`
-		};
-		const protocol = ${
-			config.kit.protocol
-				? s(config.kit.protocol)
-				: config.kit.headers.protocol
-				? `request.headers[${s(config.kit.headers.protocol)}] || default_protocol`
-				: 'default_protocol'
-		};
-
-		return respond({ ...request, url: new URL(request.url, protocol + '://' + host) }, this.options, { prerender });
+		return respond(request, this.options, { prerender });
 	}
 }
 `;

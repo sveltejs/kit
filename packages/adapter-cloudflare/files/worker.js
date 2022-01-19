@@ -1,5 +1,5 @@
-import { App } from '../output/server/app.js';
-import { manifest, prerendered } from './manifest.js';
+import { App } from 'APP';
+import { manifest, prerendered } from 'MANIFEST';
 
 const app = new App(manifest);
 
@@ -45,41 +45,9 @@ export default {
 
 		// dynamically-generated pages
 		try {
-			const rendered = await app.render({
-				url,
-				rawBody: new Uint8Array(await req.arrayBuffer()),
-				headers: Object.fromEntries(req.headers),
-				method: req.method
-			});
-
-			if (rendered) {
-				return new Response(rendered.body, {
-					status: rendered.status,
-					headers: make_headers(rendered.headers)
-				});
-			}
+			return await app.render(req);
 		} catch (e) {
 			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
 		}
-
-		return new Response({
-			status: 404,
-			statusText: 'Not Found'
-		});
 	}
 };
-
-function make_headers(headers) {
-	const result = new Headers();
-	for (const header in headers) {
-		const value = headers[header];
-		if (typeof value === 'string') {
-			result.set(header, value);
-			continue;
-		}
-		for (const sub of value) {
-			result.append(header, sub);
-		}
-	}
-	return result;
-}

@@ -3,16 +3,8 @@
 
 import './ambient-modules';
 
-export { App, IncomingRequest, RawBody, SSRManifest } from './app';
+export { App, SSRManifest } from './app';
 export { Adapter, Builder, Config, PrerenderErrorHandler, ValidatedConfig } from './config';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput } from './page';
-export {
-	ExternalFetch,
-	GetSession,
-	Handle,
-	HandleError,
-	ServerRequest as Request,
-	ServerResponse as Response,
-	ResolveOpts
-} from './hooks';
+export { ExternalFetch, GetSession, Handle, HandleError, RequestEvent, ResolveOpts } from './hooks';

@@ -419,6 +419,31 @@ test.describe.parallel('Endpoints', () => {
 
 		expect(await page.textContent('h1')).toBe(random);
 	});
+
+	test('allows headers to be a Headers object', async ({ request }) => {
+		const response = await request.get('/endpoint-output/headers-object');
+
+		expect(response.headers()['x-foo']).toBe('bar');
+	});
+
+	test('allows return value to be a Response', async ({ request }) => {
+		const { server, port } = await start_server((req, res) => {
+			res.writeHead(200, {
+				'X-Foo': 'bar'
+			});
+
+			res.end('ok');
+		});
+
+		try {
+			const response = await request.get(`/endpoint-output/proxy?port=${port}`);
+
+			expect(await response.text()).toBe('ok');
+			expect(response.headers()['x-foo']).toBe('bar');
+		} finally {
+			server.close();
+		}
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {

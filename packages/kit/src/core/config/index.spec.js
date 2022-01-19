@@ -29,11 +29,8 @@ test('fills in defaults', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
-			headers: {
-				host: null,
-				protocol: null
-			},
-			host: null,
+			headers: undefined,
+			host: undefined,
 			hydrate: true,
 			inlineStyleThreshold: 0,
 			methodOverride: {
@@ -60,7 +57,7 @@ test('fills in defaults', () => {
 				onError: 'fail',
 				pages: undefined
 			},
-			protocol: null,
+			protocol: undefined,
 			router: true,
 			ssr: null,
 			target: null,
@@ -141,11 +138,8 @@ test('fills in partial blanks', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
-			headers: {
-				host: null,
-				protocol: null
-			},
-			host: null,
+			headers: undefined,
+			host: undefined,
 			hydrate: true,
 			inlineStyleThreshold: 0,
 			methodOverride: {
@@ -172,7 +166,7 @@ test('fills in partial blanks', () => {
 				onError: 'fail',
 				pages: undefined
 			},
-			protocol: null,
+			protocol: undefined,
 			router: true,
 			ssr: null,
 			target: null,

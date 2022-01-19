@@ -1,3 +1,5 @@
+import { Readable } from 'stream';
+
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
@@ -46,4 +48,28 @@ export function getRawBody(req) {
 			fulfil(data);
 		});
 	});
+}
+
+/** @type {import('@sveltejs/kit/node').GetRequest} */
+export async function getRequest(base, req) {
+	return new Request(base + req.url, {
+		method: req.method,
+		headers: /** @type {Record<string, string>} */ (req.headers),
+		body: await getRawBody(req)
+	});
+}
+
+/** @type {import('@sveltejs/kit/node').SetResponse} */
+export async function setResponse(res, response) {
+	res.writeHead(response.status, Object.fromEntries(response.headers));
+
+	if (response.body instanceof Readable) {
+		response.body.pipe(res);
+	} else {
+		if (response.body) {
+			res.write(await response.arrayBuffer());
+		}
+
+		res.end();
+	}
 }
