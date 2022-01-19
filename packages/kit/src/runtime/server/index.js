@@ -67,24 +67,28 @@ export async function respond(request, options, state = {}) {
 	/**
 	 * @param {string} property
 	 * @param {string} replacement
+	 * @param {string} suffix
 	 */
-	const removed = (property, replacement) => ({
+	const removed = (property, replacement, suffix = '') => ({
 		get: () => {
-			throw new Error(`event.${property} has been replaced by event.${replacement}`);
+			throw new Error(`event.${property} has been replaced by event.${replacement}` + suffix);
 		}
 	});
+
+	const details = '. See https://github.com/sveltejs/kit/pull/3384 for details';
 
 	const body_getter = {
 		get: () => {
 			throw new Error(
-				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`'
+				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`' +
+					details
 			);
 		}
 	};
 
 	Object.defineProperties(event, {
-		method: removed('method', 'request.method'),
-		headers: removed('headers', 'request.headers'),
+		method: removed('method', 'request.method', details),
+		headers: removed('headers', 'request.headers', details),
 		origin: removed('origin', 'url.origin'),
 		path: removed('path', 'url.pathname'),
 		query: removed('query', 'url.searchParams'),
@@ -188,7 +192,7 @@ export async function respond(request, options, state = {}) {
 			// TODO remove for 1.0
 			// @ts-expect-error
 			get request() {
-				throw new Error('request in handle has been replaced with event');
+				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
 	} catch (/** @type {unknown} */ e) {

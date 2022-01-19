@@ -71,7 +71,7 @@ export class App {
 					// TODO remove for 1.0
 					// @ts-expect-error
 					get request() {
-						throw new Error('request in handleError has been replaced with event');
+						throw new Error('request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details');
 					}
 				});
 				error.stack = this.options.get_stack(error);
@@ -93,15 +93,14 @@ export class App {
 		};
 	}
 
-	async render(request, {
+	render(request, {
 		prerender
 	} = {}) {
 		if (!(request instanceof Request)) {
-			throw new Error('The first argument to app.render must be a Request object');
+			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		const { status, headers, body } = await respond(request, this.options, { prerender });
-		return new Response(body, { status, headers });
+		return respond(request, this.options, { prerender });
 	}
 }
 `;

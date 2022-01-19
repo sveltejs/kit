@@ -239,7 +239,9 @@ export async function create_plugin(config, cwd) {
 										// TODO remove for 1.0
 										// @ts-expect-error
 										get request() {
-											throw new Error('request in handleError has been replaced with event');
+											throw new Error(
+												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+											);
 										}
 									});
 								},
