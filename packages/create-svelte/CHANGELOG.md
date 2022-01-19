@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.95
+
+### Patch Changes
+
+- Add methodOverrides to default configs ([#3411](https://github.com/sveltejs/kit/pull/3411))
+
 ## 2.0.0-next.94
 
 ### Patch Changes
