@@ -1,7 +1,5 @@
-import { router as router_, renderer } from '../client/singletons.js';
+import { router, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
-
-const router = /** @type {import('../client/router').Router} */ (router_);
 
 /**
  * @param {string} name
