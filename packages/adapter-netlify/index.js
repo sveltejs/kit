@@ -50,8 +50,12 @@ export default function ({ split = false } = {}) {
 			/** @type {string[]} */
 			const redirects = [];
 
+			const replace = {
+				APP: './server/app.js'
+			};
+
 			if (esm) {
-				builder.copy(`${files}/esm`, '.netlify');
+				builder.copy(`${files}/esm`, '.netlify', { replace });
 			} else {
 				glob('**/*.js', { cwd: '.netlify/server' }).forEach((file) => {
 					const filepath = `.netlify/server/${file}`;
@@ -60,7 +64,7 @@ export default function ({ split = false } = {}) {
 					writeFileSync(filepath, output);
 				});
 
-				builder.copy(`${files}/cjs`, '.netlify');
+				builder.copy(`${files}/cjs`, '.netlify', { replace });
 				writeFileSync(join('.netlify', 'package.json'), JSON.stringify({ type: 'commonjs' }));
 			}
 

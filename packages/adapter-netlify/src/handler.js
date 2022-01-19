@@ -1,13 +1,11 @@
 import './shims';
-import { App } from './server/app.js';
+import { App } from 'APP';
 
 /**
- *
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {import('@netlify/functions').Handler}
  */
 export function init(manifest) {
-	/** @type {import('@sveltejs/kit').App} */
 	const app = new App(manifest);
 
 	return async (event) => {

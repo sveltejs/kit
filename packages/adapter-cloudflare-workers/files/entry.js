@@ -1,5 +1,5 @@
 import { App } from 'APP';
-import { manifest, prerendered } from './manifest.js';
+import { manifest, prerendered } from 'MANIFEST';
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
 const app = new App(manifest);

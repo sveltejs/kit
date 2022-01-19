@@ -1,7 +1,7 @@
-import { App } from '../output/server/app.js';
-import { manifest, prerendered } from './manifest.js';
+import { App } from 'APP';
+import { manifest, prerendered } from 'MANIFEST';
 
-const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
+const app = new App(manifest);
 
 const prefix = `/${manifest.appDir}/`;
 
