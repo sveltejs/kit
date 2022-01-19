@@ -66,6 +66,24 @@ const options = object(
 
 			floc: boolean(false),
 
+			// TODO: remove this for the 1.0 release
+			headers: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
+			}),
+
+			// TODO: remove this for the 1.0 release
+			host: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
+			}),
+
 			hydrate: boolean(true),
 
 			inlineStyleThreshold: number(0),
@@ -145,6 +163,7 @@ const options = object(
 
 					return input;
 				}),
+
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
@@ -157,6 +176,7 @@ const options = object(
 						);
 					}
 				}),
+
 				onError: validate('fail', (input, keypath) => {
 					if (typeof input === 'function') return input;
 					if (['continue', 'fail'].includes(input)) return input;
@@ -164,12 +184,22 @@ const options = object(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
 				}),
+
 				// TODO: remove this for the 1.0 release
 				pages: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
 						throw new Error(`${keypath} has been renamed to \`entries\`.`);
 					}
 				})
+			}),
+
+			// TODO: remove this for the 1.0 release
+			protocol: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
 			}),
 
 			router: boolean(true),
