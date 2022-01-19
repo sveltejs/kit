@@ -49,7 +49,7 @@ By default, the server will accept connections on `0.0.0.0` using port 3000. The
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
-Node HTTP servers don't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `BASE` environment variable:
+HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `BASE` environment variable:
 
 ```
 BASE=https://my.site node build
