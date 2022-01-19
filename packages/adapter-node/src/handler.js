@@ -1,19 +1,15 @@
+import './shims';
 import fs from 'fs';
 import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
-
-// @ts-ignore
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
 /* global BASE_ENV, PROTOCOL_HEADER, HOST_HEADER */
 
-__fetch_polyfill();
-
-const app = /** @type {import('@sveltejs/kit').App} */ (new App(manifest));
+const app = new App(manifest);
 const base = BASE_ENV && process.env[BASE_ENV];
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';

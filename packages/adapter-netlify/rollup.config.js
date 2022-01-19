@@ -5,7 +5,8 @@ import json from '@rollup/plugin-json';
 export default [
 	{
 		input: {
-			handler: 'src/handler.js'
+			handler: 'src/handler.js',
+			shims: 'src/shims.js'
 		},
 		output: [
 			{
