@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.234
+
+### Patch Changes
+
+- Allow endpoints to return a Response, or an object with Headers ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Expose standard Request object to endpoints and hooks ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
 ## 1.0.0-next.233
 
 ### Patch Changes

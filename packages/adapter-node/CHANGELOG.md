@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
 ## 1.0.0-next.63
 
 ### Patch Changes
