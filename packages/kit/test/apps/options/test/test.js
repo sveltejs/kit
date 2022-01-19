@@ -60,12 +60,10 @@ test.describe.parallel('base path', () => {
 		} else {
 			expect(await page.evaluate(() => document.querySelector('style'))).not.toBeNull();
 			expect(
-				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][media="print"]'))
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"][disabled]'))
 			).not.toBeNull();
 			expect(
-				await page.evaluate(() =>
-					document.querySelector('link[rel="stylesheet"]:not([media="print"])')
-				)
+				await page.evaluate(() => document.querySelector('link[rel="stylesheet"]:not([disabled])'))
 			).not.toBeNull();
 		}
 	});

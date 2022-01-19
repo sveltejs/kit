@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-[fix] add media="print" to lower priority of css that's been inlined
+[fix] add media="(max-width: 0)" to prevent stylesheets from downloading
