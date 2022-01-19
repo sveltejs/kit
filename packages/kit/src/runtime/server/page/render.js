@@ -148,8 +148,8 @@ export async function render_response({
 		}
 		// prettier-ignore
 		head += Array.from(css)
-				.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
-				.join('');
+			.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled media="(max-width: 0)"' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
+			.join('');
 
 		if (page_config.router || page_config.hydrate) {
 			head += Array.from(js)
