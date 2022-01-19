@@ -5,15 +5,14 @@ export function to_headers(object) {
 	if (object) {
 		for (const key in object) {
 			const value = object[key];
+			if (!value) continue;
 
-			if (value) {
-				if (typeof value === 'string') {
-					headers.set(key, value);
-				} else {
-					value.forEach((value) => {
-						headers.append(key, value);
-					});
-				}
+			if (typeof value === 'string') {
+				headers.set(key, value);
+			} else {
+				value.forEach((value) => {
+					headers.append(key, value);
+				});
 			}
 		}
 	}
