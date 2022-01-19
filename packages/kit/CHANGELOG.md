@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.233
+
+### Patch Changes
+
+- [fix] refactor navigation singletons to avoid storing undefined reference ([#3374](https://github.com/sveltejs/kit/pull/3374))
+
+* [fix] add media="(max-width: 0)" to prevent stylesheets from downloading ([#3396](https://github.com/sveltejs/kit/pull/3396))
+
 ## 1.0.0-next.232
 
 ### Patch Changes

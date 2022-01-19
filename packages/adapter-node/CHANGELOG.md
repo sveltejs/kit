@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
 ## 1.0.0-next.62
 
 ### Patch Changes
