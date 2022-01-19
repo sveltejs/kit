@@ -1,9 +1,7 @@
-import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
+import './shims';
 import { getRawBody } from '@sveltejs/kit/node';
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
-
-__fetch_polyfill();
 
 const app = new App(manifest);
 

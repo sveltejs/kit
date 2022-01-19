@@ -6,7 +6,8 @@ export default [
 	{
 		input: {
 			index: 'src/index.js',
-			handler: 'src/handler.js'
+			handler: 'src/handler.js',
+			shims: 'src/shims.js'
 		},
 		output: {
 			dir: 'files',
