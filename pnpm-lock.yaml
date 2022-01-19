@@ -46,16 +46,6 @@ importers:
     devDependencies:
       '@actions/core': 1.6.0
 
-  examples/hn.svelte.dev:
-    specifiers:
-      '@sveltejs/adapter-netlify': workspace:*
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.44.2
-    devDependencies:
-      '@sveltejs/adapter-netlify': link:../../packages/adapter-netlify
-      '@sveltejs/kit': link:../../packages/kit
-      svelte: 3.44.2
-
   packages/adapter-auto:
     specifiers:
       '@sveltejs/adapter-cloudflare': workspace:*
