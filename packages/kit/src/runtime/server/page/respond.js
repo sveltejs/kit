@@ -117,7 +117,7 @@ export async function respond(opts) {
 							{
 								status: loaded.loaded.status,
 								headers: {
-									location: encodeURI(loaded.loaded.redirect)
+									location: loaded.loaded.redirect
 								}
 							},
 							set_cookie_headers
