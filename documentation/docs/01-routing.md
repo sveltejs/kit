@@ -148,7 +148,7 @@ return {
 The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
 ```js
-export async function post({ request }) {
+export async function post(request) {
 	const data = await request.formData(); // or .json(), or .text(), etc
 }
 ```
