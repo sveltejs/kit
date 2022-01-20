@@ -9,6 +9,7 @@
 	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"bin": "./bin.js",
+	"main": "./index.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
 		"prompts": "^2.4.2"
