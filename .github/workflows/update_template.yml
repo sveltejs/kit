@@ -48,7 +48,7 @@ jobs:
         run: node ./scripts/update-template-repo-contents.js ${{ github.workspace }}/template
 
       - name: Publish
-        working-directory: ${{ github.workspace }}/kit/template
+        working-directory: ${{ github.workspace }}/template
         run: |
           touch "generated-$(date +%s)" 
           git add -A
