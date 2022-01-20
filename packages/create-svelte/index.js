@@ -57,8 +57,8 @@ function write_common_files(cwd, options, name) {
 	const pkg = /** @type {any} */ (JSON.parse(fs.readFileSync(pkg_file, 'utf-8')));
 
 	files.forEach((file) => {
-		const include = file.include.every((condition) => matchesCondition(condition, options));
-		const exclude = file.exclude.some((condition) => matchesCondition(condition, options));
+		const include = file.include.every((condition) => matches_condition(condition, options));
+		const exclude = file.exclude.some((condition) => matches_condition(condition, options));
 
 		if (exclude || !include) return;
 
@@ -74,7 +74,7 @@ function write_common_files(cwd, options, name) {
 
 	pkg.dependencies = sort_keys(pkg.dependencies);
 	pkg.devDependencies = sort_keys(pkg.devDependencies);
-	pkg.name = toValidPackageName(name);
+	pkg.name = to_valid_package_name(name);
 
 	fs.writeFileSync(pkg_file, JSON.stringify(pkg, null, '  '));
 }
@@ -84,7 +84,7 @@ function write_common_files(cwd, options, name) {
  * @param {import('./types/internal').Options} options
  * @returns {boolean}
  */
-function matchesCondition(condition, options) {
+function matches_condition(condition, options) {
 	return condition === 'default' || condition === 'skeleton'
 		? options.template === condition
 		: options[condition];
@@ -130,7 +130,7 @@ function sort_keys(obj) {
 }
 
 /** @param {string} name */
-function toValidPackageName(name) {
+function to_valid_package_name(name) {
 	return name
 		.trim()
 		.toLowerCase()
