@@ -174,7 +174,7 @@ If something goes wrong during `load`, return an `Error` object or a `string` de
 
 If the page should redirect (because the page is deprecated, or the user needs to be logged in, or whatever else) return a `string` containing the location to which they should be redirected alongside a `3xx` status code.
 
-The `redirect` string should be a [properly encoded](https://en.wikipedia.org/wiki/Percent-encoding) URI.  Both absolute and relative URIs are acceptable.
+The `redirect` string should be a [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URI. Both absolute and relative URIs are acceptable.
 
 #### maxage
 
