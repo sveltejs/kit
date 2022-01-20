@@ -15,7 +15,7 @@ mkdir -p $TMP
 cd $TMP
 
 if [ "$CI" ]; then
-	(umask 0077; echo "$SSH_KEY" > ~/ssh_key;)
+	(umask 0077; echo "$UPDATE_TEMPLATE_SSH_KEY" > ~/ssh_key;)
 	git config user.email 'noreply@svelte.dev'
 	git config user.name '[bot]'
 
