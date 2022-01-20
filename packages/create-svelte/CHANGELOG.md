@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.96
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise (#3384) ([#3430](https://github.com/sveltejs/kit/pull/3430))
+
 ## 2.0.0-next.95
 
 ### Patch Changes
