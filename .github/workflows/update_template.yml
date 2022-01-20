@@ -5,7 +5,6 @@ on:
     workflows: [Release]
     types:
       - completed
-  workflow_dispatch:
 
 jobs:
   release:
@@ -51,7 +50,6 @@ jobs:
       - name: Publish
         working-directory: ${{ github.workspace }}/template
         run: |
-          touch "generated-$(date +%s)"
           git config user.email "noreply@svelte.dev"
           git config user.name "[bot]"
           git add -A
