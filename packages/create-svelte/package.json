@@ -36,6 +36,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
+		"index.js",
 		"dist",
 		"bin.js",
 		"utils.js"
