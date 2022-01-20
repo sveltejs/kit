@@ -2,4 +2,4 @@
 'create-svelte': patch
 ---
 
-Add index.js file pkg.files
+Add index.js file to `pkg.files`
