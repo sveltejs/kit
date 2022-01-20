@@ -51,10 +51,6 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-// type of string[] is only for set-cookie
-// everything else must be a type of string
-type ResponseHeaders = Record<string, string | string[]>;
-
 export interface RequestEvent<Locals = Record<string, any>> {
 	request: Request;
 	url: URL;
@@ -62,26 +58,19 @@ export interface RequestEvent<Locals = Record<string, any>> {
 	locals: Locals;
 }
 
-type Body = JSONResponse | Uint8Array | string | ReadableStream | stream.Readable;
-
+type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
 export interface EndpointOutput {
 	status?: number;
 	headers?: HeadersInit;
 	body?: Body;
 }
 
-export type MaybePromise<T> = T | Promise<T>;
-
-export interface Fallthrough {
-	fallthrough?: true;
+type MaybePromise<T> = T | Promise<T>;
+interface Fallthrough {
+	fallthrough: true;
 }
-
-export interface RequestHandler<
-	Locals = Record<string, any>,
-	Input = unknown,
-	Output extends DefaultBody = DefaultBody
-> {
-	(request: Request<Locals, Input>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
+export interface RequestHandler<Locals = Record<string, any>> {
+	(request: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
 }
 ```
 
