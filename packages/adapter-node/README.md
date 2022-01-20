@@ -20,10 +20,10 @@ export default {
 				path: 'SOCKET_PATH',
 				host: 'HOST',
 				port: 'PORT',
-				base: undefined,
+				origin: 'ORIGIN',
 				headers: {
-					protocol: undefined,
-					host: 'host'
+					protocol: 'PROTOCOL_HEADER',
+					host: 'HOST_HEADER'
 				}
 			}
 		})
@@ -49,13 +49,13 @@ By default, the server will accept connections on `0.0.0.0` using port 3000. The
 HOST=127.0.0.1 PORT=4000 node build
 ```
 
-HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `BASE` environment variable:
+HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. The simplest way to tell SvelteKit where the app is being served is to set the `ORIGIN` environment variable:
 
 ```
-BASE=https://my.site node build
+ORIGIN=https://my.site node build
 ```
 
-With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the base URL:
+With this, a request for the `/stuff` pathname will correctly resolve to `https://my.site/stuff`. Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
 ```
 PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
@@ -69,7 +69,7 @@ All of these environment variables can be changed, if necessary, using the `env`
 env: {
 	host: 'MY_HOST_VARIABLE',
 	port: 'MY_PORT_VARIABLE',
-	base: 'MY_BASEURL',
+	origin: 'MY_ORIGINURL',
 	headers: {
 		protocol: 'MY_PROTOCOL_HEADER',
 		host: 'MY_HOST_HEADER'
@@ -80,7 +80,7 @@ env: {
 ```
 MY_HOST_VARIABLE=127.0.0.1 \
 MY_PORT_VARIABLE=4000 \
-MY_BASEURL=https://my.site \
+MY_ORIGINURL=https://my.site \
 node build
 ```
 

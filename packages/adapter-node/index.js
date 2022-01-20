@@ -17,11 +17,11 @@ export default function ({
 		path: path_env = 'SOCKET_PATH',
 		host: host_env = 'HOST',
 		port: port_env = 'PORT',
-		base: base_env,
+		origin: origin_env = 'ORIGIN',
 		headers: {
 			protocol: protocol_header_env = 'PROTOCOL_HEADER',
 			host: host_header_env = 'HOST_HEADER'
-		}
+		} = {}
 	} = {}
 } = {}) {
 	return {
@@ -54,7 +54,7 @@ export default function ({
 					PATH_ENV: JSON.stringify(path_env),
 					HOST_ENV: JSON.stringify(host_env),
 					PORT_ENV: JSON.stringify(port_env),
-					BASE: base_env ? `process.env[${JSON.stringify(base_env)}]` : 'undefined',
+					ORIGIN_ENV: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
 					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
 					HOST_HEADER: JSON.stringify(host_header_env)
 				}
