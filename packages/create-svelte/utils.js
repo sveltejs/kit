@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /** @param {string} dir */
 export function mkdirp(dir) {
@@ -42,4 +43,9 @@ export function copy(from, to, rename = identity) {
 		mkdirp(path.dirname(to));
 		fs.copyFileSync(from, to);
 	}
+}
+
+/** @param {string} path */
+export function dist(path) {
+	return fileURLToPath(new URL(`./dist/${path}`, import.meta.url).href);
 }

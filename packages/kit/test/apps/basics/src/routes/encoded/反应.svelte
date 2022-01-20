@@ -2,7 +2,7 @@
 	export function load() {
 		return {
 			status: 307,
-			redirect: '苗条'
+			redirect: encodeURI('苗条')
 		};
 	}
 </script>

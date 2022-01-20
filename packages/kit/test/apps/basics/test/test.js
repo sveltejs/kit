@@ -497,6 +497,22 @@ test.describe.parallel('Encoded paths', () => {
 		expect(decodeURI(await page.innerHTML('h3'))).toBe('/encoded/苗条');
 	});
 
+	test('redirects do not re-encode the redirect string', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+
+		await clicknav('[href="/encoded/redirect"]');
+
+		// check innerText instead of innerHTML because innerHTML would return the '&amp;' character reference instead of '&' character.
+		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
+	});
+
+	test('redirects do not re-encode the redirect string during ssr', async ({ page }) => {
+		await page.goto('/encoded/redirect');
+
+		// check innerText instead of innerHTML because innerHTML would return the '&amp;' character reference instead of '&' character.
+		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
+	});
+
 	test('sets charset on JSON Content-Type', async ({ request }) => {
 		const response = await request.get('/encoded/endpoint');
 		expect(response.headers()['content-type']).toBe('application/json; charset=utf-8');

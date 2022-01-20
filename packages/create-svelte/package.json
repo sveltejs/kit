@@ -1,6 +1,6 @@
 {
 	"name": "create-svelte",
-	"version": "2.0.0-next.95",
+	"version": "2.0.0-next.98",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -9,6 +9,7 @@
 	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"bin": "./bin.js",
+	"main": "./index.js",
 	"dependencies": {
 		"kleur": "^4.1.4",
 		"prompts": "^2.4.2"
@@ -35,6 +36,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"files": [
+		"index.js",
 		"dist",
 		"bin.js",
 		"utils.js"

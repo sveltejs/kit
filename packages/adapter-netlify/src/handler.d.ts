@@ -1,4 +1,3 @@
 declare module 'APP' {
-	import { App } from '@sveltejs/kit';
-	export { App };
+	export { App } from '@sveltejs/kit';
 }
