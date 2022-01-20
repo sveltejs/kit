@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.235
+
+### Patch Changes
+
+- register service worker regardless of hydrate/router option ([#3435](https://github.com/sveltejs/kit/pull/3435))
+
 ## 1.0.0-next.234
 
 ### Patch Changes

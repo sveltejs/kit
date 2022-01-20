@@ -1,5 +1,17 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.66
+
+### Patch Changes
+
+- fix usage of `ORIGIN` environment variable ([#3448](https://github.com/sveltejs/kit/pull/3448))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- [fix] rename `BASE` to `ORIGIN` and fix config handling ([#3423](https://github.com/sveltejs/kit/pull/3423))
+
 ## 1.0.0-next.64
 
 ### Patch Changes

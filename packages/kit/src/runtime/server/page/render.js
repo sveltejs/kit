@@ -180,12 +180,7 @@ export async function render_response({
 						params: ${devalue(params)}
 					}` : 'null'}
 				});
-			</script>${options.service_worker ? `
-			<script>
-				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.register('${options.service_worker}');
-				}
-			</script>` : ''}`;
+			</script>`;
 
 			body += serialized_data
 				.map(({ url, body, json }) => {
@@ -197,6 +192,16 @@ export async function render_response({
 					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\n\t');
+		}
+
+		if (options.service_worker) {
+			// always include service worker unless it's turned off explicitly
+			head += `
+			<script>
+				if ('serviceWorker' in navigator) {
+					navigator.serviceWorker.register('${options.service_worker}');
+				}
+			</script>`;
 		}
 	}
 

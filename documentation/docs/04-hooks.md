@@ -41,14 +41,14 @@ export interface Handle<Locals = Record<string, any>> {
 }
 ```
 
-To add custom data to the request, which is passed to endpoints, populate the `request.locals` object, as shown below.
+To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
-export async function handle({ request, resolve }) {
-	request.locals.user = await getUserInformation(request.headers.cookie);
+export async function handle({ event, resolve }) {
+	event.locals.user = await getUserInformation(event.request.headers.get('cookie'));
 
-	const response = await resolve(request);
+	const response = await resolve(event);
 	response.headers.set('x-custom-header', 'potato');
 
 	return response;
