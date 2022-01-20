@@ -1,9 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { createRequire } from 'module';
-
+import colors from 'kleur';
 import { preprocess } from 'svelte/compiler';
-
 import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
@@ -13,7 +12,8 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
-	const abs_package_dir = path.join(cwd, config.kit.package.dir);
+	const package_dir = config.kit.package.dir;
+	const abs_package_dir = path.isAbsolute(package_dir) ? package_dir : path.join(cwd, package_dir);
 	rimraf(abs_package_dir);
 
 	if (config.kit.package.emitTypes) {
@@ -50,7 +50,14 @@ export async function make_package(config, cwd = process.cwd()) {
 		if (!config.kit.package.files(normalized)) {
 			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
 			const dts_path = path.join(abs_package_dir, dts_file);
-			if (fs.existsSync(dts_path)) fs.unlinkSync(dts_path);
+			if (fs.existsSync(dts_path)) {
+				fs.unlinkSync(dts_path);
+
+				const dir = path.dirname(dts_path);
+				if (fs.readdirSync(dir).length === 0) {
+					fs.rmdirSync(dir);
+				}
+			}
 			continue;
 		}
 
@@ -125,14 +132,14 @@ export async function make_package(config, cwd = process.cwd()) {
 				console.warn(
 					'Cannot generate a "svelte" entry point because ' +
 						'the "." entry in "exports" is not a string. ' +
-						'If you set it by hand, please also set one of the options as a "svelte" entry point'
+						'If you set it by hand, please also set one of the options as a "svelte" entry point\n'
 				);
 			}
 		} else {
 			console.warn(
 				'Cannot generate a "svelte" entry point because ' +
 					'the "." entry in "exports" is missing. ' +
-					'Please specify one or set a "svelte" entry point yourself'
+					'Please specify one or set a "svelte" entry point yourself\n'
 			);
 		}
 	}
@@ -153,13 +160,20 @@ export async function make_package(config, cwd = process.cwd()) {
 		const package_path = path.join(abs_package_dir, pathname);
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
+
+	const from = path.relative(cwd, config.kit.files.lib);
+	const to = path.relative(cwd, config.kit.package.dir);
+	console.log(colors.bold().green(`${from} -> ${to}`));
+	console.log(`Successfully built '${pkg.name}' package. To publish it to npm:`);
+	console.log(colors.bold().cyan(`  cd ${to}`));
+	console.log(colors.bold().cyan('  npm publish\n'));
 }
 
 /**
  * Resolves the `$lib` alias.
  *
  * TODO: make this more generic to also handle other aliases the user could have defined
- * via `kit.vite.resolve.alias`. Also investage how to do this in a more robust way
+ * via `kit.vite.resolve.alias`. Also investigate how to do this in a more robust way
  * (right now regex string replacement is used).
  * For more discussion see https://github.com/sveltejs/kit/pull/2453
  *
@@ -210,6 +224,7 @@ function strip_lang_tags(content) {
 			'g'
 		);
 		content = content.replace(regexp, (tag, attributes) => {
+			if (!attributes) return tag;
 			const idx = tag.indexOf(attributes);
 			return (
 				tag.substring(0, idx) +

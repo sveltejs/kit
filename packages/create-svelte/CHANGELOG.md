@@ -1,5 +1,109 @@
 # create-svelte
 
+## 2.0.0-next.98
+
+### Patch Changes
+
+- Add index.js file to `pkg.files` ([#3445](https://github.com/sveltejs/kit/pull/3445))
+
+## 2.0.0-next.97
+
+### Patch Changes
+
+- Add a programmatic interface to create-svelte ([#3437](https://github.com/sveltejs/kit/pull/3437))
+
+## 2.0.0-next.96
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise (#3384) ([#3430](https://github.com/sveltejs/kit/pull/3430))
+
+## 2.0.0-next.95
+
+### Patch Changes
+
+- Add methodOverrides to default configs ([#3411](https://github.com/sveltejs/kit/pull/3411))
+
+## 2.0.0-next.94
+
+### Patch Changes
+
+- Add methodOverride option for submitting PUT/PATCH/DELETE/etc with <form> elements ([#2989](https://github.com/sveltejs/kit/pull/2989))
+
+## 2.0.0-next.93
+
+### Patch Changes
+
+- Update template files to include %svelte.assets% ([#3234](https://github.com/sveltejs/kit/pull/3234))
+
+## 2.0.0-next.92
+
+### Patch Changes
+
+- Update template to use new page/request APIs ([#3146](https://github.com/sveltejs/kit/pull/3146))
+
+## 2.0.0-next.91
+
+### Patch Changes
+
+- Make demo app complies with TypeScript strict mode ([#3095](https://github.com/sveltejs/kit/pull/3095))
+
+## 2.0.0-next.90
+
+### Patch Changes
+
+- bump eslint ecmaVersion to 2020 ([#2985](https://github.com/sveltejs/kit/pull/2985))
+
+* include missing .npmrc in templates ([#2990](https://github.com/sveltejs/kit/pull/2990))
+
+- Do not gitignore `.env.example` ([#2926](https://github.com/sveltejs/kit/pull/2926))
+
+* update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 2.0.0-next.89
+
+### Patch Changes
+
+- Git ignore files with a .env. prefix ([#2905](https://github.com/sveltejs/kit/pull/2905))
+
+## 2.0.0-next.88
+
+### Patch Changes
+
+- Improve project scaffolding language ([#2895](https://github.com/sveltejs/kit/pull/2895))
+
+## 2.0.0-next.87
+
+### Patch Changes
+
+- Add adapter-auto to template configs ([#2885](https://github.com/sveltejs/kit/pull/2885))
+
+## 2.0.0-next.86
+
+### Patch Changes
+
+- Add adapter-auto ([#2867](https://github.com/sveltejs/kit/pull/2867))
+
+* Add an npm run package command to templates ([#2882](https://github.com/sveltejs/kit/pull/2882))
+
+## 2.0.0-next.85
+
+### Patch Changes
+
+- feat: added .env to gitignore for skeleton and default starters ([#2732](https://github.com/sveltejs/kit/pull/2732))
+
+## 2.0.0-next.84
+
+### Patch Changes
+
+- Add explicit types in `_api.ts` and `form.ts` for TypeScript and ESLint integration example ([#2657](https://github.com/sveltejs/kit/pull/2657))
+
+## 2.0.0-next.83
+
+### Patch Changes
+
+- [breaking] drop Node 12 support ([#2604](https://github.com/sveltejs/kit/pull/2604))
+
 ## 2.0.0-next.82
 
 ### Patch Changes

@@ -27,6 +27,11 @@ declare module '$app/env' {
 
 declare module '$app/navigation' {
 	/**
+	 * Disable SvelteKit's built-in scroll handling for the current navigation, in case you need to manually control the scroll position.
+	 * This is generally discouraged, since it breaks user expectations.
+	 */
+	export function disableScrollHandling(): void;
+	/**
 	 * Returns a Promise that resolves when SvelteKit navigates (or fails to navigate, in which case the promise rejects) to the specified href.
 	 *
 	 * @param href Where to navigate to
@@ -67,6 +72,19 @@ declare module '$app/navigation' {
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<any>;
+
+	/**
+	 * A navigation interceptor that triggers before we navigate to a new route.
+	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
+	 */
+	export function beforeNavigate(
+		fn: ({ from, to, cancel }: { from: URL; to: URL | null; cancel: () => void }) => void
+	): any;
+
+	/**
+	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
+	 */
+	export function afterNavigate(fn: ({ from, to }: { from: URL | null; to: URL }) => void): any;
 }
 
 declare module '$app/paths' {
@@ -82,8 +100,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
-	type Navigating = { from: Page; to: Page };
+	type Navigating = { from: URL; to: URL };
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
@@ -91,16 +108,28 @@ declare module '$app/stores' {
 	 */
 	export function getStores<Session = any>(): {
 		navigating: Readable<Navigating | null>;
-		page: Readable<Page>;
+		page: Readable<{
+			url: URL;
+			params: Record<string, string>;
+			status: number;
+			error: Error | null;
+		}>;
 		session: Writable<Session>;
 	};
+	export const url: Readable<URL>;
 	/**
-	 * A readable store whose value reflects the object passed to load functions.
+	 * A readable store whose value contains page data.
 	 */
-	export const page: Readable<Page>;
+	export const page: Readable<{
+		url: URL;
+		params: Record<string, string>;
+		stuff: Record<string, any>;
+		status: number;
+		error: Error | null;
+	}>;
 	/**
 	 * A readable store.
-	 * When navigating starts, its value is `{ from, to }`, where from and to both mirror the page store value.
+	 * When navigating starts, its value is `{ from: URL, to: URL }`
 	 * When navigating finishes, its value reverts to `null`.
 	 */
 	export const navigating: Readable<Navigating | null>;
@@ -145,29 +174,28 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
-	import { IncomingMessage } from 'http';
-	import { RawBody } from '@sveltejs/kit';
+	import { IncomingMessage, ServerResponse } from 'http';
 
 	export interface GetRawBody {
-		(request: IncomingMessage): Promise<RawBody>;
+		(request: IncomingMessage): Promise<Uint8Array | null>;
 	}
 	export const getRawBody: GetRawBody;
-}
 
-declare module '@sveltejs/kit/ssr' {
-	import { IncomingRequest, Response } from '@sveltejs/kit';
-	// TODO import from public types, right now its heavily coupled with internal
-	type Options = import('@sveltejs/kit/types/internal').SSRRenderOptions;
-	type State = import('@sveltejs/kit/types/internal').SSRRenderState;
-
-	export interface Respond {
-		(incoming: IncomingRequest, options: Options, state?: State): Response;
+	export interface GetRequest {
+		(base: string, request: IncomingMessage): Promise<Request>;
 	}
-	export const respond: Respond;
+	export const getRequest: GetRequest;
+
+	export interface SetResponse {
+		(res: ServerResponse, response: Response): void;
+	}
+	export const setResponse: SetResponse;
 }
 
 declare module '@sveltejs/kit/install-fetch' {
 	import fetch, { Headers, Request, Response } from 'node-fetch';
+
+	export function __fetch_polyfill(): void;
 
 	export { fetch, Headers, Request, Response };
 }

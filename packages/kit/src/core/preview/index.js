@@ -4,9 +4,10 @@ import https from 'https';
 import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRawBody } from '../node/index.js';
+import { getRawBody } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
+import { to_headers } from '../../utils/http.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -34,9 +35,12 @@ export async function preview({
 	__fetch_polyfill();
 
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
+	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
 
-	/** @type {import('types/app').App} */
-	const app = await import(pathToFileURL(app_file).href);
+	/** @type {import('types/internal').AppModule} */
+	const { App, override } = await import(pathToFileURL(app_file).href);
+
+	const { manifest } = await import(pathToFileURL(manifest_file).href);
 
 	/** @type {import('sirv').RequestHandler} */
 	const static_handler = fs.existsSync(config.kit.files.assets)
@@ -53,14 +57,17 @@ export async function preview({
 
 	const has_asset_path = !!config.kit.paths.assets;
 
-	app.init({
+	override({
 		paths: {
 			base: config.kit.paths.base,
 			assets: has_asset_path ? SVELTE_KIT_ASSETS : config.kit.paths.base
 		},
 		prerendering: false,
+		protocol: use_https ? 'https' : 'http',
 		read: (file) => fs.readFileSync(join(config.kit.files.assets, file))
 	});
+
+	const app = new App(manifest);
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = (config.kit.vite && config.kit.vite()) || {};
@@ -84,24 +91,20 @@ export async function preview({
 				return res.end(err.reason || 'Invalid request body');
 			}
 
-			const parsed = new URL(initial_url, 'http://localhost/');
+			if (initial_url.startsWith(config.kit.paths.base)) {
+				const protocol = use_https ? 'https' : 'http';
+				const host = req.headers['host'];
 
-			const rendered =
-				parsed.pathname.startsWith(config.kit.paths.base) &&
-				(await app.render({
-					host: /** @type {string} */ (
-						config.kit.host || req.headers[config.kit.hostHeader || 'host']
-					),
-					method: req.method,
-					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					path: parsed.pathname.replace(config.kit.paths.base, ''),
-					query: parsed.searchParams,
-					rawBody: body
-				}));
+				const rendered = await app.render(
+					new Request(`${protocol}://${host}${initial_url}`, {
+						method: req.method,
+						headers: to_headers(req.headers),
+						body
+					})
+				);
 
-			if (rendered) {
-				res.writeHead(rendered.status, rendered.headers);
-				if (rendered.body) res.write(rendered.body);
+				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+				if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
 				res.end();
 			} else {
 				res.statusCode = 404;

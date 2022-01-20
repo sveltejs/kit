@@ -1,5 +1,5 @@
 import { test } from 'uvu';
-import { create_kit_middleware } from '../src/kit-middleware.js';
+import { create_kit_middleware } from '../src/handler.js';
 import * as assert from 'uvu/assert';
 import fetch from 'node-fetch';
 import polka from 'polka';
@@ -58,6 +58,13 @@ test('passes through umlaut as encoded path', async () => {
 	});
 	const res = await fetch(`http://localhost:${PORT}/%C3%BCber-uns`);
 	assert.equal(await res.text(), '/%C3%BCber-uns');
+	server.server.close();
+});
+
+test('serve a 400 when we have a malformed url', async () => {
+	const server = await startServer();
+	const res = await fetch(`http://localhost:${PORT}//`);
+	assert.equal(res.status, 400);
 	server.server.close();
 });
 

@@ -2,5 +2,6 @@
 	"name": "typescript",
 	"version": "1.0.0",
 	"description": "standard typescript package",
-	"svelte": "src/lib/index.ts"
+	"svelte": "src/lib/index.ts",
+	"type": "module"
 }

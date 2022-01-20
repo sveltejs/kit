@@ -1,15 +1,29 @@
-import { RequestHandler } from './endpoint';
-import {
-	ExternalFetch,
-	GetSession,
-	Handle,
-	HandleError,
-	ServerRequest,
-	ServerResponse
-} from './hooks';
+import { OutputAsset, OutputChunk } from 'rollup';
+import { InternalApp, SSRManifest } from './app';
+import { Fallthrough, RequestHandler } from './endpoint';
+import { Either } from './helper';
+import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
 
-type PageId = string;
+export interface PrerenderOptions {
+	fallback?: string;
+	all: boolean;
+	dependencies: Map<string, Response>;
+}
+
+export interface AppModule {
+	App: typeof InternalApp;
+
+	override(options: {
+		paths: {
+			base: string;
+			assets: string;
+		};
+		prerendering: boolean;
+		protocol?: 'http' | 'https';
+		read(file: string): Buffer;
+	}): void;
+}
 
 export interface Logger {
 	(msg: string): void;
@@ -21,11 +35,9 @@ export interface Logger {
 }
 
 export interface SSRComponent {
-	ssr?: boolean;
 	router?: boolean;
 	hydrate?: boolean;
 	prerender?: boolean;
-	preload?: any; // TODO remove for 1.0
 	load: Load;
 	default: {
 		render(props: Record<string, any>): {
@@ -59,12 +71,12 @@ export interface SSRPage {
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
-	a: PageId[];
+	a: number[];
 	/**
 	 * plan b — if one of them components fails in `load` we backtrack until we find
 	 * the nearest error component.
 	 */
-	b: PageId[];
+	b: number[];
 }
 
 export interface SSREndpoint {
@@ -78,73 +90,58 @@ export interface SSREndpoint {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRPage = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
 
-export type CSREndpoint = [RegExp];
-
-export type CSRRoute = CSREndpoint | CSRPage;
-
-export interface SSRManifest {
-	assets: Asset[];
-	layout: string;
-	error: string;
-	routes: SSRRoute[];
-}
+export type SSRNodeLoader = () => Promise<SSRNode>;
 
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: Handle;
+	handle: InternalHandle;
 	handleError: HandleError;
 }
 
 export interface SSRNode {
 	module: SSRComponent;
-	entry: string; // client-side module corresponding to this component
+	/** client-side module URL for this component */
+	entry: string;
+	/** external CSS files */
 	css: string[];
+	/** external JS files */
 	js: string[];
-	styles: string[];
+	/** inlined styles */
+	styles?: Record<string, string>;
 }
 
 export interface SSRRenderOptions {
 	amp: boolean;
 	dev: boolean;
-	entry: {
-		file: string;
-		css: string[];
-		js: string[];
-	};
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
 	hydrate: boolean;
-	load_component(id: PageId): Promise<SSRNode>;
 	manifest: SSRManifest;
+	method_override: MethodOverride;
 	paths: {
 		base: string;
 		assets: string;
 	};
+	prefix: string;
 	prerender: boolean;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	ssr: boolean;
 	target: string;
-	template({ head, body }: { head: string; body: string }): string;
+	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
 	trailing_slash: TrailingSlash;
 }
 
 export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
-	prerender?: {
-		fallback: string;
-		all: boolean;
-		dependencies: Map<string, ServerResponse>;
-		error: Error;
-	};
+	prerender?: PrerenderOptions;
 	fallback?: string;
 }
 
@@ -154,8 +151,17 @@ export interface Asset {
 	type: string | null;
 }
 
+export interface RouteSegment {
+	content: string;
+	dynamic: boolean;
+	rest: boolean;
+}
+
+export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
+
 export interface PageData {
 	type: 'page';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	path: string;
@@ -165,6 +171,7 @@ export interface PageData {
 
 export interface EndpointData {
 	type: 'endpoint';
+	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
 	file: string;
@@ -181,19 +188,47 @@ export interface ManifestData {
 }
 
 export interface BuildData {
-	client: string[];
-	server: string[];
+	app_dir: string;
+	manifest_data: ManifestData;
+	client: {
+		assets: OutputAsset[];
+		chunks: OutputChunk[];
+		entry: {
+			file: string;
+			js: string[];
+			css: string[];
+		};
+		vite_manifest: import('vite').Manifest;
+	};
+	server: {
+		chunks: OutputChunk[];
+		methods: Record<string, HttpMethod[]>;
+		vite_manifest: import('vite').Manifest;
+	};
 	static: string[];
 	entries: string[];
 }
 
-export interface NormalizedLoadOutput {
-	status: number;
-	error?: Error;
-	redirect?: string;
-	props?: Record<string, any> | Promise<Record<string, any>>;
-	stuff?: Record<string, any>;
-	maxage?: number;
-}
+export type NormalizedLoadOutput = Either<
+	{
+		status: number;
+		error?: Error;
+		redirect?: string;
+		props?: Record<string, any> | Promise<Record<string, any>>;
+		stuff?: Record<string, any>;
+		maxage?: number;
+	},
+	Fallthrough
+>;
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
+export interface MethodOverride {
+	parameter: string;
+	allowed: string[];
+}
+
+export interface Respond {
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
+		Response | undefined
+	>;
+}

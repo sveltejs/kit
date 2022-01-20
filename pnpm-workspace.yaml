@@ -1,5 +1,4 @@
 packages:
   - 'packages/*'
   - 'packages/create-svelte/templates/*'
-  - 'examples/*'
   - '.github/actions/*'

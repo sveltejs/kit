@@ -1,11 +1,12 @@
 {
 	"name": "@sveltejs/adapter-begin",
-	"version": "1.0.0-next.14",
+	"version": "1.0.0-next.15",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-begin"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"main": "index.cjs",
 	"types": "index.d.ts",
@@ -23,8 +24,8 @@
 	],
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"rollup": "^2.56.3",
-		"sirv": "^1.0.17"
+		"rollup": "^2.58.0",
+		"sirv": "^2.0.0"
 	},
 	"exports": {
 		".": {

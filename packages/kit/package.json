@@ -1,50 +1,51 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.173",
+	"version": "1.0.0-next.236",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/kit"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.24",
-		"cheap-watch": "^1.0.4",
+		"@sveltejs/vite-plugin-svelte": "^1.0.0-next.32",
 		"sade": "^1.7.4",
-		"vite": "^2.5.7"
+		"vite": "^2.7.2"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.17.1",
 		"@rollup/plugin-replace": "^3.0.0",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.1",
-		"@types/marked": "^3.0.1",
+		"@types/marked": "^4.0.1",
 		"@types/mime": "^2.0.3",
-		"@types/node": "^16.9.1",
-		"@types/rimraf": "^3.0.2",
+		"@types/node": "^16.11.11",
 		"@types/sade": "^1.7.3",
 		"amphtml-validator": "^1.0.35",
 		"cookie": "^0.4.1",
+		"cross-env": "^7.0.3",
 		"devalue": "^2.0.1",
-		"eslint": "^7.32.0",
+		"eslint": "^8.3.0",
 		"kleur": "^4.1.4",
 		"locate-character": "^2.0.5",
-		"marked": "^3.0.4",
-		"mime": "^2.5.2",
-		"node-fetch": "3.0.0-beta.9",
+		"marked": "^4.0.5",
+		"mime": "^3.0.0",
+		"node-fetch": "^3.1.0",
 		"port-authority": "^1.1.2",
-		"rimraf": "^3.0.2",
-		"rollup": "^2.56.3",
-		"selfsigned": "^1.10.11",
-		"sirv": "^1.0.17",
-		"svelte": "^3.43.0",
-		"svelte-check": "^2.2.6",
-		"svelte2tsx": "~0.4.6",
+		"rollup": "^2.60.2",
+		"selfsigned": "^2.0.0",
+		"sirv": "^2.0.0",
+		"svelte": "^3.44.2",
+		"svelte-check": "^2.2.10",
+		"svelte-preprocess": "^4.9.8",
+		"svelte2tsx": "~0.4.10",
 		"tiny-glob": "^0.2.9",
-		"uvu": "^0.5.1"
+		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {
-		"svelte": "^3.43.0"
+		"svelte": "^3.44.0"
 	},
 	"bin": {
 		"svelte-kit": "svelte-kit.js"
@@ -56,9 +57,9 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c",
+		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components",
 		"dev": "rollup -cw",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"src/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check --ignore \"src/packaging/test\"",
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
@@ -66,12 +67,16 @@
 		"test": "npm run test:unit && npm run test:packaging && npm run test:integration",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
 		"test:packaging": "uvu src/packaging \"(spec\\.js|test[\\\\/]index\\.js)\"",
-		"test:integration": "uvu test test.js"
+		"test:integration": "pnpm test:integration:amp && pnpm test:integration:basics && pnpm test:integration:options && pnpm test:integration:options-2",
+		"test:integration:amp": "cd test/apps/amp && pnpm test",
+		"test:integration:basics": "cd test/apps/basics && pnpm test",
+		"test:integration:options": "cd test/apps/options && pnpm test",
+		"test:integration:options-2": "cd test/apps/options-2 && pnpm test"
 	},
 	"exports": {
 		"./package.json": "./package.json",
-		"./ssr": {
-			"import": "./dist/ssr.js"
+		".": {
+			"types": "./types/index.d.ts"
 		},
 		"./node": {
 			"import": "./dist/node.js"
@@ -81,11 +86,10 @@
 		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
-		},
-		"./types": "./types/index.d.ts"
+		}
 	},
 	"types": "types/index.d.ts",
 	"engines": {
-		"node": "^12.20 || >=14.13"
+		"node": ">=14.13"
 	}
 }

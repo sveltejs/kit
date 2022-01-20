@@ -1,5 +1,69 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.35
+
+### Patch Changes
+
+- Use path.posix to resolve routes for esmodules ([#3200](https://github.com/sveltejs/kit/pull/3200))
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- Revert to v1 filesystem API ([#3149](https://github.com/sveltejs/kit/pull/3149))
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 1.0.0-next.31
+
+### Patch Changes
+
+- update dependencies ([#2574](https://github.com/sveltejs/kit/pull/2574))
+
+## 1.0.0-next.30
+
+### Patch Changes
+
+- update to vite 2.6.0 and esbuild 0.13 ([#2522](https://github.com/sveltejs/kit/pull/2522))
+
 ## 1.0.0-next.29
 
 ### Patch Changes

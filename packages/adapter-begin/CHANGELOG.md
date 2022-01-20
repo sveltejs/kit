@@ -1,5 +1,11 @@
 # @sveltejs/adapter-begin
 
+## 1.0.0-next.15
+
+### Patch Changes
+
+- [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
 ## 1.0.0-next.14
 
 ### Patch Changes

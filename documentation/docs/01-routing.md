@@ -10,7 +10,7 @@ There are two types of route — **pages** and **endpoints**.
 
 Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
 
-Endpoints run only on the server (or when you build your site, if [prerendering](#ssr-and-javascript-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
+Endpoints run only on the server (or when you build your site, if [prerendering](#page-options-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
 
 ### Pages
 
@@ -51,65 +51,39 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-// type of string[] is only for set-cookie
-// everything else must be a type of string
-type ResponseHeaders = Record<string, string | string[]>;
-type RequestHeaders = Record<string, string>;
-
-export type RawBody = null | Uint8Array;
-export interface IncomingRequest {
-	method: string;
-	host: string;
-	path: string;
-	query: URLSearchParams;
-	headers: RequestHeaders;
-	rawBody: RawBody;
-}
-
-type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
-// ServerRequest is exported as Request
-export interface ServerRequest<Locals = Record<string, any>, Body = unknown>
-	extends IncomingRequest {
+export interface RequestEvent<Locals = Record<string, any>> {
+	request: Request;
+	url: URL;
 	params: Record<string, string>;
-	body: ParameterizedBody<Body>;
-	locals: Locals; // populated by hooks handle
+	locals: Locals;
 }
 
-type DefaultBody = JSONResponse | Uint8Array;
-export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
+type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
+export interface EndpointOutput {
 	status?: number;
-	headers?: ResponseHeaders;
+	headers?: HeadersInit;
 	body?: Body;
 }
 
-export interface RequestHandler<
-	Locals = Record<string, any>,
-	Input = unknown,
-	Output extends DefaultBody = DefaultBody
-> {
-	(request: ServerRequest<Locals, Input>):
-		| void
-		| EndpointOutput<Output>
-		| Promise<void | EndpointOutput<Output>>;
+type MaybePromise<T> = T | Promise<T>;
+interface Fallthrough {
+	fallthrough: true;
+}
+export interface RequestHandler<Locals = Record<string, any>> {
+	(event: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
 }
 ```
 
- For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 
 ```js
 import db from '$lib/database';
 
-/**
- * @type {import('@sveltejs/kit').RequestHandler}
- */
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ params }) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
-	const { slug } = params;
-
-	const article = await db.get(slug);
+	const article = await db.get(params.slug);
 
 	if (article) {
 		return {
@@ -118,6 +92,10 @@ export async function get({ params }) {
 			}
 		};
 	}
+
+	return {
+		status: 404
+	};
 }
 ```
 
@@ -130,16 +108,14 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-> For successful responses, SvelteKit will generate 304s automatically.
-
 If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
 
-> Returning nothing is equivalent to an explicit 404 response.
+> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
 ```js
-export function post(request) {...}
+export function post(event) {...}
 ```
 
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
@@ -158,12 +134,36 @@ return {
 
 #### Body parsing
 
-The `body` property of the request object will be provided in the case of POST requests:
+The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
-- Text data (with content-type `text/plain`) will be parsed to a `string`
-- JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
-- Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
-- All other data will be provided as a `Uint8Array`
+```js
+export async function post({ request }) {
+	const data = await request.formData(); // or .json(), or .text(), etc
+}
+```
+
+#### HTTP Method Overrides
+
+HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
+
+```js
+// svelte.config.js
+export default {
+	kit: {
+		methodOverride: {
+			allowed: ['PUT', 'PATCH', 'DELETE']
+		}
+	}
+};
+```
+
+```html
+<form method="post" action="/todos/{id}?_method=PUT">
+	<!-- form elements -->
+</form>
+```
+
+> Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
 
 ### Private modules
 
@@ -203,6 +203,6 @@ src/routes/[qux].svelte
 src/routes/foo-[bar].svelte
 ```
 
-...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].js` (which is also a valid match for `/foo-xyz`, but less specific), then `[baz].svelte` and `[qux].svelte` in alphabetical order (endpoints have higher precedence than pages). The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
 
 If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.

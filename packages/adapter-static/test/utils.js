@@ -29,7 +29,7 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const cli_path = fileURLToPath(new URL('../../kit/src/cli.js', import.meta.url));
+			const cli_path = fileURLToPath(new URL('../../kit/dist/cli.js', import.meta.url));
 
 			rimraf(`${cwd}/build`);
 
@@ -79,7 +79,7 @@ function spawn(str, opts) {
 
 		child.on('error', reject);
 
-		child.on('exit', (code) => {
+		child.on('exit', () => {
 			fulfil();
 		});
 	});

@@ -1,57 +1,22 @@
-import { existsSync } from 'fs';
 import sade from 'sade';
 import colors from 'kleur';
+import { relative } from 'path';
 import * as ports from 'port-authority';
 import { load_config } from './core/config/index.js';
 import { networkInterfaces, release } from 'os';
-import { coalesce_to_error, has_error_code } from './utils/error.js';
+import { coalesce_to_error } from './utils/error.js';
 
-async function get_config() {
-	// TODO this is temporary, for the benefit of early adopters
-	if (existsSync('svelte.config.cjs')) {
-		// prettier-ignore
-		console.error(colors.bold().red(
-			'svelte.config.cjs should be renamed to svelte.config.js and converted to an ES module. See https://kit.svelte.dev/docs#configuration for an example'
-		));
+/** @param {unknown} e */
+function handle_error(e) {
+	const error = coalesce_to_error(e);
+
+	if (error.name === 'SyntaxError') throw error;
+
+	console.error(colors.bold().red(`> ${error.message}`));
+	if (error.stack) {
+		console.error(colors.gray(error.stack.split('\n').slice(1).join('\n')));
 	}
 
-	if (existsSync('vite.config.js')) {
-		// prettier-ignore
-		console.error(colors.bold().red(
-			'Please remove vite.config.js and put Vite config in svelte.config.js: https://kit.svelte.dev/docs#configuration-vite'
-		));
-	}
-
-	try {
-		return await load_config();
-	} catch (err) {
-		const error = coalesce_to_error(err);
-		let message = error.message;
-
-		if (
-			has_error_code(error, 'MODULE_NOT_FOUND') &&
-			/Cannot find module svelte\.config\./.test(error.message)
-		) {
-			message = 'Missing svelte.config.js';
-		} else if (error.name === 'SyntaxError') {
-			message = 'Malformed svelte.config.js';
-		}
-
-		console.error(colors.bold().red(message));
-		if (error.stack) {
-			console.error(colors.grey(error.stack));
-		}
-		process.exit(1);
-	}
-}
-
-/** @param {unknown} error */
-function handle_error(error) {
-	const err = coalesce_to_error(error);
-	console.log(colors.bold().red(`> ${err.message}`));
-	if (err.stack) {
-		console.log(colors.gray(err.stack));
-	}
 	process.exit(1);
 }
 
@@ -79,30 +44,36 @@ const prog = sade('svelte-kit').version('__VERSION__');
 prog
 	.command('dev')
 	.describe('Start a development server')
-	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
-	.option('-o, --open', 'Open a browser tab', false)
+	.option('-p, --port', 'Port')
+	.option('-h, --host', 'Host (only use this on trusted networks)')
+	.option('-H, --https', 'Use self-signed HTTPS certificate')
+	.option('-o, --open', 'Open a browser tab')
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
-		process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-		const config = await get_config();
-
-		const { dev } = await import('./core/dev/index.js');
-
 		try {
-			const watcher = await dev({ port, host, https, config });
+			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+			const config = await load_config();
 
-			watcher.on('stdout', (data) => {
-				process.stdout.write(data);
+			const { dev } = await import('./core/dev/index.js');
+
+			const cwd = process.cwd();
+
+			const { address_info, server_config } = await dev({
+				cwd,
+				port,
+				host,
+				https,
+				config
 			});
 
-			watcher.on('stderr', (data) => {
-				process.stderr.write(data);
+			welcome({
+				port: address_info.port,
+				host: address_info.address,
+				https: !!(https || server_config.https),
+				open: open || !!server_config.open,
+				loose: server_config.fs.strict === false,
+				allow: server_config.fs.allow,
+				cwd
 			});
-
-			welcome({ port, host, https, open });
 		} catch (error) {
 			handle_error(error);
 		}
@@ -113,10 +84,10 @@ prog
 	.describe('Create a production build of your app')
 	.option('--verbose', 'Log more stuff', false)
 	.action(async ({ verbose }) => {
-		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-		const config = await get_config();
-
 		try {
+			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+			const config = await load_config();
+
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
 
@@ -151,14 +122,14 @@ prog
 	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
 	.action(async ({ port, host, https, open }) => {
-		await check_port(port);
-
-		process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-		const config = await get_config();
-
-		const { preview } = await import('./core/preview/index.js');
-
 		try {
+			await check_port(port);
+
+			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+			const config = await load_config();
+
+			const { preview } = await import('./core/preview/index.js');
+
 			await preview({ port, host, config, https });
 
 			welcome({ port, host, https, open });
@@ -172,11 +143,11 @@ prog
 	.describe('Create a package')
 	.option('-d, --dir', 'Destination directory', 'package')
 	.action(async () => {
-		const config = await get_config();
-
-		const { make_package } = await import('./packaging/index.js');
-
 		try {
+			const config = await load_config();
+
+			const { make_package } = await import('./packaging/index.js');
+
 			await make_package(config);
 		} catch (error) {
 			handle_error(error);
@@ -190,16 +161,16 @@ async function check_port(port) {
 	if (await ports.check(port)) {
 		return;
 	}
-	console.log(colors.bold().red(`Port ${port} is occupied`));
+	console.error(colors.bold().red(`Port ${port} is occupied`));
 	const n = await ports.blame(port);
 	if (n) {
 		// prettier-ignore
-		console.log(
+		console.error(
 			`Terminate process ${colors.bold(n)} or specify a different port with ${colors.bold('--port')}\n`
 		);
 	} else {
 		// prettier-ignore
-		console.log(
+		console.error(
 			`Terminate the process occupying the port or specify a different port with ${colors.bold('--port')}\n`
 		);
 	}
@@ -212,15 +183,18 @@ async function check_port(port) {
  *   host: string;
  *   https: boolean;
  *   port: number;
+ *   loose?: boolean;
+ *   allow?: string[];
+ *   cwd?: string;
  * }} param0
  */
-function welcome({ port, host, https, open }) {
+function welcome({ port, host, https, open, loose, allow, cwd }) {
 	if (open) launch(port, https);
 
 	console.log(colors.bold().cyan(`\n  SvelteKit v${'__VERSION__'}\n`));
 
 	const protocol = https ? 'https:' : 'http:';
-	const exposed = host !== 'localhost' && host !== '127.0.0.1';
+	const exposed = typeof host !== 'undefined' && host !== 'localhost' && host !== '127.0.0.1';
 
 	Object.values(networkInterfaces()).forEach((interfaces) => {
 		if (!interfaces) return;
@@ -235,6 +209,11 @@ function welcome({ port, host, https, open }) {
 
 				if (exposed) {
 					console.log(`  ${colors.gray('network:')} ${protocol}//${colors.bold(`${details.address}:${port}`)}`);
+					if (loose) {
+						console.log(`\n  ${colors.yellow('Serving with vite.server.fs.strict: false. Note that all files on your machine will be accessible to anyone on your network.')}`);
+					} else if (allow?.length && cwd) {
+						console.log(`\n  ${colors.yellow('Note that all files in the following directories will be accessible to anyone on your network: ' + allow.map(a => relative(cwd, a)).join(', '))}`);
+					}
 				} else {
 					console.log(`  ${colors.gray('network: not exposed')}`);
 				}

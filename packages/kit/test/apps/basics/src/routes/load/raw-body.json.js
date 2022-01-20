@@ -1,9 +1,12 @@
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function post(request) {
+export async function post({ request }) {
+	const text = await request.text();
+	const json = JSON.parse(text);
+
 	return {
 		body: {
-			body: /** @type {string} */ (request.body),
-			rawBody: new TextDecoder().decode(/** @type {Uint8Array} */ (request.rawBody))
+			body: json,
+			rawBody: text
 		}
 	};
 }
