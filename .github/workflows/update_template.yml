@@ -36,6 +36,7 @@ jobs:
         with:
           node-version: 12.x
           cache: pnpm
+          cache-dependency-path: ${{ github.workspace }}/kit/pnpm-lock.yaml
 
       - name: Build kit
         working-directory: ${{ github.workspace }}/kit
