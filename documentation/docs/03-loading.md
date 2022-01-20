@@ -143,6 +143,8 @@ If something goes wrong during `load`, return an `Error` object or a `string` de
 
 If the page should redirect (because the page is deprecated, or the user needs to be logged in, or whatever else) return a `string` containing the location to which they should be redirected alongside a `3xx` status code.
 
+The `redirect` string should be a [properly encoded](https://en.wikipedia.org/wiki/Percent-encoding) URI.  Both absolute and relative URIs are acceptable.
+
 #### maxage
 
 To cause pages to be cached, return a `number` describing the page's max age in seconds. The resulting cache header will include `private` if user data was involved in rendering the page (either via `session`, or because a credentialed `fetch` was made in a `load` function), but otherwise will include `public` so that it can be cached by CDNs.
