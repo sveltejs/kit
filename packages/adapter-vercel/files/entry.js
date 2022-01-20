@@ -19,5 +19,5 @@ export default async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await app.render(request));
+	setResponse(res, await app.render({ request }));
 };

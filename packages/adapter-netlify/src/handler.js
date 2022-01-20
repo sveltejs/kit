@@ -14,13 +14,13 @@ export function init(manifest) {
 		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
 		const rawBody = typeof body === 'string' ? Buffer.from(body, encoding) : body;
 
-		const rendered = await app.render(
-			new Request(rawUrl, {
-				method: httpMethod,
-				headers: new Headers(headers),
-				body: rawBody
-			})
-		);
+		const request = new Request(rawUrl, {
+			method: httpMethod,
+			headers: new Headers(headers),
+			body: rawBody
+		});
+
+		const rendered = await app.render({ request });
 
 		const partial_response = {
 			statusCode: rendered.status,
