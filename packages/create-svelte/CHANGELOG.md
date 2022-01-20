@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.98
+
+### Patch Changes
+
+- Add index.js file to `pkg.files` ([#3445](https://github.com/sveltejs/kit/pull/3445))
+
 ## 2.0.0-next.97
 
 ### Patch Changes
