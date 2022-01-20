@@ -8,9 +8,6 @@ get_abs_filename() {
 DIR=$(get_abs_filename $(dirname "$0"))
 TMP=$(get_abs_filename "$DIR/../node_modules/.tmp")
 
-echo "dir: $DIR"
-echo "tmp: $TMP"
-
 mkdir -p $TMP
 cd $TMP
 
