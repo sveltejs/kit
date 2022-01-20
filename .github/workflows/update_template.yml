@@ -32,7 +32,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 12.x
-          cache: pnpm
 
       - uses: pnpm/action-setup@v2.0.1
         working-directory: ./kit
