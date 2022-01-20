@@ -1,0 +1,41 @@
+name: Update Template
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  release:
+    # prevents this action from running on forks
+    if: github.repository == 'sveltejs/kit'
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out kit repository
+        uses: actions/checkout@v2
+        with:
+          path: kit
+
+      - name: Check out template repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+          ssh-key: "${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}"
+          repository: kit-template-default
+          path: template   
+
+      - name: Write template
+        working-directory: ./kit/packages/create-svelte
+        run: node ./scripts/update-template-repo-contents.js ${{ github.workspace }}/template
+
+      - name: Publish
+        working-directory: ./template
+        run: |
+          touch "generated-$(date +%s)" 
+          git add -A
+          git commit -m "version $npm_package_version"
+          git push main -f
