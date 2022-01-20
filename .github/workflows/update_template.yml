@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 1
           ssh-key: "${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}"
-          repository: kit-template-default
+          repository: sveltejs/kit-template-default
           path: template   
 
       - name: Write template
