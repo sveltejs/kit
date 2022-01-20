@@ -291,18 +291,6 @@ importers:
       tiny-glob: 0.2.9
       uvu: 0.5.2
 
-  packages/kit/test/prerendering/basics:
-    specifiers:
-      '@sveltejs/adapter-static': workspace:^1.0.0-next.26
-      '@sveltejs/kit': workspace:*
-      svelte: ^3.43.0
-      uvu: ^0.5.2
-    devDependencies:
-      '@sveltejs/adapter-static': link:../../../../adapter-static
-      '@sveltejs/kit': link:../../..
-      svelte: 3.44.2
-      uvu: 0.5.2
-
 packages:
 
   /@actions/core/1.6.0:
