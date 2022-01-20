@@ -23,7 +23,6 @@ jobs:
       - name: Check out template repository
         uses: actions/checkout@v2
         with:
-          fetch-depth: 1
           ssh-key: "${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}"
           repository: sveltejs/kit-template-default
           path: template
@@ -39,17 +38,17 @@ jobs:
           cache: pnpm
 
       - name: Build kit
-        working-directory: ./kit
+        working-directory: ${{ github.workspace }}/kit
         run: |
           pnpm install --frozen-lockfile
           pnpm build
 
       - name: Write template
-        working-directory: ./kit/packages/create-svelte
+        working-directory: ${{ github.workspace }}/kit/packages/create-svelte
         run: node ./scripts/update-template-repo-contents.js ${{ github.workspace }}/template
 
       - name: Publish
-        working-directory: ./template
+        working-directory: ${{ github.workspace }}/template
         run: |
           touch "generated-$(date +%s)" 
           git add -A
