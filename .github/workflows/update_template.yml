@@ -29,7 +29,7 @@ jobs:
 
       - name: Write template
         working-directory: ./kit/packages/create-svelte
-        run: node $DIR/update-template-repo-contents.js ./template
+        run: node ./scripts/update-template-repo-contents.js ./template
 
       - name: Publish
         working-directory: ./template
