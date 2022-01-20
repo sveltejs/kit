@@ -1,11 +1,9 @@
 import { OutputAsset, OutputChunk } from 'rollup';
-import { RequestHandler } from './endpoint';
 import { InternalApp, SSRManifest } from './app';
+import { Fallthrough, RequestHandler } from './endpoint';
+import { Either } from './helper';
 import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
-import { Either, Fallthrough } from './helper';
-
-type PageId = string;
 
 export interface PrerenderOptions {
 	fallback?: string;

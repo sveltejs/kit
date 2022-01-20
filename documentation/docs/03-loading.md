@@ -8,10 +8,6 @@ A component that defines a page or a layout can export a `load` function that ru
 // Declaration types for Loading
 // * declarations that are not exported are for internal use
 
-export interface Fallthrough {
-	fallthrough?: true;
-}
-
 export interface LoadInput<
 	PageParams extends Record<string, string> = Record<string, string>,
 	Stuff extends Record<string, any> = Record<string, any>,
@@ -24,7 +20,7 @@ export interface LoadInput<
 	stuff: Stuff;
 }
 
-export type LoadOutput<
+export interface LoadOutput<
 	Props extends Record<string, any> = Record<string, any>,
 	Stuff extends Record<string, any> = Record<string, any>
 > {
@@ -34,7 +30,42 @@ export type LoadOutput<
 	props?: Props;
 	stuff?: Stuff;
 	maxage?: number;
-} | Fallthrough
+}
+
+interface LoadInputExtends {
+	stuff?: Record<string, any>;
+	pageParams?: Record<string, string>;
+	session?: any;
+}
+interface LoadOutputExtends {
+	stuff?: Record<string, any>;
+	props?: Record<string, any>;
+}
+
+type MaybePromise<T> = T | Promise<T>;
+interface Fallthrough {
+	fallthrough: true;
+}
+export interface Load<
+	Input extends LoadInputExtends = Required<LoadInputExtends>,
+	Output extends LoadOutputExtends = Required<LoadOutputExtends>
+> {
+	(
+		input: LoadInput<
+			InferValue<Input, 'pageParams', Record<string, string>>,
+			InferValue<Input, 'stuff', Record<string, any>>,
+			InferValue<Input, 'session', any>
+		>
+	): MaybePromise<
+		Either<
+			Fallthrough,
+			LoadOutput<
+				InferValue<Output, 'props', Record<string, any>>,
+				InferValue<Output, 'stuff', Record<string, any>>
+			>
+		>
+	>;
+}
 ```
 
 Our example blog page might contain a `load` function like the following:
@@ -143,7 +174,7 @@ If something goes wrong during `load`, return an `Error` object or a `string` de
 
 If the page should redirect (because the page is deprecated, or the user needs to be logged in, or whatever else) return a `string` containing the location to which they should be redirected alongside a `3xx` status code.
 
-The `redirect` string should be a [properly encoded](https://en.wikipedia.org/wiki/Percent-encoding) URI.  Both absolute and relative URIs are acceptable.
+The `redirect` string should be a [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URI. Both absolute and relative URIs are acceptable.
 
 #### maxage
 

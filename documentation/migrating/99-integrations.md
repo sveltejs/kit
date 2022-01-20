@@ -31,8 +31,8 @@ const minification_options = {
 	sortClassName: true
 };
 
-export async function handle({ request, resolve }) {
-  const response = await resolve(request);
+export async function handle({ event, resolve }) {
+  const response = await resolve(event);
 
   if (prerendering && response.headers['content-type'] === 'text/html') {
     response.body = minify(response.body, minification_options);

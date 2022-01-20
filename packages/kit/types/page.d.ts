@@ -1,8 +1,9 @@
-import { InferValue, MaybePromise, Rec, Either, Fallthrough } from './helper';
+import { Fallthrough } from './endpoint';
+import { Either, InferValue, MaybePromise } from './helper';
 
 export interface LoadInput<
-	PageParams extends Rec<string> = Rec<string>,
-	Stuff extends Rec = Rec,
+	PageParams extends Record<string, string> = Record<string, string>,
+	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > {
 	url: URL;
@@ -13,15 +14,18 @@ export interface LoadInput<
 }
 
 export interface ErrorLoadInput<
-	PageParams extends Rec<string> = Rec<string>,
-	Stuff extends Rec = Rec,
+	PageParams extends Record<string, string> = Record<string, string>,
+	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > extends LoadInput<PageParams, Stuff, Session> {
 	status?: number;
 	error?: Error;
 }
 
-export interface LoadOutput<Props extends Rec = Rec, Stuff extends Rec = Rec> {
+export interface LoadOutput<
+	Props extends Record<string, any> = Record<string, any>,
+	Stuff extends Record<string, any> = Record<string, any>
+> {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
@@ -31,14 +35,14 @@ export interface LoadOutput<Props extends Rec = Rec, Stuff extends Rec = Rec> {
 }
 
 interface LoadInputExtends {
-	stuff?: Rec;
-	pageParams?: Rec<string>;
+	stuff?: Record<string, any>;
+	pageParams?: Record<string, string>;
 	session?: any;
 }
 
 interface LoadOutputExtends {
-	stuff?: Rec;
-	props?: Rec;
+	stuff?: Record<string, any>;
+	props?: Record<string, any>;
 }
 
 export interface Load<
@@ -47,14 +51,17 @@ export interface Load<
 > {
 	(
 		input: LoadInput<
-			InferValue<Input, 'pageParams', Rec<string>>,
-			InferValue<Input, 'stuff', Rec>,
+			InferValue<Input, 'pageParams', Record<string, string>>,
+			InferValue<Input, 'stuff', Record<string, any>>,
 			InferValue<Input, 'session', any>
 		>
 	): MaybePromise<
 		Either<
-			LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'stuff', Rec>>,
-			Fallthrough
+			Fallthrough,
+			LoadOutput<
+				InferValue<Output, 'props', Record<string, any>>,
+				InferValue<Output, 'stuff', Record<string, any>>
+			>
 		>
 	>;
 }
@@ -65,9 +72,14 @@ export interface ErrorLoad<
 > {
 	(
 		input: ErrorLoadInput<
-			InferValue<Input, 'pageParams', Rec<string>>,
-			InferValue<Input, 'stuff', Rec>,
+			InferValue<Input, 'pageParams', Record<string, string>>,
+			InferValue<Input, 'stuff', Record<string, any>>,
 			InferValue<Input, 'session', any>
 		>
-	): MaybePromise<LoadOutput<InferValue<Output, 'props', Rec>, InferValue<Output, 'stuff', Rec>>>;
+	): MaybePromise<
+		LoadOutput<
+			InferValue<Output, 'props', Record<string, any>>,
+			InferValue<Output, 'stuff', Record<string, any>>
+		>
+	>;
 }
