@@ -17,20 +17,7 @@ pnpm install
 pnpm build
 ```
 
-You should now be able to run [the example](examples/hn.svelte.dev) with:
-
-```bash
-cd examples/hn.svelte.dev
-pnpm dev
-```
-
-Run `pnpm dev` inside the `packages/kit` directory to continually rebuild `@sveltejs/kit` as you make changes to SvelteKit. Restarting the example/test apps will cause the newly built version to be used.
-
-To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
-
-```bash
-git config core.hookspath .githooks
-```
+You can now run SvelteKit by linking it into your project with [pnpm `overrides`](https://pnpm.io/package_json#pnpmoverrides) as demonstrated in the [sandbox example](https://github.com/sveltejs/kit-sandbox) or by running one of the test projects as described in [the testing section](#testing) below.
 
 ## Code structure
 
@@ -90,6 +77,12 @@ There are a few guidelines we follow:
 - Provide a single object as the argument to public APIs. This object can have multiple properties
 - Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
 - Ensure `pnpm lint` and `pnpm check` pass. You can run `pnpm format` to format the code
+
+To use the git hooks in the repo, which will save you waiting for CI to tell you that you forgot to lint, run this:
+
+```bash
+git config core.hookspath .githooks
+```
 
 ### Generating changelogs
 
