@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- Avoid setting the body of the request when the request method is GET or HEAD ([#3459](https://github.com/sveltejs/kit/pull/3459))
+
 ## 1.0.0-next.41
 
 ### Patch Changes

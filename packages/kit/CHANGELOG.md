@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.236
+
+### Patch Changes
+
+- The redirect property returned from a module's load function must now be a properly encoded URI string value. ([#3404](https://github.com/sveltejs/kit/pull/3404))
+
 ## 1.0.0-next.235
 
 ### Patch Changes
