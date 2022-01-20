@@ -26,7 +26,25 @@ jobs:
           fetch-depth: 1
           ssh-key: "${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}"
           repository: sveltejs/kit-template-default
-          path: template   
+          path: template
+
+      - name: Setup Node.js 12.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12.x
+          cache: pnpm
+
+      - uses: pnpm/action-setup@v2.0.1
+        working-directory: ./kit
+        with:
+          version: 6.23.2
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile]
+
+      - name: Build kit
+        working-directory: ./kit
+        run: pnpm build
 
       - name: Write template
         working-directory: ./kit/packages/create-svelte
