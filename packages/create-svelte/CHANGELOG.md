@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.97
+
+### Patch Changes
+
+- Add a programmatic interface to create-svelte ([#3437](https://github.com/sveltejs/kit/pull/3437))
+
 ## 2.0.0-next.96
 
 ### Patch Changes
