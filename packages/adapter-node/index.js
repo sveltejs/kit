@@ -21,7 +21,7 @@ export default function ({
 		headers: {
 			protocol: protocol_header_env = 'PROTOCOL_HEADER',
 			host: host_header_env = 'HOST_HEADER'
-		}
+		} = {}
 	} = {}
 } = {}) {
 	return {

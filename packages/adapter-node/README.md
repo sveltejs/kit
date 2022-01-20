@@ -22,8 +22,8 @@ export default {
 				port: 'PORT',
 				base: undefined,
 				headers: {
-					protocol: undefined,
-					host: 'host'
+					protocol: 'PROTOCOL_HEADER',
+					host: 'HOST_HEADER'
 				}
 			}
 		})
