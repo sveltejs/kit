@@ -78,10 +78,9 @@ export interface Fallthrough {
 
 export interface RequestHandler<
 	Locals = Record<string, any>,
-	Input = unknown,
 	Output extends DefaultBody = DefaultBody
 > {
-	(request: Request<Locals, Input>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
+	(event: RequestEvent<Locals>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
 }
 ```
 
