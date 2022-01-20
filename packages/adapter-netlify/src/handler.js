@@ -9,18 +9,7 @@ export function init(manifest) {
 	const app = new App(manifest);
 
 	return async (event) => {
-		const { httpMethod, headers, rawUrl, body, isBase64Encoded } = event;
-
-		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
-		const rawBody = typeof body === 'string' ? Buffer.from(body, encoding) : body;
-
-		const rendered = await app.render(
-			new Request(rawUrl, {
-				method: httpMethod,
-				headers: new Headers(headers),
-				body: rawBody
-			})
-		);
+		const rendered = await app.render(to_request(event));
 
 		const partial_response = {
 			statusCode: rendered.status,
@@ -44,6 +33,27 @@ export function init(manifest) {
 			body: await rendered.text()
 		};
 	};
+}
+
+/**
+ * @param {import('@netlify/functions').HandlerEvent} event
+ * @returns {Request}
+ */
+function to_request(event) {
+	const { httpMethod, headers, rawUrl, body, isBase64Encoded } = event;
+
+	/** @type {RequestInit} */
+	const init = {
+		method: httpMethod,
+		headers: new Headers(headers)
+	};
+
+	if (httpMethod !== 'GET' && httpMethod !== 'HEAD') {
+		const encoding = isBase64Encoded ? 'base64' : 'utf-8';
+		init.body = typeof body === 'string' ? Buffer.from(body, encoding) : body;
+	}
+
+	return new Request(rawUrl, init);
 }
 
 /**
