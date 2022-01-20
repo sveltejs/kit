@@ -46,8 +46,7 @@ To add custom data to the request, which is passed to endpoints, populate the `e
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	const { locals, request } = event
-	locals.user = await getUserInformation(request.headers.get('cookie'));
+	event.locals.user = await getUserInformation(event.request.headers.get('cookie'));
 
 	const response = await resolve(event);
 	response.headers.set('x-custom-header', 'potato');
