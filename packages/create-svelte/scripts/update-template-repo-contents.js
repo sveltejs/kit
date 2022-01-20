@@ -2,8 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { create } from '../index.js';
 
-const tmp = process.argv[2];
-const repo = path.join(tmp, 'kit-template-default');
+const repo = process.argv[2];
 
 fs.readdirSync(repo).forEach((file) => {
 	if (file !== '.git') {
