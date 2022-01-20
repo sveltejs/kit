@@ -9,7 +9,6 @@
 		"test": "npm run build && uvu test"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
 		"svelte": "^3.43.0",
 		"uvu": "^0.5.2"
