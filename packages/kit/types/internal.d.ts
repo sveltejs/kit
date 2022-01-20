@@ -5,8 +5,6 @@ import { Either } from './helper';
 import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
 
-type PageId = string;
-
 export interface PrerenderOptions {
 	fallback?: string;
 	all: boolean;

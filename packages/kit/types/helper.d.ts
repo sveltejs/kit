@@ -1,13 +1,3 @@
-interface ReadOnlyFormData {
-	get(key: string): string | null;
-	getAll(key: string): string[];
-	has(key: string): boolean;
-	entries(): Generator<[string, string], void>;
-	keys(): Generator<string, void>;
-	values(): Generator<string, void>;
-	[Symbol.iterator](): Generator<[string, string], void>;
-}
-
 type ToJSON = { toJSON(...args: any[]): JSONValue };
 type JSONValue = Exclude<JSONString, ToJSON>;
 export type JSONString =
