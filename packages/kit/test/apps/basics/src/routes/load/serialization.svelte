@@ -4,7 +4,7 @@
 		const res = await fetch('/load/serialization.json');
 		return {
 			props: await res.json()
-		}
+		};
 	}
 </script>
 

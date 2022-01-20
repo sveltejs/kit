@@ -4,7 +4,8 @@ title: package.json
 
 ### type: "module"
 
-Add `"type": "module"` to your `package.json`
+Add `"type": "module"` to your `package.json`. You can do this step separately from the rest as part of an incremental migration if you are using Sapper 0.29.3
+or newer.
 
 ### dependencies
 

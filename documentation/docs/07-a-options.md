@@ -16,7 +16,7 @@ We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` at
 
 ...will cause SvelteKit to run the page's `load` function as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
 
-Note that prefetching will not work if the [`router`](#ssr-and-javascript-router) setting is `false`.
+Note that prefetching will not work if the [`router`](#page-options-router) setting is `false`.
 
 You can also programmatically invoke `prefetch` from `$app/navigation`.
 
@@ -34,7 +34,7 @@ In certain cases, you may wish to disable this behaviour. Adding a `sveltekit:no
 
 ### rel=external
 
-By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation.
+By default, the SvelteKit runtime intercepts clicks on `<a>` elements and bypasses the normal browser navigation for relative (same-origin) URLs that match one of your page routes. We sometimes need to tell SvelteKit that certain links need to be handled by normal browser navigation. Examples of this might be linking to another page on your domain that's not part of your SvelteKit app or linking to an endpoint.
 
 Adding a `rel=external` attribute to a link...
 

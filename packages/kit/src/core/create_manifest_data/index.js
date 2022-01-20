@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import mime from 'mime';
-import { posixify } from '../utils.js';
+import { runtime } from '../utils.js';
+import { posixify } from '../../utils/filesystem.js';
 
 /**
  * A portion of a file or directory name where the name has been split into
@@ -9,7 +10,7 @@ import { posixify } from '../utils.js';
  * @typedef {{
  *   content: string;
  *   dynamic: boolean;
- *   spread: boolean;
+ *   rest: boolean;
  * }} Part
  * @typedef {{
  *   basename: string;
@@ -28,12 +29,16 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
 /**
  * @param {{
  *   config: import('types/config').ValidatedConfig;
- *   output: string;
+ *   fallback?: string;
  *   cwd?: string;
  * }} opts
  * @returns {import('types/internal').ManifestData}
  */
-export default function create_manifest_data({ config, output, cwd = process.cwd() }) {
+export default function create_manifest_data({
+	config,
+	fallback = `${runtime}/components`,
+	cwd = process.cwd()
+}) {
 	/**
 	 * @param {string} file_name
 	 * @param {string} dir
@@ -49,8 +54,8 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 	/** @type {import('types/internal').RouteData[]} */
 	const routes = [];
 
-	const default_layout = posixify(path.relative(cwd, `${output}/components/layout.svelte`));
-	const default_error = posixify(path.relative(cwd, `${output}/components/error.svelte`));
+	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
+	const default_error = posixify(path.relative(cwd, `${fallback}/error.svelte`));
 
 	/**
 	 * @param {string} dir
@@ -103,10 +108,6 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				throw new Error(`Invalid route ${file} — brackets are unbalanced`);
 			}
 
-			if (/.+\[\.\.\.[^\]]+\]/.test(segment) || /\[\.\.\.[^\]]+\].+/.test(segment)) {
-				throw new Error(`Invalid route ${file} — rest parameter must be a standalone segment`);
-			}
-
 			const parts = get_parts(segment, file);
 			const is_index = is_dir ? false : basename.startsWith('index.');
 			const is_page = config.extensions.indexOf(ext) !== -1;
@@ -116,7 +117,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 				basename,
 				ext,
 				parts,
-				file: posixify(file),
+				file,
 				is_dir,
 				is_index,
 				is_page,
@@ -137,13 +138,13 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 						if (last_part.dynamic) {
 							last_segment.push({
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: item.route_suffix
 							});
 						} else {
 							last_segment[last_segment.length - 1] = {
 								dynamic: false,
-								spread: false,
+								rest: false,
 								content: `${last_part.content}${item.route_suffix}`
 							};
 						}
@@ -159,6 +160,18 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 			const params = parent_params.slice();
 			params.push(...item.parts.filter((p) => p.dynamic).map((p) => p.content));
+
+			// TODO seems slightly backwards to derive the simple segment representation
+			// from the more complex form, rather than vice versa — maybe swap it round
+			const simple_segments = segments.map((segment) => {
+				return {
+					dynamic: segment.some((part) => part.dynamic),
+					rest: segment.some((part) => part.rest),
+					content: segment
+						.map((part) => (part.dynamic ? `[${part.content}]` : part.content))
+						.join('')
+				};
+			});
 
 			if (item.is_dir) {
 				const layout_reset = find_layout('__layout.reset', item.file);
@@ -209,6 +222,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'page',
+					segments: simple_segments,
 					pattern,
 					params,
 					path,
@@ -220,6 +234,7 @@ export default function create_manifest_data({ config, output, cwd = process.cwd
 
 				routes.push({
 					type: 'endpoint',
+					segments: simple_segments,
 					pattern,
 					file: item.file,
 					params
@@ -288,13 +303,16 @@ function comparator(a, b) {
 		if (!a_sub_part) return 1; // b is more specific, so goes first
 		if (!b_sub_part) return -1;
 
-		// if spread && index, order later
-		if (a_sub_part.spread && b_sub_part.spread) {
-			return a.is_index ? 1 : -1;
+		if (a_sub_part.rest && b_sub_part.rest) {
+			if (a.is_page !== b.is_page) {
+				return a.is_page ? 1 : -1;
+			}
+			// sort alphabetically
+			return a_sub_part.content < b_sub_part.content ? -1 : 1;
 		}
 
-		// If one is ...spread order it later
-		if (a_sub_part.spread !== b_sub_part.spread) return a_sub_part.spread ? 1 : -1;
+		// If one is ...rest order it later
+		if (a_sub_part.rest !== b_sub_part.rest) return a_sub_part.rest ? 1 : -1;
 
 		if (a_sub_part.dynamic !== b_sub_part.dynamic) {
 			return a_sub_part.dynamic ? 1 : -1;
@@ -336,7 +354,7 @@ function get_parts(part, file) {
 		result.push({
 			content,
 			dynamic,
-			spread: dynamic && /^\.{3}.+$/.test(content)
+			rest: dynamic && /^\.{3}.+$/.test(content)
 		});
 	});
 
@@ -350,31 +368,37 @@ function get_parts(part, file) {
 function get_pattern(segments, add_trailing_slash) {
 	const path = segments
 		.map((segment) => {
-			return segment[0].spread
-				? '(?:\\/(.*))?'
-				: '\\/' +
-						segment
-							.map((part) => {
-								return part.dynamic
-									? '([^/]+?)'
-									: // allow users to specify characters on the file system in an encoded manner
-									  part.content
-											.normalize()
-											// We use [ and ] to denote parameters, so users must encode these on the file
-											// system to match against them. We don't decode all characters since others
-											// can already be epressed and so that '%' can be easily used directly in filenames
-											.replace(/%5[Bb]/g, '[')
-											.replace(/%5[Dd]/g, ']')
-											// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
-											// They will not be touched by decodeURI so need to be encoded here, so
-											// that we can match against them.
-											// We skip '/' since you can't create a file with it on any OS
-											.replace(/#/g, '%23')
-											.replace(/\?/g, '%3F')
-											// escape characters that have special meaning in regex
-											.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-							})
-							.join('');
+			if (segment.length === 1 && segment[0].rest) {
+				// special case — `src/routes/foo/[...bar]/baz` matches `/foo/baz`
+				// so we need to make the leading slash optional
+				return '(?:\\/(.*))?';
+			}
+
+			const parts = segment.map((part) => {
+				if (part.rest) return '(.*?)';
+				if (part.dynamic) return '([^/]+?)';
+
+				return (
+					part.content
+						// allow users to specify characters on the file system in an encoded manner
+						.normalize()
+						// We use [ and ] to denote parameters, so users must encode these on the file
+						// system to match against them. We don't decode all characters since others
+						// can already be epressed and so that '%' can be easily used directly in filenames
+						.replace(/%5[Bb]/g, '[')
+						.replace(/%5[Dd]/g, ']')
+						// '#', '/', and '?' can only appear in URL path segments in an encoded manner.
+						// They will not be touched by decodeURI so need to be encoded here, so
+						// that we can match against them.
+						// We skip '/' since you can't create a file with it on any OS
+						.replace(/#/g, '%23')
+						.replace(/\?/g, '%3F')
+						// escape characters that have special meaning in regex
+						.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+				);
+			});
+
+			return '\\/' + parts.join('');
 		})
 		.join('');
 

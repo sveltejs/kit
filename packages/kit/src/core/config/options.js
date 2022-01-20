@@ -1,4 +1,3 @@
-/** @typedef {import('./types').ConfigDefinition} ConfigDefinition */
 /** @typedef {import('./types').Validator} Validator */
 
 /** @type {Validator} */
@@ -67,11 +66,42 @@ const options = object(
 
 			floc: boolean(false),
 
-			host: string(null),
+			// TODO: remove this for the 1.0 release
+			headers: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
+			}),
 
-			hostHeader: string(null),
+			// TODO: remove this for the 1.0 release
+			host: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
+			}),
 
 			hydrate: boolean(true),
+
+			inlineStyleThreshold: number(0),
+
+			methodOverride: object({
+				parameter: string('_method'),
+				allowed: validate([], (input, keypath) => {
+					if (!Array.isArray(input) || !input.every((method) => typeof method === 'string')) {
+						throw new Error(`${keypath} must be an array of strings`);
+					}
+
+					if (input.map((i) => i.toUpperCase()).includes('GET')) {
+						throw new Error(`${keypath} cannot contain "GET"`);
+					}
+
+					return input;
+				})
+			}),
 
 			package: object({
 				dir: string('package'),
@@ -115,6 +145,7 @@ const options = object(
 			}),
 
 			prerender: object({
+				concurrency: number(1),
 				crawl: boolean(true),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
@@ -132,6 +163,7 @@ const options = object(
 
 					return input;
 				}),
+
 				// TODO: remove this for the 1.0 release
 				force: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
@@ -144,6 +176,7 @@ const options = object(
 						);
 					}
 				}),
+
 				onError: validate('fail', (input, keypath) => {
 					if (typeof input === 'function') return input;
 					if (['continue', 'fail'].includes(input)) return input;
@@ -151,6 +184,7 @@ const options = object(
 						`${keypath} should be either a custom function or one of "continue" or "fail"`
 					);
 				}),
+
 				// TODO: remove this for the 1.0 release
 				pages: validate(undefined, (input, keypath) => {
 					if (typeof input !== undefined) {
@@ -159,13 +193,30 @@ const options = object(
 				})
 			}),
 
+			// TODO: remove this for the 1.0 release
+			protocol: validate(undefined, (input, keypath) => {
+				if (typeof input !== undefined) {
+					throw new Error(
+						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+					);
+				}
+			}),
+
 			router: boolean(true),
 
 			serviceWorker: object({
+				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
 			}),
 
-			ssr: boolean(true),
+			// TODO remove this for 1.0
+			ssr: validate(null, (input) => {
+				if (input !== undefined) {
+					throw new Error(
+						'config.kit.ssr has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+					);
+				}
+			}),
 
 			target: string(null),
 
@@ -257,6 +308,19 @@ function string(fallback, allow_empty = true) {
 			throw new Error(`${keypath} cannot be empty`);
 		}
 
+		return input;
+	});
+}
+
+/**
+ * @param {number} fallback
+ * @returns {Validator}
+ */
+function number(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (typeof input !== 'number') {
+			throw new Error(`${keypath} should be a number, if specified`);
+		}
 		return input;
 	});
 }

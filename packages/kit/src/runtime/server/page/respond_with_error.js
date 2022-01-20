@@ -4,104 +4,84 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSRNode} SSRNode
  * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
  * @typedef {import('types/internal').SSRRenderState} SSRRenderState
  */
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   event: import('types/hooks').RequestEvent;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
  *   status: number;
  *   error: Error;
+ *   ssr: boolean;
  * }} opts
  */
-export async function respond_with_error({ request, options, state, $session, status, error }) {
-	const default_layout = await options.load_component(options.manifest.layout);
-	const default_error = await options.load_component(options.manifest.error);
+export async function respond_with_error({ event, options, state, $session, status, error, ssr }) {
+	try {
+		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
+		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
 
-	const page = {
-		host: request.host,
-		path: request.path,
-		query: request.query,
-		params: {}
-	};
+		/** @type {Record<string, string>} */
+		const params = {}; // error page has no params
 
-	// error pages don't fall through, so we know it's not undefined
-	const loaded = /** @type {Loaded} */ (
-		await load_node({
-			request,
-			options,
-			state,
-			route: null,
-			page,
-			node: default_layout,
-			$session,
-			stuff: {},
-			prerender_enabled: is_prerender_enabled(options, default_error, state),
-			is_leaf: false,
-			is_error: false
-		})
-	);
-
-	const branch = [
-		loaded,
-		/** @type {Loaded} */ (
+		const layout_loaded = /** @type {Loaded} */ (
 			await load_node({
-				request,
+				event,
 				options,
 				state,
 				route: null,
-				page,
+				url: event.url, // TODO this is redundant, no?
+				params,
+				node: default_layout,
+				$session,
+				stuff: {},
+				is_error: false
+			})
+		);
+
+		const error_loaded = /** @type {Loaded} */ (
+			await load_node({
+				event,
+				options,
+				state,
+				route: null,
+				url: event.url,
+				params,
 				node: default_error,
 				$session,
-				stuff: loaded ? loaded.stuff : {},
-				prerender_enabled: is_prerender_enabled(options, default_error, state),
-				is_leaf: false,
+				stuff: layout_loaded ? layout_loaded.stuff : {},
 				is_error: true,
 				status,
 				error
 			})
-		)
-	];
+		);
 
-	try {
 		return await render_response({
 			options,
+			state,
 			$session,
 			page_config: {
 				hydrate: options.hydrate,
-				router: options.router,
-				ssr: options.ssr
+				router: options.router
 			},
+			stuff: error_loaded.stuff,
 			status,
 			error,
-			branch,
-			page
+			branch: [layout_loaded, error_loaded],
+			url: event.url,
+			params,
+			ssr
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, request);
+		options.handle_error(error, event);
 
-		return {
-			status: 500,
-			headers: {},
-			body: error.stack
-		};
+		return new Response(error.stack, {
+			status: 500
+		});
 	}
-}
-
-/**
- * @param {SSRRenderOptions} options
- * @param {SSRNode} node
- * @param {SSRRenderState} state
- */
-export function is_prerender_enabled(options, node, state) {
-	return (
-		options.prerender && (!!node.module.prerender || (!!state.prerender && state.prerender.all))
-	);
 }

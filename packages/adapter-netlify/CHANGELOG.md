@@ -1,5 +1,77 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- Avoid setting the body of the request when the request method is GET or HEAD ([#3459](https://github.com/sveltejs/kit/pull/3459))
+
+## 1.0.0-next.41
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.40
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+- Add experimental function splitting ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+## 1.0.0-next.36
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 1.0.0-next.35
+
+### Patch Changes
+
+- [fix] adapter-netlify: handle undefined body ([#2682](https://github.com/sveltejs/kit/pull/2682))
+
+## 1.0.0-next.34
+
+### Patch Changes
+
+- [fix] encode UInt8Array response bodies as base64 ([#2630](https://github.com/sveltejs/kit/pull/2630))
+
+## 1.0.0-next.33
+
+### Patch Changes
+
+- update dependencies ([#2574](https://github.com/sveltejs/kit/pull/2574))
+
+## 1.0.0-next.32
+
+### Patch Changes
+
+- update to vite 2.6.0 and esbuild 0.13 ([#2522](https://github.com/sveltejs/kit/pull/2522))
+
 ## 1.0.0-next.31
 
 ### Patch Changes

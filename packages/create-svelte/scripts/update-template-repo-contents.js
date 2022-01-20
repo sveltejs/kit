@@ -1,0 +1,21 @@
+import fs from 'fs';
+import path from 'path';
+import { create } from '../index.js';
+
+const repo = process.argv[2];
+
+fs.readdirSync(repo).forEach((file) => {
+	if (file !== '.git') {
+		fs.rmSync(path.join(repo, file), {
+			recursive: true,
+			force: true
+		});
+	}
+});
+
+await create(repo, {
+	template: 'default',
+	eslint: false,
+	typescript: false,
+	prettier: true
+});

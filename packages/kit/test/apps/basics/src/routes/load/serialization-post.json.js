@@ -1,6 +1,8 @@
-/** @type {import('@sveltejs/kit').RequestHandler<any, string>} */
-export function post(request) {
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export async function post({ request }) {
+	const body = await request.text();
+
 	return {
-		body: request.body.toUpperCase()
+		body: body.toUpperCase()
 	};
 }

@@ -6,7 +6,7 @@
 			props: {
 				answer: await res.json()
 			}
-		}
+		};
 	}
 </script>
 

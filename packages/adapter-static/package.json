@@ -1,11 +1,12 @@
 {
 	"name": "@sveltejs/adapter-static",
-	"version": "1.0.0-next.20",
+	"version": "1.0.0-next.26",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
 		"directory": "packages/adapter-static"
 	},
+	"license": "MIT",
 	"homepage": "https://kit.svelte.dev",
 	"type": "module",
 	"main": "index.js",
@@ -23,12 +24,15 @@
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"test": "uvu test test.js"
 	},
+	"dependencies": {
+		"tiny-glob": "^0.2.9"
+	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:*",
-		"playwright-chromium": "^1.15.0",
+		"playwright-chromium": "^1.17.0",
 		"port-authority": "^1.1.2",
-		"sirv": "^1.0.17",
-		"svelte": "^3.43.0",
-		"uvu": "^0.5.1"
+		"sirv": "^2.0.0",
+		"svelte": "^3.44.2",
+		"uvu": "^0.5.2"
 	}
 }

@@ -1,9 +1,9 @@
-import { mkdtempSync, writeFileSync, readdirSync, mkdirSync } from 'fs';
+import { mkdtempSync, writeFileSync, readdirSync, mkdirSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { copy } from './filesystem.js';
+import { copy, mkdirp } from './filesystem.js';
 
 const suite_copy = suite('#copy()');
 
@@ -20,10 +20,20 @@ suite_copy.before.each(() => {
 	mkdirSync(dest_dir);
 });
 
+/**
+ * @param {string} file
+ * @param {string} contents
+ */
+const write = (file, contents) => {
+	const filepath = join(source_dir, file);
+	mkdirp(dirname(filepath));
+	writeFileSync(filepath, contents);
+};
+
 suite_copy('without filter', () => {
-	writeFileSync(join(source_dir, 'file-one.js'), '');
-	writeFileSync(join(source_dir, 'file-two.css'), '');
-	writeFileSync(join(source_dir, 'file-three'), '');
+	write('file-one.js', '');
+	write('file-two.css', '');
+	write('file-three', '');
 
 	copy(source_dir, dest_dir);
 
@@ -33,25 +43,24 @@ suite_copy('without filter', () => {
 });
 
 suite_copy('filters out subdirectory contents', () => {
-	writeFileSync(join(source_dir, 'file-one.js'), '');
-	writeFileSync(join(source_dir, 'file-two.css'), '');
-	mkdirSync(join(source_dir, 'no-copy'));
-	writeFileSync(join(source_dir, 'no-copy', 'do-not-copy.js'), '');
+	write('file-one.js', '');
+	write('file-two.css', '');
+	write('no-copy/do-not-copy.js', '');
 
-	copy(source_dir, dest_dir, (f) => f === 'source');
+	copy(source_dir, dest_dir, {
+		filter: (f) => f !== 'no-copy'
+	});
 
 	const copied = readdirSync(dest_dir);
 
-	assert.equal(copied.sort(), ['file-one.js', 'file-two.css', 'no-copy'].sort());
+	assert.equal(copied.sort(), ['file-one.js', 'file-two.css'].sort());
 });
 
 suite_copy('copies recursively', () => {
-	writeFileSync(join(source_dir, 'file-one.js'), '');
-	writeFileSync(join(source_dir, 'file-two.css'), '');
-	const sub_dir = join(source_dir, 'deep');
-	mkdirSync(sub_dir);
-	writeFileSync(join(sub_dir, 'a.js'), '');
-	writeFileSync(join(sub_dir, 'b.js'), '');
+	write('file-one.js', '');
+	write('file-two.css', '');
+	write('deep/a.js', '');
+	write('deep/b.js', '');
 
 	copy(source_dir, dest_dir);
 
@@ -59,29 +68,36 @@ suite_copy('copies recursively', () => {
 
 	assert.equal(root.sort(), ['file-one.js', 'file-two.css', 'deep'].sort());
 
-	const subdir = readdirSync(sub_dir);
+	const subdir = readdirSync(join(dest_dir, 'deep'));
 
 	assert.equal(subdir.sort(), ['a.js', 'b.js'].sort());
 });
 
 suite_copy('returns a list of copied files', () => {
-	writeFileSync(join(source_dir, 'file-one.js'), '');
-	writeFileSync(join(source_dir, 'file-two.css'), '');
-	const sub_dir = join(source_dir, 'deep');
-	mkdirSync(sub_dir);
-	writeFileSync(join(sub_dir, 'a.js'), '');
-	writeFileSync(join(sub_dir, 'b.js'), '');
+	write('file-one.js', '');
+	write('file-two.css', '');
+	write('deep/a.js', '');
+	write('deep/b.js', '');
 
-	const file_list = copy(source_dir, dest_dir);
+	let file_list = copy(source_dir, dest_dir);
+	assert.equal(file_list.sort(), ['file-one.js', 'file-two.css', 'deep/a.js', 'deep/b.js'].sort());
+
+	file_list = copy(`${source_dir}/file-one.js`, `${dest_dir}/file-one-renamed.js`);
+	assert.equal(file_list, ['file-one-renamed.js']);
+});
+
+suite_copy('replaces strings', () => {
+	write('foo.md', 'the quick brown JUMPER jumps over the lazy JUMPEE');
+	copy(source_dir, dest_dir, {
+		replace: {
+			JUMPER: 'fox',
+			JUMPEE: 'dog'
+		}
+	});
 
 	assert.equal(
-		file_list.sort(),
-		[
-			join(dest_dir, 'file-one.js'),
-			join(dest_dir, 'file-two.css'),
-			join(dest_dir, 'deep/a.js'),
-			join(dest_dir, 'deep/b.js')
-		].sort()
+		readFileSync(join(dest_dir, 'foo.md'), 'utf8'),
+		'the quick brown fox jumps over the lazy dog'
 	);
 });
 

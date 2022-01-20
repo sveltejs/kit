@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
@@ -5,13 +6,11 @@ import { normalize } from '../load.js';
 
 /**
  * @typedef {import('types/internal').CSRComponent} CSRComponent
- *
- * @typedef {Partial<import('types/page').Page>} Page
- * @typedef {{ from: Page; to: Page }} Navigating
+ * @typedef {{ from: URL; to: URL }} Navigating
  */
 
 /** @param {any} value */
-function page_store(value) {
+function notifiable_store(value) {
 	const store = writable(value);
 	let ready = true;
 
@@ -47,7 +46,7 @@ function page_store(value) {
 function initial_fetch(resource, opts) {
 	const url = typeof resource === 'string' ? resource : resource.url;
 
-	let selector = `script[data-type="svelte-data"][data-url="${url}"]`;
+	let selector = `script[data-type="svelte-data"][data-url=${JSON.stringify(url)}]`;
 
 	if (opts && typeof opts.body === 'string') {
 		selector += `[data-body="${hash(opts.body)}"]`;
@@ -63,17 +62,17 @@ function initial_fetch(resource, opts) {
 }
 
 export class Renderer {
-	/** @param {{
+	/**
+	 * @param {{
 	 *   Root: CSRComponent;
 	 *   fallback: [CSRComponent, CSRComponent];
 	 *   target: Node;
 	 *   session: any;
-	 *   host: string;
-	 * }} opts */
-	constructor({ Root, fallback, target, session, host }) {
+	 * }} opts
+	 */
+	constructor({ Root, fallback, target, session }) {
 		this.Root = Root;
 		this.fallback = fallback;
-		this.host = host;
 
 		/** @type {import('./router').Router | undefined} */
 		this.router;
@@ -85,11 +84,13 @@ export class Renderer {
 		this.session_id = 1;
 		this.invalid = new Set();
 		this.invalidating = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		/** @type {import('./types').NavigationState} */
 		this.current = {
 			// @ts-ignore - we need the initial value to be null
-			page: null,
+			url: null,
 			session_id: 0,
 			branch: []
 		};
@@ -104,7 +105,8 @@ export class Renderer {
 		};
 
 		this.stores = {
-			page: page_store({}),
+			url: notifiable_store({}),
+			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
 			session: writable(session)
 		};
@@ -126,15 +128,26 @@ export class Renderer {
 		ready = true;
 	}
 
+	disable_scroll_handling() {
+		if (import.meta.env.DEV && this.started && !this.updating) {
+			throw new Error('Can only disable scroll handling during navigation');
+		}
+
+		if (this.updating || !this.started) {
+			this.autoscroll = false;
+		}
+	}
+
 	/**
 	 * @param {{
 	 *   status: number;
 	 *   error: Error;
 	 *   nodes: Array<Promise<CSRComponent>>;
-	 *   page: import('types/page').Page;
+	 *   url: URL;
+	 *   params: Record<string, string>;
 	 * }} selected
 	 */
-	async start({ status, error, nodes, page }) {
+	async start({ status, error, nodes, url, params }) {
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		const branch = [];
 
@@ -146,13 +159,17 @@ export class Renderer {
 
 		let error_args;
 
+		// url.hash is empty when coming from the server
+		url.hash = window.location.hash;
+
 		try {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
 
 				const node = await this._load_node({
 					module: await nodes[i],
-					page,
+					url,
+					params,
 					stuff,
 					status: is_leaf ? status : undefined,
 					error: is_leaf ? error : undefined
@@ -166,8 +183,7 @@ export class Renderer {
 						error_args = {
 							status: node.loaded.status,
 							error: node.loaded.error,
-							path: page.path,
-							query: page.query
+							url
 						};
 					} else if (node.loaded.stuff) {
 						stuff = {
@@ -180,15 +196,21 @@ export class Renderer {
 
 			result = error_args
 				? await this._load_error(error_args)
-				: await this._get_navigation_result_from_branch({ page, branch });
+				: await this._get_navigation_result_from_branch({
+						url,
+						params,
+						stuff,
+						branch,
+						status,
+						error
+				  });
 		} catch (e) {
 			if (error) throw e;
 
 			result = await this._load_error({
 				status: 500,
 				error: coalesce_to_error(e),
-				path: page.path,
-				query: page.query
+				url
 			});
 		}
 
@@ -202,30 +224,30 @@ export class Renderer {
 		this._init(result);
 	}
 
-	/** @param {{ path: string, query: URLSearchParams }} destination */
-	notify({ path, query }) {
-		dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
-
+	/**
+	 * @param {import('./types').NavigationInfo} info
+	 * @param {string[]} chain
+	 * @param {boolean} no_cache
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 */
+	async handle_navigation(info, chain, no_cache, opts) {
 		if (this.started) {
 			this.stores.navigating.set({
-				from: {
-					path: this.current.page.path,
-					query: this.current.page.query
-				},
-				to: {
-					path,
-					query
-				}
+				from: this.current.url,
+				to: info.url
 			});
 		}
+
+		await this.update(info, chain, no_cache, opts);
 	}
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async update(info, chain, no_cache) {
+	async update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
@@ -235,19 +257,19 @@ export class Renderer {
 		this.invalid.clear();
 
 		if (navigation_result.redirect) {
-			if (chain.length > 10 || chain.includes(info.path)) {
+			if (chain.length > 10 || chain.includes(info.url.pathname)) {
 				navigation_result = await this._load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
-					path: info.path,
-					query: info.query
+					url: info.url
 				});
 			} else {
 				if (this.router) {
-					this.router.goto(navigation_result.redirect, { replaceState: true }, [
-						...chain,
-						info.path
-					]);
+					this.router.goto(
+						new URL(navigation_result.redirect, info.url).href,
+						{ replaceState: true },
+						[...chain, info.url.pathname]
+					);
 				} else {
 					location.href = new URL(navigation_result.redirect, location.href).href;
 				}
@@ -256,24 +278,54 @@ export class Renderer {
 			}
 		}
 
-		if (navigation_result.reload) {
-			location.reload();
-		} else if (this.started) {
+		this.updating = true;
+
+		if (this.started) {
 			this.current = navigation_result.state;
 
 			this.root.$set(navigation_result.props);
 			this.stores.navigating.set(null);
-
-			await 0;
 		} else {
 			this._init(navigation_result);
 		}
 
-		dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
+		// opts must be passed if we're navigating
+		if (opts) {
+			const { scroll, keepfocus } = opts;
+
+			if (!keepfocus) {
+				getSelection()?.removeAllRanges();
+				document.body.focus();
+			}
+
+			// need to render the DOM before we can scroll to the rendered elements
+			await tick();
+
+			if (this.autoscroll) {
+				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
+				if (scroll) {
+					scrollTo(scroll.x, scroll.y);
+				} else if (deep_linked) {
+					// Here we use `scrollIntoView` on the element instead of `scrollTo`
+					// because it natively supports the `scroll-margin` and `scroll-behavior`
+					// CSS properties.
+					deep_linked.scrollIntoView();
+				} else {
+					scrollTo(0, 0);
+				}
+			}
+		} else {
+			// in this case we're simply invalidating
+			await tick();
+		}
+
 		this.loading.promise = null;
 		this.loading.id = null;
+		this.autoscroll = true;
+		this.updating = false;
 
 		if (!this.router) return;
+
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node && leaf_node.module.router === false) {
 			this.router.disable();
@@ -326,6 +378,11 @@ export class Renderer {
 		});
 
 		this.started = true;
+
+		if (this.router) {
+			const navigation = { from: null, to: new URL(location.href) };
+			this.router.callbacks.after_navigate.forEach((fn) => fn(navigation));
+		}
 	}
 
 	/**
@@ -341,21 +398,13 @@ export class Renderer {
 		for (let i = 0; i < info.routes.length; i += 1) {
 			const route = info.routes[i];
 
-			// check if endpoint route
-			if (route.length === 1) {
-				return { reload: true, props: {}, state: this.current };
-			}
-
 			// load code for subsequent routes immediately, if they are as
 			// likely to match the current path/query as the current one
 			let j = i + 1;
 			while (j < info.routes.length) {
 				const next = info.routes[j];
 				if (next[0].toString() === route[0].toString()) {
-					// if it's a page route
-					if (next.length !== 1) {
-						next[1].forEach((loader) => loader());
-					}
+					next[1].forEach((loader) => loader());
 					j += 1;
 				} else {
 					break;
@@ -374,26 +423,32 @@ export class Renderer {
 
 		return await this._load_error({
 			status: 404,
-			error: new Error(`Not found: ${info.path}`),
-			path: info.path,
-			query: info.query
+			error: new Error(`Not found: ${info.url.pathname}`),
+			url: info.url
 		});
 	}
 
 	/**
 	 *
 	 * @param {{
-	 *   page: import('types/page').Page;
-	 *   branch: Array<import('./types').BranchNode | undefined>
+	 *   url: URL;
+	 *   params: Record<string, string>;
+	 *   stuff: Record<string, any>;
+	 *   branch: Array<import('./types').BranchNode | undefined>;
+	 *   status: number;
+	 *   error?: Error;
 	 * }} opts
 	 */
-	async _get_navigation_result_from_branch({ page, branch }) {
+	async _get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
+		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
+			redirect: redirect && redirect.loaded ? redirect.loaded.redirect : undefined,
 			state: {
-				page,
+				url,
+				params,
 				branch,
 				session_id: this.session_id
 			},
@@ -407,19 +462,32 @@ export class Renderer {
 			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
-		if (
-			!this.current.page ||
-			page.path !== this.current.page.path ||
-			page.query.toString() !== this.current.page.query.toString()
-		) {
-			result.props.page = page;
+		if (!this.current.url || url.href !== this.current.url.href) {
+			result.props.page = { url, params, status, error, stuff };
+
+			// TODO remove this for 1.0
+			/**
+			 * @param {string} property
+			 * @param {string} replacement
+			 */
+			const print_error = (property, replacement) => {
+				Object.defineProperty(result.props.page, property, {
+					get: () => {
+						throw new Error(`$page.${property} has been replaced by $page.url.${replacement}`);
+					}
+				});
+			};
+
+			print_error('origin', 'origin');
+			print_error('path', 'pathname');
+			print_error('query', 'searchParams');
 		}
 
 		const leaf = filtered[filtered.length - 1];
 		const maxage = leaf.loaded && leaf.loaded.maxage;
 
 		if (maxage) {
-			const key = `${page.path}?${page.query}`;
+			const key = url.pathname + url.search; // omit hash
 			let ready = false;
 
 			const clear = () => {
@@ -450,19 +518,19 @@ export class Renderer {
 	 *   status?: number;
 	 *   error?: Error;
 	 *   module: CSRComponent;
-	 *   page: import('types/page').Page;
+	 *   url: URL;
+	 *   params: Record<string, string>;
 	 *   stuff: Record<string, any>;
 	 * }} options
 	 * @returns
 	 */
-	async _load_node({ status, error, module, page, stuff }) {
+	async _load_node({ status, error, module, url, params, stuff }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
 			uses: {
 				params: new Set(),
-				path: false,
-				query: false,
+				url: false,
 				session: false,
 				stuff: false,
 				dependencies: []
@@ -472,12 +540,12 @@ export class Renderer {
 		};
 
 		/** @type {Record<string, string>} */
-		const params = {};
-		for (const key in page.params) {
-			Object.defineProperty(params, key, {
+		const uses_params = {};
+		for (const key in params) {
+			Object.defineProperty(uses_params, key, {
 				get() {
 					node.uses.params.add(key);
-					return page.params[key];
+					return params[key];
 				},
 				enumerable: true
 			});
@@ -490,17 +558,10 @@ export class Renderer {
 
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
-				page: {
-					host: page.host,
-					params,
-					get path() {
-						node.uses.path = true;
-						return page.path;
-					},
-					get query() {
-						node.uses.query = true;
-						return page.query;
-					}
+				params: uses_params,
+				get url() {
+					node.uses.url = true;
+					return url;
 				},
 				get session() {
 					node.uses.session = true;
@@ -511,8 +572,9 @@ export class Renderer {
 					return { ...stuff };
 				},
 				fetch(resource, info) {
-					const url = typeof resource === 'string' ? resource : resource.url;
-					node.uses.dependencies.push(url);
+					const requested = typeof resource === 'string' ? resource : resource.url;
+					const { href } = new URL(requested, url);
+					node.uses.dependencies.push(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				},
@@ -521,6 +583,15 @@ export class Renderer {
 				}
 			};
 
+			if (import.meta.env.DEV) {
+				// TODO remove this for 1.0
+				Object.defineProperty(load_input, 'page', {
+					get: () => {
+						throw new Error('`page` in `load` functions has been replaced by `url` and `params`');
+					}
+				});
+			}
+
 			if (error) {
 				/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
 				/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
@@ -528,8 +599,9 @@ export class Renderer {
 
 			const loaded = await module.load.call(null, load_input);
 
-			// if the page component returns nothing from load, fall through
-			if (!loaded) return;
+			if (!loaded) {
+				throw new Error('load function must return a value');
+			}
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
@@ -543,8 +615,8 @@ export class Renderer {
 	 * @param {boolean} no_cache
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info: { path, decoded_path, query } }, no_cache) {
-		const key = `${decoded_path}?${query}`;
+	async _load({ route, info: { url, path } }, no_cache) {
+		const key = url.pathname + url.search;
 
 		if (!no_cache) {
 			const cached = this.cache.get(key);
@@ -554,18 +626,14 @@ export class Renderer {
 		const [pattern, a, b, get_params] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
-			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(decoded_path)))
+			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
 			: {};
 
-		const changed = this.current.page && {
-			path: path !== this.current.page.path,
-			params: Object.keys(params).filter((key) => this.current.page.params[key] !== params[key]),
-			query: query.toString() !== this.current.page.query.toString(),
+		const changed = this.current.url && {
+			url: key !== this.current.url.pathname + this.current.url.search,
+			params: Object.keys(params).filter((key) => this.current.params[key] !== params[key]),
 			session: this.session_id !== this.current.session_id
 		};
-
-		/** @type {import('types/page').Page} */
-		const page = { host: this.host, path, query, params };
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
 		let branch = [];
@@ -596,9 +664,8 @@ export class Renderer {
 				const changed_since_last_render =
 					!previous ||
 					module !== previous.module ||
-					(changed.path && previous.uses.path) ||
+					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
-					(changed.query && previous.uses.query) ||
 					(changed.session && previous.uses.session) ||
 					previous.uses.dependencies.some((dep) => this.invalid.has(dep)) ||
 					(stuff_changed && previous.uses.stuff);
@@ -606,13 +673,15 @@ export class Renderer {
 				if (changed_since_last_render) {
 					node = await this._load_node({
 						module,
-						page,
+						url,
+						params,
 						stuff
 					});
 
-					const is_leaf = i === a.length - 1;
-
 					if (node && node.loaded) {
+						if (node.loaded.fallthrough) {
+							return;
+						}
 						if (node.loaded.error) {
 							status = node.loaded.status;
 							error = node.loaded.error;
@@ -629,10 +698,6 @@ export class Renderer {
 						if (node.loaded.stuff) {
 							stuff_changed = true;
 						}
-					} else if (is_leaf && module.load) {
-						// if the leaf node has a `load` function
-						// that returns nothing, fall through
-						return;
 					}
 				} else {
 					node = previous;
@@ -659,12 +724,20 @@ export class Renderer {
 								status,
 								error,
 								module: await b[i](),
-								page,
+								url,
+								params,
 								stuff: node_loaded.stuff
 							});
 
 							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
 								continue;
+							}
+
+							if (error_loaded && error_loaded.loaded && error_loaded.loaded.stuff) {
+								stuff = {
+									...stuff,
+									...error_loaded.loaded.stuff
+								};
 							}
 
 							branch = branch.slice(0, j + 1).concat(error_loaded);
@@ -678,8 +751,7 @@ export class Renderer {
 				return await this._load_error({
 					status,
 					error,
-					path,
-					query
+					url
 				});
 			} else {
 				if (node && node.loaded && node.loaded.stuff) {
@@ -693,42 +765,52 @@ export class Renderer {
 			}
 		}
 
-		return await this._get_navigation_result_from_branch({ page, branch });
+		return await this._get_navigation_result_from_branch({
+			url,
+			params,
+			stuff,
+			branch,
+			status,
+			error
+		});
 	}
 
 	/**
 	 * @param {{
-	 *   status?: number;
+	 *   status: number;
 	 *   error: Error;
-	 *   path: string;
-	 *   query: URLSearchParams
+	 *   url: URL;
 	 * }} opts
 	 */
-	async _load_error({ status, error, path, query }) {
-		const page = {
-			host: this.host,
-			path,
-			query,
-			params: {}
-		};
+	async _load_error({ status, error, url }) {
+		/** @type {Record<string, string>} */
+		const params = {}; // error page does not have params
 
 		const node = await this._load_node({
 			module: await this.fallback[0],
-			page,
+			url,
+			params,
 			stuff: {}
 		});
+		const error_node = await this._load_node({
+			status,
+			error,
+			module: await this.fallback[1],
+			url,
+			params,
+			stuff: (node && node.loaded && node.loaded.stuff) || {}
+		});
 
-		const branch = [
-			node,
-			await this._load_node({
-				status,
-				error,
-				module: await this.fallback[1],
-				page,
-				stuff: (node && node.loaded && node.loaded.stuff) || {}
-			})
-		];
+		const branch = [node, error_node];
+		const stuff = { ...node?.loaded?.stuff, ...error_node?.loaded?.stuff };
 
-		return await this._get_navigation_result_from_branch({ page, branch });
+		return await this._get_navigation_result_from_branch({
+			url,
+			params,
+			stuff,
+			branch,
+			status,
+			error
+		});
 	}
 }

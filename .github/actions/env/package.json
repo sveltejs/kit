@@ -12,6 +12,6 @@
 	},
 	"license": "MIT",
 	"devDependencies": {
-		"@actions/core": "^1.2.7"
+		"@actions/core": "^1.6.0"
 	}
 }

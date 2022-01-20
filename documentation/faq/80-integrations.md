@@ -40,9 +40,7 @@ See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#con
 
 ### How do I use a client-side only library that depends on `document` or `window`?
 
-Vite will attempt to process all imported libraries and may fail when encountering a library that is not compatible with SSR. [This currently occurs even when SSR is disabled](https://github.com/sveltejs/kit/issues/754).
-
-If you need access to the `document` or `window` variables or otherwise need it to run only on the client-side you can wrap it in a `browser` check:
+If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
 ```js
 import { browser } from '$app/env';
@@ -84,10 +82,6 @@ onMount(() => {
 	method('hello world');
 });
 ```
-
-### How do I use Firebase?
-
-Please use SDK v9 which provides a modular SDK approach that's currently in beta. The old versions are very difficult to get working especially with SSR and also resulted in a much larger client download size. Even with v9, most users need to set `kit.ssr: false` until [vite#4425](https://github.com/vitejs/vite/issues/4425) and [firebase-js-sdk#4846](https://github.com/firebase/firebase-js-sdk/issues/4846) are solved.
 
 ### Does it work with Yarn 2?
 

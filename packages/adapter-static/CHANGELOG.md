@@ -1,5 +1,41 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.26
+
+### Patch Changes
+
+- Log adapter-static output directories ([#3274](https://github.com/sveltejs/kit/pull/3274))
+
+## 1.0.0-next.25
+
+### Patch Changes
+
+- [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
+## 1.0.0-next.24
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+## 1.0.0-next.23
+
+### Patch Changes
+
+- add precompress option to adapter-static ([#3079](https://github.com/sveltejs/kit/pull/3079))
+
+## 1.0.0-next.22
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
+## 1.0.0-next.21
+
+### Patch Changes
+
+- update dependencies ([#2574](https://github.com/sveltejs/kit/pull/2574))
+
 ## 1.0.0-next.20
 
 ### Patch Changes

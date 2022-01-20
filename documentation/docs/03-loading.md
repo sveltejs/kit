@@ -13,12 +13,8 @@ export interface LoadInput<
 	Stuff extends Record<string, any> = Record<string, any>,
 	Session = any
 > {
-	page: {
-		host: string;
-		path: string;
-		params: PageParams;
-		query: URLSearchParams;
-	};
+	url: URL;
+	params: PageParams;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: Session;
 	stuff: Stuff;
@@ -36,17 +32,50 @@ export interface LoadOutput<
 	stuff?: Stuff;
 	maxage?: number;
 }
+
+interface LoadInputExtends {
+	stuff?: Record<string, any>;
+	pageParams?: Record<string, string>;
+	session?: any;
+}
+interface LoadOutputExtends {
+	stuff?: Record<string, any>;
+	props?: Record<string, any>;
+}
+
+type MaybePromise<T> = T | Promise<T>;
+interface Fallthrough {
+	fallthrough: true;
+}
+export interface Load<
+	Input extends LoadInputExtends = Required<LoadInputExtends>,
+	Output extends LoadOutputExtends = Required<LoadOutputExtends>
+> {
+	(
+		input: LoadInput<
+			InferValue<Input, 'pageParams', Record<string, string>>,
+			InferValue<Input, 'stuff', Record<string, any>>,
+			InferValue<Input, 'session', any>
+		>
+	): MaybePromise<
+		Either<
+			Fallthrough,
+			LoadOutput<
+				InferValue<Output, 'props', Record<string, any>>,
+				InferValue<Output, 'stuff', Record<string, any>>
+			>
+		>
+	>;
+}
 ```
 
 Our example blog page might contain a `load` function like the following:
 
 ```html
 <script context="module">
-	/**
-	 * @type {import('@sveltejs/kit').Load}
-	 */
-	export async function load({ page, fetch, session, stuff }) {
-		const url = `/blog/${page.params.slug}.json`;
+	/** @type {import('@sveltejs/kit').Load} */
+	export async function load({ params, fetch, session, stuff }) {
+		const url = `/blog/${params.slug}.json`;
 		const res = await fetch(url);
 
 		if (res.ok) {
@@ -69,9 +98,9 @@ Our example blog page might contain a `load` function like the following:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
 
-If `load` returns nothing, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-SvelteKit's `load` receives an implemention of `fetch`, which has the following special properties:
+SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
 - it has access to cookies on the server
 - it can make requests against the app's own endpoints without issuing an HTTP call
@@ -91,20 +120,28 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing four fields — `page`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `page.query`, `page.path`, `session`, or `stuff` are used in the function, they will be re-run whenever their value changes. Note that destructuring parameters in the function declaration is enough to count as using them. In the example above, the `load({ page, fetch, session, stuff })` function will re-run every time `session` or `stuff` is changed, even though they are not used in the body of the function. If it was re-written as `load({ page, fetch })`, then it would only re-run when `page.params.slug` changes. The same reactivity applies to `page.params`, but only to the params actually used in the function. If `page.params.foo` changes, the example above would not re-run, because it did not access `page.params.foo`, only `page.params.slug`.
+The `load` function receives an object containing five fields — `url`, `params`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
-#### page
+> Note that destructuring parameters in the function declaration is enough to count as using them.
 
-`page` is a `{ host, path, params, query }` object where `host` is the URL's host, `path` is its pathname, `params` is derived from `path` and the route filename, and `query` is an instance of [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams).
+#### url
 
-So if the example above was `src/routes/blog/[slug].svelte` and the URL was `https://example.com/blog/some-post?foo=bar&baz&bizz=a&bizz=b`, the following would be true:
+`url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams`.
 
-- `page.host === 'example.com'`
-- `page.path === '/blog/some-post'`
-- `page.params.slug === 'some-post'`
-- `page.query.get('foo') === 'bar'`
-- `page.query.has('baz')`
-- `page.query.getAll('bizz') === ['a', 'b']`
+> In some environments this is derived from request headers, which you [may need to configure](#configuration-headers), during server-side rendering
+
+#### params
+
+`params` is derived from `url.pathname` and the route filename.
+
+For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
+
+```js
+{
+	"b": "x",
+	"c": "y/z"
+}
+```
 
 #### fetch
 
@@ -142,6 +179,8 @@ If something goes wrong during `load`, return an `Error` object or a `string` de
 
 If the page should redirect (because the page is deprecated, or the user needs to be logged in, or whatever else) return a `string` containing the location to which they should be redirected alongside a `3xx` status code.
 
+The `redirect` string should be a [properly encoded](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) URI. Both absolute and relative URIs are acceptable.
+
 #### maxage
 
 To cause pages to be cached, return a `number` describing the page's max age in seconds. The resulting cache header will include `private` if user data was involved in rendering the page (either via `session`, or because a credentialed `fetch` was made in a `load` function), but otherwise will include `public` so that it can be cached by CDNs.
@@ -156,4 +195,4 @@ If the `load` function returns a `props` object, the props will be passed to the
 
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
-This only applies to layout components, _not_ page components.
+The combined `stuff` is available to components using the [page store](#modules-$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.

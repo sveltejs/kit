@@ -29,19 +29,27 @@ test('fills in defaults', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
-			host: null,
-			hostHeader: null,
+			headers: undefined,
+			host: undefined,
 			hydrate: true,
+			inlineStyleThreshold: 0,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: {
 				base: '',
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -49,8 +57,9 @@ test('fills in defaults', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: undefined,
 			router: true,
-			ssr: true,
+			ssr: null,
 			target: null,
 			trailingSlash: 'never'
 		}
@@ -129,19 +138,27 @@ test('fills in partial blanks', () => {
 				template: 'src/app.html'
 			},
 			floc: false,
-			host: null,
-			hostHeader: null,
+			headers: undefined,
+			host: undefined,
 			hydrate: true,
+			inlineStyleThreshold: 0,
+			methodOverride: {
+				parameter: '_method',
+				allowed: []
+			},
 			package: {
 				dir: 'package',
 				emitTypes: true
 			},
-			serviceWorker: {},
+			serviceWorker: {
+				register: true
+			},
 			paths: {
 				base: '',
 				assets: ''
 			},
 			prerender: {
+				concurrency: 1,
 				crawl: true,
 				enabled: true,
 				entries: ['*'],
@@ -149,8 +166,9 @@ test('fills in partial blanks', () => {
 				onError: 'fail',
 				pages: undefined
 			},
+			protocol: undefined,
 			router: true,
-			ssr: true,
+			ssr: null,
 			target: null,
 			trailingSlash: 'never'
 		}
