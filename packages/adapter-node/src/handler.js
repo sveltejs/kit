@@ -7,10 +7,10 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
-/* global BASE_ENV, PROTOCOL_HEADER, HOST_HEADER */
+/* global ORIGIN_ENV, PROTOCOL_HEADER, HOST_HEADER */
 
 const app = new App(manifest);
-const base = BASE_ENV && process.env[BASE_ENV];
+const origin = ORIGIN_ENV && process.env[ORIGIN_ENV];
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
@@ -39,7 +39,7 @@ const ssr = async (req, res) => {
 	let request;
 
 	try {
-		request = await getRequest(base || get_base(req.headers), req);
+		request = await getRequest(origin || get_origin(req.headers), req);
 	} catch (err) {
 		res.statusCode = err.status || 400;
 		return res.end(err.reason || 'Invalid request body');
@@ -68,7 +68,7 @@ function sequence(handlers) {
  * @param {import('http').IncomingHttpHeaders} headers
  * @returns
  */
-function get_base(headers) {
+function get_origin(headers) {
 	const protocol = (protocol_header && headers[protocol_header]) || 'https';
 	const host = headers[host_header];
 	return `${protocol}://${host}`;
