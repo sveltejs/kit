@@ -35,6 +35,7 @@ jobs:
       - name: Publish
         working-directory: ./template
         run: |
+          touch "generated-$(date +%s)" 
           git add -A
           git commit -m "version $npm_package_version"
           git push main -f
