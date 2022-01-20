@@ -56,4 +56,4 @@ jobs:
           git config user.name "[bot]"
           git add -A
           git commit -m "version $npm_package_version"
-          git push main -f
+          git push -u origin main -f
