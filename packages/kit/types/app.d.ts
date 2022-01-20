@@ -7,12 +7,12 @@ export interface RenderEvent<Locals = Record<string, any>> {
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(renderOptions: RenderEvent): Promise<Response>;
+	render(renderEvent: RenderEvent): Promise<Response>;
 }
 
 export class InternalApp extends App {
 	render(
-		renderOptions: RenderEvent,
+		renderEvent: RenderEvent,
 		options?: {
 			prerender: PrerenderOptions;
 		}
