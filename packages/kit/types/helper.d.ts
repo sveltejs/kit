@@ -22,7 +22,10 @@ export type JSONString =
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | string[]>;
 
-// Utility Types
+// <-- Utility Types -->
+type Only<T, U> = { [P in keyof T]: T[P] } & { [P in keyof U]?: never };
+
+export type Either<T, U> = Only<T, U> | Only<U, T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>
 	? Val
 	: Default;
@@ -38,15 +41,3 @@ export type RecursiveRequired<T> = {
 		? Extract<T[K], Function> // only take the Function type.
 		: T[K]; // Use the exact type for everything else
 };
-
-type Only<T, U> = {
-	[P in keyof T]: T[P];
-} & {
-	[P in keyof U]?: never;
-};
-
-export type Either<T, U> = Only<T, U> | Only<U, T>;
-
-export interface Fallthrough {
-	fallthrough: true;
-}

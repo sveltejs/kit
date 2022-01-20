@@ -1,5 +1,5 @@
 import { RequestEvent } from './hooks';
-import { JSONString, MaybePromise, ResponseHeaders, Either, Fallthrough } from './helper';
+import { Either, JSONString, MaybePromise, ResponseHeaders } from './helper';
 
 type DefaultBody = JSONString | Uint8Array;
 
@@ -7,6 +7,10 @@ export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
 	body?: Body;
+}
+
+export interface Fallthrough {
+	fallthrough: true;
 }
 
 export interface RequestHandler<

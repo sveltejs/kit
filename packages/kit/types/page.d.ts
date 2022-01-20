@@ -1,4 +1,5 @@
-import { InferValue, MaybePromise, Rec, Either, Fallthrough } from './helper';
+import { Fallthrough } from './endpoint';
+import { Either, InferValue, MaybePromise, Rec } from './helper';
 
 export interface LoadInput<
 	PageParams extends Rec<string> = Rec<string>,
