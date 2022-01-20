@@ -93,14 +93,14 @@ export class App {
 		};
 	}
 
-	render(request, {
+	render({ request, locals }, {
 		prerender
 	} = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		return respond(request, this.options, { prerender });
+		return respond({ request, locals }, this.options, { prerender });
 	}
 }
 `;

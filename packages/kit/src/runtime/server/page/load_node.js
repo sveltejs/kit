@@ -151,7 +151,7 @@ export async function load_node({
 					}
 
 					const rendered = await respond(
-						new Request(new URL(requested, event.url).href, opts),
+						{ request: new Request(new URL(requested, event.url).href, opts) },
 						options,
 						{
 							fetched: requested,

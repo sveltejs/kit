@@ -1,6 +1,6 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { RequestHandler } from './endpoint';
-import { InternalApp, SSRManifest } from './app';
+import { RenderEvent, InternalApp, SSRManifest } from './app';
 import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
 import { Either, Fallthrough } from './helper';
@@ -230,7 +230,7 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
+	(renderEvent: RenderEvent, options: SSRRenderOptions, state?: SSRRenderState): Promise<
 		Response | undefined
 	>;
 }

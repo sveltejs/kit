@@ -217,11 +217,13 @@ export async function create_plugin(config, cwd) {
 						}
 
 						const rendered = await respond(
-							new Request(url.href, {
-								headers: /** @type {Record<string, string>} */ (req.headers),
-								method: req.method,
-								body
-							}),
+							{
+								request: new Request(url.href, {
+									headers: /** @type {Record<string, string>} */ (req.headers),
+									method: req.method,
+									body
+								})
+							},
 							{
 								amp: config.kit.amp,
 								dev: true,

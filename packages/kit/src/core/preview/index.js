@@ -95,13 +95,13 @@ export async function preview({
 				const protocol = use_https ? 'https' : 'http';
 				const host = req.headers['host'];
 
-				const rendered = await app.render(
-					new Request(`${protocol}://${host}${initial_url}`, {
+				const rendered = await app.render({
+					request: new Request(`${protocol}://${host}${initial_url}`, {
 						method: req.method,
 						headers: to_headers(req.headers),
 						body
 					})
-				);
+				});
 
 				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
 				if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
