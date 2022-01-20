@@ -14,5 +14,5 @@ export interface Fallthrough {
 }
 
 export interface RequestHandler<Locals = Record<string, any>> {
-	(request: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
+	(event: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
 }

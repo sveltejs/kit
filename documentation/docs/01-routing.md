@@ -70,7 +70,7 @@ interface Fallthrough {
 	fallthrough: true;
 }
 export interface RequestHandler<Locals = Record<string, any>> {
-	(request: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
+	(event: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
 }
 ```
 
@@ -115,7 +115,7 @@ If the returned `body` is an object, and no `content-type` header is returned, i
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
 ```js
-export function post(request) {...}
+export function post(event) {...}
 ```
 
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
