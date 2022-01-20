@@ -35,16 +35,14 @@ jobs:
           cache: pnpm
 
       - uses: pnpm/action-setup@v2.0.1
-        working-directory: ./kit
         with:
           version: 6.23.2
-          run_install: |
-            - recursive: true
-              args: [--frozen-lockfile]
 
       - name: Build kit
         working-directory: ./kit
-        run: pnpm build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
 
       - name: Write template
         working-directory: ./kit/packages/create-svelte
