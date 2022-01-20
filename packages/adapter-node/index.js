@@ -54,7 +54,7 @@ export default function ({
 					PATH_ENV: JSON.stringify(path_env),
 					HOST_ENV: JSON.stringify(host_env),
 					PORT_ENV: JSON.stringify(port_env),
-					ORIGIN_ENV: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
+					ORIGIN: origin_env ? `process.env[${JSON.stringify(origin_env)}]` : 'undefined',
 					PROTOCOL_HEADER: JSON.stringify(protocol_header_env),
 					HOST_HEADER: JSON.stringify(host_header_env)
 				}

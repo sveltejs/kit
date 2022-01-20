@@ -7,10 +7,10 @@ import { getRequest, setResponse } from '@sveltejs/kit/node';
 import { App } from 'APP';
 import { manifest } from 'MANIFEST';
 
-/* global ORIGIN_ENV, PROTOCOL_HEADER, HOST_HEADER */
+/* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER */
 
 const app = new App(manifest);
-const origin = ORIGIN_ENV && process.env[ORIGIN_ENV];
+const origin = ORIGIN;
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
 
