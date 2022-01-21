@@ -22,20 +22,21 @@ If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 // everything else must be a type of string
 type ResponseHeaders = Record<string, string | string[]>;
 
-export interface RequestEvent<Locals = Record<string, any>> {
+export interface RequestEvent<Locals = Record<string, any>, Meta = Record<string, unknown>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
+	meta: Meta;
 }
 
 export interface ResolveOpts {
 	ssr?: boolean;
 }
 
-export interface Handle<Locals = Record<string, any>> {
+export interface Handle<Locals = Record<string, any>, Meta = Record<string, unknown>> {
 	(input: {
-		event: RequestEvent<Locals>;
+		event: RequestEvent<Locals, Meta>;
 		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<Response>;
 	}): MaybePromise<Response>;
 }
@@ -84,8 +85,8 @@ If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
 // Declaration types for handleError hook
-export interface HandleError<Locals = Record<string, any>> {
-	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals> }): void;
+export interface HandleError<Locals = Record<string, any>, Meta = Record<string, unknown>> {
+	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals, Meta> }): void;
 }
 ```
 
@@ -107,8 +108,12 @@ If unimplemented, session is `{}`.
 
 ```ts
 // Declaration types for getSession hook
-export interface GetSession<Locals = Record<string, any>, Session = any> {
-	(event: RequestEvent<Locals>): Session | Promise<Session>;
+export interface GetSession<
+	Locals = Record<string, any>,
+	Meta = Record<string, unknown>,
+	Session = any
+> {
+	(event: RequestEvent<Locals, Meta>): MaybePromise<Session>;
 }
 ```
 
@@ -125,7 +130,7 @@ export function getSession(event) {
 					email: event.locals.user.email,
 					avatar: event.locals.user.avatar
 				}
-			}
+		  }
 		: {};
 }
 ```
