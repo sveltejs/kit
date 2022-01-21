@@ -7,7 +7,7 @@ export interface RequestEvent<Locals = Record<string, any>, Platform = Record<st
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
-	platform: Platform;
+	platform: Readonly<Platform>;
 }
 
 export interface GetSession<
