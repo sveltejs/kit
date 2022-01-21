@@ -82,7 +82,7 @@ export async function respond({ request, meta }, options, state = {}) {
 		get: () => {
 			throw new Error(
 				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`' +
-				details
+					details
 			);
 		}
 	};

@@ -26,9 +26,9 @@ import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
 const template = ({ head, body, assets }) => ${s(load_template(cwd, config))
-		.replace('%svelte.head%', '" + head + "')
-		.replace('%svelte.body%', '" + body + "')
-		.replace(/%svelte\.assets%/g, '" + assets + "')};
+	.replace('%svelte.head%', '" + head + "')
+	.replace('%svelte.body%', '" + body + "')
+	.replace(/%svelte\.assets%/g, '" + assets + "')};
 
 let read = null;
 
@@ -243,7 +243,7 @@ export async function build_server(
 	manifest_data.routes.forEach((route) => {
 		if (route.type === 'endpoint' && lookup[route.file]) {
 			methods[route.file] = lookup[route.file]
-				.map((x) => /** @type {import('types/internal').HttpMethod} */(method_names[x]))
+				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
 				.filter(Boolean);
 		}
 	});
@@ -340,7 +340,7 @@ function get_methods(cwd, output, manifest_data) {
 	manifest_data.routes.forEach((route) => {
 		if (route.type === 'endpoint' && lookup[route.file]) {
 			methods[route.file] = lookup[route.file]
-				.map((x) => /** @type {import('types/internal').HttpMethod} */(method_names[x]))
+				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
 				.filter(Boolean);
 		}
 	});
