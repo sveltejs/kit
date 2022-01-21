@@ -128,6 +128,12 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
+	if (state.prerender) {
+		if (maxage) {
+			head += `<meta http-equiv="cache-control" content="max-age=${maxage}">`;
+		}
+	}
+
 	if (options.amp) {
 		head += `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>

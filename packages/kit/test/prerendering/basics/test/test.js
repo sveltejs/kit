@@ -37,4 +37,9 @@ test('escapes characters in redirect', () => {
 	);
 });
 
+test('inserts http-equiv tag for cache-control headers', () => {
+	const content = read('max-age/index.html');
+	assert.ok(content.includes('<meta http-equiv="cache-control" content="max-age=300">'));
+});
+
 test.run();
