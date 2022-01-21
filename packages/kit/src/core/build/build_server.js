@@ -93,14 +93,14 @@ export class App {
 		};
 	}
 
-	render({ request, meta }, {
+	render({ request, platform }, {
 		prerender
 	} = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		return respond({ request, meta }, this.options, { prerender });
+		return respond({ request, platform }, this.options, { prerender });
 	}
 }
 `;
@@ -171,14 +171,14 @@ export async function build_server(
 
 	// prettier-ignore
 	fs.writeFileSync(
-		input.app,
-		template({
-			cwd,
-			config,
-			hooks: app_relative(hooks_file),
-			has_service_worker: service_worker_register && !!service_worker_entry_file
-		})
-	);
+    input.app,
+    template({
+      cwd,
+      config,
+      hooks: app_relative(hooks_file),
+      has_service_worker: service_worker_register && !!service_worker_entry_file
+    })
+  );
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();

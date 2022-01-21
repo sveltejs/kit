@@ -5,7 +5,7 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('types/internal').Respond} */
-export async function respond({ request, meta }, options, state = {}) {
+export async function respond({ request, platform }, options, state = {}) {
 	const url = new URL(request.url);
 
 	if (url.pathname !== '/' && options.trailing_slash !== 'ignore') {
@@ -61,7 +61,7 @@ export async function respond({ request, meta }, options, state = {}) {
 		url,
 		params: {},
 		locals: {},
-		meta: meta ?? {}
+		platform: platform ?? {}
 	};
 
 	// TODO remove this for 1.0

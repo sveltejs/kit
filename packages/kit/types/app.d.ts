@@ -1,8 +1,8 @@
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
-export interface RenderEvent<Meta = Record<string, unknown>> {
+export interface RenderEvent<Platform = Record<string, unknown>> {
 	request: Request;
-	meta?: Meta;
+	platform?: Platform;
 }
 
 export class App {

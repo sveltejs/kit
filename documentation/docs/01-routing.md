@@ -51,12 +51,12 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-export interface RequestEvent<Locals = Record<string, any>, Meta = Record<string, unknown>> {
+export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, unknown>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
-	meta: Meta;
+	platform: Platform;
 }
 
 type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
@@ -71,8 +71,10 @@ interface Fallthrough {
 	fallthrough: true;
 }
 
-export interface RequestHandler<Locals = Record<string, any>, Meta = Record<string, unknown>> {
-	(event: RequestEvent<Locals, Meta>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
+export interface RequestHandler<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+	(event: RequestEvent<Locals, Platform>): MaybePromise<
+		Either<Response | EndpointOutput, Fallthrough>
+	>;
 }
 ```
 
@@ -194,7 +196,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 > `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
-#### Meta object
+#### Platform object
 
 Some adapters may pass in some extra context when calling your application. They do this by setting the `meta` object, that can be accessed in both route handlers and hooks ([detailed later](#hooks)). It is up to the adapter to decide what is passed in.
 
