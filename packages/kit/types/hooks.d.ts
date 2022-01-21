@@ -2,11 +2,12 @@ import { MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface RequestEvent<Locals = Record<string, any>> {
+export interface RequestEvent<Locals = Record<string, any>, Meta = Record<string, unknown>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
+	meta: Meta;
 }
 
 export interface GetSession<Locals = Record<string, any>, Session = any> {

@@ -1,8 +1,8 @@
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
-export interface RenderEvent<Locals = Record<string, any>> {
+export interface RenderEvent<Meta = Record<string, unknown>> {
 	request: Request;
-	locals?: Locals;
+	meta?: Meta;
 }
 
 export class App {

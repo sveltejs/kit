@@ -5,7 +5,7 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 
 /** @type {import('types/internal').Respond} */
-export async function respond({ request, locals }, options, state = {}) {
+export async function respond({ request, meta }, options, state = {}) {
 	const url = new URL(request.url);
 
 	if (url.pathname !== '/' && options.trailing_slash !== 'ignore') {
@@ -60,7 +60,8 @@ export async function respond({ request, locals }, options, state = {}) {
 		request,
 		url,
 		params: {},
-		locals: locals ?? {}
+		locals: {},
+		meta: meta ?? {}
 	};
 
 	// TODO remove this for 1.0
@@ -81,7 +82,7 @@ export async function respond({ request, locals }, options, state = {}) {
 		get: () => {
 			throw new Error(
 				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`' +
-					details
+				details
 			);
 		}
 	};
