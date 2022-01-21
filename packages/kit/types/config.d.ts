@@ -119,6 +119,7 @@ export interface Config {
 		amp?: boolean;
 		appDir?: string;
 		csp?: {
+			mode?: 'hash' | 'nonce' | 'auto';
 			directives?: CspDirectives;
 		};
 		files?: {

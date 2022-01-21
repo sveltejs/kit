@@ -55,6 +55,43 @@ const options = object(
 				return input;
 			}),
 
+			csp: object({
+				mode: list(['auto', 'hash', 'nonce']),
+				directives: object({
+					'child-src': string_array(),
+					'default-src': string_array(),
+					'frame-src': string_array(),
+					'worker-src': string_array(),
+					'connect-src': string_array(),
+					'font-src': string_array(),
+					'img-src': string_array(),
+					'manifest-src': string_array(),
+					'media-src': string_array(),
+					'object-src': string_array(),
+					'prefetch-src': string_array(),
+					'script-src': string_array(),
+					'script-src-elem': string_array(),
+					'script-src-attr': string_array(),
+					'style-src': string_array(),
+					'style-src-elem': string_array(),
+					'style-src-attr': string_array(),
+					'base-uri': string_array(),
+					sandbox: string_array(),
+					'form-action': string_array(),
+					'frame-ancestors': string_array(),
+					'navigate-to': string_array(),
+					'report-uri': string_array(),
+					'report-to': string_array(),
+					'require-trusted-types-for': string_array(),
+					'trusted-types': string_array(),
+					'upgrade-insecure-requests': boolean(false),
+					'require-sri-for': string_array(),
+					'block-all-mixed-content': boolean(false),
+					'plugin-types': string_array(),
+					referrer: string_array()
+				})
+			}),
+
 			files: object({
 				assets: string('static'),
 				hooks: string('src/hooks'),
@@ -306,6 +343,19 @@ function string(fallback, allow_empty = true) {
 
 		if (!allow_empty && input === '') {
 			throw new Error(`${keypath} cannot be empty`);
+		}
+
+		return input;
+	});
+}
+
+/**
+ * @returns {Validator}
+ */
+function string_array() {
+	return validate([], (input, keypath) => {
+		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
+			throw new Error(`${keypath} must be an array of strings, if specified`);
 		}
 
 		return input;
