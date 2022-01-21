@@ -37,7 +37,7 @@ export interface ResolveOpts {
 export interface Handle<Locals = Record<string, any>, Meta = Record<string, unknown>> {
 	(input: {
 		event: RequestEvent<Locals, Meta>;
-		resolve(event: RequestEvent<Locals>, opts?: ResolveOpts): MaybePromise<Response>;
+		resolve(event: RequestEvent<Locals, Meta>, opts?: ResolveOpts): MaybePromise<Response>;
 	}): MaybePromise<Response>;
 }
 ```
