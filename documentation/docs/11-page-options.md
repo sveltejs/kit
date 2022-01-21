@@ -58,7 +58,7 @@ The basic rule is this: for a page to be prerenderable, any two users hitting it
 
 Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The prerenderer will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
 
-Accessing [`page.query`](#loading-input-page) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
+Accessing [`url.searchParams`](#loading-input-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
 #### Route conflicts
 
