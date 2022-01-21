@@ -1,3 +1,4 @@
+import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { UserConfig as ViteConfig } from 'vite';
 import { RecursiveRequired } from './helper';
 import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
@@ -110,7 +111,7 @@ export interface PrerenderErrorHandler {
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
 export interface Config {
-	compilerOptions?: any;
+	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
