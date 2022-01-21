@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.237
+
+### Patch Changes
+
+- Type compilerOptions as CompileOptions instead of any ([#3486](https://github.com/sveltejs/kit/pull/3486))
+
 ## 1.0.0-next.236
 
 ### Patch Changes
