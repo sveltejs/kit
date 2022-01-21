@@ -61,7 +61,7 @@ export async function getRequest(base, req) {
 
 /** @type {import('@sveltejs/kit/node').SetResponse} */
 export async function setResponse(res, response) {
-	res.writeHead(response.status, Object.fromEntries(response.headers));
+	res.writeHead(response.status, Object.fromEntries(response.headers.entries()));
 
 	if (response.body instanceof Readable) {
 		response.body.pipe(res);
