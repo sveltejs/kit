@@ -11,10 +11,8 @@ import { mkdirp, copy, dist } from './utils.js';
 export async function create(cwd, options) {
 	mkdirp(cwd);
 
-	const name = path.basename(path.resolve(cwd));
-
-	write_template_files(options.template, options.typescript, name, cwd);
-	write_common_files(cwd, options, name);
+	write_template_files(options.template, options.typescript, options.name, cwd);
+	write_common_files(cwd, options, options.name);
 }
 
 /**

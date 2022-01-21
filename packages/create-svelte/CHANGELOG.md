@@ -1,5 +1,15 @@
 # create-svelte
 
+## 2.0.0-next.99
+
+### Patch Changes
+
+- Respect Ctrl-C when running create-svelte ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+* Make project name an explicit option' ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+- Prompt for directory when running create-svelte without argument ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
 ## 2.0.0-next.98
 
 ### Patch Changes
