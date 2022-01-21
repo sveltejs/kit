@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.238
+
+### Patch Changes
+
+- Escape prerendered redirect locations, instead of encoding them ([#3456](https://github.com/sveltejs/kit/pull/3456))
+
 ## 1.0.0-next.237
 
 ### Patch Changes
