@@ -444,37 +444,20 @@ test.describe.parallel('Endpoints', () => {
 			server.close();
 		}
 	});
+
 	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
-		const response = await request.get('/multicookie/setcookies');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(response.headers()['set-cookie']).toBeDefined();
+		const response = await request.get('/set-cookie');
+
 		const cookies = response
 			.headersArray()
 			.filter((obj) => obj.name === 'set-cookie')
 			.map((obj) => obj.value);
-		expect(cookies.length).toBeGreaterThan(1);
-		expect(cookies.find((cookie) => cookie.startsWith('x='))).toBe('x=y');
-		expect(cookies.find((cookie) => cookie.startsWith('foo='))).toBe('foo=bar; SameSite=Lax');
-		expect(cookies.find((cookie) => cookie.startsWith('current_wish='))).toBe(
-			'current_wish=fix, this, stuff; HttpOnly; Secure'
-		);
-	});
-	test('multiple set-cookie on endpoints using POST', async ({ request }) => {
-		const response = await request.post('/multicookie/setcookies');
-		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
-		expect(response.headers()['set-cookie']).toBeDefined();
-		const cookies = response
-			.headersArray()
-			.filter((obj) => obj.name === 'set-cookie')
-			.map((obj) => obj.value);
-		expect(cookies.length).toBeGreaterThan(1);
-		expect(cookies.find((cookie) => cookie.startsWith('post_x='))).toBe('post_x=y');
-		expect(cookies.find((cookie) => cookie.startsWith('post_foo='))).toBe(
-			'post_foo=bar; SameSite=Lax'
-		);
-		expect(cookies.find((cookie) => cookie.startsWith('post_current_wish='))).toBe(
-			'post_current_wish=fix, this, stuff; HttpOnly; Secure'
-		);
+
+		expect(cookies).toEqual([
+			'answer=42; HttpOnly',
+			'problem=comma, separated, values; HttpOnly',
+			'name=SvelteKit; path=/; HttpOnly'
+		]);
 	});
 });
 
