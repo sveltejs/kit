@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.240
+
+### Patch Changes
+
+- Error if handle hook returns something other than a Response ([#3496](https://github.com/sveltejs/kit/pull/3496))
+
+* allow setting multiple set-cookie headers ([#3502](https://github.com/sveltejs/kit/pull/3502))
+
+- fixed prerendering with base path configured ([#3500](https://github.com/sveltejs/kit/pull/3500))
+
 ## 1.0.0-next.239
 
 ### Patch Changes
