@@ -1,4 +1,5 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
@@ -115,6 +116,7 @@ export interface SSRNode {
 
 export interface SSRRenderOptions {
 	amp: boolean;
+	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
