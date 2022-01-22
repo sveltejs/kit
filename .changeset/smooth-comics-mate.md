@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fixed prerendering if base path is set
+fixed prerendering with base path configured
