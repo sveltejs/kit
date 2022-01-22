@@ -36,6 +36,16 @@ export async function render_response({
 	ssr,
 	stuff
 }) {
+	if (state.prerender) {
+		if (options.csp.mode === 'nonce') {
+			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
+		}
+
+		if (options.template_contains_nonce) {
+			throw new Error('Cannot use prerendering if page template contains %svelte.nonce%');
+		}
+	}
+
 	const stylesheets = new Set(options.manifest._.entry.css);
 	const modulepreloads = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
@@ -128,6 +138,7 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
+	// CSP stuff
 	const script_src = options.csp.directives['script-src'] || options.csp.directives['default-src'];
 	const style_src = options.csp.directives['style-src'] || options.csp.directives['default-src'];
 
@@ -137,8 +148,15 @@ export async function render_response({
 	const needs_styles_csp =
 		style_src && style_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
+	const use_hashes =
+		options.csp.mode === 'hash' || (options.csp.mode === 'auto' && state.prerender);
+
+	const use_nonce = options.csp.mode !== 'hash';
+
+	const nonce = (use_nonce || options.template_contains_nonce) && generate_nonce();
+
 	// prettier-ignore
-	const init = `
+	const init_app = `
 		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 		start({
 			target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
@@ -160,7 +178,14 @@ export async function render_response({
 				url: new URL(${s(url.href)}),
 				params: ${devalue(params)}
 			}` : 'null'}
-		});`;
+		});
+	`;
+
+	const init_service_worker = `
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('${options.service_worker}');
+		}
+	`;
 
 	if (state.prerender) {
 		if (maxage) {
@@ -200,7 +225,7 @@ export async function render_response({
 				.join('');
 
 			head += `
-			<script type="module">${init}</script>`;
+			<script type="module">${init_app}</script>`;
 
 			body += serialized_data
 				.map(({ url, body, json }) => {
@@ -229,7 +254,7 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.template({ head, body, assets });
+	const html = options.template({ head, body, assets, nonce });
 
 	const headers = new Headers({
 		'content-type': 'text/html',
