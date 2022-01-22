@@ -100,7 +100,7 @@ export async function respond({ request, platform }, options, state = {}) {
 	let ssr = true;
 
 	try {
-		return await options.hooks.handle({
+		const response = await options.hooks.handle({
 			event,
 			resolve: async (event, opts) => {
 				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
@@ -196,6 +196,13 @@ export async function respond({ request, platform }, options, state = {}) {
 				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
+
+		// TODO for 1.0, change the error message to point to docs rather than PR
+		if (response && !(response instanceof Response)) {
+			throw new Error('handle must return a Response object' + details);
+		}
+
+		return response;
 	} catch (/** @type {unknown} */ e) {
 		const error = coalesce_to_error(e);
 

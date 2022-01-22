@@ -7,6 +7,7 @@ import { SVELTE_KIT } from '../../constants.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
+import { escape_html_attr } from '../../../utils/escape.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -131,16 +132,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	async function visit(path, decoded_path, referrer) {
 		/** @type {Map<string, Response>} */
 		const dependencies = new Map();
+		const render_path = config.kit.paths?.base
+			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
+			: `http://sveltekit-prerender${path}`;
 
 		const rendered = await app.render(
 			{
-				request: new Request(`http://sveltekit-prerender${path}`)
+				request: new Request(render_path)
 			},
-			{
-				prerender: {
-					all,
-					dependencies
-				}
+			prerender: {
+				all,
+				dependencies
 			}
 		);
 
@@ -163,7 +165,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					mkdirp(dirname(file));
 
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+
+					writeFileSync(
+						file,
+						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+					);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {

@@ -65,9 +65,8 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
-	const { request } = event;
-	const response = await resolve(request, {
-		ssr: !request.url.pathname.startsWith('/admin')
+	const response = await resolve(event, {
+		ssr: !event.url.pathname.startsWith('/admin')
 	});
 
 	return response;

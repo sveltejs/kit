@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
-export function getRawBody(req) {
+function get_raw_body(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;
 
@@ -55,13 +55,21 @@ export async function getRequest(base, req) {
 	return new Request(base + req.url, {
 		method: req.method,
 		headers: /** @type {Record<string, string>} */ (req.headers),
-		body: await getRawBody(req)
+		body: await get_raw_body(req) // TODO stream rather than buffer
 	});
 }
 
 /** @type {import('@sveltejs/kit/node').SetResponse} */
 export async function setResponse(res, response) {
-	res.writeHead(response.status, Object.fromEntries(response.headers));
+	/** @type {import('../types/helper').ResponseHeaders} */
+	const headers = Object.fromEntries(response.headers);
+
+	if (response.headers.has('set-cookie')) {
+		// @ts-expect-error (headers.raw() is non-standard)
+		headers['set-cookie'] = response.headers.raw()['set-cookie'];
+	}
+
+	res.writeHead(response.status, headers);
 
 	if (response.body instanceof Readable) {
 		response.body.pipe(res);

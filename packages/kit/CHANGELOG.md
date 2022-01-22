@@ -1,5 +1,33 @@
 # @sveltejs/kit
 
+## 1.0.0-next.240
+
+### Patch Changes
+
+- Error if handle hook returns something other than a Response ([#3496](https://github.com/sveltejs/kit/pull/3496))
+
+* allow setting multiple set-cookie headers ([#3502](https://github.com/sveltejs/kit/pull/3502))
+
+- fixed prerendering with base path configured ([#3500](https://github.com/sveltejs/kit/pull/3500))
+
+## 1.0.0-next.239
+
+### Patch Changes
+
+- Insert <meta http-equiv> cache-control header when prerendering ([#3493](https://github.com/sveltejs/kit/pull/3493))
+
+## 1.0.0-next.238
+
+### Patch Changes
+
+- Escape prerendered redirect locations, instead of encoding them ([#3456](https://github.com/sveltejs/kit/pull/3456))
+
+## 1.0.0-next.237
+
+### Patch Changes
+
+- Type compilerOptions as CompileOptions instead of any ([#3486](https://github.com/sveltejs/kit/pull/3486))
+
 ## 1.0.0-next.236
 
 ### Patch Changes
