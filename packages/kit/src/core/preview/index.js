@@ -7,7 +7,7 @@ import { pathToFileURL } from 'url';
 import { getRawBody } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { to_headers } from '../../utils/http.js';
+import { to_headers, to_out_headers } from '../../utils/http.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -103,7 +103,8 @@ export async function preview({
 					})
 				);
 
-				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+				//res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
+				res.writeHead(rendered.status, to_out_headers(rendered));
 				if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
 				res.end();
 			} else {

@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-
+import { to_out_headers } from './utils/http.js';
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
 export function getRawBody(req) {
 	return new Promise((fulfil, reject) => {
@@ -61,7 +61,7 @@ export async function getRequest(base, req) {
 
 /** @type {import('@sveltejs/kit/node').SetResponse} */
 export async function setResponse(res, response) {
-	res.writeHead(response.status, Object.fromEntries(response.headers));
+	res.writeHead(response.status, to_out_headers(response));
 
 	if (response.body instanceof Readable) {
 		response.body.pipe(res);
