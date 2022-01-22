@@ -132,8 +132,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	async function visit(path, decoded_path, referrer) {
 		/** @type {Map<string, Response>} */
 		const dependencies = new Map();
+		const render_path = config.kit.paths?.base
+			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
+			: `http://sveltekit-prerender${path}`;
 
-		const rendered = await app.render(new Request(`http://sveltekit-prerender${path}`), {
+		const rendered = await app.render(new Request(render_path), {
 			prerender: {
 				all,
 				dependencies
