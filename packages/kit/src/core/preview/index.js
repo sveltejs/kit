@@ -4,10 +4,9 @@ import https from 'https';
 import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRawBody, getRequest, setResponse } from '../../node.js';
+import { getRequest, setResponse } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { to_headers } from '../../utils/http.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
