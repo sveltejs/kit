@@ -187,12 +187,6 @@ export async function render_response({
 		}
 	`;
 
-	if (state.prerender) {
-		if (maxage) {
-			head += `<meta http-equiv="cache-control" content="max-age=${maxage}">`;
-		}
-	}
-
 	if (options.amp) {
 		head += `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
@@ -242,12 +236,23 @@ export async function render_response({
 		if (options.service_worker) {
 			// always include service worker unless it's turned off explicitly
 			head += `
-			<script>
-				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.register('${options.service_worker}');
-				}
-			</script>`;
+			<script>${init_service_worker}</script>`;
 		}
+	}
+
+	if (state.prerender) {
+		/** @type {Array<{ key: string, value: string }>} */
+		const http_equiv = [];
+
+		if (maxage) {
+			http_equiv.push({ key: 'cache-control', value: `max-age=${maxage}` });
+		}
+
+		const tags = http_equiv.map(
+			({ key, value }) => `<meta http-equiv="${key}" content=${escape_html_attr(value)}>`
+		);
+
+		head = tags + head;
 	}
 
 	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
