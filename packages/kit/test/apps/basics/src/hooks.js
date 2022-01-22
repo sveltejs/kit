@@ -36,7 +36,7 @@ export const handle = sequence(
 		}
 
 		const response = await resolve(event, { ssr: !event.url.pathname.startsWith('/no-ssr') });
-		response.headers.set('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
+		response.headers.append('set-cookie', 'name=SvelteKit; path=/; HttpOnly');
 
 		return response;
 	}

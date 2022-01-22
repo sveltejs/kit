@@ -444,6 +444,21 @@ test.describe.parallel('Endpoints', () => {
 			server.close();
 		}
 	});
+
+	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
+		const response = await request.get('/set-cookie');
+
+		const cookies = response
+			.headersArray()
+			.filter((obj) => obj.name === 'set-cookie')
+			.map((obj) => obj.value);
+
+		expect(cookies).toEqual([
+			'answer=42; HttpOnly',
+			'problem=comma, separated, values; HttpOnly',
+			'name=SvelteKit; path=/; HttpOnly'
+		]);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
