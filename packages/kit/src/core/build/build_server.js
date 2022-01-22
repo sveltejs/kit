@@ -60,6 +60,7 @@ export class App {
 
 		this.options = {
 			amp: ${config.kit.amp},
+			csp: ${s(config.kit.csp)},
 			dev: false,
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security

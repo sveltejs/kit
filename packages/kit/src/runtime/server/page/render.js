@@ -36,8 +36,8 @@ export async function render_response({
 	ssr,
 	stuff
 }) {
-	const css = new Set(options.manifest._.entry.css);
-	const js = new Set(options.manifest._.entry.js);
+	const stylesheets = new Set(options.manifest._.entry.css);
+	const modulepreloads = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
 	const styles = new Map();
 
@@ -55,8 +55,8 @@ export async function render_response({
 
 	if (ssr) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
-			if (node.css) node.css.forEach((url) => css.add(url));
-			if (node.js) node.js.forEach((url) => js.add(url));
+			if (node.css) node.css.forEach((url) => stylesheets.add(url));
+			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
@@ -128,6 +128,39 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
+	const needs_scripts_csp =
+		options.csp.directives['script-src'] &&
+		options.csp.directives['script-src'].filter((value) => value !== 'unsafe-inline').length > 0;
+
+	const needs_styles_csp =
+		options.csp.directives['style-src'] &&
+		options.csp.directives['style-src'].filter((value) => value !== 'unsafe-inline').length > 0;
+
+	// prettier-ignore
+	const init = `
+		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+		start({
+			target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+			paths: ${s(options.paths)},
+			session: ${try_serialize($session, (error) => {
+				throw new Error(`Failed to serialize session data: ${error.message}`);
+			})},
+			route: ${!!page_config.router},
+			spa: ${!ssr},
+			trailing_slash: ${s(options.trailing_slash)},
+			hydrate: ${ssr && page_config.hydrate ? `{
+				status: ${status},
+				error: ${serialize_error(error)},
+				nodes: [
+					${(branch || [])
+					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+					.join(',\n\t\t\t\t\t\t')}
+				],
+				url: new URL(${s(url.href)}),
+				params: ${devalue(params)}
+			}` : 'null'}
+		});`;
+
 	if (state.prerender) {
 		if (maxage) {
 			head += `<meta http-equiv="cache-control" content="max-age=${maxage}">`;
@@ -150,43 +183,23 @@ export async function render_response({
 		}
 	} else {
 		if (inlined_style) {
-			head += `\n\t<style${options.dev ? ' data-svelte' : ''}>${inlined_style}</style>`;
+			const attributes = [];
+			if (options.dev) attributes.push(' data-svelte');
+
+			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
 		}
 		// prettier-ignore
-		head += Array.from(css)
+		head += Array.from(stylesheets)
 			.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled media="(max-width: 0)"' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
 			.join('');
 
 		if (page_config.router || page_config.hydrate) {
-			head += Array.from(js)
+			head += Array.from(modulepreloads)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
-			// prettier-ignore
+
 			head += `
-			<script type="module">
-				import { start } from ${s(options.prefix + options.manifest._.entry.file)};
-				start({
-					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-					paths: ${s(options.paths)},
-					session: ${try_serialize($session, (error) => {
-						throw new Error(`Failed to serialize session data: ${error.message}`);
-					})},
-					route: ${!!page_config.router},
-					spa: ${!ssr},
-					trailing_slash: ${s(options.trailing_slash)},
-					hydrate: ${ssr && page_config.hydrate ? `{
-						status: ${status},
-						error: ${serialize_error(error)},
-						nodes: [
-							${(branch || [])
-							.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-							.join(',\n\t\t\t\t\t\t')}
-						],
-						url: new URL(${s(url.href)}),
-						params: ${devalue(params)}
-					}` : 'null'}
-				});
-			</script>`;
+			<script type="module">${init}</script>`;
 
 			body += serialized_data
 				.map(({ url, body, json }) => {

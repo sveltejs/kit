@@ -224,6 +224,7 @@ export async function create_plugin(config, cwd) {
 							}),
 							{
 								amp: config.kit.amp,
+								csp: config.kit.csp,
 								dev: true,
 								floc: config.kit.floc,
 								get_stack: (error) => {

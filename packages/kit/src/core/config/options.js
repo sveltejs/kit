@@ -350,10 +350,13 @@ function string(fallback, allow_empty = true) {
 }
 
 /**
+ * @param {string[] | undefined} [fallback]
  * @returns {Validator}
  */
-function string_array() {
-	return validate([], (input, keypath) => {
+function string_array(fallback) {
+	return validate(fallback, (input, keypath) => {
+		if (input === undefined) return input;
+
 		if (!Array.isArray(input) || input.some((value) => typeof value !== 'string')) {
 			throw new Error(`${keypath} must be an array of strings, if specified`);
 		}
