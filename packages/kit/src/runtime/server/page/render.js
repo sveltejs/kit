@@ -128,13 +128,14 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
+	const script_src = options.csp.directives['script-src'] || options.csp.directives['default-src'];
+	const style_src = options.csp.directives['style-src'] || options.csp.directives['default-src'];
+
 	const needs_scripts_csp =
-		options.csp.directives['script-src'] &&
-		options.csp.directives['script-src'].filter((value) => value !== 'unsafe-inline').length > 0;
+		script_src && script_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
 	const needs_styles_csp =
-		options.csp.directives['style-src'] &&
-		options.csp.directives['style-src'].filter((value) => value !== 'unsafe-inline').length > 0;
+		style_src && style_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
 	// prettier-ignore
 	const init = `
