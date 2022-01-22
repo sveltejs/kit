@@ -198,7 +198,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 #### Platform object
 
-Some adapters may pass in some extra context when calling your application. They do this by setting the `meta` object, that can be accessed in both route handlers and hooks ([detailed later](#hooks)). It is up to the adapter to decide what is passed in.
+Some adapters may pass in some extra context when calling your application. They do this by setting the `platform` object, that can be accessed in both route handlers and hooks ([detailed later](#hooks)). It is up to the adapter to decide what is passed in.
 
 #### Fallthrough routes
 
