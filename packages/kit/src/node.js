@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
-export function getRawBody(req) {
+function get_raw_body(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;
 
@@ -55,7 +55,7 @@ export async function getRequest(base, req) {
 	return new Request(base + req.url, {
 		method: req.method,
 		headers: /** @type {Record<string, string>} */ (req.headers),
-		body: await getRawBody(req)
+		body: await get_raw_body(req) // TODO stream rather than buffer
 	});
 }
 
