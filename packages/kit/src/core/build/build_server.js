@@ -169,16 +169,15 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	// prettier-ignore
 	fs.writeFileSync(
-    input.app,
-    template({
-      cwd,
-      config,
-      hooks: app_relative(hooks_file),
-      has_service_worker: service_worker_register && !!service_worker_entry_file
-    })
-  );
+		input.app,
+		template({
+			cwd,
+			config,
+			hooks: app_relative(hooks_file),
+			has_service_worker: service_worker_register && !!service_worker_entry_file
+		})
+	);
 
 	/** @type {import('vite').UserConfig} */
 	const vite_config = config.kit.vite();

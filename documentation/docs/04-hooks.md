@@ -131,7 +131,7 @@ export function getSession(event) {
 					email: event.locals.user.email,
 					avatar: event.locals.user.avatar
 				}
-		  }
+			}
 		: {};
 }
 ```
