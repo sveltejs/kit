@@ -196,7 +196,7 @@ export async function respond(request, options, state = {}) {
 			}
 		});
 
-		// TODO remove for 1.0
+		// TODO for 1.0, change the error message to point to docs rather than PR
 		if (response && !(response instanceof Response)) {
 			throw new Error('handle must return a Response object' + details);
 		}
