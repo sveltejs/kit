@@ -140,9 +140,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			{
 				request: new Request(render_path)
 			},
-			prerender: {
-				all,
-				dependencies
+			{
+				prerender: {
+					all,
+					dependencies
+				}
 			}
 		);
 
