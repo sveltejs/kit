@@ -5,10 +5,16 @@ import { Either } from './helper';
 import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
 import { Load } from './page';
 
+export interface PrerenderDependency {
+	status: number;
+	headers: Headers;
+	body?: string | Uint8Array;
+}
+
 export interface PrerenderOptions {
 	fallback?: string;
 	all: boolean;
-	dependencies: Map<string, Response>;
+	dependencies: Map<string, PrerenderDependency>;
 }
 
 export interface AppModule {

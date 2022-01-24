@@ -98,6 +98,9 @@ export async function load_node({
 
 				let response;
 
+				/** @type {import('types/internal').PrerenderDependency} */
+				let dependency;
+
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = options.paths.assets || options.paths.base;
@@ -124,8 +127,6 @@ export async function load_node({
 						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
 					}
 				} else if (is_root_relative(resolved)) {
-					const relative = resolved;
-
 					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
@@ -161,7 +162,12 @@ export async function load_node({
 
 					if (rendered) {
 						if (state.prerender) {
-							state.prerender.dependencies.set(relative, rendered);
+							dependency = {
+								status: rendered.status,
+								headers: rendered.headers
+							};
+
+							state.prerender.dependencies.set(resolved, dependency);
 						}
 
 						response = rendered;
@@ -208,8 +214,7 @@ export async function load_node({
 					const proxy = new Proxy(response, {
 						get(response, key, _receiver) {
 							async function text() {
-								const cloned_response = response.clone();
-								const body = await cloned_response.text();
+								const body = await response.text();
 
 								/** @type {import('types/helper').ResponseHeaders} */
 								const headers = {};
@@ -230,6 +235,10 @@ export async function load_node({
 									});
 								}
 
+								if (dependency) {
+									dependency.body = body;
+								}
+
 								return body;
 							}
 
@@ -243,7 +252,20 @@ export async function load_node({
 								};
 							}
 
-							// TODO arrayBuffer?
+							if (key === 'arrayBuffer') {
+								return async () => {
+									const buffer = await response.arrayBuffer();
+
+									if (dependency) {
+										dependency.body = new Uint8Array(buffer);
+									}
+
+									// TODO should buffer be inlined into the page (albeit base64'd)?
+									// any conditions in which it shouldn't be?
+
+									return buffer;
+								};
+							}
 
 							return Reflect.get(response, key, response);
 						}

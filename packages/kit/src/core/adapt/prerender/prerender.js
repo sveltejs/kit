@@ -130,8 +130,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, Response>} */
+		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
+
 		const render_path = config.kit.paths?.base
 			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
 			: `http://sveltekit-prerender${path}`;
@@ -205,7 +206,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				if (result.body) {
-					writeFileSync(file, await result.text());
+					writeFileSync(file, result.body);
 					paths.push(dependency_path);
 				}
 
