@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.43
+
+### Patch Changes
+
+- Bump version to trigger rebuild with set-cookie support ([#3529](https://github.com/sveltejs/kit/pull/3529))
+
 ## 1.0.0-next.42
 
 ### Patch Changes
