@@ -262,11 +262,13 @@ export async function create_plugin(config, cwd) {
 								root,
 								router: config.kit.router,
 								target: config.kit.target,
-								template: ({ head, body, assets }) => {
+								template: ({ head, body, assets, nonce }) => {
 									let rendered = template
+										.replace(/%svelte\.assets%/g, assets)
+										.replace(/%svelte\.nonce%/g, nonce)
+										// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
 										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body)
-										.replace(/%svelte\.assets%/g, assets);
+										.replace('%svelte.body%', () => body);
 
 									if (amp) {
 										const result = amp.validateString(rendered);

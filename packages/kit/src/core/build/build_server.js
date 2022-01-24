@@ -25,10 +25,11 @@ import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
-const template = ({ head, body, assets }) => ${s(template)
+const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%svelte.head%', '" + head + "')
 	.replace('%svelte.body%', '" + body + "')
-	.replace(/%svelte\.assets%/g, '" + assets + "')};
+	.replace(/%svelte\.assets%/g, '" + assets + "')}
+	.replace(/%svelte\.nonce%/g, '" + nonce + "')};
 
 let read = null;
 
