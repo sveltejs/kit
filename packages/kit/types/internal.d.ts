@@ -136,7 +136,18 @@ export interface SSRRenderOptions {
 	router: boolean;
 	service_worker?: string;
 	target: string;
-	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
+	template({
+		head,
+		body,
+		assets,
+		nonce
+	}: {
+		head: string;
+		body: string;
+		assets: string;
+		nonce: string;
+	}): string;
+	template_contains_nonce: boolean;
 	trailing_slash: TrailingSlash;
 }
 

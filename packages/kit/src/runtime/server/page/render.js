@@ -5,6 +5,7 @@ import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
+import { Csp } from './csp.js';
 
 // TODO rename this function/module
 
@@ -138,22 +139,7 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
-	// CSP stuff
-	const script_src = options.csp.directives['script-src'] || options.csp.directives['default-src'];
-	const style_src = options.csp.directives['style-src'] || options.csp.directives['default-src'];
-
-	const needs_scripts_csp =
-		script_src && script_src.filter((value) => value !== 'unsafe-inline').length > 0;
-
-	const needs_styles_csp =
-		style_src && style_src.filter((value) => value !== 'unsafe-inline').length > 0;
-
-	const use_hashes =
-		options.csp.mode === 'hash' || (options.csp.mode === 'auto' && state.prerender);
-
-	const use_nonce = options.csp.mode !== 'hash';
-
-	const nonce = (use_nonce || options.template_contains_nonce) && generate_nonce();
+	const csp = new Csp(options.csp, !!state.prerender);
 
 	// prettier-ignore
 	const init_app = `
@@ -205,12 +191,31 @@ export async function render_response({
 		if (inlined_style) {
 			const attributes = [];
 			if (options.dev) attributes.push(' data-svelte');
+			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
+
+			await csp.add_style(inlined_style);
 
 			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
 		}
+
 		// prettier-ignore
 		head += Array.from(stylesheets)
-			.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled media="(max-width: 0)"' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
+			.map((dep) => {
+				const attributes = [
+					'rel="stylesheet"',
+					`href="${options.prefix + dep}"`
+				];
+
+				if (csp.style_needs_nonce) {
+					attributes.push(`nonce="${csp.nonce}"`);
+				}
+
+				if (styles.has(dep)) {
+					attributes.push('disabled', 'media="(max-width: 0)"');
+				}
+
+				return `\n\t<link${attributes.join(' ')}>`
+			})
 			.join('');
 
 		if (page_config.router || page_config.hydrate) {
@@ -218,14 +223,20 @@ export async function render_response({
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
 
-			head += `
-			<script type="module">${init_app}</script>`;
+			const attributes = ['type="module"'];
 
+			await csp.add_script(init_app);
+
+			if (csp.script_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			head += `<script ${attributes.join(' ')}>${init_app}</script>`;
+
+			// prettier-ignore
 			body += serialized_data
 				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
-						url
-					)}`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(url)}`;
 					if (body) attributes += ` data-body="${hash(body)}"`;
 
 					return `<script ${attributes}>${json}</script>`;
@@ -235,31 +246,35 @@ export async function render_response({
 
 		if (options.service_worker) {
 			// always include service worker unless it's turned off explicitly
+			await csp.add_script(init_service_worker);
+
 			head += `
-			<script>${init_service_worker}</script>`;
+				<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
 		}
 	}
 
 	if (state.prerender) {
-		/** @type {Array<{ key: string, value: string }>} */
 		const http_equiv = [];
 
-		if (maxage) {
-			http_equiv.push({ key: 'cache-control', value: `max-age=${maxage}` });
+		const csp_headers = csp.get_meta();
+		if (csp_headers) {
+			http_equiv.push(csp_headers);
 		}
 
-		const tags = http_equiv.map(
-			({ key, value }) => `<meta http-equiv="${key}" content=${escape_html_attr(value)}>`
-		);
+		if (maxage) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${maxage}">`);
+		}
 
-		head = tags + head;
+		if (http_equiv.length > 0) {
+			head = http_equiv.join('\n') + head;
+		}
 	}
 
 	const segments = url.pathname.slice(options.paths.base.length).split('/').slice(2);
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.template({ head, body, assets, nonce });
+	const html = options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) });
 
 	const headers = new Headers({
 		'content-type': 'text/html',
@@ -274,10 +289,40 @@ export async function render_response({
 		headers.set('permissions-policy', 'interest-cohort=()');
 	}
 
+	if (!state.prerender) {
+		headers.set('content-security-policy', csp.get_header());
+	}
+
 	return new Response(html, {
 		status,
 		headers
 	});
+}
+
+/**
+ *
+ * @param {string} type
+ * @param {Record<string, string | true>} attributes
+ * @param {string} [content]
+ */
+function element(type, attributes, content) {
+	let result = `<${type}`;
+
+	for (const key in attributes) {
+		const value = attributes[key];
+		result += ' ' + key;
+		if (value !== true) {
+			result += escape_html_attr(value);
+		}
+	}
+
+	if (content) {
+		result += `>${content}</${type}>`;
+	} else {
+		result += '/>';
+	}
+
+	return result;
 }
 
 /**

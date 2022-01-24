@@ -216,6 +216,8 @@ export async function create_plugin(config, cwd) {
 							return res.end(err.reason || 'Invalid request body');
 						}
 
+						const template = load_template(cwd, config);
+
 						const rendered = await respond(
 							new Request(url.href, {
 								headers: /** @type {Record<string, string>} */ (req.headers),
@@ -261,7 +263,7 @@ export async function create_plugin(config, cwd) {
 								router: config.kit.router,
 								target: config.kit.target,
 								template: ({ head, body, assets }) => {
-									let rendered = load_template(cwd, config)
+									let rendered = template
 										.replace('%svelte.head%', () => head)
 										.replace('%svelte.body%', () => body)
 										.replace(/%svelte\.assets%/g, assets);
@@ -312,6 +314,7 @@ export async function create_plugin(config, cwd) {
 
 									return rendered;
 								},
+								template_contains_nonce: template.includes('%svelte.nonce%'),
 								trailing_slash: config.kit.trailingSlash
 							}
 						);

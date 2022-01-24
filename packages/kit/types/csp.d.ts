@@ -37,7 +37,7 @@ type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 
 type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
 
-type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
+export type Source = HostSource | SchemeSource | CryptoSource | BaseSource;
 type Sources = Source[];
 
 type ActionSource = 'strict-dynamic' | 'report-sample';
