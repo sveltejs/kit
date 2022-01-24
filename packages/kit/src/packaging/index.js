@@ -15,6 +15,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	const package_dir = config.kit.package.dir;
 	const abs_package_dir = path.isAbsolute(package_dir) ? package_dir : path.join(cwd, package_dir);
 	rimraf(abs_package_dir);
+	mkdirp(abs_package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
 	if (config.kit.package.emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
