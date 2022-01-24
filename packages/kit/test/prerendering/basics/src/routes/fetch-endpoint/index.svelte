@@ -1,7 +1,7 @@
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ fetch }) {
-		const url = `/fetch-endpoint.json`;
+		const url = '/fetch-endpoint.json';
 		const res = await fetch(url);
 		const { test } = await res.json();
 
