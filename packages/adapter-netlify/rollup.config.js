@@ -19,6 +19,6 @@ export default [
 			}
 		],
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['APP', ...require('module').builtinModules]
+		external: ['App', ...require('module').builtinModules]
 	}
 ];
