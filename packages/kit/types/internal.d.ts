@@ -6,9 +6,8 @@ import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } 
 import { Load } from './page';
 
 export interface PrerenderDependency {
-	status: number;
-	headers: Headers;
-	body?: string | Uint8Array;
+	response: Response;
+	body: null | string | Uint8Array;
 }
 
 export interface PrerenderOptions {

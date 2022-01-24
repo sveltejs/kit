@@ -193,9 +193,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			for (const [dependency_path, result] of dependencies) {
-				const response_type = Math.floor(result.status / 100);
+				const { status, headers } = result.response;
 
-				const is_html = result.headers.get('content-type') === 'text/html';
+				const response_type = Math.floor(status / 100);
+
+				const is_html = headers.get('content-type') === 'text/html';
 
 				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -205,16 +207,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				if (result.body) {
-					writeFileSync(file, result.body);
-					paths.push(dependency_path);
-				}
+				writeFileSync(
+					file,
+					result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
+				);
+				paths.push(dependency_path);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${dependency_path}`);
+					log.info(`${status} ${dependency_path}`);
 				} else {
 					error({
-						status: result.status,
+						status,
 						path: dependency_path,
 						referrer: path,
 						referenceType: 'fetched'

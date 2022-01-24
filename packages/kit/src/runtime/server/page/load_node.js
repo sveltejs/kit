@@ -163,8 +163,8 @@ export async function load_node({
 					if (rendered) {
 						if (state.prerender) {
 							dependency = {
-								status: rendered.status,
-								headers: rendered.headers
+								response: rendered,
+								body: null
 							};
 
 							state.prerender.dependencies.set(resolved, dependency);
