@@ -208,8 +208,7 @@ export async function load_node({
 					const proxy = new Proxy(response, {
 						get(response, key, _receiver) {
 							async function text() {
-								const cloned_response = response.clone();
-								const body = await cloned_response.text();
+								const body = await response.text();
 
 								/** @type {import('types/helper').ResponseHeaders} */
 								const headers = {};
