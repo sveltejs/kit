@@ -205,7 +205,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				mkdirp(dirname(file));
 
 				if (result.body) {
-					writeFileSync(file, await result.text());
+					writeFileSync(file, text);
 					paths.push(dependency_path);
 				}
 
