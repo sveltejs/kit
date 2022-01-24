@@ -15,6 +15,7 @@ export async function make_package(config, cwd = process.cwd()) {
 	const package_dir = config.kit.package.dir;
 	const abs_package_dir = path.isAbsolute(package_dir) ? package_dir : path.join(cwd, package_dir);
 	rimraf(abs_package_dir);
+	mkdirp(abs_package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
 	if (config.kit.package.emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
@@ -62,25 +63,28 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 
 		const filename = path.join(config.kit.files.lib, file);
-		const source = fs.readFileSync(filename, 'utf8');
+		const source = fs.readFileSync(filename);
 
 		/** @type {string} */
 		let out_file;
 
-		/** @type {string} */
+		/** @type {string | Buffer} */
 		let out_contents;
 
 		if (svelte_ext) {
 			// it's a Svelte component
-			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
-			out_contents = config.preprocess
-				? strip_lang_tags((await preprocess(source, config.preprocess, { filename })).code)
-				: source;
 			contains_svelte_files = true;
+			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
+			out_contents = source.toString('utf-8');
+			out_contents = config.preprocess
+				? strip_lang_tags((await preprocess(out_contents, config.preprocess, { filename })).code)
+				: out_contents;
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
-			out_contents = source;
+			out_contents = source.toString('utf-8');
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
 			if (fs.existsSync(path.join(abs_package_dir, out_file))) {
 				console.warn(
 					'Found already existing file from d.ts generation for ' +
@@ -90,12 +94,12 @@ export async function make_package(config, cwd = process.cwd()) {
 			}
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
-			out_contents = await transpile_ts(filename, source);
+			out_contents = await transpile_ts(filename, source.toString('utf-8'));
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
 		} else {
 			out_file = file;
 			out_contents = source;
 		}
-		out_contents = resolve_$lib_alias(out_file, out_contents, config);
 
 		write(path.join(abs_package_dir, out_file), out_contents);
 
@@ -287,7 +291,7 @@ function load_tsconfig(filename, ts) {
 
 /**
  * @param {string} file
- * @param {string} contents
+ * @param {Parameters<typeof fs.writeFileSync>[1]} contents
  */
 function write(file, contents) {
 	mkdirp(path.dirname(file));
