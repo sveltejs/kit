@@ -51,12 +51,12 @@ const get_defaults = (prefix = '') => ({
 			}
 		},
 		files: {
-			assets: prefix + 'static',
-			hooks: prefix + 'src/hooks',
-			lib: prefix + 'src/lib',
-			routes: prefix + 'src/routes',
-			serviceWorker: prefix + 'src/service-worker',
-			template: prefix + 'src/app.html'
+			assets: join(prefix, 'static'),
+			hooks: join(prefix, 'src/hooks'),
+			lib: join(prefix, 'src/lib'),
+			routes: join(prefix, 'src/routes'),
+			serviceWorker: join(prefix, 'src/service-worker'),
+			template: join(prefix, 'src/app.html')
 		},
 		floc: false,
 		headers: undefined,
