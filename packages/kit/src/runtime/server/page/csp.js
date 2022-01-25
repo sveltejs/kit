@@ -1,10 +1,9 @@
-import { webcrypto } from 'crypto';
 import { escape_html_attr } from '../../../utils/escape.js';
 
 const array = new Uint8Array(16);
 
 export function generate_nonce() {
-	webcrypto.getRandomValues(array);
+	crypto.getRandomValues(array);
 	return base64(array);
 }
 
@@ -15,7 +14,7 @@ export function generate_nonce() {
  */
 async function generate_hash(contents, algorithm = 'sha-256') {
 	const bytes = new TextEncoder().encode(contents);
-	const digest = new Uint8Array(await webcrypto.subtle.digest(algorithm, bytes));
+	const digest = new Uint8Array(await crypto.subtle.digest(algorithm, bytes));
 	return base64(digest);
 }
 

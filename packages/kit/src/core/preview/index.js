@@ -6,6 +6,7 @@ import sirv from 'sirv';
 import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
+import { polyfill_crypto } from '../../install-crypto.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
@@ -32,6 +33,7 @@ export async function preview({
 	cwd = process.cwd()
 }) {
 	__fetch_polyfill();
+	polyfill_crypto();
 
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
