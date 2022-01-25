@@ -94,7 +94,7 @@ const BitArray = {
 	/**
 	 * Find the length of an array of bits.
 	 * @param {bitArray} a The array.
-	 * @return {Number} The length of a, in bits.
+	 * @return {number} The length of a, in bits.
 	 */
 	bitLength: function (a) {
 		var l = a.length,
@@ -165,7 +165,13 @@ const BitArray = {
 
 		shift2 = BitArray.getPartial(last2);
 
-		out.push(BitArray.partial((shift + shift2) & 31, shift + shift2 > 32 ? carry : out.pop(), 1));
+		out.push(
+			BitArray.partial(
+				(shift + shift2) & 31,
+				shift + shift2 > 32 ? carry : /** @type {number} */ (out.pop()),
+				1
+			)
+		);
 
 		return out;
 	}
@@ -243,6 +249,7 @@ export class Sha256 {
 		}
 
 		this._h = init.slice(0);
+		/** @type {bitArray} */
 		this._buffer = [];
 		this._length = 0;
 	}
