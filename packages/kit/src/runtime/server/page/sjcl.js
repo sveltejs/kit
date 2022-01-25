@@ -240,6 +240,97 @@ function precompute() {
 	}
 }
 
+/**
+ * Perform one cycle of SHA-256.
+ * @param {Uint32Array} out
+ * @param {Uint32Array | bitArray} w one block of words.
+ */
+const block = (out, w) => {
+	var tmp;
+	var a;
+	var b;
+
+	let out0 = out[0];
+	let out1 = out[1];
+	let out2 = out[2];
+	let out3 = out[3];
+	let out4 = out[4];
+	let out5 = out[5];
+	let out6 = out[6];
+	let out7 = out[7];
+
+	/* Rationale for placement of |0 :
+	 * If a value can overflow is original 32 bits by a factor of more than a few
+	 * million (2^23 ish), there is a possibility that it might overflow the
+	 * 53-bit mantissa and lose precision.
+	 *
+	 * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
+	 * propagates around the loop, and on the hash state out[]. I don't believe
+	 * that the clamps on out4 and on out0 are strictly necessary, but it's close
+	 * (for out4 anyway), and better safe than sorry.
+	 *
+	 * The clamps on out[] are necessary for the output to be correct even in the
+	 * common case and for short inputs.
+	 */
+
+	for (let i = 0; i < 64; i++) {
+		// load up the input word for this round
+
+		if (i < 16) {
+			tmp = w[i];
+		} else {
+			a = w[(i + 1) & 15];
+
+			b = w[(i + 14) & 15];
+
+			tmp = w[i & 15] =
+				(((a >>> 7) ^ (a >>> 18) ^ (a >>> 3) ^ (a << 25) ^ (a << 14)) +
+					((b >>> 17) ^ (b >>> 19) ^ (b >>> 10) ^ (b << 15) ^ (b << 13)) +
+					w[i & 15] +
+					w[(i + 9) & 15]) |
+				0;
+		}
+
+		tmp =
+			tmp +
+			out7 +
+			((out4 >>> 6) ^ (out4 >>> 11) ^ (out4 >>> 25) ^ (out4 << 26) ^ (out4 << 21) ^ (out4 << 7)) +
+			(out6 ^ (out4 & (out5 ^ out6))) +
+			key[i]; // | 0;
+
+		// shift register
+		out7 = out6;
+		out6 = out5;
+		out5 = out4;
+
+		out4 = (out3 + tmp) | 0;
+
+		out3 = out2;
+		out2 = out1;
+		out1 = out0;
+
+		out0 =
+			(tmp +
+				((out1 & out2) ^ (out3 & (out1 ^ out2))) +
+				((out1 >>> 2) ^
+					(out1 >>> 13) ^
+					(out1 >>> 22) ^
+					(out1 << 30) ^
+					(out1 << 19) ^
+					(out1 << 10))) |
+			0;
+	}
+
+	out[0] = (out[0] + out0) | 0;
+	out[1] = (out[1] + out1) | 0;
+	out[2] = (out[2] + out2) | 0;
+	out[3] = (out[3] + out3) | 0;
+	out[4] = (out[4] + out4) | 0;
+	out[5] = (out[5] + out5) | 0;
+	out[6] = (out[6] + out6) | 0;
+	out[7] = (out[7] + out7) | 0;
+};
+
 /** @param {bitArray | string} data */
 export function hash(data) {
 	if (!key[0]) precompute();
@@ -257,100 +348,9 @@ export function hash(data) {
 	// update
 	const c = new Uint32Array(_buffer);
 
-	/**
-	 * Perform one cycle of SHA-256.
-	 * @param {Uint32Array|bitArray} w one block of words.
-	 */
-	const block = (w) => {
-		var tmp;
-		var a;
-		var b;
-
-		let out0 = out[0];
-		let out1 = out[1];
-		let out2 = out[2];
-		let out3 = out[3];
-		let out4 = out[4];
-		let out5 = out[5];
-		let out6 = out[6];
-		let out7 = out[7];
-
-		/* Rationale for placement of |0 :
-		 * If a value can overflow is original 32 bits by a factor of more than a few
-		 * million (2^23 ish), there is a possibility that it might overflow the
-		 * 53-bit mantissa and lose precision.
-		 *
-		 * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
-		 * propagates around the loop, and on the hash state out[]. I don't believe
-		 * that the clamps on out4 and on out0 are strictly necessary, but it's close
-		 * (for out4 anyway), and better safe than sorry.
-		 *
-		 * The clamps on out[] are necessary for the output to be correct even in the
-		 * common case and for short inputs.
-		 */
-
-		for (let i = 0; i < 64; i++) {
-			// load up the input word for this round
-
-			if (i < 16) {
-				tmp = w[i];
-			} else {
-				a = w[(i + 1) & 15];
-
-				b = w[(i + 14) & 15];
-
-				tmp = w[i & 15] =
-					(((a >>> 7) ^ (a >>> 18) ^ (a >>> 3) ^ (a << 25) ^ (a << 14)) +
-						((b >>> 17) ^ (b >>> 19) ^ (b >>> 10) ^ (b << 15) ^ (b << 13)) +
-						w[i & 15] +
-						w[(i + 9) & 15]) |
-					0;
-			}
-
-			tmp =
-				tmp +
-				out7 +
-				((out4 >>> 6) ^ (out4 >>> 11) ^ (out4 >>> 25) ^ (out4 << 26) ^ (out4 << 21) ^ (out4 << 7)) +
-				(out6 ^ (out4 & (out5 ^ out6))) +
-				key[i]; // | 0;
-
-			// shift register
-			out7 = out6;
-			out6 = out5;
-			out5 = out4;
-
-			out4 = (out3 + tmp) | 0;
-
-			out3 = out2;
-			out2 = out1;
-			out1 = out0;
-
-			out0 =
-				(tmp +
-					((out1 & out2) ^ (out3 & (out1 ^ out2))) +
-					((out1 >>> 2) ^
-						(out1 >>> 13) ^
-						(out1 >>> 22) ^
-						(out1 << 30) ^
-						(out1 << 19) ^
-						(out1 << 10))) |
-				0;
-		}
-
-		out[0] = (out[0] + out0) | 0;
-		out[1] = (out[1] + out1) | 0;
-		out[2] = (out[2] + out2) | 0;
-		out[3] = (out[3] + out3) | 0;
-		out[4] = (out[4] + out4) | 0;
-		out[5] = (out[5] + out5) | 0;
-		out[6] = (out[6] + out6) | 0;
-		out[7] = (out[7] + out7) | 0;
-	};
-
 	let j = 0;
 	for (let i = 512; i <= _length; i += 512) {
-		block(c.subarray(16 * j, 16 * (j + 1)));
-
+		block(out, c.subarray(16 * j, 16 * (j + 1)));
 		j += 1;
 	}
 
@@ -371,7 +371,7 @@ export function hash(data) {
 	_buffer.push(_length | 0);
 
 	while (_buffer.length) {
-		block(_buffer.splice(0, 16));
+		block(out, _buffer.splice(0, 16));
 	}
 
 	return out;
