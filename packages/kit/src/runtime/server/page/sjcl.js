@@ -1,7 +1,3 @@
-export const sjcl = {
-	hash: {}
-};
-
 /** @param {Uint32Array} uint32array' */
 function swap_endianness(uint32array) {
 	const uint8array = new Uint8Array(uint32array.buffer);
@@ -254,7 +250,7 @@ export class Sha256 {
 	/**
 	 * Hash a string or an array of words.
 	 * @static
-	 * @param {bitArray|String} data the data to hash.
+	 * @param {bitArray | string} data the data to hash.
 	 * @return {bitArray} The hash value, an array of 16 big-endian words.
 	 */
 	static hash(data) {
@@ -263,8 +259,7 @@ export class Sha256 {
 
 	/**
 	 * Input several words to the hash.
-	 * @param {bitArray|String} data the data to hash.
-	 * @return this
+	 * @param {bitArray | string} data the data to hash.
 	 */
 	update(data) {
 		if (typeof data === 'string') {
@@ -280,23 +275,17 @@ export class Sha256 {
 			throw new Error('Cannot hash more than 2^53 - 1 bits');
 		}
 
-		if (typeof Uint32Array !== 'undefined') {
-			var c = new Uint32Array(b);
+		var c = new Uint32Array(b);
 
-			var j = 0;
+		var j = 0;
 
-			for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
-				this.#block(c.subarray(16 * j, 16 * (j + 1)));
+		for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
+			this.#block(c.subarray(16 * j, 16 * (j + 1)));
 
-				j += 1;
-			}
-
-			b.splice(0, 16 * j);
-		} else {
-			for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
-				this.#block(b.splice(0, 16));
-			}
+			j += 1;
 		}
+
+		b.splice(0, 16 * j);
 
 		return this;
 	}

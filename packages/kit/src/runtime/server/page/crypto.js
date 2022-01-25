@@ -1,4 +1,4 @@
-import { sjcl, Sha256 } from './sjcl.js';
+import { Sha256 } from './sjcl.js';
 
 // adapted from https://bitwiseshiftleft.github.io/sjcl/,
 // modified and redistributed under BSD license
