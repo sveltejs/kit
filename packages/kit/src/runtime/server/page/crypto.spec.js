@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { sha256 } from './crypto.js';
 
 const inputs = [
+	'hello world',
 	'',
 	'abcd',
 	'the quick brown fox jumps over the lazy dog',

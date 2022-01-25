@@ -1,6 +1,6 @@
 const encoder = new TextEncoder();
 
-/** @param {Uint32Array} uint32array' */
+/** @param {Uint32Array} uint32array */
 function swap_endianness(uint32array) {
 	const uint8array = new Uint8Array(uint32array.buffer);
 
@@ -19,166 +19,24 @@ function swap_endianness(uint32array) {
 	return uint32array;
 }
 
-/**
- * Get the number of bits used by a partial word.
- * @param {number} n The partial word.
- * @return {number} The number of bits used by the partial word.
- */
-function count_bits_in_word(n) {
-	return Math.round(n / 0x10000000000) || 32;
-}
-
 /** @param {string} str */
 function to_bits(str) {
-	let uint8array = encoder.encode(str);
+	const encoded = encoder.encode(str);
+	const length = encoded.length * 8;
 
-	const buffer = [];
+	const size = 512 * Math.ceil((length + 129) / 512);
+	const bytes = new Uint8Array(size / 8);
+	bytes.set(encoded);
+	bytes[encoded.length] = 0b10000000;
 
-	let i;
-	let tmp = 0;
+	swap_endianness(new Uint32Array(bytes.buffer));
 
-	for (i = 0; i < uint8array.length; i++) {
-		tmp = (tmp << 8) | uint8array[i];
+	const words = new Uint32Array(bytes.buffer);
+	words[words.length - 2] = Math.floor(length / 0x100000000); // this will always be zero for us
+	words[words.length - 1] = length;
 
-		if ((i & 3) === 3) {
-			buffer.push(tmp);
-			tmp = 0;
-		}
-	}
-
-	if (i & 3) {
-		let partial = BitArray.partial(8 * (i & 3), tmp);
-		buffer.push(partial);
-	}
-
-	return { buffer, bits: uint8array.length * 8 };
+	return words;
 }
-
-/**
- * Arrays of bits, encoded as arrays of Numbers.
- * @namespace
- * @description
- * <p>
- * These objects are the currency accepted by SJCL's crypto functions.
- * </p>
- *
- * <p>
- * Most of our crypto primitives operate on arrays of 4-byte words internally,
- * but many of them can take arguments that are not a multiple of 4 bytes.
- * This library encodes arrays of bits (whose size need not be a multiple of 8
- * bits) as arrays of 32-bit words.  The bits are packed, big-endian, into an
- * array of words, 32 bits at a time.  Since the words are double-precision
- * floating point numbers, they fit some extra data.  We use this (in a private,
- * possibly-changing manner) to encode the number of bits actually  present
- * in the last word of the array.
- * </p>
- *
- * <p>
- * Because bitwise ops clear this out-of-band data, these arrays can be passed
- * to ciphers like AES which want arrays of words.
- * </p>
- */
-
-/** @typedef {number[]} bitArray */
-
-const BitArray = {
-	/**
-	 * Concatenate two bit arrays.
-	 * @param {bitArray} a1 The first array.
-	 * @param {bitArray} a2 The second array.
-	 * @return {bitArray} The concatenation of a1 and a2.
-	 */
-	concat: function (a1, a2) {
-		if (a1.length === 0) {
-			return a1.concat(a2);
-		}
-
-		const last = a1[a1.length - 1];
-		const shift = count_bits_in_word(last);
-
-		if (shift === 32) {
-			return a1.concat(a2);
-		} else {
-			return BitArray._shiftRight(a2, shift, last | 0, a1.slice(0, a1.length - 1));
-		}
-	},
-
-	/**
-	 * Find the length of an array of bits.
-	 * @param {bitArray} a The array.
-	 * @return {number} The length of a, in bits.
-	 */
-	bitLength: function (a) {
-		var l = a.length,
-			x;
-
-		if (l === 0) {
-			return 0;
-		}
-
-		x = a[l - 1];
-
-		return (l - 1) * 32 + count_bits_in_word(x);
-	},
-
-	/**
-	 * Make a partial word for a bit array.
-	 * @param {Number} len The number of bits in the word.
-	 * @param {Number} x The bits.
-	 * @param {Number} [_end=0] Pass 1 if x has already been shifted to the high side.
-	 * @return {Number} The partial word.
-	 */
-	partial: function (len, x, _end) {
-		if (len === 32) {
-			return x;
-		}
-
-		return (_end ? x | 0 : x << (32 - len)) + len * 0x10000000000;
-	},
-
-	/** Shift an array right.
-	 * @param {bitArray} a The array to shift.
-	 * @param {number} shift The number of bits to shift.
-	 * @param {number} [carry] A byte to carry in
-	 * @param {bitArray} [out] An array to prepend to the output.
-	 * @private
-	 */
-	_shiftRight: function (a, shift, carry = 0, out = []) {
-		var i,
-			last2 = 0,
-			shift2;
-
-		for (; shift >= 32; shift -= 32) {
-			out.push(carry);
-
-			carry = 0;
-		}
-
-		if (shift === 0) {
-			return out.concat(a);
-		}
-
-		for (i = 0; i < a.length; i++) {
-			out.push(carry | (a[i] >>> shift));
-
-			carry = a[i] << (32 - shift);
-		}
-
-		last2 = a.length ? a[a.length - 1] : 0;
-
-		shift2 = count_bits_in_word(last2);
-
-		out.push(
-			BitArray.partial(
-				(shift + shift2) & 31,
-				shift + shift2 > 32 ? carry : /** @type {number} */ (out.pop()),
-				1
-			)
-		);
-
-		return out;
-	}
-};
 
 /**
  * The SHA-256 initialization vector, to be precomputed.
@@ -336,25 +194,10 @@ export function hash(data) {
 	if (!key[0]) precompute();
 
 	const out = init.slice(0);
+	const array = to_bits(data);
 
-	let { buffer, bits } = to_bits(data);
-
-	// Round out and push the buffer
-	buffer = BitArray.concat(buffer, [0xff80000000]);
-
-	// Round out the buffer to a multiple of 16 words, less the 2 length words.
-	for (let i = buffer.length + 2; i & 15; i++) {
-		buffer.push(0);
-	}
-
-	// append the length
-	buffer.push(Math.floor(bits / 0x100000000)); // this will always be zero for us
-	buffer.push(bits | 0);
-
-	const uint32array = new Uint32Array(buffer);
-
-	for (let i = 0; i < uint32array.length; i += 16) {
-		block(out, uint32array.subarray(i, i + 16));
+	for (let i = 0; i < array.length; i += 16) {
+		block(out, array.subarray(i, i + 16));
 	}
 
 	return out;
