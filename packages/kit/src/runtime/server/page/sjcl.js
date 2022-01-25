@@ -222,50 +222,50 @@ const key = [];
  * @constructor
  */
 
-sjcl.hash.sha256 = function (hash) {
-	if (!key[0]) {
-		this._precompute();
+export class Sha256 {
+	constructor(hash) {
+		if (!key[0]) {
+			this._precompute();
+		}
+
+		if (hash) {
+			this._h = hash._h.slice(0);
+
+			this._buffer = hash._buffer.slice(0);
+
+			this._length = hash._length;
+		} else {
+			this.reset();
+		}
 	}
 
-	if (hash) {
-		this._h = hash._h.slice(0);
-
-		this._buffer = hash._buffer.slice(0);
-
-		this._length = hash._length;
-	} else {
-		this.reset();
+	/**
+	 * Hash a string or an array of words.
+	 * @static
+	 * @param {bitArray|String} data the data to hash.
+	 * @return {bitArray} The hash value, an array of 16 big-endian words.
+	 */
+	static hash(data) {
+		return new Sha256().update(data).finalize();
 	}
-};
 
-/**
- * Hash a string or an array of words.
- * @static
- * @param {bitArray|String} data the data to hash.
- * @return {bitArray} The hash value, an array of 16 big-endian words.
- */
-sjcl.hash.sha256.hash = function (data) {
-	return new sjcl.hash.sha256().update(data).finalize();
-};
-
-sjcl.hash.sha256.prototype = {
 	/**
 	 * Reset the hash state.
 	 * @return this
 	 */
-	reset: function () {
+	reset() {
 		this._h = init.slice(0);
 		this._buffer = [];
 		this._length = 0;
 		return this;
-	},
+	}
 
 	/**
 	 * Input several words to the hash.
 	 * @param {bitArray|String} data the data to hash.
 	 * @return this
 	 */
-	update: function (data) {
+	update(data) {
 		if (typeof data === 'string') {
 			data = toBits(data);
 		}
@@ -298,13 +298,13 @@ sjcl.hash.sha256.prototype = {
 		}
 
 		return this;
-	},
+	}
 
 	/**
 	 * Complete hashing and output the hash value.
 	 * @return {bitArray} The hash value, an array of 8 big-endian words.
 	 */
-	finalize: function () {
+	finalize() {
 		var i,
 			b = this._buffer,
 			h = this._h;
@@ -332,13 +332,13 @@ sjcl.hash.sha256.prototype = {
 		this.reset();
 
 		return h;
-	},
+	}
 
 	/**
 	 * Function to precompute _init and _key.
 	 * @private
 	 */
-	_precompute: function () {
+	_precompute() {
 		var i = 0,
 			prime = 2,
 			factor,
@@ -369,14 +369,14 @@ sjcl.hash.sha256.prototype = {
 				i++;
 			}
 		}
-	},
+	}
 
 	/**
 	 * Perform one cycle of SHA-256.
 	 * @param {Uint32Array|bitArray} w one block of words.
 	 * @private
 	 */
-	_block: function (w) {
+	_block(w) {
 		var i,
 			tmp,
 			a,
@@ -459,4 +459,4 @@ sjcl.hash.sha256.prototype = {
 		h[6] = (h[6] + h6) | 0;
 		h[7] = (h[7] + h7) | 0;
 	}
-};
+}
