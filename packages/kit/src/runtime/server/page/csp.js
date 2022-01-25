@@ -48,6 +48,15 @@ export class Csp {
 	/** @type {boolean} */
 	#use_hashes;
 
+	/** @type {boolean} */
+	#dev;
+
+	/** @type {boolean} */
+	#script_needs_csp;
+
+	/** @type {boolean} */
+	#style_needs_csp;
+
 	/** @type {import('types/csp').CspDirectives} */
 	#directives;
 
@@ -62,11 +71,13 @@ export class Csp {
 	 *   mode: string,
 	 *   directives: import('types/csp').CspDirectives
 	 * }} opts
+	 * @param {boolean} dev
 	 * @param {boolean} prerender
 	 */
-	constructor({ mode, directives }, prerender) {
+	constructor({ mode, directives }, dev, prerender) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = directives;
+		this.#dev = dev;
 
 		this.#script_src = [];
 		this.#style_src = [];
@@ -74,16 +85,17 @@ export class Csp {
 		const effective_script_src = directives['script-src'] || directives['default-src'];
 		const effective_style_src = directives['style-src'] || directives['default-src'];
 
-		this.script_needs_csp =
-			effective_script_src &&
+		this.#script_needs_csp =
+			!!effective_script_src &&
 			effective_script_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
-		this.style_needs_csp =
-			effective_style_src &&
+		this.#style_needs_csp =
+			!dev &&
+			!!effective_style_src &&
 			effective_style_src.filter((value) => value !== 'unsafe-inline').length > 0;
 
-		this.script_needs_nonce = this.script_needs_csp && !this.#use_hashes;
-		this.style_needs_nonce = this.style_needs_csp && !this.#use_hashes;
+		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
+		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
 
 		if (this.script_needs_nonce || this.style_needs_nonce) {
 			this.nonce = generate_nonce();
@@ -93,7 +105,7 @@ export class Csp {
 	// TODO would be great if these methods weren't async
 	/** @param {string} content */
 	add_script(content) {
-		if (this.script_needs_csp) {
+		if (this.#script_needs_csp) {
 			if (this.#use_hashes) {
 				this.#script_src.push(`sha256-${generate_hash(content)}`);
 			} else if (this.#script_src.length === 0) {
@@ -104,7 +116,7 @@ export class Csp {
 
 	/** @param {string} content */
 	add_style(content) {
-		if (this.style_needs_csp) {
+		if (this.#style_needs_csp) {
 			if (this.#use_hashes) {
 				this.#style_src.push(`sha256-${generate_hash(content)}`);
 			} else if (this.#style_src.length === 0) {
@@ -130,7 +142,19 @@ export class Csp {
 			];
 		}
 
-		if (this.#style_src.length > 0) {
+		if (this.#dev) {
+			const effective_style_src = directives['style-src'] || directives['default-src'];
+
+			// in development, we need to be able to inject <style> elements
+			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
+				directives['style-src'] = [
+					.../** @type {import('types/csp').Source[]} */ (
+						directives['style-src'] || directives['default-src']
+					),
+					'unsafe-inline'
+				];
+			}
+		} else {
 			directives['style-src'] = [
 				...(directives['style-src'] || directives['default-src'] || []),
 				...this.#style_src

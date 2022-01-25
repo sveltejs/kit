@@ -140,7 +140,7 @@ export async function render_response({
 	const inlined_style = Array.from(styles.values()).join('\n');
 
 	await csp_ready;
-	const csp = new Csp(options.csp, !!state.prerender);
+	const csp = new Csp(options.csp, options.dev, !!state.prerender);
 
 	// prettier-ignore
 	const init_app = `
