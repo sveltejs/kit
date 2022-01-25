@@ -19,25 +19,25 @@ function swap_endianness(uint32array) {
 
 /** @param {string} str */
 function toBits(str) {
-	str = unescape(encodeURIComponent(str));
+	let uint8array = new TextEncoder().encode(str);
 
 	const out = [];
 
 	let i;
 	let tmp = 0;
 
-	for (i = 0; i < str.length; i++) {
-		tmp = (tmp << 8) | str.charCodeAt(i);
+	for (i = 0; i < uint8array.length; i++) {
+		tmp = (tmp << 8) | uint8array[i];
 
 		if ((i & 3) === 3) {
 			out.push(tmp);
-
 			tmp = 0;
 		}
 	}
 
 	if (i & 3) {
-		out.push(BitArray.partial(8 * (i & 3), tmp));
+		let partial = BitArray.partial(8 * (i & 3), tmp);
+		out.push(partial);
 	}
 
 	return out;
