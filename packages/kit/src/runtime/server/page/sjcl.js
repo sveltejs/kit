@@ -240,103 +240,45 @@ function precompute() {
 	}
 }
 
-export class Sha256 {
-	constructor() {
-		if (!key[0]) {
-			precompute();
-		}
-
-		this._h = init.slice(0);
-		/** @type {bitArray} */
-		this._buffer = [];
-		this._length = 0;
+/** @param {bitArray | string} data */
+export function hash(data) {
+	if (!key[0]) {
+		precompute();
 	}
 
-	/**
-	 * Hash a string or an array of words.
-	 * @static
-	 * @param {bitArray | string} data the data to hash.
-	 * @return {bitArray} The hash value, an array of 16 big-endian words.
-	 */
-	static hash(data) {
-		return new Sha256().update(data).finalize();
+	const _h = init.slice(0);
+	/** @type {bitArray} */
+	let _buffer = [];
+	let _length = 0;
+
+	if (typeof data === 'string') {
+		data = toBits(data);
 	}
 
-	/**
-	 * Input several words to the hash.
-	 * @param {bitArray | string} data the data to hash.
-	 */
-	update(data) {
-		if (typeof data === 'string') {
-			data = toBits(data);
-		}
+	// update
+	var i,
+		b = (_buffer = BitArray.concat(_buffer, data)),
+		ol = _length,
+		nl = (_length = ol + BitArray.bitLength(data));
 
-		var i,
-			b = (this._buffer = BitArray.concat(this._buffer, data)),
-			ol = this._length,
-			nl = (this._length = ol + BitArray.bitLength(data));
-
-		if (nl > 9007199254740991) {
-			throw new Error('Cannot hash more than 2^53 - 1 bits');
-		}
-
-		var c = new Uint32Array(b);
-
-		var j = 0;
-
-		for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
-			this.#block(c.subarray(16 * j, 16 * (j + 1)));
-
-			j += 1;
-		}
-
-		b.splice(0, 16 * j);
-
-		return this;
+	if (nl > 9007199254740991) {
+		throw new Error('Cannot hash more than 2^53 - 1 bits');
 	}
 
-	/**
-	 * Complete hashing and output the hash value.
-	 * @return {bitArray} The hash value, an array of 8 big-endian words.
-	 */
-	finalize() {
-		var i,
-			b = this._buffer,
-			h = this._h;
+	var c = new Uint32Array(b);
 
-		// Round out and push the buffer
-
-		b = BitArray.concat(b, [BitArray.partial(1, 1)]);
-
-		// Round out the buffer to a multiple of 16 words, less the 2 length words.
-
-		for (i = b.length + 2; i & 15; i++) {
-			b.push(0);
-		}
-
-		// append the length
-
-		b.push(Math.floor(this._length / 0x100000000));
-
-		b.push(this._length | 0);
-
-		while (b.length) {
-			this.#block(b.splice(0, 16));
-		}
-
-		return h;
-	}
+	var j = 0;
 
 	/**
 	 * Perform one cycle of SHA-256.
 	 * @param {Uint32Array|bitArray} w one block of words.
 	 */
-	#block(w) {
+	const block = (w) => {
 		var i,
 			tmp,
 			a,
 			b,
-			h = this._h,
+			h = _h,
 			k = key,
 			h0 = h[0],
 			h1 = h[1],
@@ -413,5 +355,40 @@ export class Sha256 {
 		h[5] = (h[5] + h5) | 0;
 		h[6] = (h[6] + h6) | 0;
 		h[7] = (h[7] + h7) | 0;
+	};
+
+	for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
+		block(c.subarray(16 * j, 16 * (j + 1)));
+
+		j += 1;
 	}
+
+	b.splice(0, 16 * j);
+
+	// finalize
+	var i,
+		b = _buffer,
+		h = _h;
+
+	// Round out and push the buffer
+
+	b = BitArray.concat(b, [BitArray.partial(1, 1)]);
+
+	// Round out the buffer to a multiple of 16 words, less the 2 length words.
+
+	for (i = b.length + 2; i & 15; i++) {
+		b.push(0);
+	}
+
+	// append the length
+
+	b.push(Math.floor(_length / 0x100000000));
+
+	b.push(_length | 0);
+
+	while (b.length) {
+		block(b.splice(0, 16));
+	}
+
+	return h;
 }

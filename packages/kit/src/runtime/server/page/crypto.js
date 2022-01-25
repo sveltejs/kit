@@ -1,11 +1,12 @@
-import { Sha256 } from './sjcl.js';
+import { hash } from './sjcl.js';
 
 // adapted from https://bitwiseshiftleft.github.io/sjcl/,
 // modified and redistributed under BSD license
 
 /** @param {string} text */
 export function sha256(text) {
-	const hashed = new Uint32Array(Sha256.hash(text));
+	// const hashed = new Uint32Array(Sha256.hash(text));
+	const hashed = new Uint32Array(hash(text));
 	const buffer = hashed.buffer;
 	const uint8array = new Uint8Array(buffer);
 
