@@ -203,10 +203,47 @@ const key = [];
  * 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2],
  */
 
+/**
+ * Function to precompute _init and _key.
+ */
+function precompute() {
+	var i = 0,
+		prime = 2,
+		factor,
+		isPrime;
+
+	/** @param {number} x */
+	function frac(x) {
+		return ((x - Math.floor(x)) * 0x100000000) | 0;
+	}
+
+	for (; i < 64; prime++) {
+		isPrime = true;
+
+		for (factor = 2; factor * factor <= prime; factor++) {
+			if (prime % factor === 0) {
+				isPrime = false;
+
+				break;
+			}
+		}
+
+		if (isPrime) {
+			if (i < 8) {
+				init[i] = frac(Math.pow(prime, 1 / 2));
+			}
+
+			key[i] = frac(Math.pow(prime, 1 / 3));
+
+			i++;
+		}
+	}
+}
+
 export class Sha256 {
 	constructor() {
 		if (!key[0]) {
-			this._precompute();
+			precompute();
 		}
 
 		this._h = init.slice(0);
@@ -240,7 +277,7 @@ export class Sha256 {
 			nl = (this._length = ol + BitArray.bitLength(data));
 
 		if (nl > 9007199254740991) {
-			throw new sjcl.exception.invalid('Cannot hash more than 2^53 - 1 bits');
+			throw new Error('Cannot hash more than 2^53 - 1 bits');
 		}
 
 		if (typeof Uint32Array !== 'undefined') {
@@ -249,7 +286,7 @@ export class Sha256 {
 			var j = 0;
 
 			for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
-				this._block(c.subarray(16 * j, 16 * (j + 1)));
+				this.#block(c.subarray(16 * j, 16 * (j + 1)));
 
 				j += 1;
 			}
@@ -257,7 +294,7 @@ export class Sha256 {
 			b.splice(0, 16 * j);
 		} else {
 			for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
-				this._block(b.splice(0, 16));
+				this.#block(b.splice(0, 16));
 			}
 		}
 
@@ -290,55 +327,17 @@ export class Sha256 {
 		b.push(this._length | 0);
 
 		while (b.length) {
-			this._block(b.splice(0, 16));
+			this.#block(b.splice(0, 16));
 		}
 
 		return h;
 	}
 
 	/**
-	 * Function to precompute _init and _key.
-	 * @private
-	 */
-	_precompute() {
-		var i = 0,
-			prime = 2,
-			factor,
-			isPrime;
-
-		function frac(x) {
-			return ((x - Math.floor(x)) * 0x100000000) | 0;
-		}
-
-		for (; i < 64; prime++) {
-			isPrime = true;
-
-			for (factor = 2; factor * factor <= prime; factor++) {
-				if (prime % factor === 0) {
-					isPrime = false;
-
-					break;
-				}
-			}
-
-			if (isPrime) {
-				if (i < 8) {
-					init[i] = frac(Math.pow(prime, 1 / 2));
-				}
-
-				key[i] = frac(Math.pow(prime, 1 / 3));
-
-				i++;
-			}
-		}
-	}
-
-	/**
 	 * Perform one cycle of SHA-256.
 	 * @param {Uint32Array|bitArray} w one block of words.
-	 * @private
 	 */
-	_block(w) {
+	#block(w) {
 		var i,
 			tmp,
 			a,
