@@ -214,7 +214,7 @@ export async function render_response({
 					attributes.push('disabled', 'media="(max-width: 0)"');
 				}
 
-				return `\n\t<link ${attributes.join(' ')}>`
+				return `\n\t<link ${attributes.join(' ')}>`;
 			})
 			.join('');
 
@@ -300,32 +300,6 @@ export async function render_response({
 		status,
 		headers
 	});
-}
-
-/**
- *
- * @param {string} type
- * @param {Record<string, string | true>} attributes
- * @param {string} [content]
- */
-function element(type, attributes, content) {
-	let result = `<${type}`;
-
-	for (const key in attributes) {
-		const value = attributes[key];
-		result += ' ' + key;
-		if (value !== true) {
-			result += escape_html_attr(value);
-		}
-	}
-
-	if (content) {
-		result += `>${content}</${type}>`;
-	} else {
-		result += '/>';
-	}
-
-	return result;
 }
 
 /**

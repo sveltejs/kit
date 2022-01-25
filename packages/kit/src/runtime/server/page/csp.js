@@ -184,21 +184,25 @@ const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 /** @param {Uint8Array} bytes */
 function base64(bytes) {
-	let result = '',
-		i,
-		l = bytes.length;
+	const l = bytes.length;
+
+	let result = '';
+	let i;
+
 	for (i = 2; i < l; i += 3) {
 		result += chars[bytes[i - 2] >> 2];
 		result += chars[((bytes[i - 2] & 0x03) << 4) | (bytes[i - 1] >> 4)];
 		result += chars[((bytes[i - 1] & 0x0f) << 2) | (bytes[i] >> 6)];
 		result += chars[bytes[i] & 0x3f];
 	}
+
 	if (i === l + 1) {
 		// 1 octet yet to write
 		result += chars[bytes[i - 2] >> 2];
 		result += chars[(bytes[i - 2] & 0x03) << 4];
 		result += '==';
 	}
+
 	if (i === l) {
 		// 2 octets yet to write
 		result += chars[bytes[i - 2] >> 2];
@@ -206,5 +210,6 @@ function base64(bytes) {
 		result += chars[(bytes[i - 1] & 0x0f) << 2];
 		result += '=';
 	}
+
 	return result;
 }
