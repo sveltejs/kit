@@ -1,189 +1,108 @@
 export const sjcl = {
-	hash: {},
-	codec: {}
+	hash: {}
 };
 
-/** @fileOverview Bit array codec implementations.
+/** @param {Uint32Array} uint32array' */
+function swap_endianness(uint32array) {
+	const uint8array = new Uint8Array(uint32array.buffer);
 
- *
+	for (let i = 0; i < uint8array.length; i += 4) {
+		const a = uint8array[i + 0];
+		const b = uint8array[i + 1];
+		const c = uint8array[i + 2];
+		const d = uint8array[i + 3];
 
- * @author Emily Stark
-
- * @author Mike Hamburg
-
- * @author Dan Boneh
-
- */
-
-/**
-
- * UTF-8 strings
-
- * @namespace
-
- */
-
-sjcl.codec.utf8String = {
-	/** Convert from a bitArray to a UTF-8 string. */
-
-	fromBits: function (arr) {
-		var out = '',
-			bl = sjcl.bitArray.bitLength(arr),
-			i,
-			tmp;
-
-		for (i = 0; i < bl / 8; i++) {
-			if ((i & 3) === 0) {
-				tmp = arr[i / 4];
-			}
-
-			out += String.fromCharCode(tmp >>> 24);
-
-			tmp <<= 8;
-		}
-
-		return decodeURIComponent(escape(out));
-	},
-
-	/** Convert from a UTF-8 string to a bitArray. */
-
-	toBits: function (str) {
-		str = unescape(encodeURIComponent(str));
-
-		var out = [],
-			i,
-			tmp = 0;
-
-		for (i = 0; i < str.length; i++) {
-			tmp = (tmp << 8) | str.charCodeAt(i);
-
-			if ((i & 3) === 3) {
-				out.push(tmp);
-
-				tmp = 0;
-			}
-		}
-
-		if (i & 3) {
-			out.push(sjcl.bitArray.partial(8 * (i & 3), tmp));
-		}
-
-		return out;
+		uint8array[i + 0] = d;
+		uint8array[i + 1] = c;
+		uint8array[i + 2] = b;
+		uint8array[i + 3] = a;
 	}
-};
 
-/** @fileOverview Arrays of bits, encoded as arrays of Numbers.
+	return uint32array;
+}
 
- *
+/** @param {string} str */
+function toBits(str) {
+	str = unescape(encodeURIComponent(str));
 
- * @author Emily Stark
+	var out = [],
+		i,
+		tmp = 0;
 
- * @author Mike Hamburg
+	for (i = 0; i < str.length; i++) {
+		tmp = (tmp << 8) | str.charCodeAt(i);
 
- * @author Dan Boneh
+		if ((i & 3) === 3) {
+			out.push(tmp);
 
- */
+			tmp = 0;
+		}
+	}
+
+	if (i & 3) {
+		out.push(sjcl.bitArray.partial(8 * (i & 3), tmp));
+	}
+
+	return out;
+}
 
 /**
-
  * Arrays of bits, encoded as arrays of Numbers.
-
  * @namespace
-
  * @description
-
  * <p>
-
  * These objects are the currency accepted by SJCL's crypto functions.
-
  * </p>
-
  *
-
  * <p>
-
  * Most of our crypto primitives operate on arrays of 4-byte words internally,
-
  * but many of them can take arguments that are not a multiple of 4 bytes.
-
  * This library encodes arrays of bits (whose size need not be a multiple of 8
-
  * bits) as arrays of 32-bit words.  The bits are packed, big-endian, into an
-
  * array of words, 32 bits at a time.  Since the words are double-precision
-
  * floating point numbers, they fit some extra data.  We use this (in a private,
-
  * possibly-changing manner) to encode the number of bits actually  present
-
  * in the last word of the array.
-
  * </p>
-
  *
-
  * <p>
-
  * Because bitwise ops clear this out-of-band data, these arrays can be passed
-
  * to ciphers like AES which want arrays of words.
-
  * </p>
-
  */
 
 sjcl.bitArray = {
 	/**
-
 	 * Array slices in units of bits.
-
 	 * @param {bitArray} a The array to slice.
-
 	 * @param {Number} bstart The offset to the start of the slice, in bits.
-
 	 * @param {Number} bend The offset to the end of the slice, in bits.  If this is undefined,
-
 	 * slice until the end of the array.
-
 	 * @return {bitArray} The requested slice.
-
 	 */
-
 	bitSlice: function (a, bstart, bend) {
 		a = sjcl.bitArray._shiftRight(a.slice(bstart / 32), 32 - (bstart & 31)).slice(1);
-
 		return bend === undefined ? a : sjcl.bitArray.clamp(a, bend - bstart);
 	},
 
 	/**
-
 	 * Extract a number packed into a bit array.
-
 	 * @param {bitArray} a The array to slice.
-
 	 * @param {Number} bstart The offset to the start of the slice, in bits.
-
 	 * @param {Number} blength The length of the number to extract.
-
 	 * @return {Number} The requested slice.
-
 	 */
-
 	extract: function (a, bstart, blength) {
 		// FIXME: this Math.floor is not necessary at all, but for some reason
-
 		// seems to suppress a bug in the Chromium JIT.
-
 		var x,
 			sh = Math.floor((-bstart - blength) & 31);
 
 		if (((bstart + blength - 1) ^ bstart) & -32) {
 			// it crosses a boundary
-
 			x = (a[(bstart / 32) | 0] << (32 - sh)) ^ (a[(bstart / 32 + 1) | 0] >>> sh);
 		} else {
 			// within a single word
-
 			x = a[(bstart / 32) | 0] >>> sh;
 		}
 
@@ -191,17 +110,11 @@ sjcl.bitArray = {
 	},
 
 	/**
-
 	 * Concatenate two bit arrays.
-
 	 * @param {bitArray} a1 The first array.
-
 	 * @param {bitArray} a2 The second array.
-
 	 * @return {bitArray} The concatenation of a1 and a2.
-
 	 */
-
 	concat: function (a1, a2) {
 		if (a1.length === 0 || a2.length === 0) {
 			return a1.concat(a2);
@@ -218,15 +131,10 @@ sjcl.bitArray = {
 	},
 
 	/**
-
 	 * Find the length of an array of bits.
-
 	 * @param {bitArray} a The array.
-
 	 * @return {Number} The length of a, in bits.
-
 	 */
-
 	bitLength: function (a) {
 		var l = a.length,
 			x;
@@ -241,17 +149,11 @@ sjcl.bitArray = {
 	},
 
 	/**
-
 	 * Truncate an array.
-
 	 * @param {bitArray} a The array.
-
 	 * @param {Number} len The length to truncate to, in bits.
-
 	 * @return {bitArray} A new array, truncated to len bits.
-
 	 */
-
 	clamp: function (a, len) {
 		if (a.length * 32 < len) {
 			return a;
@@ -271,19 +173,12 @@ sjcl.bitArray = {
 	},
 
 	/**
-
 	 * Make a partial word for a bit array.
-
 	 * @param {Number} len The number of bits in the word.
-
 	 * @param {Number} x The bits.
-
 	 * @param {Number} [_end=0] Pass 1 if x has already been shifted to the high side.
-
 	 * @return {Number} The partial word.
-
 	 */
-
 	partial: function (len, x, _end) {
 		if (len === 32) {
 			return x;
@@ -293,29 +188,19 @@ sjcl.bitArray = {
 	},
 
 	/**
-
 	 * Get the number of bits used by a partial word.
-
 	 * @param {Number} x The partial word.
-
 	 * @return {Number} The number of bits used by the partial word.
-
 	 */
-
 	getPartial: function (x) {
 		return Math.round(x / 0x10000000000) || 32;
 	},
 
 	/**
-
 	 * Compare two arrays for equality in a predictable amount of time.
-
 	 * @param {bitArray} a The first array.
-
 	 * @param {bitArray} b The second array.
-
 	 * @return {boolean} true if a == b; false otherwise.
-
 	 */
 
 	equal: function (a, b) {
@@ -334,19 +219,12 @@ sjcl.bitArray = {
 	},
 
 	/** Shift an array right.
-
 	 * @param {bitArray} a The array to shift.
-
 	 * @param {Number} shift The number of bits to shift.
-
 	 * @param {Number} [carry=0] A byte to carry in
-
 	 * @param {bitArray} [out=[]] An array to prepend to the output.
-
 	 * @private
-
 	 */
-
 	_shiftRight: function (a, shift, carry, out) {
 		var i,
 			last2 = 0,
@@ -384,25 +262,17 @@ sjcl.bitArray = {
 	},
 
 	/** xor a block of 4 words together.
-
 	 * @private
-
 	 */
-
 	_xor4: function (x, y) {
 		return [x[0] ^ y[0], x[1] ^ y[1], x[2] ^ y[2], x[3] ^ y[3]];
 	},
 
 	/** byteswap a word array inplace.
-
 	 * (does not handle partial words)
-
 	 * @param {sjcl.bitArray} a word array
-
 	 * @return {sjcl.bitArray} byteswapped array
-
 	 */
-
 	byteswapM: function (a) {
 		var i,
 			v,
@@ -419,39 +289,22 @@ sjcl.bitArray = {
 };
 
 /** @fileOverview Javascript SHA-256 implementation.
-
  *
-
  * An older version of this implementation is available in the public
-
  * domain, but this one is (c) Emily Stark, Mike Hamburg, Dan Boneh,
-
  * Stanford University 2008-2010 and BSD-licensed for liability
-
  * reasons.
-
  *
-
  * Special thanks to Aldo Cortesi for pointing out several bugs in
-
  * this code.
-
  *
-
  * @author Emily Stark
-
  * @author Mike Hamburg
-
  * @author Dan Boneh
-
  */
-
 /**
-
  * Context for a SHA-256 operation in progress.
-
  * @constructor
-
  */
 
 sjcl.hash.sha256 = function (hash) {
@@ -471,63 +324,41 @@ sjcl.hash.sha256 = function (hash) {
 };
 
 /**
-
-   * Hash a string or an array of words.
-
-   * @static
-
-   * @param {bitArray|String} data the data to hash.
-
-   * @return {bitArray} The hash value, an array of 16 big-endian words.
-
-   */
-
+ * Hash a string or an array of words.
+ * @static
+ * @param {bitArray|String} data the data to hash.
+ * @return {bitArray} The hash value, an array of 16 big-endian words.
+ */
 sjcl.hash.sha256.hash = function (data) {
 	return new sjcl.hash.sha256().update(data).finalize();
 };
 
 sjcl.hash.sha256.prototype = {
 	/**
-
 	 * The hash's block size, in bits.
-
 	 * @constant
-
 	 */
-
 	blockSize: 512,
 
 	/**
-
 	 * Reset the hash state.
-
 	 * @return this
-
 	 */
-
 	reset: function () {
 		this._h = this._init.slice(0);
-
 		this._buffer = [];
-
 		this._length = 0;
-
 		return this;
 	},
 
 	/**
-
 	 * Input several words to the hash.
-
 	 * @param {bitArray|String} data the data to hash.
-
 	 * @return this
-
 	 */
-
 	update: function (data) {
 		if (typeof data === 'string') {
-			data = sjcl.codec.utf8String.toBits(data);
+			data = toBits(data);
 		}
 
 		var i,
@@ -561,13 +392,9 @@ sjcl.hash.sha256.prototype = {
 	},
 
 	/**
-
 	 * Complete hashing and output the hash value.
-
 	 * @return {bitArray} The hash value, an array of 8 big-endian words.
-
 	 */
-
 	finalize: function () {
 		var i,
 			b = this._buffer,
@@ -599,61 +426,37 @@ sjcl.hash.sha256.prototype = {
 	},
 
 	/**
-
 	 * The SHA-256 initialization vector, to be precomputed.
-
 	 * @private
-
 	 */
-
 	_init: [],
 
 	/*
-
 	_init:[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],
-
 	*/
 
 	/**
-
 	 * The SHA-256 hash key, to be precomputed.
-
 	 * @private
-
 	 */
-
 	_key: [],
 
 	/*
-
 	_key:
-
 	  [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-
 	   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-
 	   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-
 	   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-
 	   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-
 	   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-
 	   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-
 	   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2],
-
 	*/
 
 	/**
-
 	 * Function to precompute _init and _key.
-
 	 * @private
-
 	 */
-
 	_precompute: function () {
 		var i = 0,
 			prime = 2,
@@ -688,15 +491,10 @@ sjcl.hash.sha256.prototype = {
 	},
 
 	/**
-
 	 * Perform one cycle of SHA-256.
-
 	 * @param {Uint32Array|bitArray} w one block of words.
-
 	 * @private
-
 	 */
-
 	_block: function (w) {
 		var i,
 			tmp,
@@ -714,30 +512,18 @@ sjcl.hash.sha256.prototype = {
 			h7 = h[7];
 
 		/* Rationale for placement of |0 :
-
-	   * If a value can overflow is original 32 bits by a factor of more than a few
-
-	   * million (2^23 ish), there is a possibility that it might overflow the
-
-	   * 53-bit mantissa and lose precision.
-
-	   *
-
-	   * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
-
-	   * propagates around the loop, and on the hash state h[].  I don't believe
-
-	   * that the clamps on h4 and on h0 are strictly necessary, but it's close
-
-	   * (for h4 anyway), and better safe than sorry.
-
-	   *
-
-	   * The clamps on h[] are necessary for the output to be correct even in the
-
-	   * common case and for short inputs.
-
-	   */
+		 * If a value can overflow is original 32 bits by a factor of more than a few
+		 * million (2^23 ish), there is a possibility that it might overflow the
+		 * 53-bit mantissa and lose precision.
+		 *
+		 * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
+		 * propagates around the loop, and on the hash state h[].  I don't believe
+		 * that the clamps on h4 and on h0 are strictly necessary, but it's close
+		 * (for h4 anyway), and better safe than sorry.
+		 *
+		 * The clamps on h[] are necessary for the output to be correct even in the
+		 * common case and for short inputs.
+		 */
 
 		for (i = 0; i < 64; i++) {
 			// load up the input word for this round
@@ -784,19 +570,12 @@ sjcl.hash.sha256.prototype = {
 		}
 
 		h[0] = (h[0] + h0) | 0;
-
 		h[1] = (h[1] + h1) | 0;
-
 		h[2] = (h[2] + h2) | 0;
-
 		h[3] = (h[3] + h3) | 0;
-
 		h[4] = (h[4] + h4) | 0;
-
 		h[5] = (h[5] + h5) | 0;
-
 		h[6] = (h[6] + h6) | 0;
-
 		h[7] = (h[7] + h7) | 0;
 	}
 };
