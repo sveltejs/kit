@@ -194,7 +194,7 @@ export async function render_response({
 			if (options.dev) attributes.push(' data-svelte');
 			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-			await csp.add_style(inlined_style);
+			csp.add_style(inlined_style);
 
 			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
 		}
@@ -226,7 +226,7 @@ export async function render_response({
 
 			const attributes = ['type="module"'];
 
-			await csp.add_script(init_app);
+			csp.add_script(init_app);
 
 			if (csp.script_needs_nonce) {
 				attributes.push(`nonce="${csp.nonce}"`);
@@ -247,7 +247,7 @@ export async function render_response({
 
 		if (options.service_worker) {
 			// always include service worker unless it's turned off explicitly
-			await csp.add_script(init_service_worker);
+			csp.add_script(init_service_worker);
 
 			head += `
 				<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
