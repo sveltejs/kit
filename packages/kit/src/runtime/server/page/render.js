@@ -214,7 +214,7 @@ export async function render_response({
 					attributes.push('disabled', 'media="(max-width: 0)"');
 				}
 
-				return `\n\t<link${attributes.join(' ')}>`
+				return `\n\t<link ${attributes.join(' ')}>`
 			})
 			.join('');
 
