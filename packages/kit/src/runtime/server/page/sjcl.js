@@ -210,33 +210,30 @@ const key = new Uint32Array(64);
  * Function to precompute _init and _key.
  */
 function precompute() {
-	var i = 0,
-		prime = 2,
-		factor,
-		isPrime;
-
 	/** @param {number} x */
 	function frac(x) {
 		return (x - Math.floor(x)) * 0x100000000;
 	}
 
-	for (; i < 64; prime++) {
-		isPrime = true;
+	let prime = 2;
 
-		for (factor = 2; factor * factor <= prime; factor++) {
+	for (let i = 0; i < 64; prime++) {
+		let is_prime = true;
+
+		for (let factor = 2; factor * factor <= prime; factor++) {
 			if (prime % factor === 0) {
-				isPrime = false;
+				is_prime = false;
 
 				break;
 			}
 		}
 
-		if (isPrime) {
+		if (is_prime) {
 			if (i < 8) {
-				init[i] = frac(Math.pow(prime, 1 / 2));
+				init[i] = frac(prime ** (1 / 2));
 			}
 
-			key[i] = frac(Math.pow(prime, 1 / 3));
+			key[i] = frac(prime ** (1 / 3));
 
 			i++;
 		}
