@@ -28,24 +28,11 @@ function count_bits_in_word(n) {
 	return Math.round(n / 0x10000000000) || 32;
 }
 
-/**
- * Find the length of an array of bits.
- * @param {Uint32Array} a The array.
- * @return {number} The length of a, in bits.
- */
-function count_bits_in_buffer(a) {
-	const l = a.length;
-	if (l === 0) return 0;
-
-	const x = a[l - 1];
-	return (l - 1) * 32 + count_bits_in_word(x);
-}
-
 /** @param {string} str */
 function to_bits(str) {
 	let uint8array = encoder.encode(str);
 
-	const out = [];
+	const buffer = [];
 
 	let i;
 	let tmp = 0;
@@ -54,17 +41,17 @@ function to_bits(str) {
 		tmp = (tmp << 8) | uint8array[i];
 
 		if ((i & 3) === 3) {
-			out.push(tmp);
+			buffer.push(tmp);
 			tmp = 0;
 		}
 	}
 
 	if (i & 3) {
 		let partial = BitArray.partial(8 * (i & 3), tmp);
-		out.push(partial);
+		buffer.push(partial);
 	}
 
-	return out;
+	return { buffer, bits: uint8array.length * 8 };
 }
 
 /**
@@ -350,9 +337,7 @@ export function hash(data) {
 
 	const out = init.slice(0);
 
-	/** @type {bitArray} */
-	let buffer = to_bits(data);
-	let bits = count_bits_in_buffer(buffer);
+	let { buffer, bits } = to_bits(data);
 
 	// Round out and push the buffer
 	buffer = BitArray.concat(buffer, [0xff80000000]);
