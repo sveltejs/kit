@@ -20,7 +20,8 @@ if (typeof crypto !== 'undefined') {
 
 	generate_hash = sha256;
 } else {
-	csp_ready = import('crypto').then((crypto) => {
+	const name = 'crypto'; // store in a variable to fool esbuild when adapters bundle kit
+	csp_ready = import(name).then((crypto) => {
 		generate_nonce = () => {
 			return crypto.randomBytes(16).toString('base64');
 		};
