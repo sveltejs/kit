@@ -291,6 +291,26 @@ importers:
       tiny-glob: 0.2.9
       uvu: 0.5.2
 
+  packages/kit/test/prerendering/basics:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.43.0
+      uvu: ^0.5.2
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      svelte: 3.44.2
+      uvu: 0.5.2
+
+  packages/kit/test/prerendering/options:
+    specifiers:
+      '@sveltejs/kit': workspace:*
+      svelte: ^3.43.0
+      uvu: ^0.5.2
+    devDependencies:
+      '@sveltejs/kit': link:../../..
+      svelte: 3.44.2
+      uvu: 0.5.2
+
 packages:
 
   /@actions/core/1.6.0:
