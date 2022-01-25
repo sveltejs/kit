@@ -21,9 +21,10 @@ function swap_endianness(uint32array) {
 function toBits(str) {
 	str = unescape(encodeURIComponent(str));
 
-	var out = [],
-		i,
-		tmp = 0;
+	const out = [];
+
+	let i;
+	let tmp = 0;
 
 	for (i = 0; i < str.length; i++) {
 		tmp = (tmp << 8) | str.charCodeAt(i);
@@ -331,47 +332,43 @@ const block = (out, w) => {
 	out[7] = (out[7] + out7) | 0;
 };
 
-/** @param {bitArray | string} data */
+/** @param {string} data */
 export function hash(data) {
 	if (!key[0]) precompute();
-
-	if (typeof data === 'string') {
-		data = toBits(data);
-	}
 
 	const out = init.slice(0);
 
 	/** @type {bitArray} */
-	let _buffer = data;
-	let _length = BitArray.bitLength(data);
+	let buffer = toBits(data);
+	let length = BitArray.bitLength(buffer);
 
 	// update
-	const c = new Uint32Array(_buffer);
+	const c = new Uint32Array(buffer);
 
 	let j = 0;
-	for (let i = 512; i <= _length; i += 512) {
+	for (let i = 512; i <= length; i += 512) {
 		block(out, c.subarray(16 * j, 16 * (j + 1)));
 		j += 1;
 	}
 
-	_buffer.splice(0, 16 * j);
+	buffer.splice(0, 16 * j);
 
 	// finalize
 
 	// Round out and push the buffer
-	_buffer = BitArray.concat(_buffer, [BitArray.partial(1, 1)]);
+	buffer = BitArray.concat(buffer, [BitArray.partial(1, 1)]);
 
 	// Round out the buffer to a multiple of 16 words, less the 2 length words.
-	for (let i = _buffer.length + 2; i & 15; i++) {
-		_buffer.push(0);
+	for (let i = buffer.length + 2; i & 15; i++) {
+		buffer.push(0);
 	}
 
 	// append the length
-	_buffer.push(Math.floor(_length / 0x100000000));
-	_buffer.push(_length | 0);
+	buffer.push(Math.floor(length / 0x100000000));
+	buffer.push(length | 0);
 
-	while (_buffer.length) {
-		block(out, _buffer.splice(0, 16));
+	while (buffer.length) {
+		block(out, buffer.splice(0, 16));
 	}
 
 	return out;
