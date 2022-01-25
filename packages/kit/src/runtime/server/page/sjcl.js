@@ -243,7 +243,7 @@ function precompute() {
 /**
  * Perform one cycle of SHA-256.
  * @param {Uint32Array} out
- * @param {Uint32Array | bitArray} w one block of words.
+ * @param {Uint32Array} w one block of words.
  */
 const block = (out, w) => {
 	var tmp;
@@ -341,19 +341,6 @@ export function hash(data) {
 	let buffer = toBits(data);
 	let length = BitArray.bitLength(buffer);
 
-	// update
-	const c = new Uint32Array(buffer);
-
-	let j = 0;
-	for (let i = 512; i <= length; i += 512) {
-		block(out, c.subarray(16 * j, 16 * (j + 1)));
-		j += 1;
-	}
-
-	buffer.splice(0, 16 * j);
-
-	// finalize
-
 	// Round out and push the buffer
 	buffer = BitArray.concat(buffer, [BitArray.partial(1, 1)]);
 
@@ -366,8 +353,10 @@ export function hash(data) {
 	buffer.push(Math.floor(length / 0x100000000));
 	buffer.push(length | 0);
 
-	while (buffer.length) {
-		block(out, buffer.splice(0, 16));
+	const uint32array = new Uint32Array(buffer);
+
+	for (let i = 0; i < uint32array.length; i += 16) {
+		block(out, uint32array.subarray(i, i + 16));
 	}
 
 	return out;

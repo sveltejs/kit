@@ -14,7 +14,8 @@ inputs.forEach((input) => {
 		const expected_bytes = crypto.createHash('sha256').update(input, 'utf-8').digest();
 		const expected = expected_bytes.toString('base64');
 
-		assert.equal(sha256(input), expected);
+		const actual = sha256(input);
+		assert.equal(actual, expected);
 	});
 });
 
