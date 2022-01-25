@@ -290,7 +290,10 @@ export async function render_response({
 	}
 
 	if (!state.prerender) {
-		headers.set('content-security-policy', csp.get_header());
+		const csp_header = csp.get_header();
+		if (csp_header) {
+			headers.set('content-security-policy', csp_header);
+		}
 	}
 
 	return new Response(html, {
