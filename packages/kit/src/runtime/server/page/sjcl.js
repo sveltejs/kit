@@ -42,7 +42,7 @@ function count_bits_in_buffer(a) {
 }
 
 /** @param {string} str */
-function toBits(str) {
+function to_bits(str) {
 	let uint8array = encoder.encode(str);
 
 	const out = [];
@@ -97,19 +97,41 @@ function toBits(str) {
 const BitArray = {
 	/**
 	 * Concatenate two bit arrays.
-	 * @param {bitArray} array The array.
-	 * @param {number} n The number.
-	 * @return {bitArray} The concatenation of a1 and n.
+	 * @param {bitArray} a1 The first array.
+	 * @param {bitArray} a2 The second array.
+	 * @return {bitArray} The concatenation of a1 and a2.
 	 */
-	concat: function (array, n) {
-		if (array.length === 0) return [n];
+	concat: function (a1, a2) {
+		if (a1.length === 0) {
+			return a1.concat(a2);
+		}
 
-		const last = array[array.length - 1];
+		const last = a1[a1.length - 1];
 		const shift = count_bits_in_word(last);
 
-		if (shift === 32) return array.concat(n);
+		if (shift === 32) {
+			return a1.concat(a2);
+		} else {
+			return BitArray._shiftRight(a2, shift, last | 0, a1.slice(0, a1.length - 1));
+		}
+	},
 
-		return BitArray._shiftRight(n, shift, last, array.slice(0, array.length - 1));
+	/**
+	 * Find the length of an array of bits.
+	 * @param {bitArray} a The array.
+	 * @return {number} The length of a, in bits.
+	 */
+	bitLength: function (a) {
+		var l = a.length,
+			x;
+
+		if (l === 0) {
+			return 0;
+		}
+
+		x = a[l - 1];
+
+		return (l - 1) * 32 + count_bits_in_word(x);
 	},
 
 	/**
@@ -128,13 +150,17 @@ const BitArray = {
 	},
 
 	/** Shift an array right.
-	 * @param {number} a The array to shift.
+	 * @param {bitArray} a The array to shift.
 	 * @param {number} shift The number of bits to shift.
 	 * @param {number} [carry] A byte to carry in
 	 * @param {bitArray} [out] An array to prepend to the output.
 	 * @private
 	 */
 	_shiftRight: function (a, shift, carry = 0, out = []) {
+		var i,
+			last2 = 0,
+			shift2;
+
 		for (; shift >= 32; shift -= 32) {
 			out.push(carry);
 
@@ -145,11 +171,15 @@ const BitArray = {
 			return out.concat(a);
 		}
 
-		out.push(carry | (a >>> shift));
-		carry = a << (32 - shift);
+		for (i = 0; i < a.length; i++) {
+			out.push(carry | (a[i] >>> shift));
 
-		const last2 = a;
-		const shift2 = count_bits_in_word(last2);
+			carry = a[i] << (32 - shift);
+		}
+
+		last2 = a.length ? a[a.length - 1] : 0;
+
+		shift2 = count_bits_in_word(last2);
 
 		out.push(
 			BitArray.partial(
@@ -320,19 +350,12 @@ export function hash(data) {
 
 	const out = init.slice(0);
 
-	let uint8array = encoder.encode(data);
-	let l = 4 * Math.ceil(uint8array.length / 4);
-	if (uint8array.length < l) {
-		const tmp = new Uint8Array(l);
-		tmp.set(uint8array);
-		uint8array = tmp;
-	}
 	/** @type {bitArray} */
-	let buffer = toBits(data);
+	let buffer = to_bits(data);
 	let bits = count_bits_in_buffer(buffer);
 
 	// Round out and push the buffer
-	buffer = BitArray.concat(buffer, 0xff80000000);
+	buffer = BitArray.concat(buffer, [0xff80000000]);
 
 	// Round out the buffer to a multiple of 16 words, less the 2 length words.
 	for (let i = buffer.length + 2; i & 15; i++) {
