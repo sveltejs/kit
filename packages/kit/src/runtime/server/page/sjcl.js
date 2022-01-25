@@ -179,9 +179,8 @@ const BitArray = {
 
 /**
  * The SHA-256 initialization vector, to be precomputed.
- * @type {number[]}
  */
-const init = [];
+const init = new Uint32Array(8);
 
 /*
  * init:[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19],
@@ -189,9 +188,8 @@ const init = [];
 
 /**
  * The SHA-256 hash key, to be precomputed.
- * @type {number[]}
  */
-const key = [];
+const key = new Uint32Array(64);
 
 /*
  * key:
@@ -216,7 +214,7 @@ function precompute() {
 
 	/** @param {number} x */
 	function frac(x) {
-		return ((x - Math.floor(x)) * 0x100000000) | 0;
+		return (x - Math.floor(x)) * 0x100000000;
 	}
 
 	for (; i < 64; prime++) {
