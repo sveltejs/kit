@@ -24,7 +24,7 @@ test('adds CSP headers via meta tag', () => {
 	const content = read('index.html');
 	assert.ok(
 		content.includes(
-			`<meta http-equiv="content-security-policy" content="script-src 'self' 'sha256-`
+			'<meta http-equiv="content-security-policy" content="script-src \'self\' \'sha256-'
 		)
 	);
 });

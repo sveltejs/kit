@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
-import { start_server } from '../../../utils.js';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
