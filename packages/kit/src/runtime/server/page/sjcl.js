@@ -242,52 +242,38 @@ function precompute() {
 
 /** @param {bitArray | string} data */
 export function hash(data) {
-	if (!key[0]) {
-		precompute();
-	}
-
-	const _h = init.slice(0);
-	/** @type {bitArray} */
-	let _buffer = [];
-	let _length = 0;
+	if (!key[0]) precompute();
 
 	if (typeof data === 'string') {
 		data = toBits(data);
 	}
 
+	const out = init.slice(0);
+
+	/** @type {bitArray} */
+	let _buffer = data;
+	let _length = BitArray.bitLength(data);
+
 	// update
-	var i,
-		b = (_buffer = BitArray.concat(_buffer, data)),
-		ol = _length,
-		nl = (_length = ol + BitArray.bitLength(data));
-
-	if (nl > 9007199254740991) {
-		throw new Error('Cannot hash more than 2^53 - 1 bits');
-	}
-
-	var c = new Uint32Array(b);
-
-	var j = 0;
+	const c = new Uint32Array(_buffer);
 
 	/**
 	 * Perform one cycle of SHA-256.
 	 * @param {Uint32Array|bitArray} w one block of words.
 	 */
 	const block = (w) => {
-		var i,
-			tmp,
-			a,
-			b,
-			h = _h,
-			k = key,
-			h0 = h[0],
-			h1 = h[1],
-			h2 = h[2],
-			h3 = h[3],
-			h4 = h[4],
-			h5 = h[5],
-			h6 = h[6],
-			h7 = h[7];
+		var tmp;
+		var a;
+		var b;
+
+		let out0 = out[0];
+		let out1 = out[1];
+		let out2 = out[2];
+		let out3 = out[3];
+		let out4 = out[4];
+		let out5 = out[5];
+		let out6 = out[6];
+		let out7 = out[7];
 
 		/* Rationale for placement of |0 :
 		 * If a value can overflow is original 32 bits by a factor of more than a few
@@ -295,15 +281,15 @@ export function hash(data) {
 		 * 53-bit mantissa and lose precision.
 		 *
 		 * To avoid this, we clamp back to 32 bits by |'ing with 0 on any value that
-		 * propagates around the loop, and on the hash state h[].  I don't believe
-		 * that the clamps on h4 and on h0 are strictly necessary, but it's close
-		 * (for h4 anyway), and better safe than sorry.
+		 * propagates around the loop, and on the hash state out[]. I don't believe
+		 * that the clamps on out4 and on out0 are strictly necessary, but it's close
+		 * (for out4 anyway), and better safe than sorry.
 		 *
-		 * The clamps on h[] are necessary for the output to be correct even in the
+		 * The clamps on out[] are necessary for the output to be correct even in the
 		 * common case and for short inputs.
 		 */
 
-		for (i = 0; i < 64; i++) {
+		for (let i = 0; i < 64; i++) {
 			// load up the input word for this round
 
 			if (i < 16) {
@@ -323,72 +309,70 @@ export function hash(data) {
 
 			tmp =
 				tmp +
-				h7 +
-				((h4 >>> 6) ^ (h4 >>> 11) ^ (h4 >>> 25) ^ (h4 << 26) ^ (h4 << 21) ^ (h4 << 7)) +
-				(h6 ^ (h4 & (h5 ^ h6))) +
-				k[i]; // | 0;
+				out7 +
+				((out4 >>> 6) ^ (out4 >>> 11) ^ (out4 >>> 25) ^ (out4 << 26) ^ (out4 << 21) ^ (out4 << 7)) +
+				(out6 ^ (out4 & (out5 ^ out6))) +
+				key[i]; // | 0;
 
 			// shift register
+			out7 = out6;
+			out6 = out5;
+			out5 = out4;
 
-			h7 = h6;
-			h6 = h5;
-			h5 = h4;
+			out4 = (out3 + tmp) | 0;
 
-			h4 = (h3 + tmp) | 0;
+			out3 = out2;
+			out2 = out1;
+			out1 = out0;
 
-			h3 = h2;
-			h2 = h1;
-			h1 = h0;
-
-			h0 =
+			out0 =
 				(tmp +
-					((h1 & h2) ^ (h3 & (h1 ^ h2))) +
-					((h1 >>> 2) ^ (h1 >>> 13) ^ (h1 >>> 22) ^ (h1 << 30) ^ (h1 << 19) ^ (h1 << 10))) |
+					((out1 & out2) ^ (out3 & (out1 ^ out2))) +
+					((out1 >>> 2) ^
+						(out1 >>> 13) ^
+						(out1 >>> 22) ^
+						(out1 << 30) ^
+						(out1 << 19) ^
+						(out1 << 10))) |
 				0;
 		}
 
-		h[0] = (h[0] + h0) | 0;
-		h[1] = (h[1] + h1) | 0;
-		h[2] = (h[2] + h2) | 0;
-		h[3] = (h[3] + h3) | 0;
-		h[4] = (h[4] + h4) | 0;
-		h[5] = (h[5] + h5) | 0;
-		h[6] = (h[6] + h6) | 0;
-		h[7] = (h[7] + h7) | 0;
+		out[0] = (out[0] + out0) | 0;
+		out[1] = (out[1] + out1) | 0;
+		out[2] = (out[2] + out2) | 0;
+		out[3] = (out[3] + out3) | 0;
+		out[4] = (out[4] + out4) | 0;
+		out[5] = (out[5] + out5) | 0;
+		out[6] = (out[6] + out6) | 0;
+		out[7] = (out[7] + out7) | 0;
 	};
 
-	for (i = 512 + ol - ((512 + ol) & 511); i <= nl; i += 512) {
+	let j = 0;
+	for (let i = 512; i <= _length; i += 512) {
 		block(c.subarray(16 * j, 16 * (j + 1)));
 
 		j += 1;
 	}
 
-	b.splice(0, 16 * j);
+	_buffer.splice(0, 16 * j);
 
 	// finalize
-	var i,
-		b = _buffer,
-		h = _h;
 
 	// Round out and push the buffer
-
-	b = BitArray.concat(b, [BitArray.partial(1, 1)]);
+	_buffer = BitArray.concat(_buffer, [BitArray.partial(1, 1)]);
 
 	// Round out the buffer to a multiple of 16 words, less the 2 length words.
-
-	for (i = b.length + 2; i & 15; i++) {
-		b.push(0);
+	for (let i = _buffer.length + 2; i & 15; i++) {
+		_buffer.push(0);
 	}
 
 	// append the length
+	_buffer.push(Math.floor(_length / 0x100000000));
+	_buffer.push(_length | 0);
 
-	b.push(Math.floor(_length / 0x100000000));
-
-	b.push(_length | 0);
-
-	while (b.length) {
-		block(b.splice(0, 16));
+	while (_buffer.length) {
+		block(_buffer.splice(0, 16));
 	}
 
-	return h;
+	return out;
 }
