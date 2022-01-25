@@ -60,10 +60,10 @@ export interface RequestEvent<Locals = Record<string, any>, Platform = Record<st
 }
 
 type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
-export interface EndpointOutput {
+export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;
-	headers?: HeadersInit;
-	body?: Body;
+	headers?: Headers | Partial<ResponseHeaders>;
+	body?: Output;
 }
 
 type MaybePromise<T> = T | Promise<T>;
@@ -71,9 +71,13 @@ interface Fallthrough {
 	fallthrough: true;
 }
 
-export interface RequestHandler<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface RequestHandler<
+	Locals = Record<string, any>,
+	Platform = Record<string, unknown>,
+	Output extends Body = Body
+> {
 	(event: RequestEvent<Locals, Platform>): MaybePromise<
-		Either<Response | EndpointOutput, Fallthrough>
+		Either<Response | EndpointOutput<Output>, Fallthrough>
 	>;
 }
 ```

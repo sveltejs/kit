@@ -34,16 +34,22 @@ async function test_make_package(path) {
 				`\n\t actually: ${JSON.stringify(actual_files)}`
 		);
 
+		const extensions = ['.json', '.svelte', '.ts', 'js'];
 		for (const file of actual_files) {
-			if (!statSync(join(pwd, file)).isDirectory()) {
-				assert.equal(expected_files.includes(file), true, `Did not expect ${file} in ${path}`);
-				const expected_content = format(file, readFileSync(join(ewd, file), 'utf-8'));
-				const actual_content = format(file, readFileSync(join(pwd, file), 'utf-8'));
-				assert.fixture(
-					actual_content,
-					expected_content,
-					`Expected equal file contents for ${file} in ${path}`
-				);
+			const pathname = join(pwd, file);
+			if (statSync(pathname).isDirectory()) continue;
+			assert.ok(expected_files.includes(file), `Did not expect ${file} in ${path}`);
+
+			const expected = readFileSync(join(ewd, file));
+			const actual = readFileSync(join(pwd, file));
+			const err_msg = `Expected equal file contents for ${file} in ${path}`;
+
+			if (extensions.some((ext) => pathname.endsWith(ext))) {
+				const expected_content = format(file, expected.toString('utf-8'));
+				const actual_content = format(file, actual.toString('utf-8'));
+				assert.fixture(actual_content, expected_content, err_msg);
+			} else {
+				assert.ok(expected.equals(actual), err_msg);
 			}
 		}
 	} finally {
@@ -97,6 +103,10 @@ test('create standard package with javascript', async () => {
 
 test('create standard package with typescript', async () => {
 	await test_make_package('typescript');
+});
+
+test('create package and assets are not tampered', async () => {
+	await test_make_package('assets');
 });
 
 test('create package with emitTypes settings disabled', async () => {
