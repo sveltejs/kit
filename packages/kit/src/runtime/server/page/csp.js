@@ -65,7 +65,7 @@ export class Csp {
 	 */
 	constructor({ mode, directives }, prerender) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
-		this.#directives = { ...directives };
+		this.#directives = directives;
 
 		this.#script_src = [];
 		this.#style_src = [];
@@ -120,31 +120,31 @@ export class Csp {
 		// (specifically, Firefox appears to not ignore nonce-{nonce} directives
 		// on default-src), so we ensure that script-src and style-src exist
 
-		if (this.#script_src.length > 0) {
-			if (!this.#directives['script-src']) {
-				this.#directives['script-src'] = [...(this.#directives['default-src'] || [])];
-			}
+		const directives = { ...this.#directives };
 
-			this.#directives['script-src'].push(...this.#script_src);
+		if (this.#script_src.length > 0) {
+			directives['script-src'] = [
+				...(directives['script-src'] || directives['default-src'] || []),
+				...this.#script_src
+			];
 		}
 
 		if (this.#style_src.length > 0) {
-			if (!this.#directives['style-src']) {
-				this.#directives['style-src'] = [...(this.#directives['default-src'] || [])];
-			}
-
-			this.#directives['style-src'].push(...this.#style_src);
+			directives['style-src'] = [
+				...(directives['style-src'] || directives['default-src'] || []),
+				...this.#style_src
+			];
 		}
 
-		for (const key in this.#directives) {
+		for (const key in directives) {
 			if (is_meta && (key === 'frame-ancestors' || key === 'report-uri' || key === 'sandbox')) {
 				// these values cannot be used with a <meta> tag
 				// TODO warn?
 				continue;
 			}
 
-			// @ts-expect-error gimme a break typescript, `key` is obviously a member of this.#directives
-			const value = /** @type {string[] | true} */ (this.#directives[key]);
+			// @ts-expect-error gimme a break typescript, `key` is obviously a member of directives
+			const value = /** @type {string[] | true} */ (directives[key]);
 
 			if (!value) continue;
 
