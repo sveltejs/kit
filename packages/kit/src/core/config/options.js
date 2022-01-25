@@ -1,3 +1,5 @@
+import { join } from 'path';
+
 /** @typedef {import('./types').Validator} Validator */
 
 /** @type {Validator} */
@@ -94,11 +96,11 @@ const options = object(
 
 			files: object({
 				assets: string('static'),
-				hooks: string('src/hooks'),
-				lib: string('src/lib'),
-				routes: string('src/routes'),
-				serviceWorker: string('src/service-worker'),
-				template: string('src/app.html')
+				hooks: string(join('src', 'hooks')),
+				lib: string(join('src', 'lib')),
+				routes: string(join('src', 'routes')),
+				serviceWorker: string(join('src', 'service-worker')),
+				template: string(join('src', 'app.html'))
 			}),
 
 			floc: boolean(false),
