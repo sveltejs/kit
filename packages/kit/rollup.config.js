@@ -57,6 +57,7 @@ export default [
 			cli: 'src/cli.js',
 			node: 'src/node.js',
 			hooks: 'src/hooks.js',
+			'install-crypto': 'src/install-crypto.js',
 			'install-fetch': 'src/install-fetch.js'
 		},
 		output: {

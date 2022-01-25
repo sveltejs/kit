@@ -1,2 +1,5 @@
-import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
-__fetch_polyfill();
+import { install_crypto } from '@sveltejs/kit/install-crypto';
+import { install_fetch } from '@sveltejs/kit/install-fetch';
+
+install_crypto();
+install_fetch();

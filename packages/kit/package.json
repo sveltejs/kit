@@ -86,6 +86,9 @@
 		"./hooks": {
 			"import": "./dist/hooks.js"
 		},
+		"./install-crypto": {
+			"import": "./dist/install-crypto.js"
+		},
 		"./install-fetch": {
 			"import": "./dist/install-fetch.js"
 		}

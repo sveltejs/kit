@@ -2,8 +2,8 @@ import { readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
-import { __fetch_polyfill } from '../../../install-fetch.js';
-import { polyfill_crypto } from '../../../install-crypto.js';
+import { install_fetch } from '../../../install-fetch.js';
+import { install_crypto } from '../../../install-crypto.js';
 import { SVELTE_KIT } from '../../constants.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
@@ -57,8 +57,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		return { paths: [] };
 	}
 
-	__fetch_polyfill();
-	polyfill_crypto();
+	install_fetch();
+	install_crypto();
 
 	mkdirp(out);
 

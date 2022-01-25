@@ -4,8 +4,8 @@ import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { respond } from '../../runtime/server/index.js';
-import { __fetch_polyfill } from '../../install-fetch.js';
-import { polyfill_crypto } from '../../install-crypto.js';
+import { install_fetch } from '../../install-fetch.js';
+import { install_crypto } from '../../install-crypto.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRequest, setResponse } from '../../node.js';
@@ -32,8 +32,8 @@ export async function create_plugin(config, cwd) {
 		name: 'vite-plugin-svelte-kit',
 
 		configureServer(vite) {
-			__fetch_polyfill();
-			polyfill_crypto();
+			install_fetch();
+			install_crypto();
 
 			/** @type {import('types/app').SSRManifest} */
 			let manifest;

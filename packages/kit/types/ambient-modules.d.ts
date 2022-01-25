@@ -195,7 +195,7 @@ declare module '@sveltejs/kit/node' {
 declare module '@sveltejs/kit/install-fetch' {
 	import fetch, { Headers, Request, Response } from 'node-fetch';
 
-	export function __fetch_polyfill(): void;
+	export function install_fetch(): void;
 
 	export { fetch, Headers, Request, Response };
 }
