@@ -40,7 +40,7 @@ function toBits(str) {
 	}
 
 	if (i & 3) {
-		out.push(sjcl.bitArray.partial(8 * (i & 3), tmp));
+		out.push(BitArray.partial(8 * (i & 3), tmp));
 	}
 
 	return out;
@@ -71,44 +71,9 @@ function toBits(str) {
  * </p>
  */
 
-sjcl.bitArray = {
-	/**
-	 * Array slices in units of bits.
-	 * @param {bitArray} a The array to slice.
-	 * @param {Number} bstart The offset to the start of the slice, in bits.
-	 * @param {Number} bend The offset to the end of the slice, in bits.  If this is undefined,
-	 * slice until the end of the array.
-	 * @return {bitArray} The requested slice.
-	 */
-	bitSlice: function (a, bstart, bend) {
-		a = sjcl.bitArray._shiftRight(a.slice(bstart / 32), 32 - (bstart & 31)).slice(1);
-		return bend === undefined ? a : sjcl.bitArray.clamp(a, bend - bstart);
-	},
+/** @typedef {number[]} bitArray */
 
-	/**
-	 * Extract a number packed into a bit array.
-	 * @param {bitArray} a The array to slice.
-	 * @param {Number} bstart The offset to the start of the slice, in bits.
-	 * @param {Number} blength The length of the number to extract.
-	 * @return {Number} The requested slice.
-	 */
-	extract: function (a, bstart, blength) {
-		// FIXME: this Math.floor is not necessary at all, but for some reason
-		// seems to suppress a bug in the Chromium JIT.
-		var x,
-			sh = Math.floor((-bstart - blength) & 31);
-
-		if (((bstart + blength - 1) ^ bstart) & -32) {
-			// it crosses a boundary
-			x = (a[(bstart / 32) | 0] << (32 - sh)) ^ (a[(bstart / 32 + 1) | 0] >>> sh);
-		} else {
-			// within a single word
-			x = a[(bstart / 32) | 0] >>> sh;
-		}
-
-		return x & ((1 << blength) - 1);
-	},
-
+const BitArray = {
 	/**
 	 * Concatenate two bit arrays.
 	 * @param {bitArray} a1 The first array.
@@ -121,12 +86,12 @@ sjcl.bitArray = {
 		}
 
 		var last = a1[a1.length - 1],
-			shift = sjcl.bitArray.getPartial(last);
+			shift = BitArray.getPartial(last);
 
 		if (shift === 32) {
 			return a1.concat(a2);
 		} else {
-			return sjcl.bitArray._shiftRight(a2, shift, last | 0, a1.slice(0, a1.length - 1));
+			return BitArray._shiftRight(a2, shift, last | 0, a1.slice(0, a1.length - 1));
 		}
 	},
 
@@ -145,31 +110,7 @@ sjcl.bitArray = {
 
 		x = a[l - 1];
 
-		return (l - 1) * 32 + sjcl.bitArray.getPartial(x);
-	},
-
-	/**
-	 * Truncate an array.
-	 * @param {bitArray} a The array.
-	 * @param {Number} len The length to truncate to, in bits.
-	 * @return {bitArray} A new array, truncated to len bits.
-	 */
-	clamp: function (a, len) {
-		if (a.length * 32 < len) {
-			return a;
-		}
-
-		a = a.slice(0, Math.ceil(len / 32));
-
-		var l = a.length;
-
-		len = len & 31;
-
-		if (l > 0 && len) {
-			a[l - 1] = sjcl.bitArray.partial(len, a[l - 1] & (0x80000000 >> (len - 1)), 1);
-		}
-
-		return a;
+		return (l - 1) * 32 + BitArray.getPartial(x);
 	},
 
 	/**
@@ -196,43 +137,17 @@ sjcl.bitArray = {
 		return Math.round(x / 0x10000000000) || 32;
 	},
 
-	/**
-	 * Compare two arrays for equality in a predictable amount of time.
-	 * @param {bitArray} a The first array.
-	 * @param {bitArray} b The second array.
-	 * @return {boolean} true if a == b; false otherwise.
-	 */
-
-	equal: function (a, b) {
-		if (sjcl.bitArray.bitLength(a) !== sjcl.bitArray.bitLength(b)) {
-			return false;
-		}
-
-		var x = 0,
-			i;
-
-		for (i = 0; i < a.length; i++) {
-			x |= a[i] ^ b[i];
-		}
-
-		return x === 0;
-	},
-
 	/** Shift an array right.
 	 * @param {bitArray} a The array to shift.
-	 * @param {Number} shift The number of bits to shift.
-	 * @param {Number} [carry=0] A byte to carry in
-	 * @param {bitArray} [out=[]] An array to prepend to the output.
+	 * @param {number} shift The number of bits to shift.
+	 * @param {number} [carry] A byte to carry in
+	 * @param {bitArray} [out] An array to prepend to the output.
 	 * @private
 	 */
-	_shiftRight: function (a, shift, carry, out) {
+	_shiftRight: function (a, shift, carry = 0, out = []) {
 		var i,
 			last2 = 0,
 			shift2;
-
-		if (out === undefined) {
-			out = [];
-		}
 
 		for (; shift >= 32; shift -= 32) {
 			out.push(carry);
@@ -252,39 +167,11 @@ sjcl.bitArray = {
 
 		last2 = a.length ? a[a.length - 1] : 0;
 
-		shift2 = sjcl.bitArray.getPartial(last2);
+		shift2 = BitArray.getPartial(last2);
 
-		out.push(
-			sjcl.bitArray.partial((shift + shift2) & 31, shift + shift2 > 32 ? carry : out.pop(), 1)
-		);
+		out.push(BitArray.partial((shift + shift2) & 31, shift + shift2 > 32 ? carry : out.pop(), 1));
 
 		return out;
-	},
-
-	/** xor a block of 4 words together.
-	 * @private
-	 */
-	_xor4: function (x, y) {
-		return [x[0] ^ y[0], x[1] ^ y[1], x[2] ^ y[2], x[3] ^ y[3]];
-	},
-
-	/** byteswap a word array inplace.
-	 * (does not handle partial words)
-	 * @param {sjcl.bitArray} a word array
-	 * @return {sjcl.bitArray} byteswapped array
-	 */
-	byteswapM: function (a) {
-		var i,
-			v,
-			m = 0xff00;
-
-		for (i = 0; i < a.length; ++i) {
-			v = a[i];
-
-			a[i] = (v >>> 24) | ((v >>> 8) & m) | ((v & m) << 8) | (v << 24);
-		}
-
-		return a;
 	}
 };
 
@@ -362,9 +249,9 @@ sjcl.hash.sha256.prototype = {
 		}
 
 		var i,
-			b = (this._buffer = sjcl.bitArray.concat(this._buffer, data)),
+			b = (this._buffer = BitArray.concat(this._buffer, data)),
 			ol = this._length,
-			nl = (this._length = ol + sjcl.bitArray.bitLength(data));
+			nl = (this._length = ol + BitArray.bitLength(data));
 
 		if (nl > 9007199254740991) {
 			throw new sjcl.exception.invalid('Cannot hash more than 2^53 - 1 bits');
@@ -402,7 +289,7 @@ sjcl.hash.sha256.prototype = {
 
 		// Round out and push the buffer
 
-		b = sjcl.bitArray.concat(b, [sjcl.bitArray.partial(1, 1)]);
+		b = BitArray.concat(b, [BitArray.partial(1, 1)]);
 
 		// Round out the buffer to a multiple of 16 words, less the 2 length words.
 
