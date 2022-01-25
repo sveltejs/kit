@@ -17,9 +17,11 @@ function swap_endianness(uint32array) {
 	return uint32array;
 }
 
+const encoder = new TextEncoder();
+
 /** @param {string} str */
 function toBits(str) {
-	let uint8array = new TextEncoder().encode(str);
+	let uint8array = encoder.encode(str);
 
 	const out = [];
 
