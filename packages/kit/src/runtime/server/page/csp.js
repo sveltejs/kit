@@ -154,7 +154,7 @@ export class Csp {
 					'unsafe-inline'
 				];
 			}
-		} else {
+		} else if (this.#style_src.length > 0) {
 			directives['style-src'] = [
 				...(directives['style-src'] || directives['default-src'] || []),
 				...this.#style_src
