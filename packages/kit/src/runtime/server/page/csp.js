@@ -1,21 +1,25 @@
 import { escape_html_attr } from '../../../utils/escape.js';
+import { sha256 } from './crypto.js';
 
-const array = new Uint8Array(16);
+/** @type {Promise<void>} */
+export let csp_ready;
 
-export function generate_nonce() {
-	crypto.getRandomValues(array);
-	return base64(array);
-}
+/** @type {() => string} */
+let generate_nonce;
 
-/**
- * @param {string} contents
- * @param {string} algorithm
- * @returns
- */
-async function generate_hash(contents, algorithm = 'sha-256') {
-	const bytes = new TextEncoder().encode(contents);
-	const digest = new Uint8Array(await crypto.subtle.digest(algorithm, bytes));
-	return base64(digest);
+if (typeof crypto !== 'undefined') {
+	const array = new Uint8Array(16);
+
+	generate_nonce = () => {
+		crypto.getRandomValues(array);
+		return base64(array);
+	};
+} else {
+	csp_ready = import('crypto').then((crypto) => {
+		generate_nonce = () => {
+			return crypto.randomBytes(16).toString('base64');
+		};
+	});
 }
 
 const quoted = new Set([
@@ -78,10 +82,10 @@ export class Csp {
 
 	// TODO would be great if these methods weren't async
 	/** @param {string} content */
-	async add_script(content) {
+	add_script(content) {
 		if (this.script_needs_csp) {
 			if (this.#use_hashes) {
-				this.#script_src.push(`sha256-${await generate_hash(content)}`);
+				this.#script_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#script_src.length === 0) {
 				this.#script_src.push(`nonce-${this.nonce}`);
 			}
@@ -89,10 +93,10 @@ export class Csp {
 	}
 
 	/** @param {string} content */
-	async add_style(content) {
+	add_style(content) {
 		if (this.style_needs_csp) {
 			if (this.#use_hashes) {
-				this.#style_src.push(`sha256-${await generate_hash(content)}`);
+				this.#style_src.push(`sha256-${sha256(content)}`);
 			} else if (this.#style_src.length === 0) {
 				this.#style_src.push(`nonce-${this.nonce}`);
 			}

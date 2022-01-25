@@ -3,7 +3,6 @@ import { dirname, join, resolve as resolve_path } from 'path';
 import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { install_fetch } from '../../../install-fetch.js';
-import { install_crypto } from '../../../install-crypto.js';
 import { SVELTE_KIT } from '../../constants.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
@@ -58,7 +57,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	install_fetch();
-	install_crypto();
 
 	mkdirp(out);
 

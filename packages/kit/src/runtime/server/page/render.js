@@ -5,7 +5,7 @@ import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { Csp } from './csp.js';
+import { Csp, csp_ready } from './csp.js';
 
 // TODO rename this function/module
 
@@ -139,6 +139,7 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
+	await csp_ready;
 	const csp = new Csp(options.csp, !!state.prerender);
 
 	// prettier-ignore
