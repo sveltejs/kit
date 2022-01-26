@@ -96,6 +96,7 @@ export async function load_node({
 
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
+				/** @type {Response} */
 				let response;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
@@ -167,7 +168,7 @@ export async function load_node({
 					} else {
 						// we can't load the endpoint from our own manifest,
 						// so we need to make an actual HTTP request
-						return fetch(new URL(requested, event.url).href, {
+						response = await fetch(new URL(requested, event.url).href, {
 							method: opts.method || 'GET',
 							headers: opts.headers
 						});
