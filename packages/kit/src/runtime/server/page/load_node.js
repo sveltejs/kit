@@ -126,7 +126,6 @@ export async function load_node({
 				} else if (is_root_relative(resolved)) {
 					const relative = resolved;
 
-					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
