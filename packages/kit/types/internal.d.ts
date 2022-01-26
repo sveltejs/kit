@@ -2,7 +2,7 @@ import { OutputAsset, OutputChunk } from 'rollup';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
-import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
+import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
 
 export interface PrerenderOptions {
@@ -97,7 +97,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: InternalHandle;
+	handle: Handle;
 	handleError: HandleError;
 }
 
@@ -228,7 +228,5 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
-		Response | undefined
-	>;
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<Response>;
 }
