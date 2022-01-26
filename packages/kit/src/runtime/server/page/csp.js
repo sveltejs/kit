@@ -192,6 +192,6 @@ export class Csp {
 
 	get_meta() {
 		const content = escape_html_attr(this.get_header(true));
-		return `<meta http-equiv="content-security-policy" content=${content}`;
+		return `<meta http-equiv="content-security-policy" content=${content}>`;
 	}
 }
