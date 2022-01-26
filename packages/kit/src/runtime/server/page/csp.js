@@ -87,15 +87,16 @@ export class Csp {
 
 		if (dev) {
 			// remove strict-dynamic in dev...
-			if (d['default-src']) {
-				d['default-src'] = d['default-src'].filter((name) => name !== 'strict-dynamic');
-				if (d['default-src'].length === 0) delete d['default-src'];
-			}
+			// TODO reinstate this if we can figure out how to make strict-dynamic work
+			// if (d['default-src']) {
+			// 	d['default-src'] = d['default-src'].filter((name) => name !== 'strict-dynamic');
+			// 	if (d['default-src'].length === 0) delete d['default-src'];
+			// }
 
-			if (d['script-src']) {
-				d['script-src'] = d['script-src'].filter((name) => name !== 'strict-dynamic');
-				if (d['script-src'].length === 0) delete d['script-src'];
-			}
+			// if (d['script-src']) {
+			// 	d['script-src'] = d['script-src'].filter((name) => name !== 'strict-dynamic');
+			// 	if (d['script-src'].length === 0) delete d['script-src'];
+			// }
 
 			const effective_style_src = d['style-src'] || d['default-src'];
 
