@@ -51,7 +51,7 @@ export default function ({ split = false } = {}) {
 			const redirects = [];
 
 			const replace = {
-				APP: './server/app.js'
+				'0APP': './server/app.js'
 			};
 
 			if (esm) {

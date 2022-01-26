@@ -19,6 +19,7 @@ export default [
 			}
 		],
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['APP', ...require('module').builtinModules]
+		external: (id) => id === '0APP' || id.startsWith('node:'),
+		preserveEntrySignatures: true
 	}
 ];
