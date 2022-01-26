@@ -5,6 +5,7 @@ import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
+import { Csp, csp_ready } from './csp.js';
 
 // TODO rename this function/module
 
@@ -36,8 +37,18 @@ export async function render_response({
 	ssr,
 	stuff
 }) {
-	const css = new Set(options.manifest._.entry.css);
-	const js = new Set(options.manifest._.entry.js);
+	if (state.prerender) {
+		if (options.csp.mode === 'nonce') {
+			throw new Error('Cannot use prerendering if config.kit.csp.mode === "nonce"');
+		}
+
+		if (options.template_contains_nonce) {
+			throw new Error('Cannot use prerendering if page template contains %svelte.nonce%');
+		}
+	}
+
+	const stylesheets = new Set(options.manifest._.entry.css);
+	const modulepreloads = new Set(options.manifest._.entry.js);
 	/** @type {Map<string, string>} */
 	const styles = new Map();
 
@@ -55,8 +66,8 @@ export async function render_response({
 
 	if (ssr) {
 		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
-			if (node.css) node.css.forEach((url) => css.add(url));
-			if (node.js) node.js.forEach((url) => js.add(url));
+			if (node.css) node.css.forEach((url) => stylesheets.add(url));
+			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
@@ -128,11 +139,44 @@ export async function render_response({
 
 	const inlined_style = Array.from(styles.values()).join('\n');
 
-	if (state.prerender) {
-		if (maxage) {
-			head += `<meta http-equiv="cache-control" content="max-age=${maxage}">`;
+	await csp_ready;
+	const csp = new Csp(options.csp, {
+		dev: options.dev,
+		prerender: !!state.prerender,
+		needs_nonce: options.template_contains_nonce
+	});
+
+	// prettier-ignore
+	const init_app = `
+		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
+		start({
+			target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+			paths: ${s(options.paths)},
+			session: ${try_serialize($session, (error) => {
+				throw new Error(`Failed to serialize session data: ${error.message}`);
+			})},
+			route: ${!!page_config.router},
+			spa: ${!ssr},
+			trailing_slash: ${s(options.trailing_slash)},
+			hydrate: ${ssr && page_config.hydrate ? `{
+				status: ${status},
+				error: ${serialize_error(error)},
+				nodes: [
+					${(branch || [])
+					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+					.join(',\n\t\t\t\t\t\t')}
+				],
+				url: new URL(${s(url.href)}),
+				params: ${devalue(params)}
+			}` : 'null'}
+		});
+	`;
+
+	const init_service_worker = `
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('${options.service_worker}');
 		}
-	}
+	`;
 
 	if (options.amp) {
 		head += `
@@ -150,49 +194,54 @@ export async function render_response({
 		}
 	} else {
 		if (inlined_style) {
-			head += `\n\t<style${options.dev ? ' data-svelte' : ''}>${inlined_style}</style>`;
+			const attributes = [];
+			if (options.dev) attributes.push(' data-svelte');
+			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
+
+			csp.add_style(inlined_style);
+
+			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
 		}
+
 		// prettier-ignore
-		head += Array.from(css)
-			.map((dep) => `\n\t<link${styles.has(dep) ? ' disabled media="(max-width: 0)"' : ''} rel="stylesheet" href="${options.prefix + dep}">`)
+		head += Array.from(stylesheets)
+			.map((dep) => {
+				const attributes = [
+					'rel="stylesheet"',
+					`href="${options.prefix + dep}"`
+				];
+
+				if (csp.style_needs_nonce) {
+					attributes.push(`nonce="${csp.nonce}"`);
+				}
+
+				if (styles.has(dep)) {
+					attributes.push('disabled', 'media="(max-width: 0)"');
+				}
+
+				return `\n\t<link ${attributes.join(' ')}>`;
+			})
 			.join('');
 
 		if (page_config.router || page_config.hydrate) {
-			head += Array.from(js)
+			head += Array.from(modulepreloads)
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
-			// prettier-ignore
-			head += `
-			<script type="module">
-				import { start } from ${s(options.prefix + options.manifest._.entry.file)};
-				start({
-					target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
-					paths: ${s(options.paths)},
-					session: ${try_serialize($session, (error) => {
-						throw new Error(`Failed to serialize session data: ${error.message}`);
-					})},
-					route: ${!!page_config.router},
-					spa: ${!ssr},
-					trailing_slash: ${s(options.trailing_slash)},
-					hydrate: ${ssr && page_config.hydrate ? `{
-						status: ${status},
-						error: ${serialize_error(error)},
-						nodes: [
-							${(branch || [])
-							.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-							.join(',\n\t\t\t\t\t\t')}
-						],
-						url: new URL(${s(url.href)}),
-						params: ${devalue(params)}
-					}` : 'null'}
-				});
-			</script>`;
 
+			const attributes = ['type="module"'];
+
+			csp.add_script(init_app);
+
+			if (csp.script_needs_nonce) {
+				attributes.push(`nonce="${csp.nonce}"`);
+			}
+
+			head += `<script ${attributes.join(' ')}>${init_app}</script>`;
+
+			// prettier-ignore
 			body += serialized_data
 				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(
-						url
-					)}`;
+					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(url)}`;
 					if (body) attributes += ` data-body="${hash(body)}"`;
 
 					return `<script ${attributes}>${json}</script>`;
@@ -202,12 +251,27 @@ export async function render_response({
 
 		if (options.service_worker) {
 			// always include service worker unless it's turned off explicitly
+			csp.add_script(init_service_worker);
+
 			head += `
-			<script>
-				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.register('${options.service_worker}');
-				}
-			</script>`;
+				<script${csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''}>${init_service_worker}</script>`;
+		}
+	}
+
+	if (state.prerender) {
+		const http_equiv = [];
+
+		const csp_headers = csp.get_meta();
+		if (csp_headers) {
+			http_equiv.push(csp_headers);
+		}
+
+		if (maxage) {
+			http_equiv.push(`<meta http-equiv="cache-control" content="max-age=${maxage}">`);
+		}
+
+		if (http_equiv.length > 0) {
+			head = http_equiv.join('\n') + head;
 		}
 	}
 
@@ -215,7 +279,7 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.template({ head, body, assets });
+	const html = options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) });
 
 	const headers = new Headers({
 		'content-type': 'text/html',
@@ -228,6 +292,13 @@ export async function render_response({
 
 	if (!options.floc) {
 		headers.set('permissions-policy', 'interest-cohort=()');
+	}
+
+	if (!state.prerender) {
+		const csp_header = csp.get_header();
+		if (csp_header) {
+			headers.set('content-security-policy', csp_header);
+		}
 	}
 
 	return new Response(html, {

@@ -214,8 +214,11 @@ export async function create_plugin(config, cwd) {
 							return res.end(err.reason || 'Invalid request body');
 						}
 
+						const template = load_template(cwd, config);
+
 						const rendered = await respond(request, {
 							amp: config.kit.amp,
+							csp: config.kit.csp,
 							dev: true,
 							floc: config.kit.floc,
 							get_stack: (error) => {
@@ -251,9 +254,10 @@ export async function create_plugin(config, cwd) {
 							root,
 							router: config.kit.router,
 							target: config.kit.target,
-							template: ({ head, body, assets }) => {
-								let rendered = load_template(cwd, config)
+							template: ({ head, body, assets, nonce }) => {
+								let rendered = template
 									.replace(/%svelte\.assets%/g, assets)
+									.replace(/%svelte\.nonce%/g, nonce)
 									// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
 									.replace('%svelte.head%', () => head)
 									.replace('%svelte.body%', () => body);
@@ -304,6 +308,7 @@ export async function create_plugin(config, cwd) {
 
 								return rendered;
 							},
+							template_contains_nonce: template.includes('%svelte.nonce%'),
 							trailing_slash: config.kit.trailingSlash
 						});
 
