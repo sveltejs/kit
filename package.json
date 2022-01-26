@@ -9,8 +9,7 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"version": "pnpm changeset version && pnpm install --no-frozen-lockfile && git add .",
-		"release": "pnpm changeset tag && pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\" && git push --follow-tags",
 		"preview:docs": "action-deploy-docs --project=kit",
 		"changeset:version": "changeset version && pnpm i --lockfile-only"
 	},
