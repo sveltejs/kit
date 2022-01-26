@@ -71,11 +71,14 @@ export class Csp {
 	 * @param {{
 	 *   mode: string,
 	 *   directives: import('types/csp').CspDirectives
+	 * }} config
+	 * @param {{
+	 *   dev: boolean;
+	 *   prerender: boolean;
+	 *   needs_nonce: boolean;
 	 * }} opts
-	 * @param {boolean} dev
-	 * @param {boolean} prerender
 	 */
-	constructor({ mode, directives }, dev, prerender) {
+	constructor({ mode, directives }, { dev, prerender, needs_nonce }) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
 		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
@@ -120,7 +123,7 @@ export class Csp {
 		this.script_needs_nonce = this.#script_needs_csp && !this.#use_hashes;
 		this.style_needs_nonce = this.#style_needs_csp && !this.#use_hashes;
 
-		if (this.script_needs_nonce || this.style_needs_nonce) {
+		if (this.script_needs_nonce || this.style_needs_nonce || needs_nonce) {
 			this.nonce = generate_nonce();
 		}
 	}

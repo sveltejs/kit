@@ -8,8 +8,11 @@ test('generates blank CSP header', () => {
 			mode: 'hash',
 			directives: {}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	assert.equal(csp.get_header(), '');
@@ -23,8 +26,11 @@ test('generates CSP header with directive', () => {
 				'default-src': ['self']
 			}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	assert.equal(csp.get_header(), "default-src 'self'");
@@ -38,8 +44,11 @@ test('generates CSP header with nonce', () => {
 				'default-src': ['self']
 			}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	csp.add_script('');
@@ -55,8 +64,11 @@ test('skips nonce with unsafe-inline', () => {
 				'default-src': ['unsafe-inline']
 			}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	csp.add_script('');
@@ -73,8 +85,11 @@ test('skips hash with unsafe-inline', () => {
 				'default-src': ['unsafe-inline']
 			}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	csp.add_script('');
@@ -94,8 +109,11 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 				sandbox: ['allow-modals']
 			}
 		},
-		false,
-		false
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	assert.equal(
@@ -117,8 +135,11 @@ test('adds unsafe-inline styles in dev', () => {
 				'default-src': ['self']
 			}
 		},
-		true,
-		false
+		{
+			dev: true,
+			prerender: false,
+			needs_nonce: false
+		}
 	);
 
 	csp.add_style('');
@@ -135,8 +156,11 @@ test('removes strict-dynamic in dev', () => {
 					[name]: ['strict-dynamic']
 				}
 			},
-			true,
-			false
+			{
+				dev: true,
+				prerender: false,
+				needs_nonce: false
+			}
 		);
 
 		csp.add_script('');
@@ -153,8 +177,11 @@ test('uses hashes when prerendering', () => {
 				'script-src': ['self']
 			}
 		},
-		false,
-		true
+		{
+			dev: false,
+			prerender: true,
+			needs_nonce: false
+		}
 	);
 
 	csp.add_script('');
@@ -163,6 +190,22 @@ test('uses hashes when prerendering', () => {
 		csp.get_header(),
 		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
 	);
+});
+
+test('always creates a nonce when template needs it', () => {
+	const csp = new Csp(
+		{
+			mode: 'hash',
+			directives: {}
+		},
+		{
+			dev: false,
+			prerender: false,
+			needs_nonce: true
+		}
+	);
+
+	assert.ok(csp.nonce);
 });
 
 test.run();
