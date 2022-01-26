@@ -20,6 +20,7 @@ if (typeof crypto !== 'undefined') {
 
 	generate_hash = sha256;
 } else {
+	// TODO: remove this in favor of web crypto API once we no longer support Node 14
 	const name = 'crypto'; // store in a variable to fool esbuild when adapters bundle kit
 	csp_ready = import(name).then((crypto) => {
 		generate_nonce = () => {
