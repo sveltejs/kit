@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.242
+
+### Patch Changes
+
+- reinstate `EndpointOutput` generic ([#3537](https://github.com/sveltejs/kit/pull/3537))
+
 ## 1.0.0-next.241
 
 ### Patch Changes
