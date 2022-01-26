@@ -77,14 +77,36 @@ export class Csp {
 	 */
 	constructor({ mode, directives }, dev, prerender) {
 		this.#use_hashes = mode === 'hash' || (mode === 'auto' && prerender);
-		this.#directives = directives;
+		this.#directives = dev ? { ...directives } : directives; // clone in dev so we can safely mutate
 		this.#dev = dev;
+
+		const d = this.#directives;
+
+		if (dev) {
+			// remove strict-dynamic in dev...
+			if (d['default-src']) {
+				d['default-src'] = d['default-src'].filter((name) => name !== 'strict-dynamic');
+				if (d['default-src'].length === 0) delete d['default-src'];
+			}
+
+			if (d['script-src']) {
+				d['script-src'] = d['script-src'].filter((name) => name !== 'strict-dynamic');
+				if (d['script-src'].length === 0) delete d['script-src'];
+			}
+
+			const effective_style_src = d['style-src'] || d['default-src'];
+
+			// ...and add unsafe-inline so we can inject <style> elements
+			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
+				d['style-src'] = [...effective_style_src, 'unsafe-inline'];
+			}
+		}
 
 		this.#script_src = [];
 		this.#style_src = [];
 
-		const effective_script_src = directives['script-src'] || directives['default-src'];
-		const effective_style_src = directives['style-src'] || directives['default-src'];
+		const effective_script_src = d['script-src'] || d['default-src'];
+		const effective_style_src = d['style-src'] || d['default-src'];
 
 		this.#script_needs_csp =
 			!!effective_script_src &&
@@ -135,29 +157,17 @@ export class Csp {
 
 		const directives = { ...this.#directives };
 
+		if (this.#style_src.length > 0) {
+			directives['style-src'] = [
+				...(directives['style-src'] || directives['default-src'] || []),
+				...this.#style_src
+			];
+		}
+
 		if (this.#script_src.length > 0) {
 			directives['script-src'] = [
 				...(directives['script-src'] || directives['default-src'] || []),
 				...this.#script_src
-			];
-		}
-
-		if (this.#dev) {
-			const effective_style_src = directives['style-src'] || directives['default-src'];
-
-			// in development, we need to be able to inject <style> elements
-			if (effective_style_src && !effective_style_src.includes('unsafe-inline')) {
-				directives['style-src'] = [
-					.../** @type {import('types/csp').Source[]} */ (
-						directives['style-src'] || directives['default-src']
-					),
-					'unsafe-inline'
-				];
-			}
-		} else if (this.#style_src.length > 0) {
-			directives['style-src'] = [
-				...(directives['style-src'] || directives['default-src'] || []),
-				...this.#style_src
 			];
 		}
 

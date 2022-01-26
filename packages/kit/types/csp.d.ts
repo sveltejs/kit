@@ -49,7 +49,7 @@ type UriPath = `${HttpDelineator}${string}`;
 
 export type CspDirectives = {
 	'child-src'?: Sources;
-	'default-src'?: Sources;
+	'default-src'?: Array<Source | ActionSource>;
 	'frame-src'?: Sources;
 	'worker-src'?: Sources;
 	'connect-src'?: Sources;
@@ -59,10 +59,10 @@ export type CspDirectives = {
 	'media-src'?: Sources;
 	'object-src'?: Sources;
 	'prefetch-src'?: Sources;
-	'script-src'?: Sources;
+	'script-src'?: Array<Source | ActionSource>;
 	'script-src-elem'?: Sources;
 	'script-src-attr'?: Sources;
-	'style-src'?: Sources;
+	'style-src'?: Array<Source | ActionSource>;
 	'style-src-elem'?: Sources;
 	'style-src-attr'?: Sources;
 	'base-uri'?: Array<Source | ActionSource>;
@@ -81,9 +81,9 @@ export type CspDirectives = {
 		| 'allow-top-navigation'
 		| 'allow-top-navigation-by-user-activation'
 	>;
-	'form-action'?: Sources;
+	'form-action'?: Array<Source | ActionSource>;
 	'frame-ancestors'?: Array<HostSource | SchemeSource | FrameSource>;
-	'navigate-to'?: Sources;
+	'navigate-to'?: Array<Source | ActionSource>;
 	'report-uri'?: UriPath[];
 	'report-to'?: string[];
 

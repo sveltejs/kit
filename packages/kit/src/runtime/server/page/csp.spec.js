@@ -109,4 +109,60 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 	);
 });
 
+test('adds unsafe-inline styles in dev', () => {
+	const csp = new Csp(
+		{
+			mode: 'hash',
+			directives: {
+				'default-src': ['self']
+			}
+		},
+		true,
+		false
+	);
+
+	csp.add_style('');
+
+	assert.equal(csp.get_header(), "default-src 'self'; style-src 'self' 'unsafe-inline'");
+});
+
+test('removes strict-dynamic in dev', () => {
+	['default-src', 'script-src'].forEach((name) => {
+		const csp = new Csp(
+			{
+				mode: 'hash',
+				directives: {
+					[name]: ['strict-dynamic']
+				}
+			},
+			true,
+			false
+		);
+
+		csp.add_script('');
+
+		assert.equal(csp.get_header(), '');
+	});
+});
+
+test('uses hashes when prerendering', () => {
+	const csp = new Csp(
+		{
+			mode: 'auto',
+			directives: {
+				'script-src': ['self']
+			}
+		},
+		false,
+		true
+	);
+
+	csp.add_script('');
+
+	assert.equal(
+		csp.get_header(),
+		"script-src 'self' 'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+	);
+});
+
 test.run();
