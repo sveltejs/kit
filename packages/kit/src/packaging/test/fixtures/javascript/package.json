@@ -1,5 +1,6 @@
 {
 	"name": "javascript",
 	"version": "1.0.0",
-	"description": "standard javascript package"
+	"description": "standard javascript package",
+	"private": true
 }

@@ -8,5 +8,6 @@
 			"import": "./index.js"
 		}
 	},
-	"svelte": "./Test.svelte"
+	"svelte": "./Test.svelte",
+	"private": true
 }
