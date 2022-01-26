@@ -15,7 +15,7 @@ export interface Fallthrough {
 
 export interface RequestHandler<
 	Locals = Record<string, any>,
-	Platform = Record<string, unknown>,
+	Platform = Record<string, any>,
 	Output extends Body = Body
 > {
 	(event: RequestEvent<Locals, Platform>): MaybePromise<

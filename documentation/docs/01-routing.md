@@ -51,7 +51,7 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
@@ -73,7 +73,7 @@ interface Fallthrough {
 
 export interface RequestHandler<
 	Locals = Record<string, any>,
-	Platform = Record<string, unknown>,
+	Platform = Record<string, any>,
 	Output extends Body = Body
 > {
 	(event: RequestEvent<Locals, Platform>): MaybePromise<

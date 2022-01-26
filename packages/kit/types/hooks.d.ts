@@ -2,7 +2,7 @@ import { MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
@@ -12,7 +12,7 @@ export interface RequestEvent<Locals = Record<string, any>, Platform = Record<st
 
 export interface GetSession<
 	Locals = Record<string, any>,
-	Platform = Record<string, unknown>,
+	Platform = Record<string, any>,
 	Session = any
 > {
 	(event: RequestEvent<Locals, Platform>): MaybePromise<Session>;
@@ -22,7 +22,7 @@ export interface ResolveOpts {
 	ssr?: boolean;
 }
 
-export interface Handle<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface Handle<Locals = Record<string, any>, Platform = Record<string, any>> {
 	(input: {
 		event: RequestEvent<Locals, Platform>;
 		resolve(event: RequestEvent<Locals, Platform>, opts?: ResolveOpts): MaybePromise<Response>;
@@ -31,7 +31,7 @@ export interface Handle<Locals = Record<string, any>, Platform = Record<string, 
 
 // internally, `resolve` could return `undefined`, so we differentiate InternalHandle
 // from the public Handle type
-export interface InternalHandle<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface InternalHandle<Locals = Record<string, any>, Platform = Record<string, any>> {
 	(input: {
 		event: RequestEvent<Locals, Platform>;
 		resolve(
@@ -41,7 +41,7 @@ export interface InternalHandle<Locals = Record<string, any>, Platform = Record<
 	}): MaybePromise<Response | undefined>;
 }
 
-export interface HandleError<Locals = Record<string, any>, Platform = Record<string, unknown>> {
+export interface HandleError<Locals = Record<string, any>, Platform = Record<string, any>> {
 	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals, Platform> }): void;
 }
 

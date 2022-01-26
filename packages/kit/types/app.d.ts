@@ -1,6 +1,6 @@
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
-export interface RenderEvent<Platform = Record<string, unknown>> {
+export interface RenderEvent<Platform = Record<string, any>> {
 	request: Request;
 	platform?: Platform;
 }
