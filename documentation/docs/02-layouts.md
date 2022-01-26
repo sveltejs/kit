@@ -111,4 +111,6 @@ If an error component has a [`load`](#loading) function, it will be called with 
 <h1>{title}</h1>
 ```
 
+> Layout components also have access to `error` and `status` via the [page store](#modules-$app-stores)
+>
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.
