@@ -123,7 +123,7 @@ test('skips frame-ancestors, report-uri, sandbox from meta tags', () => {
 
 	assert.equal(
 		csp.get_meta(),
-		`<meta http-equiv="content-security-policy" content="default-src 'self'">`
+		'<meta http-equiv="content-security-policy" content="default-src \'self\'">'
 	);
 });
 
