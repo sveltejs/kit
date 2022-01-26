@@ -1,7 +1,7 @@
 import fetch, { Response, Request, Headers } from 'node-fetch';
 
 // exported for dev/preview and node environments
-export function install_fetch() {
+export function __fetch_polyfill() {
 	Object.defineProperties(globalThis, {
 		fetch: {
 			enumerable: true,

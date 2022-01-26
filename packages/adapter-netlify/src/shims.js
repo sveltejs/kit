@@ -1,3 +1,3 @@
-import { install_fetch } from '@sveltejs/kit/install-fetch';
+import { __fetch_polyfill } from '@sveltejs/kit/install-fetch';
 
-install_fetch();
+__fetch_polyfill();
