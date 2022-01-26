@@ -122,7 +122,9 @@ export async function respond(request, options, state = {}) {
 				let decoded = decodeURI(event.url.pathname);
 
 				if (options.paths.base) {
-					if (!decoded.startsWith(options.paths.base)) return;
+					if (!decoded.startsWith(options.paths.base)) {
+						return new Response(undefined, { status: 404 });
+					}
 					decoded = decoded.slice(options.paths.base.length) || '/';
 				}
 
@@ -187,6 +189,8 @@ export async function respond(request, options, state = {}) {
 						ssr
 					});
 				}
+
+				return new Response(undefined, { status: 404 });
 			},
 
 			// TODO remove for 1.0
