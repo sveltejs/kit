@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.243
+
+### Patch Changes
+
+- [fix] hydrate real HTTP requests ([#3547](https://github.com/sveltejs/kit/pull/3547))
+
 ## 1.0.0-next.242
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- Fix string replacement in CJS builds ([#3546](https://github.com/sveltejs/kit/pull/3546))
+
 ## 1.0.0-next.43
 
 ### Patch Changes
