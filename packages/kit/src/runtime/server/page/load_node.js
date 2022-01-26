@@ -159,20 +159,11 @@ export async function load_node({
 						}
 					);
 
-					if (rendered) {
-						if (state.prerender) {
-							state.prerender.dependencies.set(relative, rendered);
-						}
-
-						response = rendered;
-					} else {
-						// we can't load the endpoint from our own manifest,
-						// so we need to make an actual HTTP request
-						response = await fetch(new URL(requested, event.url).href, {
-							method: opts.method || 'GET',
-							headers: opts.headers
-						});
+					if (state.prerender) {
+						state.prerender.dependencies.set(relative, rendered);
 					}
+
+					response = rendered;
 				} else {
 					// external
 					if (resolved.startsWith('//')) {
@@ -204,7 +195,6 @@ export async function load_node({
 					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
-				if (response) {
 					const proxy = new Proxy(response, {
 						get(response, key, _receiver) {
 							async function text() {
@@ -249,14 +239,6 @@ export async function load_node({
 					});
 
 					return proxy;
-				}
-
-				return (
-					response ||
-					new Response('Not found', {
-						status: 404
-					})
-				);
 			},
 			stuff: { ...stuff }
 		};

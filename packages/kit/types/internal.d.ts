@@ -228,7 +228,5 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
-		Response | undefined
-	>;
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<Response>;
 }

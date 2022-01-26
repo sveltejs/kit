@@ -190,7 +190,9 @@ export async function respond(request, options, state = {}) {
 					});
 				}
 
-				return new Response(undefined, { status: 404 });
+				// we can't load the endpoint from our own manifest,
+				// so we need to make an actual HTTP request
+				return await fetch(request);
 			},
 
 			// TODO remove for 1.0
