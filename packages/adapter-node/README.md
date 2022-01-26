@@ -86,7 +86,7 @@ node build
 
 ## Platform
 
-The handler that is outputed by the build will pass in the original Node `req` object into the `platform` variable. This means that it can be accessed from all hooks and endpoint handlers. This is particually useful if previous middleware has added values to the `req` object.
+The handler that is outputed by the build will pass in the original Node request object into the `platform` variable. This means that it can be accessed from all hooks and endpoint handlers. This is particually useful if previous middleware has added values to the request object.
 
 ```ts
 import { Request } from 'polka';
@@ -96,12 +96,12 @@ interface Locals {
 }
 
 interface Platform {
-	req: Request;
+	request: Request;
 }
 
 // If using cookie-parser middleware
 export async function post<Locals, Platform>({ request, platform }) {
-	const cookies = platform.req.cookies;
+	const cookies = platform.request.cookies;
 }
 ```
 
