@@ -102,7 +102,6 @@ export class Csp {
 		}
 	}
 
-	// TODO would be great if these methods weren't async
 	/** @param {string} content */
 	add_script(content) {
 		if (this.#script_needs_csp) {
