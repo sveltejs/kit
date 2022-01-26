@@ -23,7 +23,9 @@
     "set-env-action": "1.0.0",
     "~TODO~": "0.0.1",
     "@sveltejs/adapter-cloudflare": "1.0.0-next.0",
-    "@sveltejs/adapter-auto": "1.0.0-next"
+    "@sveltejs/adapter-auto": "1.0.0-next",
+    "prerendering-test-basics": "0.0.1",
+    "prerendering-test-options": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -355,6 +357,7 @@
     "nice-ways-search",
     "nine-actors-whisper",
     "nine-beans-rhyme",
+    "nine-dots-occur",
     "nine-rats-heal",
     "nine-starfishes-destroy",
     "nine-tomatoes-poke",
@@ -533,6 +536,7 @@
     "sour-waves-return",
     "spicy-buckets-draw",
     "spicy-geese-accept",
+    "spicy-glasses-promise",
     "spicy-jeans-rest",
     "spicy-kings-perform",
     "spicy-moose-relate",
@@ -587,6 +591,7 @@
     "ten-plants-sleep",
     "tender-actors-tease",
     "tender-buckets-turn",
+    "tender-buses-talk",
     "tender-pans-explode",
     "thick-meals-attend",
     "thick-peas-shop",
@@ -633,6 +638,7 @@
     "tricky-walls-approve",
     "tricky-wolves-confess",
     "twelve-carrots-smoke",
+    "twelve-comics-enjoy",
     "twelve-feet-deny",
     "twelve-goats-knock",
     "twelve-onions-burn",

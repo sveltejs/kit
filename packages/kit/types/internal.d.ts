@@ -1,4 +1,5 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
@@ -120,6 +121,7 @@ export interface SSRNode {
 
 export interface SSRRenderOptions {
 	amp: boolean;
+	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
@@ -139,7 +141,18 @@ export interface SSRRenderOptions {
 	router: boolean;
 	service_worker?: string;
 	target: string;
-	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
+	template({
+		head,
+		body,
+		assets,
+		nonce
+	}: {
+		head: string;
+		body: string;
+		assets: string;
+		nonce: string;
+	}): string;
+	template_contains_nonce: boolean;
 	trailing_slash: TrailingSlash;
 }
 

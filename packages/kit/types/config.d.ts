@@ -1,5 +1,6 @@
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { UserConfig as ViteConfig } from 'vite';
+import { CspDirectives } from './csp';
 import { RecursiveRequired } from './helper';
 import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
@@ -117,6 +118,10 @@ export interface Config {
 		adapter?: Adapter;
 		amp?: boolean;
 		appDir?: string;
+		csp?: {
+			mode?: 'hash' | 'nonce' | 'auto';
+			directives?: CspDirectives;
+		};
 		files?: {
 			assets?: string;
 			hooks?: string;
