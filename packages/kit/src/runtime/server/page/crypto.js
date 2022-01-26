@@ -207,7 +207,7 @@ function encode(str) {
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split('');
 
 /** @param {Uint8Array} bytes */
-function base64(bytes) {
+export function base64(bytes) {
 	const l = bytes.length;
 
 	let result = '';
