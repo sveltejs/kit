@@ -130,8 +130,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, Response>} */
+		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
+
 		const render_path = config.kit.paths?.base
 			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
 			: `http://sveltekit-prerender${path}`;
@@ -192,9 +193,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			for (const [dependency_path, result] of dependencies) {
-				const response_type = Math.floor(result.status / 100);
+				const { status, headers } = result.response;
 
-				const is_html = result.headers.get('content-type') === 'text/html';
+				const response_type = Math.floor(status / 100);
+
+				const is_html = headers.get('content-type') === 'text/html';
 
 				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -204,16 +207,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				if (result.body) {
-					writeFileSync(file, await result.text());
-					paths.push(dependency_path);
-				}
+				writeFileSync(
+					file,
+					result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
+				);
+				paths.push(dependency_path);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${dependency_path}`);
+					log.info(`${status} ${dependency_path}`);
 				} else {
 					error({
-						status: result.status,
+						status,
 						path: dependency_path,
 						referrer: path,
 						referenceType: 'fetched'

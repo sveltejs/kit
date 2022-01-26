@@ -99,6 +99,9 @@ export async function load_node({
 				/** @type {Response} */
 				let response;
 
+				/** @type {import('types/internal').PrerenderDependency} */
+				let dependency;
+
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
 				const prefix = options.paths.assets || options.paths.base;
@@ -125,8 +128,6 @@ export async function load_node({
 						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
 					}
 				} else if (is_root_relative(resolved)) {
-					const relative = resolved;
-
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
@@ -150,20 +151,15 @@ export async function load_node({
 						throw new Error('Request body must be a string');
 					}
 
-					const rendered = await respond(
-						new Request(new URL(requested, event.url).href, opts),
-						options,
-						{
-							fetched: requested,
-							initiator: route
-						}
-					);
+					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
+						fetched: requested,
+						initiator: route
+					});
 
 					if (state.prerender) {
-						state.prerender.dependencies.set(relative, rendered);
+						dependency = { response, body: null };
+						state.prerender.dependencies.set(resolved, dependency);
 					}
-
-					response = rendered;
 				} else {
 					// external
 					if (resolved.startsWith('//')) {
@@ -219,7 +215,26 @@ export async function load_node({
 									});
 							}
 
+							if (dependency) {
+								dependency.body = body;
+							}
+
 							return body;
+						}
+
+						if (key === 'arrayBuffer') {
+							return async () => {
+								const buffer = await response.arrayBuffer();
+
+								if (dependency) {
+									dependency.body = new Uint8Array(buffer);
+								}
+
+								// TODO should buffer be inlined into the page (albeit base64'd)?
+								// any conditions in which it shouldn't be?
+
+								return buffer;
+							};
 						}
 
 						if (key === 'text') {

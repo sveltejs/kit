@@ -42,4 +42,20 @@ test('inserts http-equiv tag for cache-control headers', () => {
 	assert.ok(content.includes('<meta http-equiv="cache-control" content="max-age=300">'));
 });
 
+test('renders page with data from endpoint', () => {
+	const content = read('fetch-endpoint/buffered/index.html');
+	assert.ok(content.includes('<h1>the answer is 42</h1>'));
+
+	const json = read('fetch-endpoint/buffered.json');
+	assert.equal(json, JSON.stringify({ answer: 42 }));
+});
+
+test('renders page with unbuffered data from endpoint', () => {
+	const content = read('fetch-endpoint/not-buffered/index.html');
+	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
+
+	const json = read('fetch-endpoint/not-buffered.json');
+	assert.equal(json, JSON.stringify({ answer: 42 }));
+});
+
 test.run();
