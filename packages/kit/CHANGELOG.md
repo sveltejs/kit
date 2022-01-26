@@ -1,5 +1,23 @@
 # @sveltejs/kit
 
+## 1.0.0-next.243
+
+### Patch Changes
+
+- [fix] hydrate real HTTP requests ([#3547](https://github.com/sveltejs/kit/pull/3547))
+
+## 1.0.0-next.242
+
+### Patch Changes
+
+- reinstate `EndpointOutput` generic ([#3537](https://github.com/sveltejs/kit/pull/3537))
+
+## 1.0.0-next.241
+
+### Patch Changes
+
+- `svelte-kit package` only encodes text files ([#3522](https://github.com/sveltejs/kit/pull/3522))
+
 ## 1.0.0-next.240
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 import './shims';
-import { App } from 'APP';
+import { App } from '0APP';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
