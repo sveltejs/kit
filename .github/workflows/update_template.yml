@@ -1,10 +1,9 @@
 name: Update Template
 
 on:
-  workflow_run:
-    workflows: [Release]
-    types:
-      - completed
+  push:
+    tags:
+      - create-svelte@*
 
 jobs:
   release:
@@ -53,5 +52,5 @@ jobs:
           git config user.email "noreply@svelte.dev"
           git config user.name "[bot]"
           git add -A
-          git commit -m "version $npm_package_version"
+          git commit -m "version ${{ github.ref_name }}"
           git push -u origin main -f
