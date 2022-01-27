@@ -1,0 +1,17 @@
+{
+	"name": "prerendering-test-basics",
+	"private": true,
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "node ../../cli.js dev",
+		"build": "node ../../cli.js build",
+		"preview": "node ../../cli.js preview",
+		"test": "npm run build && uvu test"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:*",
+		"svelte": "^3.43.0",
+		"uvu": "^0.5.2"
+	},
+	"type": "module"
+}

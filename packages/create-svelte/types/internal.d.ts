@@ -1,4 +1,5 @@
 export type Options = {
+	name: string;
 	template: 'default' | 'skeleton';
 	typescript: boolean;
 	prettier: boolean;
@@ -15,8 +16,8 @@ export type Condition = 'eslint' | 'prettier' | 'typescript' | 'skeleton' | 'def
 export type Common = {
 	files: Array<{
 		name: string;
-		include: Array<Condition>;
-		exclude: Array<Condition>;
+		include: Condition[];
+		exclude: Condition[];
 		contents: string;
 	}>;
 };

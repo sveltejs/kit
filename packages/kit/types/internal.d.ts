@@ -1,23 +1,20 @@
 import { OutputAsset, OutputChunk } from 'rollup';
-import { RequestHandler } from './endpoint';
+import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
-import {
-	ExternalFetch,
-	GetSession,
-	HandleError,
-	InternalHandle,
-	ServerRequest,
-	ServerResponse
-} from './hooks';
+import { Fallthrough, RequestHandler } from './endpoint';
+import { Either } from './helper';
+import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
-import { Either, Fallthrough } from './helper';
 
-type PageId = string;
+export interface PrerenderDependency {
+	response: Response;
+	body: null | string | Uint8Array;
+}
 
 export interface PrerenderOptions {
 	fallback?: string;
 	all: boolean;
-	dependencies: Map<string, ServerResponse>;
+	dependencies: Map<string, PrerenderDependency>;
 }
 
 export interface AppModule {
@@ -106,7 +103,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: InternalHandle;
+	handle: Handle;
 	handleError: HandleError;
 }
 
@@ -124,10 +121,11 @@ export interface SSRNode {
 
 export interface SSRRenderOptions {
 	amp: boolean;
+	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-	handle_error(error: Error & { frame?: string }, request: ServerRequest<any>): void;
+	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;
@@ -143,13 +141,25 @@ export interface SSRRenderOptions {
 	router: boolean;
 	service_worker?: string;
 	target: string;
-	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
+	template({
+		head,
+		body,
+		assets,
+		nonce
+	}: {
+		head: string;
+		body: string;
+		assets: string;
+		nonce: string;
+	}): string;
+	template_contains_nonce: boolean;
 	trailing_slash: TrailingSlash;
 }
 
 export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
+	platform?: any;
 	prerender?: PrerenderOptions;
 	fallback?: string;
 }
@@ -234,4 +244,8 @@ export type TrailingSlash = 'never' | 'always' | 'ignore';
 export interface MethodOverride {
 	parameter: string;
 	allowed: string[];
+}
+
+export interface Respond {
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<Response>;
 }

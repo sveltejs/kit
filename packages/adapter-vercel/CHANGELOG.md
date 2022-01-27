@@ -1,5 +1,23 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.39
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.38
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
+## 1.0.0-next.37
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
 ## 1.0.0-next.36
 
 ### Patch Changes

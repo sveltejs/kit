@@ -5,7 +5,8 @@ import json from '@rollup/plugin-json';
 export default [
 	{
 		input: {
-			handler: 'src/handler.js'
+			handler: 'src/handler.js',
+			shims: 'src/shims.js'
 		},
 		output: [
 			{
@@ -18,6 +19,7 @@ export default [
 			}
 		],
 		plugins: [nodeResolve(), commonjs(), json()],
-		external: ['./server/app.js', ...require('module').builtinModules]
+		external: (id) => id === '0APP' || id.startsWith('node:'),
+		preserveEntrySignatures: true
 	}
 ];

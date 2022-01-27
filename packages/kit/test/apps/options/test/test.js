@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -78,6 +78,28 @@ test.describe.parallel('base path', () => {
 	});
 });
 
+test.describe.parallel('CSP', () => {
+	test('blocks script from external site', async ({ page }) => {
+		const { server, port } = await start_server((req, res) => {
+			if (req.url === '/blocked.js') {
+				res.writeHead(200, {
+					'content-type': 'text/javascript'
+				});
+
+				res.end('window.pwned = true');
+			} else {
+				res.writeHead(404).end('not found');
+			}
+		});
+
+		await page.goto(`/path-base/csp?port=${port}`);
+
+		expect(await page.evaluate('window.pwned')).toBe(undefined);
+
+		server.close();
+	});
+});
+
 test.describe.parallel('Custom extensions', () => {
 	test('works with arbitrary extensions', async ({ page }) => {
 		await page.goto('/path-base/custom-extensions/');
@@ -107,18 +129,6 @@ test.describe.parallel('Headers', () => {
 		const response = await page.goto('/path-base');
 		const headers = /** @type {Response} */ (response).headers();
 		expect(headers['permissions-policy']).toBeUndefined();
-	});
-});
-
-test.describe.parallel('Origin', () => {
-	test('sets origin', async ({ baseURL, page }) => {
-		await page.goto('/path-base/origin/');
-
-		const origin = process.env.DEV ? baseURL : 'https://example.com';
-
-		expect(await page.textContent('[data-source="load"]')).toBe(origin);
-		expect(await page.textContent('[data-source="store"]')).toBe(origin);
-		expect(await page.textContent('[data-source="endpoint"]')).toBe(origin);
 	});
 });
 

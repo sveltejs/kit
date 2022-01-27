@@ -1,5 +1,51 @@
 # create-svelte
 
+## 2.0.0-next.101
+
+### Patch Changes
+
+- bump eslint plugin and parser in template ([#3544](https://github.com/sveltejs/kit/pull/3544))
+
+## 2.0.0-next.100
+
+### Patch Changes
+
+- add ESLint configuration for mixed JS/TS codebase ([#3536](https://github.com/sveltejs/kit/pull/3536))
+
+## 2.0.0-next.99
+
+### Patch Changes
+
+- Respect Ctrl-C when running create-svelte ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+* Make project name an explicit option' ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+- Prompt for directory when running create-svelte without argument ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+## 2.0.0-next.98
+
+### Patch Changes
+
+- Add index.js file to `pkg.files` ([#3445](https://github.com/sveltejs/kit/pull/3445))
+
+## 2.0.0-next.97
+
+### Patch Changes
+
+- Add a programmatic interface to create-svelte ([#3437](https://github.com/sveltejs/kit/pull/3437))
+
+## 2.0.0-next.96
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise (#3384) ([#3430](https://github.com/sveltejs/kit/pull/3430))
+
+## 2.0.0-next.95
+
+### Patch Changes
+
+- Add methodOverrides to default configs ([#3411](https://github.com/sveltejs/kit/pull/3411))
+
 ## 2.0.0-next.94
 
 ### Patch Changes

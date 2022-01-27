@@ -4,7 +4,7 @@ import https from 'https';
 import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRawBody } from '../../node.js';
+import { getRequest, setResponse } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
@@ -79,30 +79,21 @@ export async function preview({
 		const initial_url = req.url;
 
 		const render_handler = async () => {
-			if (!req.method) throw new Error('Incomplete request');
+			if (initial_url.startsWith(config.kit.paths.base)) {
+				const protocol = use_https ? 'https' : 'http';
+				const host = req.headers['host'];
 
-			let body;
+				let request;
 
-			try {
-				body = await getRawBody(req);
-			} catch (/** @type {any} */ err) {
-				res.statusCode = err.status || 400;
-				return res.end(err.reason || 'Invalid request body');
-			}
+				try {
+					req.url = initial_url;
+					request = await getRequest(`${protocol}://${host}`, req);
+				} catch (/** @type {any} */ err) {
+					res.statusCode = err.status || 400;
+					return res.end(err.reason || 'Invalid request body');
+				}
 
-			const rendered =
-				initial_url.startsWith(config.kit.paths.base) &&
-				(await app.render({
-					url: initial_url,
-					method: req.method,
-					headers: /** @type {import('types/helper').RequestHeaders} */ (req.headers),
-					rawBody: body
-				}));
-
-			if (rendered) {
-				res.writeHead(rendered.status, rendered.headers);
-				if (rendered.body) res.write(rendered.body);
-				res.end();
+				setResponse(res, await app.render(request));
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');

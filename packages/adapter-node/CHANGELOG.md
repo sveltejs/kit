@@ -1,5 +1,43 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- Bump version to trigger rebuild with set-cookie support ([#3529](https://github.com/sveltejs/kit/pull/3529))
+
+## 1.0.0-next.66
+
+### Patch Changes
+
+- fix usage of `ORIGIN` environment variable ([#3448](https://github.com/sveltejs/kit/pull/3448))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- [fix] rename `BASE` to `ORIGIN` and fix config handling ([#3423](https://github.com/sveltejs/kit/pull/3423))
+
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
+## 1.0.0-next.62
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
 ## 1.0.0-next.61
 
 ### Patch Changes

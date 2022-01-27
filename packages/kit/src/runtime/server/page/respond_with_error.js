@@ -10,7 +10,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @param {{
- *   request: import('types/hooks').ServerRequest;
+ *   event: import('types/hooks').RequestEvent;
  *   options: SSRRenderOptions;
  *   state: SSRRenderState;
  *   $session: any;
@@ -19,15 +19,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   ssr: boolean;
  * }} opts
  */
-export async function respond_with_error({
-	request,
-	options,
-	state,
-	$session,
-	status,
-	error,
-	ssr
-}) {
+export async function respond_with_error({ event, options, state, $session, status, error, ssr }) {
 	try {
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
@@ -37,11 +29,11 @@ export async function respond_with_error({
 
 		const layout_loaded = /** @type {Loaded} */ (
 			await load_node({
-				request,
+				event,
 				options,
 				state,
 				route: null,
-				url: request.url, // TODO this is redundant, no?
+				url: event.url, // TODO this is redundant, no?
 				params,
 				node: default_layout,
 				$session,
@@ -52,11 +44,11 @@ export async function respond_with_error({
 
 		const error_loaded = /** @type {Loaded} */ (
 			await load_node({
-				request,
+				event,
 				options,
 				state,
 				route: null,
-				url: request.url,
+				url: event.url,
 				params,
 				node: default_error,
 				$session,
@@ -79,19 +71,17 @@ export async function respond_with_error({
 			status,
 			error,
 			branch: [layout_loaded, error_loaded],
-			url: request.url,
+			url: event.url,
 			params,
 			ssr
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);
 
-		options.handle_error(error, request);
+		options.handle_error(error, event);
 
-		return {
-			status: 500,
-			headers: {},
-			body: error.stack
-		};
+		return new Response(error.stack, {
+			status: 500
+		});
 	}
 }

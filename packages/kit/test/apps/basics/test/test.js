@@ -419,6 +419,46 @@ test.describe.parallel('Endpoints', () => {
 
 		expect(await page.textContent('h1')).toBe(random);
 	});
+
+	test('allows headers to be a Headers object', async ({ request }) => {
+		const response = await request.get('/endpoint-output/headers-object');
+
+		expect(response.headers()['x-foo']).toBe('bar');
+	});
+
+	test('allows return value to be a Response', async ({ request }) => {
+		const { server, port } = await start_server((req, res) => {
+			res.writeHead(200, {
+				'X-Foo': 'bar'
+			});
+
+			res.end('ok');
+		});
+
+		try {
+			const response = await request.get(`/endpoint-output/proxy?port=${port}`);
+
+			expect(await response.text()).toBe('ok');
+			expect(response.headers()['x-foo']).toBe('bar');
+		} finally {
+			server.close();
+		}
+	});
+
+	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
+		const response = await request.get('/set-cookie');
+
+		const cookies = response
+			.headersArray()
+			.filter((obj) => obj.name === 'set-cookie')
+			.map((obj) => obj.value);
+
+		expect(cookies).toEqual([
+			'answer=42; HttpOnly',
+			'problem=comma, separated, values; HttpOnly',
+			'name=SvelteKit; path=/; HttpOnly'
+		]);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
@@ -470,6 +510,22 @@ test.describe.parallel('Encoded paths', () => {
 		expect(await page.innerHTML('h1')).toBe('static');
 		expect(decodeURI(await page.innerHTML('h2'))).toBe('/encoded/苗条');
 		expect(decodeURI(await page.innerHTML('h3'))).toBe('/encoded/苗条');
+	});
+
+	test('redirects do not re-encode the redirect string', async ({ page, clicknav }) => {
+		await page.goto('/encoded');
+
+		await clicknav('[href="/encoded/redirect"]');
+
+		// check innerText instead of innerHTML because innerHTML would return the '&amp;' character reference instead of '&' character.
+		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
+	});
+
+	test('redirects do not re-encode the redirect string during ssr', async ({ page }) => {
+		await page.goto('/encoded/redirect');
+
+		// check innerText instead of innerHTML because innerHTML would return the '&amp;' character reference instead of '&' character.
+		expect(await page.innerText('pre')).toBe('/苗条?foo=bar&fizz=buzz');
 	});
 
 	test('sets charset on JSON Content-Type', async ({ request }) => {
@@ -1848,6 +1904,9 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
+
+		response = await request.get('/favicon.ico');
+		expect(response.status()).toBe(200);
 	});
 });
 

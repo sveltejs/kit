@@ -4,7 +4,7 @@ title: Page options
 
 By default, SvelteKit will render any component first on the server and send it to the client as HTML. It will then render the component again in the browser to make it interactive in a process called **hydration**. For this reason, you need to ensure that components can run in both places. SvelteKit will then initialise a [**router**](#routing) that takes over subsequent navigations.
 
-You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#script_context_module), and only apply to page components, _not_ [layout](#layouts) components.
+You can control each of these on a per-app or per-page basis. Note that each of the per-page settings use [`context="module"`](https://svelte.dev/docs#component-format-script-context-module), and only apply to page components, _not_ [layout](#layouts) components.
 
 If both are specified, per-page settings override per-app settings in case of conflicts.
 
@@ -58,7 +58,7 @@ The basic rule is this: for a page to be prerenderable, any two users hitting it
 
 Note that you can still prerender pages that load data based on the page's parameters, like our `src/routes/blog/[slug].svelte` example from earlier. The prerenderer will intercept requests made inside `load`, so the data served from `src/routes/blog/[slug].json.js` will also be captured.
 
-Accessing [`page.query`](#loading-input-page) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
+Accessing [`url.searchParams`](#loading-input-url) during prerendering is forbidden. If you need to use it, ensure you are only doing so in the browser (for example in `onMount`).
 
 #### Route conflicts
 

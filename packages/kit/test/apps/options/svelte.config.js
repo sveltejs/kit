@@ -4,6 +4,11 @@ import path from 'path';
 const config = {
 	extensions: ['.jesuslivesineveryone', '.whokilledthemuffinman', '.svelte.md', '.svelte'],
 	kit: {
+		csp: {
+			directives: {
+				'script-src': ['self']
+			}
+		},
 		files: {
 			assets: 'public',
 			lib: 'source/components',
@@ -15,7 +20,6 @@ const config = {
 		appDir: '_wheee',
 		floc: true,
 		target: '#content-goes-here',
-		host: 'example.com',
 		inlineStyleThreshold: 1024,
 		trailingSlash: 'always',
 		vite: {
@@ -32,8 +36,7 @@ const config = {
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
-		},
-		protocol: 'https'
+		}
 	}
 };
 

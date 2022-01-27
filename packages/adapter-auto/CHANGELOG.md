@@ -1,5 +1,67 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.17
+
+### Patch Changes
+
+- Updated dependencies [[`667bc815`](https://github.com/sveltejs/kit/commit/667bc8152d094c4537cfc3329dba7c6bb4b9eac1)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.9
+  - @sveltejs/adapter-netlify@1.0.0-next.44
+  - @sveltejs/adapter-vercel@1.0.0-next.39
+
+## 1.0.0-next.16
+
+### Patch Changes
+
+- Updated dependencies [[`90664c9d`](https://github.com/sveltejs/kit/commit/90664c9dd9749086ac0b34aa2acd625174af80cf)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.44
+  - @sveltejs/adapter-cloudflare@1.0.0-next.8
+  - @sveltejs/adapter-vercel@1.0.0-next.39
+
+## 1.0.0-next.15
+
+### Patch Changes
+
+- Updated dependencies [[`1795843a`](https://github.com/sveltejs/kit/commit/1795843ac8551cc06009bd5868c7ef2a65c00200)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.43
+
+## 1.0.0-next.14
+
+### Patch Changes
+
+- Updated dependencies [[`4d58e10c`](https://github.com/sveltejs/kit/commit/4d58e10c36cab47d40c161a87c82512bebeb6b90)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.42
+  - @sveltejs/adapter-cloudflare@1.0.0-next.8
+  - @sveltejs/adapter-vercel@1.0.0-next.39
+
+## 1.0.0-next.13
+
+### Patch Changes
+
+- Updated dependencies [[`ee906a3b`](https://github.com/sveltejs/kit/commit/ee906a3b2b103e4523eb1b6bb13f04d03eb35238)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.8
+  - @sveltejs/adapter-netlify@1.0.0-next.41
+  - @sveltejs/adapter-vercel@1.0.0-next.39
+
+## 1.0.0-next.12
+
+### Patch Changes
+
+- Updated dependencies [[`49114b9a`](https://github.com/sveltejs/kit/commit/49114b9a37e93335b027865e68fa4d58a0a7a2e5)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.40
+  - @sveltejs/adapter-vercel@1.0.0-next.38
+  - @sveltejs/adapter-cloudflare@1.0.0-next.7
+
+## 1.0.0-next.11
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
+- Updated dependencies [[`7569bb27`](https://github.com/sveltejs/kit/commit/7569bb27a640c2bbff6ac02a4c44fdf456bdc227)]:
+  - @sveltejs/adapter-netlify@1.0.0-next.39
+  - @sveltejs/adapter-vercel@1.0.0-next.37
+
 ## 1.0.0-next.10
 
 ### Patch Changes

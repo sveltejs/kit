@@ -1,5 +1,127 @@
 # @sveltejs/kit
 
+## 1.0.0-next.247
+
+### Patch Changes
+
+- fix handling an incoming request from HTTP/2 ([#3572](https://github.com/sveltejs/kit/pull/3572))
+
+## 1.0.0-next.246
+
+### Patch Changes
+
+- `svelte-kit package` gives clearer error message when svelte2tsx and typescript are not installed ([#3562](https://github.com/sveltejs/kit/pull/3562))
+
+* `svelte-kit package` errors when lib directory does not exist ([#3562](https://github.com/sveltejs/kit/pull/3562))
+
+- [chore] refactor AMP validation ([#3554](https://github.com/sveltejs/kit/pull/3554))
+
+## 1.0.0-next.245
+
+### Patch Changes
+
+- Allow adapters to pass in `platform` object ([#3429](https://github.com/sveltejs/kit/pull/3429))
+
+* favicon.ico is now requestable ([#3559](https://github.com/sveltejs/kit/pull/3559))
+
+## 1.0.0-next.244
+
+### Patch Changes
+
+- [fix] reading from same response body twice during prerender (#3473) ([#3521](https://github.com/sveltejs/kit/pull/3521))
+
+* Add CSP support ([#3499](https://github.com/sveltejs/kit/pull/3499))
+
+- [chore] remove InternalHandle ([#3541](https://github.com/sveltejs/kit/pull/3541))
+
+* Force Vite to use HTTP/1 in dev mode, so `dev --https` works again ([#3553](https://github.com/sveltejs/kit/pull/3553))
+
+## 1.0.0-next.243
+
+### Patch Changes
+
+- [fix] hydrate real HTTP requests ([#3547](https://github.com/sveltejs/kit/pull/3547))
+
+## 1.0.0-next.242
+
+### Patch Changes
+
+- reinstate `EndpointOutput` generic ([#3537](https://github.com/sveltejs/kit/pull/3537))
+
+## 1.0.0-next.241
+
+### Patch Changes
+
+- `svelte-kit package` only encodes text files ([#3522](https://github.com/sveltejs/kit/pull/3522))
+
+## 1.0.0-next.240
+
+### Patch Changes
+
+- Error if handle hook returns something other than a Response ([#3496](https://github.com/sveltejs/kit/pull/3496))
+
+* allow setting multiple set-cookie headers ([#3502](https://github.com/sveltejs/kit/pull/3502))
+
+- fixed prerendering with base path configured ([#3500](https://github.com/sveltejs/kit/pull/3500))
+
+## 1.0.0-next.239
+
+### Patch Changes
+
+- Insert <meta http-equiv> cache-control header when prerendering ([#3493](https://github.com/sveltejs/kit/pull/3493))
+
+## 1.0.0-next.238
+
+### Patch Changes
+
+- Escape prerendered redirect locations, instead of encoding them ([#3456](https://github.com/sveltejs/kit/pull/3456))
+
+## 1.0.0-next.237
+
+### Patch Changes
+
+- Type compilerOptions as CompileOptions instead of any ([#3486](https://github.com/sveltejs/kit/pull/3486))
+
+## 1.0.0-next.236
+
+### Patch Changes
+
+- The redirect property returned from a module's load function must now be a properly encoded URI string value. ([#3404](https://github.com/sveltejs/kit/pull/3404))
+
+## 1.0.0-next.235
+
+### Patch Changes
+
+- register service worker regardless of hydrate/router option ([#3435](https://github.com/sveltejs/kit/pull/3435))
+
+## 1.0.0-next.234
+
+### Patch Changes
+
+- Allow endpoints to return a Response, or an object with Headers ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Expose standard Request object to endpoints and hooks ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.233
+
+### Patch Changes
+
+- [fix] refactor navigation singletons to avoid storing undefined reference ([#3374](https://github.com/sveltejs/kit/pull/3374))
+
+* [fix] add media="(max-width: 0)" to prevent stylesheets from downloading ([#3396](https://github.com/sveltejs/kit/pull/3396))
+
+## 1.0.0-next.232
+
+### Patch Changes
+
+- Preserve explicit ETag header ([#3348](https://github.com/sveltejs/kit/pull/3348))
+
+* [fix] ignore hash links during prerendering (again) ([#3367](https://github.com/sveltejs/kit/pull/3367))
+
 ## 1.0.0-next.231
 
 ### Patch Changes

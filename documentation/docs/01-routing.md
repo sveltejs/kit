@@ -51,46 +51,34 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-// type of string[] is only for set-cookie
-// everything else must be a type of string
-type ResponseHeaders = Record<string, string | string[]>;
-type RequestHeaders = Record<string, string>;
-
-export type RawBody = null | Uint8Array;
-
-type ParameterizedBody<Body = unknown> = Body extends FormData
-	? ReadOnlyFormData
-	: (string | RawBody | ReadOnlyFormData) & Body;
-
-export interface Request<Locals = Record<string, any>, Body = unknown> {
+export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
+	request: Request;
 	url: URL;
-	method: string;
-	headers: RequestHeaders;
-	rawBody: RawBody;
 	params: Record<string, string>;
-	body: ParameterizedBody<Body>;
 	locals: Locals;
+	platform: Platform;
 }
 
-type DefaultBody = JSONResponse | Uint8Array;
-export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
+type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
+export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;
-	headers?: ResponseHeaders;
-	body?: Body;
+	headers?: Headers | Partial<ResponseHeaders>;
+	body?: Output;
 }
 
-export type MaybePromise<T> = T | Promise<T>;
-
-export interface Fallthrough {
-	fallthrough?: true;
+type MaybePromise<T> = T | Promise<T>;
+interface Fallthrough {
+	fallthrough: true;
 }
 
 export interface RequestHandler<
 	Locals = Record<string, any>,
-	Input = unknown,
-	Output extends DefaultBody = DefaultBody
+	Platform = Record<string, any>,
+	Output extends Body = Body
 > {
-	(request: Request<Locals, Input>): MaybePromise<Fallthrough | EndpointOutput<Output>>;
+	(event: RequestEvent<Locals, Platform>): MaybePromise<
+		Either<Response | EndpointOutput<Output>, Fallthrough>
+	>;
 }
 ```
 
@@ -103,9 +91,7 @@ import db from '$lib/database';
 export async function get({ params }) {
 	// the `slug` parameter is available because this file
 	// is called [slug].json.js
-	const { slug } = params;
-
-	const article = await db.get(slug);
+	const article = await db.get(params.slug);
 
 	if (article) {
 		return {
@@ -114,6 +100,10 @@ export async function get({ params }) {
 			}
 		};
 	}
+
+	return {
+		status: 404
+	};
 }
 ```
 
@@ -133,7 +123,7 @@ If the returned `body` is an object, and no `content-type` header is returned, i
 For endpoints that handle other HTTP methods, like POST, export the corresponding function:
 
 ```js
-export function post(request) {...}
+export function post(event) {...}
 ```
 
 Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
@@ -152,14 +142,15 @@ return {
 
 #### Body parsing
 
-The `body` property of the request object will be provided in the case of POST requests:
+The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
-- Text data (with content-type `text/plain`) will be parsed to a `string`
-- JSON data (with content-type `application/json`) will be parsed to a `JSONValue` (an `object`, `Array`, or primitive).
-- Form data (with content-type `application/x-www-form-urlencoded` or `multipart/form-data`) will be parsed to a read-only version of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
-- All other data will be provided as a `Uint8Array`
+```js
+export async function post({ request }) {
+	const data = await request.formData(); // or .json(), or .text(), etc
+}
+```
 
-#### HTTP Method Overrides
+#### HTTP method overrides
 
 HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 
@@ -220,6 +211,6 @@ src/routes/[qux].svelte
 src/routes/foo-[bar].svelte
 ```
 
-...and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match, then will try `[baz].js` (which is also a valid match for `/foo-xyz`, but less specific), then `[baz].svelte` and `[qux].svelte` in alphabetical order (endpoints have higher precedence than pages). The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
 
 If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.

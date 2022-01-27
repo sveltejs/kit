@@ -4,10 +4,10 @@ import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../../install-fetch.js';
 import { SVELTE_KIT } from '../../constants.js';
-import { get_single_valued_header } from '../../../utils/http.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
+import { escape_html_attr } from '../../../utils/escape.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -149,40 +149,39 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, import('types/hooks').ServerResponse>} */
+		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}${path}`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
-			{
-				prerender: {
-					all,
-					dependencies
-				}
+		const render_path = config.kit.paths?.base
+			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
+			: `http://sveltekit-prerender${path}`;
+
+		const rendered = await app.render(new Request(render_path), {
+			prerender: {
+				all,
+				dependencies
 			}
-		);
+		});
 
 		if (rendered) {
 			const response_type = Math.floor(rendered.status / 100);
-			const headers = rendered.headers;
-			const type = headers && headers['content-type'];
+			const type = rendered.headers.get('content-type');
 			const is_html = response_type === REDIRECT || type === 'text/html';
 
 			const file = `${out}${output_filename(decoded_path, is_html)}`;
 
 			if (response_type === REDIRECT) {
-				const location = get_single_valued_header(headers, 'location');
+				const location = rendered.headers.get('location');
 
 				if (location) {
 					mkdirp(dirname(file));
 
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+
+					writeFileSync(
+						file,
+						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+					);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -195,44 +194,49 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				return;
 			}
 
+			const text = await rendered.text();
+
 			if (rendered.status === 200) {
 				mkdirp(dirname(file));
 
 				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, rendered.body || '');
+				writeFileSync(file, text);
 				paths.push(normalize(decoded_path));
 			} else if (response_type !== OK) {
 				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
 			}
 
-			dependencies.forEach((result, dependency_path) => {
-				const response_type = Math.floor(result.status / 100);
+			for (const [dependency_path, result] of dependencies) {
+				const { status, headers } = result.response;
 
-				const is_html = result.headers['content-type'] === 'text/html';
+				const response_type = Math.floor(status / 100);
+
+				const is_html = headers.get('content-type') === 'text/html';
 
 				const file = `${out}${output_filename(dependency_path, is_html)}`;
 				mkdirp(dirname(file));
 
-				if (result.body) {
-					writeFileSync(file, result.body);
-					paths.push(dependency_path);
-				}
+				writeFileSync(
+					file,
+					result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
+				);
+				paths.push(dependency_path);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${dependency_path}`);
+					log.info(`${status} ${dependency_path}`);
 				} else {
 					error({
-						status: result.status,
+						status,
 						path: dependency_path,
 						referrer: path,
 						referenceType: 'fetched'
 					});
 				}
-			});
+			}
 
 			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(/** @type {string} */ (rendered.body))) {
-					if (href.startsWith('data:')) continue;
+				for (const href of crawl(text)) {
+					if (href.startsWith('data:') || href.startsWith('#')) continue;
 
 					const resolved = resolve(path, href);
 					if (!is_root_relative(resolved)) continue;
@@ -274,25 +278,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (fallback) {
-		const rendered = await app.render(
-			{
-				url: `${config.kit.protocol || 'http'}://${config.kit.host || 'prerender'}/[fallback]`,
-				method: 'GET',
-				headers: {},
-				rawBody: null
-			},
-			{
-				prerender: {
-					fallback,
-					all: false,
-					dependencies: new Map()
-				}
+		const rendered = await app.render(new Request('http://sveltekit-prerender/[fallback]'), {
+			prerender: {
+				fallback,
+				all: false,
+				dependencies: new Map()
 			}
-		);
+		});
 
 		const file = join(out, fallback);
 		mkdirp(dirname(file));
-		writeFileSync(file, rendered.body || '');
+		writeFileSync(file, await rendered.text());
 	}
 
 	return {

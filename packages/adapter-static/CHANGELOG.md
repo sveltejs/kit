@@ -20,7 +20,7 @@
 
 ## 1.0.0-next.23
 
-### Minor Changes
+### Patch Changes
 
 - add precompress option to adapter-static ([#3079](https://github.com/sveltejs/kit/pull/3079))
 

@@ -20,10 +20,10 @@ jobs:
       - uses: pnpm/action-setup@v2.0.1
         with:
           version: 6.23.2
-      - name: Setup Node.js 12.x
+      - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: 16.x
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -38,6 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens

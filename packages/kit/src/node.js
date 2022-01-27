@@ -1,5 +1,7 @@
+import { Readable } from 'stream';
+
 /** @type {import('@sveltejs/kit/node').GetRawBody} */
-export function getRawBody(req) {
+function get_raw_body(req) {
 	return new Promise((fulfil, reject) => {
 		const h = req.headers;
 
@@ -46,4 +48,46 @@ export function getRawBody(req) {
 			fulfil(data);
 		});
 	});
+}
+
+/** @type {import('@sveltejs/kit/node').GetRequest} */
+export async function getRequest(base, req) {
+	let headers = /** @type {Record<string, string>} */ (req.headers);
+	if (req.httpVersionMajor === 2) {
+		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
+		// Request implementation doesn't like them
+		headers = Object.assign({}, headers);
+		delete headers[':method'];
+		delete headers[':path'];
+		delete headers[':authority'];
+		delete headers[':scheme'];
+	}
+	return new Request(base + req.url, {
+		method: req.method,
+		headers,
+		body: await get_raw_body(req) // TODO stream rather than buffer
+	});
+}
+
+/** @type {import('@sveltejs/kit/node').SetResponse} */
+export async function setResponse(res, response) {
+	/** @type {import('../types/helper').ResponseHeaders} */
+	const headers = Object.fromEntries(response.headers);
+
+	if (response.headers.has('set-cookie')) {
+		// @ts-expect-error (headers.raw() is non-standard)
+		headers['set-cookie'] = response.headers.raw()['set-cookie'];
+	}
+
+	res.writeHead(response.status, headers);
+
+	if (response.body instanceof Readable) {
+		response.body.pipe(res);
+	} else {
+		if (response.body) {
+			res.write(await response.arrayBuffer());
+		}
+
+		res.end();
+	}
 }

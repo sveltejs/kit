@@ -1,12 +1,11 @@
 export class App {
 	render() {
-		return {
+		return new Response('', {
 			status: 200,
 			headers: {
 				'content-type': 'text/html'
-			},
-			body: ''
-		};
+			}
+		});
 	}
 }
 
