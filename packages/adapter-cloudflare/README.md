@@ -50,27 +50,25 @@ When configuring your project settings, you must use the following settings:
 
 > **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `14.13` or later, so you should use `14` or `16` as the `NODE_VERSION` value.
 
-## Platform
+## Environment variables
 
-The handler that is outputed by the build will pass in the env object from cloudflare pages into the `platform` variable. You can read more about what env is [here](https://developers.cloudflare.com/pages/platform/functions#adding-bindings). This allows access to KV and Durable Objects from any hook or endpoint handler.
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property, meaning you can access it in hooks and endpoints:
 
 ```ts
-interface Env {
-	COUNTER: DurableObjectNamespace;
-}
-
-interface Locals {
-	// Locals set in locals hook
-}
+interface Locals {}
 
 interface Platform {
-	env: Env;
+	env: {
+		COUNTER: DurableObjectNamespace;
+	};
 }
 
 export async function post<Locals, Platform>({ request, platform }) {
 	const counter = platform.env.COUNTER.idFromName('A');
 }
 ```
+
+> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
 
 ## Changelog
 
