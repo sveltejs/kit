@@ -13,7 +13,7 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  */
 export async function make_package(config, cwd = process.cwd()) {
 	if (!fs.existsSync(config.kit.files.lib)) {
-		throw new Error(`${config.kit.files.lib} does not exists`);
+		throw new Error(`${config.kit.files.lib} does not exist`);
 	}
 
 	const package_dir = path.isAbsolute(config.kit.package.dir)
