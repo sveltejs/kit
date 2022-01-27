@@ -141,7 +141,6 @@ export async function create_plugin(config, cwd) {
 				vite.middlewares.use(async (req, res) => {
 					try {
 						if (!req.url || !req.method) throw new Error('Incomplete request');
-						if (req.url === '/favicon.ico') return not_found(res);
 
 						const base = `${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}`;
 
@@ -157,6 +156,8 @@ export async function create_plugin(config, cwd) {
 								return;
 							}
 						}
+
+						if (req.url === '/favicon.ico') return not_found(res);
 
 						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
 
