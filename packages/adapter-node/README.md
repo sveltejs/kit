@@ -84,27 +84,6 @@ MY_ORIGINURL=https://my.site \
 node build
 ```
 
-## Platform
-
-The handler that is outputed by the build will pass in the original Node request object into the `platform` variable. This means that it can be accessed from all hooks and endpoint handlers. This is particually useful if previous middleware has added values to the request object.
-
-```ts
-import { Request } from 'polka';
-
-interface Locals {
-	// Locals set in locals hook
-}
-
-interface Platform {
-	req: Request;
-}
-
-// If using cookie-parser middleware
-export async function post<Locals, Platform>({ request, platform }) {
-	const cookies = platform.req.cookies;
-}
-```
-
 ## Custom server
 
 The adapter creates two files in your build directory — `index.js` and `handler.js`. Running `index.js` — e.g. `node build`, if you use the default build directory — will start a server on the configured port.
