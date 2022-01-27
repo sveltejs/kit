@@ -19,14 +19,9 @@ const create = (dir, config = {}) => {
 		extensions,
 		kit: {
 			excludes: (filepath) => {
-				const parts = filepath.split('/');
-				if (
-					parts.some(
-						(part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known')
-					)
-				)
-					return true;
-				return false;
+				return filepath
+					.split('/')
+					.some((part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known'));
 			},
 			files: {
 				assets: path.resolve(cwd, 'static'),

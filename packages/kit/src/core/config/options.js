@@ -104,14 +104,9 @@ const options = object(
 			}),
 
 			excludes: fun((filepath) => {
-				const parts = filepath.split('/');
-				if (
-					parts.some(
-						(part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known')
-					)
-				)
-					return true;
-				return false;
+				return filepath
+					.split('/')
+					.some((part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known'));
 			}),
 
 			floc: boolean(false),
