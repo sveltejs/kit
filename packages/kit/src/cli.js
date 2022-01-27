@@ -45,9 +45,9 @@ prog
 	.command('dev')
 	.describe('Start a development server')
 	.option('-p, --port', 'Port')
-	.option('-h, --host', 'Host (only use this on trusted networks)')
-	.option('-H, --https', 'Use self-signed HTTPS certificate')
 	.option('-o, --open', 'Open a browser tab')
+	.option('--host', 'Host (only use this on trusted networks)')
+	.option('--https', 'Use self-signed HTTPS certificate')
 	.action(async ({ port, host, https, open }) => {
 		try {
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
@@ -118,9 +118,9 @@ prog
 	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
+	.option('--host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('--https', 'Use self-signed HTTPS certificate', false)
 	.action(async ({ port, host, https, open }) => {
 		try {
 			await check_port(port);
