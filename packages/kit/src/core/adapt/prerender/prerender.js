@@ -7,6 +7,7 @@ import { SVELTE_KIT } from '../../constants.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
+import { escape_html_attr } from '../../../utils/escape.js';
 
 /**
  * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
@@ -129,10 +130,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(path, decoded_path, referrer) {
-		/** @type {Map<string, Response>} */
+		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const rendered = await app.render(new Request(`http://sveltekit-prerender${path}`), {
+		const render_path = config.kit.paths?.base
+			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
+			: `http://sveltekit-prerender${path}`;
+
+		const rendered = await app.render(new Request(render_path), {
 			prerender: {
 				all,
 				dependencies
@@ -158,7 +163,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					mkdirp(dirname(file));
 
 					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
-					writeFileSync(file, `<meta http-equiv="refresh" content="0;url=${encodeURI(location)}">`);
+
+					writeFileSync(
+						file,
+						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+					);
 
 					const resolved = resolve(path, location);
 					if (is_root_relative(resolved)) {
@@ -184,9 +193,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 
 			for (const [dependency_path, result] of dependencies) {
-				const response_type = Math.floor(result.status / 100);
+				const { status, headers } = result.response;
 
-				const is_html = result.headers.get('content-type') === 'text/html';
+				const response_type = Math.floor(status / 100);
+
+				const is_html = headers.get('content-type') === 'text/html';
 
 				const parts = dependency_path.split('/');
 				if (is_html && parts[parts.length - 1] !== 'index.html') {
@@ -196,16 +207,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const file = `${out}${parts.join('/')}`;
 				mkdirp(dirname(file));
 
-				if (result.body) {
-					writeFileSync(file, await result.text());
-					paths.push(dependency_path);
-				}
+				writeFileSync(
+					file,
+					result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
+				);
+				paths.push(dependency_path);
 
 				if (response_type === OK) {
-					log.info(`${result.status} ${dependency_path}`);
+					log.info(`${status} ${dependency_path}`);
 				} else {
 					error({
-						status: result.status,
+						status,
 						path: dependency_path,
 						referrer: path,
 						referenceType: 'fetched'

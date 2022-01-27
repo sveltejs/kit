@@ -51,26 +51,34 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-export interface RequestEvent<Locals = Record<string, any>> {
+export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
 	locals: Locals;
+	platform: Platform;
 }
 
 type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
-export interface EndpointOutput {
+export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;
-	headers?: HeadersInit;
-	body?: Body;
+	headers?: Headers | Partial<ResponseHeaders>;
+	body?: Output;
 }
 
 type MaybePromise<T> = T | Promise<T>;
 interface Fallthrough {
 	fallthrough: true;
 }
-export interface RequestHandler<Locals = Record<string, any>> {
-	(event: RequestEvent<Locals>): MaybePromise<Either<Response | EndpointOutput, Fallthrough>>;
+
+export interface RequestHandler<
+	Locals = Record<string, any>,
+	Platform = Record<string, any>,
+	Output extends Body = Body
+> {
+	(event: RequestEvent<Locals, Platform>): MaybePromise<
+		Either<Response | EndpointOutput<Output>, Fallthrough>
+	>;
 }
 ```
 
@@ -142,7 +150,7 @@ export async function post({ request }) {
 }
 ```
 
-#### HTTP Method Overrides
+#### HTTP method overrides
 
 HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 

@@ -21,7 +21,21 @@ async function main() {
 	console.log(gray(`\ncreate-svelte version ${version}`));
 	console.log(disclaimer);
 
-	const cwd = process.argv[2] || '.';
+	let cwd = process.argv[2] || '.';
+
+	if (cwd === '.') {
+		const opts = await prompts([
+			{
+				type: 'text',
+				name: 'dir',
+				message: 'Where should we create your project?\n  (leave blank to use current directory)'
+			}
+		]);
+
+		if (opts.dir) {
+			cwd = opts.dir;
+		}
+	}
 
 	if (fs.existsSync(cwd)) {
 		if (fs.readdirSync(cwd).length > 0) {
@@ -39,47 +53,56 @@ async function main() {
 	}
 
 	const options = /** @type {import('./types/internal').Options} */ (
-		await prompts([
-			{
-				type: 'select',
-				name: 'template',
-				message: 'Which Svelte app template?',
-				choices: fs.readdirSync(dist('templates')).map((dir) => {
-					const meta_file = dist(`templates/${dir}/meta.json`);
-					const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
+		await prompts(
+			[
+				{
+					type: 'select',
+					name: 'template',
+					message: 'Which Svelte app template?',
+					choices: fs.readdirSync(dist('templates')).map((dir) => {
+						const meta_file = dist(`templates/${dir}/meta.json`);
+						const meta = JSON.parse(fs.readFileSync(meta_file, 'utf8'));
 
-					return {
-						title: meta.description,
-						value: dir
-					};
-				})
-			},
+						return {
+							title: meta.description,
+							value: dir
+						};
+					})
+				},
+				{
+					type: 'toggle',
+					name: 'typescript',
+					message: 'Use TypeScript?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'eslint',
+					message: 'Add ESLint for code linting?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
+				},
+				{
+					type: 'toggle',
+					name: 'prettier',
+					message: 'Add Prettier for code formatting?',
+					initial: false,
+					active: 'Yes',
+					inactive: 'No'
+				}
+			],
 			{
-				type: 'toggle',
-				name: 'typescript',
-				message: 'Use TypeScript?',
-				initial: false,
-				active: 'Yes',
-				inactive: 'No'
-			},
-			{
-				type: 'toggle',
-				name: 'eslint',
-				message: 'Add ESLint for code linting?',
-				initial: false,
-				active: 'Yes',
-				inactive: 'No'
-			},
-			{
-				type: 'toggle',
-				name: 'prettier',
-				message: 'Add Prettier for code formatting?',
-				initial: false,
-				active: 'Yes',
-				inactive: 'No'
+				onCancel: () => {
+					process.exit(1);
+				}
 			}
-		])
+		)
 	);
+
+	options.name = path.basename(path.resolve(cwd));
 
 	await create(cwd, options);
 

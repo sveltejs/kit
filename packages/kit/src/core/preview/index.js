@@ -4,10 +4,9 @@ import https from 'https';
 import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
-import { getRawBody } from '../../node.js';
+import { getRequest, setResponse } from '../../node.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
-import { to_headers } from '../../utils/http.js';
 
 /** @param {string} dir */
 const mutable = (dir) =>
@@ -80,32 +79,21 @@ export async function preview({
 		const initial_url = req.url;
 
 		const render_handler = async () => {
-			if (!req.method) throw new Error('Incomplete request');
-
-			let body;
-
-			try {
-				body = await getRawBody(req);
-			} catch (/** @type {any} */ err) {
-				res.statusCode = err.status || 400;
-				return res.end(err.reason || 'Invalid request body');
-			}
-
 			if (initial_url.startsWith(config.kit.paths.base)) {
 				const protocol = use_https ? 'https' : 'http';
 				const host = req.headers['host'];
 
-				const rendered = await app.render(
-					new Request(`${protocol}://${host}${initial_url}`, {
-						method: req.method,
-						headers: to_headers(req.headers),
-						body
-					})
-				);
+				let request;
 
-				res.writeHead(rendered.status, Object.fromEntries(rendered.headers));
-				if (rendered.body) res.write(new Uint8Array(await rendered.arrayBuffer()));
-				res.end();
+				try {
+					req.url = initial_url;
+					request = await getRequest(`${protocol}://${host}`, req);
+				} catch (/** @type {any} */ err) {
+					res.statusCode = err.status || 400;
+					return res.end(err.reason || 'Invalid request body');
+				}
+
+				setResponse(res, await app.render(request));
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');

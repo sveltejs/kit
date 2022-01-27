@@ -13,7 +13,7 @@ export type JSONString =
 export type ResponseHeaders = Record<string, string | string[]>;
 
 // <-- Utility Types -->
-type Only<T, U> = { [P in keyof T]: T[P] } & { [P in keyof U]?: never };
+type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 export type InferValue<T, Key extends keyof T, Default> = T extends Record<Key, infer Val>

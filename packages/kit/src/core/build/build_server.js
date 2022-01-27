@@ -11,24 +11,25 @@ import { s } from '../../utils/misc.js';
 
 /**
  * @param {{
- *   cwd: string;
  *   hooks: string;
  *   config: import('types/config').ValidatedConfig;
  *   has_service_worker: boolean;
+ *   template: string;
  * }} opts
  * @returns
  */
-const template = ({ cwd, config, hooks, has_service_worker }) => `
+const app_template = ({ config, hooks, has_service_worker, template }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
 import { set_prerendering } from '${runtime}/env.js';
 import * as user_hooks from ${s(hooks)};
 
-const template = ({ head, body, assets }) => ${s(load_template(cwd, config))
+const template = ({ head, body, assets, nonce }) => ${s(template)
 	.replace('%svelte.head%', '" + head + "')
 	.replace('%svelte.body%', '" + body + "')
-	.replace(/%svelte\.assets%/g, '" + assets + "')};
+	.replace(/%svelte\.assets%/g, '" + assets + "')
+	.replace(/%svelte\.nonce%/g, '" + nonce + "')};
 
 let read = null;
 
@@ -60,6 +61,7 @@ export class App {
 
 		this.options = {
 			amp: ${config.kit.amp},
+			csp: ${s(config.kit.csp)},
 			dev: false,
 			floc: ${config.kit.floc},
 			get_stack: error => String(error), // for security
@@ -89,18 +91,17 @@ export class App {
 			router: ${s(config.kit.router)},
 			target: ${s(config.kit.target)},
 			template,
+			template_contains_nonce: ${template.includes('%svelte.nonce%')},
 			trailing_slash: ${s(config.kit.trailingSlash)}
 		};
 	}
 
-	render(request, {
-		prerender
-	} = {}) {
+	render(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		return respond(request, this.options, { prerender });
+		return respond(request, this.options, options);
 	}
 }
 `;
@@ -169,14 +170,13 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	// prettier-ignore
 	fs.writeFileSync(
 		input.app,
-		template({
-			cwd,
+		app_template({
 			config,
 			hooks: app_relative(hooks_file),
-			has_service_worker: service_worker_register && !!service_worker_entry_file
+			has_service_worker: service_worker_register && !!service_worker_entry_file,
+			template: load_template(cwd, config)
 		})
 	);
 

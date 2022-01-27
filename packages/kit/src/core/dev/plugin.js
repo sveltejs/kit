@@ -7,11 +7,12 @@ import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { getRawBody, setResponse } from '../../node.js';
+import { getRequest, setResponse } from '../../node.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, resolve_entry, runtime } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
+import { sequence } from '../../hooks.js';
 
 /**
  * @param {import('types/config').ValidatedConfig} config
@@ -19,12 +20,12 @@ import { load_template } from '../config/index.js';
  * @returns {Promise<import('vite').Plugin>}
  */
 export async function create_plugin(config, cwd) {
-	/** @type {import('amphtml-validator').Validator} */
+	/** @type {import('types/hooks').Handle} */
 	let amp;
 
 	if (config.kit.amp) {
 		process.env.VITE_SVELTEKIT_AMP = 'true';
-		amp = await (await import('amphtml-validator')).getInstance();
+		amp = (await import('./amp_hook')).handle;
 	}
 
 	return {
@@ -141,13 +142,10 @@ export async function create_plugin(config, cwd) {
 				vite.middlewares.use(async (req, res) => {
 					try {
 						if (!req.url || !req.method) throw new Error('Incomplete request');
-						if (req.url === '/favicon.ico') return not_found(res);
 
-						const url = new URL(
-							`${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}${req.url}`
-						);
+						const base = `${vite.config.server.https ? 'https' : 'http'}://${req.headers.host}`;
 
-						const decoded = decodeURI(url.pathname);
+						const decoded = decodeURI(new URL(base + req.url).pathname);
 
 						if (decoded.startsWith(assets)) {
 							const pathname = decoded.slice(assets.length);
@@ -160,6 +158,8 @@ export async function create_plugin(config, cwd) {
 							}
 						}
 
+						if (req.url === '/favicon.ico') return not_found(res);
+
 						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
 
 						/** @type {Partial<import('types/internal').Hooks>} */
@@ -167,10 +167,12 @@ export async function create_plugin(config, cwd) {
 							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 							: {};
 
+						const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
+
 						/** @type {import('types/internal').Hooks} */
 						const hooks = {
 							getSession: user_hooks.getSession || (() => ({})),
-							handle: user_hooks.handle || (({ event, resolve }) => resolve(event)),
+							handle: amp ? sequence(amp, handle) : handle,
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {
@@ -207,113 +209,68 @@ export async function create_plugin(config, cwd) {
 							assets
 						});
 
-						let body;
+						let request;
 
 						try {
-							body = await getRawBody(req);
+							request = await getRequest(base, req);
 						} catch (/** @type {any} */ err) {
 							res.statusCode = err.status || 400;
 							return res.end(err.reason || 'Invalid request body');
 						}
 
-						const rendered = await respond(
-							new Request(url.href, {
-								headers: /** @type {Record<string, string>} */ (req.headers),
-								method: req.method,
-								body
-							}),
-							{
-								amp: config.kit.amp,
-								dev: true,
-								floc: config.kit.floc,
-								get_stack: (error) => {
-									vite.ssrFixStacktrace(error);
-									return error.stack;
-								},
-								handle_error: (error, event) => {
-									vite.ssrFixStacktrace(error);
-									hooks.handleError({
-										error,
-										event,
+						const template = load_template(cwd, config);
 
-										// TODO remove for 1.0
-										// @ts-expect-error
-										get request() {
-											throw new Error(
-												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-											);
-										}
-									});
-								},
-								hooks,
-								hydrate: config.kit.hydrate,
-								manifest,
-								method_override: config.kit.methodOverride,
-								paths: {
-									base: config.kit.paths.base,
-									assets
-								},
-								prefix: '',
-								prerender: config.kit.prerender.enabled,
-								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-								root,
-								router: config.kit.router,
-								target: config.kit.target,
-								template: ({ head, body, assets }) => {
-									let rendered = load_template(cwd, config)
+						const rendered = await respond(request, {
+							amp: config.kit.amp,
+							csp: config.kit.csp,
+							dev: true,
+							floc: config.kit.floc,
+							get_stack: (error) => {
+								vite.ssrFixStacktrace(error);
+								return error.stack;
+							},
+							handle_error: (error, event) => {
+								vite.ssrFixStacktrace(error);
+								hooks.handleError({
+									error,
+									event,
+
+									// TODO remove for 1.0
+									// @ts-expect-error
+									get request() {
+										throw new Error(
+											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+										);
+									}
+								});
+							},
+							hooks,
+							hydrate: config.kit.hydrate,
+							manifest,
+							method_override: config.kit.methodOverride,
+							paths: {
+								base: config.kit.paths.base,
+								assets
+							},
+							prefix: '',
+							prerender: config.kit.prerender.enabled,
+							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+							root,
+							router: config.kit.router,
+							target: config.kit.target,
+							template: ({ head, body, assets, nonce }) => {
+								return (
+									template
+										.replace(/%svelte\.assets%/g, assets)
+										.replace(/%svelte\.nonce%/g, nonce)
+										// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
 										.replace('%svelte.head%', () => head)
 										.replace('%svelte.body%', () => body)
-										.replace(/%svelte\.assets%/g, assets);
-
-									if (amp) {
-										const result = amp.validateString(rendered);
-
-										if (result.status !== 'PASS') {
-											const lines = rendered.split('\n');
-
-											/** @param {string} str */
-											const escape = (str) =>
-												str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-											rendered = `<!doctype html>
-										<head>
-											<meta charset="utf-8" />
-											<meta name="viewport" content="width=device-width, initial-scale=1" />
-											<style>
-												body {
-													font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-													color: #333;
-												}
-
-												pre {
-													background: #f4f4f4;
-													padding: 1em;
-													overflow-x: auto;
-												}
-											</style>
-										</head>
-										<h1>AMP validation failed</h1>
-
-										${result.errors
-											.map(
-												(error) => `
-											<h2>${error.severity}</h2>
-											<p>Line ${error.line}, column ${error.col}: ${error.message} (<a href="${error.specUrl}">${
-													error.code
-												}</a>)</p>
-											<pre>${escape(lines[error.line - 1])}</pre>
-										`
-											)
-											.join('\n\n')}
-									`;
-										}
-									}
-
-									return rendered;
-								},
-								trailing_slash: config.kit.trailingSlash
-							}
-						);
+								);
+							},
+							template_contains_nonce: template.includes('%svelte.nonce%'),
+							trailing_slash: config.kit.trailingSlash
+						});
 
 						if (rendered) {
 							setResponse(res, rendered);

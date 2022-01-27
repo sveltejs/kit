@@ -12,17 +12,23 @@ const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmig
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
-	const package_dir = config.kit.package.dir;
-	const abs_package_dir = path.isAbsolute(package_dir) ? package_dir : path.join(cwd, package_dir);
-	rimraf(abs_package_dir);
+	if (!fs.existsSync(config.kit.files.lib)) {
+		throw new Error(`${config.kit.files.lib} does not exist`);
+	}
+
+	const package_dir = path.isAbsolute(config.kit.package.dir)
+		? config.kit.package.dir
+		: path.join(cwd, config.kit.package.dir);
+	rimraf(package_dir);
+	mkdirp(package_dir); // TODO https://github.com/sveltejs/kit/issues/2333
 
 	if (config.kit.package.emitTypes) {
 		// Generate type definitions first so hand-written types can overwrite generated ones
 		await emit_dts(config);
 		// Resolve aliases, TS leaves them as-is
-		const files = walk(abs_package_dir);
+		const files = walk(package_dir);
 		for (const file of files) {
-			const filename = path.join(abs_package_dir, file);
+			const filename = path.join(package_dir, file);
 			const source = fs.readFileSync(filename, 'utf8');
 			fs.writeFileSync(filename, resolve_$lib_alias(file, source, config));
 		}
@@ -49,7 +55,7 @@ export async function make_package(config, cwd = process.cwd()) {
 
 		if (!config.kit.package.files(normalized)) {
 			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
-			const dts_path = path.join(abs_package_dir, dts_file);
+			const dts_path = path.join(package_dir, dts_file);
 			if (fs.existsSync(dts_path)) {
 				fs.unlinkSync(dts_path);
 
@@ -62,26 +68,29 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 
 		const filename = path.join(config.kit.files.lib, file);
-		const source = fs.readFileSync(filename, 'utf8');
+		const source = fs.readFileSync(filename);
 
 		/** @type {string} */
 		let out_file;
 
-		/** @type {string} */
+		/** @type {string | Buffer} */
 		let out_contents;
 
 		if (svelte_ext) {
 			// it's a Svelte component
-			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
-			out_contents = config.preprocess
-				? strip_lang_tags((await preprocess(source, config.preprocess, { filename })).code)
-				: source;
 			contains_svelte_files = true;
+			out_file = file.slice(0, -svelte_ext.length) + '.svelte';
+			out_contents = source.toString('utf-8');
+			out_contents = config.preprocess
+				? strip_lang_tags((await preprocess(out_contents, config.preprocess, { filename })).code)
+				: out_contents;
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
 		} else if (ext === '.ts' && file.endsWith('.d.ts')) {
 			// TypeScript's declaration emit won't copy over the d.ts files, so we do it here
 			out_file = file;
-			out_contents = source;
-			if (fs.existsSync(path.join(abs_package_dir, out_file))) {
+			out_contents = source.toString('utf-8');
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
+			if (fs.existsSync(path.join(package_dir, out_file))) {
 				console.warn(
 					'Found already existing file from d.ts generation for ' +
 						out_file +
@@ -90,14 +99,14 @@ export async function make_package(config, cwd = process.cwd()) {
 			}
 		} else if (ext === '.ts') {
 			out_file = file.slice(0, -'.ts'.length) + '.js';
-			out_contents = await transpile_ts(filename, source);
+			out_contents = await transpile_ts(filename, source.toString('utf-8'));
+			out_contents = resolve_$lib_alias(out_file, out_contents, config);
 		} else {
 			out_file = file;
 			out_contents = source;
 		}
-		out_contents = resolve_$lib_alias(out_file, out_contents, config);
 
-		write(path.join(abs_package_dir, out_file), out_contents);
+		write(path.join(package_dir, out_file), out_contents);
 
 		if (config.kit.package.exports(normalized)) {
 			const original = `$lib/${normalized}`;
@@ -144,7 +153,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		}
 	}
 
-	write(path.join(abs_package_dir, 'package.json'), JSON.stringify(pkg, null, '  '));
+	write(path.join(package_dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
 	const whitelist = fs.readdirSync(cwd).filter((file) => {
 		const lowercased = file.toLowerCase();
@@ -154,7 +163,7 @@ export async function make_package(config, cwd = process.cwd()) {
 		const full_path = path.join(cwd, pathname);
 		if (fs.lstatSync(full_path).isDirectory()) continue; // just to be sure
 
-		const package_path = path.join(abs_package_dir, pathname);
+		const package_path = path.join(package_dir, pathname);
 		if (!fs.existsSync(package_path)) fs.copyFileSync(full_path, package_path);
 	}
 
@@ -287,7 +296,7 @@ function load_tsconfig(filename, ts) {
 
 /**
  * @param {string} file
- * @param {string} contents
+ * @param {Parameters<typeof fs.writeFileSync>[1]} contents
  */
 function write(file, contents) {
 	mkdirp(path.dirname(file));
@@ -322,8 +331,7 @@ async function try_load_svelte2tsx() {
 			return await import('svelte2tsx');
 		} catch (e) {
 			throw new Error(
-				'You need to install svelte2tsx and typescript if you want to generate type definitions\n' +
-					e
+				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs#packaging'
 			);
 		}
 	}

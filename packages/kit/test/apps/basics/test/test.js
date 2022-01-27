@@ -444,6 +444,21 @@ test.describe.parallel('Endpoints', () => {
 			server.close();
 		}
 	});
+
+	test('multiple set-cookie on endpoints using GET', async ({ request }) => {
+		const response = await request.get('/set-cookie');
+
+		const cookies = response
+			.headersArray()
+			.filter((obj) => obj.name === 'set-cookie')
+			.map((obj) => obj.value);
+
+		expect(cookies).toEqual([
+			'answer=42; HttpOnly',
+			'problem=comma, separated, values; HttpOnly',
+			'name=SvelteKit; path=/; HttpOnly'
+		]);
+	});
 });
 
 test.describe.parallel('Encoded paths', () => {
@@ -1889,6 +1904,9 @@ test.describe.parallel('Static files', () => {
 
 		response = await request.get('/subdirectory/static.json');
 		expect(await response.json()).toBe('subdirectory file');
+
+		response = await request.get('/favicon.ico');
+		expect(response.status()).toBe(200);
 	});
 });
 

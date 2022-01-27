@@ -1,5 +1,27 @@
 # create-svelte
 
+## 2.0.0-next.101
+
+### Patch Changes
+
+- bump eslint plugin and parser in template ([#3544](https://github.com/sveltejs/kit/pull/3544))
+
+## 2.0.0-next.100
+
+### Patch Changes
+
+- add ESLint configuration for mixed JS/TS codebase ([#3536](https://github.com/sveltejs/kit/pull/3536))
+
+## 2.0.0-next.99
+
+### Patch Changes
+
+- Respect Ctrl-C when running create-svelte ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+* Make project name an explicit option' ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
+- Prompt for directory when running create-svelte without argument ([#3472](https://github.com/sveltejs/kit/pull/3472))
+
 ## 2.0.0-next.98
 
 ### Patch Changes

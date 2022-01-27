@@ -4,6 +4,11 @@ import path from 'path';
 const config = {
 	extensions: ['.jesuslivesineveryone', '.whokilledthemuffinman', '.svelte.md', '.svelte'],
 	kit: {
+		csp: {
+			directives: {
+				'script-src': ['self']
+			}
+		},
 		files: {
 			assets: 'public',
 			lib: 'source/components',

@@ -17,6 +17,13 @@ const config = {
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		csp: {
+			mode: 'auto',
+			directives: {
+				'default-src': undefined
+				// ...
+			}
+		},
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -81,6 +88,29 @@ Enable [AMP](#amp) mode.
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+
+### csp
+
+An object containing zero or more of the following values:
+
+- `mode` — 'hash', 'nonce' or 'auto'
+- `directives` — an object of `[directive]: value[]` pairs.
+
+[Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
+
+```js
+{
+	directives: {
+		'script-src': ['self']
+	}
+}
+```
+
+...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
+
+When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
+
+> When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbiddem.
 
 ### files
 

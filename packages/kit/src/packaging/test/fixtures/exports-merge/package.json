@@ -1,5 +1,6 @@
 {
 	"name": "exports-replace",
+	"private": true,
 	"version": "1.0.0",
 	"description": "merges exports field",
 	"exports": {

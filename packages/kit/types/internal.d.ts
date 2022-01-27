@@ -1,14 +1,20 @@
 import { OutputAsset, OutputChunk } from 'rollup';
+import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
-import { ExternalFetch, GetSession, HandleError, InternalHandle, RequestEvent } from './hooks';
+import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
+
+export interface PrerenderDependency {
+	response: Response;
+	body: null | string | Uint8Array;
+}
 
 export interface PrerenderOptions {
 	fallback?: string;
 	all: boolean;
-	dependencies: Map<string, Response>;
+	dependencies: Map<string, PrerenderDependency>;
 }
 
 export interface AppModule {
@@ -97,7 +103,7 @@ export type SSRNodeLoader = () => Promise<SSRNode>;
 export interface Hooks {
 	externalFetch: ExternalFetch;
 	getSession: GetSession;
-	handle: InternalHandle;
+	handle: Handle;
 	handleError: HandleError;
 }
 
@@ -115,6 +121,7 @@ export interface SSRNode {
 
 export interface SSRRenderOptions {
 	amp: boolean;
+	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
@@ -134,13 +141,25 @@ export interface SSRRenderOptions {
 	router: boolean;
 	service_worker?: string;
 	target: string;
-	template({ head, body, assets }: { head: string; body: string; assets: string }): string;
+	template({
+		head,
+		body,
+		assets,
+		nonce
+	}: {
+		head: string;
+		body: string;
+		assets: string;
+		nonce: string;
+	}): string;
+	template_contains_nonce: boolean;
 	trailing_slash: TrailingSlash;
 }
 
 export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
+	platform?: any;
 	prerender?: PrerenderOptions;
 	fallback?: string;
 }
@@ -228,7 +247,5 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<
-		Response | undefined
-	>;
+	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<Response>;
 }
