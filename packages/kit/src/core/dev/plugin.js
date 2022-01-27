@@ -245,7 +245,7 @@ export async function create_plugin(config, cwd) {
 								});
 							},
 							hooks,
-							hydrate: config.kit.hydrate,
+							hydrate: config.kit.browser.hydrate,
 							manifest,
 							method_override: config.kit.methodOverride,
 							paths: {
@@ -256,7 +256,7 @@ export async function create_plugin(config, cwd) {
 							prerender: config.kit.prerender.enabled,
 							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 							root,
-							router: config.kit.router,
+							router: config.kit.browser.router,
 							target: config.kit.target,
 							template: ({ head, body, assets, nonce }) => {
 								return (

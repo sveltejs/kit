@@ -63,7 +63,7 @@ export async function dev({ cwd, port, host, https, config }) {
 				extensions: config.extensions,
 				emitCss: !config.kit.amp,
 				compilerOptions: {
-					hydratable: !!config.kit.hydrate
+					hydratable: !!config.kit.browser.hydrate
 				}
 			}),
 			await create_plugin(config, cwd)

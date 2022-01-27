@@ -79,7 +79,7 @@ export class App {
 				error.stack = this.options.get_stack(error);
 			},
 			hooks,
-			hydrate: ${s(config.kit.hydrate)},
+			hydrate: ${s(config.kit.browser.hydrate)},
 			manifest,
 			method_override: ${s(config.kit.methodOverride)},
 			paths: { base, assets },
@@ -88,7 +88,7 @@ export class App {
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.router)},
+			router: ${s(config.kit.browser.router)},
 			target: ${s(config.kit.target)},
 			template,
 			template_contains_nonce: ${template.includes('%svelte.nonce%')},
@@ -217,7 +217,7 @@ export async function build_server(
 			svelte({
 				extensions: config.extensions,
 				compilerOptions: {
-					hydratable: !!config.kit.hydrate
+					hydratable: !!config.kit.browser.hydrate
 				}
 			})
 		],
