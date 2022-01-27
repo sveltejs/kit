@@ -48,8 +48,11 @@ prog
 	.option('-o, --open', 'Open a browser tab')
 	.option('--host', 'Host (only use this on trusted networks)')
 	.option('--https', 'Use self-signed HTTPS certificate')
-	.action(async ({ port, host, https, open }) => {
+	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
+	.action(async ({ port, host, https, open, H }) => {
 		try {
+			if (H) throw new Error('-H is no longer supported — use --https instead');
+
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 			const config = await load_config();
 
@@ -121,8 +124,11 @@ prog
 	.option('-o, --open', 'Open a browser tab', false)
 	.option('--host', 'Host (only use this on trusted networks)', 'localhost')
 	.option('--https', 'Use self-signed HTTPS certificate', false)
-	.action(async ({ port, host, https, open }) => {
+	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
+	.action(async ({ port, host, https, open, H }) => {
 		try {
+			if (H) throw new Error('-H is no longer supported — use --https instead');
+
 			await check_port(port);
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
