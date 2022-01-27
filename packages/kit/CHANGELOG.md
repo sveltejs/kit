@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.247
+
+### Patch Changes
+
+- fix handling an incoming request from HTTP/2 ([#3572](https://github.com/sveltejs/kit/pull/3572))
+
 ## 1.0.0-next.246
 
 ### Patch Changes
