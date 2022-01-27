@@ -45,11 +45,14 @@ prog
 	.command('dev')
 	.describe('Start a development server')
 	.option('-p, --port', 'Port')
-	.option('-h, --host', 'Host (only use this on trusted networks)')
-	.option('-H, --https', 'Use self-signed HTTPS certificate')
 	.option('-o, --open', 'Open a browser tab')
-	.action(async ({ port, host, https, open }) => {
+	.option('--host', 'Host (only use this on trusted networks)')
+	.option('--https', 'Use self-signed HTTPS certificate')
+	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
+	.action(async ({ port, host, https, open, H }) => {
 		try {
+			if (H) throw new Error('-H is no longer supported — use --https instead');
+
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 			const config = await load_config();
 
@@ -118,11 +121,14 @@ prog
 	.command('preview')
 	.describe('Serve an already-built app')
 	.option('-p, --port', 'Port', 3000)
-	.option('-h, --host', 'Host (only use this on trusted networks)', 'localhost')
-	.option('-H, --https', 'Use self-signed HTTPS certificate', false)
 	.option('-o, --open', 'Open a browser tab', false)
-	.action(async ({ port, host, https, open }) => {
+	.option('--host', 'Host (only use this on trusted networks)', 'localhost')
+	.option('--https', 'Use self-signed HTTPS certificate', false)
+	.option('-H', 'no longer supported, use --https instead') // TODO remove for 1.0
+	.action(async ({ port, host, https, open, H }) => {
 		try {
+			if (H) throw new Error('-H is no longer supported — use --https instead');
+
 			await check_port(port);
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
