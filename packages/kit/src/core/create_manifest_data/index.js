@@ -93,10 +93,7 @@ export default function create_manifest_data({
 
 			if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
-			if (
-				basename !== '.well-known' &&
-				is_excluded({ excludes: config.kit.excludes, filepath: file, basename })
-			) {
+			if (basename !== '.well-known' && config.kit.excludes(file)) {
 				return;
 			}
 
@@ -265,25 +262,6 @@ export default function create_manifest_data({
 		components,
 		routes
 	};
-}
-
-/**
- * @param {{
- *   excludes: import('types/config').ValidatedConfig['kit']['excludes'],
- *   filepath: string,
- *   basename: string,
- * }} opts
- */
-function is_excluded({ excludes = [/^[_.]/], filepath, basename }) {
-	return excludes.some((exclude) => {
-		if (exclude instanceof RegExp) {
-			return exclude.test(basename);
-		} else if (typeof exclude === 'function') {
-			return exclude({ filepath, basename });
-		} else {
-			return basename === exclude;
-		}
-	});
 }
 
 /**

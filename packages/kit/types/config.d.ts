@@ -130,7 +130,7 @@ export interface Config {
 			serviceWorker?: string;
 			template?: string;
 		};
-		excludes?: Array<string | RegExp | ((args: { filepath: string; basename: string }) => boolean)>;
+		excludes?: (filepath: string) => boolean;
 		floc?: boolean;
 		hydrate?: boolean;
 		inlineStyleThreshold?: number;

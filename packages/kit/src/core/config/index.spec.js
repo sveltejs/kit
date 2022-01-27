@@ -91,8 +91,7 @@ const get_defaults = (prefix = '') => ({
 		router: true,
 		ssr: null,
 		target: null,
-		trailingSlash: 'never',
-		excludes: [/^[_.]/]
+		trailingSlash: 'never'
 	}
 });
 

@@ -103,17 +103,15 @@ const options = object(
 				template: string(join('src', 'app.html'))
 			}),
 
-			excludes: validate([/^[_.]/], (input, keypath) => {
-				const isValidArgType = (/** @type {any} */ arg) =>
-					typeof arg === 'string' || arg instanceof RegExp || arg instanceof Function;
-
-				if (!Array.isArray(input) || !input.every(isValidArgType)) {
-					throw new Error(
-						`${keypath} must be an array of strings, regular expressions, or functions`
-					);
-				}
-
-				return input;
+			excludes: fun((filepath) => {
+				const parts = filepath.split('/');
+				if (
+					parts.some(
+						(part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known')
+					)
+				)
+					return true;
+				return false;
 			}),
 
 			floc: boolean(false),
