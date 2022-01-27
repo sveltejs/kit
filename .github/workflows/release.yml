@@ -19,11 +19,11 @@ jobs:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2.0.1
         with:
-          version: 6
-      - name: Setup Node.js 12.x
+          version: 6.23.2
+      - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: 16.x
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -31,13 +31,14 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@master
+        uses: changesets/action@v1
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens

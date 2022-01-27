@@ -16,13 +16,14 @@ export default {
 			// default options are shown
 			pages: 'build',
 			assets: 'build',
-			fallback: null
+			fallback: null,
+			precompress: false
 		})
 	}
 };
 ```
 
-Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) option is set.
+Unless you're in [SPA mode](#spa-mode), the adapter will attempt to prerender every page of your app, regardless of whether the [`prerender`](https://kit.svelte.dev/docs#page-options-prerender) option is set.
 
 ## Options
 
@@ -37,6 +38,10 @@ The directory to write static assets (the contents of `static`, plus client-side
 ### fallback
 
 Specify a fallback page for SPA mode, e.g. `index.html` or `200.html` or `404.html`.
+
+### precompress
+
+If `true`, precompresses files with brotli and gzip. This will generate `.br` and `.gz` files.
 
 ## SPA mode
 
@@ -59,7 +64,7 @@ export default {
 };
 ```
 
-When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#ssr-and-javascript-prerender) option set will be prerendered.
+When operating in SPA mode, only pages that have the [`prerender`](https://kit.svelte.dev/docs#page-options-prerender) option set will be prerendered.
 
 ## GitHub Pages
 

@@ -1,5 +1,87 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.67
+
+### Patch Changes
+
+- Bump version to trigger rebuild with set-cookie support ([#3529](https://github.com/sveltejs/kit/pull/3529))
+
+## 1.0.0-next.66
+
+### Patch Changes
+
+- fix usage of `ORIGIN` environment variable ([#3448](https://github.com/sveltejs/kit/pull/3448))
+
+## 1.0.0-next.65
+
+### Patch Changes
+
+- [fix] rename `BASE` to `ORIGIN` and fix config handling ([#3423](https://github.com/sveltejs/kit/pull/3423))
+
+## 1.0.0-next.64
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.63
+
+### Patch Changes
+
+- Polyfill fetch before running any app code ([#3400](https://github.com/sveltejs/kit/pull/3400))
+
+## 1.0.0-next.62
+
+### Patch Changes
+
+- Allow `__fetchPolyfill()` to run several times ([#3377](https://github.com/sveltejs/kit/pull/3377))
+
+## 1.0.0-next.61
+
+### Patch Changes
+
+- [chore] update dependency sirv to v2 ([#3263](https://github.com/sveltejs/kit/pull/3263))
+
+## 1.0.0-next.60
+
+### Patch Changes
+
+- Don't cache non-hashed static assets in adapter-node ([#3193](https://github.com/sveltejs/kit/pull/3193))
+
+* Only set cache-control: immutable when appropriate ([#3196](https://github.com/sveltejs/kit/pull/3196))
+
+## 1.0.0-next.59
+
+### Patch Changes
+
+- Fix types ([#3181](https://github.com/sveltejs/kit/pull/3181))
+
+* Check if directory exists, before compressing ([#3179](https://github.com/sveltejs/kit/pull/3179))
+
+## 1.0.0-next.58
+
+### Patch Changes
+
+- [fix] only add handlers for directories that exist ([#3148](https://github.com/sveltejs/kit/pull/3148))
+
+## 1.0.0-next.57
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+- Don't bundle final output ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+## 1.0.0-next.56
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
 ## 1.0.0-next.55
 
 ### Patch Changes

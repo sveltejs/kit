@@ -1,5 +1,39 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.30
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.29
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.28
+
+### Patch Changes
+
+- use path/posix to resolve relative paths for esmodules ([#3212](https://github.com/sveltejs/kit/pull/3212))
+
+## 1.0.0-next.27
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.26
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
 ## 1.0.0-next.25
 
 ### Patch Changes

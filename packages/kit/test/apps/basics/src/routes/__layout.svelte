@@ -12,17 +12,31 @@
 </script>
 
 <script>
-	import { goto, invalidate, prefetch, prefetchRoutes } from '$app/navigation';
+	import {
+		goto,
+		invalidate,
+		prefetch,
+		prefetchRoutes,
+		beforeNavigate,
+		afterNavigate
+	} from '$app/navigation';
 
 	if (typeof window !== 'undefined') {
-		Object.assign(window, { goto, invalidate, prefetch, prefetchRoutes });
+		Object.assign(window, {
+			goto,
+			invalidate,
+			prefetch,
+			prefetchRoutes,
+			beforeNavigate,
+			afterNavigate
+		});
 	}
 
 	/** @type {{ bar: string }} */
 	export let foo;
 </script>
 
-<slot></slot>
+<slot />
 
 <footer>{foo.bar}</footer>
 

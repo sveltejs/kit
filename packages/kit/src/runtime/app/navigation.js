@@ -1,7 +1,5 @@
-import { router as router_ } from '../client/singletons.js';
+import { router, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
-
-const router = /** @type {import('../client/router').Router} */ (router_);
 
 /**
  * @param {string} name
@@ -12,10 +10,22 @@ function guard(name) {
 	};
 }
 
+export const disableScrollHandling = import.meta.env.SSR
+	? guard('disableScrollHandling')
+	: disableScrollHandling_;
 export const goto = import.meta.env.SSR ? guard('goto') : goto_;
 export const invalidate = import.meta.env.SSR ? guard('invalidate') : invalidate_;
 export const prefetch = import.meta.env.SSR ? guard('prefetch') : prefetch_;
 export const prefetchRoutes = import.meta.env.SSR ? guard('prefetchRoutes') : prefetchRoutes_;
+export const beforeNavigate = import.meta.env.SSR ? () => {} : beforeNavigate_;
+export const afterNavigate = import.meta.env.SSR ? () => {} : afterNavigate_;
+
+/**
+ * @type {import('$app/navigation').goto}
+ */
+async function disableScrollHandling_() {
+	renderer.disable_scroll_handling();
+}
 
 /**
  * @type {import('$app/navigation').goto}
@@ -50,4 +60,18 @@ async function prefetchRoutes_(pathnames) {
 	const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
 
 	await Promise.all(promises);
+}
+
+/**
+ * @type {import('$app/navigation').beforeNavigate}
+ */
+function beforeNavigate_(fn) {
+	if (router) router.before_navigate(fn);
+}
+
+/**
+ * @type {import('$app/navigation').afterNavigate}
+ */
+function afterNavigate_(fn) {
+	if (router) router.after_navigate(fn);
 }

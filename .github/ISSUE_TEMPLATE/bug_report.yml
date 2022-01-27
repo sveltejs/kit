@@ -9,7 +9,7 @@ body:
     id: bug-description
     attributes:
       label: Describe the bug
-      description: Bugs related to building may be caused by Vite. See this project's readme for more details. If you intend to submit a PR for this issue, tell us in the description. Thanks!
+      description: Please [check if bugs related to building are caused by Vite](https://github.com/sveltejs/kit#bug-reporting) and [file there](https://github.com/vitejs/vite/issues) if appropriate. If you intend to submit a PR for this issue, tell us in the description. Thanks!
       placeholder: Bug description
     validations:
       required: true
@@ -17,7 +17,7 @@ body:
     id: reproduction
     attributes:
       label: Reproduction
-      description: A link to a repository that reproduces the issue. Explaining how to reproduce is generally not enough. It pushes the burden of creating a reproduction project onto a small set of volunteer maintainers and isn't scalable. If no reproduction is provided within a reasonable time-frame, the issue will be closed.
+      description: A link to a repository, or a fork of https://node.new/sveltekit, that reproduces the issue. Explaining how to reproduce is generally not enough. It pushes the burden of creating a reproduction project onto a small set of volunteer maintainers and isn't scalable. If no reproduction is provided, the issue will be closed.
       placeholder: Reproduction
     validations:
       required: true

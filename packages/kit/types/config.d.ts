@@ -1,38 +1,103 @@
+import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { UserConfig as ViteConfig } from 'vite';
+import { CspDirectives } from './csp';
 import { RecursiveRequired } from './helper';
-import { Logger, TrailingSlash } from './internal';
+import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
-export interface AdapterUtils {
+export interface RouteDefinition {
+	type: 'page' | 'endpoint';
+	pattern: RegExp;
+	segments: RouteSegment[];
+	methods: HttpMethod[];
+}
+
+export interface AdapterEntry {
+	/**
+	 * A string that uniquely identifies an HTTP service (e.g. serverless function) and is used for deduplication.
+	 * For example, `/foo/a-[b]` and `/foo/[c]` are different routes, but would both
+	 * be represented in a Netlify _redirects file as `/foo/:param`, so they share an ID
+	 */
+	id: string;
+
+	/**
+	 * A function that compares the candidate route with the current route to determine
+	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
+	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
+	 */
+	filter: (route: RouteDefinition) => boolean;
+
+	/**
+	 * A function that is invoked once the entry has been created. This is where you
+	 * should write the function to the filesystem and generate redirect manifests.
+	 */
+	complete: (entry: {
+		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+	}) => void;
+}
+
+export interface Builder {
 	log: Logger;
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
+
+	appDir: string;
+
+	/**
+	 * Create entry points that map to individual functions
+	 * @param fn A function that groups a set of routes into an entry point
+	 */
+	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
+
+	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+
+	getBuildDirectory(name: string): string;
+	getClientDirectory(): string;
+	getServerDirectory(): string;
+	getStaticDirectory(): string;
+
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
-	copy_client_files(dest: string): string[];
+	writeClient(dest: string): string[];
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
-	copy_server_files(dest: string): string[];
+	writeServer(dest: string): string[];
 	/**
 	 * @param dest the destination folder to which files should be copied
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
-	copy_static_files(dest: string): string[];
+	writeStatic(dest: string): string[];
 	/**
-	 * @param from the source folder from which files should be copied
-	 * @param to the destination folder to which files should be copied
+	 * @param from the source file or folder
+	 * @param to the destination file or folder
+	 * @param opts.filter a function to determine whether a file or folder should be copied
+	 * @param opts.replace a map of strings to replace
 	 * @returns an array of paths corresponding to the files that have been created by the copy
 	 */
-	copy(from: string, to: string, filter?: (basename: string) => boolean): string[];
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<void>;
+	copy(
+		from: string,
+		to: string,
+		opts?: {
+			filter?: (basename: string) => boolean;
+			replace?: Record<string, string>;
+		}
+	): string[];
+
+	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<{
+		paths: string[];
+	}>;
 }
 
 export interface Adapter {
 	name: string;
-	adapt(context: { utils: AdapterUtils; config: ValidatedConfig }): Promise<void>;
+	headers?: {
+		host?: string;
+		protocol?: string;
+	};
+	adapt(builder: Builder): Promise<void>;
 }
 
 export interface PrerenderErrorHandler {
@@ -47,12 +112,16 @@ export interface PrerenderErrorHandler {
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
 export interface Config {
-	compilerOptions?: any;
+	compilerOptions?: CompileOptions;
 	extensions?: string[];
 	kit?: {
 		adapter?: Adapter;
 		amp?: boolean;
 		appDir?: string;
+		csp?: {
+			mode?: 'hash' | 'nonce' | 'auto';
+			directives?: CspDirectives;
+		};
 		files?: {
 			assets?: string;
 			hooks?: string;
@@ -63,9 +132,12 @@ export interface Config {
 		};
 		excludes?: Array<string | RegExp | ((args: { filepath: string; basename: string }) => boolean)>;
 		floc?: boolean;
-		host?: string;
-		hostHeader?: string;
 		hydrate?: boolean;
+		inlineStyleThreshold?: number;
+		methodOverride?: {
+			parameter?: string;
+			allowed?: string[];
+		};
 		package?: {
 			dir?: string;
 			emitTypes?: boolean;
@@ -77,6 +149,7 @@ export interface Config {
 			base?: string;
 		};
 		prerender?: {
+			concurrency?: number;
 			crawl?: boolean;
 			enabled?: boolean;
 			entries?: string[];
@@ -84,9 +157,9 @@ export interface Config {
 		};
 		router?: boolean;
 		serviceWorker?: {
-			files?(filepath: string): boolean;
+			register?: boolean;
+			files?: (filepath: string) => boolean;
 		};
-		ssr?: boolean;
 		target?: string;
 		trailingSlash?: TrailingSlash;
 		vite?: ViteConfig | (() => ViteConfig);

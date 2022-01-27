@@ -1,58 +1,53 @@
-/* global ASSETS */
-import { init, render } from '../output/server/app.js';
+import { App } from 'APP';
+import { manifest, prerendered } from 'MANIFEST';
 
-init();
+const app = new App(manifest);
+
+const prefix = `/${manifest.appDir}/`;
 
 export default {
 	async fetch(req, env) {
 		const url = new URL(req.url);
-		// check generated asset_set for static files
-		if (ASSETS.has(url.pathname.substring(1))) {
+
+		// static assets
+		if (url.pathname.startsWith(prefix)) {
+			/** @type {Response} */
+			const res = await env.ASSETS.fetch(req);
+
+			return new Response(res.body, {
+				headers: {
+					// include original cache headers, minus cache-control which
+					// is overridden, and etag which is no longer useful
+					'cache-control': 'public, immutable, max-age=31536000',
+					'content-type': res.headers.get('content-type'),
+					'x-robots-tag': 'noindex'
+				}
+			});
+		}
+
+		// prerendered pages and index.html files
+		const pathname = url.pathname.replace(/\/$/, '');
+		let file = pathname.substring(1);
+
+		try {
+			file = decodeURIComponent(file);
+		} catch (err) {
+			// ignore
+		}
+
+		if (
+			manifest.assets.has(file) ||
+			manifest.assets.has(file + '/index.html') ||
+			prerendered.has(pathname || '/')
+		) {
 			return env.ASSETS.fetch(req);
 		}
 
+		// dynamically-generated pages
 		try {
-			const rendered = await render({
-				host: url.host || '',
-				path: url.pathname || '',
-				query: url.searchParams || '',
-				rawBody: await read(req),
-				headers: Object.fromEntries(req.headers),
-				method: req.method
-			});
-
-			if (rendered) {
-				return new Response(rendered.body, {
-					status: rendered.status,
-					headers: makeHeaders(rendered.headers)
-				});
-			}
+			return await app.render(req, { platform: { env } });
 		} catch (e) {
 			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
 		}
-
-		return new Response({
-			status: 404,
-			statusText: 'Not Found'
-		});
 	}
 };
-
-async function read(request) {
-	return new Uint8Array(await request.arrayBuffer());
-}
-
-function makeHeaders(headers) {
-	const result = new Headers();
-	for (const header in headers) {
-		const value = headers[header];
-		if (typeof value === 'string') {
-			result.set(header, value);
-			continue;
-		}
-		for (const sub of value) {
-			result.append(header, sub);
-		}
-	}
-	return result;
-}

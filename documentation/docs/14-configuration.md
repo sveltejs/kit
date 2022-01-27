@@ -7,7 +7,7 @@ Your project's configuration lives in a `svelte.config.js` file. All values are 
 ```js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// options passed to svelte.compile (https://svelte.dev/docs#svelte_compile)
+	// options passed to svelte.compile (https://svelte.dev/docs#compile-time-svelte-compile)
 	compilerOptions: null,
 
 	// an array of file extensions that should be treated as Svelte components
@@ -17,6 +17,13 @@ const config = {
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		csp: {
+			mode: 'auto',
+			directives: {
+				'default-src': undefined
+				// ...
+			}
+		},
 		files: {
 			assets: 'static',
 			hooks: 'src/hooks',
@@ -29,9 +36,12 @@ const config = {
 			/^_/,
 		],
 		floc: false,
-		host: null,
-		hostHeader: null,
 		hydrate: true,
+		inlineStyleThreshold: 0,
+		methodOverride: {
+			parameter: '_method',
+			allowed: []
+		},
 		package: {
 			dir: 'package',
 			emitTypes: true,
@@ -44,6 +54,7 @@ const config = {
 			base: ''
 		},
 		prerender: {
+			concurrency: 1,
 			crawl: true,
 			enabled: true,
 			entries: ['*'],
@@ -51,18 +62,18 @@ const config = {
 		},
 		router: true,
 		serviceWorker: {
+			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		ssr: true,
 		target: null,
 		trailingSlash: 'never',
 		vite: () => ({})
 	},
-	
+
 	// SvelteKit uses vite-plugin-svelte. Its options can be provided directly here.
 	// See the available options at https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md
 
-	// options passed to svelte.preprocess (https://svelte.dev/docs#svelte_preprocess)
+	// options passed to svelte.preprocess (https://svelte.dev/docs#compile-time-svelte-preprocess)
 	preprocess: null
 };
 
@@ -80,6 +91,29 @@ Enable [AMP](#amp) mode.
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+
+### csp
+
+An object containing zero or more of the following values:
+
+- `mode` — 'hash', 'nonce' or 'auto'
+- `directives` — an object of `[directive]: value[]` pairs.
+
+[Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
+
+```js
+{
+	directives: {
+		'script-src': ['self']
+	}
+}
+```
+
+...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
+
+When pages are prerendered, the CSP header is added via a `<meta http-equiv>` tag (note that in this case, `frame-ancestors`, `report-uri` and `sandbox` directives will be ignored).
+
+> When `mode` is `'auto'`, SvelteKit will use nonces for dynamically rendered pages and hashes for prerendered pages. Using nonces with prerendered pages is insecure and therefore forbiddem.
 
 ### files
 
@@ -133,28 +167,22 @@ Permissions-Policy: interest-cohort=()
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
 
-### host
-
-A value that overrides the `Host` header when populating `page.host`
-
-### hostHeader
-
-If your app is behind a reverse proxy (think load balancers and CDNs) then the `Host` header will be incorrect. In most cases, the underlying host is exposed via the [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) header and you should specify this in your config if you need to access `page.host`:
-
-```js
-// svelte.config.js
-export default {
-	kit: {
-		hostHeader: 'X-Forwarded-Host'
-	}
-};
-```
-
-**You should only do this if you trust the reverse proxy**, which is why it isn't the default.
-
 ### hydrate
 
-Whether to [hydrate](#ssr-and-javascript-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+Whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+
+### inlineStyleThreshold
+
+Inline CSS inside a `<style>` block at the head of the HTML. This option is a number that specifies the maximum length of a CSS file to be inlined. All CSS files needed for the page and smaller than this value are merged and inlined in a `<style>` block.
+
+> This results in fewer initial requests and can improve your [First Contentful Paint](https://web.dev/first-contentful-paint) score. However, it generates larger HTML output and reduces the effectiveness of browser caches. Use it advisedly.
+
+### methodOverride
+
+See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+
+- `parameter` — query parameter name to use for passing the intended method value
+- `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### package
 
@@ -193,8 +221,9 @@ An object containing zero or more of the following `string` values:
 
 ### prerender
 
-See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or more of the following:
+See [Prerendering](#page-options-prerender). An object containing zero or more of the following:
 
+- `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
@@ -225,17 +254,14 @@ See [Prerendering](#ssr-and-javascript-prerender). An object containing zero or 
 
 ### router
 
-Enables or disables the client-side [router](#ssr-and-javascript-router) app-wide.
+Enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### serviceWorker
 
 An object containing zero or more of the following values:
 
+- `register` - if set to `false`, will disable automatic service worker registration
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### ssr
-
-Enables or disables [server-side rendering](#ssr-and-javascript-ssr) app-wide.
 
 ### target
 
@@ -253,4 +279,4 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 
 ### vite
 
-A [Vite config object](https://vitejs.dev/config), or a function that returns one. Not all configuration options can be set, since SvelteKit depends on certain values being configured internally.
+A [Vite config object](https://vitejs.dev/config), or a function that returns one. You can pass [Vite and Rollup plugins](https://github.com/vitejs/awesome-vite#plugins) via [the `plugins` option](https://vitejs.dev/config/#plugins) to customize your build in advanced ways such as supporting image optimization, Tauri, WASM, Workbox, and more. SvelteKit will prevent you from setting certain build-related options since it depends on certain configuration values.

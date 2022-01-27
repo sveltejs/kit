@@ -1,7 +1,6 @@
 # adapter-cloudflare
 
-[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit
-applications on Cloudflare Pages with Workers integration.
+[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
 
 _**Comparisons**_
 
@@ -27,34 +26,14 @@ $ npm i --save-dev @sveltejs/adapter-cloudflare@next
 You can include these changes in your `svelte.config.js` configuration file:
 
 ```js
-import cloudflare from '@sveltejs/adapter-cloudflare';
+import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
 	kit: {
 		target: '#svelte',
-		adapter: cloudflare({
-			// any esbuild options
-		})
+		adapter: adapter()
 	}
 };
-```
-
-### Options
-
-The adapter optionally accepts all
-[`esbuild.build`](https://esbuild.github.io/api/#build-api) configuration.
-
-These are the default options, of which, all but `target` and `platform` are
-enforced:
-
-```js
-target: 'es2020',
-platform: 'browser',
-entryPoints: '< input >',
-outfile: '<output>/_worker.js',
-allowOverwrite: true,
-format: 'esm',
-bundle: true,
 ```
 
 ## Deployment
@@ -71,7 +50,26 @@ When configuring your project settings, you must use the following settings:
 
 > **Important:** You need to add a `NODE_VERSION` environment variable to both the "production" and "preview" environments. You can add this during project setup or later in the Pages project settings. SvelteKit requires Node `14.13` or later, so you should use `14` or `16` as the `NODE_VERSION` value.
 
+## Environment variables
+
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property, meaning you can access it in hooks and endpoints:
+
+```ts
+interface Locals {}
+
+interface Platform {
+	env: {
+		COUNTER: DurableObjectNamespace;
+	};
+}
+
+export async function post<Locals, Platform>({ request, platform }) {
+	const counter = platform.env.COUNTER.idFromName('A');
+}
+```
+
+> `platform.env` is only available in the production build. Use [wrangler](https://developers.cloudflare.com/workers/cli-wrangler) to test it locally
+
 ## Changelog
 
-[The Changelog for this package is available on
-GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).
+[The Changelog for this package is available on GitHub](https://github.com/sveltejs/kit/blob/master/packages/adapter-cloudflare/CHANGELOG.md).

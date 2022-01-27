@@ -4,6 +4,7 @@ interface AdapterOptions {
 	pages?: string;
 	assets?: string;
 	fallback?: string;
+	precompress?: boolean;
 }
 
 declare function plugin(options?: AdapterOptions): Adapter;

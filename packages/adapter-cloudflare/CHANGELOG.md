@@ -1,5 +1,51 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- Pass `env` object to SvelteKit via `platform` ([#3429](https://github.com/sveltejs/kit/pull/3429))
+
+## 1.0.0-next.8
+
+### Patch Changes
+
+- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+
+## 1.0.0-next.7
+
+### Patch Changes
+
+- Add immutable cache headers to generated assets ([#3222](https://github.com/sveltejs/kit/pull/3222))
+
+## 1.0.0-next.6
+
+### Patch Changes
+
+- use posix to resolve relative path ([#3214](https://github.com/sveltejs/kit/pull/3214))
+
+## 1.0.0-next.5
+
+### Patch Changes
+
+- Overhaul adapter API ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+* Remove esbuild options ([#2931](https://github.com/sveltejs/kit/pull/2931))
+
+- Update adapters to provide app.render with a url ([#3133](https://github.com/sveltejs/kit/pull/3133))
+
+## 1.0.0-next.4
+
+### Patch Changes
+
+- Updated Cloudflare adapter to allow static files with spaces (eg. "Example File.pdf") to be accessed. ([#3047](https://github.com/sveltejs/kit/pull/3047))
+
+## 1.0.0-next.3
+
+### Patch Changes
+
+- update to esbuild 0.13.15 and other dependency updates ([#2957](https://github.com/sveltejs/kit/pull/2957))
+
 ## 1.0.0-next.2
 
 ### Patch Changes

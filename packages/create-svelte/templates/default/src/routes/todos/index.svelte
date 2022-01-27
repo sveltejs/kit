@@ -77,7 +77,7 @@
 			animate:flip={{ duration: 200 }}
 		>
 			<form
-				action="/todos/{todo.uid}.json?_method=patch"
+				action="/todos/{todo.uid}.json?_method=PATCH"
 				method="post"
 				use:enhance={{
 					pending: (data) => {
@@ -92,7 +92,7 @@
 
 			<form
 				class="text"
-				action="/todos/{todo.uid}.json?_method=patch"
+				action="/todos/{todo.uid}.json?_method=PATCH"
 				method="post"
 				use:enhance={{
 					result: patch
@@ -103,7 +103,7 @@
 			</form>
 
 			<form
-				action="/todos/{todo.uid}.json?_method=delete"
+				action="/todos/{todo.uid}.json?_method=DELETE"
 				method="post"
 				use:enhance={{
 					pending: () => (todo.pending_delete = true),

@@ -1,18 +1,24 @@
-import { ServerRequest } from './hooks';
-import { JSONString, MaybePromise, ResponseHeaders } from './helper';
+import { RequestEvent } from './hooks';
+import { Either, JSONString, MaybePromise, ResponseHeaders } from './helper';
 
-type DefaultBody = JSONString | Uint8Array;
+type Body = JSONString | Uint8Array | ReadableStream | import('stream').Readable;
 
-export interface EndpointOutput<Body extends DefaultBody = DefaultBody> {
+export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;
-	headers?: ResponseHeaders;
-	body?: Body;
+	headers?: Headers | Partial<ResponseHeaders>;
+	body?: Output;
+}
+
+export interface Fallthrough {
+	fallthrough: true;
 }
 
 export interface RequestHandler<
 	Locals = Record<string, any>,
-	Input = unknown,
-	Output extends DefaultBody = DefaultBody
+	Platform = Record<string, any>,
+	Output extends Body = Body
 > {
-	(request: ServerRequest<Locals, Input>): MaybePromise<void | EndpointOutput<Output>>;
+	(event: RequestEvent<Locals, Platform>): MaybePromise<
+		Either<Response | EndpointOutput<Output>, Fallthrough>
+	>;
 }
