@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import create_manifest_data from './index.js';
+import options from '../config/options.js';
 
 const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
@@ -12,29 +13,10 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
  * @returns
  */
 const create = (dir, config = {}) => {
-	const { kit, extensions = ['.svelte'], ...other_config } = config;
+	const initial = options(config, 'config');
 
-	/** @type {import('types/config').Config} */
-	const initial = {
-		extensions,
-		kit: {
-			excludes: (filepath) => {
-				return filepath
-					.split('/')
-					.some((part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known'));
-			},
-			files: {
-				assets: path.resolve(cwd, 'static'),
-				routes: path.resolve(cwd, dir)
-			},
-			appDir: '_app',
-			serviceWorker: {
-				files: (filepath) => !/\.DS_STORE/.test(filepath)
-			},
-			...kit
-		},
-		...other_config
-	};
+	initial.kit.files.assets = path.resolve(cwd, 'static');
+	initial.kit.files.routes = path.resolve(cwd, dir);
 
 	return create_manifest_data({
 		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
