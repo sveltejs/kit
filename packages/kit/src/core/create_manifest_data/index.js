@@ -93,7 +93,7 @@ export default function create_manifest_data({
 
 			if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
 
-			if (basename !== '.well-known' && !config.kit.routes(file)) {
+			if (!config.kit.routes(file)) {
 				return;
 			}
 
