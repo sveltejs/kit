@@ -130,7 +130,6 @@ export interface Config {
 			serviceWorker?: string;
 			template?: string;
 		};
-		excludes?: (filepath: string) => boolean;
 		floc?: boolean;
 		hydrate?: boolean;
 		inlineStyleThreshold?: number;
@@ -156,6 +155,7 @@ export interface Config {
 			onError?: PrerenderOnErrorValue;
 		};
 		router?: boolean;
+		routes?: (filepath: string) => boolean;
 		serviceWorker?: {
 			register?: boolean;
 			files?: (filepath: string) => boolean;

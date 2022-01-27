@@ -103,12 +103,6 @@ const options = object(
 				template: string(join('src', 'app.html'))
 			}),
 
-			excludes: fun((filepath) => {
-				return filepath
-					.split('/')
-					.some((part) => part.startsWith('_') || (part.startsWith('.') && part !== '.well-known'));
-			}),
-
 			floc: boolean(false),
 
 			// TODO: remove this for the 1.0 release
@@ -248,6 +242,14 @@ const options = object(
 			}),
 
 			router: boolean(true),
+
+			routes: fun((filepath) => {
+				return filepath
+					.split('/')
+					.every(
+						(part) => part === '.well-known' || (!part.startsWith('.') && !part.startsWith('_'))
+					);
+			}),
 
 			serviceWorker: object({
 				register: boolean(true),

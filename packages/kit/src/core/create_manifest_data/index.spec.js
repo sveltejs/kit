@@ -259,7 +259,7 @@ test.only('ignores files and directories with leading dots except .well-known', 
 test('ignores files by `kit.excludes` config w/RegExp', () => {
 	const { routes } = create('samples/hidden-by-excludes-config', {
 		kit: {
-			excludes: (filepath) => filepath.endsWith('.test.js') || filepath.endsWith('.spec.js')
+			routes: (filepath) => !filepath.endsWith('.test.js') && !filepath.endsWith('.spec.js')
 		}
 	});
 
@@ -286,7 +286,7 @@ test('ignores files by `kit.excludes` config w/RegExp', () => {
 test('ignores files by `kit.excludes` config w/string', () => {
 	const { routes } = create('samples/hidden-by-excludes-config', {
 		kit: {
-			excludes: (filepath) => filepath.split('/').includes('a.js')
+			routes: (filepath) => !filepath.split('/').includes('a.js')
 		}
 	});
 
@@ -313,7 +313,7 @@ test('ignores files by `kit.excludes` config w/string', () => {
 test('ignores files by `kit.excludes` config w/function', () => {
 	const { routes } = create('samples/hidden-by-excludes-config', {
 		kit: {
-			excludes: (filepath) => filepath.startsWith('samples/hidden-by-excludes-config/subdir')
+			routes: (filepath) => !filepath.startsWith('samples/hidden-by-excludes-config/subdir')
 		}
 	});
 
