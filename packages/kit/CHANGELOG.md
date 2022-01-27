@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.245
+
+### Patch Changes
+
+- Allow adapters to pass in `platform` object ([#3429](https://github.com/sveltejs/kit/pull/3429))
+
+* favicon.ico is now requestable ([#3559](https://github.com/sveltejs/kit/pull/3559))
+
 ## 1.0.0-next.244
 
 ### Patch Changes
