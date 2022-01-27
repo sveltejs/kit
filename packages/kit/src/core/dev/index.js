@@ -41,7 +41,7 @@ export async function dev({ cwd, port, host, https, config }) {
 				strictPort: true
 			}
 		},
-		config.kit.vite()
+		await config.kit.vite()
 	);
 
 	/** @type {[any, string[]]} */
