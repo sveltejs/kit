@@ -9,7 +9,7 @@ export function init(manifest) {
 	const app = new App(manifest);
 
 	return async (event) => {
-		const rendered = await app.render({ request: to_request(event) });
+		const rendered = await app.render(to_request(event));
 
 		const partial_response = {
 			statusCode: rendered.status,

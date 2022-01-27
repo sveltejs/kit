@@ -6,7 +6,7 @@ export interface RequestOptions<Platform = Record<string, any>> {
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(request: Request, options: RequestOptions): Promise<Response>;
+	render(request: Request, options?: RequestOptions): Promise<Response>;
 }
 
 export class InternalApp extends App {
