@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.246
+
+### Patch Changes
+
+- `svelte-kit package` gives clearer error message when svelte2tsx and typescript are not installed ([#3562](https://github.com/sveltejs/kit/pull/3562))
+
+* `svelte-kit package` errors when lib directory does not exist ([#3562](https://github.com/sveltejs/kit/pull/3562))
+
+- [chore] refactor AMP validation ([#3554](https://github.com/sveltejs/kit/pull/3554))
+
 ## 1.0.0-next.245
 
 ### Patch Changes
