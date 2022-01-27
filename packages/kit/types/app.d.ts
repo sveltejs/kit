@@ -1,20 +1,19 @@
 import { PrerenderOptions, SSRNodeLoader, SSRRoute } from './internal';
 
-export interface RenderEvent<Platform = Record<string, any>> {
-	request: Request;
+export interface RequestOptions<Platform = Record<string, any>> {
 	platform?: Platform;
 }
 
 export class App {
 	constructor(manifest: SSRManifest);
-	render(renderEvent: RenderEvent): Promise<Response>;
+	render(request: Request, options: RequestOptions): Promise<Response>;
 }
 
 export class InternalApp extends App {
 	render(
-		renderEvent: RenderEvent,
-		options?: {
-			prerender: PrerenderOptions;
+		request: Request,
+		options?: RequestOptions & {
+			prerender?: PrerenderOptions;
 		}
 	): Promise<Response>;
 }

@@ -93,7 +93,7 @@ export async function preview({
 					return res.end(err.reason || 'Invalid request body');
 				}
 
-				setResponse(res, await app.render({ request }));
+				setResponse(res, await app.render(request));
 			} else {
 				res.statusCode = 404;
 				res.end('Not found');

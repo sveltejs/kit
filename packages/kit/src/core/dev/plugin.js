@@ -214,63 +214,61 @@ export async function create_plugin(config, cwd) {
 							return res.end(err.reason || 'Invalid request body');
 						}
 
-						const rendered = await respond(
-							{ request },
-							{
-								amp: config.kit.amp,
-								dev: true,
-								floc: config.kit.floc,
-								get_stack: (error) => {
-									vite.ssrFixStacktrace(error);
-									return error.stack;
-								},
-								handle_error: (error, event) => {
-									vite.ssrFixStacktrace(error);
-									hooks.handleError({
-										error,
-										event,
+						const rendered = await respond(request, {
+							amp: config.kit.amp,
+							dev: true,
+							floc: config.kit.floc,
+							get_stack: (error) => {
+								vite.ssrFixStacktrace(error);
+								return error.stack;
+							},
+							handle_error: (error, event) => {
+								vite.ssrFixStacktrace(error);
+								hooks.handleError({
+									error,
+									event,
 
-										// TODO remove for 1.0
-										// @ts-expect-error
-										get request() {
-											throw new Error(
-												'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
-											);
-										}
-									});
-								},
-								hooks,
-								hydrate: config.kit.hydrate,
-								manifest,
-								method_override: config.kit.methodOverride,
-								paths: {
-									base: config.kit.paths.base,
-									assets
-								},
-								prefix: '',
-								prerender: config.kit.prerender.enabled,
-								read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
-								root,
-								router: config.kit.router,
-								target: config.kit.target,
-								template: ({ head, body, assets }) => {
-									let rendered = load_template(cwd, config)
-										.replace(/%svelte\.assets%/g, assets)
-										// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
-										.replace('%svelte.head%', () => head)
-										.replace('%svelte.body%', () => body);
+									// TODO remove for 1.0
+									// @ts-expect-error
+									get request() {
+										throw new Error(
+											'request in handleError has been replaced with event. See https://github.com/sveltejs/kit/pull/3384 for details'
+										);
+									}
+								});
+							},
+							hooks,
+							hydrate: config.kit.hydrate,
+							manifest,
+							method_override: config.kit.methodOverride,
+							paths: {
+								base: config.kit.paths.base,
+								assets
+							},
+							prefix: '',
+							prerender: config.kit.prerender.enabled,
+							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
+							root,
+							router: config.kit.router,
+							target: config.kit.target,
+							template: ({ head, body, assets }) => {
+								let rendered = load_template(cwd, config)
+									.replace(/%svelte\.assets%/g, assets)
+									// head and body must be replaced last, in case someone tries to sneak in %svelte.assets% etc
+									.replace('%svelte.head%', () => head)
+									.replace('%svelte.body%', () => body);
 
-									if (amp) {
-										const result = amp.validateString(rendered);
+								if (amp) {
+									const result = amp.validateString(rendered);
 
-										if (result.status !== 'PASS') {
-											const lines = rendered.split('\n');
+									if (result.status !== 'PASS') {
+										const lines = rendered.split('\n');
 
-											/** @param {string} str */
-											const escape = (str) =>
-												str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+										/** @param {string} str */
+										const escape = (str) =>
+											str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-											rendered = `<!doctype html>
+										rendered = `<!doctype html>
 										<head>
 											<meta charset="utf-8" />
 											<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -301,14 +299,13 @@ export async function create_plugin(config, cwd) {
 											)
 											.join('\n\n')}
 									`;
-										}
 									}
+								}
 
-									return rendered;
-								},
-								trailing_slash: config.kit.trailingSlash
-							}
-						);
+								return rendered;
+							},
+							trailing_slash: config.kit.trailingSlash
+						});
 
 						if (rendered) {
 							setResponse(res, rendered);
