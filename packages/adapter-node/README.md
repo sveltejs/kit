@@ -96,12 +96,12 @@ interface Locals {
 }
 
 interface Platform {
-	request: Request;
+	req: Request;
 }
 
 // If using cookie-parser middleware
 export async function post<Locals, Platform>({ request, platform }) {
-	const cookies = platform.request.cookies;
+	const cookies = platform.req.cookies;
 }
 ```
 
