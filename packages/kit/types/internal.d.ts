@@ -159,6 +159,7 @@ export interface SSRRenderOptions {
 export interface SSRRenderState {
 	fetched?: string;
 	initiator?: SSRPage | null;
+	platform?: any;
 	prerender?: PrerenderOptions;
 	fallback?: string;
 }

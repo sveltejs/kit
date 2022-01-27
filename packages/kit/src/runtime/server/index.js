@@ -60,7 +60,8 @@ export async function respond(request, options, state = {}) {
 		request,
 		url,
 		params: {},
-		locals: {}
+		locals: {},
+		platform: state.platform
 	};
 
 	// TODO remove this for 1.0

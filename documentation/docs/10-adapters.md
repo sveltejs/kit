@@ -54,6 +54,10 @@ Most adapters will generate static HTML for any [prerenderable](#page-options-pr
 
 You can also use `adapter-static` to generate single-page apps (SPAs) by specifying a [fallback page](https://github.com/sveltejs/kit/tree/master/packages/adapter-static#spa-mode).
 
+#### Platform-specific context
+
+Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](#hooks) and [endpoints](#routing-endpoints) as the `platform` property — consult each adapter's documentation to learn more.
+
 ### Community adapters
 
 Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms. After installing the relevant adapter with your package manager, update your `svelte.config.js`:
@@ -93,6 +97,7 @@ Within the `adapt` method, there are a number of things that an adapter should d
   - Imports `App` from `${builder.getServerDirectory()}/app.js`
   - Instantiates the app with a manifest generated with `builder.generateManifest({ relativePath })`
   - Listens for requests from the platform, converts them to a standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) if necessary, calls the `render` function to generate a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) and responds with it
+  - expose any platform-specific information to SvelteKit via the `platform` option passed to `app.render`
   - Globally shims `fetch` to work on the target platform, if necessary. SvelteKit provides a `@sveltejs/kit/install-fetch` helper for platforms that can use `node-fetch`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform

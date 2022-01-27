@@ -96,14 +96,12 @@ export class App {
 		};
 	}
 
-	render(request, {
-		prerender
-	} = {}) {
+	render(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
 
-		return respond(request, this.options, { prerender });
+		return respond(request, this.options, options);
 	}
 }
 `;
@@ -172,7 +170,6 @@ export async function build_server(
 		return relative_file[0] === '.' ? relative_file : `./${relative_file}`;
 	};
 
-	// prettier-ignore
 	fs.writeFileSync(
 		input.app,
 		app_template({
