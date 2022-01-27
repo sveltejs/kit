@@ -52,9 +52,19 @@ function get_raw_body(req) {
 
 /** @type {import('@sveltejs/kit/node').GetRequest} */
 export async function getRequest(base, req) {
+	let headers = /** @type {Record<string, string>} */ (req.headers);
+	if (req.httpVersionMajor === 2) {
+		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
+		// Request implementation doesn't like them
+		headers = Object.assign({}, headers);
+		delete headers[':method'];
+		delete headers[':path'];
+		delete headers[':authority'];
+		delete headers[':scheme'];
+	}
 	return new Request(base + req.url, {
 		method: req.method,
-		headers: /** @type {Record<string, string>} */ (req.headers),
+		headers,
 		body: await get_raw_body(req) // TODO stream rather than buffer
 	});
 }
