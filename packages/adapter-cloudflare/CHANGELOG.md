@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.9
+
+### Patch Changes
+
+- Pass `env` object to SvelteKit via `platform` ([#3429](https://github.com/sveltejs/kit/pull/3429))
+
 ## 1.0.0-next.8
 
 ### Patch Changes
