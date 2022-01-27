@@ -99,12 +99,12 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 				// TODO: non-existent tsconfig passes without error
 				// 	it detects tsconfig in packages/kit instead and creates package folder
 				// 	in packages/kit/package, not sure how to handle and test this yet
-
 				// case 'no-tsconfig':
 				// 	assert.match(error.message, 'Failed to locate tsconfig or jsconfig');
 				// 	break;
 
 				default:
+					assert.unreachable('All error test must be handled');
 					break;
 			}
 		} finally {
