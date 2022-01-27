@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add kit.excludes config
+Add kit.routes config to customise public/private modules
