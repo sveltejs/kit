@@ -17,6 +17,10 @@ const config = {
 			assets: 'https://cdn.example.com/stuff'
 		},
 
+		prerender: {
+			subfolders: false
+		},
+
 		vite: {
 			build: {
 				minify: false
