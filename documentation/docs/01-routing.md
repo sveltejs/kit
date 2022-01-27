@@ -200,10 +200,6 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 > `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
-#### Platform object
-
-Some adapters may pass in some extra context when calling your application. They do this by setting the `platform` object, that can be accessed in both route handlers and hooks ([detailed later](#hooks)). It is up to the adapter to decide what is passed in.
-
 #### Fallthrough routes
 
 Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
