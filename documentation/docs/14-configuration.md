@@ -32,9 +32,6 @@ const config = {
 			serviceWorker: 'src/service-worker',
 			template: 'src/app.html'
 		},
-		excludes: [
-			/^_/,
-		],
 		floc: false,
 		hydrate: true,
 		inlineStyleThreshold: 0,
@@ -61,6 +58,7 @@ const config = {
 			onError: 'fail'
 		},
 		router: true,
+		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
@@ -125,35 +123,6 @@ An object containing zero or more of the following `string` values:
 - `routes` — the files that define the structure of your app (see [Routing](#routing))
 - `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
 - `template` — the location of the template for HTML responses
-
-### excludes
-
-An array that matches filenames to exclude (i.e., the file will not be interpreted as a [page](#routing-pages) or [endpoint](#routing-endpoints) route). Excluded files are effectively [private modules](#routing-private-modules).
-
-Each array item is one of the following:
-
- * `String` - The string is matched against the file's basename, and the file is excluded if it matches.
- * `RegExp` - The regular expression is tested against the file's basename, and the file is excluded if it matches.
- * `({ filepath: string, basename: string }) => boolean` - The function receives the file's path and basename, and returns `true` to exclude the file.
-
-Double-underscore prefixes (e.g., `__foo.svelte`) are reserved for special files, and thus cannot be excluded.
-
-**Default:** `[/^[_.]/]` *(exclude files that begin with `_` or `.`)*
-
-```js
-// svelte.config.js
-export default {
-	kit: {
-		excludes: [
-			/^[_.]/,
-			/\.(test|spec)\.js$/,
-			'excluded.js',
-			({ basename }) => basename.startsWith('@'),
-			({ filepath }) => filepath.includes('demo')
-		]
-	}
-};
-```
 
 ### floc
 
@@ -255,6 +224,10 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 ### router
 
 Enables or disables the client-side [router](#page-options-router) app-wide.
+
+### routes
+
+A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](#routing-private-modules).
 
 ### serviceWorker
 

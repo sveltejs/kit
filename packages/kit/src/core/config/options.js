@@ -243,13 +243,7 @@ const options = object(
 
 			router: boolean(true),
 
-			routes: fun((filepath) => {
-				return filepath
-					.split('/')
-					.every(
-						(part) => part === '.well-known' || (!part.startsWith('.') && !part.startsWith('_'))
-					);
-			}),
+			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
 
 			serviceWorker: object({
 				register: boolean(true),
