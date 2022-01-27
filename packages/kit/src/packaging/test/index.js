@@ -94,7 +94,7 @@ for (const dir of fs.readdirSync(join(__dirname, 'errors'))) {
 					);
 					break;
 				case 'no-lib-folder':
-					assert.match(error.message, `${join(cwd, 'src', 'lib')} does not exists`);
+					assert.match(error.message, `${join(cwd, 'src', 'lib')} does not exist`);
 					break;
 				// TODO: non-existent tsconfig passes without error
 				// 	it detects tsconfig in packages/kit instead and creates package folder
