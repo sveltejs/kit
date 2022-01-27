@@ -85,6 +85,14 @@ export async function dev({ cwd, port, host, https, config }) {
 		merged_config.server.https = https;
 	}
 
+	// by default, when enabling HTTPS in Vite, it also enables HTTP/2
+	// however, node-fetch's Request implementation does not like the HTTP/2 headers
+	// we set a no-op proxy config to force Vite to downgrade to TLS-only
+	// see https://vitejs.dev/config/#server-https
+	if (merged_config.server.https && !merged_config.server.proxy) {
+		merged_config.server.proxy = {};
+	}
+
 	if (port) {
 		merged_config.server.port = port;
 	}

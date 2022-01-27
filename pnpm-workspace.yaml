@@ -1,4 +1,5 @@
 packages:
   - 'packages/*'
+  - 'packages/kit/test/prerendering/*'
   - 'packages/create-svelte/templates/*'
   - '.github/actions/*'

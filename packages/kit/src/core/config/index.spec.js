@@ -1,8 +1,99 @@
+import { join } from 'path';
+import { fileURLToPath } from 'url';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-
 import { remove_keys } from '../../utils/object.js';
-import { validate_config } from './index.js';
+import { validate_config, load_config } from './index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = join(__filename, '..');
+
+const get_defaults = (prefix = '') => ({
+	extensions: ['.svelte'],
+	kit: {
+		adapter: null,
+		amp: false,
+		appDir: '_app',
+		csp: {
+			mode: 'auto',
+			directives: {
+				'child-src': undefined,
+				'default-src': undefined,
+				'frame-src': undefined,
+				'worker-src': undefined,
+				'connect-src': undefined,
+				'font-src': undefined,
+				'img-src': undefined,
+				'manifest-src': undefined,
+				'media-src': undefined,
+				'object-src': undefined,
+				'prefetch-src': undefined,
+				'script-src': undefined,
+				'script-src-elem': undefined,
+				'script-src-attr': undefined,
+				'style-src': undefined,
+				'style-src-elem': undefined,
+				'style-src-attr': undefined,
+				'base-uri': undefined,
+				sandbox: undefined,
+				'form-action': undefined,
+				'frame-ancestors': undefined,
+				'navigate-to': undefined,
+				'report-uri': undefined,
+				'report-to': undefined,
+				'require-trusted-types-for': undefined,
+				'trusted-types': undefined,
+				'upgrade-insecure-requests': false,
+				'require-sri-for': undefined,
+				'block-all-mixed-content': false,
+				'plugin-types': undefined,
+				referrer: undefined
+			}
+		},
+		files: {
+			assets: join(prefix, 'static'),
+			hooks: join(prefix, 'src/hooks'),
+			lib: join(prefix, 'src/lib'),
+			routes: join(prefix, 'src/routes'),
+			serviceWorker: join(prefix, 'src/service-worker'),
+			template: join(prefix, 'src/app.html')
+		},
+		floc: false,
+		headers: undefined,
+		host: undefined,
+		hydrate: true,
+		inlineStyleThreshold: 0,
+		methodOverride: {
+			parameter: '_method',
+			allowed: []
+		},
+		package: {
+			dir: 'package',
+			emitTypes: true
+		},
+		serviceWorker: {
+			register: true
+		},
+		paths: {
+			base: '',
+			assets: ''
+		},
+		prerender: {
+			concurrency: 1,
+			crawl: true,
+			enabled: true,
+			entries: ['*'],
+			force: undefined,
+			onError: 'fail',
+			pages: undefined
+		},
+		protocol: undefined,
+		router: true,
+		ssr: null,
+		target: null,
+		trailingSlash: 'never'
+	}
+});
 
 test('fills in defaults', () => {
 	const validated = validate_config({});
@@ -14,56 +105,7 @@ test('fills in defaults', () => {
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
-	assert.equal(validated, {
-		extensions: ['.svelte'],
-		kit: {
-			adapter: null,
-			amp: false,
-			appDir: '_app',
-			files: {
-				assets: 'static',
-				hooks: 'src/hooks',
-				lib: 'src/lib',
-				routes: 'src/routes',
-				serviceWorker: 'src/service-worker',
-				template: 'src/app.html'
-			},
-			floc: false,
-			headers: undefined,
-			host: undefined,
-			hydrate: true,
-			inlineStyleThreshold: 0,
-			methodOverride: {
-				parameter: '_method',
-				allowed: []
-			},
-			package: {
-				dir: 'package',
-				emitTypes: true
-			},
-			serviceWorker: {
-				register: true
-			},
-			paths: {
-				base: '',
-				assets: ''
-			},
-			prerender: {
-				concurrency: 1,
-				crawl: true,
-				enabled: true,
-				entries: ['*'],
-				force: undefined,
-				onError: 'fail',
-				pages: undefined
-			},
-			protocol: undefined,
-			router: true,
-			ssr: null,
-			target: null,
-			trailingSlash: 'never'
-		}
-	});
+	assert.equal(validated, get_defaults());
 });
 
 test('errors on invalid values', () => {
@@ -123,56 +165,10 @@ test('fills in partial blanks', () => {
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
-	assert.equal(validated, {
-		extensions: ['.svelte'],
-		kit: {
-			adapter: null,
-			amp: false,
-			appDir: '_app',
-			files: {
-				assets: 'public',
-				hooks: 'src/hooks',
-				lib: 'src/lib',
-				routes: 'src/routes',
-				serviceWorker: 'src/service-worker',
-				template: 'src/app.html'
-			},
-			floc: false,
-			headers: undefined,
-			host: undefined,
-			hydrate: true,
-			inlineStyleThreshold: 0,
-			methodOverride: {
-				parameter: '_method',
-				allowed: []
-			},
-			package: {
-				dir: 'package',
-				emitTypes: true
-			},
-			serviceWorker: {
-				register: true
-			},
-			paths: {
-				base: '',
-				assets: ''
-			},
-			prerender: {
-				concurrency: 1,
-				crawl: true,
-				enabled: true,
-				entries: ['*'],
-				force: undefined,
-				onError: 'fail',
-				pages: undefined
-			},
-			protocol: undefined,
-			router: true,
-			ssr: null,
-			target: null,
-			trailingSlash: 'never'
-		}
-	});
+	const config = get_defaults();
+	config.kit.files.assets = 'public';
+
+	assert.equal(validated, config);
 });
 
 test('fails if kit.appDir is blank', () => {
@@ -326,5 +322,30 @@ validate_paths(
 		assets: 'https://cdn.example.com'
 	}
 );
+
+test('load default config (esm)', async () => {
+	const cwd = join(__dirname, 'fixtures/default');
+
+	const config = await load_config({ cwd });
+	remove_keys(config, ([, v]) => typeof v === 'function');
+
+	assert.equal(config, get_defaults(cwd + '/'));
+});
+
+test('errors on loading config with incorrect default export', async () => {
+	let message = null;
+
+	try {
+		const cwd = join(__dirname, 'fixtures', 'export-string');
+		await load_config({ cwd });
+	} catch (/** @type {any} */ e) {
+		message = e.message;
+	}
+
+	assert.equal(
+		message,
+		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs#configuration'
+	);
+});
 
 test.run();

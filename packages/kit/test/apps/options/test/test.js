@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { start_server, test } from '../../../utils.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -75,6 +75,28 @@ test.describe.parallel('base path', () => {
 
 		await clicknav('[href="/path-base/base/two"]');
 		expect(await page.textContent('h2')).toBe('two');
+	});
+});
+
+test.describe.parallel('CSP', () => {
+	test('blocks script from external site', async ({ page }) => {
+		const { server, port } = await start_server((req, res) => {
+			if (req.url === '/blocked.js') {
+				res.writeHead(200, {
+					'content-type': 'text/javascript'
+				});
+
+				res.end('window.pwned = true');
+			} else {
+				res.writeHead(404).end('not found');
+			}
+		});
+
+		await page.goto(`/path-base/csp?port=${port}`);
+
+		expect(await page.evaluate('window.pwned')).toBe(undefined);
+
+		server.close();
 	});
 });
 

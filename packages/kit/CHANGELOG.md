@@ -1,5 +1,29 @@
 # @sveltejs/kit
 
+## 1.0.0-next.244
+
+### Patch Changes
+
+- [fix] reading from same response body twice during prerender (#3473) ([#3521](https://github.com/sveltejs/kit/pull/3521))
+
+* Add CSP support ([#3499](https://github.com/sveltejs/kit/pull/3499))
+
+- [chore] remove InternalHandle ([#3541](https://github.com/sveltejs/kit/pull/3541))
+
+* Force Vite to use HTTP/1 in dev mode, so `dev --https` works again ([#3553](https://github.com/sveltejs/kit/pull/3553))
+
+## 1.0.0-next.243
+
+### Patch Changes
+
+- [fix] hydrate real HTTP requests ([#3547](https://github.com/sveltejs/kit/pull/3547))
+
+## 1.0.0-next.242
+
+### Patch Changes
+
+- reinstate `EndpointOutput` generic ([#3537](https://github.com/sveltejs/kit/pull/3537))
+
 ## 1.0.0-next.241
 
 ### Patch Changes

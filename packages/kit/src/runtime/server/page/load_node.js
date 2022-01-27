@@ -96,7 +96,11 @@ export async function load_node({
 
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
+				/** @type {Response} */
 				let response;
+
+				/** @type {import('types/internal').PrerenderDependency} */
+				let dependency;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
 				// we need to support everything the browser's fetch supports
@@ -124,9 +128,6 @@ export async function load_node({
 						response = await fetch(`${url.origin}/${file}`, /** @type {RequestInit} */ (opts));
 					}
 				} else if (is_root_relative(resolved)) {
-					const relative = resolved;
-
-					// TODO: fix type https://github.com/node-fetch/node-fetch/issues/1113
 					if (opts.credentials !== 'omit') {
 						uses_credentials = true;
 
@@ -150,28 +151,14 @@ export async function load_node({
 						throw new Error('Request body must be a string');
 					}
 
-					const rendered = await respond(
-						new Request(new URL(requested, event.url).href, opts),
-						options,
-						{
-							fetched: requested,
-							initiator: route
-						}
-					);
+					response = await respond(new Request(new URL(requested, event.url).href, opts), options, {
+						fetched: requested,
+						initiator: route
+					});
 
-					if (rendered) {
-						if (state.prerender) {
-							state.prerender.dependencies.set(relative, rendered);
-						}
-
-						response = rendered;
-					} else {
-						// we can't load the endpoint from our own manifest,
-						// so we need to make an actual HTTP request
-						return fetch(new URL(requested, event.url).href, {
-							method: opts.method || 'GET',
-							headers: opts.headers
-						});
+					if (state.prerender) {
+						dependency = { response, body: null };
+						state.prerender.dependencies.set(resolved, dependency);
 					}
 				} else {
 					// external
@@ -204,59 +191,69 @@ export async function load_node({
 					response = await options.hooks.externalFetch.call(null, external_request);
 				}
 
-				if (response) {
-					const proxy = new Proxy(response, {
-						get(response, key, _receiver) {
-							async function text() {
-								const body = await response.text();
+				const proxy = new Proxy(response, {
+					get(response, key, _receiver) {
+						async function text() {
+							const body = await response.text();
 
-								/** @type {import('types/helper').ResponseHeaders} */
-								const headers = {};
-								for (const [key, value] of response.headers) {
-									if (key === 'set-cookie') {
-										set_cookie_headers = set_cookie_headers.concat(value);
-									} else if (key !== 'etag') {
-										headers[key] = value;
-									}
+							/** @type {import('types/helper').ResponseHeaders} */
+							const headers = {};
+							for (const [key, value] of response.headers) {
+								if (key === 'set-cookie') {
+									set_cookie_headers = set_cookie_headers.concat(value);
+								} else if (key !== 'etag') {
+									headers[key] = value;
 								}
+							}
 
-								if (!opts.body || typeof opts.body === 'string') {
-									// prettier-ignore
-									fetched.push({
+							if (!opts.body || typeof opts.body === 'string') {
+								// prettier-ignore
+								fetched.push({
 										url: requested,
 										body: /** @type {string} */ (opts.body),
 										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_string_in_html(body)}"}`
 									});
+							}
+
+							if (dependency) {
+								dependency.body = body;
+							}
+
+							return body;
+						}
+
+						if (key === 'arrayBuffer') {
+							return async () => {
+								const buffer = await response.arrayBuffer();
+
+								if (dependency) {
+									dependency.body = new Uint8Array(buffer);
 								}
 
-								return body;
-							}
+								// TODO should buffer be inlined into the page (albeit base64'd)?
+								// any conditions in which it shouldn't be?
 
-							if (key === 'text') {
-								return text;
-							}
-
-							if (key === 'json') {
-								return async () => {
-									return JSON.parse(await text());
-								};
-							}
-
-							// TODO arrayBuffer?
-
-							return Reflect.get(response, key, response);
+								return buffer;
+							};
 						}
-					});
 
-					return proxy;
-				}
+						if (key === 'text') {
+							return text;
+						}
 
-				return (
-					response ||
-					new Response('Not found', {
-						status: 404
-					})
-				);
+						if (key === 'json') {
+							return async () => {
+								return JSON.parse(await text());
+							};
+						}
+
+						// TODO arrayBuffer?
+
+						return Reflect.get(response, key, response);
+					}
+				});
+
+				return proxy;
 			},
 			stuff: { ...stuff }
 		};

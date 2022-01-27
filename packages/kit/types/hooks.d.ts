@@ -29,20 +29,8 @@ export interface Handle<Locals = Record<string, any>, Platform = Record<string, 
 	}): MaybePromise<Response>;
 }
 
-// internally, `resolve` could return `undefined`, so we differentiate InternalHandle
-// from the public Handle type
-export interface InternalHandle<Locals = Record<string, any>, Platform = Record<string, any>> {
-	(input: {
-		event: RequestEvent<Locals, Platform>;
-		resolve(
-			event: RequestEvent<Locals, Platform>,
-			opts?: ResolveOpts
-		): MaybePromise<Response | undefined>;
-	}): MaybePromise<Response | undefined>;
-}
-
-export interface HandleError<Locals = Record<string, any>, Platform = Record<string, any>> {
-	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals, Platform> }): void;
+export interface HandleError<Locals = Record<string, any>> {
+	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals> }): void;
 }
 
 export interface ExternalFetch {
