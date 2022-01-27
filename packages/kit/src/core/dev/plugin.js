@@ -25,7 +25,7 @@ export async function create_plugin(config, cwd) {
 
 	if (config.kit.amp) {
 		process.env.VITE_SVELTEKIT_AMP = 'true';
-		amp = (await import('./amp_hook')).handle;
+		amp = (await import('./amp_hook.js')).handle;
 	}
 
 	return {
