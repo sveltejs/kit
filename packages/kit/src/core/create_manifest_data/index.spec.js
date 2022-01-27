@@ -248,7 +248,7 @@ test('ignores files and directories with leading underscores', () => {
 	]);
 });
 
-test.only('ignores files and directories with leading dots except .well-known', () => {
+test('ignores files and directories with leading dots except .well-known', () => {
 	const { routes } = create('samples/hidden-dot');
 
 	assert.equal(routes.map((r) => r.type === 'endpoint' && r.file).filter(Boolean), [
