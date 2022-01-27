@@ -144,7 +144,7 @@ export async function post({ request }) {
 }
 ```
 
-#### HTTP Method Overrides
+#### HTTP method overrides
 
 HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 
