@@ -209,6 +209,7 @@ export interface ManifestData {
 export interface BuildData {
 	app_dir: string;
 	manifest_data: ManifestData;
+	service_worker: string | null;
 	client: {
 		assets: OutputAsset[];
 		chunks: OutputChunk[];

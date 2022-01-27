@@ -57,6 +57,7 @@ export async function build(config) {
 	const build_data = {
 		app_dir: config.kit.appDir,
 		manifest_data: options.manifest_data,
+		service_worker: options.service_worker_entry_file ? 'service_worker.js' : null, // TODO make file configurable?
 		client,
 		server,
 		static: options.manifest_data.assets.map((asset) => posixify(asset.file)),
