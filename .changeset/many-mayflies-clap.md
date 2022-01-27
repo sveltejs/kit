@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-Adapter render API updated to allow `meta` value
+Allow adapters to pass in `platform` object

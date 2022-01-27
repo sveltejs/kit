@@ -3,4 +3,4 @@
 '@sveltejs/adapter-node': patch
 ---
 
-Updated adapters to work with new `app.render` API
+Pass `platform` object to SvelteKit
