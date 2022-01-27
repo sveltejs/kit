@@ -1,5 +1,5 @@
 {
-	"name": "errors",
+	"name": "error-duplicate-export",
 	"version": "1.0.0",
-	"description": "validate error output"
+	"description": "validate duplicate export error output"
 }
