@@ -9,7 +9,7 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "changeset publish --tag=next",
+		"release": "changeset publish",
 		"preview:docs": "action-deploy-docs --project=kit"
 	},
 	"repository": {
