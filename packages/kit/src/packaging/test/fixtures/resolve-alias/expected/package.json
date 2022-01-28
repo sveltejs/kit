@@ -12,6 +12,5 @@
 		"./sub/bar": "./sub/bar.js",
 		"./sub/foo": "./sub/foo.js"
 	},
-	"svelte": "./index.js",
-	"private": true
+	"svelte": "./index.js"
 }

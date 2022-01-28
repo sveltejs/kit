@@ -10,6 +10,5 @@
 		},
 		"./package.json": "./package.json"
 	},
-	"svelte": "./Test.svelte",
-	"private": true
+	"svelte": "./Test.svelte"
 }

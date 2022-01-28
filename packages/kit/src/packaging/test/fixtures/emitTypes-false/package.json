@@ -3,6 +3,5 @@
 	"private": true,
 	"version": "1.0.0",
 	"description": "emitTypes settings disabled",
-	"type": "module",
-	"private": true
+	"type": "module"
 }

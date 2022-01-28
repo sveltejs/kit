@@ -18,6 +18,5 @@
 		"./package.json": "./package.json"
 	},
 	"type": "module",
-	"svelte": "./index.js",
-	"private": true
+	"svelte": "./index.js"
 }

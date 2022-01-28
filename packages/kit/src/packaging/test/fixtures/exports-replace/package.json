@@ -9,6 +9,5 @@
 			"import": "./index.js"
 		}
 	},
-	"svelte": "./Test.svelte",
-	"private": true
+	"svelte": "./Test.svelte"
 }

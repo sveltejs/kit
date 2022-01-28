@@ -3,6 +3,7 @@
 	"version": "1.0.0",
 	"description": "Action to set environment",
 	"main": "action/main.js",
+	"private": true,
 	"scripts": {
 		"build": "rollup -c"
 	},
