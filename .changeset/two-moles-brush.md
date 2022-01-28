@@ -1,0 +1,5 @@
+---
+'create-svelte': patch
+---
+
+typo
