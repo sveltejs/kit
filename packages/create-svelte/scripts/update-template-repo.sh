@@ -12,12 +12,15 @@ mkdir -p $TMP
 cd $TMP
 
 if [ "$CI" ]; then
+	echo ">>> setting git config"
 	(umask 0077; echo "$UPDATE_TEMPLATE_SSH_KEY" > ~/ssh_key;)
 	git config user.email 'noreply@svelte.dev'
 	git config user.name '[bot]'
 
 	export GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=accept-new -i ~/ssh_key'
 fi
+
+echo "GIT_SSH_COMMAND: $GIT_SSH_COMMAND"
 
 # clone the template repo
 rm -rf kit-template-default
