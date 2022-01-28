@@ -11,6 +11,14 @@ TMP=$(get_abs_filename "$DIR/../node_modules/.tmp")
 mkdir -p $TMP
 cd $TMP
 
+# clone the template repo
+rm -rf kit-template-default
+git clone --depth 1 --single-branch --branch main git@github.com:sveltejs/kit-template-default.git kit-template-default
+
+# empty out the repo
+cd kit-template-default
+node $DIR/update-template-repo-contents.js $TMP/kit-template-default
+
 if [ "$CI" ]; then
 	echo ">>> setting git config"
 	(umask 0077; echo "$UPDATE_TEMPLATE_SSH_KEY" > ~/ssh_key;)
@@ -21,14 +29,6 @@ if [ "$CI" ]; then
 fi
 
 echo "GIT_SSH_COMMAND: $GIT_SSH_COMMAND"
-
-# clone the template repo
-rm -rf kit-template-default
-git clone --depth 1 --single-branch --branch main git@github.com:sveltejs/kit-template-default.git kit-template-default
-
-# empty out the repo
-cd kit-template-default
-node $DIR/update-template-repo-contents.js $TMP/kit-template-default
 
 # commit the new files
 git add -A
