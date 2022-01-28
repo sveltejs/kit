@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.248
+
+### Patch Changes
+
+- Decode fetched resources before checking against manifest when prerendering ([#3571](https://github.com/sveltejs/kit/pull/3571))
+
+* Breaking: remove -H and (conflicting) -h shortcuts from CLI ([#3573](https://github.com/sveltejs/kit/pull/3573))
+
 ## 1.0.0-next.247
 
 ### Patch Changes
