@@ -87,16 +87,15 @@ export default function create_manifest_data({
 				}
 			});
 
-			if (name[0] === '_') {
-				if (name[1] === '_' && !specials.has(name)) {
-					throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
-				}
-
-				return;
+			if (basename.startsWith('__') && !specials.has(name)) {
+				throw new Error(`Files and directories prefixed with __ are reserved (saw ${file})`);
 			}
 
-			if (basename[0] === '.' && basename !== '.well-known') return null;
 			if (!is_dir && !/^(\.[a-z0-9]+)+$/i.test(ext)) return null; // filter out tmp files etc
+
+			if (!config.kit.routes(file)) {
+				return;
+			}
 
 			const segment = is_dir ? basename : name;
 

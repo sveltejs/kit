@@ -58,6 +58,7 @@ const config = {
 			onError: 'fail'
 		},
 		router: true,
+		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
@@ -223,6 +224,10 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 ### router
 
 Enables or disables the client-side [router](#page-options-router) app-wide.
+
+### routes
+
+A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](#routing-private-modules).
 
 ### serviceWorker
 

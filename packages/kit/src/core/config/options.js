@@ -243,6 +243,8 @@ const options = object(
 
 			router: boolean(true),
 
+			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
+
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))
