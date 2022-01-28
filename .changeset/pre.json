@@ -13,7 +13,11 @@
     "@sveltejs/vite-plugin-svelte": "1.0.0-next.0",
     "@sveltejs/adapter-cloudflare-workers": "0.0.1",
     "@sveltejs/adapter-cloudflare": "1.0.0-next.0",
-    "@sveltejs/adapter-auto": "1.0.0-next"
+    "@sveltejs/adapter-auto": "1.0.0-next",
+    "set-env-action": "1.0.0",
+    "~TODO~": "0.0.1",
+    "prerendering-test-basics": "0.0.1",
+    "prerendering-test-options": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -52,6 +56,7 @@
     "bright-sheep-promise",
     "brown-bugs-arrive",
     "brown-days-agree",
+    "brown-impalas-travel",
     "brown-jeans-cover",
     "brown-mangos-tie",
     "brown-peas-worry",
@@ -231,6 +236,7 @@
     "hip-elephants-judge",
     "hip-nails-burn",
     "hip-nails-taste",
+    "hip-walls-flash",
     "honest-beers-sing",
     "honest-bikes-pull",
     "honest-jars-report",
@@ -600,6 +606,7 @@
     "thin-coins-move",
     "thin-grapes-dance",
     "thin-planets-obey",
+    "thin-swans-cheat",
     "thin-trains-own",
     "thirty-frogs-mix",
     "thirty-spies-sparkle",

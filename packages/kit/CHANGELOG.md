@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.249
+
+### Patch Changes
+
+- Include service worker in manifest ([#3570](https://github.com/sveltejs/kit/pull/3570))
+
+* Add kit.routes config to customise public/private modules ([#3576](https://github.com/sveltejs/kit/pull/3576))
+
 ## 1.0.0-next.248
 
 ### Patch Changes
