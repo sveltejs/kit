@@ -9,7 +9,7 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "pnpm changeset publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
+		"release": "changeset publish --tag=next",
 		"preview:docs": "action-deploy-docs --project=kit"
 	},
 	"repository": {
