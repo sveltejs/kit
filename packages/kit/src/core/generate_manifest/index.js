@@ -47,10 +47,15 @@ export function generate_manifest(
 			? (path) => `() => import('${path}')`
 			: (path) => `() => Promise.resolve().then(() => require('${path}'))`;
 
+	const assets = build_data.manifest_data.assets.map((asset) => asset.file);
+	if (build_data.service_worker) {
+		assets.push(build_data.service_worker);
+	}
+
 	// prettier-ignore
 	return `{
 		appDir: ${s(build_data.app_dir)},
-		assets: new Set(${s(build_data.manifest_data.assets.map(asset => asset.file))}),
+		assets: new Set(${s(assets)}),
 		_: {
 			mime: ${s(get_mime_lookup(build_data.manifest_data))},
 			entry: ${s(build_data.client.entry)},
