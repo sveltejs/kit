@@ -58,4 +58,9 @@ test('renders page with unbuffered data from endpoint', () => {
 	assert.equal(json, JSON.stringify({ answer: 42 }));
 });
 
+test('loads a file with spaces in the filename', () => {
+	const content = read('load-file-with-spaces/index.html');
+	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
+});
+
 test.run();
