@@ -9,9 +9,8 @@
 		"check": "pnpm -r check",
 		"lint": "pnpm -r lint",
 		"format": "pnpm -r format",
-		"release": "pnpm publish --tag=next --filter=\"@sveltejs/*\" --filter=\"create-svelte\"",
-		"preview:docs": "action-deploy-docs --project=kit",
-		"changeset:version": "changeset version && pnpm i --lockfile-only"
+		"release": "changeset publish",
+		"preview:docs": "action-deploy-docs --project=kit"
 	},
 	"repository": {
 		"type": "git",

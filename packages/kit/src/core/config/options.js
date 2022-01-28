@@ -237,6 +237,8 @@ const options = object(
 			// TODO remove for 1.0
 			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
 
+			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
+
 			serviceWorker: object({
 				register: boolean(true),
 				files: fun((filename) => !/\.DS_STORE/.test(filename))

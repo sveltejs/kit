@@ -157,6 +157,7 @@ export interface Config {
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
 		};
+		routes?: (filepath: string) => boolean;
 		serviceWorker?: {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
