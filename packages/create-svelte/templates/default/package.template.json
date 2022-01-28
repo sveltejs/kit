@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "next",
 		"@sveltejs/kit": "next",
-		"svelte": "^3.44.0"
+		"svelte": "^3.46.0"
 	},
 	"type": "module",
 	"dependencies": {
