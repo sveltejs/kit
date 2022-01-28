@@ -19,15 +19,12 @@ if [ "$CI" ]; then
 	export GIT_SSH_COMMAND='ssh -o StrictHostKeyChecking=accept-new -i ~/ssh_key'
 fi
 
-echo "here $PWD"
-
 # clone the template repo
 rm -rf kit-template-default
 git clone --depth 1 --single-branch --branch main git@github.com:sveltejs/kit-template-default.git kit-template-default
 
-echo "wtf $(ls .)"
-
 # empty out the repo
+cd kit-template-default
 node $DIR/update-template-repo-contents.js $TMP/kit-template-default
 
 # commit the new files
