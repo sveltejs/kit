@@ -3,7 +3,7 @@ name: Update Template
 on:
   push:
     tags:
-      - create-svelte@*
+      - create-svelte@**
 
 jobs:
   release:
