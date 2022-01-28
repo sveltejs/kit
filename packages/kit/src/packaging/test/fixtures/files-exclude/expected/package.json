@@ -10,5 +10,6 @@
 		"./Test.svelte": "./Test.svelte",
 		".": "./index.js"
 	},
-	"svelte": "./index.js"
+	"svelte": "./index.js",
+	"private": true
 }

@@ -3,5 +3,6 @@
 	"private": true,
 	"version": "1.0.0",
 	"description": "package using $lib alias",
-	"type": "module"
+	"type": "module",
+	"private": true
 }

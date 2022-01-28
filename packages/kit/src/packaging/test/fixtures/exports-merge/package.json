@@ -9,5 +9,6 @@
 		},
 		"./constants": "./internal/constants.js",
 		"./Test": "./Test.svelte"
-	}
+	},
+	"private": true
 }

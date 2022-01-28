@@ -12,5 +12,6 @@
 		"./utils": "./utils.js",
 		".": "./index.js"
 	},
-	"svelte": "./index.js"
+	"svelte": "./index.js",
+	"private": true
 }

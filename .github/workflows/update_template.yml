@@ -1,11 +1,9 @@
 name: Update Template
 
 on:
-  workflow_run:
-    workflows: [Release]
-    types:
-      - completed
-  workflow_dispatch:
+  push:
+    tags:
+      - create-svelte@*
 
 jobs:
   release:
@@ -51,9 +49,8 @@ jobs:
       - name: Publish
         working-directory: ${{ github.workspace }}/template
         run: |
-          touch "generated-$(date +%s)"
           git config user.email "noreply@svelte.dev"
           git config user.name "[bot]"
           git add -A
-          git commit -m "version $npm_package_version"
+          git commit -m "create-svelte version ${{ github.ref_name }}"
           git push -u origin main -f
