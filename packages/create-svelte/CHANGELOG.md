@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.104
+
+### Patch Changes
+
+- typo ([#3593](https://github.com/sveltejs/kit/pull/3593))
+
 ## 2.0.0-next.103
 
 ### Patch Changes
