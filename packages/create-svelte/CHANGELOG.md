@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.107
+
+### Patch Changes
+
+- Trying something ([#3598](https://github.com/sveltejs/kit/pull/3598))
+
 ## 2.0.0-next.105
 
 ### Patch Changes
