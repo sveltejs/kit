@@ -40,6 +40,14 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           UPDATE_TEMPLATE_SSH_KEY: ${{ secrets.UPDATE_TEMPLATE_SSH_KEY }}
 
+      - name: Print published packages
+        run: echo "published ${{ fromJson(steps.changesets.outputs.publishedPackages) }}"
+
+      - name: Update default template repo
+        if: ${{ steps.changesets.outputs.publishedPackages && steps.changesets.outputs.publishedPackages.contains("create-svelte")) }}
+        working-directory: packages/create-svelte
+        run: ./scripts/update-template-repo.sh
+
       # TODO alert discord
       # - name: Send a Slack notification if a publish happens
       #   if: steps.changesets.outputs.published == 'true'
