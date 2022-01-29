@@ -10,18 +10,6 @@ import { SVELTE_KIT } from '../constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = join(__filename, '..');
 
-/** @param {string} _msg */
-const logger = (_msg) => {};
-
-/** @type {import('types/internal').Logger} */
-const log = Object.assign(logger, {
-	info: logger,
-	minor: logger,
-	warn: logger,
-	error: logger,
-	success: logger
-});
-
 test('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
 
@@ -36,21 +24,13 @@ test('copy files', () => {
 		}
 	};
 
-	/** @type {import('types/internal').BuildData} */
-	const build_data = {
-		// @ts-expect-error
-		client: {},
-		// @ts-expect-error
-		server: {},
-		static: [],
-		entries: []
-	};
-
 	const builder = create_builder({
 		cwd,
 		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
-		build_data,
-		log
+		// @ts-expect-error
+		build_data: {},
+		// @ts-expect-error
+		log: {}
 	});
 
 	const dest = join(__dirname, 'output');
