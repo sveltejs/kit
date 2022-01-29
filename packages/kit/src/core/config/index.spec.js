@@ -14,6 +14,10 @@ const get_defaults = (prefix = '') => ({
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		browser: {
+			hydrate: true,
+			router: true
+		},
 		csp: {
 			mode: 'auto',
 			directives: {
@@ -61,7 +65,7 @@ const get_defaults = (prefix = '') => ({
 		floc: false,
 		headers: undefined,
 		host: undefined,
-		hydrate: true,
+		hydrate: undefined,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
@@ -88,8 +92,8 @@ const get_defaults = (prefix = '') => ({
 			pages: undefined
 		},
 		protocol: undefined,
-		router: true,
-		ssr: null,
+		router: undefined,
+		ssr: undefined,
 		target: null,
 		trailingSlash: 'never'
 	}

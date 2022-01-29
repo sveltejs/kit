@@ -57,6 +57,11 @@ const options = object(
 				return input;
 			}),
 
+			browser: object({
+				hydrate: boolean(true),
+				router: boolean(true)
+			}),
+
 			csp: object({
 				mode: list(['auto', 'hash', 'nonce']),
 				directives: object({
@@ -106,24 +111,19 @@ const options = object(
 			floc: boolean(false),
 
 			// TODO: remove this for the 1.0 release
-			headers: validate(undefined, (input, keypath) => {
-				if (typeof input !== undefined) {
-					throw new Error(
-						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-					);
-				}
-			}),
+			headers: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+			),
 
 			// TODO: remove this for the 1.0 release
-			host: validate(undefined, (input, keypath) => {
-				if (typeof input !== undefined) {
-					throw new Error(
-						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-					);
-				}
-			}),
+			host: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+			),
 
-			hydrate: boolean(true),
+			// TODO remove for 1.0
+			hydrate: error((keypath) => `${keypath} has been moved to config.kit.browser.hydrate`),
 
 			inlineStyleThreshold: number(0),
 
@@ -225,23 +225,17 @@ const options = object(
 				}),
 
 				// TODO: remove this for the 1.0 release
-				pages: validate(undefined, (input, keypath) => {
-					if (typeof input !== undefined) {
-						throw new Error(`${keypath} has been renamed to \`entries\`.`);
-					}
-				})
+				pages: error((keypath) => `${keypath} has been renamed to \`entries\`.`)
 			}),
 
 			// TODO: remove this for the 1.0 release
-			protocol: validate(undefined, (input, keypath) => {
-				if (typeof input !== undefined) {
-					throw new Error(
-						`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
-					);
-				}
-			}),
+			protocol: error(
+				(keypath) =>
+					`${keypath} has been removed. See https://github.com/sveltejs/kit/pull/3384 for details`
+			),
 
-			router: boolean(true),
+			// TODO remove for 1.0
+			router: error((keypath) => `${keypath} has been moved to config.kit.browser.router`),
 
 			routes: fun((filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath)),
 
@@ -251,13 +245,10 @@ const options = object(
 			}),
 
 			// TODO remove this for 1.0
-			ssr: validate(null, (input) => {
-				if (input !== undefined) {
-					throw new Error(
-						'config.kit.ssr has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
-					);
-				}
-			}),
+			ssr: error(
+				(keypath) =>
+					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'`
+			),
 
 			target: string(null),
 
@@ -434,6 +425,15 @@ function assert_string(input, keypath) {
 	if (typeof input !== 'string') {
 		throw new Error(`${keypath} should be a string, if specified`);
 	}
+}
+
+/** @param {(keypath?: string) => string} fn */
+function error(fn) {
+	return validate(undefined, (input, keypath) => {
+		if (input !== undefined) {
+			throw new Error(fn(keypath));
+		}
+	});
 }
 
 export default options;

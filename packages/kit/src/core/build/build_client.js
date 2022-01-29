@@ -87,7 +87,7 @@ export async function build_client({
 				extensions: config.extensions,
 				emitCss: !config.kit.amp,
 				compilerOptions: {
-					hydratable: !!config.kit.hydrate
+					hydratable: !!config.kit.browser.hydrate
 				}
 			})
 		]
