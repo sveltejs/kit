@@ -312,6 +312,16 @@ export class Renderer {
 					deep_linked.scrollIntoView();
 				} else {
 					scrollTo(0, 0);
+					// In some cases it is needed scroll first root element of target that
+					// is not scrolled to the top
+					const target_children = this.target.childNodes;
+					for (const target_child of target_children) {
+						const target_child_element = target_child.firstChild?.parentElement;
+						if (target_child_element && target_child_element.scrollTop > 0) {
+							target_child_element.scrollTo(0, 0);
+							break;
+						}
+					}
 				}
 			}
 		} else {
