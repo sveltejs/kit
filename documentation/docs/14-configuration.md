@@ -17,6 +17,10 @@ const config = {
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		browser: {
+			hydrate: true,
+			router: true
+		},
 		csp: {
 			mode: 'auto',
 			directives: {
@@ -33,7 +37,6 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
-		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
@@ -58,7 +61,6 @@ const config = {
 			entries: ['*'],
 			onError: 'fail'
 		},
-		router: true,
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
