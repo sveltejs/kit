@@ -65,7 +65,9 @@ export default [
 			chunkFileNames: 'chunks/[name].js'
 		},
 		external: (id) => {
-			return id.startsWith('node:') || external.includes(id) || id.includes('runtime/server/index.js');
+			return (
+				id.startsWith('node:') || external.includes(id) || id.includes('runtime/server/index.js')
+			);
 		},
 		plugins: [
 			replace({
