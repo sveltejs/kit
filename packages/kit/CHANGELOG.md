@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.251
+
+### Patch Changes
+
+- Handle non-compliant ReadableStream implementations ([#3624](https://github.com/sveltejs/kit/pull/3624))
+
 ## 1.0.0-next.250
 
 ### Patch Changes

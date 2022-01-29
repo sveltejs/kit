@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.40
+
+### Patch Changes
+
+- Expose external option ([#3614](https://github.com/sveltejs/kit/pull/3614))
+
 ## 1.0.0-next.39
 
 ### Patch Changes
