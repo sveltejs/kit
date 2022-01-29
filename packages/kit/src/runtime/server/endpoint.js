@@ -116,7 +116,7 @@ function is_pojo(body) {
 		if (body._readableState && body._writableState && body._events) return false;
 
 		// similarly, it could be a web ReadableStream
-		if (body[Symbol.toStringTag] === 'ReadableStream') return false;
+		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
 	}
 
 	return true;
