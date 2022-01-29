@@ -12,7 +12,7 @@ If both are specified, per-page settings override per-app settings in case of co
 
 SvelteKit includes a [client-side router](#appendix-routing) that intercepts navigations (from the user clicking on links, or interacting with the back/forward buttons) and updates the page contents, rather than letting the browser handle the navigation by reloading.
 
-In certain circumstances you might need to disable [client-side routing](#appendix-routing) with the app-wide [`router` config option](#configuration-browser) or the page-level `router` export:
+In certain circumstances you might need to disable [client-side routing](#appendix-routing) with the app-wide [`browser.router` config option](#configuration-browser) or the page-level `router` export:
 
 ```html
 <script context="module">
