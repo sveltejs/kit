@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-add prerender.subfolders setting
+add `prerender.createIndexFiles` option
