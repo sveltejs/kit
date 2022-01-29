@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.250
+
+### Patch Changes
+
+- Move config.kit.hydrate and config.kit.router to config.kit.browser ([#3578](https://github.com/sveltejs/kit/pull/3578))
+
+* add prerender.subfolders setting ([#2632](https://github.com/sveltejs/kit/pull/2632))
+
 ## 1.0.0-next.249
 
 ### Patch Changes
