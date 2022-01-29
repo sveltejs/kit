@@ -17,6 +17,10 @@ const config = {
 		adapter: null,
 		amp: false,
 		appDir: '_app',
+		browser: {
+			hydrate: true,
+			router: true
+		},
 		csp: {
 			mode: 'auto',
 			directives: {
@@ -33,7 +37,6 @@ const config = {
 			template: 'src/app.html'
 		},
 		floc: false,
-		hydrate: true,
 		inlineStyleThreshold: 0,
 		methodOverride: {
 			parameter: '_method',
@@ -58,7 +61,6 @@ const config = {
 			entries: ['*'],
 			onError: 'fail'
 		},
-		router: true,
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
@@ -90,6 +92,13 @@ Enable [AMP](#amp) mode.
 ### appDir
 
 The directory relative to `paths.assets` where the built JS and CSS (and imported assets) are served from. (The filenames therein contain content-based hashes, meaning they can be cached indefinitely). Must not start or end with `/`.
+
+### browser
+
+An object containing zero or more of the following `boolean` values:
+
+- `hydrate` — whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+- `router` — enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### csp
 
@@ -136,10 +145,6 @@ Permissions-Policy: interest-cohort=()
 ```
 
 > This only applies to server-rendered responses — headers for prerendered pages (e.g. created with [adapter-static](https://github.com/sveltejs/kit/tree/master/packages/adapter-static)) are determined by the hosting platform.
-
-### hydrate
-
-Whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
 
 ### inlineStyleThreshold
 
@@ -222,10 +227,6 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
     	}
     };
     ```
-
-### router
-
-Enables or disables the client-side [router](#page-options-router) app-wide.
 
 ### routes
 
