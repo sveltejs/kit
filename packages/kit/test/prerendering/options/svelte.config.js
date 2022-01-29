@@ -18,7 +18,7 @@ const config = {
 		},
 
 		prerender: {
-			subfolders: false
+			createIndexFiles: false
 		},
 
 		vite: {

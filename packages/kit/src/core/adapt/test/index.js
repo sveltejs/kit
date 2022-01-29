@@ -99,8 +99,8 @@ suite('prerender', async () => {
 			appDir: '_app',
 			prerender: {
 				concurrency: 1,
+				createIndexFiles: true,
 				enabled: true,
-				subfolders: true,
 				entries: ['*']
 			}
 		}

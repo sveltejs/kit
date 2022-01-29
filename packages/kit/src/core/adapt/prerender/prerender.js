@@ -121,7 +121,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 		const parts = path.split('/');
 		if (is_html && parts[parts.length - 1] !== 'index.html') {
-			if (config.kit.prerender.subfolders) {
+			if (config.kit.prerender.createIndexFiles) {
 				parts.push('index.html');
 			} else {
 				parts[parts.length - 1] += '.html';
