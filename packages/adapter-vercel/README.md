@@ -14,10 +14,16 @@ import vercel from '@sveltejs/adapter-vercel';
 export default {
 	kit: {
 		...
-		adapter: vercel()
+		adapter: vercel(options)
 	}
 };
 ```
+
+## Options
+
+You can pass an `options` argument, if necessary, with the following:
+
+- `external` — an array of dependencies that [esbuild](https://esbuild.github.io/api/#external) should treat as external
 
 ## Changelog
 
