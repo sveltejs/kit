@@ -186,6 +186,7 @@ const options = object(
 			prerender: object({
 				concurrency: number(1),
 				crawl: boolean(true),
+				createIndexFiles: boolean(true),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {

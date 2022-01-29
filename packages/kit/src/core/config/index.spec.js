@@ -85,6 +85,7 @@ const get_defaults = (prefix = '') => ({
 		prerender: {
 			concurrency: 1,
 			crawl: true,
+			createIndexFiles: true,
 			enabled: true,
 			entries: ['*'],
 			force: undefined,
