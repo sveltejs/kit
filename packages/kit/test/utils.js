@@ -186,7 +186,7 @@ export const config = {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
 		port: 3000
 	},
-	workers: 8,
+	workers: process.platform === 'win32' ? 4 : 8,
 	retries: process.env.CI ? 5 : 0,
 	projects: [
 		{
