@@ -1,29 +1,29 @@
 # adapter-vercel
 
-Adapter for Svelte apps that creates a Vercel app, using a function for dynamic server rendering.
+Allow SvelteKit applications to adapt to Vercel's serverless environment, with support for both static files and server-rendering.
 
 ## Usage
 
-Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
+You do not need to install this package manually. It is automatically installed through `@sveltejs/adapter-auto`.
 
-Then in your `svelte.config.js`:
+1. `npm i -D @sveltejs/adapter-auto`.
+2. Update your `svelte.config.js` as shown below.
 
 ```js
-import vercel from '@sveltejs/adapter-vercel';
+import adapter from "@sveltejs/adapter-auto";
 
-export default {
-	kit: {
-		...
-		adapter: vercel(options)
-	}
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  kit: {
+    adapter: adapter(),
+
+    // hydrate the <div id="svelte"> element in src/app.html
+    target: "#svelte",
+  },
 };
+
+export default config;
 ```
-
-## Options
-
-You can pass an `options` argument, if necessary, with the following:
-
-- `external` — an array of dependencies that [esbuild](https://esbuild.github.io/api/#external) should treat as external
 
 ## Changelog
 
