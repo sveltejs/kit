@@ -92,11 +92,14 @@ export async function load_node({
 					};
 				}
 
+				opts.headers = new Headers(opts.headers);
+
 				// merge headers from request
-				opts.headers = new Headers({
-					...Object.fromEntries(event.request.headers),
-					...opts.headers
-				});
+				for (const [key, value] of event.request.headers.entries()) {
+					if (!opts.headers.has(key)) {
+						opts.headers.append(key, value);
+					}
+				}
 
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
