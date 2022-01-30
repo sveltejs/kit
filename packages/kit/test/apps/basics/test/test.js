@@ -234,6 +234,16 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#input')).toBe(true);
 		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
+
+	test.only('scroll to top works with overflowing root container', async ({
+		page,
+		clicknav,
+		in_view
+	}) => {
+		await page.goto('/scroll-top-overflow');
+		await clicknav('#other');
+		expect(await page.$eval('#overflow-container', (el) => el.scrollTop)).toBe(0);
+	});
 });
 
 test.describe.parallel('Imports', () => {
