@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Improved client side navigation by adding scrolling for overflown root elements
+Improved client side navigation by ensuring scroll reset
