@@ -62,11 +62,12 @@ export default [
 		output: {
 			dir: 'dist',
 			format: 'esm',
-			chunkFileNames: 'chunks/[name].js'
+			chunkFileNames: 'chunks/[name].js',
+			paths: (id) => id.includes('runtime/server/index.js') ? '../../../assets/server/index.js' : id
 		},
 		external: (id) => {
 			return (
-				id.startsWith('node:') || external.includes(id) || id.includes('runtime/server/index.js')
+				id.startsWith('node:') || external.includes(id) || id.includes('../../runtime/server/index.js')
 			);
 		},
 		plugins: [
