@@ -235,11 +235,7 @@ test.describe('Scrolling', () => {
 		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
 
-	test.only('scroll to top works with overflowing root container', async ({
-		page,
-		clicknav,
-		in_view
-	}) => {
+	test('scroll to top works with overflowing root container', async ({ page, clicknav }) => {
 		await page.goto('/scroll-top-overflow');
 		await clicknav('#other');
 		expect(await page.$eval('#overflow-container', (el) => el.scrollTop)).toBe(0);
