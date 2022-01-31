@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.252
+
+### Patch Changes
+
+- remove nonexistent `url` store from `$app/stores` ambient types ([#3640](https://github.com/sveltejs/kit/pull/3640))
+
 ## 1.0.0-next.251
 
 ### Patch Changes
