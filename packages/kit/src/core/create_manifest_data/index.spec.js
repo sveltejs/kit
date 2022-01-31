@@ -216,6 +216,7 @@ test('disallows rest parameters inside segments', () => {
 
 	assert.equal(routes, [
 		{
+			id: '2',
 			type: 'page',
 			segments: [
 				{

@@ -1,7 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
+	import { l, localizedPaths, locale as currentLocale, defaultLocale } from '$lib/i18n';
+
+	$: alternatePaths = $localizedPaths($page.url.pathname);
+	$: defaultPath = alternatePaths[defaultLocale];
 </script>
+
+<svelte:head>
+	{#if defaultPath}
+		<link rel="alternate" hreflang="x-default" href={defaultPath} />
+	{/if}
+	{#each Object.entries(alternatePaths) as [locale, path]}
+		<link rel="alternate" hreflang={locale} href={path} />
+	{/each}
+</svelte:head>
 
 <header>
 	<div class="corner">
@@ -15,12 +28,14 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li class:active={$page.url.pathname === '/'}><a sveltekit:prefetch href="/">Home</a></li>
-			<li class:active={$page.url.pathname === '/about'}>
-				<a sveltekit:prefetch href="/about">About</a>
+			<li class:active={$page.url.pathname === $l('/')}>
+				<a sveltekit:prefetch href={$l('/')}>Home</a>
 			</li>
-			<li class:active={$page.url.pathname === '/todos'}>
-				<a sveltekit:prefetch href="/todos">Todos</a>
+			<li class:active={$page.url.pathname === $l('/about')}>
+				<a sveltekit:prefetch href={$l('/about')}>About</a>
+			</li>
+			<li class:active={$page.url.pathname === $l('/todos')}>
+				<a sveltekit:prefetch href={$l('/todos')}>Todos</a>
 			</li>
 		</ul>
 		<svg viewBox="0 0 2 3" aria-hidden="true">
@@ -30,6 +45,11 @@
 
 	<div class="corner">
 		<!-- TODO put something else here? github link? -->
+		<nav>
+			{#each Object.entries(alternatePaths) as [locale, path]}
+				<a class:active={$currentLocale === locale} href={path}>{locale}</a>
+			{/each}
+		</nav>
 	</div>
 </header>
 
@@ -40,7 +60,7 @@
 	}
 
 	.corner {
-		width: 3em;
+		display: flex;
 		height: 3em;
 	}
 
@@ -50,6 +70,23 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
+		text-transform: uppercase;
+	}
+
+	.corner nav a {
+		position: relative;
+	}
+
+	.corner a.active::before {
+		--size: 6px;
+		content: '';
+		width: 0;
+		height: 0;
+		position: absolute;
+		top: 0;
+		left: calc(50% - var(--size));
+		border: var(--size) solid transparent;
+		border-top: var(--size) solid var(--accent-color);
 	}
 
 	.corner img {

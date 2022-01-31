@@ -1,5 +1,6 @@
 import adapter from '@sveltejs/adapter-auto';
 import preprocess from 'svelte-preprocess';
+import { localizeRoutes } from './i18n.config.js';
 
 // This config is ignored and replaced with one of the configs in the shared folder when a project is created.
 
@@ -18,7 +19,9 @@ const config = {
 		// Override http methods in the Todo forms
 		methodOverride: {
 			allowed: ['PATCH', 'DELETE']
-		}
+		},
+
+		alternateRoutes: localizeRoutes
 	}
 };
 
