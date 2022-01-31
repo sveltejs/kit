@@ -29,6 +29,8 @@ export async function build_client({
 	output_dir,
 	client_entry_file
 }) {
+	if (!process.env.VITE_APP_VERSION) process.env.VITE_APP_VERSION = new Date().toISOString();
+
 	create_app({
 		manifest_data,
 		output: `${SVELTE_KIT}/generated`,
@@ -104,6 +106,12 @@ export async function build_client({
 	const entry_js = new Set();
 	const entry_css = new Set();
 	find_deps(entry, vite_manifest, entry_js, entry_css);
+
+	fs.writeFileSync(
+		`${client_out_dir}/version.json`,
+		JSON.stringify(process.env.VITE_APP_VERSION),
+		'utf-8'
+	);
 
 	return {
 		assets,

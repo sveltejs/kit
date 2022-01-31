@@ -41,6 +41,44 @@ function notifiable_store(value) {
 }
 
 /**
+ * @param {any} value
+ * @param {(set: (new_value: any) => void) => any} fn
+ * @param {number | undefined} interval
+ */
+function checkable_store(value, fn, interval) {
+	const { set, update, subscribe } = writable(value);
+
+	setInterval(() => {
+		fn(set);
+	}, interval);
+
+	return {
+		set,
+		update,
+		subscribe,
+		check: () => fn(set)
+	};
+}
+
+/**
+ * @returns {Promise<boolean>}
+ */
+async function has_version_changed() {
+	if (import.meta.env.DEV) return false;
+
+	const headers = new Headers();
+	headers.append('pragma', 'no-cache');
+	headers.append('cache-control', 'no-cache');
+
+	const current_version = import.meta.env.VITE_APP_VERSION;
+	const new_version = await fetch('_app/version.json', { headers })
+		.then((res) => res.json())
+		.catch(() => undefined);
+
+	return new_version && current_version && new_version !== current_version;
+}
+
+/**
  * @param {RequestInfo} resource
  * @param {RequestInit} [opts]
  */
@@ -109,7 +147,17 @@ export class Renderer {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: writable(session)
+			session: writable(session),
+			updated: checkable_store(
+				false,
+				(set) => {
+					return has_version_changed().then((changed) => {
+						if (changed) set(true);
+						return changed;
+					});
+				},
+				300000
+			)
 		};
 
 		this.$session = null;
@@ -279,8 +327,11 @@ export class Renderer {
 				return;
 			}
 		} else if (navigation_result.props?.page?.status >= 400 && onError !== 'fail') {
-			location.href = info.url.href;
-			return;
+			const updated = await this.stores.updated.check();
+			if (updated) {
+				location.href = info.url.href;
+				return;
+			}
 		}
 
 		this.updating = true;

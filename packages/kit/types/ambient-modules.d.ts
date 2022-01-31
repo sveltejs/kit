@@ -23,6 +23,10 @@ declare module '$app/env' {
 	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
 	 */
 	export const mode: string;
+	/**
+	 * Version of the app
+	 */
+	export const version: string;
 }
 
 declare module '$app/navigation' {
@@ -110,6 +114,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		session: Writable<Session>;
+		updated: Writable<boolean> & { check: () => boolean };
 	};
 	/**
 	 * A readable store whose value contains page data.
@@ -132,6 +137,11 @@ declare module '$app/stores' {
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
 	export const session: Writable<any>;
+	/**
+	 * A writable store indicating if the site was updated since the store was created.
+	 * It can be written to when custom logic is required to detect updates.
+	 */
+	export const updated: Writable<boolean> & { check: () => boolean };
 }
 
 declare module '$service-worker' {

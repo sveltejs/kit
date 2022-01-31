@@ -32,7 +32,8 @@ export const getStores = () => {
 				subscribe: stores.navigating.subscribe
 			};
 		},
-		session: stores.session
+		session: stores.session,
+		updated: stores.updated
 	};
 };
 
@@ -76,4 +77,22 @@ export const session = {
 	},
 	set: () => throw_error('set'),
 	update: () => throw_error('update')
+};
+
+/** @type {typeof import('$app/stores').updated} */
+export const updated = {
+	subscribe(fn) {
+		const store = getStores().updated;
+
+		if (browser) {
+			updated.set = store.set;
+			updated.update = store.update;
+			updated.check = store.check;
+		}
+
+		return store.subscribe(fn);
+	},
+	set: () => throw_error('set'),
+	update: () => throw_error('update'),
+	check: () => throw_error('check')
 };

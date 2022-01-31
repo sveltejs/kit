@@ -80,12 +80,23 @@ export async function render_response({
 
 		const session = writable($session);
 
+		const updated = () => {
+			const { set, update, subscribe } = writable(false);
+			return {
+				set,
+				update,
+				subscribe,
+				check: () => {}
+			};
+		};
+
 		/** @type {Record<string, any>} */
 		const props = {
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				updated
 			},
 			page: {
 				url: state.prerender ? create_prerendering_url_proxy(url) : url,

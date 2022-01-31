@@ -1732,7 +1732,7 @@ src/routes/foo-<span class="token punctuation">[</span>bar<span class="token pun
 						<ul>
 							<li>
 								<code>getStores</code> is a convenience function around <code>getContext</code> that
-								returns <code>{ navigating, page, session }</code>. This needs to be called at the
+								returns <code>{ navigating, page, session, updating }</code>. This needs to be called at the
 								top-level or synchronously during component or page initialisation.
 							</li>
 						</ul>
@@ -1785,6 +1785,16 @@ src/routes/foo-<span class="token punctuation">[</span>bar<span class="token pun
 								<a href="#hooks-getsession" rel="noopener noreferrer"><code>getSession</code></a
 								>. It can be written to, but this will <em>not</em> cause changes to persist on the
 								server — this is something you must implement yourself.
+							</li>
+							<li>
+								<code>updating</code> is a
+								<a
+									href="https://svelte.dev/tutorial/writable-stores"
+									target="_blank"
+									rel="noopener noreferrer"
+									>writable store</a
+								>
+								whose initial value is false. The app's version will be checked every minute for changes, setting the value to true if the version does not match the version at the time the store was created. It can be written to when custom logic is required to detect updates. There is a <code>check</code> function to force the version check immediately, returning the result.
 							</li>
 						</ul>
 						<h3 id="modules-$lib">$lib</h3>

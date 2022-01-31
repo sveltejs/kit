@@ -71,6 +71,8 @@ The stores themselves attach to the correct context at the point of subscription
 - `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](#loading-input-params), [`stuff`](#loading-output-stuff), [`status`](#loading-output-status) and [`error`](#loading-output-error).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
 
+- `updated` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is false. The app's version will be checked every minute for changes, setting the value to true if the version does not match the version at the time the store was created. It can be written to when custom logic is required to detect updates. There is a `check` function to force the version check immediately, returning the result.
+
 ### $lib
 
 This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`]. It allows you to access common components and utility modules without `../../../../` nonsense.
