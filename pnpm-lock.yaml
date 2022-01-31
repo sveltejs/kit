@@ -13,7 +13,7 @@ importers:
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       action-deploy-docs: github:sveltejs/action-deploy-docs#main
-      dotenv: ^14.0.0
+      dotenv: ^15.0.0
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
@@ -31,7 +31,7 @@ importers:
       '@typescript-eslint/eslint-plugin': 5.5.0_15fb0f7dd5018b02e6608eb3a323af2f
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.4.4
       action-deploy-docs: github.com/sveltejs/action-deploy-docs/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91
-      dotenv: 14.1.0
+      dotenv: 15.0.0
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
@@ -2341,8 +2341,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /dotenv/14.1.0:
-    resolution: {integrity: sha512-h8V+Yfa8m0YSjf3Rgbno51cxWldb4PEixIJVL55VmW7uAfeLQKiaPrEUiBps+ARK9MeqjJgTf269OMmu6lOODQ==}
+  /dotenv/15.0.0:
+    resolution: {integrity: sha512-/l1sXXm79ry34KwwS0y4oVZjB468iw/6u9g1W26dtexKcIJAnVL2pMF+hxQwzZ7LutxOwEgtym9eIxvX33CMKg==}
     engines: {node: '>=12'}
     dev: true
 
