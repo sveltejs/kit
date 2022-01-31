@@ -68,7 +68,7 @@ export default [
 			}
 		},
 		external: (id) => {
-			return id.startsWith('node:') || external.includes(id) || id === 'SERVER';
+			return id.startsWith('node:') || external.includes(id) || id === '__SERVER__';
 		},
 		plugins: [
 			replace({
