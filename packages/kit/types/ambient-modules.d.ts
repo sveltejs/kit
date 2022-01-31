@@ -116,7 +116,6 @@ declare module '$app/stores' {
 		}>;
 		session: Writable<Session>;
 	};
-	export const url: Readable<URL>;
 	/**
 	 * A readable store whose value contains page data.
 	 */
