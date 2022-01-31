@@ -88,7 +88,10 @@ export class App {
 			read,
 			root,
 			service_worker: ${has_service_worker ? "base + '/service-worker.js'" : 'null'},
-			router: ${s(config.kit.browser.router)},
+			router: {
+				enabled: ${s(config.kit.browser.router.enabled)},
+				onError: ${s(config.kit.browser.router.onError)}
+			},
 			target: ${s(config.kit.target)},
 			template,
 			template_contains_nonce: ${template.includes('%svelte.nonce%')},

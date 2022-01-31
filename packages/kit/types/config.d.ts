@@ -111,6 +111,8 @@ export interface PrerenderErrorHandler {
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
+export type RouteOnErrorValue = 'fail' | 'reload';
+
 export interface Config {
 	compilerOptions?: CompileOptions;
 	extensions?: string[];
@@ -120,7 +122,10 @@ export interface Config {
 		appDir?: string;
 		browser?: {
 			hydrate?: boolean;
-			router?: boolean;
+			router?: {
+				enabled: boolean;
+				onError?: RouteOnErrorValue;
+			};
 		};
 		csp?: {
 			mode?: 'hash' | 'nonce' | 'auto';

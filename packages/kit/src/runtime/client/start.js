@@ -14,7 +14,10 @@ import { set_paths } from '../paths.js';
  *   },
  *   target: Node;
  *   session: any;
- *   route: boolean;
+ *   route: {
+ * 	   enabled: boolean;
+ *     onError?: import('types/config').RouteOnErrorValue;
+ *   },
  *   spa: boolean;
  *   trailing_slash: import('types/internal').TrailingSlash;
  *   hydrate: {
@@ -38,14 +41,16 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 		session
 	});
 
-	const router = route
-		? new Router({
-				base: paths.base,
-				routes,
-				trailing_slash,
-				renderer
-		  })
-		: null;
+	const router =
+		route && route.enabled
+			? new Router({
+					base: paths.base,
+					routes,
+					trailing_slash,
+					renderer,
+					onError: route.onError
+			  })
+			: null;
 
 	init({ router, renderer });
 	set_paths(paths);

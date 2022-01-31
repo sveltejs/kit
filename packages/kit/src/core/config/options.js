@@ -59,7 +59,13 @@ const options = object(
 
 			browser: object({
 				hydrate: boolean(true),
-				router: boolean(true)
+				router: object({
+					enabled: boolean(true),
+					onError: validate('fail', (input, keypath) => {
+						if (['reload', 'fail'].includes(input)) return input;
+						throw new Error(`${keypath} should be either "reload" or "fail"`);
+					})
+				})
 			}),
 
 			csp: object({
