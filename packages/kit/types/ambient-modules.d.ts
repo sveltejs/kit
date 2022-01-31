@@ -107,13 +107,8 @@ declare module '$app/stores' {
 	 * Most of the time, you won't need to use it.
 	 */
 	export function getStores<Session = any>(): {
-		navigating: Readable<Navigating | null>;
-		page: Readable<{
-			url: URL;
-			params: Record<string, string>;
-			status: number;
-			error: Error | null;
-		}>;
+		navigating: typeof navigating;
+		page: typeof page;
 		session: Writable<Session>;
 	};
 	/**
