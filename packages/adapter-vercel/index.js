@@ -6,7 +6,7 @@ import esbuild from 'esbuild';
 const dir = '.vercel_build_output';
 
 /** @type {import('.')} **/
-export default function () {
+export default function ({ external = [] } = {}) {
 	return {
 		name: '@sveltejs/adapter-vercel',
 
@@ -52,7 +52,8 @@ export default function () {
 				outfile: `${dirs.lambda}/index.js`,
 				target: 'node14',
 				bundle: true,
-				platform: 'node'
+				platform: 'node',
+				external
 			});
 
 			writeFileSync(`${dirs.lambda}/package.json`, JSON.stringify({ type: 'commonjs' }));
