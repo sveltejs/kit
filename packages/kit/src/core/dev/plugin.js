@@ -27,10 +27,13 @@ export async function create_plugin(config, cwd) {
 		amp = (await import('./amp_hook.js')).handle;
 	}
 
-	const { respond } = process.env.BUNDLED
-		? // @ts-expect-error
-		  await import('__SERVER__')
-		: await import('../../runtime/server/index.js');
+	/** @type {import('types/internal').Respond} */
+	const respond = (
+		process.env.BUNDLED
+			? // @ts-expect-error
+			  await import('__SERVER__')
+			: await import('../../runtime/server/index.js')
+	).respond;
 
 	return {
 		name: 'vite-plugin-svelte-kit',
