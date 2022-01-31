@@ -28,12 +28,7 @@ export async function create_plugin(config, cwd) {
 	}
 
 	/** @type {import('types/internal').Respond} */
-	const respond = (
-		process.env.BUNDLED
-			? // @ts-expect-error
-			  await import('__SERVER__')
-			: await import('../../runtime/server/index.js')
-	).respond;
+	const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 	return {
 		name: 'vite-plugin-svelte-kit',
