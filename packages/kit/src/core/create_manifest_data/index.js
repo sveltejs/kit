@@ -193,50 +193,70 @@ export default function create_manifest_data({
 					layout_reset ? [error] : error_stack.concat(error)
 				);
 			} else if (item.is_page) {
+				const id = components.length.toString();
+				const alternates = config.kit.alternateRoutes
+					? config.kit.alternateRoutes(segments, 'page')
+					: [segments];
+
 				components.push(item.file);
 
 				const concatenated = layout_stack.concat(item.file);
 				const errors = error_stack.slice();
 
-				const pattern = get_pattern(segments, true);
+				alternates.forEach((segments) => {
+					const pattern = get_pattern(segments, true);
+					const params = segments.flatMap((parts) =>
+						parts.filter((p) => p.dynamic).map((p) => p.content)
+					);
 
-				let i = concatenated.length;
-				while (i--) {
-					if (!errors[i] && !concatenated[i]) {
-						errors.splice(i, 1);
-						concatenated.splice(i, 1);
+					let i = concatenated.length;
+					while (i--) {
+						if (!errors[i] && !concatenated[i]) {
+							errors.splice(i, 1);
+							concatenated.splice(i, 1);
+						}
 					}
-				}
 
-				i = errors.length;
-				while (i--) {
-					if (errors[i]) break;
-				}
+					i = errors.length;
+					while (i--) {
+						if (errors[i]) break;
+					}
 
-				errors.splice(i + 1);
+					errors.splice(i + 1);
 
-				const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
-					? `/${segments.map((segment) => segment[0].content).join('/')}`
-					: '';
+					const path = segments.every((segment) => segment.length === 1 && !segment[0].dynamic)
+						? `/${segments.map((segment) => segment[0].content).join('/')}`
+						: '';
 
-				routes.push({
-					type: 'page',
-					segments: simple_segments,
-					pattern,
-					params,
-					path,
-					a: /** @type {string[]} */ (concatenated),
-					b: /** @type {string[]} */ (errors)
+					routes.push({
+						id,
+						type: 'page',
+						segments: simple_segments,
+						pattern,
+						params,
+						path,
+						a: /** @type {string[]} */ (concatenated),
+						b: /** @type {string[]} */ (errors)
+					});
 				});
 			} else {
-				const pattern = get_pattern(segments, !item.route_suffix);
+				const alternates = config.kit.alternateRoutes
+					? config.kit.alternateRoutes(segments, 'endpoint')
+					: [segments];
 
-				routes.push({
-					type: 'endpoint',
-					segments: simple_segments,
-					pattern,
-					file: item.file,
-					params
+				alternates.forEach((segments) => {
+					const pattern = get_pattern(segments, !item.route_suffix);
+					const params = segments.flatMap((parts) =>
+						parts.filter((p) => p.dynamic).map((p) => p.content)
+					);
+
+					routes.push({
+						type: 'endpoint',
+						segments: simple_segments,
+						pattern,
+						file: item.file,
+						params
+					});
 				});
 			}
 		});

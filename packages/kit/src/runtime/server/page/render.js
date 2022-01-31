@@ -94,7 +94,8 @@ export async function render_response({
 				error,
 				stuff
 			},
-			components: branch.map(({ node }) => node.module.default)
+			components: branch.map(({ node }) => node.module.default),
+			routes: options.manifest._.routes
 		};
 
 		// TODO remove this for 1.0
