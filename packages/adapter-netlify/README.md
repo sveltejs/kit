@@ -2,6 +2,8 @@
 
 Adapter for Svelte apps that creates a Netlify app, using serverless functions for dynamically generating pages.
 
+If you're using [adapter-auto](../adapter-auto), you don't need to install this unless you need to specify Netlify-specific options, since it's already included.
+
 ## Installation
 
 > ⚠️ For the time being, the latest version of adapter-netlify is at the @next tag. If you get the error `config.kit.adapter should be an object with an "adapt" method.`, this is a sign that you are using the wrong version (eg `1.0.0-next.0` instead of `1.0.0-next.9`).

@@ -2,6 +2,8 @@
 
 Adapter for Svelte apps that creates a Vercel app, using a function for dynamic server rendering.
 
+If you're using [adapter-auto](../adapter-auto), you don't need to install this unless you need to specify Vercel-specific options, since it's already included.
+
 ## Usage
 
 Add `"@sveltejs/adapter-vercel": "next"` to the `devDependencies` in your `package.json` and run `npm install`.
