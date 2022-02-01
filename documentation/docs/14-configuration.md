@@ -19,10 +19,7 @@ const config = {
 		appDir: '_app',
 		browser: {
 			hydrate: true,
-			router: {
-				enabled: true,
-				onError: 'fail'
-			},
+			router: true
 		},
 		csp: {
 			mode: 'auto',

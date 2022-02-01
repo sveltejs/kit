@@ -1,5 +1,5 @@
 import { OutputAsset, OutputChunk } from 'rollup';
-import { ValidatedConfig, RouteOnErrorValue } from './config';
+import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
@@ -138,10 +138,7 @@ export interface SSRRenderOptions {
 	prerender: boolean;
 	read(file: string): Buffer;
 	root: SSRComponent['default'];
-	router: {
-		enabled: boolean;
-		onError: RouteOnErrorValue;
-	};
+	router: boolean;
 	service_worker?: string;
 	target: string;
 	template({

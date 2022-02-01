@@ -65,7 +65,7 @@ export async function respond_with_error({ event, options, state, $session, stat
 			$session,
 			page_config: {
 				hydrate: options.hydrate,
-				router: options.router.enabled
+				router: options.router
 			},
 			stuff: error_loaded.stuff,
 			status,

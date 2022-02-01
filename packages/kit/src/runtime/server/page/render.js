@@ -166,10 +166,7 @@ export async function render_response({
 			session: ${try_serialize($session, (error) => {
 				throw new Error(`Failed to serialize session data: ${error.message}`);
 			})},
-			route: {
-				enabled: ${!!page_config.router},
-				onError: ${s(options.router.onError)}
-			},
+			route: ${!!page_config.router},
 			spa: ${!ssr},
 			trailing_slash: ${s(options.trailing_slash)},
 			hydrate: ${ssr && page_config.hydrate ? `{

@@ -250,7 +250,7 @@ function get_page_config(leaf, options) {
 	}
 
 	return {
-		router: 'router' in leaf ? !!leaf.router : options.router.enabled,
+		router: 'router' in leaf ? !!leaf.router : options.router,
 		hydrate: 'hydrate' in leaf ? !!leaf.hydrate : options.hydrate
 	};
 }
