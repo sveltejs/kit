@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-Add SvelteKit namespace for app-level types
+Add App namespace for app-level types
