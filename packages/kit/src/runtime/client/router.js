@@ -186,9 +186,9 @@ export class Router {
 
 			// Check if new url only differs by hash
 			if (url.href.split('#')[0] === location.href.split('#')[0]) {
-				// Call `pushState` to add url to history so going back works.
+				// Call `replaceState` to add url to history so going back works.
 				// Also make a delay, otherwise the browser default behaviour would not kick in
-				setTimeout(() => history.pushState({}, '', url.href));
+				setTimeout(() => history.replaceState({}, '', url.href));
 				const info = this.parse(url);
 				if (info) {
 					return this.renderer.update(info, [], false);
