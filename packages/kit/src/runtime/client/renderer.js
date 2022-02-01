@@ -147,10 +147,7 @@ export class Renderer {
 			promise: null
 		};
 
-		const versionPollInterval =
-			typeof import.meta.env.VITE_APP_VERSION_POLL_INTERVAL === 'string'
-				? parseInt(import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
-				: 60_000;
+		const version_poll_interval = +import.meta.env.VITE_APP_VERSION_POLL_INTERVAL;
 
 		this.stores = {
 			url: notifiable_store({}),
@@ -165,7 +162,7 @@ export class Renderer {
 						return changed;
 					});
 				},
-				versionPollInterval
+				version_poll_interval
 			)
 		};
 
