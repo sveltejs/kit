@@ -56,22 +56,21 @@ import { base, assets } from '$app/paths';
 ### $app/stores
 
 ```js
-import { getStores, navigating, page, session } from '$app/stores';
+import { getStores, navigating, page, session, updated } from '$app/stores';
 ```
 
 Stores are _contextual_ — they are added to the [context](https://svelte.dev/tutorial/context-api) of your root component. This means that `session` and `page` are unique to each request on the server, rather than shared between multiple requests handled by the same server simultaneously, which is what makes it safe to include user-specific data in `session`.
 
 Because of that, the stores are not free-floating objects: they must be accessed during component initialisation, like anything else that would be accessed with `getContext`.
 
-- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session }`. This needs to be called at the top-level or synchronously during component or page initialisation.
+- `getStores` is a convenience function around `getContext` that returns `{ navigating, page, session, updated }`. This needs to be called at the top-level or synchronously during component or page initialisation.
 
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
 - `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](#loading-input-params), [`stuff`](#loading-output-stuff), [`status`](#loading-output-status) and [`error`](#loading-output-error).
 - `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
-
-- `updated` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is false. The app's version will be checked every minute for changes, setting the value to true if the version does not match the version at the time the store was created. It can be written to when custom logic is required to detect updates. There is a `check` function to force the version check immediately, returning the result.
+- `updated` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is false. The app's version, which can be specified as [`config.kit.version.name`], will optionally be checked for changes regularly, setting the value to true if the version does not match the version at the time the store was created. There is a `check` function to force the version check immediately, returning the result. The interval for regular checks can be specified in ms as [`config.kit.version.pollInterval`]. A value of `0` will disable regular checks. The store can be written to when custom logic is required to detect updates.
 
 ### $lib
 
