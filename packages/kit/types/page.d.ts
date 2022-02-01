@@ -23,14 +23,6 @@ export interface LoadOutput<Props = Record<string, any>> {
 	maxage?: number;
 }
 
-interface LoadInputExtends {
-	params?: Record<string, string>;
-}
-
-interface LoadOutputExtends {
-	props?: Record<string, any>;
-}
-
 export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
 	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
 }
