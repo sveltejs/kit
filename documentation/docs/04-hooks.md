@@ -77,7 +77,7 @@ export async function handle({ event, resolve }) {
 
 ### handleError
 
-If an error is thrown during rendering, this function will be called with the `error` and the `request` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
+If an error is thrown during rendering, this function will be called with the `error` and the `event` that caused it. This allows you to send data to an error tracking service, or to customise the formatting before printing the error to the console.
 
 During development, if an error occurs because of a syntax error in your Svelte code, a `frame` property will be appended highlighting the location of the error.
 
@@ -130,7 +130,7 @@ export function getSession(event) {
 					email: event.locals.user.email,
 					avatar: event.locals.user.avatar
 				}
-			}
+		  }
 		: {};
 }
 ```
