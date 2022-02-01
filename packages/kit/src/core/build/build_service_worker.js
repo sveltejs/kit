@@ -56,7 +56,7 @@ export async function build_service_worker(
 	);
 
 	/** @type {[any, string[]]} */
-	const [merged_config, conflicts] = deep_merge(config.kit.vite(), {
+	const [merged_config, conflicts] = deep_merge(await config.kit.vite(), {
 		configFile: false,
 		root: cwd,
 		base: assets_base,
