@@ -69,10 +69,14 @@ function create_updated_store() {
 
 		if (res.ok) {
 			const { version } = await res.json();
-			if (version !== initial) {
+			const updated = version !== initial;
+
+			if (updated) {
 				set(true);
 				clearTimeout(timeout);
 			}
+
+			return updated;
 		} else {
 			throw new Error(`Version check failed: ${res.status}`);
 		}
