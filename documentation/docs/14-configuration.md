@@ -69,7 +69,7 @@ const config = {
 		target: null,
 		trailingSlash: 'never',
 		version: {
-			name: Date.now(),
+			name: Date.now().toString(),
 			pollInterval: 0,
 		},
 		vite: () => ({})
