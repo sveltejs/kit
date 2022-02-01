@@ -96,9 +96,9 @@ export async function load_node({
 
 				// merge headers from request
 				for (const [key, value] of event.request.headers) {
-					if (!opts.headers.has(key)) {
-						opts.headers.append(key, value);
-					}
+					if (opts.headers.has(key)) continue;
+					if (key === 'cookie' || key === 'authorization') continue;
+					opts.headers.append(key, value);
 				}
 
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
