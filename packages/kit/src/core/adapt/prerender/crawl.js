@@ -25,7 +25,7 @@ export function crawl(html) {
 			if (html[i + 1] === '!') {
 				i += 2;
 
-				if (html.substr(i, DOCTYPE.length).toUpperCase() === DOCTYPE) {
+				if (html.substring(i, DOCTYPE.length).toUpperCase() === DOCTYPE) {
 					i += DOCTYPE.length;
 					while (i < html.length) {
 						if (html[i++] === '>') {
@@ -35,10 +35,10 @@ export function crawl(html) {
 				}
 
 				// skip cdata
-				if (html.substr(i, CDATA_OPEN.length) === CDATA_OPEN) {
+				if (html.substring(i, CDATA_OPEN.length) === CDATA_OPEN) {
 					i += CDATA_OPEN.length;
 					while (i < html.length) {
-						if (html.substr(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
+						if (html.substring(i, CDATA_CLOSE.length) === CDATA_CLOSE) {
 							i += CDATA_CLOSE.length;
 							continue main;
 						}
@@ -48,10 +48,10 @@ export function crawl(html) {
 				}
 
 				// skip comments
-				if (html.substr(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
+				if (html.substring(i, COMMENT_OPEN.length) === COMMENT_OPEN) {
 					i += COMMENT_OPEN.length;
 					while (i < html.length) {
-						if (html.substr(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
+						if (html.substring(i, COMMENT_CLOSE.length) === COMMENT_CLOSE) {
 							i += COMMENT_CLOSE.length;
 							continue main;
 						}
@@ -79,7 +79,7 @@ export function crawl(html) {
 						if (
 							html[i] === '<' &&
 							html[i + 1] === '/' &&
-							html.substr(i + 2, tag.length).toUpperCase() === tag
+							html.substring(i + 2, tag.length).toUpperCase() === tag
 						) {
 							continue main;
 						}
@@ -175,6 +175,8 @@ export function crawl(html) {
 									hrefs.push(src);
 								}
 							}
+						} else {
+							i -= 1;
 						}
 					}
 
