@@ -26,7 +26,7 @@ declare module '$app/env' {
 	/**
 	 * Version of the app
 	 */
-	export const version: string;
+	export const version: string | undefined;
 }
 
 declare module '$app/navigation' {

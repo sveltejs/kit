@@ -1,11 +1,10 @@
 import { OutputAsset, OutputChunk } from 'rollup';
-import { ValidatedConfig } from './config';
+import { ValidatedConfig, RouteOnErrorValue } from './config';
 import { InternalApp, SSRManifest } from './app';
 import { Fallthrough, RequestHandler } from './endpoint';
 import { Either } from './helper';
 import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
-import { RouteOnErrorValue } from './config';
 
 export interface PrerenderDependency {
 	response: Response;

@@ -17,6 +17,6 @@ export const amp = !!import.meta.env.VITE_SVELTEKIT_AMP;
 /**
  * @type {import('$app/env').version}
  */
-export const version = import.meta.env.VITE_APP_VERSION;
+export const version = import.meta.env.VITE_APP_VERSION?.toString();
 
 export { prerendering } from '../env.js';

@@ -29,7 +29,9 @@ export async function build_client({
 	output_dir,
 	client_entry_file
 }) {
-	if (!process.env.VITE_APP_VERSION) process.env.VITE_APP_VERSION = new Date().toISOString();
+	process.env.VITE_APP_VERSION = config.kit.version?.name || Date.now().toString();
+	process.env.VITE_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
+	process.env.VITE_APP_VERSION_POLL_INTERVAL = `${config.kit.version?.pollInterval || 60_000}`;
 
 	create_app({
 		manifest_data,
@@ -109,8 +111,7 @@ export async function build_client({
 
 	fs.writeFileSync(
 		`${client_out_dir}/version.json`,
-		JSON.stringify(process.env.VITE_APP_VERSION),
-		'utf-8'
+		JSON.stringify({ version: process.env.VITE_APP_VERSION })
 	);
 
 	return {

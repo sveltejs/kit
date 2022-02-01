@@ -99,7 +99,11 @@ const get_defaults = (prefix = '') => ({
 		router: undefined,
 		ssr: undefined,
 		target: null,
-		trailingSlash: 'never'
+		trailingSlash: 'never',
+		version: {
+			name: null,
+			pollInterval: 60_000
+		}
 	}
 });
 

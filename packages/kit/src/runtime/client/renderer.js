@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
+import { base } from '../paths.js';
 
 /**
  * @typedef {import('types/internal').CSRComponent} CSRComponent
@@ -64,18 +65,22 @@ function checkable_store(value, fn, interval) {
  * @returns {Promise<boolean>}
  */
 async function has_version_changed() {
-	if (import.meta.env.DEV) return false;
+	if (import.meta.env.DEV || import.meta.env.SSR) return false;
 
-	const headers = new Headers();
-	headers.append('pragma', 'no-cache');
-	headers.append('cache-control', 'no-cache');
-
+	const file = import.meta.env.VITE_APP_VERSION_FILE;
 	const current_version = import.meta.env.VITE_APP_VERSION;
-	const new_version = await fetch('_app/version.json', { headers })
-		.then((res) => res.json())
-		.catch(() => undefined);
+	if (!file || !current_version) return false;
 
-	return new_version && current_version && new_version !== current_version;
+	const new_version = await fetch(`${base}/${file}`, {
+		headers: {
+			pragma: 'no-cache',
+			'cache-control': 'no-cache'
+		}
+	})
+		.then((res) => res.json())
+		.then((res) => res.version);
+
+	return new_version && new_version !== current_version;
 }
 
 /**
@@ -143,6 +148,11 @@ export class Renderer {
 			promise: null
 		};
 
+		const versionPollInterval =
+			typeof import.meta.env.VITE_APP_VERSION_POLL_INTERVAL === 'string'
+				? parseInt(import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
+				: 60_000;
+
 		this.stores = {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
@@ -156,7 +166,7 @@ export class Renderer {
 						return changed;
 					});
 				},
-				300000
+				versionPollInterval
 			)
 		};
 

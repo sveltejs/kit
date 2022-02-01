@@ -261,6 +261,11 @@ const options = object(
 
 			trailingSlash: list(['never', 'always', 'ignore']),
 
+			version: object({
+				name: string(null),
+				pollInterval: number(60_000)
+			}),
+
 			vite: validate(
 				() => ({}),
 				(input, keypath) => {
