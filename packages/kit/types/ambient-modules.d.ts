@@ -23,10 +23,6 @@ declare module '$app/env' {
 	 * By default, `svelte-kit dev` runs with `mode=development` and `svelte-kit build` runs with `mode=production`.
 	 */
 	export const mode: string;
-	/**
-	 * Version of the app
-	 */
-	export const version: string | undefined;
 }
 
 declare module '$app/navigation' {
