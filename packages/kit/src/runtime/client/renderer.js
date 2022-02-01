@@ -48,7 +48,7 @@ function notifiable_store(value) {
 function checkable_store(value, fn, interval) {
 	const { set, update, subscribe } = writable(value);
 
-	if (interval) {
+	if (interval > 0) {
 		setInterval(() => {
 			fn(set);
 		}, interval);
