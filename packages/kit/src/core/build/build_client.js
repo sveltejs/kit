@@ -29,9 +29,9 @@ export async function build_client({
 	output_dir,
 	client_entry_file
 }) {
-	process.env.VITE_APP_VERSION = config.kit.version?.name || Date.now().toString();
+	process.env.VITE_APP_VERSION = config.kit.version.name;
 	process.env.VITE_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
-	process.env.VITE_APP_VERSION_POLL_INTERVAL = `${config.kit.version?.pollInterval || 60_000}`;
+	process.env.VITE_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
 
 	create_app({
 		manifest_data,
