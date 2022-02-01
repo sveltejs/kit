@@ -70,7 +70,7 @@ const config = {
 		trailingSlash: 'never',
 		version: {
 			name: Date.now(),
-			pollInterval: 60_000,
+			pollInterval: 0,
 		},
 		vite: () => ({})
 	},

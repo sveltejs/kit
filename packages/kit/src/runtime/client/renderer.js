@@ -43,14 +43,16 @@ function notifiable_store(value) {
 /**
  * @param {any} value
  * @param {(set: (new_value: any) => void) => any} fn
- * @param {number | undefined} interval
+ * @param {number} interval
  */
 function checkable_store(value, fn, interval) {
 	const { set, update, subscribe } = writable(value);
 
-	setInterval(() => {
-		fn(set);
-	}, interval);
+	if (interval) {
+		setInterval(() => {
+			fn(set);
+		}, interval);
+	}
 
 	return {
 		set,
@@ -147,7 +149,10 @@ export class Renderer {
 			promise: null
 		};
 
-		const version_poll_interval = +import.meta.env.VITE_APP_VERSION_POLL_INTERVAL;
+		const version_poll_interval =
+			typeof import.meta.env.VITE_APP_VERSION_POLL_INTERVAL === 'string'
+				? parseInt(import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
+				: 0;
 
 		this.stores = {
 			url: notifiable_store({}),

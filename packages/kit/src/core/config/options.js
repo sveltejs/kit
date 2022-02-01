@@ -257,7 +257,7 @@ const options = object(
 
 			version: object({
 				name: string(Date.now().toString()),
-				pollInterval: number(60_000)
+				pollInterval: number(0)
 			}),
 
 			vite: validate(

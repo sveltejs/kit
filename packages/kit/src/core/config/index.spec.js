@@ -99,7 +99,7 @@ const get_defaults = (prefix = '') => ({
 		trailingSlash: 'never',
 		version: {
 			name: Date.now().toString(),
-			pollInterval: 60_000
+			pollInterval: 0
 		}
 	}
 });
