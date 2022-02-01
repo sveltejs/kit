@@ -69,7 +69,7 @@ export async function preview({
 	const app = new App(manifest);
 
 	/** @type {import('vite').UserConfig} */
-	const vite_config = (config.kit.vite && config.kit.vite()) || {};
+	const vite_config = (config.kit.vite && (await config.kit.vite())) || {};
 
 	const server = await get_server(use_https, vite_config, (req, res) => {
 		if (req.url == null) {

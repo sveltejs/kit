@@ -181,7 +181,7 @@ export async function build_server(
 	);
 
 	/** @type {import('vite').UserConfig} */
-	const vite_config = config.kit.vite();
+	const vite_config = await config.kit.vite();
 
 	const default_config = {
 		build: {
