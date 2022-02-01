@@ -42,6 +42,8 @@ export interface Handle {
 }
 ```
 
+> See the [TypeScript](#typescript) section for information on `SvelteKit.Locals` and `SvelteKit.Platform`.
+
 To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
 
 ```js

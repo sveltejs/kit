@@ -10,7 +10,7 @@ A component that defines a page or a layout can export a `load` function that ru
 
 export interface LoadInput<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
-	params: PageParams;
+	params: Params;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: SvelteKit.Session;
 	stuff: Partial<SvelteKit.Stuff>;
@@ -34,6 +34,8 @@ export interface Load<Params = Record<string, string>, Props = Record<string, an
 	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
 }
 ```
+
+> See the [TypeScript](#typescript) section for information on `SvelteKit.Session` and `SvelteKit.Stuff`.
 
 Our example blog page might contain a `load` function like the following:
 
