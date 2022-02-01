@@ -40,46 +40,48 @@ function notifiable_store(value) {
 	return { notify, set, subscribe };
 }
 
-/**
- * @param {any} value
- * @param {(set: (new_value: any) => void) => any} fn
- * @param {number} interval
- */
-function checkable_store(value, fn, interval) {
-	const { set, subscribe } = writable(value);
+function create_updated_store() {
+	const { set, subscribe } = writable(false);
 
-	if (interval > 0) {
-		setInterval(() => {
-			fn(set);
-		}, interval);
+	const interval = +(/** @type {string} */ (import.meta.env.VITE_APP_VERSION_POLL_INTERVAL));
+	const initial = import.meta.env.VITE_APP_VERSION;
+
+	/** @type {NodeJS.Timeout} */
+	let timeout;
+
+	async function check() {
+		if (import.meta.env.DEV || import.meta.env.SSR) return false;
+
+		clearTimeout(timeout);
+
+		if (interval) timeout = setTimeout(check, interval);
+
+		const file = import.meta.env.VITE_APP_VERSION_FILE;
+
+		const res = await fetch(`${base}/${file}`, {
+			headers: {
+				pragma: 'no-cache',
+				'cache-control': 'no-cache'
+			}
+		});
+
+		if (res.ok) {
+			const { version } = await res.json();
+			if (version !== initial) {
+				set(true);
+				clearTimeout(timeout);
+			}
+		} else {
+			throw new Error(`Version check failed: ${res.status}`);
+		}
 	}
+
+	if (interval) timeout = setTimeout(check, interval);
 
 	return {
 		subscribe,
-		check: () => fn(set)
+		check
 	};
-}
-
-/**
- * @returns {Promise<boolean>}
- */
-async function has_version_changed() {
-	if (import.meta.env.DEV || import.meta.env.SSR) return false;
-
-	const file = import.meta.env.VITE_APP_VERSION_FILE;
-	const current_version = import.meta.env.VITE_APP_VERSION;
-	if (!file || !current_version) return false;
-
-	const new_version = await fetch(`${base}/${file}`, {
-		headers: {
-			pragma: 'no-cache',
-			'cache-control': 'no-cache'
-		}
-	})
-		.then((res) => res.json())
-		.then((res) => res.version);
-
-	return new_version && new_version !== current_version;
 }
 
 /**
@@ -147,25 +149,12 @@ export class Renderer {
 			promise: null
 		};
 
-		const version_poll_interval = +(
-			/** @type {string} */ (import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
-		);
-
 		this.stores = {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
 			session: writable(session),
-			updated: checkable_store(
-				false,
-				(set) => {
-					return has_version_changed().then((changed) => {
-						if (changed) set(true);
-						return changed;
-					});
-				},
-				version_poll_interval
-			)
+			updated: create_updated_store()
 		};
 
 		this.$session = null;
