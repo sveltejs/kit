@@ -98,7 +98,7 @@ export async function load_node({
 				for (const [key, value] of event.request.headers) {
 					if (opts.headers.has(key)) continue;
 					if (key === 'cookie' || key === 'authorization') continue;
-					opts.headers.append(key, value);
+					opts.headers.set(key, value);
 				}
 
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
