@@ -11,7 +11,7 @@ import { Csp, csp_ready } from './csp.js';
 
 const updated = {
 	...readable(false),
-	check: () => {}
+	check: () => false
 };
 
 /**
