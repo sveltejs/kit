@@ -109,7 +109,7 @@ export async function build_client({
 
 	fs.writeFileSync(
 		`${client_out_dir}/version.json`,
-		JSON.stringify(process.env.VITE_APP_VERSION),
+		JSON.stringify({ version: process.env.VITE_APP_VERSION })
 		'utf-8'
 	);
 
