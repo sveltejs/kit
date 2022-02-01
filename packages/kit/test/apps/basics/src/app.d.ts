@@ -1,4 +1,11 @@
 declare namespace SvelteKit {
+	interface Locals {
+		answer: number;
+		name: string;
+	}
+
+	interface Platform {}
+
 	interface Session {
 		answer: number;
 		calls: number;

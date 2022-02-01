@@ -4,7 +4,10 @@ import { sequence } from '../../../../src/hooks';
 
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(request) {
-	return request.locals;
+	return {
+		answer: request.locals.answer,
+		calls: 0
+	};
 }
 
 /** @type {import('@sveltejs/kit').HandleError} */
