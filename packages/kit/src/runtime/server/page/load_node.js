@@ -94,6 +94,15 @@ export async function load_node({
 
 				opts.headers = new Headers(opts.headers);
 
+				// merge headers from request
+				for (const [key, value] of event.request.headers) {
+					if (opts.headers.has(key)) continue;
+					if (key === 'cookie' || key === 'authorization' || key === 'if-none-match') continue;
+					opts.headers.set(key, value);
+				}
+
+				opts.headers.set('referer', event.url.href);
+
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
 				/** @type {Response} */
@@ -209,10 +218,10 @@ export async function load_node({
 							if (!opts.body || typeof opts.body === 'string') {
 								// prettier-ignore
 								fetched.push({
-										url: requested,
-										body: /** @type {string} */ (opts.body),
-										json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_string_in_html(body)}"}`
-									});
+									url: requested,
+									body: /** @type {string} */ (opts.body),
+									json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_string_in_html(body)}"}`
+								});
 							}
 
 							if (dependency) {
