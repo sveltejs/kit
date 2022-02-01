@@ -95,7 +95,7 @@ export async function load_node({
 				opts.headers = new Headers(opts.headers);
 
 				// merge headers from request
-				for (const [key, value] of event.request.headers.entries()) {
+				for (const [key, value] of event.request.headers) {
 					if (!opts.headers.has(key)) {
 						opts.headers.append(key, value);
 					}
