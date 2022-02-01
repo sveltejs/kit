@@ -1,7 +1,7 @@
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { UserConfig as ViteConfig } from 'vite';
 import { CspDirectives } from './csp';
-import { RecursiveRequired } from './helper';
+import { MaybePromise, RecursiveRequired } from './helper';
 import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
 export interface RouteDefinition {
@@ -165,7 +165,7 @@ export interface Config {
 		};
 		target?: string;
 		trailingSlash?: TrailingSlash;
-		vite?: ViteConfig | (() => ViteConfig);
+		vite?: ViteConfig | (() => MaybePromise<ViteConfig>);
 	};
 	preprocess?: any;
 }
