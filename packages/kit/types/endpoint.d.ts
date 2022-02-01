@@ -13,12 +13,6 @@ export interface Fallthrough {
 	fallthrough: true;
 }
 
-export interface RequestHandler<
-	Locals = Record<string, any>,
-	Platform = Record<string, any>,
-	Output extends Body = Body
-> {
-	(event: RequestEvent<Locals, Platform>): MaybePromise<
-		Either<Response | EndpointOutput<Output>, Fallthrough>
-	>;
+export interface RequestHandler<Output extends Body = Body> {
+	(event: RequestEvent): MaybePromise<Either<Response | EndpointOutput<Output>, Fallthrough>>;
 }
