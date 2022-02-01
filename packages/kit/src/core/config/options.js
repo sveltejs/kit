@@ -256,7 +256,7 @@ const options = object(
 			trailingSlash: list(['never', 'always', 'ignore']),
 
 			version: object({
-				name: string(null),
+				name: string(Date.now().toString()),
 				pollInterval: number(60_000)
 			}),
 
