@@ -3,7 +3,6 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -27,6 +26,9 @@ export async function create_plugin(config, cwd) {
 		process.env.VITE_SVELTEKIT_AMP = 'true';
 		amp = (await import('./amp_hook.js')).handle;
 	}
+
+	/** @type {import('types/internal').Respond} */
+	const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 	return {
 		name: 'vite-plugin-svelte-kit',
