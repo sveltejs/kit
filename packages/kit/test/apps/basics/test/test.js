@@ -1036,6 +1036,25 @@ test.describe.parallel('Load', () => {
 		expect(await page.textContent('h1')).toBe('Hello SvelteKit!');
 	});
 
+	test('includes correct page request headers', async ({
+		baseURL,
+		page,
+		clicknav,
+		javaScriptEnabled
+	}) => {
+		await page.goto('/load');
+		await clicknav('[href="/load/fetch-headers"]');
+
+		const json = /** @type {string} */ (await page.textContent('pre'));
+		expect(JSON.parse(json)).toEqual({
+			referer: `${baseURL}/load/fetch-headers`,
+			// these headers aren't particularly useful, but they allow us to verify
+			// that page headers are being forwarded
+			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
+			'sec-fetch-mode': javaScriptEnabled ? 'cors' : 'navigate'
+		});
+	});
+
 	test('exposes rawBody to endpoints', async ({ page, clicknav }) => {
 		await page.goto('/load');
 		await clicknav('[href="/load/raw-body"]');
