@@ -147,10 +147,9 @@ export class Renderer {
 			promise: null
 		};
 
-		const version_poll_interval =
-			typeof import.meta.env.VITE_APP_VERSION_POLL_INTERVAL === 'string'
-				? parseInt(import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
-				: 0;
+		const version_poll_interval = +(
+			/** @type {string} */ (import.meta.env.VITE_APP_VERSION_POLL_INTERVAL)
+		);
 
 		this.stores = {
 			url: notifiable_store({}),
