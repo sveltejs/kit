@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.253
+
+### Patch Changes
+
+- Allow config.kit.vite to be an async function ([#3565](https://github.com/sveltejs/kit/pull/3565))
+
+* Include page request headers in server-side fetches ([#3631](https://github.com/sveltejs/kit/pull/3631))
+
 ## 1.0.0-next.252
 
 ### Patch Changes
