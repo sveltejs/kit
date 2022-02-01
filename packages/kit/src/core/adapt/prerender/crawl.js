@@ -175,6 +175,8 @@ export function crawl(html) {
 									hrefs.push(src);
 								}
 							}
+						} else {
+							i -= 1;
 						}
 					}
 
