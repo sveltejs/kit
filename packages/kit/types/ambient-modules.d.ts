@@ -1,6 +1,6 @@
 /* eslint-disable import/no-duplicates */
 
-declare namespace SvelteKit {
+declare namespace App {
 	interface Locals {}
 	interface Platform {}
 	interface Session {}
@@ -116,7 +116,7 @@ declare module '$app/stores' {
 	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: Writable<SvelteKit.Session>;
+		session: Writable<App.Session>;
 		updated: typeof updated;
 	};
 	/**
@@ -139,7 +139,7 @@ declare module '$app/stores' {
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
-	export const session: Writable<SvelteKit.Session>;
+	export const session: Writable<App.Session>;
 	/**
 	 * A writable store indicating if the site was updated since the store was created.
 	 * It can be written to when custom logic is required to detect updates.

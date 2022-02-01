@@ -1,6 +1,6 @@
 /// <reference types="@sveltejs/kit" />
 
-declare namespace SvelteKit {
+declare namespace App {
 	interface Locals {}
 
 	interface Platform {}

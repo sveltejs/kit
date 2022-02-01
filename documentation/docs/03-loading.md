@@ -12,8 +12,8 @@ export interface LoadInput<Params extends Record<string, string> = Record<string
 	url: URL;
 	params: Params;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	session: SvelteKit.Session;
-	stuff: Partial<SvelteKit.Stuff>;
+	session: App.Session;
+	stuff: Partial<App.Stuff>;
 }
 
 export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
@@ -21,7 +21,7 @@ export interface LoadOutput<Props extends Record<string, any> = Record<string, a
 	error?: string | Error;
 	redirect?: string;
 	props?: Props;
-	stuff?: Partial<SvelteKit.Stuff>;
+	stuff?: Partial<App.Stuff>;
 	maxage?: number;
 }
 
@@ -35,7 +35,7 @@ export interface Load<Params = Record<string, string>, Props = Record<string, an
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `SvelteKit.Session` and `SvelteKit.Stuff`.
+> See the [TypeScript](#typescript) section for information on `App.Session` and `App.Stuff`.
 
 Our example blog page might contain a `load` function like the following:
 

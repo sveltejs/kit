@@ -5,8 +5,8 @@ export interface LoadInput<Params = Record<string, string>> {
 	url: URL;
 	params: Params;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
-	session: SvelteKit.Session;
-	stuff: Partial<SvelteKit.Stuff>;
+	session: App.Session;
+	stuff: Partial<App.Stuff>;
 }
 
 export interface ErrorLoadInput<Params = Record<string, string>> extends LoadInput<Params> {
@@ -19,7 +19,7 @@ export interface LoadOutput<Props = Record<string, any>> {
 	error?: string | Error;
 	redirect?: string;
 	props?: Props;
-	stuff?: Partial<SvelteKit.Stuff>;
+	stuff?: Partial<App.Stuff>;
 	maxage?: number;
 }
 

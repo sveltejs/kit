@@ -6,12 +6,12 @@ export interface RequestEvent {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
-	locals: SvelteKit.Locals;
-	platform: Readonly<SvelteKit.Platform>;
+	locals: App.Locals;
+	platform: Readonly<App.Platform>;
 }
 
 export interface GetSession {
-	(event: RequestEvent): MaybePromise<SvelteKit.Session>;
+	(event: RequestEvent): MaybePromise<App.Session>;
 }
 
 export interface ResolveOpts {

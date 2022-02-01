@@ -55,8 +55,8 @@ export interface RequestEvent {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
-	locals: SvelteKit.Locals;
-	platform: SvelteKit.Platform;
+	locals: App.Locals;
+	platform: App.Platform;
 }
 
 type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
@@ -76,7 +76,7 @@ export interface RequestHandler<Output extends Body = Body> {
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `SvelteKit.Locals` and `SvelteKit.Platform`.
+> See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
 
 For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 

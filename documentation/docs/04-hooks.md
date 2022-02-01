@@ -26,8 +26,8 @@ export interface RequestEvent {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
-	locals: SvelteKit.Locals;
-	platform: SvelteKit.Platform;
+	locals: App.Locals;
+	platform: App.Platform;
 }
 
 export interface ResolveOpts {
@@ -42,7 +42,7 @@ export interface Handle {
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `SvelteKit.Locals` and `SvelteKit.Platform`.
+> See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
 
 To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
 
@@ -111,7 +111,7 @@ If unimplemented, session is `{}`.
 ```ts
 // Declaration types for getSession hook
 export interface GetSession {
-	(event: RequestEvent): MaybePromise<SvelteKit.Session>;
+	(event: RequestEvent): MaybePromise<App.Session>;
 }
 ```
 

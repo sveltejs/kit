@@ -1,4 +1,4 @@
-declare namespace SvelteKit {
+declare namespace App {
 	interface Locals {
 		answer: number;
 		name: string;
