@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.254
+
+### Patch Changes
+
+- Add version config and expose updated store ([#3412](https://github.com/sveltejs/kit/pull/3412))
+
+* [fix] update types to match changes to Vite config handling ([#3662](https://github.com/sveltejs/kit/pull/3662))
+
 ## 1.0.0-next.253
 
 ### Patch Changes
