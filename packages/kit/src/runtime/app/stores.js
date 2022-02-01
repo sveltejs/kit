@@ -85,14 +85,10 @@ export const updated = {
 		const store = getStores().updated;
 
 		if (browser) {
-			updated.set = store.set;
-			updated.update = store.update;
 			updated.check = store.check;
 		}
 
 		return store.subscribe(fn);
 	},
-	set: () => throw_error('set'),
-	update: () => throw_error('update'),
 	check: () => throw_error('check')
 };

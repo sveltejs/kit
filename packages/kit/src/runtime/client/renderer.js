@@ -55,8 +55,6 @@ function checkable_store(value, fn, interval) {
 	}
 
 	return {
-		set,
-		update,
 		subscribe,
 		check: () => fn(set)
 	};

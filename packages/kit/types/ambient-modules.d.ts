@@ -110,7 +110,7 @@ declare module '$app/stores' {
 		navigating: typeof navigating;
 		page: typeof page;
 		session: Writable<Session>;
-		updated: Writable<boolean> & { check: () => boolean };
+		updated: typeof updated;
 	};
 	/**
 	 * A readable store whose value contains page data.
@@ -137,7 +137,7 @@ declare module '$app/stores' {
 	 * A writable store indicating if the site was updated since the store was created.
 	 * It can be written to when custom logic is required to detect updates.
 	 */
-	export const updated: Writable<boolean> & { check: () => boolean };
+	export const updated: Readable<boolean> & { check: () => boolean };
 }
 
 declare module '$service-worker' {

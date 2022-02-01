@@ -80,15 +80,8 @@ export async function render_response({
 
 		const session = writable($session);
 
-		const updated = (() => {
-			const { set, update, subscribe } = writable(false);
-			return {
-				set,
-				update,
-				subscribe,
-				check: () => {}
-			};
-		})();
+		const updated = readable(false);
+		updated.check = () => {};
 
 		/** @type {Record<string, any>} */
 		const props = {
