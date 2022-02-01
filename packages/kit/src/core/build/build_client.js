@@ -29,6 +29,10 @@ export async function build_client({
 	output_dir,
 	client_entry_file
 }) {
+	process.env.VITE_SVELTEKIT_APP_VERSION = config.kit.version.name;
+	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
+	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
+
 	create_app({
 		manifest_data,
 		output: `${SVELTE_KIT}/generated`,
@@ -104,6 +108,11 @@ export async function build_client({
 	const entry_js = new Set();
 	const entry_css = new Set();
 	find_deps(entry, vite_manifest, entry_js, entry_css);
+
+	fs.writeFileSync(
+		`${client_out_dir}/version.json`,
+		JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
+	);
 
 	return {
 		assets,

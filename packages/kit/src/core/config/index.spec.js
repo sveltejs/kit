@@ -96,7 +96,11 @@ const get_defaults = (prefix = '') => ({
 		router: undefined,
 		ssr: undefined,
 		target: null,
-		trailingSlash: 'never'
+		trailingSlash: 'never',
+		version: {
+			name: Date.now().toString(),
+			pollInterval: 0
+		}
 	}
 });
 
@@ -110,7 +114,10 @@ test('fills in defaults', () => {
 
 	remove_keys(validated, ([, v]) => typeof v === 'function');
 
-	assert.equal(validated, get_defaults());
+	const defaults = get_defaults();
+	defaults.kit.version.name = validated.kit.version.name;
+
+	assert.equal(validated, defaults);
 });
 
 test('errors on invalid values', () => {
@@ -159,6 +166,9 @@ test('fills in partial blanks', () => {
 		kit: {
 			files: {
 				assets: 'public'
+			},
+			version: {
+				name: '0'
 			}
 		}
 	});
@@ -172,6 +182,7 @@ test('fills in partial blanks', () => {
 
 	const config = get_defaults();
 	config.kit.files.assets = 'public';
+	config.kit.version.name = '0';
 
 	assert.equal(validated, config);
 });
@@ -334,7 +345,10 @@ test('load default config (esm)', async () => {
 	const config = await load_config({ cwd });
 	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	assert.equal(config, get_defaults(cwd + '/'));
+	const defaults = get_defaults(cwd + '/');
+	defaults.kit.version.name = config.kit.version.name;
+
+	assert.equal(config, defaults);
 });
 
 test('errors on loading config with incorrect default export', async () => {

@@ -165,6 +165,10 @@ export interface Config {
 		};
 		target?: string;
 		trailingSlash?: TrailingSlash;
+		version?: {
+			name?: string;
+			pollInterval?: number;
+		};
 		vite?: ViteConfig | (() => MaybePromise<ViteConfig>);
 	};
 	preprocess?: any;

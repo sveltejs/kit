@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
+import { base } from '../paths.js';
 
 /**
  * @typedef {import('types/internal').CSRComponent} CSRComponent
@@ -37,6 +38,56 @@ function notifiable_store(value) {
 	}
 
 	return { notify, set, subscribe };
+}
+
+function create_updated_store() {
+	const { set, subscribe } = writable(false);
+
+	const interval = +(
+		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
+	);
+	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
+
+	/** @type {NodeJS.Timeout} */
+	let timeout;
+
+	async function check() {
+		if (import.meta.env.DEV || import.meta.env.SSR) return false;
+
+		clearTimeout(timeout);
+
+		if (interval) timeout = setTimeout(check, interval);
+
+		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
+
+		const res = await fetch(`${base}/${file}`, {
+			headers: {
+				pragma: 'no-cache',
+				'cache-control': 'no-cache'
+			}
+		});
+
+		if (res.ok) {
+			const { version } = await res.json();
+			const updated = version !== initial;
+
+			if (updated) {
+				set(true);
+				clearTimeout(timeout);
+			}
+
+			return updated;
+		} else {
+			throw new Error(`Version check failed: ${res.status}`);
+		}
+	}
+
+	if (interval) timeout = setTimeout(check, interval);
+
+	return {
+		subscribe,
+		check
+	};
 }
 
 /**
@@ -108,7 +159,8 @@ export class Renderer {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: writable(session)
+			session: writable(session),
+			updated: create_updated_store()
 		};
 
 		this.$session = null;
@@ -274,6 +326,12 @@ export class Renderer {
 					location.href = new URL(navigation_result.redirect, location.href).href;
 				}
 
+				return;
+			}
+		} else if (navigation_result.props?.page?.status >= 400) {
+			const updated = await this.stores.updated.check();
+			if (updated) {
+				location.href = info.url.href;
 				return;
 			}
 		}

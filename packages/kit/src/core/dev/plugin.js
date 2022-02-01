@@ -27,6 +27,8 @@ export async function create_plugin(config, cwd) {
 		amp = (await import('./amp_hook.js')).handle;
 	}
 
+	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
+
 	/** @type {import('types/internal').Respond} */
 	const respond = (await import(`${runtime}/server/index.js`)).respond;
 

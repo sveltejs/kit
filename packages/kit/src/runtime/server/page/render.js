@@ -1,5 +1,5 @@
 import devalue from 'devalue';
-import { writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
@@ -8,6 +8,11 @@ import { create_prerendering_url_proxy } from './utils.js';
 import { Csp, csp_ready } from './csp.js';
 
 // TODO rename this function/module
+
+const updated = {
+	...readable(false),
+	check: () => false
+};
 
 /**
  * @param {{
@@ -85,7 +90,8 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				updated
 			},
 			page: {
 				url: state.prerender ? create_prerendering_url_proxy(url) : url,
