@@ -7,8 +7,6 @@ import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './
 import { Load } from './page';
 import { RouteOnErrorValue } from './config';
 
-type PageId = string;
-
 export interface PrerenderDependency {
 	response: Response;
 	body: null | string | Uint8Array;
