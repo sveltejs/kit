@@ -43,8 +43,10 @@ function notifiable_store(value) {
 function create_updated_store() {
 	const { set, subscribe } = writable(false);
 
-	const interval = +(/** @type {string} */ (import.meta.env.VITE_APP_VERSION_POLL_INTERVAL));
-	const initial = import.meta.env.VITE_APP_VERSION;
+	const interval = +(
+		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
+	);
+	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
 
 	/** @type {NodeJS.Timeout} */
 	let timeout;
@@ -56,7 +58,7 @@ function create_updated_store() {
 
 		if (interval) timeout = setTimeout(check, interval);
 
-		const file = import.meta.env.VITE_APP_VERSION_FILE;
+		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
 
 		const res = await fetch(`${base}/${file}`, {
 			headers: {

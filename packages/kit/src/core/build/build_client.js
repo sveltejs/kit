@@ -29,9 +29,9 @@ export async function build_client({
 	output_dir,
 	client_entry_file
 }) {
-	process.env.VITE_APP_VERSION = config.kit.version.name;
-	process.env.VITE_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
-	process.env.VITE_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
+	process.env.VITE_SVELTEKIT_APP_VERSION = config.kit.version.name;
+	process.env.VITE_SVELTEKIT_APP_VERSION_FILE = `${config.kit.appDir}/version.json`;
+	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = `${config.kit.version.pollInterval}`;
 
 	create_app({
 		manifest_data,
@@ -111,7 +111,7 @@ export async function build_client({
 
 	fs.writeFileSync(
 		`${client_out_dir}/version.json`,
-		JSON.stringify({ version: process.env.VITE_APP_VERSION })
+		JSON.stringify({ version: process.env.VITE_SVELTEKIT_APP_VERSION })
 	);
 
 	return {
