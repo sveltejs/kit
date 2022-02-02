@@ -63,7 +63,11 @@ export async function load_node({
 
 	/** @type {import('types/endpoint').ShadowData} */
 	const shadow = is_leaf
-		? await load_shadow_data(/** @type {import('types/internal').SSRPage} */ (route), event)
+		? await load_shadow_data(
+				/** @type {import('types/internal').SSRPage} */ (route),
+				event,
+				!!state.prerender
+		  )
 		: {};
 
 	if (shadow.fallthrough) return;
@@ -352,13 +356,18 @@ export async function load_node({
  *
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/hooks').RequestEvent} event
+ * @param {boolean} prerender
  * @returns {Promise<import('types/endpoint').ShadowData>}
  */
-async function load_shadow_data(route, event) {
+async function load_shadow_data(route, event, prerender) {
 	if (!route.shadow) return {};
 
 	try {
 		const mod = await route.shadow();
+
+		if (prerender && (mod.post || mod.put || mod.del || mod.patch)) {
+			throw new Error('Cannot prerender pages that have shadow endpoints with mutative methods');
+		}
 
 		const method = event.request.method.toLowerCase().replace('delete', 'del');
 		const handler = mod[method];

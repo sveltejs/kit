@@ -6,6 +6,10 @@ const config = {
 	kit: {
 		adapter: adapter(),
 
+		prerender: {
+			onError: 'continue'
+		},
+
 		vite: {
 			build: {
 				minify: false

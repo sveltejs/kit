@@ -3,13 +3,12 @@ import { respond } from './respond.js';
 /**
  * @param {import('types/hooks').RequestEvent} event
  * @param {import('types/internal').SSRPage} route
- * @param {RegExpExecArray} match
  * @param {import('types/internal').SSROptions} options
  * @param {import('types/internal').SSRState} state
  * @param {boolean} ssr
  * @returns {Promise<Response | undefined>}
  */
-export async function render_page(event, route, match, options, state, ssr) {
+export async function render_page(event, route, options, state, ssr) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
