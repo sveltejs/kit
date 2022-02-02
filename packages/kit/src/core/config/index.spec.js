@@ -95,7 +95,7 @@ const get_defaults = (prefix = '') => ({
 		protocol: undefined,
 		router: undefined,
 		ssr: undefined,
-		target: null,
+		target: undefined,
 		trailingSlash: 'never',
 		version: {
 			name: Date.now().toString(),
@@ -125,10 +125,10 @@ test('errors on invalid values', () => {
 		validate_config({
 			kit: {
 				// @ts-expect-error - given value expected to throw
-				target: 42
+				appDir: 42
 			}
 		});
-	}, /^config\.kit\.target should be a string, if specified$/);
+	}, /^config\.kit\.appDir should be a string, if specified$/);
 });
 
 test('errors on invalid nested values', () => {

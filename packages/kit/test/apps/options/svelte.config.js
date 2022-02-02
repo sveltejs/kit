@@ -19,7 +19,6 @@ const config = {
 		},
 		appDir: '_wheee',
 		floc: true,
-		target: '#content-goes-here',
 		inlineStyleThreshold: 1024,
 		trailingSlash: 'always',
 		vite: {
