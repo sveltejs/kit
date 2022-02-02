@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.257
+
+### Patch Changes
+
+- Rename JSONString type to JSONValue ([#3683](https://github.com/sveltejs/kit/pull/3683))
+
+* Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
+
+- Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+
 ## 1.0.0-next.256
 
 ### Patch Changes
