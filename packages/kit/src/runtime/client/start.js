@@ -50,7 +50,13 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 	init({ router, renderer });
 	set_paths(paths);
 
-	if (hydrate) await renderer.start(hydrate);
+	// hydrate.url should include search
+	if (hydrate) {
+		const url = new URL(location.href);
+		hydrate.url.search = url.search;
+		await renderer.start(hydrate);
+	}
+
 	if (router) {
 		if (spa) router.goto(location.href, { replaceState: true }, []);
 		router.init_listeners();
