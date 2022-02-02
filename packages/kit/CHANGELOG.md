@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.259
+
+### Patch Changes
+
+- Prevent `Host` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#3690](https://github.com/sveltejs/kit/pull/3690))
+
 ## 1.0.0-next.258
 
 ### Patch Changes
