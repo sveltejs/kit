@@ -353,10 +353,28 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('The answer is 42');
 	});
 
-	test('Handles redirects', async ({ page, clicknav }) => {
+	test('Handles GET redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/redirect-get"]');
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Handles POST redirects', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/error-get"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
+	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
+		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
 	});
 });
 
