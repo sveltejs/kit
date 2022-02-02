@@ -327,6 +327,7 @@ export async function load_node({
 
 	return {
 		node,
+		props: shadow.body,
 		loaded: normalize(loaded),
 		stuff: loaded.stuff || stuff,
 		fetched,
