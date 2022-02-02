@@ -36,24 +36,16 @@ export function is_text(content_type) {
 
 /**
  * @param {import('types/hooks').RequestEvent} event
- * @param {import('types/internal').SSREndpoint} route
- * @param {RegExpExecArray} match
+ * @param {{ [method: string]: import('types/endpoint').RequestHandler }} mod
  * @returns {Promise<Response | undefined>}
  */
-export async function render_endpoint(event, route, match) {
-	const mod = await route.load();
-
+export async function render_endpoint(event, mod) {
 	/** @type {import('types/endpoint').RequestHandler} */
 	const handler = mod[event.request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
 
 	if (!handler) {
 		return;
 	}
-
-	// we're mutating `request` so that we don't have to do { ...request, params }
-	// on the next line, since that breaks the getters that replace path, query and
-	// origin. We could revert that once we remove the getters
-	event.params = route.params ? decode_params(route.params(match)) : {};
 
 	const response = await handler(event);
 	const preface = `Invalid response from route ${event.url.pathname}`;

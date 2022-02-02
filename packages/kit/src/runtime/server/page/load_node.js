@@ -360,7 +360,7 @@ async function load_shadow_data(route, event) {
 		}
 
 		/** @type {import('types/endpoint').ShadowData} */
-		let data = {
+		const data = {
 			status: 200,
 			cookies: [],
 			body: {}

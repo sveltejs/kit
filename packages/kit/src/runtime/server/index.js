@@ -3,6 +3,9 @@ import { render_page } from './page/index.js';
 import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
+import { decode_params } from './utils.js';
+
+const DATA_SUFFIX = '__data.json';
 
 /** @type {import('types/internal').Respond} */
 export async function respond(request, options, state = {}) {
@@ -130,14 +133,26 @@ export async function respond(request, options, state = {}) {
 					decoded = decoded.slice(options.paths.base.length) || '/';
 				}
 
+				const is_data_request = decoded.endsWith(DATA_SUFFIX);
+				if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length);
+
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 
-					const response =
-						route.type === 'endpoint'
-							? await render_endpoint(event, route, match)
-							: await render_page(event, route, match, options, state, ssr);
+					event.params = route.params ? decode_params(route.params(match)) : {};
+
+					/** @type {Response | undefined} */
+					let response;
+
+					if (is_data_request && route.type === 'page' && route.shadow) {
+						response = await render_endpoint(event, await route.shadow());
+					} else {
+						response =
+							route.type === 'endpoint'
+								? await render_endpoint(event, await route.load())
+								: await render_page(event, route, match, options, state, ssr);
+					}
 
 					if (response) {
 						// respond with 304 if etag matches

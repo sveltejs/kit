@@ -18,7 +18,6 @@ export async function render_page(event, route, match, options, state, ssr) {
 		});
 	}
 
-	const params = route.params ? decode_params(route.params(match)) : {};
 	const $session = await options.hooks.getSession(event);
 
 	const response = await respond({
@@ -27,7 +26,7 @@ export async function render_page(event, route, match, options, state, ssr) {
 		state,
 		$session,
 		route,
-		params,
+		params: event.params, // TODO this is redundant
 		ssr
 	});
 
