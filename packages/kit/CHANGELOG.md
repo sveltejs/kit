@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.255
+
+### Patch Changes
+
+- fix parsing during pre-render crawl when there are HTML attributes without a value ([#3668](https://github.com/sveltejs/kit/pull/3668))
+
+* Correctly populate asset manifest when generating service worker ([#3673](https://github.com/sveltejs/kit/pull/3673))
+
 ## 1.0.0-next.254
 
 ### Patch Changes
