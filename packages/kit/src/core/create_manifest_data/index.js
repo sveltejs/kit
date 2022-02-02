@@ -153,6 +153,7 @@ export default function create_manifest_data({
 						}
 
 						segments[segments.length - 1] = last_segment;
+						key[key.length - 1] += item.route_suffix;
 					} else {
 						segments.push(item.parts);
 					}
@@ -228,11 +229,11 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'page',
 					key: key.join('/'),
-					shadow: null,
 					segments: simple_segments,
 					pattern,
 					params,
 					path,
+					shadow: null,
 					a: /** @type {string[]} */ (concatenated),
 					b: /** @type {string[]} */ (errors)
 				});
@@ -268,8 +269,8 @@ export default function create_manifest_data({
 
 		if (prev && prev.key === route.key) {
 			if (prev.type !== 'endpoint' || route.type !== 'page') {
-				// just to be safe
-				throw new Error('An unexpected error occurred');
+				const relative = path.relative(cwd, path.resolve(config.kit.files.routes, prev.key));
+				throw new Error(`Duplicate route files: ${relative}`);
 			}
 
 			route.shadow = prev.file;
