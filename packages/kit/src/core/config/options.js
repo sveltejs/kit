@@ -251,7 +251,8 @@ const options = object(
 					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'`
 			),
 
-			target: string(null),
+			// TODO remove this for 1.0
+			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
 			trailingSlash: list(['never', 'always', 'ignore']),
 

@@ -163,7 +163,6 @@ export interface Config {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
 		};
-		target?: string;
 		trailingSlash?: TrailingSlash;
 		version?: {
 			name?: string;
