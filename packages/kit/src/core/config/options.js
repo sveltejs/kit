@@ -252,7 +252,7 @@ const options = object(
 			),
 
 			// TODO remove this for 1.0
-			target: error((keypath) => `${keypath} is no longer required`),
+			target: error((keypath) => `${keypath} is no longer required, and should be removed`),
 
 			trailingSlash: list(['never', 'always', 'ignore']),
 
