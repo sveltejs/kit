@@ -96,9 +96,15 @@ export async function load_node({
 
 				// merge headers from request
 				for (const [key, value] of event.request.headers) {
-					if (opts.headers.has(key)) continue;
-					if (key === 'cookie' || key === 'authorization' || key === 'if-none-match') continue;
-					opts.headers.set(key, value);
+					if (
+						key !== 'authorization' &&
+						key !== 'cookie' &&
+						key !== 'host' &&
+						key !== 'if-none-match' &&
+						!opts.headers.has(key)
+					) {
+						opts.headers.set(key, value);
+					}
 				}
 
 				opts.headers.set('referer', event.url.href);
