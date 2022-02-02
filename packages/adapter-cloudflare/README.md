@@ -56,16 +56,25 @@ When configuring your project settings, you must use the following settings:
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property, meaning you can access it in hooks and endpoints:
 
-```ts
-interface Locals {}
+```diff
+// src/app.d.ts
+declare namespace App {
+	interface Locals {}
 
-interface Platform {
-	env: {
-		COUNTER: DurableObjectNamespace;
-	};
++	interface Platform {
++		env: {
++			COUNTER: DurableObjectNamespace;
++		};
++	}
+
+	interface Session {}
+
+	interface Stuff {}
 }
+```
 
-export async function post<Locals, Platform>({ request, platform }) {
+```js
+export async function post({ request, platform }) {
 	const counter = platform.env.COUNTER.idFromName('A');
 }
 ```

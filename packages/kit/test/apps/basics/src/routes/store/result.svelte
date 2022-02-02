@@ -8,7 +8,7 @@
 	let calls = 0;
 
 	onMount(() => {
-		calls = get(session);
+		({ calls } = get(session));
 	});
 </script>
 

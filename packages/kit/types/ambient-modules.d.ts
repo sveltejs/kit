@@ -1,5 +1,12 @@
 /* eslint-disable import/no-duplicates */
 
+declare namespace App {
+	interface Locals {}
+	interface Platform {}
+	interface Session {}
+	interface Stuff {}
+}
+
 declare module '$app/env' {
 	/**
 	 * Whether or not app is in AMP mode.
@@ -106,10 +113,10 @@ declare module '$app/stores' {
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
 	 * Most of the time, you won't need to use it.
 	 */
-	export function getStores<Session = any>(): {
+	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: Writable<Session>;
+		session: Writable<App.Session>;
 		updated: typeof updated;
 	};
 	/**
@@ -132,7 +139,7 @@ declare module '$app/stores' {
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
 	 */
-	export const session: Writable<any>;
+	export const session: Writable<App.Session>;
 	/**
 	 * A writable store indicating if the site was updated since the store was created.
 	 * It can be written to when custom logic is required to detect updates.
