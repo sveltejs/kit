@@ -325,6 +325,18 @@ export async function load_node({
 		return;
 	}
 
+	// generate __data.json files when prerendering
+	if (shadow.body && state.prerender) {
+		const pathname = `${event.url.pathname}/__data.json`;
+
+		const dependency = {
+			response: new Response(undefined),
+			body: JSON.stringify(shadow.body)
+		};
+
+		state.prerender.dependencies.set(pathname, dependency);
+	}
+
 	return {
 		node,
 		props: shadow.body,

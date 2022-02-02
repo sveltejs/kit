@@ -63,4 +63,14 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
+test('generates __data.json file for shadow endpoint', () => {
+	const json = read('shadowed-get/__data.json');
+	assert.equal(json, JSON.stringify({ answer: 42 }));
+});
+
+test('does not prerender page with shadow endpoint with non-GET handler', () => {
+	assert.ok(!fs.existsSync(`${build}/shadowed-post/index.html`));
+	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
+});
+
 test.run();
