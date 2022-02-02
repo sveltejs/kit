@@ -51,12 +51,12 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // Declaration types for Endpoints
 // * declarations that are not exported are for internal use
 
-export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
+export interface RequestEvent {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
-	locals: Locals;
-	platform: Platform;
+	locals: App.Locals;
+	platform: App.Platform;
 }
 
 type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
@@ -71,16 +71,12 @@ interface Fallthrough {
 	fallthrough: true;
 }
 
-export interface RequestHandler<
-	Locals = Record<string, any>,
-	Platform = Record<string, any>,
-	Output extends Body = Body
-> {
-	(event: RequestEvent<Locals, Platform>): MaybePromise<
-		Either<Response | EndpointOutput<Output>, Fallthrough>
-	>;
+export interface RequestHandler<Output extends Body = Body> {
+	(event: RequestEvent): MaybePromise<Either<Response | EndpointOutput<Output>, Fallthrough>>;
 }
 ```
+
+> See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
 
 For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
 

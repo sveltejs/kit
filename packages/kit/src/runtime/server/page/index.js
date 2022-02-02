@@ -5,8 +5,8 @@ import { respond } from './respond.js';
  * @param {import('types/hooks').RequestEvent} event
  * @param {import('types/internal').SSRPage} route
  * @param {RegExpExecArray} match
- * @param {import('types/internal').SSRRenderOptions} options
- * @param {import('types/internal').SSRRenderState} state
+ * @param {import('types/internal').SSROptions} options
+ * @param {import('types/internal').SSRState} state
  * @param {boolean} ssr
  * @returns {Promise<Response | undefined>}
  */

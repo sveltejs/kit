@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.256
+
+### Patch Changes
+
+- fix regression in parsing HTML when crawling for pre-rendering ([#3677](https://github.com/sveltejs/kit/pull/3677))
+
 ## 1.0.0-next.255
 
 ### Patch Changes

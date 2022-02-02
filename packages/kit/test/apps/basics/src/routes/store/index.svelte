@@ -7,12 +7,18 @@
 	let calls = 0;
 
 	onMount(() => {
-		session.set(calls);
+		session.update(($session) => ({
+			...$session,
+			calls
+		}));
 	});
 
 	const unsubscribe = page.subscribe(() => {
 		calls++;
-		session.set(calls);
+		session.update(($session) => ({
+			...$session,
+			calls
+		}));
 	});
 
 	onDestroy(unsubscribe);

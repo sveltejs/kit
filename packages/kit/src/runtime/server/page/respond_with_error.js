@@ -4,15 +4,15 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
- * @typedef {import('types/internal').SSRRenderState} SSRRenderState
+ * @typedef {import('types/internal').SSROptions} SSROptions
+ * @typedef {import('types/internal').SSRState} SSRState
  */
 
 /**
  * @param {{
  *   event: import('types/hooks').RequestEvent;
- *   options: SSRRenderOptions;
- *   state: SSRRenderState;
+ *   options: SSROptions;
+ *   state: SSRState;
  *   $session: any;
  *   status: number;
  *   error: Error;
