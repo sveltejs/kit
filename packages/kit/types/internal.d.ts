@@ -74,6 +74,11 @@ export interface SSRPage {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
+	shadow:
+		| null
+		| (() => Promise<{
+				[method: string]: ShadowRequestHandler;
+		  }>);
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */

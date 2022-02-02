@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { decode_params } from './utils.js';
+import { decode_params, is_pojo } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -102,22 +102,4 @@ export async function render_endpoint(event, route, match) {
 		status,
 		headers
 	});
-}
-
-/** @param {any} body */
-function is_pojo(body) {
-	if (typeof body !== 'object') return false;
-
-	if (body) {
-		if (body instanceof Uint8Array) return false;
-
-		// body could be a node Readable, but we don't want to import
-		// node built-ins, so we use duck typing
-		if (body._readableState && body._writableState && body._events) return false;
-
-		// similarly, it could be a web ReadableStream
-		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
-	}
-
-	return true;
 }
