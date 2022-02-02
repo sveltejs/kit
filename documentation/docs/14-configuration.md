@@ -66,11 +66,10 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		target: null,
 		trailingSlash: 'never',
 		version: {
 			name: Date.now().toString(),
-			pollInterval: 0,
+			pollInterval: 0
 		},
 		vite: () => ({})
 	},
@@ -242,10 +241,6 @@ An object containing zero or more of the following values:
 
 - `register` - if set to `false`, will disable automatic service worker registration
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
-
-### target
-
-Specifies an element to mount the app to. It must be a DOM selector that identifies an element that exists in your template file. If unspecified, the app will be mounted to `document.body`.
 
 ### trailingSlash
 
