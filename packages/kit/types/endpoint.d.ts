@@ -1,7 +1,7 @@
 import { RequestEvent } from './hooks';
-import { Either, JSONString, MaybePromise, ResponseHeaders } from './helper';
+import { Either, JSONValue, MaybePromise, ResponseHeaders } from './helper';
 
-type Body = JSONString | Uint8Array | ReadableStream | import('stream').Readable;
+type Body = JSONValue | Uint8Array | ReadableStream | import('stream').Readable;
 
 export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;

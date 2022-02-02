@@ -59,7 +59,7 @@ export interface RequestEvent {
 	platform: App.Platform;
 }
 
-type Body = JSONString | Uint8Array | ReadableStream | stream.Readable;
+type Body = JSONValue | Uint8Array | ReadableStream | stream.Readable;
 export interface EndpointOutput<Output extends Body = Body> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
