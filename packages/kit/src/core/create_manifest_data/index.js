@@ -228,7 +228,7 @@ export default function create_manifest_data({
 				routes.push({
 					type: 'page',
 					key: key.join('/'),
-					shadowed: false,
+					shadow: null,
 					segments: simple_segments,
 					pattern,
 					params,
@@ -272,7 +272,7 @@ export default function create_manifest_data({
 				throw new Error('An unexpected error occurred');
 			}
 
-			route.shadowed = true;
+			route.shadow = prev.file;
 			routes.splice(--i, 1);
 		}
 	}

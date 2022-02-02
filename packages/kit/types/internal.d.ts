@@ -181,7 +181,7 @@ export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 export interface PageData {
 	type: 'page';
 	key: string;
-	shadowed: boolean;
+	shadow: string | null;
 	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
