@@ -741,7 +741,7 @@ export class Renderer {
 
 				if (changed_since_last_render) {
 					/** @type {Record<string, any>} */
-					let props;
+					let props = {};
 
 					if (has_shadow && i === a.length - 1) {
 						const res = await fetch(`${url.pathname}/__data.json`);
