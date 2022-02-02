@@ -744,9 +744,23 @@ export class Renderer {
 					let props = {};
 
 					if (has_shadow && i === a.length - 1) {
-						const res = await fetch(`${url.pathname}/__data.json`);
+						const res = await fetch(`${url.pathname}/__data.json`, {
+							headers: {
+								'x-sveltekit-noredirect': 'true'
+							}
+						});
 
 						if (res.ok) {
+							const redirect = res.headers.get('x-sveltekit-location');
+
+							if (redirect) {
+								return {
+									redirect,
+									props: {},
+									state: this.current
+								};
+							}
+
 							props = await res.json();
 						} else {
 							status = res.status;

@@ -147,6 +147,26 @@ export async function respond(request, options, state = {}) {
 
 					if (is_data_request && route.type === 'page' && route.shadow) {
 						response = await render_endpoint(event, await route.shadow());
+
+						// since redirects are opaque to the browser, we need to repackage
+						// 3xx responses as 200s with a custom header
+						if (
+							response &&
+							response.status >= 300 &&
+							response.status < 400 &&
+							request.headers.get('x-sveltekit-noredirect') === 'true'
+						) {
+							const location = response.headers.get('location');
+
+							if (location) {
+								response = new Response(undefined, {
+									status: 204,
+									headers: {
+										'x-sveltekit-location': location
+									}
+								});
+							}
+						}
 					} else {
 						response =
 							route.type === 'endpoint'

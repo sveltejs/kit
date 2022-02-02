@@ -352,6 +352,12 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/simple"]');
 		expect(await page.textContent('h1')).toBe('The answer is 42');
 	});
+
+	test('Handles redirects', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
