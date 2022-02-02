@@ -218,13 +218,23 @@ export class Renderer {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
 
+				let props;
+
+				if (is_leaf) {
+					const serialized = document.querySelector('[data-type="svelte-props"]');
+					if (serialized) {
+						props = JSON.parse(/** @type {string} */ (serialized.textContent));
+					}
+				}
+
 				const node = await this._load_node({
 					module: await nodes[i],
 					url,
 					params,
 					stuff,
 					status: is_leaf ? status : undefined,
-					error: is_leaf ? error : undefined
+					error: is_leaf ? error : undefined,
+					props
 				});
 
 				branch.push(node);
@@ -579,10 +589,11 @@ export class Renderer {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   stuff: Record<string, any>;
+	 *   props?: Record<string, any>;
 	 * }} options
 	 * @returns
 	 */
-	async _load_node({ status, error, module, url, params, stuff }) {
+	async _load_node({ status, error, module, url, params, stuff, props = {} }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -617,6 +628,7 @@ export class Renderer {
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				params: uses_params,
+				props,
 				get url() {
 					node.uses.url = true;
 					return url;
@@ -660,6 +672,8 @@ export class Renderer {
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
+		} else if (props) {
+			node.loaded = normalize({ props });
 		}
 
 		return node;
@@ -678,7 +692,7 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params] = route;
+		const [pattern, a, b, get_params, has_shadow] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
@@ -726,12 +740,29 @@ export class Renderer {
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
-					node = await this._load_node({
-						module,
-						url,
-						params,
-						stuff
-					});
+					/** @type {Record<string, any>} */
+					let props;
+
+					if (has_shadow && i === a.length - 1) {
+						const res = await fetch(`${url.pathname}/__data.json`);
+
+						if (res.ok) {
+							props = await res.json();
+						} else {
+							status = res.status;
+							error = new Error('Failed to load data');
+						}
+					}
+
+					if (!error) {
+						node = await this._load_node({
+							module,
+							url,
+							params,
+							props,
+							stuff
+						});
+					}
 
 					if (node && node.loaded) {
 						if (node.loaded.fallthrough) {
