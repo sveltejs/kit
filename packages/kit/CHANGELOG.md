@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.258
+
+### Patch Changes
+
+- Update \$app/stores page.stuff to use App.Stuff ([#3686](https://github.com/sveltejs/kit/pull/3686))
+
 ## 1.0.0-next.257
 
 ### Patch Changes
