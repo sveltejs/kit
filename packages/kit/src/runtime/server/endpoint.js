@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { decode_params, is_pojo } from './utils.js';
+import { is_pojo } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
