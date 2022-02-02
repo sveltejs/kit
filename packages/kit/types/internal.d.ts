@@ -1,7 +1,7 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
-import { Fallthrough, RequestHandler } from './endpoint';
+import { Fallthrough, RequestHandler, ShadowRequestHandler } from './endpoint';
 import { Either } from './helper';
 import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
