@@ -436,22 +436,6 @@ test.describe.parallel('Endpoints', () => {
 		expect(await response.text()).toBe('<foo />');
 	});
 
-	test('endpoints can shadow pages', async ({ page }) => {
-		await page.goto('/routing/shadow');
-
-		const random = String(Math.random());
-
-		await page.evaluate((random) => {
-			const el = document.querySelector('input');
-			if (!el) throw new Error('Could not find input');
-			el.value = random;
-		}, random);
-
-		await page.click('button');
-
-		expect(await page.textContent('h1')).toBe(random);
-	});
-
 	test('allows headers to be a Headers object', async ({ request }) => {
 		const response = await request.get('/endpoint-output/headers-object');
 
