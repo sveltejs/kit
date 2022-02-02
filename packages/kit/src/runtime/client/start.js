@@ -52,8 +52,7 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 
 	// hydrate.url should include search
 	if (hydrate) {
-		const url = new URL(location.href);
-		hydrate.url.search = url.search;
+		hydrate.url.search = location.search;
 		await renderer.start(hydrate);
 	}
 
