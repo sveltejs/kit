@@ -16,3 +16,13 @@ export interface Fallthrough {
 export interface RequestHandler<Output extends Body = Body> {
 	(event: RequestEvent): MaybePromise<Either<Response | EndpointOutput<Output>, Fallthrough>>;
 }
+
+export interface ShadowEndpointOutput<Output extends JSONString = JSONString> {
+	status?: number;
+	headers?: Partial<ResponseHeaders>;
+	body?: Output;
+}
+
+export interface ShadowRequestHandler<Output extends JSONString = JSONString> {
+	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
+}
