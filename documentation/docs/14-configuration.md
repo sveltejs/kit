@@ -223,7 +223,6 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
     export default {
     	kit: {
     		adapter: adapter(),
-    		target: '#svelte',
     		prerender: {
     			onError: handleError
     		}
