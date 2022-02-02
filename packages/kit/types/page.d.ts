@@ -4,6 +4,7 @@ import { Either, MaybePromise } from './helper';
 export interface LoadInput<Params = Record<string, string>> {
 	url: URL;
 	params: Params;
+	props: Record<string, any>;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;

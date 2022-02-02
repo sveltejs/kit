@@ -26,3 +26,12 @@ export interface ShadowEndpointOutput<Output extends JSONObject = JSONObject> {
 export interface ShadowRequestHandler<Output extends JSONObject = JSONObject> {
 	(event: RequestEvent): MaybePromise<Either<ShadowEndpointOutput<Output>, Fallthrough>>;
 }
+
+export interface ShadowData {
+	fallthrough?: boolean;
+	status?: number;
+	error?: Error;
+	redirect?: string;
+	cookies?: string[];
+	body?: JSONObject;
+}

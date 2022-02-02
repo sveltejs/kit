@@ -103,7 +103,8 @@ export async function respond(opts) {
 						url: event.url,
 						node,
 						stuff,
-						is_error: false
+						is_error: false,
+						is_leaf: i === nodes.length - 1
 					});
 
 					if (!loaded) return;
@@ -158,6 +159,7 @@ export async function respond(opts) {
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
+										is_leaf: false,
 										status,
 										error
 									})
