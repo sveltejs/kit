@@ -346,8 +346,8 @@ test.describe.parallel('CSS', () => {
 	});
 });
 
-test.describe.parallel('Duplex routes', () => {
-	test.only('Loads props from an endpoint', async ({ page, clicknav }) => {
+test.describe.parallel('Shadowed pages', () => {
+	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/simple"]');
 		expect(await page.textContent('h1')).toBe('The answer is 42');
