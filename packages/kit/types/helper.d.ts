@@ -1,13 +1,13 @@
-type ToJSON = { toJSON(...args: any[]): JSONValue };
-type JSONValue = Exclude<JSONString, ToJSON>;
-export type JSONString =
+type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
+
+export type JSONValue =
 	| string
 	| number
 	| boolean
 	| null
 	| ToJSON
-	| JSONString[]
-	| { [key: string]: JSONString };
+	| JSONValue[]
+	| { [key: string]: JSONValue };
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | string[]>;
