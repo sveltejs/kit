@@ -140,7 +140,6 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	target: string;
 	template({
 		head,
 		body,
