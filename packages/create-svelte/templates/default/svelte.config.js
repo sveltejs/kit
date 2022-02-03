@@ -16,14 +16,6 @@ const config = {
 		// Override http methods in the Todo forms
 		methodOverride: {
 			allowed: ['PATCH', 'DELETE']
-		},
-
-		vite: {
-			server: {
-				fs: {
-					allow: [path.resolve('../../../kit/src')]
-				}
-			}
 		}
 	}
 };
