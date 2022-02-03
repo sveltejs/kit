@@ -63,7 +63,7 @@ function negotiate(accept, types) {
 	const parts = accept
 		.split(',')
 		.map((str, i) => {
-			const match = /([^/]+)\/([^;]+)(?:\;q=([0-9.]+))?/.exec(str);
+			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
 			if (match) {
 				const [, type, subtype, q = '1'] = match;
 				return { type, subtype, q: +q, i };
