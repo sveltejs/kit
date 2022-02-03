@@ -111,7 +111,7 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 
 #### props
 
-If the page you're loading has an endpoint, the data returned from it is accessible inside the leaf component's `load` function as `props`.
+If the page you're loading has an endpoint, the data returned from it is accessible inside the leaf component's `load` function as `props`. For layout components and pages without endpoints, `props` will be an empty object.
 
 #### fetch
 
