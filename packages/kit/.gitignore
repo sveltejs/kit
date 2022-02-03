@@ -7,3 +7,4 @@
 /test/**/build
 !/src/core/adapt/fixtures/*/.svelte-kit
 !/test/node_modules
+/test/apps/basics/test/errors.json
