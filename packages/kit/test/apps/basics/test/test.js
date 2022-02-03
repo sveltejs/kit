@@ -376,6 +376,18 @@ test.describe.parallel('Shadowed pages', () => {
 		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
 		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
 	});
+
+	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
+		request
+	}) => {
+		const response = await request.get('/shadowed/simple', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(await response.json()).toEqual({ answer: 42 });
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
