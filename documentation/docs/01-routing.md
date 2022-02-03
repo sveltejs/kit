@@ -72,7 +72,9 @@ interface Fallthrough {
 }
 
 export interface RequestHandler<Output extends Body = Body> {
-	(event: RequestEvent): MaybePromise<Either<Response | EndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<
+		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
+	>;
 }
 ```
 
