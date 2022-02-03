@@ -5,7 +5,7 @@ import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { decode_params } from './utils.js';
 
-const DATA_SUFFIX = '__data.json';
+const DATA_SUFFIX = '/__data.json';
 
 /** @type {import('types/internal').Respond} */
 export async function respond(request, options, state = {}) {
@@ -134,7 +134,7 @@ export async function respond(request, options, state = {}) {
 				}
 
 				const is_data_request = decoded.endsWith(DATA_SUFFIX);
-				if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length);
+				if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
