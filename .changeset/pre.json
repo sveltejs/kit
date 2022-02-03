@@ -17,7 +17,8 @@
     "set-env-action": "1.0.0",
     "~TODO~": "0.0.1",
     "prerendering-test-basics": "0.0.1",
-    "prerendering-test-options": "0.0.1"
+    "prerendering-test-options": "0.0.1",
+    "kit.svelte.dev": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -154,6 +155,7 @@
     "fast-poems-notice",
     "few-apes-listen",
     "few-points-taste",
+    "few-rockets-sort",
     "few-rockets-think",
     "few-singers-pump",
     "few-suits-drive",
@@ -727,6 +729,7 @@
     "witty-maps-pull",
     "witty-meals-tie",
     "witty-news-dress",
+    "yellow-coins-wash",
     "yellow-eagles-carry",
     "yellow-meals-agree",
     "yellow-steaks-doubt",
