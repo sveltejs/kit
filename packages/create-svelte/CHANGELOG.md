@@ -1,5 +1,13 @@
 # create-svelte
 
+## 2.0.0-next.114
+
+### Patch Changes
+
+- Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
+
+* Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+
 ## 2.0.0-next.113
 
 ### Patch Changes

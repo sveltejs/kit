@@ -22,7 +22,7 @@ By populating these interfaces, you will gain type safety when using `event.loca
 
 ### App.Locals
 
-The interface that defines `event.locals`, which can be accessed in [hooks](#hooks) (`handle`, `handleError` and `getSession`) and [endpoints](#endpoints).
+The interface that defines `event.locals`, which can be accessed in [hooks](#hooks) (`handle`, `handleError` and `getSession`) and [endpoints](#routing-endpoints).
 
 ### App.Platform
 

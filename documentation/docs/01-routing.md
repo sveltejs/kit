@@ -52,7 +52,9 @@ Endpoints are modules written in `.js` (or `.ts`) files that export functions co
 // an `export` keyword can be imported from `@sveltejs/kit`)
 
 export interface RequestHandler<Output = Record<string, any>> {
-	(event: RequestEvent): MaybePromise<Either<Response | EndpointOutput<Output>, Fallthrough>>;
+	(event: RequestEvent): MaybePromise<
+		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
+	>;
 }
 
 export interface RequestEvent {
