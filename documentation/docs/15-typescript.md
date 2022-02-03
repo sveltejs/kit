@@ -1,5 +1,5 @@
 ---
-title: TypeScript
+title: TypeScript and JSDoc
 ---
 
 All APIs in SvelteKit are fully typed. Additionally, it's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
