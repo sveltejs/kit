@@ -31,3 +31,21 @@ export function decode_params(params) {
 
 	return params;
 }
+
+/** @param {any} body */
+export function is_pojo(body) {
+	if (typeof body !== 'object') return false;
+
+	if (body) {
+		if (body instanceof Uint8Array) return false;
+
+		// body could be a node Readable, but we don't want to import
+		// node built-ins, so we use duck typing
+		if (body._readableState && body._writableState && body._events) return false;
+
+		// similarly, it could be a web ReadableStream
+		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
+	}
+
+	return true;
+}

@@ -14,6 +14,7 @@ import { posixify } from '../../utils/filesystem.js';
  * }} Part
  * @typedef {{
  *   basename: string;
+ *   name: string;
  *   ext: string;
  *   parts: Part[],
  *   file: string;
@@ -59,12 +60,13 @@ export default function create_manifest_data({
 
 	/**
 	 * @param {string} dir
+	 * @param {string[]} parent_key
 	 * @param {Part[][]} parent_segments
 	 * @param {string[]} parent_params
 	 * @param {Array<string|undefined>} layout_stack // accumulated __layout.svelte components
 	 * @param {Array<string|undefined>} error_stack // accumulated __error.svelte components
 	 */
-	function walk(dir, parent_segments, parent_params, layout_stack, error_stack) {
+	function walk(dir, parent_key, parent_segments, parent_params, layout_stack, error_stack) {
 		/** @type {Item[]} */
 		let items = [];
 		fs.readdirSync(dir).forEach((basename) => {
@@ -114,6 +116,7 @@ export default function create_manifest_data({
 
 			items.push({
 				basename,
+				name,
 				ext,
 				parts,
 				file,
@@ -126,6 +129,7 @@ export default function create_manifest_data({
 		items = items.sort(comparator);
 
 		items.forEach((item) => {
+			const key = parent_key.slice();
 			const segments = parent_segments.slice();
 
 			if (item.is_index) {
@@ -149,11 +153,13 @@ export default function create_manifest_data({
 						}
 
 						segments[segments.length - 1] = last_segment;
+						key[key.length - 1] += item.route_suffix;
 					} else {
 						segments.push(item.parts);
 					}
 				}
 			} else {
+				key.push(item.name);
 				segments.push(item.parts);
 			}
 
@@ -187,6 +193,7 @@ export default function create_manifest_data({
 
 				walk(
 					path.join(dir, item.basename),
+					key,
 					segments,
 					params,
 					layout_reset ? [layout_reset] : layout_stack.concat(layout),
@@ -221,10 +228,12 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'page',
+					key: key.join('/'),
 					segments: simple_segments,
 					pattern,
 					params,
 					path,
+					shadow: null,
 					a: /** @type {string[]} */ (concatenated),
 					b: /** @type {string[]} */ (errors)
 				});
@@ -233,6 +242,7 @@ export default function create_manifest_data({
 
 				routes.push({
 					type: 'endpoint',
+					key: key.join('/'),
 					segments: simple_segments,
 					pattern,
 					file: item.file,
@@ -249,7 +259,24 @@ export default function create_manifest_data({
 
 	components.push(layout, error);
 
-	walk(config.kit.files.routes, [], [], [layout], [error]);
+	walk(config.kit.files.routes, [], [], [], [layout], [error]);
+
+	// merge matching page/endpoint pairs into shadowed pages
+	let i = routes.length;
+	while (i--) {
+		const route = routes[i];
+		const prev = routes[i - 1];
+
+		if (prev && prev.key === route.key) {
+			if (prev.type !== 'endpoint' || route.type !== 'page') {
+				const relative = path.relative(cwd, path.resolve(config.kit.files.routes, prev.key));
+				throw new Error(`Duplicate route files: ${relative}`);
+			}
+
+			route.shadow = prev.file;
+			routes.splice(--i, 1);
+		}
+	}
 
 	const assets = fs.existsSync(config.kit.files.assets)
 		? list_files({ config, dir: config.kit.files.assets, path: '' })

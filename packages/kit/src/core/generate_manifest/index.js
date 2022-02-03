@@ -70,6 +70,7 @@ export function generate_manifest(
 							pattern: ${route.pattern},
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},
+							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
 							a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
 							b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
 						}`.replace(/^\t\t/gm, '');

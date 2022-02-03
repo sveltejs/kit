@@ -2,15 +2,22 @@
 title: Loading
 ---
 
-A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to get data for a page without (for example) showing a loading spinner and fetching data in `onMount`.
+A component that defines a page or a layout can export a `load` function that runs before the component is created. This function runs both during server-side rendering and in the client, and allows you to fetch and manipulate data before the page is rendered, thus preventing loading spinners.
+
+If the data for a page comes from its endpoint, you may not need a `load` function. It's useful when you need more flexibility, for example loading data from an external API.
 
 ```ts
-// Declaration types for Loading
-// * declarations that are not exported are for internal use
+// Type declarations for `load` (declarations marked with
+// an `export` keyword can be imported from `@sveltejs/kit`)
+
+export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
+	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
+}
 
 export interface LoadInput<Params extends Record<string, string> = Record<string, string>> {
 	url: URL;
 	params: Params;
+	props: Record<string, any>;
 	fetch(info: RequestInfo, init?: RequestInit): Promise<Response>;
 	session: App.Session;
 	stuff: Partial<App.Stuff>;
@@ -26,37 +33,28 @@ export interface LoadOutput<Props extends Record<string, any> = Record<string, a
 }
 
 type MaybePromise<T> = T | Promise<T>;
+
 interface Fallthrough {
 	fallthrough: true;
-}
-
-export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
-	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
 }
 ```
 
 > See the [TypeScript](#typescript) section for information on `App.Session` and `App.Stuff`.
 
-Our example blog page might contain a `load` function like the following:
+A page that loads data from an external API might look like this:
 
 ```html
+<!-- src/routes/blog/[slug].svelte -->
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ params, fetch, session, stuff }) {
-		const url = `/blog/${params.slug}.json`;
-		const res = await fetch(url);
-
-		if (res.ok) {
-			return {
-				props: {
-					article: await res.json()
-				}
-			};
-		}
+		const response = await fetch(`https://cms.example.com/article/${params.slug}.json`);
 
 		return {
-			status: res.status,
-			error: new Error(`Could not load ${url}`)
+			status: response.status,
+			props: {
+				article: response.ok && (await response.json())
+			}
 		};
 	}
 </script>
@@ -64,7 +62,7 @@ Our example blog page might contain a `load` function like the following:
 
 > Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.
 
-`load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client.
+`load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
 If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
@@ -88,7 +86,7 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing five fields — `url`, `params`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
+The `load` function receives an object containing five fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
 > Note that destructuring parameters in the function declaration is enough to count as using them.
 
@@ -110,6 +108,10 @@ For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname`
 	"c": "y/z"
 }
 ```
+
+#### props
+
+If the page you're loading has an endpoint, the data returned from it is accessible inside the leaf component's `load` function as `props`. For layout components and pages without endpoints, `props` will be an empty object.
 
 #### fetch
 

@@ -39,17 +39,23 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 <p>TODO...</p>
 ```
 
-Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. Soon, we'll see how to access that parameter in a [load function](#loading) or the [page store](#modules-$app-stores).
+Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`.
 
 A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods.
+Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
 ```ts
-// Declaration types for Endpoints
-// * declarations that are not exported are for internal use
+// Type declarations for endpoints (declarations marked with
+// an `export` keyword can be imported from `@sveltejs/kit`)
+
+export interface RequestHandler<Output = Record<string, any>> {
+	(event: RequestEvent): MaybePromise<
+		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
+	>;
+}
 
 export interface RequestEvent {
 	request: Request;
@@ -59,43 +65,34 @@ export interface RequestEvent {
 	platform: App.Platform;
 }
 
-type Body = JSONValue | Uint8Array | ReadableStream | stream.Readable;
-export interface EndpointOutput<Output extends Body = Body> {
+export interface EndpointOutput<Output = Record<string, any>> {
 	status?: number;
 	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
+	body?: Record<string, any>;
 }
 
 type MaybePromise<T> = T | Promise<T>;
+
 interface Fallthrough {
 	fallthrough: true;
-}
-
-export interface RequestHandler<Output extends Body = Body> {
-	(event: RequestEvent): MaybePromise<
-		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
-	>;
 }
 ```
 
 > See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
 
-For example, our hypothetical blog page, `/blog/cool-article`, might request data from `/blog/cool-article.json`, which could be represented by a `src/routes/blog/[slug].json.js` endpoint:
+A page like `src/routes/items/[id].svelte` could get its data from `src/routes/items/[id].js`:
 
 ```js
 import db from '$lib/database';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ params }) {
-	// the `slug` parameter is available because this file
-	// is called [slug].json.js
-	const article = await db.get(params.slug);
+	// `params.id` comes from [id].js
+	const item = await db.get(params.id);
 
-	if (article) {
+	if (item) {
 		return {
-			body: {
-				article
-			}
+			body: { item }
 		};
 	}
 
@@ -105,7 +102,7 @@ export async function get({ params }) {
 }
 ```
 
-> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs.
+> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](#modules-$lib).
 
 The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
@@ -114,29 +111,93 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-If the returned `body` is an object, and no `content-type` header is returned, it will automatically be turned into a JSON response. (Don't worry about `$lib`, we'll get to that [later](#modules-$lib).)
-
 > If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-For endpoints that handle other HTTP methods, like POST, export the corresponding function:
+The returned `body` corresponds to the page's props:
+
+```svelte
+<script>
+	// populated with data from the endpoint
+	export let item;
+</script>
+
+<h1>{item.title}</h1>
+```
+
+#### POST, PUT, PATCH, DELETE
+
+Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
 
 ```js
 export function post(event) {...}
+export function put(event) {...}
+export function patch(event) {...}
+export function del(event) {...} // `delete` is a reserved word
 ```
 
-Since `delete` is a reserved word in JavaScript, DELETE requests are handled with a `del` function.
-
-> We don't interact with the `req`/`res` objects you might be familiar with from Node's `http` module or frameworks like Express, because they're only available on certain platforms. Instead, SvelteKit translates the returned object into whatever's required by the platform you're deploying your app to.
-
-To set multiple cookies in a single set of response headers, you can return an array:
+These functions can, like `get`, return a `body` that will be passed to the page as props. Whereas 4xx/5xx responses from `get` will result in an error page rendering, similar responses to non-GET requests do not, allowing you to do things like render form validation errors:
 
 ```js
-return {
-	headers: {
-		'set-cookie': [cookie1, cookie2]
+// src/routes/items.js
+import * as db from '$lib/database';
+
+export async function get() {
+	const items = await db.list();
+
+	return {
+		body: { items }
+	};
+}
+
+export async function post({ request }) {
+	const [errors, item] = await db.create(request);
+
+	if (errors) {
+		// return validation errors
+		return {
+			status: 400,
+			body: { errors }
+		};
 	}
-};
+
+	// redirect to the newly created item
+	return {
+		status: 303,
+		headers: {
+			location: `/items/${item.id}`
+		}
+	};
+}
 ```
+
+```svelte
+<!-- src/routes/items.svelte -->
+<script>
+	// The page always has access to props from `get`...
+	export let items;
+
+	// ...plus props from `post` when the page is rendered
+	// in response to a POST request, for example after
+	// submitting the form below
+	export let errors;
+</script>
+
+{#each items as item}
+	<Preview item={item}/>
+{/each}
+
+<form method="post">
+	<input name="title">
+
+	{#if errors?.title}
+		<p class="error">{errors.title}</p>
+	{/if}
+
+	<button type="submit">Create item</button>
+</form>
+```
+
+If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML.
 
 #### Body parsing
 
@@ -146,6 +207,18 @@ The `request` object is an instance of the standard [Request](https://developer.
 export async function post({ request }) {
 	const data = await request.formData(); // or .json(), or .text(), etc
 }
+```
+
+#### Setting cookies
+
+Endpoints can set cookies by returning a `headers` object with `set-cookie`. To set multiple cookies simultaneously, return an array:
+
+```js
+return {
+	headers: {
+		'set-cookie': [cookie1, cookie2]
+	}
+};
 ```
 
 #### HTTP method overrides
@@ -171,15 +244,21 @@ export default {
 
 > Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
 
+### Standalone endpoints
+
+Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a string or a `Uint8Array`.
+
+> Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
+
 ### Private modules
 
 Files and directories with a leading `_` or `.` (other than [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI)) are private by default, meaning that they do not create routes (but can be imported by files that do). You can configure which modules are considered public or private with the [`routes`](#configuration-routes) configuration.
 
-### Advanced
+### Advanced routing
 
 #### Rest parameters
 
-A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
+A route can have multiple dynamic parameters, for example `src/routes/[category]/[item].svelte` or even `src/routes/[category]-[item].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `/x-y-z`, `category` would be `x` and `item` would be `y-z`.) If the number of route segments is unknown, you can use rest syntax — for example you might implement GitHub's file viewer like so...
 
 ```bash
 /[org]/[repo]/tree/[branch]/[...file]

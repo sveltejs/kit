@@ -60,6 +60,8 @@ export async function render_response({
 	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];
 
+	let shadow_props;
+
 	let rendered;
 
 	let is_private = false;
@@ -70,13 +72,14 @@ export async function render_response({
 	}
 
 	if (ssr) {
-		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
+		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => stylesheets.add(url));
 			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
+			if (props) shadow_props = props;
 
 			if (uses_credentials) is_private = true;
 
@@ -255,6 +258,11 @@ export async function render_response({
 					return `<script ${attributes}>${json}</script>`;
 				})
 				.join('\n\t');
+
+			if (shadow_props) {
+				// prettier-ignore
+				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props)}</script>`;
+			}
 		}
 
 		if (options.service_worker) {

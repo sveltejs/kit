@@ -144,8 +144,10 @@ export async function build_server(
 
 	// add entry points for every endpoint...
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint') {
-			const resolved = path.resolve(cwd, route.file);
+		const file = route.type === 'endpoint' ? route.file : route.shadow;
+
+		if (file) {
+			const resolved = path.resolve(cwd, file);
 			const relative = path.relative(config.kit.files.routes, resolved);
 			const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
 			input[name] = resolved;
@@ -228,24 +230,6 @@ export async function build_server(
 	print_config_conflicts(conflicts, 'kit.vite.', 'build_server');
 
 	const { chunks } = await create_build(merged_config);
-
-	/** @type {Record<string, string[]>} */
-	const lookup = {};
-	chunks.forEach((chunk) => {
-		if (!chunk.facadeModuleId) return;
-		const id = chunk.facadeModuleId.slice(cwd.length + 1);
-		lookup[id] = chunk.exports;
-	});
-
-	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
-	const methods = {};
-	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint' && lookup[route.file]) {
-			methods[route.file] = lookup[route.file]
-				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
-				.filter(Boolean);
-		}
-	});
 
 	/** @type {import('vite').Manifest} */
 	const vite_manifest = JSON.parse(fs.readFileSync(`${output_dir}/server/manifest.json`, 'utf-8'));
@@ -337,8 +321,10 @@ function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
-		if (route.type === 'endpoint' && lookup[route.file]) {
-			methods[route.file] = lookup[route.file]
+		const file = route.type === 'endpoint' ? route.file : route.shadow;
+
+		if (file && lookup[file]) {
+			methods[file] = lookup[file]
 				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
 				.filter(Boolean);
 		}

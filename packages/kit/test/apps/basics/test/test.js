@@ -346,6 +346,50 @@ test.describe.parallel('CSS', () => {
 	});
 });
 
+test.describe.parallel('Shadowed pages', () => {
+	test('Loads props from an endpoint', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/simple"]');
+		expect(await page.textContent('h1')).toBe('The answer is 42');
+	});
+
+	test('Handles GET redirects', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Handles POST redirects', async ({ page }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/error-get"]');
+		expect(await page.textContent('h1')).toBe('404');
+	});
+
+	test('Merges bodies for 4xx and 5xx responses from non-GET', async ({ page }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#error-post')]);
+		expect(await page.textContent('h1')).toBe('hello from get / hello from post');
+	});
+
+	test('Responds from endpoint if Accept includes application/json but not text/html', async ({
+		request
+	}) => {
+		const response = await request.get('/shadowed/simple', {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+
+		expect(await response.json()).toEqual({ answer: 42 });
+	});
+});
+
 test.describe.parallel('Endpoints', () => {
 	test('calls a delete handler', async ({ page, javaScriptEnabled }) => {
 		if (javaScriptEnabled) {
@@ -402,22 +446,6 @@ test.describe.parallel('Endpoints', () => {
 
 		expect(response.headers()['content-type']).toBe('application/xml');
 		expect(await response.text()).toBe('<foo />');
-	});
-
-	test('endpoints can shadow pages', async ({ page }) => {
-		await page.goto('/routing/shadow');
-
-		const random = String(Math.random());
-
-		await page.evaluate((random) => {
-			const el = document.querySelector('input');
-			if (!el) throw new Error('Could not find input');
-			el.value = random;
-		}, random);
-
-		await page.click('button');
-
-		expect(await page.textContent('h1')).toBe(random);
 	});
 
 	test('allows headers to be a Headers object', async ({ request }) => {

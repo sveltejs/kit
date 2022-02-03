@@ -1,16 +1,15 @@
-import { decode_params } from '../utils.js';
+import { render_endpoint } from '../endpoint.js';
 import { respond } from './respond.js';
 
 /**
  * @param {import('types/hooks').RequestEvent} event
  * @param {import('types/internal').SSRPage} route
- * @param {RegExpExecArray} match
  * @param {import('types/internal').SSROptions} options
  * @param {import('types/internal').SSRState} state
  * @param {boolean} ssr
  * @returns {Promise<Response | undefined>}
  */
-export async function render_page(event, route, match, options, state, ssr) {
+export async function render_page(event, route, options, state, ssr) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -18,7 +17,16 @@ export async function render_page(event, route, match, options, state, ssr) {
 		});
 	}
 
-	const params = route.params ? decode_params(route.params(match)) : {};
+	if (route.shadow) {
+		const type = negotiate(event.request.headers.get('accept') || 'text/html', [
+			'text/html',
+			'application/json'
+		]);
+
+		if (type === 'application/json') {
+			return render_endpoint(event, await route.shadow());
+		}
+	}
 
 	const $session = await options.hooks.getSession(event);
 
@@ -28,7 +36,7 @@ export async function render_page(event, route, match, options, state, ssr) {
 		state,
 		$session,
 		route,
-		params,
+		params: event.params, // TODO this is redundant
 		ssr
 	});
 
@@ -45,4 +53,56 @@ export async function render_page(event, route, match, options, state, ssr) {
 			status: 500
 		});
 	}
+}
+
+/**
+ * @param {string} accept
+ * @param {string[]} types
+ */
+function negotiate(accept, types) {
+	const parts = accept
+		.split(',')
+		.map((str, i) => {
+			const match = /([^/]+)\/([^;]+)(?:;q=([0-9.]+))?/.exec(str);
+			if (match) {
+				const [, type, subtype, q = '1'] = match;
+				return { type, subtype, q: +q, i };
+			}
+
+			throw new Error(`Invalid Accept header: ${accept}`);
+		})
+		.sort((a, b) => {
+			if (a.q !== b.q) {
+				return b.q - a.q;
+			}
+
+			if ((a.subtype === '*') !== (b.subtype === '*')) {
+				return a.subtype === '*' ? 1 : -1;
+			}
+
+			if ((a.type === '*') !== (b.type === '*')) {
+				return a.type === '*' ? 1 : -1;
+			}
+
+			return a.i - b.i;
+		});
+
+	let accepted;
+	let min_priority = Infinity;
+
+	for (const mimetype of types) {
+		const [type, subtype] = mimetype.split('/');
+		const priority = parts.findIndex(
+			(part) =>
+				(part.type === type || part.type === '*') &&
+				(part.subtype === subtype || part.subtype === '*')
+		);
+
+		if (priority !== -1 && priority < min_priority) {
+			accepted = mimetype;
+			min_priority = priority;
+		}
+	}
+
+	return accepted;
 }

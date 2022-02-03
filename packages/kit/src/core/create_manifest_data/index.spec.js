@@ -41,26 +41,31 @@ test('creates routes', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: '',
 			segments: [],
 			pattern: /^\/$/,
 			params: [],
 			path: '/',
+			shadow: null,
 			a: [layout, index],
 			b: [error]
 		},
 
 		{
 			type: 'page',
+			key: 'about',
 			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
 			params: [],
 			path: '/about',
+			shadow: null,
 			a: [layout, about],
 			b: [error]
 		},
 
 		{
 			type: 'endpoint',
+			key: 'blog.json',
 			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
 			file: 'samples/basic/blog/index.json.js',
@@ -69,16 +74,19 @@ test('creates routes', () => {
 
 		{
 			type: 'page',
+			key: 'blog',
 			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
 			params: [],
 			path: '/blog',
+			shadow: null,
 			a: [layout, blog],
 			b: [error]
 		},
 
 		{
 			type: 'endpoint',
+			key: 'blog/[slug].json',
 			segments: [
 				{ rest: false, dynamic: false, content: 'blog' },
 				{ rest: false, dynamic: true, content: '[slug].json' }
@@ -90,6 +98,7 @@ test('creates routes', () => {
 
 		{
 			type: 'page',
+			key: 'blog/[slug]',
 			segments: [
 				{ rest: false, dynamic: false, content: 'blog' },
 				{ rest: false, dynamic: true, content: '[slug]' }
@@ -97,6 +106,7 @@ test('creates routes', () => {
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
 			path: '',
+			shadow: null,
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -117,20 +127,24 @@ test('creates routes with layout', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: '',
 			segments: [],
 			pattern: /^\/$/,
 			params: [],
 			path: '/',
+			shadow: null,
 			a: [layout, index],
 			b: [error]
 		},
 
 		{
 			type: 'page',
+			key: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
 			params: [],
 			path: '/foo',
+			shadow: null,
 			a: [layout, foo___layout, foo],
 			b: [error]
 		}
@@ -197,9 +211,7 @@ test('sorts routes with rest correctly', () => {
 	assert.equal(
 		routes.map((p) => (p.type === 'page' ? p.a : p.file)),
 		[
-			'samples/rest/a/[...rest].js',
 			[layout, 'samples/rest/a/[...rest].svelte'],
-			'samples/rest/b/[...rest].ts',
 			[layout, 'samples/rest/b/[...rest].svelte']
 		]
 	);
@@ -211,6 +223,7 @@ test('disallows rest parameters inside segments', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: 'prefix-[...rest]',
 			segments: [
 				{
 					dynamic: true,
@@ -221,11 +234,13 @@ test('disallows rest parameters inside segments', () => {
 			pattern: /^\/prefix-(.*?)\/?$/,
 			params: ['...rest'],
 			path: '',
+			shadow: null,
 			a: [layout, 'samples/rest-prefix-suffix/prefix-[...rest].svelte'],
 			b: [error]
 		},
 		{
 			type: 'endpoint',
+			key: '[...rest].json',
 			segments: [
 				{
 					dynamic: true,
@@ -259,7 +274,10 @@ test('ignores files and directories with leading dots except .well-known', () =>
 test('ignores files by `kit.excludes` config w/RegExp', () => {
 	const { routes } = create('samples/hidden-by-excludes-config', {
 		kit: {
-			routes: (filepath) => !filepath.endsWith('.test.js') && !filepath.endsWith('.spec.js')
+			routes: (filepath) =>
+				!filepath.endsWith('.test.js') &&
+				!filepath.endsWith('.spec.js') &&
+				!filepath.endsWith('.md')
 		}
 	});
 
@@ -273,62 +291,10 @@ test('ignores files by `kit.excludes` config w/RegExp', () => {
 			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
 			'samples/hidden-by-excludes-config/_a.js',
 			'samples/hidden-by-excludes-config/a.js',
-			'samples/hidden-by-excludes-config/a.md',
 			'samples/hidden-by-excludes-config/subdir/.a.js',
 			'samples/hidden-by-excludes-config/subdir/_a.js',
 			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/subdir/a.js',
-			'samples/hidden-by-excludes-config/subdir/a.md'
-		].sort()
-	);
-});
-
-test('ignores files by `kit.excludes` config w/string', () => {
-	const { routes } = create('samples/hidden-by-excludes-config', {
-		kit: {
-			routes: (filepath) => !filepath.split('/').includes('a.js')
-		}
-	});
-
-	assert.equal(
-		routes
-			.map((r) => r.type === 'endpoint' && r.file)
-			.filter(Boolean)
-			.sort(),
-		[
-			'samples/hidden-by-excludes-config/.a.js',
-			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/_a.js',
-			'samples/hidden-by-excludes-config/a.md',
-			'samples/hidden-by-excludes-config/a.spec.js',
-			'samples/hidden-by-excludes-config/subdir/.a.js',
-			'samples/hidden-by-excludes-config/subdir/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/subdir/_a.js',
-			'samples/hidden-by-excludes-config/subdir/a.md',
-			'samples/hidden-by-excludes-config/subdir/a.spec.js'
-		].sort()
-	);
-});
-
-test('ignores files by `kit.excludes` config w/function', () => {
-	const { routes } = create('samples/hidden-by-excludes-config', {
-		kit: {
-			routes: (filepath) => !filepath.startsWith('samples/hidden-by-excludes-config/subdir')
-		}
-	});
-
-	assert.equal(
-		routes
-			.map((r) => r.type === 'endpoint' && r.file)
-			.filter(Boolean)
-			.sort(),
-		[
-			'samples/hidden-by-excludes-config/.a.js',
-			'samples/hidden-by-excludes-config/.well-known/dnt-policy.txt.js',
-			'samples/hidden-by-excludes-config/_a.js',
-			'samples/hidden-by-excludes-config/a.js',
-			'samples/hidden-by-excludes-config/a.md',
-			'samples/hidden-by-excludes-config/a.spec.js'
+			'samples/hidden-by-excludes-config/subdir/a.js'
 		].sort()
 	);
 });
@@ -341,6 +307,7 @@ test('allows multiple slugs', () => {
 		[
 			{
 				type: 'endpoint',
+				key: '[file].[ext]',
 				segments: [{ dynamic: true, rest: false, content: '[file].[ext]' }],
 				pattern: /^\/([^/]+?)\.([^/]+?)$/,
 				file: 'samples/multiple-slugs/[file].[ext].js',
@@ -362,6 +329,7 @@ test('ignores things that look like lockfiles', () => {
 	assert.equal(routes, [
 		{
 			type: 'endpoint',
+			key: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			file: 'samples/lockfiles/foo.js',
 			params: [],
@@ -385,26 +353,31 @@ test('works with custom extensions', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: '',
 			segments: [],
 			pattern: /^\/$/,
 			params: [],
 			path: '/',
+			shadow: null,
 			a: [layout, index],
 			b: [error]
 		},
 
 		{
 			type: 'page',
+			key: 'about',
 			segments: [{ rest: false, dynamic: false, content: 'about' }],
 			pattern: /^\/about\/?$/,
 			params: [],
 			path: '/about',
+			shadow: null,
 			a: [layout, about],
 			b: [error]
 		},
 
 		{
 			type: 'endpoint',
+			key: 'blog.json',
 			segments: [{ rest: false, dynamic: false, content: 'blog.json' }],
 			pattern: /^\/blog\.json$/,
 			file: 'samples/custom-extension/blog/index.json.js',
@@ -413,16 +386,19 @@ test('works with custom extensions', () => {
 
 		{
 			type: 'page',
+			key: 'blog',
 			segments: [{ rest: false, dynamic: false, content: 'blog' }],
 			pattern: /^\/blog\/?$/,
 			params: [],
 			path: '/blog',
+			shadow: null,
 			a: [layout, blog],
 			b: [error]
 		},
 
 		{
 			type: 'endpoint',
+			key: 'blog/[slug].json',
 			segments: [
 				{ rest: false, dynamic: false, content: 'blog' },
 				{ rest: false, dynamic: true, content: '[slug].json' }
@@ -434,6 +410,7 @@ test('works with custom extensions', () => {
 
 		{
 			type: 'page',
+			key: 'blog/[slug]',
 			segments: [
 				{ rest: false, dynamic: false, content: 'blog' },
 				{ rest: false, dynamic: true, content: '[slug]' }
@@ -441,6 +418,7 @@ test('works with custom extensions', () => {
 			pattern: /^\/blog\/([^/]+?)\/?$/,
 			params: ['slug'],
 			path: '',
+			shadow: null,
 			a: [layout, blog_$slug],
 			b: [error]
 		}
@@ -470,6 +448,7 @@ test('includes nested error components', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: 'foo/bar/baz',
 			segments: [
 				{ rest: false, dynamic: false, content: 'foo' },
 				{ rest: false, dynamic: false, content: 'bar' },
@@ -478,6 +457,7 @@ test('includes nested error components', () => {
 			pattern: /^\/foo\/bar\/baz\/?$/,
 			params: [],
 			path: '/foo/bar/baz',
+			shadow: null,
 			a: [
 				layout,
 				'samples/nested-errors/foo/__layout.svelte',
@@ -501,19 +481,23 @@ test('resets layout', () => {
 	assert.equal(routes, [
 		{
 			type: 'page',
+			key: '',
 			segments: [],
 			pattern: /^\/$/,
 			params: [],
 			path: '/',
+			shadow: null,
 			a: [layout, 'samples/layout-reset/index.svelte'],
 			b: [error]
 		},
 		{
 			type: 'page',
+			key: 'foo',
 			segments: [{ rest: false, dynamic: false, content: 'foo' }],
 			pattern: /^\/foo\/?$/,
 			params: [],
 			path: '/foo',
+			shadow: null,
 			a: [
 				layout,
 				'samples/layout-reset/foo/__layout.svelte',
@@ -523,6 +507,7 @@ test('resets layout', () => {
 		},
 		{
 			type: 'page',
+			key: 'foo/bar',
 			segments: [
 				{ rest: false, dynamic: false, content: 'foo' },
 				{ rest: false, dynamic: false, content: 'bar' }
@@ -530,6 +515,7 @@ test('resets layout', () => {
 			pattern: /^\/foo\/bar\/?$/,
 			params: [],
 			path: '/foo/bar',
+			shadow: null,
 			a: [
 				'samples/layout-reset/foo/bar/__layout.reset.svelte',
 				'samples/layout-reset/foo/bar/index.svelte'

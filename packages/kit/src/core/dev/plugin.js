@@ -108,6 +108,12 @@ export async function create_plugin(config, cwd) {
 									type: 'page',
 									pattern: route.pattern,
 									params: get_params(route.params),
+									shadow: route.shadow
+										? async () => {
+												const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
+												return await vite.ssrLoadModule(url);
+										  }
+										: null,
 									a: route.a.map((id) => manifest_data.components.indexOf(id)),
 									b: route.b.map((id) => manifest_data.components.indexOf(id))
 								};
