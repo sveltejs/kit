@@ -30,7 +30,7 @@ type HostProtocolSchemes = `${string}://` | '';
 type PortScheme = `:${number}` | '' | ':*';
 /** Can actually be any string, but typed more explicitly to
  *  restrict the combined optional types of Source from collapsing to just bing `string` */
-type HostNameScheme = `${string}.${string}` | `localhost`;
+type HostNameScheme = `${string}.${string}` | 'localhost';
 type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
 
 type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;

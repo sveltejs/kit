@@ -24,15 +24,15 @@ export interface AdapterEntry {
 	 * if it should be treated as a fallback for the current route. For example, `/foo/[c]`
 	 * is a fallback for `/foo/a-[b]`, and `/[...catchall]` is a fallback for all routes
 	 */
-	filter: (route: RouteDefinition) => boolean;
+	filter(route: RouteDefinition): boolean;
 
 	/**
 	 * A function that is invoked once the entry has been created. This is where you
 	 * should write the function to the filesystem and generate redirect manifests.
 	 */
-	complete: (entry: {
-		generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
-	}) => void;
+	complete(entry: {
+		generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
+	}): void;
 }
 
 export interface Builder {
@@ -48,7 +48,7 @@ export interface Builder {
 	 */
 	createEntries(fn: (route: RouteDefinition) => AdapterEntry): void;
 
-	generateManifest: (opts: { relativePath: string; format?: 'esm' | 'cjs' }) => string;
+	generateManifest(opts: { relativePath: string; format?: 'esm' | 'cjs' }): string;
 
 	getBuildDirectory(name: string): string;
 	getClientDirectory(): string;
@@ -81,7 +81,7 @@ export interface Builder {
 		from: string,
 		to: string,
 		opts?: {
-			filter?: (basename: string) => boolean;
+			filter?(basename: string): boolean;
 			replace?: Record<string, string>;
 		}
 	): string[];
@@ -158,10 +158,10 @@ export interface Config {
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;
 		};
-		routes?: (filepath: string) => boolean;
+		routes?(filepath: string): boolean;
 		serviceWorker?: {
 			register?: boolean;
-			files?: (filepath: string) => boolean;
+			files?(filepath: string): boolean;
 		};
 		trailingSlash?: TrailingSlash;
 		version?: {

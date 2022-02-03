@@ -13,6 +13,7 @@
 		"afterNavigate": true
 	},
 	"rules": {
-		"@typescript-eslint/no-empty-interface": "off"
+		"@typescript-eslint/no-empty-interface": "off",
+		"@typescript-eslint/method-signature-style": ["error", "method"]
 	}
 }

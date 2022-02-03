@@ -85,7 +85,7 @@ declare module '$app/navigation' {
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
 	 */
 	export function beforeNavigate(
-		fn: ({ from, to, cancel }: { from: URL; to: URL | null; cancel: () => void }) => void
+		fn: ({ from, to, cancel }: { from: URL; to: URL | null; cancel(): void }) => void
 	): any;
 
 	/**
@@ -116,7 +116,7 @@ declare module '$app/stores' {
 	export function getStores(): {
 		navigating: typeof navigating;
 		page: typeof page;
-		session: Writable<App.Session>;
+		session: typeof session;
 		updated: typeof updated;
 	};
 	/**
@@ -144,7 +144,7 @@ declare module '$app/stores' {
 	 * A writable store indicating if the site was updated since the store was created.
 	 * It can be written to when custom logic is required to detect updates.
 	 */
-	export const updated: Readable<boolean> & { check: () => boolean };
+	export const updated: Readable<boolean> & { check(): boolean };
 }
 
 declare module '$service-worker' {
