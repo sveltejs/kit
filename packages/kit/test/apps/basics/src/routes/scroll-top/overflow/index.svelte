@@ -1,5 +1,5 @@
 <div>Spacing</div>
-<a id="other" href="/scroll-top-overflow/other">Other</a>
+<a id="other" href="/scroll-top/overflow/other">Other</a>
 
 <style>
 	:global(body) {

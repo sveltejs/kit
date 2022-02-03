@@ -235,10 +235,16 @@ test.describe('Scrolling', () => {
 		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
 	});
 
-	test('scroll to top works with overflowing root container', async ({ page, clicknav }) => {
-		await page.goto('/scroll-top-overflow');
+	test.only('scroll to top works with overflowing root container', async ({ page, clicknav }) => {
+		await page.goto('/scroll-top/overflow');
 		await clicknav('#other');
 		expect(await page.$eval('#overflow-container', (el) => el.scrollTop)).toBe(0);
+	});
+
+	test.only('scroll to top works with overflowing body', async ({ page, clicknav }) => {
+		await page.goto('/scroll-top/body');
+		await clicknav('#other');
+		expect(await page.evaluate(() => document.body.scrollTop)).toBe(0);
 	});
 });
 

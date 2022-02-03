@@ -1,14 +1,8 @@
 OTHER
 <div>Spacing</div>
-<a href="/scroll-top-overflow">/</a>
+<a href="/scroll-top/body">/</a>
 
 <style>
-	:global(body) {
-		background-color: tan;
-		display: flex;
-		flex-direction: column;
-	}
-
 	a {
 		display: block;
 		margin: 20px;

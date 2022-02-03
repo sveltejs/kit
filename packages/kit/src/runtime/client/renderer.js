@@ -384,6 +384,7 @@ export class Renderer {
 					deep_linked.scrollIntoView();
 				} else {
 					scrollTo(0, 0);
+					if (document.body.scrollTop > 0) document.body.scrollTo(0, 0);
 					// In some cases it is needed scroll first root element of target that
 					// is not scrolled to the top
 					for (const target_child of this.target.childNodes) {
