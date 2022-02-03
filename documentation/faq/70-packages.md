@@ -1,10 +1,11 @@
 ---
-question: How do I fix the error I'm getting trying to include a package?
+title: How do I fix the error I'm getting trying to include a package?
 ---
 
 Vite's SSR support has become fairly stable since Vite 2.7. Most issues related to including a library are due to incorrect packaging.
 
 Libraries work best with Vite when they distribute an ESM version and you may wish to suggest this to library authors. Here are a few things to keep in mind when checking if a library is packaged correctly:
+
 - `exports` takes precedence over the other entry point fields such as `main` and `module`. Adding an `exports` field may not be backwards-compatible as it prevents deep imports.
 - ESM files should end with `.mjs` unless `"type": "module"` is set in which any case CommonJS files should end with `.cjs`.
 - `main` should be defined if `exports` is not. It should be either a CommonJS or ESM file and adhere to the previous bullet. If a `module` field is defined, it should refer to an ESM file.

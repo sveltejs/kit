@@ -1,5 +1,5 @@
 ---
-question: How do I use X with SvelteKit?
+title: How do I use X with SvelteKit?
 ---
 
 Make sure you've read the [documentation section on integrations](/docs#additional-resources-integrations). If you're still having trouble, solutions to common issues are listed below.
@@ -14,20 +14,20 @@ Put the code to query your database in [endpoints](/docs#routing-endpoints) - do
 
 ```js
 const myPlugin = {
-  name: 'log-request-middleware',
-  configureServer(server) {
-    server.middlewares.use((req, res, next) => {
-      console.log(`Got request ${req.url}`);
-      next();
-    })
-  }
-}
+	name: 'log-request-middleware',
+	configureServer(server) {
+		server.middlewares.use((req, res, next) => {
+			console.log(`Got request ${req.url}`);
+			next();
+		});
+	}
+};
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		vite: {
-			plugins: [ myPlugin ]
+			plugins: [myPlugin]
 		}
 	}
 };
