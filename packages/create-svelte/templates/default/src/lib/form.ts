@@ -38,7 +38,10 @@ export function enhance(
 
 			if (res.ok) {
 				if (result) result(res, form);
-				invalidate(form.action);
+
+				const url = new URL(form.action);
+				url.search = url.hash = '';
+				invalidate(url.href);
 			} else if (error) {
 				error(res, null, form);
 			} else {

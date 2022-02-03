@@ -237,6 +237,10 @@ export class Renderer {
 					props
 				});
 
+				if (props) {
+					node.uses.dependencies.add(url.href);
+				}
+
 				branch.push(node);
 
 				if (node && node.loaded) {
@@ -593,7 +597,7 @@ export class Renderer {
 	 * }} options
 	 * @returns
 	 */
-	async _load_node({ status, error, module, url, params, stuff, props = {} }) {
+	async _load_node({ status, error, module, url, params, stuff, props }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -602,11 +606,16 @@ export class Renderer {
 				url: false,
 				session: false,
 				stuff: false,
-				dependencies: []
+				dependencies: new Set()
 			},
 			loaded: null,
 			stuff
 		};
+
+		if (props) {
+			// shadow endpoint props means we need to mark this URL as a dependency of itself
+			node.uses.dependencies.add(url.href);
+		}
 
 		/** @type {Record<string, string>} */
 		const uses_params = {};
@@ -628,7 +637,7 @@ export class Renderer {
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				params: uses_params,
-				props,
+				props: props || {},
 				get url() {
 					node.uses.url = true;
 					return url;
@@ -644,7 +653,7 @@ export class Renderer {
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
 					const { href } = new URL(requested, url);
-					node.uses.dependencies.push(href);
+					node.uses.dependencies.add(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				}
@@ -736,7 +745,7 @@ export class Renderer {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					previous.uses.dependencies.some((dep) => this.invalid.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {

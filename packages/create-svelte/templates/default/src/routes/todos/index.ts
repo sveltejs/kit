@@ -40,7 +40,7 @@ export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
 	return api(request, `todos/${locals.userid}/${form.get('uid')}`, {
-		text: form.get('text'),
+		text: form.has('text') ? form.get('text') : undefined,
 		done: form.has('done') ? !!form.get('done') : undefined
 	});
 };
