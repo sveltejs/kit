@@ -12,15 +12,6 @@
 	};
 
 	export let todos: Todo[];
-
-	async function patch(res: Response) {
-		const todo = await res.json();
-
-		todos = todos.map((t) => {
-			if (t.uid === todo.uid) return todo;
-			return t;
-		});
-	}
 </script>
 
 <svelte:head>
@@ -35,10 +26,7 @@
 		action="/todos"
 		method="post"
 		use:enhance={{
-			result: async (res, form) => {
-				const created = await res.json();
-				todos = [...todos, created];
-
+			result: async ({ form }) => {
 				form.reset();
 			}
 		}}
@@ -57,7 +45,7 @@
 				action="/todos?_method=PATCH"
 				method="post"
 				use:enhance={{
-					pending: (data) => {
+					pending: ({ data }) => {
 						todo.done = !!data.get('done');
 					}
 				}}
