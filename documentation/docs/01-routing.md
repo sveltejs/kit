@@ -197,6 +197,8 @@ export async function post({ request }) {
 </form>
 ```
 
+If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML.
+
 #### Body parsing
 
 The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
