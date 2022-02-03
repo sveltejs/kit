@@ -7,7 +7,7 @@ export function to_headers(object) {
 			const value = object[key];
 			if (!value) continue;
 
-			if (typeof value === 'string') {
+			if (typeof value === 'string' || typeof value === 'number') {
 				headers.set(key, value);
 			} else {
 				value.forEach((value) => {
