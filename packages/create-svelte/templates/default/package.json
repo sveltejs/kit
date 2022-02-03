@@ -3,10 +3,10 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "svelte-kit dev",
-		"build": "svelte-kit build --verbose",
-		"preview": "svelte-kit preview",
-		"start": "svelte-kit start"
+		"dev": "node ../../../kit/src/cli.js dev",
+		"build": "node ../../../kit/src/cli.js build --verbose",
+		"package": "node ../../../kit/src/cli.js package",
+		"preview": "node ../../../kit/src/cli.js preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",

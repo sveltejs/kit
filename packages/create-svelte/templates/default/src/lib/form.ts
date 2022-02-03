@@ -1,3 +1,5 @@
+import { invalidate } from '$app/navigation';
+
 // this action (https://svelte.dev/tutorial/actions) allows us to
 // progressively enhance a <form> that already works without JS
 export function enhance(
@@ -9,8 +11,8 @@ export function enhance(
 	}: {
 		pending?: (data: FormData, form: HTMLFormElement) => void;
 		error?: (res: Response | null, error: Error | null, form: HTMLFormElement) => void;
-		result: (res: Response, form: HTMLFormElement) => void;
-	}
+		result?: (res: Response, form: HTMLFormElement) => void;
+	} = {}
 ): { destroy: () => void } {
 	let current_token: unknown;
 
@@ -35,7 +37,8 @@ export function enhance(
 			if (token !== current_token) return;
 
 			if (res.ok) {
-				result(res, form);
+				if (result) result(res, form);
+				invalidate(form.action);
 			} else if (error) {
 				error(res, null, form);
 			} else {

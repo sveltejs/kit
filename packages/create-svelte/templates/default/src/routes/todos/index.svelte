@@ -1,28 +1,5 @@
-<script context="module" lang="ts">
-	import { enhance } from '$lib/form';
-	import type { Load } from '@sveltejs/kit';
-
-	// see https://kit.svelte.dev/docs#loading
-	export const load: Load = async ({ fetch }) => {
-		const res = await fetch('/todos.json');
-
-		if (res.ok) {
-			const todos = await res.json();
-
-			return {
-				props: { todos }
-			};
-		}
-
-		const { message } = await res.json();
-
-		return {
-			error: new Error(message)
-		};
-	};
-</script>
-
 <script lang="ts">
+	import { enhance } from '$lib/form';
 	import { scale } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
@@ -55,7 +32,7 @@
 
 	<form
 		class="new"
-		action="/todos.json"
+		action="/todos"
 		method="post"
 		use:enhance={{
 			result: async (res, form) => {
@@ -77,41 +54,33 @@
 			animate:flip={{ duration: 200 }}
 		>
 			<form
-				action="/todos/{todo.uid}.json?_method=PATCH"
+				action="/todos?_method=PATCH"
 				method="post"
 				use:enhance={{
 					pending: (data) => {
 						todo.done = !!data.get('done');
-					},
-					result: patch
+					}
 				}}
 			>
+				<input type="hidden" name="uid" value={todo.uid} />
 				<input type="hidden" name="done" value={todo.done ? '' : 'true'} />
 				<button class="toggle" aria-label="Mark todo as {todo.done ? 'not done' : 'done'}" />
 			</form>
 
-			<form
-				class="text"
-				action="/todos/{todo.uid}.json?_method=PATCH"
-				method="post"
-				use:enhance={{
-					result: patch
-				}}
-			>
+			<form class="text" action="/todos?_method=PATCH" method="post" use:enhance>
+				<input type="hidden" name="uid" value={todo.uid} />
 				<input aria-label="Edit todo" type="text" name="text" value={todo.text} />
 				<button class="save" aria-label="Save todo" />
 			</form>
 
 			<form
-				action="/todos/{todo.uid}.json?_method=DELETE"
+				action="/todos?_method=DELETE"
 				method="post"
 				use:enhance={{
-					pending: () => (todo.pending_delete = true),
-					result: () => {
-						todos = todos.filter((t) => t.uid !== todo.uid);
-					}
+					pending: () => (todo.pending_delete = true)
 				}}
 			>
+				<input type="hidden" name="uid" value={todo.uid} />
 				<button class="delete" aria-label="Delete todo" disabled={todo.pending_delete} />
 			</form>
 		</div>
