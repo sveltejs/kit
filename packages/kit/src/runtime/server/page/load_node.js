@@ -379,8 +379,6 @@ async function load_shadow_data(route, event, prerender) {
 		const handler = mod[method];
 
 		if (!handler) {
-			// TODO figure out what to do here. is 405 Method Not Allowed
-			// appropriate, or do we fall through?
 			return {
 				status: 405,
 				error: new Error(`${method} method not allowed`)
