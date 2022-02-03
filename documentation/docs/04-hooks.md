@@ -15,12 +15,8 @@ This function runs every time SvelteKit receives a request — whether that happ
 If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
 
 ```ts
-// Declaration types for Hooks
-// * declarations that are not exported are for internal use
-
-// type of string[] is only for set-cookie
-// everything else must be a type of string
-type ResponseHeaders = Record<string, string | string[]>;
+// Type declarations for `handle` (declarations marked with
+// an `export` keyword can be imported from `@sveltejs/kit`)
 
 export interface RequestEvent {
 	request: Request;
@@ -86,7 +82,6 @@ During development, if an error occurs because of a syntax error in your Svelte 
 If unimplemented, SvelteKit will log the error with default formatting.
 
 ```ts
-// Declaration types for handleError hook
 export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
@@ -109,7 +104,6 @@ This function takes the `event` object and returns a `session` object that is [a
 If unimplemented, session is `{}`.
 
 ```ts
-// Declaration types for getSession hook
 export interface GetSession {
 	(event: RequestEvent): MaybePromise<App.Session>;
 }
@@ -142,8 +136,6 @@ This function allows you to modify (or replace) a `fetch` request for an externa
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
 
 ```ts
-// Declaration types for externalFetch hook
-
 export interface ExternalFetch {
 	(req: Request): Promise<Response>;
 }
