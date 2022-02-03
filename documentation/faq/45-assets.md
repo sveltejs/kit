@@ -1,5 +1,5 @@
 ---
-question: How do I hash asset file names for caching?
+title: How do I hash asset file names for caching?
 ---
 
 You can have Vite process your assets by importing them as shown below:

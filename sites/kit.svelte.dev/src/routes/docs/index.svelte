@@ -1,13 +1,5 @@
 <script context="module">
-	import { API_BASE } from '../../_env';
-
-	export async function load({ fetch }) {
-		const sections = await fetch(`${API_BASE}/docs/kit/docs?content`).then(r => r.json());
-		return {
-			props: { sections },
-			maxage: 60
-		};
-	}
+	export const prerender = true;
 </script>
 
 <script>
@@ -17,15 +9,15 @@
 
 	let path;
 
-	$: contents = sections.map(section => ({
+	$: contents = sections.map((section) => ({
 		path: `/docs#${section.slug}`,
 		title: section.title,
-		sections: section.sections.map(subsection => ({
+		sections: section.sections.map((subsection) => ({
 			path: `/docs#${subsection.slug}`,
 			title: subsection.title,
-			sections: subsection.sections.map(subsection => ({
+			sections: subsection.sections.map((subsection) => ({
 				path: `/docs#${subsection.slug}`,
-				title: subsection.title,
+				title: subsection.title
 			}))
 		}))
 	}));
