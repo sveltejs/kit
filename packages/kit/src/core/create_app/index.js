@@ -3,12 +3,15 @@ import path from 'path';
 import { s } from '../../utils/misc.js';
 import { mkdirp } from '../../utils/filesystem.js';
 
-/** @type {Map<string, string>} */
+/**
+ * Maps file contents to file path
+ *  @type {Map<string, string>} */
 const previous_contents = new Map();
 
 /**
- * @param {string} file
- * @param {string} code
+ * Checks `previous_contents` map for `file` key and performs strict inequality comparison of `code` against the value, then writes `code` to `file` if there are changes.
+ * @param {string} file - the path of the file to be written
+ * @param {string} code - code to be checked against `previous_contents` and written if unequal
  */
 export function write_if_changed(file, code) {
 	if (code !== previous_contents.get(file)) {
@@ -20,12 +23,13 @@ export function write_if_changed(file, code) {
 
 /** @typedef {import('types/internal').ManifestData} ManifestData */
 
+
 /**
- * @param {{
- *   manifest_data: ManifestData;
- *   output: string;
- *   cwd: string;
- * }} options
+ * Updates or creates two files - manifest.js and root.svelte - in the specified output directory.
+ * @param {Object} options
+ * @param {ManifestData} options.manifest_data - details the apps assets, user defined components, routes, and __layout and error components
+ * @param {string} options.output - directory files will be written in
+ * @param {string} options.cwd - the current working directory. Defaults to `process.cwd()`
  */
 export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 	const base = path.relative(cwd, output);
@@ -35,15 +39,18 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 }
 
 /**
+ * Returns string without leading tabs and whitespace.
  * @param {string} str
+ * 
  */
 function trim(str) {
 	return str.replace(/^\t\t/gm, '').trim();
 }
 
 /**
- * @param {ManifestData} manifest_data
- * @param {string} base
+ * Generates code which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and an array of components ([layout, component, error])
+ * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and __layout and error components
+ * @param {string} base - the base path to prepend to imports 
  */
 function generate_client_manifest(manifest_data, base) {
 	/** @type {Record<string, number>} */
