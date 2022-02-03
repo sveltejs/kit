@@ -1,7 +1,7 @@
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import { UserConfig as ViteConfig } from 'vite';
 import { CspDirectives } from './csp';
-import { RecursiveRequired } from './helper';
+import { MaybePromise, RecursiveRequired } from './helper';
 import { HttpMethod, Logger, RouteSegment, TrailingSlash } from './internal';
 
 export interface RouteDefinition {
@@ -163,9 +163,12 @@ export interface Config {
 			register?: boolean;
 			files?: (filepath: string) => boolean;
 		};
-		target?: string;
 		trailingSlash?: TrailingSlash;
-		vite?: ViteConfig | (() => ViteConfig);
+		version?: {
+			name?: string;
+			pollInterval?: number;
+		};
+		vite?: ViteConfig | (() => MaybePromise<ViteConfig>);
 	};
 	preprocess?: any;
 }

@@ -5,8 +5,8 @@
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build --verbose",
-		"preview": "svelte-kit preview",
-		"start": "svelte-kit start"
+		"package": "svelte-kit package",
+		"preview": "svelte-kit preview"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",

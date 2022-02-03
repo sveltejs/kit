@@ -1,7 +1,7 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import { ValidatedConfig } from './config';
 import { InternalApp, SSRManifest } from './app';
-import { Fallthrough, RequestHandler } from './endpoint';
+import { Fallthrough, RequestHandler, ShadowRequestHandler } from './endpoint';
 import { Either } from './helper';
 import { ExternalFetch, GetSession, Handle, HandleError, RequestEvent } from './hooks';
 import { Load } from './page';
@@ -74,6 +74,11 @@ export interface SSRPage {
 	type: 'page';
 	pattern: RegExp;
 	params: GetParams;
+	shadow:
+		| null
+		| (() => Promise<{
+				[method: string]: ShadowRequestHandler;
+		  }>);
 	/**
 	 * plan a is to render 1 or more layout components followed by a leaf component.
 	 */
@@ -96,7 +101,8 @@ export interface SSREndpoint {
 
 export type SSRRoute = SSREndpoint | SSRPage;
 
-export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?];
+type HasShadow = 1;
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, HasShadow?];
 
 export type SSRNodeLoader = () => Promise<SSRNode>;
 
@@ -119,7 +125,7 @@ export interface SSRNode {
 	styles?: Record<string, string>;
 }
 
-export interface SSRRenderOptions {
+export interface SSROptions {
 	amp: boolean;
 	csp: ValidatedConfig['kit']['csp'];
 	dev: boolean;
@@ -140,7 +146,6 @@ export interface SSRRenderOptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-	target: string;
 	template({
 		head,
 		body,
@@ -156,7 +161,7 @@ export interface SSRRenderOptions {
 	trailing_slash: TrailingSlash;
 }
 
-export interface SSRRenderState {
+export interface SSRState {
 	fetched?: string;
 	initiator?: SSRPage | null;
 	platform?: any;
@@ -180,6 +185,8 @@ export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export interface PageData {
 	type: 'page';
+	key: string;
+	shadow: string | null;
 	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
@@ -190,6 +197,7 @@ export interface PageData {
 
 export interface EndpointData {
 	type: 'endpoint';
+	key: string;
 	segments: RouteSegment[];
 	pattern: RegExp;
 	params: string[];
@@ -248,5 +256,5 @@ export interface MethodOverride {
 }
 
 export interface Respond {
-	(request: Request, options: SSRRenderOptions, state?: SSRRenderState): Promise<Response>;
+	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
 }

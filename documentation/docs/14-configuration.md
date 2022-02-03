@@ -66,8 +66,11 @@ const config = {
 			register: true,
 			files: (filepath) => !/\.DS_STORE/.test(filepath)
 		},
-		target: null,
 		trailingSlash: 'never',
+		version: {
+			name: Date.now().toString(),
+			pollInterval: 0
+		},
 		vite: () => ({})
 	},
 
@@ -220,7 +223,6 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
     export default {
     	kit: {
     		adapter: adapter(),
-    		target: '#svelte',
     		prerender: {
     			onError: handleError
     		}
@@ -239,10 +241,6 @@ An object containing zero or more of the following values:
 - `register` - if set to `false`, will disable automatic service worker registration
 - `files` - a function with the type of `(filepath: string) => boolean`. When `true`, the given file will be available in `$service-worker.files`, otherwise it will be excluded.
 
-### target
-
-Specifies an element to mount the app to. It must be a DOM selector that identifies an element that exists in your template file. If unspecified, the app will be mounted to `document.body`.
-
 ### trailingSlash
 
 Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
@@ -252,6 +250,17 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
+
+### version
+
+An object containing zero or more of the following values:
+
+- `name` - current app version string
+- `pollInterval` - interval in milliseconds to poll for version changes
+
+Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
+
+If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](#modules-$app-stores) store to `true` when it detects one.
 
 ### vite
 

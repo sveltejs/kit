@@ -2,6 +2,8 @@
 
 [Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
 
+If you're using [adapter-auto](../adapter-auto), you don't need to install this — it's already included.
+
 _**Comparisons**_
 
 - `adapter-cloudflare` – supports all SvelteKit features; builds for
@@ -30,7 +32,6 @@ import adapter from '@sveltejs/adapter-cloudflare';
 
 export default {
 	kit: {
-		target: '#svelte',
 		adapter: adapter()
 	}
 };
@@ -54,16 +55,25 @@ When configuring your project settings, you must use the following settings:
 
 The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property, meaning you can access it in hooks and endpoints:
 
-```ts
-interface Locals {}
+```diff
+// src/app.d.ts
+declare namespace App {
+	interface Locals {}
 
-interface Platform {
-	env: {
-		COUNTER: DurableObjectNamespace;
-	};
++	interface Platform {
++		env: {
++			COUNTER: DurableObjectNamespace;
++		};
++	}
+
+	interface Session {}
+
+	interface Stuff {}
 }
+```
 
-export async function post<Locals, Platform>({ request, platform }) {
+```js
+export async function post({ request, platform }) {
 	const counter = platform.env.COUNTER.idFromName('A');
 }
 ```

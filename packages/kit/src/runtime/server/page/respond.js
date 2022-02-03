@@ -6,15 +6,15 @@ import { coalesce_to_error } from '../../../utils/error.js';
 /**
  * @typedef {import('./types.js').Loaded} Loaded
  * @typedef {import('types/internal').SSRNode} SSRNode
- * @typedef {import('types/internal').SSRRenderOptions} SSRRenderOptions
- * @typedef {import('types/internal').SSRRenderState} SSRRenderState
+ * @typedef {import('types/internal').SSROptions} SSROptions
+ * @typedef {import('types/internal').SSRState} SSRState
  */
 
 /**
  * @param {{
  *   event: import('types/hooks').RequestEvent;
- *   options: SSRRenderOptions;
- *   state: SSRRenderState;
+ *   options: SSROptions;
+ *   state: SSRState;
  *   $session: any;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
@@ -103,7 +103,8 @@ export async function respond(opts) {
 						url: event.url,
 						node,
 						stuff,
-						is_error: false
+						is_error: false,
+						is_leaf: i === nodes.length - 1
 					});
 
 					if (!loaded) return;
@@ -158,6 +159,7 @@ export async function respond(opts) {
 										node: error_node,
 										stuff: node_loaded.stuff,
 										is_error: true,
+										is_leaf: false,
 										status,
 										error
 									})
@@ -239,7 +241,7 @@ export async function respond(opts) {
 
 /**
  * @param {import('types/internal').SSRComponent} leaf
- * @param {SSRRenderOptions} options
+ * @param {SSROptions} options
  */
 function get_page_config(leaf, options) {
 	// TODO remove for 1.0

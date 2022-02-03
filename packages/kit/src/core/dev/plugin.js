@@ -3,7 +3,6 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { respond } from '../../runtime/server/index.js';
 import { __fetch_polyfill } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
@@ -27,6 +26,11 @@ export async function create_plugin(config, cwd) {
 		process.env.VITE_SVELTEKIT_AMP = 'true';
 		amp = (await import('./amp_hook.js')).handle;
 	}
+
+	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
+
+	/** @type {import('types/internal').Respond} */
+	const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 	return {
 		name: 'vite-plugin-svelte-kit',
@@ -104,6 +108,12 @@ export async function create_plugin(config, cwd) {
 									type: 'page',
 									pattern: route.pattern,
 									params: get_params(route.params),
+									shadow: route.shadow
+										? async () => {
+												const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
+												return await vite.ssrLoadModule(url);
+										  }
+										: null,
 									a: route.a.map((id) => manifest_data.components.indexOf(id)),
 									b: route.b.map((id) => manifest_data.components.indexOf(id))
 								};
@@ -171,6 +181,7 @@ export async function create_plugin(config, cwd) {
 
 						/** @type {import('types/internal').Hooks} */
 						const hooks = {
+							// @ts-expect-error this picks up types that belong to the tests
 							getSession: user_hooks.getSession || (() => ({})),
 							handle: amp ? sequence(amp, handle) : handle,
 							handleError:
@@ -257,7 +268,6 @@ export async function create_plugin(config, cwd) {
 							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 							root,
 							router: config.kit.browser.router,
-							target: config.kit.target,
 							template: ({ head, body, assets, nonce }) => {
 								return (
 									template

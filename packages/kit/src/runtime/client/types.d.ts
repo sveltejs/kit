@@ -26,7 +26,7 @@ export type BranchNode = {
 		url: boolean; // TODO make more granular?
 		session: boolean;
 		stuff: boolean;
-		dependencies: string[];
+		dependencies: Set<string>;
 	};
 	stuff: Record<string, any>;
 };

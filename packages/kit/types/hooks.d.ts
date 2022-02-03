@@ -2,35 +2,31 @@ import { MaybePromise } from './helper';
 
 export type StrictBody = string | Uint8Array;
 
-export interface RequestEvent<Locals = Record<string, any>, Platform = Record<string, any>> {
+export interface RequestEvent {
 	request: Request;
 	url: URL;
 	params: Record<string, string>;
-	locals: Locals;
-	platform: Readonly<Platform>;
+	locals: App.Locals;
+	platform: Readonly<App.Platform>;
 }
 
-export interface GetSession<
-	Locals = Record<string, any>,
-	Platform = Record<string, any>,
-	Session = any
-> {
-	(event: RequestEvent<Locals, Platform>): MaybePromise<Session>;
+export interface GetSession {
+	(event: RequestEvent): MaybePromise<App.Session>;
 }
 
 export interface ResolveOpts {
 	ssr?: boolean;
 }
 
-export interface Handle<Locals = Record<string, any>, Platform = Record<string, any>> {
+export interface Handle {
 	(input: {
-		event: RequestEvent<Locals, Platform>;
-		resolve(event: RequestEvent<Locals, Platform>, opts?: ResolveOpts): MaybePromise<Response>;
+		event: RequestEvent;
+		resolve(event: RequestEvent, opts?: ResolveOpts): MaybePromise<Response>;
 	}): MaybePromise<Response>;
 }
 
-export interface HandleError<Locals = Record<string, any>> {
-	(input: { error: Error & { frame?: string }; event: RequestEvent<Locals> }): void;
+export interface HandleError {
+	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
 export interface ExternalFetch {

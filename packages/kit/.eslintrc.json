@@ -11,5 +11,8 @@
 		"prefetchRoutes": true,
 		"beforeNavigate": true,
 		"afterNavigate": true
+	},
+	"rules": {
+		"@typescript-eslint/no-empty-interface": "off"
 	}
 }

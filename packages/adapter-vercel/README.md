@@ -1,6 +1,8 @@
 # adapter-vercel
 
-Adapter for Svelte apps that creates a Vercel app, using a function for dynamic server rendering.
+A SvelteKit adapter that creates a Vercel app.
+
+If you're using [adapter-auto](../adapter-auto), you don't need to install this unless you need to specify Vercel-specific options, since it's already included.
 
 ## Usage
 

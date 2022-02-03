@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
+import { base } from '../paths.js';
 
 /**
  * @typedef {import('types/internal').CSRComponent} CSRComponent
@@ -37,6 +38,56 @@ function notifiable_store(value) {
 	}
 
 	return { notify, set, subscribe };
+}
+
+function create_updated_store() {
+	const { set, subscribe } = writable(false);
+
+	const interval = +(
+		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
+	);
+	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
+
+	/** @type {NodeJS.Timeout} */
+	let timeout;
+
+	async function check() {
+		if (import.meta.env.DEV || import.meta.env.SSR) return false;
+
+		clearTimeout(timeout);
+
+		if (interval) timeout = setTimeout(check, interval);
+
+		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
+
+		const res = await fetch(`${base}/${file}`, {
+			headers: {
+				pragma: 'no-cache',
+				'cache-control': 'no-cache'
+			}
+		});
+
+		if (res.ok) {
+			const { version } = await res.json();
+			const updated = version !== initial;
+
+			if (updated) {
+				set(true);
+				clearTimeout(timeout);
+			}
+
+			return updated;
+		} else {
+			throw new Error(`Version check failed: ${res.status}`);
+		}
+	}
+
+	if (interval) timeout = setTimeout(check, interval);
+
+	return {
+		subscribe,
+		check
+	};
 }
 
 /**
@@ -108,7 +159,8 @@ export class Renderer {
 			url: notifiable_store({}),
 			page: notifiable_store({}),
 			navigating: writable(/** @type {Navigating | null} */ (null)),
-			session: writable(session)
+			session: writable(session),
+			updated: create_updated_store()
 		};
 
 		this.$session = null;
@@ -166,14 +218,28 @@ export class Renderer {
 			for (let i = 0; i < nodes.length; i += 1) {
 				const is_leaf = i === nodes.length - 1;
 
+				let props;
+
+				if (is_leaf) {
+					const serialized = document.querySelector('[data-type="svelte-props"]');
+					if (serialized) {
+						props = JSON.parse(/** @type {string} */ (serialized.textContent));
+					}
+				}
+
 				const node = await this._load_node({
 					module: await nodes[i],
 					url,
 					params,
 					stuff,
 					status: is_leaf ? status : undefined,
-					error: is_leaf ? error : undefined
+					error: is_leaf ? error : undefined,
+					props
 				});
+
+				if (props) {
+					node.uses.dependencies.add(url.href);
+				}
 
 				branch.push(node);
 
@@ -274,6 +340,12 @@ export class Renderer {
 					location.href = new URL(navigation_result.redirect, location.href).href;
 				}
 
+				return;
+			}
+		} else if (navigation_result.props?.page?.status >= 400) {
+			const updated = await this.stores.updated.check();
+			if (updated) {
+				location.href = info.url.href;
 				return;
 			}
 		}
@@ -530,10 +602,11 @@ export class Renderer {
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   stuff: Record<string, any>;
+	 *   props?: Record<string, any>;
 	 * }} options
 	 * @returns
 	 */
-	async _load_node({ status, error, module, url, params, stuff }) {
+	async _load_node({ status, error, module, url, params, stuff, props }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -542,11 +615,16 @@ export class Renderer {
 				url: false,
 				session: false,
 				stuff: false,
-				dependencies: []
+				dependencies: new Set()
 			},
 			loaded: null,
 			stuff
 		};
+
+		if (props) {
+			// shadow endpoint props means we need to mark this URL as a dependency of itself
+			node.uses.dependencies.add(url.href);
+		}
 
 		/** @type {Record<string, string>} */
 		const uses_params = {};
@@ -568,6 +646,7 @@ export class Renderer {
 			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
 			const load_input = {
 				params: uses_params,
+				props: props || {},
 				get url() {
 					node.uses.url = true;
 					return url;
@@ -583,7 +662,7 @@ export class Renderer {
 				fetch(resource, info) {
 					const requested = typeof resource === 'string' ? resource : resource.url;
 					const { href } = new URL(requested, url);
-					node.uses.dependencies.push(href);
+					node.uses.dependencies.add(href);
 
 					return started ? fetch(resource, info) : initial_fetch(resource, info);
 				}
@@ -611,6 +690,8 @@ export class Renderer {
 
 			node.loaded = normalize(loaded);
 			if (node.loaded.stuff) node.stuff = node.loaded.stuff;
+		} else if (props) {
+			node.loaded = normalize({ props });
 		}
 
 		return node;
@@ -629,7 +710,7 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params] = route;
+		const [pattern, a, b, get_params, has_shadow] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
@@ -673,16 +754,47 @@ export class Renderer {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					previous.uses.dependencies.some((dep) => this.invalid.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
-					node = await this._load_node({
-						module,
-						url,
-						params,
-						stuff
-					});
+					/** @type {Record<string, any>} */
+					let props = {};
+
+					if (has_shadow && i === a.length - 1) {
+						const res = await fetch(`${url.pathname}/__data.json`, {
+							headers: {
+								'x-sveltekit-noredirect': 'true'
+							}
+						});
+
+						if (res.ok) {
+							const redirect = res.headers.get('x-sveltekit-location');
+
+							if (redirect) {
+								return {
+									redirect,
+									props: {},
+									state: this.current
+								};
+							}
+
+							props = await res.json();
+						} else {
+							status = res.status;
+							error = new Error('Failed to load data');
+						}
+					}
+
+					if (!error) {
+						node = await this._load_node({
+							module,
+							url,
+							params,
+							props,
+							stuff
+						});
+					}
 
 					if (node && node.loaded) {
 						if (node.loaded.fallthrough) {

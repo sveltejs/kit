@@ -1,6 +1,8 @@
 # adapter-netlify
 
-Adapter for Svelte apps that creates a Netlify app, using serverless functions for dynamically generating pages.
+A SvelteKit adapter that creates a Netlify app.
+
+If you're using [adapter-auto](../adapter-auto), you don't need to install this unless you need to specify Netlify-specific options, since it's already included.
 
 ## Installation
 
@@ -21,8 +23,7 @@ export default {
 			// if true, will split your app into multiple functions
 			// instead of creating a single one for the entire app
 			split: false
-		}),
-		target: '#svelte'
+		})
 	}
 };
 ```

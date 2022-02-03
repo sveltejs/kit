@@ -1,5 +1,5 @@
 import devalue from 'devalue';
-import { writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr } from '../../../utils/escape.js';
@@ -9,11 +9,16 @@ import { Csp, csp_ready } from './csp.js';
 
 // TODO rename this function/module
 
+const updated = {
+	...readable(false),
+	check: () => false
+};
+
 /**
  * @param {{
  *   branch: Array<import('./types').Loaded>;
- *   options: import('types/internal').SSRRenderOptions;
- *   state: import('types/internal').SSRRenderState;
+ *   options: import('types/internal').SSROptions;
+ *   state: import('types/internal').SSRState;
  *   $session: any;
  *   page_config: { hydrate: boolean, router: boolean };
  *   status: number;
@@ -55,6 +60,8 @@ export async function render_response({
 	/** @type {Array<{ url: string, body: string, json: string }>} */
 	const serialized_data = [];
 
+	let shadow_props;
+
 	let rendered;
 
 	let is_private = false;
@@ -65,13 +72,14 @@ export async function render_response({
 	}
 
 	if (ssr) {
-		branch.forEach(({ node, loaded, fetched, uses_credentials }) => {
+		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => stylesheets.add(url));
 			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
 			if (node.styles) Object.entries(node.styles).forEach(([k, v]) => styles.set(k, v));
 
 			// TODO probably better if `fetched` wasn't populated unless `hydrate`
 			if (fetched && page_config.hydrate) serialized_data.push(...fetched);
+			if (props) shadow_props = props;
 
 			if (uses_credentials) is_private = true;
 
@@ -85,7 +93,8 @@ export async function render_response({
 			stores: {
 				page: writable(null),
 				navigating: writable(null),
-				session
+				session,
+				updated
 			},
 			page: {
 				url: state.prerender ? create_prerendering_url_proxy(url) : url,
@@ -146,11 +155,13 @@ export async function render_response({
 		needs_nonce: options.template_contains_nonce
 	});
 
+	const target = hash(body);
+
 	// prettier-ignore
 	const init_app = `
 		import { start } from ${s(options.prefix + options.manifest._.entry.file)};
 		start({
-			target: ${options.target ? `document.querySelector(${s(options.target)})` : 'document.body'},
+			target: document.querySelector('[data-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			session: ${try_serialize($session, (error) => {
 				throw new Error(`Failed to serialize session data: ${error.message}`);
@@ -228,7 +239,7 @@ export async function render_response({
 				.map((dep) => `\n\t<link rel="modulepreload" href="${options.prefix + dep}">`)
 				.join('');
 
-			const attributes = ['type="module"'];
+			const attributes = ['type="module"', `data-hydrate="${target}"`];
 
 			csp.add_script(init_app);
 
@@ -236,7 +247,7 @@ export async function render_response({
 				attributes.push(`nonce="${csp.nonce}"`);
 			}
 
-			head += `<script ${attributes.join(' ')}>${init_app}</script>`;
+			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
 			// prettier-ignore
 			body += serialized_data
@@ -246,7 +257,12 @@ export async function render_response({
 
 					return `<script ${attributes}>${json}</script>`;
 				})
-				.join('\n\n\t');
+				.join('\n\t');
+
+			if (shadow_props) {
+				// prettier-ignore
+				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props)}</script>`;
+			}
 		}
 
 		if (options.service_worker) {

@@ -1,5 +1,5 @@
 ---
-question: How do I setup a path alias?
+title: How do I setup a path alias?
 ---
 
 First, you need to add it to the Vite configuration. In `svelte.config.js` add [`vite.resolve.alias`](https://vitejs.dev/config/#resolve-alias):

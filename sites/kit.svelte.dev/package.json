@@ -1,0 +1,22 @@
+{
+	"name": "kit.svelte.dev",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "svelte-kit dev",
+		"build": "svelte-kit build --verbose",
+		"prebuild": "test \"$CI\" = true && npx pnpm install --store=node_modules/.pnpm-store || echo skipping pnpm install",
+		"preview": "svelte-kit preview"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/site-kit": "^2.0.0",
+		"@types/node": "^16.6.1",
+		"marked": "^4.0.5",
+		"prism-svelte": "^0.4.7",
+		"prismjs": "^1.26.0",
+		"svelte": "^3.43.0",
+		"vite-imagetools": "^4.0.3"
+	},
+	"type": "module"
+}

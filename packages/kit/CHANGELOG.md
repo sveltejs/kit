@@ -1,5 +1,71 @@
 # @sveltejs/kit
 
+## 1.0.0-next.260
+
+### Patch Changes
+
+- Allow Response object to be returned without properties showing up in object constructor ([#3697](https://github.com/sveltejs/kit/pull/3697))
+
+* Implement shadow endpoints ([#3679](https://github.com/sveltejs/kit/pull/3679))
+
+## 1.0.0-next.259
+
+### Patch Changes
+
+- Prevent `Host` header from being incorrectly inherited by requests made from `load`'s `fetch` during SSR ([#3690](https://github.com/sveltejs/kit/pull/3690))
+
+## 1.0.0-next.258
+
+### Patch Changes
+
+- Update \$app/stores page.stuff to use App.Stuff ([#3686](https://github.com/sveltejs/kit/pull/3686))
+
+## 1.0.0-next.257
+
+### Patch Changes
+
+- Rename JSONString type to JSONValue ([#3683](https://github.com/sveltejs/kit/pull/3683))
+
+* Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
+
+- Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+
+## 1.0.0-next.256
+
+### Patch Changes
+
+- fix regression in parsing HTML when crawling for pre-rendering ([#3677](https://github.com/sveltejs/kit/pull/3677))
+
+## 1.0.0-next.255
+
+### Patch Changes
+
+- fix parsing during pre-render crawl when there are HTML attributes without a value ([#3668](https://github.com/sveltejs/kit/pull/3668))
+
+* Correctly populate asset manifest when generating service worker ([#3673](https://github.com/sveltejs/kit/pull/3673))
+
+## 1.0.0-next.254
+
+### Patch Changes
+
+- Add version config and expose updated store ([#3412](https://github.com/sveltejs/kit/pull/3412))
+
+* [fix] update types to match changes to Vite config handling ([#3662](https://github.com/sveltejs/kit/pull/3662))
+
+## 1.0.0-next.253
+
+### Patch Changes
+
+- Allow config.kit.vite to be an async function ([#3565](https://github.com/sveltejs/kit/pull/3565))
+
+* Include page request headers in server-side fetches ([#3631](https://github.com/sveltejs/kit/pull/3631))
+
+## 1.0.0-next.252
+
+### Patch Changes
+
+- remove nonexistent `url` store from `$app/stores` ambient types ([#3640](https://github.com/sveltejs/kit/pull/3640))
+
 ## 1.0.0-next.251
 
 ### Patch Changes
