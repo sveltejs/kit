@@ -11,13 +11,10 @@
 			}
 		},
 		{
-			"files": ["packages/kit/src/packaging/test/fixtures/**/expected/**/*"],
-			"options": {
-				"requirePragma": true
-			}
-		},
-		{
-			"files": ["packages/kit/src/core/adapt/prerender/fixtures/**/*"],
+			"files": [
+				"packages/kit/src/packaging/test/fixtures/**/expected/**/*",
+				"packages/kit/src/core/adapt/prerender/fixtures/**/*"
+			],
 			"options": {
 				"requirePragma": true
 			}
