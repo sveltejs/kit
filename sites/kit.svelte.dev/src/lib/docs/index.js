@@ -47,9 +47,6 @@ function parse(markdown, file) {
 
 	let section;
 
-	// const tabbed = body.split('\n').filter((line) => line.startsWith('\t'));
-	// console.log(tabbed.join('\n'));
-
 	marked.use({
 		renderer: {
 			heading(html, level) {
