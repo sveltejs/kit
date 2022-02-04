@@ -194,7 +194,7 @@
 
 	.search-box {
 		width: calc(100vw - 2rem);
-		height: calc(100vh - 2rem);
+		height: calc(100% - 2rem);
 		max-width: 50rem;
 		max-height: 50rem;
 		background: white;
