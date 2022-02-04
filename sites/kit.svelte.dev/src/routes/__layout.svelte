@@ -4,6 +4,7 @@
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
+	import SearchBox from '$lib/search/SearchBox.svelte';
 </script>
 
 <Icons />
@@ -34,6 +35,10 @@
 		</NavItem>
 	</svelte:fragment>
 </Nav>
+
+{#if browser}
+	<SearchBox />
+{/if}
 
 <main id="main">
 	<slot />
