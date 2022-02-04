@@ -169,6 +169,16 @@
 	.search-container {
 		display: flex;
 		align-items: center;
+		animation: fade-in 0.2s;
+	}
+
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	input {
