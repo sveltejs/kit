@@ -111,7 +111,7 @@ function parse(markdown, file) {
 	};
 }
 
-function extract_frontmatter(markdown) {
+export function extract_frontmatter(markdown) {
 	const match = /---\r?\n([\s\S]+?)\r?\n---/.exec(markdown);
 	const frontmatter = match[1];
 	const body = markdown.slice(match[0].length);
@@ -125,7 +125,7 @@ function extract_frontmatter(markdown) {
 	return { metadata, body };
 }
 
-function slugify(title) {
+export function slugify(title) {
 	return title
 		.toLowerCase()
 		.replace(/[^a-z0-9-$]/g, '-')

@@ -12,6 +12,7 @@
 		"@sveltejs/kit": "workspace:*",
 		"@sveltejs/site-kit": "^2.0.0",
 		"@types/node": "^16.6.1",
+		"flexsearch": "^0.7.21",
 		"marked": "^4.0.5",
 		"prism-svelte": "^0.4.7",
 		"prismjs": "^1.26.0",

@@ -2,6 +2,7 @@
 	import '@sveltejs/site-kit/base.css';
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
+	import Search from '$lib/search/Search.svelte';
 </script>
 
 <Icons />
@@ -13,9 +14,11 @@
 <SkipLink href="#main" />
 <Nav {page} logo="/images/svelte-kit-horizontal.svg">
 	<svelte:fragment slot="nav-center">
-		<NavItem href="/docs">Docs</NavItem>
+		<!-- <NavItem href="/docs">Docs</NavItem>
 		<NavItem href="/faq">FAQ</NavItem>
-		<NavItem href="/migrating">Migrating</NavItem>
+		<NavItem href="/migrating">Migrating</NavItem> -->
+
+		<Search />
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">

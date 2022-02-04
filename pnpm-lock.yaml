@@ -317,6 +317,7 @@ importers:
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.0.0
       '@types/node': ^16.6.1
+      flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.4.7
       prismjs: ^1.26.0
@@ -327,6 +328,7 @@ importers:
       '@sveltejs/kit': link:../../packages/kit
       '@sveltejs/site-kit': 2.0.0
       '@types/node': 16.11.11
+      flexsearch: 0.7.21
       marked: 4.0.5
       prism-svelte: 0.4.7
       prismjs: 1.26.0
@@ -3056,6 +3058,10 @@ packages:
 
   /flatted/3.2.4:
     resolution: {integrity: sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==}
+    dev: true
+
+  /flexsearch/0.7.21:
+    resolution: {integrity: sha512-W7cHV7Hrwjid6lWmy0IhsWDFQboWSng25U3VVywpHOTJnnAZNPScog67G+cVpeX9f7yDD21ih0WDrMMT+JoaYg==}
     dev: true
 
   /foreground-child/2.0.0:
