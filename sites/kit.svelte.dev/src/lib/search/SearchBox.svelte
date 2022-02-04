@@ -173,10 +173,24 @@
 
 <style>
 	input {
-		padding: 0.5em 0.5em 0.4em 0.5em;
-		border: 1px solid #ccc;
 		font-family: inherit;
 		font-size: 1.6rem;
+		width: 100%;
+		padding: 1rem 1rem 0.5rem 1rem;
+		height: 5rem;
+		border: none;
+		border-bottom: 1px solid #eee;
+		font-weight: 600;
+	}
+
+	input::selection {
+		background-color: rgba(255, 255, 255, 0.4);
+	}
+
+	input:focus-visible {
+		background: var(--flash);
+		color: white;
+		outline: none;
 	}
 
 	.modal-background {
@@ -203,25 +217,6 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-	}
-
-	.search-box input {
-		width: 100%;
-		padding: 1rem 1rem 0.5rem 1rem;
-		height: 5rem;
-		border: none;
-		border-bottom: 1px solid #eee;
-		font-weight: 600;
-	}
-
-	.search-box input::selection {
-		background-color: rgba(255, 255, 255, 0.4);
-	}
-
-	.search-box input:focus-visible {
-		background: var(--flash);
-		color: white;
-		outline: none;
 	}
 
 	.results {
