@@ -1,9 +1,11 @@
 <script>
 	import { onMount } from 'svelte';
 	import flexsearch from 'flexsearch';
+	import { goto } from '$app/navigation';
 
 	let searching = false;
 	let ul;
+	let button;
 
 	let query = '';
 	let results = [];
@@ -23,8 +25,14 @@
 		lookup = new Map();
 
 		for (const block of blocks) {
-			lookup.set(block.href, block);
-			index.add(block.href, block.content);
+			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
+			lookup.set(block.href, {
+				title,
+				href: block.href,
+				breadcrumbs: block.breadcrumbs.slice(1, -1),
+				content: block.content
+			});
+			index.add(block.href, `${title} ${block.content}`);
 		}
 	});
 
@@ -44,7 +52,7 @@
 			return content.slice(0, 100);
 		}
 
-		const prefix = index > 20 ? `...${content.slice(index - 15, index)}` : content.slice(0, index);
+		const prefix = index > 20 ? `…${content.slice(index - 15, index)}` : content.slice(0, index);
 		const suffix = content.slice(
 			index + query.length,
 			index + query.length + (80 - (prefix.length + query.length))
@@ -77,6 +85,8 @@
 		if (e.code === 'KeyK' && e.metaKey) {
 			e.preventDefault();
 			searching = !searching;
+		} else if (document.activeElement === button) {
+			console.log(e);
 		}
 	}}
 />
@@ -84,14 +94,20 @@
 <div class="search-container">
 	<input
 		on:input={(e) => {
+			console.log('before', query, e.target.value);
 			searching = true;
-			query = e.target.value;
+			update(e);
 			e.target.value = '';
+			console.log('after', query, e.target.value);
 		}}
 		on:click={() => (searching = true)}
 		type="search"
-		placeholder="Search (Cmd-K)"
 	/>
+
+	<span>
+		<!-- TODO should be ctrl on non-mac -->
+		Search <kbd>⌘</kbd> <kbd>K</kbd>
+	</span>
 </div>
 
 {#if searching}
@@ -123,15 +139,12 @@
 					}
 
 					if (e.key === 'Enter') {
-						const a = ul.querySelector('[aria-current="true"] a');
-
-						if (a) {
-							a.click();
-							searching = false;
-						}
+						searching = false;
+						goto(results[selected].href);
 					}
 				}}
 				on:input={update}
+				value={query}
 			/>
 
 			<ul bind:this={ul} class="results">
@@ -139,7 +152,8 @@
 					<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 					<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
 						<a href={result.href}>
-							<strong>{result.breadcrumbs.join('/')}</strong>
+							<small>{result.breadcrumbs.join('/')}</small>
+							<strong>{@html excerpt(result.title, query)}</strong>
 							<span>{@html excerpt(result.content, query)}</span>
 						</a>
 					</li>
@@ -156,19 +170,41 @@
 	}
 
 	input {
-		padding: 0.5em;
+		padding: 0.5em 0.5em 0.4em 0.5em;
 		border-radius: var(--border-r);
 		border: 1px solid #ccc;
-	}
-
-	input[type='search'] {
-		text-align: center;
 		font-family: inherit;
 		font-size: 1.6rem;
 	}
 
+	input[type='search'] {
+		text-align: center;
+	}
+
 	.search-container input {
-		height: 2em;
+		height: 3.2rem;
+		border-radius: 1.6rem;
+	}
+
+	.search-container span {
+		color: #666;
+		position: absolute;
+		top: calc(50% - 0.9rem);
+		width: 100%;
+		text-align: center;
+		pointer-events: none;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+	}
+
+	.search-container kbd {
+		background: #eee;
+		border: 1px solid #ddd;
+		padding: 0.2rem 0.2rem 0rem 0.2rem;
+		color: #666;
+		font-size: inherit;
+		font-family: inherit;
+		border-radius: 2px;
 	}
 
 	.modal-background {
@@ -199,9 +235,14 @@
 
 	.search-box input {
 		width: 100%;
-		padding: 0.5rem;
+		border: 2px solid #ccc;
 		border-radius: var(--border-r);
 		margin: 0 0 1rem 0;
+	}
+
+	.search-box input:focus-visible {
+		border: 2px solid var(--flash);
+		outline: none;
 	}
 
 	.results {
@@ -209,37 +250,61 @@
 		overflow: scroll;
 	}
 
-	ul {
-	}
-
 	li {
 		list-style: none;
 		margin: 0;
-		padding: 1rem;
+		padding: 0.8rem;
 		border-radius: var(--border-r);
 	}
 
 	a {
 		display: block;
 		text-decoration: none;
+		line-height: 1;
 	}
 
+	a small,
 	a strong,
 	a span {
 		display: block;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		line-height: 1.2;
+		line-height: 1;
+	}
+
+	a small {
+		font-size: 1rem;
+		text-transform: uppercase;
+		font-weight: 600;
+		color: #999;
 	}
 
 	a strong {
 		font-size: 1.6rem;
-		margin: 0 0 0.2rem 0;
+		color: var(--text);
+		margin: 0.4rem 0;
 	}
 
 	a span {
 		font-size: 1.2rem;
+		color: #999;
+	}
+
+	a span :global(mark) {
+		background: none;
+		color: var(--text);
+	}
+
+	a strong :global(mark) {
+		background: var(--flash);
+		color: white;
+		text-decoration: none;
+		border-radius: 1px;
+	}
+
+	[aria-current='true'] a :global(mark) {
+		color: inherit;
 	}
 
 	[aria-current='true'] {

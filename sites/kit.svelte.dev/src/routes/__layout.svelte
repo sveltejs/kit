@@ -1,5 +1,6 @@
 <script>
 	import '@sveltejs/site-kit/base.css';
+	import { browser } from '$app/env';
 	import { page, navigating } from '$app/stores';
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
@@ -18,7 +19,9 @@
 		<NavItem href="/faq">FAQ</NavItem>
 		<NavItem href="/migrating">Migrating</NavItem> -->
 
-		<Search />
+		{#if browser}
+			<Search />
+		{/if}
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
