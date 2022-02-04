@@ -122,7 +122,6 @@
 				autofocus
 				on:keydown={(e) => {
 					if (e.key === 'Tab' && results.length > 0) {
-						console.log('preventing default');
 						e.preventDefault();
 					}
 
@@ -138,7 +137,7 @@
 						scroll_into_view();
 					}
 
-					if (e.key === 'Escape') {
+					if (e.key === 'Escape' || (e.key === 'Backspace' && $query === '')) {
 						$searching = false;
 					}
 
