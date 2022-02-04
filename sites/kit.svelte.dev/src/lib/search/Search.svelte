@@ -93,8 +93,6 @@
 		if (e.code === 'KeyK' && e.metaKey) {
 			e.preventDefault();
 			searching = !searching;
-		} else if (document.activeElement === button) {
-			console.log(e);
 		}
 	}}
 />
@@ -120,8 +118,18 @@
 </div>
 
 {#if searching}
-	<div class="modal-background" on:click={() => (searching = false)}>
-		<div class="search-box" on:click={(e) => e.stopPropagation()}>
+	<div
+		class="modal-background"
+		on:click={() => (searching = false)}
+		on:wheel={(e) => e.preventDefault()}
+		on:touchmove={(e) => e.preventDefault()}
+	>
+		<div
+			class="search-box"
+			on:click={(e) => e.stopPropagation()}
+			on:wheel={(e) => e.stopPropagation()}
+			on:touchmove={(e) => e.stopPropagation()}
+		>
 			<!-- svelte-ignore a11y-autofocus -->
 			<input
 				autofocus
@@ -157,6 +165,7 @@
 					update();
 				}}
 				value={query}
+				placeholder="Search"
 			/>
 
 			<ul bind:this={ul} class="results">
@@ -193,7 +202,6 @@
 
 	input {
 		padding: 0.5em 0.5em 0.4em 0.5em;
-		border-radius: var(--border-r);
 		border: 1px solid #ccc;
 		font-family: inherit;
 		font-size: 1.6rem;
@@ -239,7 +247,7 @@
 		top: 0;
 		width: 100%;
 		height: 100%;
-		background: rgba(255, 255, 255, 0.4);
+		background: rgba(255, 255, 255, 0.7);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -249,25 +257,28 @@
 	.search-box {
 		width: calc(100vw - 2rem);
 		height: calc(100vh - 2rem);
-		max-width: 40rem;
-		max-height: 60rem;
-		padding: 2rem;
+		max-width: 50rem;
+		max-height: 50rem;
 		background: white;
-		filter: drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.1));
+		filter: drop-shadow(2px 4px 16px rgba(0, 0, 0, 0.2));
 		border-radius: var(--border-r);
 		display: flex;
 		flex-direction: column;
+		overflow: hidden;
 	}
 
 	.search-box input {
 		width: 100%;
-		border: 2px solid #ccc;
-		border-radius: var(--border-r);
-		margin: 0 0 1rem 0;
+		padding: 1rem 1rem 0.5rem 1rem;
+		height: 5rem;
+		border: none;
+		border-bottom: 1px solid #eee;
+		font-weight: 600;
 	}
 
 	.search-box input:focus-visible {
-		border: 2px solid var(--flash);
+		background: var(--flash);
+		color: white;
 		outline: none;
 	}
 
@@ -279,8 +290,7 @@
 	li {
 		list-style: none;
 		margin: 0;
-		padding: 0.8rem;
-		border-radius: var(--border-r);
+		padding: 1rem;
 	}
 
 	a {
@@ -329,16 +339,7 @@
 		border-radius: 1px;
 	}
 
-	[aria-current='true'] a :global(mark) {
-		color: inherit;
-	}
-
 	[aria-current='true'] {
-		background-color: var(--flash);
-		color: white;
-	}
-
-	[aria-current='true'] * {
-		color: white;
+		background: #eee;
 	}
 </style>
