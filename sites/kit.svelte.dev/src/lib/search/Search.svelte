@@ -29,7 +29,7 @@
 			lookup.set(block.href, {
 				title,
 				href: block.href,
-				breadcrumbs: block.breadcrumbs.slice(1, -1),
+				breadcrumbs: block.breadcrumbs.slice(0, -1),
 				content: block.content
 			});
 			index.add(block.href, `${title} ${block.content}`);

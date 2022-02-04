@@ -2,45 +2,65 @@ import fs from 'fs';
 import { extract_frontmatter, transform } from '$lib/docs/markdown';
 import { slugify } from '../lib/docs';
 
+const pages = [
+	{ slug: 'docs', label: null },
+	{ slug: 'faq', label: 'FAQ' },
+	{ slug: 'migrating', label: 'Migrating' }
+];
+
 export function get() {
 	const blocks = [];
 
-	for (const file of fs.readdirSync('../../documentation/docs')) {
-		if (!/\d{2}-.+\.md/.test(file)) continue;
+	for (const page of pages) {
+		const breadcrumbs = page.label ? [page.label] : [];
 
-		const filepath = `../../documentation/docs/${file}`;
-		const markdown = fs.readFileSync(filepath, 'utf-8');
+		for (const file of fs.readdirSync(`../../documentation/${page.slug}`)) {
+			if (!/\d{2}-.+\.md/.test(file)) continue;
 
-		const { body, metadata } = extract_frontmatter(markdown);
+			const filepath = `../../documentation/${page.slug}/${file}`;
+			const markdown = fs.readFileSync(filepath, 'utf-8');
 
-		const sections = body.trim().split(/^### /m).slice(1);
+			const { body, metadata } = extract_frontmatter(markdown);
 
-		for (const section of sections) {
-			const lines = section.split('\n');
-			const h3 = lines.shift();
-			const content = lines.join('\n');
+			const sections = body.trim().split(/^### /m);
 
-			const subsections = content.trim().split('#### ');
-
-			const intro = subsections.shift().trim();
+			const intro = sections.shift().trim();
 
 			if (intro) {
 				blocks.push({
-					breadcrumbs: ['Docs', metadata.title, h3],
-					href: `/docs#${slugify(metadata.title)}-${slugify(h3)}`,
+					breadcrumbs: [...breadcrumbs, metadata.title],
+					href: `/${page.slug}#${slugify(metadata.title)}`,
 					content: plaintext(intro)
 				});
 			}
 
-			for (const subsection of subsections) {
-				const lines = subsection.split('\n');
-				const h4 = lines.shift();
+			for (const section of sections) {
+				const lines = section.split('\n');
+				const h3 = lines.shift();
+				const content = lines.join('\n');
 
-				blocks.push({
-					breadcrumbs: ['Docs', metadata.title, h3, h4],
-					href: `/docs#${slugify(metadata.title)}-${slugify(h3)}-${slugify(h4)}`,
-					content: plaintext(lines.join('\n').trim())
-				});
+				const subsections = content.trim().split('#### ');
+
+				const intro = subsections.shift().trim();
+
+				if (intro) {
+					blocks.push({
+						breadcrumbs: [...breadcrumbs, metadata.title, h3],
+						href: `/${page.slug}#${slugify(metadata.title)}-${slugify(h3)}`,
+						content: plaintext(intro)
+					});
+				}
+
+				for (const subsection of subsections) {
+					const lines = subsection.split('\n');
+					const h4 = lines.shift();
+
+					blocks.push({
+						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
+						href: `/${page.slug}#${slugify(metadata.title)}-${slugify(h3)}-${slugify(h4)}`,
+						content: plaintext(lines.join('\n').trim())
+					});
+				}
 			}
 		}
 	}
