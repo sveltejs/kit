@@ -100,7 +100,8 @@
 			e.target.value = '';
 			console.log('after', query, e.target.value);
 		}}
-		on:click={() => (searching = true)}
+		on:mousedown|preventDefault={() => (searching = true)}
+		on:touchstart|preventDefault={() => (searching = true)}
 		type="search"
 	/>
 
@@ -184,6 +185,10 @@
 	.search-container input {
 		height: 3.2rem;
 		border-radius: 1.6rem;
+	}
+
+	.search-container input:focus + span {
+		display: none;
 	}
 
 	.search-container span {
