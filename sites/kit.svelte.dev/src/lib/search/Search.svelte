@@ -93,6 +93,7 @@
 
 <div class="search-container">
 	<input
+		aria-label="Search"
 		on:input={(e) => {
 			console.log('before', query, e.target.value);
 			searching = true;
