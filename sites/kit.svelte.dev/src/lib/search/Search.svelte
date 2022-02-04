@@ -24,6 +24,7 @@
 
 		lookup = new Map();
 
+		let time = Date.now();
 		for (const block of blocks) {
 			const title = block.breadcrumbs[block.breadcrumbs.length - 1];
 			lookup.set(block.href, {
@@ -33,11 +34,18 @@
 				content: block.content
 			});
 			index.add(block.href, `${title} ${block.content}`);
+
+			// poor man's way of preventing blocking
+			if (Date.now() - time > 25) {
+				await new Promise((f) => setTimeout(f, 0));
+				time = Date.now();
+			}
 		}
+
+		update();
 	});
 
-	function update(e) {
-		query = e.target.value;
+	function update() {
 		results = (index ? index.search(query) : []).map((href) => lookup.get(href));
 		selected = 0;
 	}
@@ -95,11 +103,10 @@
 	<input
 		aria-label="Search"
 		on:input={(e) => {
-			console.log('before', query, e.target.value);
 			searching = true;
-			update(e);
+			query = e.target.value;
+			update();
 			e.target.value = '';
-			console.log('after', query, e.target.value);
 		}}
 		on:mousedown|preventDefault={() => (searching = true)}
 		on:touchstart|preventDefault={() => (searching = true)}
@@ -145,7 +152,10 @@
 						goto(results[selected].href);
 					}
 				}}
-				on:input={update}
+				on:input={(e) => {
+					query = e.target.value;
+					update();
+				}}
 				value={query}
 			/>
 
