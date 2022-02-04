@@ -5,7 +5,7 @@
 
 	let searching = false;
 	let ul;
-	let button;
+	let modal;
 
 	let query = '';
 	let results = [];
@@ -95,6 +95,11 @@
 			searching = !searching;
 		}
 	}}
+	on:focusin={() => {
+		if (modal && !modal.contains(document.activeElement)) {
+			searching = false;
+		}
+	}}
 />
 
 <div class="search-container">
@@ -119,6 +124,7 @@
 
 {#if searching}
 	<div
+		bind:this={modal}
 		class="modal-background"
 		on:click={() => (searching = false)}
 		on:wheel={(e) => e.preventDefault()}
@@ -186,6 +192,7 @@
 
 <style>
 	.search-container {
+		position: relative;
 		display: flex;
 		align-items: center;
 		animation: fade-in 0.2s;
@@ -212,6 +219,7 @@
 	}
 
 	.search-container input {
+		width: 100%;
 		height: 3.2rem;
 		border-radius: 1.6rem;
 	}
