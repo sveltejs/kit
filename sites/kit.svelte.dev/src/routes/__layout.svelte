@@ -15,10 +15,6 @@
 <SkipLink href="#main" />
 <Nav {page} logo="/images/svelte-kit-horizontal.svg">
 	<svelte:fragment slot="nav-center">
-		<!-- <NavItem href="/docs">Docs</NavItem>
-		<NavItem href="/faq">FAQ</NavItem>
-		<NavItem href="/migrating">Migrating</NavItem> -->
-
 		{#if browser}
 			<Search />
 		{/if}
