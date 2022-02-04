@@ -221,7 +221,13 @@
 	.search-container input {
 		width: 100%;
 		height: 3.2rem;
-		border-radius: 1.6rem;
+		border-radius: var(--border-r);
+	}
+
+	@media (min-width: 800px) {
+		.search-container input {
+			border-radius: 1.6rem;
+		}
 	}
 
 	.search-container input:focus + span {
