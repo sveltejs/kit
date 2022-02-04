@@ -22,6 +22,12 @@
 	</svelte:fragment>
 
 	<svelte:fragment slot="nav-right">
+		<NavItem href="/docs">Docs</NavItem>
+		<NavItem href="/faq">FAQ</NavItem>
+		<NavItem href="/migrating">Migrating</NavItem>
+
+		<span class="separator" />
+
 		<NavItem external="https://svelte.dev">Svelte</NavItem>
 
 		<NavItem external="https://svelte.dev/chat" title="Discord Chat">
@@ -61,6 +67,15 @@
 		display: none;
 	}
 
+	/* duplicating content from <Nav> — bit hacky but will do for now */
+	.separator {
+		display: block;
+		position: relative;
+		height: 1px;
+		margin: 0.5rem 0;
+		background: radial-gradient(circle at center, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+	}
+
 	@media (min-width: 800px) {
 		.small {
 			display: none;
@@ -68,6 +83,23 @@
 
 		.large {
 			display: inline;
+		}
+
+		.separator {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: none;
+			height: 100%;
+			margin: 0;
+			border: none;
+			text-align: center;
+		}
+
+		.separator::before {
+			content: '•';
+			margin: 0 0.3rem;
+			color: #ccc;
 		}
 	}
 </style>
