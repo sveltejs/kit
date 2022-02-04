@@ -252,7 +252,7 @@
 
 	.results {
 		flex: 1;
-		overflow: scroll;
+		overflow: auto;
 	}
 
 	li {
