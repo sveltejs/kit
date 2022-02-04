@@ -322,6 +322,7 @@ importers:
       prism-svelte: ^0.4.7
       prismjs: ^1.26.0
       svelte: ^3.43.0
+      typescript: ^4.5.5
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
@@ -333,6 +334,7 @@ importers:
       prism-svelte: 0.4.7
       prismjs: 1.26.0
       svelte: 3.44.2
+      typescript: 4.5.5
       vite-imagetools: 4.0.3
 
 packages:
@@ -5617,6 +5619,12 @@ packages:
 
   /typescript/4.5.2:
     resolution: {integrity: sha512-5BlMof9H1yGt0P8/WF+wPNw6GfctgGjXp5hkblpyT+8rkASSmkUKMXrxR0Xg8ThVCi/JnHQiKXeBaEwCeQwMFw==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.5.5:
+    resolution: {integrity: sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true

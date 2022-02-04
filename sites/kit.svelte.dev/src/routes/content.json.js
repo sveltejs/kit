@@ -1,6 +1,5 @@
 import fs from 'fs';
-import { marked } from 'marked';
-import { extract_frontmatter } from '$lib/docs';
+import { extract_frontmatter, transform } from '$lib/docs/markdown';
 import { slugify } from '../lib/docs';
 
 export function get() {
@@ -54,41 +53,38 @@ export function get() {
 }
 
 function plaintext(markdown) {
-	const identity = (text) => text;
+	const block = (text) => `${text}\n`;
+	const inline = (text) => text;
 
-	marked.use({
-		renderer: {
-			code: identity,
-			blockquote: identity,
-			html: () => {
-				throw new Error('TODO implement HTML');
-			},
-			hr: () => '',
-			list: identity,
-			listitem: identity,
-			checkbox: identity,
-			paragraph: (text) => `${text}\n\n`,
-			table: () => {
-				throw new Error('TODO implement tables');
-			},
-			tablerow: () => {
-				throw new Error('TODO implement tables');
-			},
-			tablecell: () => {
-				throw new Error('TODO implement tables');
-			},
-			strong: identity,
-			em: identity,
-			codespan: identity,
-			br: () => '',
-			del: identity,
-			link: (href, title, text) => text,
-			image: (href, title, text) => text,
-			text: identity
-		}
-	});
-
-	return marked(markdown)
+	return transform(markdown, {
+		code: block,
+		blockquote: block,
+		html: () => {
+			throw new Error('TODO implement HTML');
+		},
+		hr: () => '',
+		list: block,
+		listitem: block,
+		checkbox: block,
+		paragraph: (text) => `${text}\n\n`,
+		table: () => {
+			throw new Error('TODO implement tables');
+		},
+		tablerow: () => {
+			throw new Error('TODO implement tables');
+		},
+		tablecell: () => {
+			throw new Error('TODO implement tables');
+		},
+		strong: inline,
+		em: inline,
+		codespan: inline,
+		br: () => '',
+		del: inline,
+		link: (href, title, text) => text,
+		image: (href, title, text) => text,
+		text: inline
+	})
 		.replace(/&lt;/g, '<')
 		.replace(/&gt;/g, '>')
 		.replace(/&#(\d+);/g, (match, code) => {
