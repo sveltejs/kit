@@ -64,7 +64,7 @@ A page that loads data from an external API might look like this:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
-If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 

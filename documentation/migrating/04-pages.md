@@ -39,7 +39,7 @@ You access them differently in SvelteKit. `stores` is now `getStores`, but in mo
 
 ### Routing
 
-Regex routes are no longer supported. Instead, use [fallthrough routes](/docs#routing-advanced-fallthrough-routes).
+Regex routes are no longer supported. Instead, use [fallthrough routes](/docs#routing-advanced-routing-fallthrough-routes).
 
 ### URLs
 

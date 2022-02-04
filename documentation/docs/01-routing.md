@@ -111,7 +111,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 The returned `body` corresponds to the page's props:
 
