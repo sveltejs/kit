@@ -140,6 +140,12 @@
 			<input
 				autofocus
 				on:keydown={(e) => {
+					if (e.key === 'Enter') {
+						if (results.length > 0) {
+							modal.querySelector('a').click();
+						}
+					}
+
 					// ideally, opening the modal would create a history entry that we
 					// could use with browser back/forward buttons — this would be the
 					// best way to allow people to close the modal on mobile, for
