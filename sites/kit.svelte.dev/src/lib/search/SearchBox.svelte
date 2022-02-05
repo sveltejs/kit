@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
 	import flexsearch from 'flexsearch';
-	import { goto } from '$app/navigation';
-	import { searching, query } from './stores.js';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { searching, query, recent } from './stores.js';
 
 	let ul;
 	let modal;
@@ -43,6 +43,12 @@
 		}
 
 		update();
+	});
+
+	afterNavigate(() => {
+		// TODO this also needs to apply when only the hash changes
+		// (should before/afterNavigate fire at that time? unclear)
+		$searching = false;
 	});
 
 	function update() {
@@ -88,6 +94,8 @@
 	}
 
 	$: if ($searching) update();
+
+	$: recent_searches = lookup ? $recent.map((href) => lookup.get(href)).filter(Boolean) : [];
 </script>
 
 <svelte:window
@@ -104,7 +112,7 @@
 	}}
 />
 
-{#if $searching}
+{#if $searching && index}
 	<div
 		bind:this={modal}
 		class="modal-background"
@@ -122,19 +130,21 @@
 			<input
 				autofocus
 				on:keydown={(e) => {
-					if (e.key === 'Tab' && results.length > 0) {
+					const list = $query ? results : recent_searches;
+
+					if (e.key === 'Tab' && list.length > 0) {
 						e.preventDefault();
 					}
 
 					if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
 						selected += 1;
-						selected %= results.length;
+						selected %= list.length;
 						scroll_into_view();
 					}
 
 					if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
 						selected -= 1;
-						if (selected === -1) selected = results.length - 1;
+						if (selected === -1) selected = list.length - 1;
 						scroll_into_view();
 					}
 
@@ -143,8 +153,14 @@
 					}
 
 					if (e.key === 'Enter') {
+						const { href } = list[selected];
 						$searching = false;
-						goto(results[selected].href);
+						goto(href);
+
+						recent.update(($recent) => [
+							href,
+							...$recent.filter((existing) => existing !== href && lookup.has(existing))
+						]);
 					}
 
 					// ideally, opening the modal would create a history entry that we
@@ -178,16 +194,30 @@
 			/>
 
 			<ul bind:this={ul} class="results">
-				{#each results as result, i}
-					<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-					<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
-						<a href={result.href}>
-							<small>{result.breadcrumbs.join('/')}</small>
-							<strong>{@html excerpt(result.title, $query)}</strong>
-							<span>{@html excerpt(result.content, $query)}</span>
-						</a>
-					</li>
-				{/each}
+				{#if $query}
+					{#each results as result, i}
+						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+						<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
+							<a href={result.href}>
+								<small>{result.breadcrumbs.join('/')}</small>
+								<strong>{@html excerpt(result.title, $query)}</strong>
+								<span>{@html excerpt(result.content, $query)}</span>
+							</a>
+						</li>
+					{/each}
+				{:else}
+					{#each recent_searches as search, i}
+						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+						<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
+							<a href={search.href}>
+								<small>{search.breadcrumbs.join('/')}</small>
+								<strong>{search.title}</strong>
+							</a>
+						</li>
+					{:else}
+						<li>No recent searches</li>
+					{/each}
+				{/if}
 			</ul>
 		</div>
 	</div>
