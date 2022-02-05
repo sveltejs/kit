@@ -18,6 +18,28 @@ export function focusable_children(node) {
 	};
 
 	return {
+		/** @param {string} [selector] */
+		next: (selector) => {
+			const reordered = [...nodes.slice(index + 1), ...nodes.slice(0, index + 1)];
+
+			for (let i = 0; i < reordered.length; i += 1) {
+				if (!selector || reordered[i].matches(selector)) {
+					reordered[i].focus();
+					return;
+				}
+			}
+		},
+		/** @param {string} [selector] */
+		prev: (selector) => {
+			const reordered = [...nodes.slice(index + 1), ...nodes.slice(0, index + 1)];
+
+			for (let i = reordered.length - 2; i >= 0; i -= 1) {
+				if (!selector || reordered[i].matches(selector)) {
+					reordered[i].focus();
+					return;
+				}
+			}
+		},
 		update
 	};
 }
@@ -28,7 +50,11 @@ export function trap(node) {
 			e.preventDefault();
 
 			const group = focusable_children(node);
-			group.update(e.shiftKey ? -1 : 1);
+			if (e.shiftKey) {
+				group.prev();
+			} else {
+				group.next();
+			}
 		}
 	};
 

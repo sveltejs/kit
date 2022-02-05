@@ -122,7 +122,12 @@
 			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 				e.preventDefault();
 				const group = focusable_children(e.currentTarget);
-				group.update(e.key === 'ArrowDown' ? 1 : -1);
+
+				if (e.key === 'ArrowDown') {
+					group.next('a, input');
+				} else {
+					group.prev('a, input');
+				}
 			}
 
 			if (e.code === 'Space' && e.target.nodeName !== 'INPUT') {
