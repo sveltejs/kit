@@ -123,10 +123,13 @@
 				e.preventDefault();
 				const group = focusable_children(e.currentTarget);
 
+				// when using arrow keys (as opposed to tab), don't focus buttons
+				const selector = 'a, input';
+
 				if (e.key === 'ArrowDown') {
-					group.next('a, input');
+					group.next(selector);
 				} else {
-					group.prev('a, input');
+					group.prev(selector);
 				}
 			}
 
