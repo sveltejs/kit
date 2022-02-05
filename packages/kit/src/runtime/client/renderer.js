@@ -753,7 +753,7 @@ export class Renderer {
 					let props = {};
 
 					if (has_shadow && i === a.length - 1) {
-						const res = await fetch(`${url.pathname}/__data.json`, {
+						const res = await fetch(`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json`, {
 							headers: {
 								'x-sveltekit-noredirect': 'true'
 							}
