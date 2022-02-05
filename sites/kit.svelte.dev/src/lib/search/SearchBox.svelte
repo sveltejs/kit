@@ -101,11 +101,6 @@
 			$searching = false;
 		}
 	}}
-	on:focusin={() => {
-		if (modal && !modal.contains(document.activeElement)) {
-			// $searching = false;
-		}
-	}}
 />
 
 {#if $searching && index}
