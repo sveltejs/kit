@@ -86,7 +86,7 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing five fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
+The `load` function receives an object containing six fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
 > Note that destructuring parameters in the function declaration is enough to count as using them.
 
