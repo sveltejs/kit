@@ -1627,9 +1627,21 @@ test.describe.parallel('Routing', () => {
 			let requests = [];
 			page.on('request', (r) => requests.push(r.url()));
 
-			await app.prefetch('/routing/prefetched');
-			expect(requests.length).toBe(2);
-			expect(requests[1]).toBe(`${baseURL}/routing/prefetched.json`);
+			// also wait for network processing to complete, see
+			// https://playwright.dev/docs/network#network-events
+			await Promise.all([
+				app.prefetch('/routing/prefetched'),
+				page.waitForResponse(`${baseURL}/routing/prefetched.json`)
+			]);
+
+			// svelte request made is environment dependent
+			if (process.env.DEV) {
+				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			} else {
+				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+			}
+
+			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
 
 			requests = [];
 			await app.goto('/routing/prefetched');
