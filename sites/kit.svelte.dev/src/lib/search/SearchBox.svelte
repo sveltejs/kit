@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { Icon } from '@sveltejs/site-kit';
 	import flexsearch from 'flexsearch';
 	import { afterNavigate } from '$app/navigation';
 	import { searching, query, recent } from './stores.js';
@@ -165,6 +166,10 @@
 				placeholder="Search"
 			/>
 
+			<button aria-label="Close" on:click={() => ($searching = false)}>
+				<Icon name="close" />
+			</button>
+
 			<ul class="results">
 				{#if $query}
 					{#each results as result, i}
@@ -199,7 +204,7 @@
 		font-family: inherit;
 		font-size: 1.6rem;
 		width: 100%;
-		padding: 1rem 1rem 0.5rem 1rem;
+		padding: 1rem 6rem 0.5rem 1rem;
 		height: 5rem;
 		border: none;
 		border-bottom: 1px solid #eee;
@@ -214,6 +219,27 @@
 		background: var(--flash);
 		color: white;
 		outline: none;
+	}
+
+	button[aria-label='Close'] {
+		--size: 2rem;
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 5rem;
+		height: 5rem;
+		background: none;
+		color: var(--text);
+	}
+
+	button[aria-label='Close']:focus-visible {
+		background: var(--flash);
+		color: white;
+		outline: none;
+	}
+
+	input:focus-visible + button[aria-label='Close'] {
+		color: white;
 	}
 
 	.modal-background,
