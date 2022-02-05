@@ -1,14 +1,13 @@
 <script>
 	import { onMount } from 'svelte';
 	import flexsearch from 'flexsearch';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate } from '$app/navigation';
 	import { searching, query, recent } from './stores.js';
+	import { focusable_children, trap } from '../actions/focus.js';
 
-	let ul;
 	let modal;
 
 	let results = [];
-	let selected = 0;
 	let backspace_pressed;
 
 	let index;
@@ -53,7 +52,6 @@
 
 	function update() {
 		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
-		selected = 0;
 	}
 
 	function escape(text) {
@@ -79,18 +77,10 @@
 		);
 	}
 
-	function scroll_into_view() {
-		const li = ul && ul.children[selected];
-		if (li) {
-			const ul_rect = ul.getBoundingClientRect();
-			const li_rect = li.getBoundingClientRect();
-
-			const d_top = ul_rect.top - li_rect.top;
-			const d_bottom = ul_rect.bottom - li_rect.bottom;
-
-			if (d_top > 0) ul.scrollTop -= d_top;
-			if (d_bottom < 0) ul.scrollTop -= d_bottom;
-		}
+	/** @param {string} href */
+	function navigate(href) {
+		$recent = [href, ...$recent.filter((x) => x !== href)];
+		$searching = false;
 	}
 
 	$: if ($searching) update();
@@ -104,65 +94,47 @@
 			e.preventDefault();
 			$searching = !$searching;
 		}
+
+		if (e.code === 'Escape') {
+			$searching = false;
+		}
 	}}
 	on:focusin={() => {
 		if (modal && !modal.contains(document.activeElement)) {
-			$searching = false;
+			// $searching = false;
 		}
 	}}
 />
 
 {#if $searching && index}
 	<div
-		bind:this={modal}
 		class="modal-background"
 		on:click={() => ($searching = false)}
 		on:wheel={(e) => e.preventDefault()}
 		on:touchmove={(e) => e.preventDefault()}
+	/>
+
+	<div
+		bind:this={modal}
+		class="modal"
+		on:keydown={(e) => {
+			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+				e.preventDefault();
+				const group = focusable_children(e.currentTarget);
+				group.update(e.key === 'ArrowDown' ? 1 : -1);
+			}
+
+			if (e.code === 'Space' && e.target.nodeName !== 'INPUT') {
+				e.preventDefault();
+			}
+		}}
+		use:trap
 	>
-		<div
-			class="search-box"
-			on:click={(e) => e.stopPropagation()}
-			on:wheel={(e) => e.stopPropagation()}
-			on:touchmove={(e) => e.stopPropagation()}
-		>
+		<div class="search-box">
 			<!-- svelte-ignore a11y-autofocus -->
 			<input
 				autofocus
 				on:keydown={(e) => {
-					const list = $query ? results : recent_searches;
-
-					if (e.key === 'Tab' && list.length > 0) {
-						e.preventDefault();
-					}
-
-					if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey)) {
-						selected += 1;
-						selected %= list.length;
-						scroll_into_view();
-					}
-
-					if (e.key === 'ArrowUp' || (e.key === 'Tab' && e.shiftKey)) {
-						selected -= 1;
-						if (selected === -1) selected = list.length - 1;
-						scroll_into_view();
-					}
-
-					if (e.key === 'Escape') {
-						$searching = false;
-					}
-
-					if (e.key === 'Enter') {
-						const { href } = list[selected];
-						$searching = false;
-						goto(href);
-
-						recent.update(($recent) => [
-							href,
-							...$recent.filter((existing) => existing !== href && lookup.has(existing))
-						]);
-					}
-
 					// ideally, opening the modal would create a history entry that we
 					// could use with browser back/forward buttons — this would be the
 					// best way to allow people to close the modal on mobile, for
@@ -193,12 +165,12 @@
 				placeholder="Search"
 			/>
 
-			<ul bind:this={ul} class="results">
+			<ul class="results">
 				{#if $query}
 					{#each results as result, i}
 						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-						<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
-							<a href={result.href}>
+						<li>
+							<a on:click={() => navigate(result.href)} href={result.href}>
 								<small>{result.breadcrumbs.join('/')}</small>
 								<strong>{@html excerpt(result.title, $query)}</strong>
 								<span>{@html excerpt(result.content, $query)}</span>
@@ -206,16 +178,15 @@
 						</li>
 					{/each}
 				{:else}
+					<li class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</li>
 					{#each recent_searches as search, i}
 						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-						<li aria-current={i === selected} on:mouseover={() => (selected = i)}>
-							<a href={search.href}>
+						<li>
+							<a on:click={() => navigate(search.href)} href={search.href}>
 								<small>{search.breadcrumbs.join('/')}</small>
 								<strong>{search.title}</strong>
 							</a>
 						</li>
-					{:else}
-						<li>No recent searches</li>
 					{/each}
 				{/if}
 			</ul>
@@ -245,17 +216,25 @@
 		outline: none;
 	}
 
-	.modal-background {
+	.modal-background,
+	.modal {
 		position: fixed;
 		left: 0;
 		top: 0;
 		width: 100%;
 		height: 100%;
+		z-index: 9999;
+	}
+
+	.modal-background {
 		background: rgba(255, 255, 255, 0.7);
+	}
+
+	.modal {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		z-index: 9999;
+		pointer-events: none;
 	}
 
 	.search-box {
@@ -269,6 +248,7 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		pointer-events: all;
 	}
 
 	.results {
@@ -283,13 +263,29 @@
 	li {
 		list-style: none;
 		margin: 0;
-		padding: 1rem;
+	}
+
+	li.info {
+		padding: 1rem 1rem 0 1rem;
+		font-size: 1.2rem;
+		text-transform: uppercase;
 	}
 
 	a {
 		display: block;
 		text-decoration: none;
 		line-height: 1;
+		padding: 1rem;
+	}
+
+	a:hover {
+		background: #eee;
+	}
+
+	a:focus {
+		background: var(--flash);
+		color: white;
+		outline: none;
 	}
 
 	a small,
@@ -322,7 +318,20 @@
 
 	a span :global(mark) {
 		background: none;
-		color: var(--text);
+		color: #111;
+	}
+
+	a:focus small,
+	a:focus span {
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	a:focus strong {
+		color: white;
+	}
+
+	a:focus span :global(mark) {
+		color: white;
 	}
 
 	a strong :global(mark) {
@@ -330,9 +339,5 @@
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
-	}
-
-	[aria-current='true'] {
-		background: #eee;
 	}
 </style>
