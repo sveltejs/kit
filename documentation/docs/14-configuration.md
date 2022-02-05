@@ -245,7 +245,7 @@ An object containing zero or more of the following values:
 
 Whether to remove, append, or ignore trailing slashes when resolving URLs to routes.
 
-- `"never"` — redirect `/x/` to `/x`
+- `"never"` — redirect `/x/` to `/x` (default)
 - `"always"` — redirect `/x` to `/x/`
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
