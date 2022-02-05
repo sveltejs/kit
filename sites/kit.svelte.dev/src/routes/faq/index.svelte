@@ -74,7 +74,7 @@
 		inline-size: 1.4em;
 		block-size: 1em;
 		inset-inline-start: -1.3em;
-		/* opacity: 0; */
+		opacity: 0;
 		transition: opacity 0.2s;
 	}
 
