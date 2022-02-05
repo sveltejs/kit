@@ -93,6 +93,7 @@
 	on:keydown={(e) => {
 		if (e.code === 'KeyK' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
 			e.preventDefault();
+			$query = '';
 			$searching = !$searching;
 		}
 
@@ -194,10 +195,21 @@
 					<li class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</li>
 					{#each recent_searches as search, i}
 						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-						<li>
+						<li class="recent">
 							<a on:click={() => navigate(search.href)} href={search.href}>
 								<small>{search.breadcrumbs.join('/')}</small>
 								<strong>{search.title}</strong>
+
+								<button
+									aria-label="Delete"
+									on:click={(e) => {
+										$recent = $recent.filter((href) => href !== search.href);
+										e.stopPropagation();
+										e.preventDefault();
+									}}
+								>
+									<Icon name="delete" />
+								</button>
 							</a>
 						</li>
 					{/each}
@@ -373,5 +385,31 @@
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
+	}
+
+	button[aria-label='Delete'] {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 5rem;
+		height: 100%;
+		color: var(--text);
+		opacity: 0.1;
+	}
+
+	a:focus [aria-label='Delete'] {
+		color: white;
+	}
+
+	button[aria-label='Delete']:hover {
+		opacity: 1;
+		outline: none;
+	}
+
+	button[aria-label='Delete']:focus-visible {
+		background: var(--flash);
+		color: white;
+		opacity: 1;
+		outline: none;
 	}
 </style>
