@@ -2,6 +2,8 @@
 title: TypeScript
 ---
 
+> You can use types both in [TypeScript](typescriptlang.org/) code and with [JSDoc](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html).
+
 All APIs in SvelteKit are fully typed. Additionally, it's possible to tell SvelteKit how to type objects inside your app by declaring the `App` namespace. By default, a new project will have a file called `src/app.d.ts` containing the following:
 
 ```ts
