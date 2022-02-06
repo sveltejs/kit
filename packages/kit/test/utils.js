@@ -111,25 +111,23 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			const isVisible = await page.isVisible(selector);
-			if (!isVisible) {
-				// @ts-expect-error
-				return page.$eval(selector, async (element) => {
-					const { top, bottom } = element.getBoundingClientRect();
+			const visible = await page.isVisible(selector);
+			if (visible) return true;
 
-					if (top > window.innerHeight || bottom < 0) {
-						// slightly more useful feedback than true/false
-						return {
-							top,
-							bottom
-						};
-					}
+			// @ts-expect-error
+			return page.$eval(selector, async (element) => {
+				const { top, bottom } = element.getBoundingClientRect();
 
-					return true;
-				});
-			}
+				if (top > window.innerHeight || bottom < 0) {
+					// slightly more useful feedback than true/false
+					return {
+						top,
+						bottom
+					};
+				}
 
-			return isVisible;
+				return true;
+			});
 		}
 
 		use(in_view);
@@ -185,14 +183,8 @@ export const test = base.extend({
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
-	// generous timeouts on CI, especially on windows
-	timeout: process.env.CI
-		? process.platform === 'win32'
-			? 45000
-			: 30000
-		: process.platform === 'win32'
-		? 15000
-		: 10000,
+	// generous timeouts on CI
+	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
 		port: 3000
