@@ -130,6 +130,7 @@
 			}
 
 			if (e.code === 'Space' && e.target.nodeName !== 'INPUT') {
+				// prevent scroll
 				e.preventDefault();
 			}
 		}}
