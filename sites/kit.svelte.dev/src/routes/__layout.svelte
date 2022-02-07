@@ -26,7 +26,7 @@
 		<NavItem href="/faq">FAQ</NavItem>
 		<NavItem href="/migrating">Migrating</NavItem>
 
-		<span class="separator" />
+		<li aria-hidden="true"><span class="separator" /></li>
 
 		<NavItem external="https://svelte.dev">Svelte</NavItem>
 
