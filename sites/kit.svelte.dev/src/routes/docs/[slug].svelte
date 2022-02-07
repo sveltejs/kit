@@ -45,8 +45,10 @@
 
 <style>
 	a {
+		position: relative;
 		font-size: 1.4rem;
 		line-height: 1;
+		z-index: 2;
 	}
 
 	a :global(.icon) {
