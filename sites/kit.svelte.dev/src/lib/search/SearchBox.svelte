@@ -84,7 +84,16 @@
 		$searching = false;
 	}
 
-	$: if ($searching) update();
+	$: if ($searching) {
+		update();
+		document.body.style.position = 'fixed';
+		document.body.style.top = `-${window.scrollY}px`;
+	} else {
+		const scroll = document.body.style.top;
+		document.body.style.position = '';
+		document.body.style.top = '';
+		window.scrollTo(0, -parseInt(scroll || '0'));
+	}
 
 	$: recent_searches = lookup ? $recent.map((href) => lookup.get(href)).filter(Boolean) : [];
 </script>
@@ -104,12 +113,7 @@
 />
 
 {#if $searching && index}
-	<div
-		class="modal-background"
-		on:click={() => ($searching = false)}
-		on:wheel={(e) => e.preventDefault()}
-		on:touchmove={(e) => e.preventDefault()}
-	/>
+	<div class="modal-background" on:click={() => ($searching = false)} />
 
 	<div
 		bind:this={modal}
@@ -127,11 +131,6 @@
 				} else {
 					group.prev(selector);
 				}
-			}
-
-			if (e.code === 'Space' && e.target.nodeName !== 'INPUT') {
-				// prevent scroll
-				e.preventDefault();
 			}
 		}}
 		use:trap
