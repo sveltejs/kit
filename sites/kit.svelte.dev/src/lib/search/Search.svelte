@@ -4,7 +4,7 @@
 
 <div class="search-container">
 	<input
-		aria-label="Search"
+		id="search"
 		on:input={(e) => {
 			$searching = true;
 			$query = e.target.value;
@@ -15,7 +15,7 @@
 		type="search"
 	/>
 
-	<span>
+	<label for="#search">
 		<svg viewBox="0 0 24 24" aria-hidden="true">
 			<path
 				fill="currentColor"
@@ -24,7 +24,7 @@
 		</svg>
 
 		Search <kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
-	</span>
+	</label>
 </div>
 
 <style>
@@ -72,11 +72,11 @@
 		border-radius: var(--border-r);
 	}
 
-	.search-container input:focus + span {
+	.search-container input:focus + label {
 		display: none;
 	}
 
-	.search-container span {
+	.search-container label {
 		color: #666;
 		position: absolute;
 		top: calc(50% - 0.9rem);
