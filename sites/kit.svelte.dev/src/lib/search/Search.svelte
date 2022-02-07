@@ -8,7 +8,6 @@
 		on:input={(e) => {
 			$searching = true;
 			$query = e.target.value;
-			// update();
 			e.target.value = '';
 		}}
 		on:mousedown|preventDefault={() => ($searching = true)}
