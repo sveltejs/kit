@@ -185,10 +185,8 @@ export class Router {
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
 			// Check if new url only differs by hash
-			if (
-				url.href.split('#').length > 1 &&
-				url.href.split('#')[0] === location.href.split('#')[0]
-			) {
+			const [base, hash] = url.href.split('#');
+			if (hash && base === location.href.split('#')[0]) {
 				// Call `pushState` to add url to history so going back works.
 				// Also make a delay, otherwise the browser default behaviour would not kick in
 				setTimeout(() => history.pushState({}, '', url.href));
