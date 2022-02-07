@@ -201,18 +201,18 @@
 							<a on:click={() => navigate(search.href)} href={search.href}>
 								<small>{search.breadcrumbs.join('/')}</small>
 								<strong>{search.title}</strong>
-
-								<button
-									aria-label="Delete"
-									on:click={(e) => {
-										$recent = $recent.filter((href) => href !== search.href);
-										e.stopPropagation();
-										e.preventDefault();
-									}}
-								>
-									<Icon name="delete" />
-								</button>
 							</a>
+
+							<button
+								aria-label="Delete"
+								on:click={(e) => {
+									$recent = $recent.filter((href) => href !== search.href);
+									e.stopPropagation();
+									e.preventDefault();
+								}}
+							>
+								<Icon name="delete" />
+							</button>
 						</li>
 					{/each}
 				{/if}
@@ -309,6 +309,7 @@
 	}
 
 	li {
+		position: relative;
 		list-style: none;
 		margin: 0;
 	}
