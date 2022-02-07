@@ -285,6 +285,7 @@
 	}
 
 	.search-box {
+		position: relative;
 		width: calc(100vw - 2rem);
 		height: calc(100% - 2rem);
 		max-width: 50rem;
@@ -399,7 +400,7 @@
 		opacity: 0.1;
 	}
 
-	a:focus [aria-label='Delete'] {
+	a:focus + [aria-label='Delete'] {
 		color: white;
 	}
 
