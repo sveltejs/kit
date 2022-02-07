@@ -24,7 +24,6 @@
 			/>
 		</svg>
 
-		<!-- TODO should be ctrl on non-mac -->
 		Search <kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
 	</span>
 </div>
