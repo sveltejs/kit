@@ -17,7 +17,10 @@
 <Nav {page} logo="/images/svelte-kit-horizontal.svg">
 	<svelte:fragment slot="nav-center">
 		{#if browser}
-			<Search />
+			<!-- the <Nav> component renders this content inside a <ul>, so
+				 we need to wrap it in an <li>. TODO if we adopt this design
+				 on other sites, change <Nav> so we don't need to do this -->
+			<li><Search /></li>
 		{/if}
 	</svelte:fragment>
 
