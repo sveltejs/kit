@@ -203,7 +203,7 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
-- `createIndexFiles` - if set to `false`, will render `about.html` instead of `about/index.html`
+- `createIndexFiles` - if set to `false`, will render `about.html` instead of `about/index.html`, which may have the advantage of rendering the URL without a trailing slash. The value of `false` value is meant to be used with static file hosts that respond to `/about` with `about.html`
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
