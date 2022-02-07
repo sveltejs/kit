@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fixes bug with hash routing
+Prevent full reload when router navigates and only removes hash
