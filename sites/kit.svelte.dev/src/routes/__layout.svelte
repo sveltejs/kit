@@ -45,12 +45,12 @@
 	</svelte:fragment>
 </Nav>
 
-{#if browser}
-	<SearchBox />
-{/if}
-
 <main id="main">
 	<slot />
+
+	{#if browser}
+		<SearchBox />
+	{/if}
 </main>
 
 <style>

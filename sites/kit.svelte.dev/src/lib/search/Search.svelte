@@ -33,6 +33,7 @@
 		display: flex;
 		align-items: center;
 		animation: fade-in 0.2s;
+		height: 100%;
 	}
 
 	@keyframes fade-in {
