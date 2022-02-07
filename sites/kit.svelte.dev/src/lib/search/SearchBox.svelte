@@ -231,6 +231,12 @@
 	</div>
 {/if}
 
+<div aria-live="assertive">
+	{#if $searching && $query && results.length === 0}
+		<p>No results</p>
+	{/if}
+</div>
+
 <style>
 	input {
 		font-family: inherit;
