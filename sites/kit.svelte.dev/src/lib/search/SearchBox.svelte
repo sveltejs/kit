@@ -48,8 +48,13 @@
 	afterNavigate(() => {
 		// TODO this also needs to apply when only the hash changes
 		// (should before/afterNavigate fire at that time? unclear)
-		$searching = false;
+		close();
 	});
+
+	function close() {
+		$searching = false;
+		document.body.focus();
+	}
 
 	function update() {
 		results = (index ? index.search($query) : []).map((href) => lookup.get(href));
@@ -81,7 +86,7 @@
 	/** @param {string} href */
 	function navigate(href) {
 		$recent = [href, ...$recent.filter((x) => x !== href)];
-		$searching = false;
+		close();
 	}
 
 	$: if ($searching) {
@@ -107,13 +112,13 @@
 		}
 
 		if (e.code === 'Escape') {
-			$searching = false;
+			close();
 		}
 	}}
 />
 
 {#if $searching && index}
-	<div class="modal-background" on:click={() => ($searching = false)} />
+	<div class="modal-background" on:click={close} />
 
 	<div
 		bind:this={modal}
@@ -157,7 +162,7 @@
 					// doesn't work on mobile, longpress will close the modal)
 					if (e.key === 'Backspace') {
 						if ($query === '' && !backspace_pressed) {
-							$searching = false;
+							close();
 						}
 
 						backspace_pressed = true;
@@ -177,7 +182,7 @@
 				aria-describedby="search-description"
 			/>
 
-			<button aria-label="Close" on:click={() => ($searching = false)}>
+			<button aria-label="Close" on:click={close}>
 				<Icon name="close" />
 			</button>
 
