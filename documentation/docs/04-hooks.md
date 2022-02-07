@@ -58,7 +58,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr` — specifies whether the page will be loaded and rendered on the server.
+- `ssr` (boolean, default `true`) — specifies whether the page will be loaded and rendered on the server.
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
