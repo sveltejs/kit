@@ -42,7 +42,7 @@ function parse(markdown, file) {
 
 	const slug = slugify(metadata.title);
 
-	const headings = [, slug];
+	const headings = [];
 	const sections = [];
 
 	let section;
