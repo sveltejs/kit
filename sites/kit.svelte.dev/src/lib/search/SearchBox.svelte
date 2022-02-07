@@ -180,42 +180,50 @@
 				<Icon name="close" />
 			</button>
 
-			<ul class="results">
+			<div class="results">
 				{#if $query}
-					{#each results as result, i}
-						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-						<li>
-							<a on:click={() => navigate(result.href)} href={result.href}>
-								<small>{result.breadcrumbs.join('/')}</small>
-								<strong>{@html excerpt(result.title, $query)}</strong>
-								<span>{@html excerpt(result.content, $query)}</span>
-							</a>
-						</li>
-					{/each}
+					{#if results.length > 0}
+						<ul class="results">
+							{#each results as result, i}
+								<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+								<li>
+									<a on:click={() => navigate(result.href)} href={result.href}>
+										<small>{result.breadcrumbs.join('/')}</small>
+										<strong>{@html excerpt(result.title, $query)}</strong>
+										<span>{@html excerpt(result.content, $query)}</span>
+									</a>
+								</li>
+							{/each}
+						</ul>
+					{:else}
+						<p class="info">No results</p>
+					{/if}
 				{:else}
-					<li class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</li>
-					{#each recent_searches as search, i}
-						<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-						<li class="recent">
-							<a on:click={() => navigate(search.href)} href={search.href}>
-								<small>{search.breadcrumbs.join('/')}</small>
-								<strong>{search.title}</strong>
-							</a>
+					<h2 class="info">{recent_searches.length ? 'Recent searches' : 'No recent searches'}</h2>
+					<ul>
+						{#each recent_searches as search, i}
+							<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+							<li class="recent">
+								<a on:click={() => navigate(search.href)} href={search.href}>
+									<small>{search.breadcrumbs.join('/')}</small>
+									<strong>{search.title}</strong>
+								</a>
 
-							<button
-								aria-label="Delete"
-								on:click={(e) => {
-									$recent = $recent.filter((href) => href !== search.href);
-									e.stopPropagation();
-									e.preventDefault();
-								}}
-							>
-								<Icon name="delete" />
-							</button>
-						</li>
-					{/each}
+								<button
+									aria-label="Delete"
+									on:click={(e) => {
+										$recent = $recent.filter((href) => href !== search.href);
+										e.stopPropagation();
+										e.preventDefault();
+									}}
+								>
+									<Icon name="delete" />
+								</button>
+							</li>
+						{/each}
+					</ul>
 				{/if}
-			</ul>
+			</div>
 		</div>
 	</div>
 {/if}
@@ -314,9 +322,10 @@
 		margin: 0;
 	}
 
-	li.info {
+	.info {
 		padding: 1rem 1rem 0 1rem;
 		font-size: 1.2rem;
+		font-weight: normal;
 		text-transform: uppercase;
 	}
 
