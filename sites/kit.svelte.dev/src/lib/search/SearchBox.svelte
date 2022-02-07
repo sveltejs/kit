@@ -174,11 +174,14 @@
 				}}
 				value={$query}
 				placeholder="Search"
+				aria-describedby="search-description"
 			/>
 
 			<button aria-label="Close" on:click={() => ($searching = false)}>
 				<Icon name="close" />
 			</button>
+
+			<span id="search-description" class="visually-hidden">Results will update as you type</span>
 
 			<div class="results">
 				{#if $query}
@@ -245,7 +248,7 @@
 	}
 
 	input:focus-visible {
-		background: var(--flash);
+		background: var(--second);
 		color: white;
 		outline: none;
 	}
@@ -262,7 +265,7 @@
 	}
 
 	button[aria-label='Close']:focus-visible {
-		background: var(--flash);
+		background: var(--second);
 		color: white;
 		outline: none;
 	}
@@ -341,7 +344,7 @@
 	}
 
 	a:focus {
-		background: var(--flash);
+		background: var(--second);
 		color: white;
 		outline: none;
 	}
@@ -393,7 +396,7 @@
 	}
 
 	a strong :global(mark) {
-		background: var(--flash);
+		background: var(--second);
 		color: white;
 		text-decoration: none;
 		border-radius: 1px;
@@ -419,7 +422,7 @@
 	}
 
 	button[aria-label='Delete']:focus-visible {
-		background: var(--flash);
+		background: var(--second);
 		color: white;
 		opacity: 1;
 		outline: none;
