@@ -354,6 +354,11 @@ export class Renderer {
 
 		if (this.started) {
 			this.current = navigation_result.state;
+			
+			this.root.$set({
+				components: [],
+			});
+			await tick();
 
 			this.root.$set(navigation_result.props);
 			this.stores.navigating.set(null);
