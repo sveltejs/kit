@@ -45,7 +45,7 @@ export function get() {
 			if (intro) {
 				blocks.push({
 					breadcrumbs: [...breadcrumbs, metadata.title],
-					href: `/${category.slug}#${page_slug}`,
+					href: `/${category.slug}/${page_slug}`,
 					content: plaintext(intro)
 				});
 			}
@@ -62,7 +62,7 @@ export function get() {
 				if (intro) {
 					blocks.push({
 						breadcrumbs: [...breadcrumbs, metadata.title, h3],
-						href: `/${category.slug}#${page_slug}-${slugify(h3)}`,
+						href: `/${category.slug}/${page_slug}#${slugify(h3)}`,
 						content: plaintext(intro)
 					});
 				}
@@ -73,7 +73,7 @@ export function get() {
 
 					blocks.push({
 						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
-						href: `/${category.slug}#${page_slug}-${slugify(h3)}-${slugify(h4)}`,
+						href: `/${category.slug}/${page_slug}#${slugify(h3)}-${slugify(h4)}`,
 						content: plaintext(lines.join('\n').trim())
 					});
 				}
