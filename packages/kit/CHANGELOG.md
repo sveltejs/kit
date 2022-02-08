@@ -28,7 +28,7 @@
 
 * Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
 
-- Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+- [breaking] remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
 
 ## 1.0.0-next.256
 
