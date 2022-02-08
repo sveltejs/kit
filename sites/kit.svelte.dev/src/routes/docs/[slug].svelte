@@ -81,6 +81,7 @@
 	}
 
 	.controls {
+		max-width: var(--linemax);
 		border-top: 1px solid #eee;
 		padding: 1rem 0 0 0;
 		display: grid;

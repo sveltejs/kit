@@ -13,7 +13,7 @@
 </script>
 
 <script>
-	import Contents from './_/Contents.svelte';
+	import Contents from '$lib/docs/Contents.svelte';
 
 	export let sections;
 
@@ -31,6 +31,30 @@
 	}));
 </script>
 
-<slot />
+<div class="grid">
+	<slot />
+	<div class="toc-container">
+		<Contents {contents} />
+	</div>
+</div>
 
-<Contents {contents} />
+<style>
+	.grid {
+	}
+
+	@media (min-width: 832px) {
+		.grid {
+			grid-template-rows: unset;
+			grid-template-columns: var(--sidebar-w) 1fr;
+		}
+
+		.toc-container {
+			width: var(--sidebar-w);
+			height: 100vh;
+			overflow: auto;
+			position: fixed;
+			inset-inline-start: 0;
+			inset-block-start: 0;
+		}
+	}
+</style>
