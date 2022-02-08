@@ -279,7 +279,9 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 #### Fallthrough routes
 
-Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
+Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until it finds one that responds. A route will be considered to respond if it does not define [a `load` function](#loading) or returns anything other than `{fallthrough: true}`.
+
+For example if you have these routes...
 
 ```bash
 src/routes/[baz].js
@@ -288,6 +290,6 @@ src/routes/[qux].svelte
 src/routes/foo-[bar].svelte
 ```
 
-... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`.
 
 If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.
