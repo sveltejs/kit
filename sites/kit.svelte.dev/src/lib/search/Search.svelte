@@ -23,7 +23,7 @@
 			/>
 		</svg>
 
-		Search <kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
+		<span>Search</span> <kbd>{navigator.platform === 'MacIntel' ? '⌘' : 'Ctrl'}</kbd> <kbd>K</kbd>
 	</label>
 </div>
 
@@ -33,6 +33,7 @@
 		display: flex;
 		align-items: center;
 		animation: fade-in 0.2s;
+		width: 100%;
 		height: 100%;
 	}
 
@@ -99,12 +100,39 @@
 	}
 
 	@media (min-width: 800px) {
+		.search-container {
+			width: 11rem;
+		}
+
+		.search-container label {
+			text-align: right;
+			padding: 0 1.6rem 0 0;
+		}
+
+		.search-container span {
+			display: none;
+		}
+
 		.search-container input {
 			border-radius: 1.6rem;
 		}
 
 		/* we're using media query as an imperfect proxy for mobile/desktop */
 		.search-container kbd {
+			display: inline;
+		}
+	}
+
+	@media (min-width: 960px) {
+		.search-container {
+			width: 100%;
+		}
+
+		.search-container label {
+			text-align: center;
+		}
+
+		.search-container span {
 			display: inline;
 		}
 	}
