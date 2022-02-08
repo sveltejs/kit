@@ -34,7 +34,7 @@
 <div class="content listify">
 	<h1>{section.title}</h1>
 
-	<a href="https://github.com/sveltejs/kit/edit/master/documentation/docs/{section.file}">
+	<a href="https://github.com/sveltejs/kit/edit/master/documentation/{section.file}">
 		<Icon size={50} name="edit" /> Edit this page on GitHub
 	</a>
 

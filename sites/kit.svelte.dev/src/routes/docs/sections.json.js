@@ -1,7 +1,7 @@
-import { read } from '$lib/docs';
+import { read_all } from '$lib/docs';
 
 export function get() {
 	return {
-		body: read('docs')
+		body: read_all('docs').map(({ slug, title, sections }) => ({ slug, title, sections }))
 	};
 }

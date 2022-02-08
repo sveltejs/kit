@@ -1,6 +1,6 @@
 import fs from 'fs';
+import path from 'path';
 import PrismJS from 'prismjs';
-
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
@@ -19,24 +19,46 @@ const languages = {
 	'': ''
 };
 
+const base = '../../documentation';
+
+/**
+ * @param {string} dir
+ * @param {string} file
+ */
+export function read_file(dir, file) {
+	const match = /\d{2}-(.+)\.md/.exec(file);
+	if (!match) return null;
+
+	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+
+	return {
+		file: `${dir}/${file}`,
+		slug: match[1],
+		...parse(markdown, file)
+	};
+}
+
+/**
+ * @param {string} dir
+ * @param {string} slug
+ */
+export function read(dir, slug) {
+	const file = fs.readdirSync(`${base}/${dir}`).find((file) => file.slice(3, -3) === slug);
+	return file && read_file(dir, file);
+}
+
 /** @param {string} dir */
-export function read(dir) {
+export function read_all(dir) {
 	return fs
-		.readdirSync(`../../documentation/${dir}`)
-		.map((file) => {
-			const match = /\d{2}-(.+)\.md/.exec(file);
-			if (!match) return;
-
-			const slug = match[1];
-
-			const markdown = fs.readFileSync(`../../documentation/${dir}/${file}`, 'utf-8');
-			const { title, sections, content } = parse(markdown, file);
-
-			return { title, slug, file, sections, content };
-		})
+		.readdirSync(`${base}/${dir}`)
+		.map((file) => read_file(dir, file))
 		.filter(Boolean);
 }
 
+/**
+ * @param {string} markdown
+ * @param {string} file
+ */
 function parse(markdown, file) {
 	const { body, metadata } = extract_frontmatter(markdown);
 
@@ -107,6 +129,7 @@ function parse(markdown, file) {
 	};
 }
 
+/** @param {string} title */
 export function slugify(title) {
 	return title
 		.toLowerCase()

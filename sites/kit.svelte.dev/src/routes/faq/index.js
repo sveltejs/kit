@@ -1,9 +1,9 @@
-import { read } from '$lib/docs';
+import { read_all } from '$lib/docs';
 
 export function get() {
 	return {
 		body: {
-			sections: read('faq')
+			sections: read_all('faq')
 		}
 	};
 }

@@ -13,6 +13,10 @@ const escapeReplacements = {
 };
 const getEscapeReplacement = (ch) => escapeReplacements[ch];
 
+/**
+ * @param {string} html
+ * @param {boolean} encode
+ */
 export function escape(html, encode) {
 	if (encode) {
 		if (escapeTest.test(html)) {
@@ -27,6 +31,7 @@ export function escape(html, encode) {
 	return html;
 }
 
+/** @type {Partial<import('marked').Renderer>} */
 const default_renderer = {
 	code(code, infostring, escaped) {
 		const lang = (infostring || '').match(/\S*/)[0];
@@ -147,6 +152,10 @@ const default_renderer = {
 	}
 };
 
+/**
+ * @param {string} markdown
+ * @param {Partial<import('marked').Renderer>} renderer
+ */
 export function transform(markdown, renderer = {}) {
 	marked.use({
 		renderer: {
@@ -161,6 +170,7 @@ export function transform(markdown, renderer = {}) {
 	return marked(markdown);
 }
 
+/** @param {string} markdown */
 export function extract_frontmatter(markdown) {
 	const match = /---\r?\n([\s\S]+?)\r?\n---/.exec(markdown);
 	const frontmatter = match[1];
