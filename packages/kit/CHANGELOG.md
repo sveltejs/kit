@@ -28,7 +28,7 @@
 
 * Add App namespace for app-level types ([#3670](https://github.com/sveltejs/kit/pull/3670))
 
-- Remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
+- [breaking] remove target option ([#3674](https://github.com/sveltejs/kit/pull/3674))
 
 ## 1.0.0-next.256
 
@@ -76,7 +76,7 @@
 
 ### Patch Changes
 
-- Move config.kit.hydrate and config.kit.router to config.kit.browser ([#3578](https://github.com/sveltejs/kit/pull/3578))
+- [breaking] move `config.kit.hydrate` and `config.kit.router` to `config.kit.browser` ([#3578](https://github.com/sveltejs/kit/pull/3578))
 
 * add `prerender.createIndexFiles` option ([#2632](https://github.com/sveltejs/kit/pull/2632))
 
@@ -94,7 +94,7 @@
 
 - Decode fetched resources before checking against manifest when prerendering ([#3571](https://github.com/sveltejs/kit/pull/3571))
 
-* Breaking: remove -H and (conflicting) -h shortcuts from CLI ([#3573](https://github.com/sveltejs/kit/pull/3573))
+* [breaking] remove -H and (conflicting) -h shortcuts from CLI ([#3573](https://github.com/sveltejs/kit/pull/3573))
 
 ## 1.0.0-next.247
 
@@ -194,13 +194,13 @@
 
 ### Patch Changes
 
-- Allow endpoints to return a Response, or an object with Headers ([#3384](https://github.com/sveltejs/kit/pull/3384))
+- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
-* Breaking: Expose standard Request object to endpoints and hooks ([#3384](https://github.com/sveltejs/kit/pull/3384))
+* [breaking] Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
-- Breaking: change app.render signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
+- [breaking] change `app.render` signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
-* Breaking: Remove protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
+* [breaking] move protocol/host configuration options from Kit to adapter-node ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
 ## 1.0.0-next.233
 
@@ -346,7 +346,7 @@
 
 ### Patch Changes
 
-- Breaking: Add disableScrollHandling function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+- [breaking] Add `disableScrollHandling` function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
 
 ## 1.0.0-next.213
 
@@ -674,7 +674,7 @@
 
 - [chore] upgrade to Svelte 3.43.0" ([#2474](https://github.com/sveltejs/kit/pull/2474))
 
-* **breaking change** the "context" parameter of the load function was renamed to "stuff" ([#2439](https://github.com/sveltejs/kit/pull/2439))
+* [breaking] rename the `context` parameter of the load function to `stuff` ([#2439](https://github.com/sveltejs/kit/pull/2439))
 
 ## 1.0.0-next.171
 
@@ -1444,7 +1444,7 @@
 ### Patch Changes
 
 - 6d9f7b1: Only include CSS on an SSR'd page ([#839](https://github.com/sveltejs/kit/pull/839))
-- 6ecfa2c: Remove duplicate <style> element ([#845](https://github.com/sveltejs/kit/pull/845))
+- 6ecfa2c: Remove duplicate &lt;style&gt; element ([#845](https://github.com/sveltejs/kit/pull/845))
 
 ## 1.0.0-next.69
 
