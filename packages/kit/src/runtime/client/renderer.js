@@ -615,6 +615,9 @@ export class Renderer {
 		if (props) {
 			// shadow endpoint props means we need to mark this URL as a dependency of itself
 			node.uses.dependencies.add(url.href);
+			for (const key in params) {
+				node.uses.params.add(key);
+			}
 		}
 
 		/** @type {Record<string, string>} */
