@@ -43,8 +43,24 @@ export function read_file(dir, file) {
  * @param {string} slug
  */
 export function read(dir, slug) {
-	const file = fs.readdirSync(`${base}/${dir}`).find((file) => file.slice(3, -3) === slug);
-	return file && read_file(dir, file);
+	const files = fs.readdirSync(`${base}/${dir}`);
+	const index = files.findIndex((file) => file.slice(3, -3) === slug);
+
+	if (index === -1) return null;
+
+	const prev = index > 0 && files[index - 1];
+	const next = index < files.length - 1 && files[index + 1];
+
+	const summarise = (file) => ({
+		slug: file.slice(3, -3), // remove 00- prefix and .md suffix
+		title: extract_frontmatter(fs.readFileSync(`${base}/${dir}/${file}`, 'utf8')).metadata.title
+	});
+
+	return {
+		prev: prev && summarise(prev),
+		next: next && summarise(next),
+		section: read_file(dir, files[index])
+	};
 }
 
 /** @param {string} dir */
