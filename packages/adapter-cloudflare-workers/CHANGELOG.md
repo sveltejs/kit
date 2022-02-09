@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.31
+
+### Patch Changes
+
+- update to Vite 2.8 and esbuild 0.14 ([#3791](https://github.com/sveltejs/kit/pull/3791))
+
 ## 1.0.0-next.30
 
 ### Patch Changes
