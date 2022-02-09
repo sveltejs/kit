@@ -2,7 +2,7 @@
 	export const prerender = true;
 
 	export async function load({ fetch }) {
-		const res = await fetch('/docs/sections.json');
+		const res = await fetch('/docs.json');
 
 		return {
 			props: {
