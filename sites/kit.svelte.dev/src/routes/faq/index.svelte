@@ -123,6 +123,16 @@
 		inset-block-start: 0;
 	}
 
+	.faqs :global(a) {
+		position: relative;
+		z-index: 2;
+	}
+
+	/* TODO this page must be missing some styles from somewhere. the whole thing needs tidying up */
+	.faqs :global(a) :global(code) {
+		color: var(--prime);
+	}
+
 	.faq:first-child {
 		margin: 0;
 		margin-block: 2rem;

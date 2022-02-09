@@ -70,7 +70,7 @@ Layout resets are otherwise identical to normal layout components.
 
 ### Error pages
 
-If a page fails to load (see [Loading](#loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layout and page components.
+If a page fails to load (see [Loading](/docs/loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layout and page components.
 
 For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
 
@@ -87,7 +87,7 @@ export interface ErrorLoadInput<Params extends Record<string, string> = Record<s
 }
 ```
 
-If an error component has a [`load`](#loading) function, it will be called with `error` and `status` properties:
+If an error component has a [`load`](/docs/loading) function, it will be called with `error` and `status` properties:
 
 ```html
 <script context="module">
@@ -108,6 +108,6 @@ If an error component has a [`load`](#loading) function, it will be called with 
 <h1>{title}</h1>
 ```
 
-> Layout components also have access to `error` and `status` via the [page store](#modules-$app-stores)
+> Layout components also have access to `error` and `status` via the [page store](/docs/modules#$app-stores)
 >
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.

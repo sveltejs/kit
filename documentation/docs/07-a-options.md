@@ -16,7 +16,7 @@ We can mitigate that by _prefetching_ the data. Adding a `sveltekit:prefetch` at
 
 ...will cause SvelteKit to run the page's `load` function as soon as the user hovers over the link (on a desktop) or touches it (on mobile), rather than waiting for the `click` event to trigger navigation. Typically, this buys us an extra couple of hundred milliseconds, which is the difference between a user interface that feels laggy, and one that feels snappy.
 
-Note that prefetching will not work if the [`router`](#page-options-router) setting is `false`.
+Note that prefetching will not work if the [`router`](/docs/page-options#router) setting is `false`.
 
 You can also programmatically invoke `prefetch` from `$app/navigation`.
 
