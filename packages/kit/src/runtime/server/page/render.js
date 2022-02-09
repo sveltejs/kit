@@ -260,8 +260,24 @@ export async function render_response({
 				.join('\n\t');
 
 			if (shadow_props) {
-				// prettier-ignore
-				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</script>`;
+				// adapted from https://github.com/vercel/next.js/blob/694407450638b037673c6d714bfe4126aeded740/packages/next/server/htmlescape.ts
+				// based on https://github.com/zertosh/htmlescape
+				// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
+				/**
+				 * @type { Record<string, string> }
+				 */
+				const escape_lookup = {
+					'&': '\\u0026',
+					'>': '\\u003e',
+					'<': '\\u003c',
+					'\u2028': '\\u2028',
+					'\u2029': '\\u2029'
+				};
+				const escaped_shadow_props = s(shadow_props).replace(
+					/[&><\u2028\u2029]/g,
+					(match) => escape_lookup[match]
+				);
+				body += `<script type="application/json" data-type="svelte-props">${escaped_shadow_props}</script>`;
 			}
 		}
 
