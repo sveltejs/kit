@@ -111,8 +111,8 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			const visible = await page.isVisible(selector);
-			if (visible) return true;
+			const box = await page.locator(selector).boundingBox();
+			if (box !== null) return true;
 
 			// @ts-expect-error
 			return page.$eval(selector, async (element) => {
