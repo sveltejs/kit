@@ -53,7 +53,7 @@ test.describe.parallel('a11y', () => {
 				page.type('#input', 'bar'),
 				page.waitForFunction(() => window.location.search === '?foo=bar')
 			]);
-			expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
+			expect(await page.locator('#input')).toBeFocused();
 		}
 	});
 
@@ -221,7 +221,7 @@ test.describe('Scrolling', () => {
 	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
 		await page.goto('/use-action/focus-and-scroll');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
+		expect(await page.locator('#input')).toBeFocused();
 	});
 
 	test('app-supplied scroll and focus work on navigation to page', async ({
@@ -232,7 +232,7 @@ test.describe('Scrolling', () => {
 		await page.goto('/use-action');
 		await clicknav('[href="/use-action/focus-and-scroll"]');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.$eval('#input', (el) => el === document.activeElement)).toBe(true);
+		expect(await page.locator('#input')).toBeFocused();
 	});
 });
 
@@ -1483,14 +1483,16 @@ test.describe.parallel('Redirects', () => {
 	});
 
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
-		await page.goto('/redirect-on-load');
+		const redirected_to_url = javaScriptEnabled
+			? `${baseURL}/redirect-on-load/redirected`
+			: `${baseURL}/redirect-on-load`;
+
+		await Promise.all([page.waitForResponse(redirected_to_url), page.goto('/redirect-on-load')]);
+
+		expect(page.url()).toBe(redirected_to_url);
 
 		if (javaScriptEnabled) {
-			await page.waitForTimeout(50); // TODO investigate why this test is flaky
-			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
 			expect(await page.textContent('h1')).toBe('Hazaa!');
-		} else {
-			expect(page.url()).toBe(`${baseURL}/redirect-on-load`);
 		}
 	});
 });
@@ -1627,9 +1629,21 @@ test.describe.parallel('Routing', () => {
 			let requests = [];
 			page.on('request', (r) => requests.push(r.url()));
 
-			await app.prefetch('/routing/prefetched');
-			expect(requests.length).toBe(2);
-			expect(requests[1]).toBe(`${baseURL}/routing/prefetched.json`);
+			// also wait for network processing to complete, see
+			// https://playwright.dev/docs/network#network-events
+			await Promise.all([
+				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
+				app.prefetch('/routing/prefetched')
+			]);
+
+			// svelte request made is environment dependent
+			if (process.env.DEV) {
+				expect(requests.filter((req) => req.endsWith('index.svelte')).length).toBe(1);
+			} else {
+				expect(requests.filter((req) => req.endsWith('.js')).length).toBe(1);
+			}
+
+			expect(requests.includes(`${baseURL}/routing/prefetched.json`)).toBe(true);
 
 			requests = [];
 			await app.goto('/routing/prefetched');
