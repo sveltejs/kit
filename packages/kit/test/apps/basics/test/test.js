@@ -1994,7 +1994,7 @@ test.describe.parallel('XSS', () => {
 	});
 
 	test('no xss via shadow endpoint', async ({ page }) => {
-		await page.goto('/xss/shadow')
+		await page.goto('/xss/shadow');
 
 		// @ts-expect-error - check global injected variable
 		expect(await page.evaluate(() => window.pwned)).toBeUndefined();
