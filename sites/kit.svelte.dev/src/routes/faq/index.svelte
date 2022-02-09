@@ -20,10 +20,9 @@
 	<h1>Frequently Asked Questions</h1>
 	{#each sections as faq}
 		<article class="faq">
-			<h2>
-				<span id={faq.slug} class="offset-anchor" />
+			<h2 id={faq.slug}>
 				{faq.title}
-				<Permalink href="/faq#{faq.slug}" />
+				<Permalink href="#{faq.slug}" />
 			</h2>
 			{@html faq.content}
 		</article>
@@ -52,7 +51,6 @@
 		margin: 0;
 		inset-block-start: 0;
 		background: transparent;
-		color: white;
 	}
 
 	.faqs :global(pre) {
@@ -62,17 +60,8 @@
 		max-inline-size: var(--linemax);
 		padding-inline: 2.5rem;
 		padding-block: 1.5rem;
-		background: #333;
 		border-radius: 0.5rem;
 		font-size: 0.8rem;
-	}
-
-	.faqs :global(.offset-anchor) {
-		position: relative;
-		display: block;
-		inset-block-start: calc(-1 * var(--top-offset));
-		inline-size: 0;
-		block-size: 0;
 	}
 
 	.faqs :global(.anchor) {
@@ -89,7 +78,7 @@
 
 	.faqs :global(h2 > .anchor),
 	.faqs :global(h3 > .anchor) {
-		inset-block-start: 0.2em;
+		inset-block-end: 0.3em;
 	}
 
 	@media (min-width: 768px) {
@@ -104,12 +93,13 @@
 
 		.faqs :global(h5) :global(.anchor),
 		.faqs :global(h6) :global(.anchor) {
-			inset-block-start: 0.25em;
+			inset-block-end: 0.25em;
 		}
 	}
 
 	h2 {
-		margin-block: 3.5rem 1rem;
+		margin-block: -4rem 1rem;
+		padding-block-start: 10rem;
 		padding-block-end: 0.2rem;
 		color: var(--text);
 		/* max-inline-size: 24em; */
@@ -131,6 +121,16 @@
 		inset-block-start: 0;
 	}
 
+	.faqs :global(a) {
+		position: relative;
+		z-index: 2;
+	}
+
+	/* TODO this page must be missing some styles from somewhere. the whole thing needs tidying up */
+	.faqs :global(a) :global(code) {
+		color: var(--prime);
+	}
+
 	.faq:first-child {
 		margin: 0;
 		margin-block: 2rem;
@@ -145,10 +145,6 @@
 
 	:global(.faqs .faq ul) {
 		margin-inline-start: 3.2rem;
-	}
-
-	.faqs :global(.anchor) {
-		inset-block-start: calc((var(--h3) - 24px) / 2);
 	}
 
 	@media (max-width: 768px) {

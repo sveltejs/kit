@@ -4,7 +4,7 @@ title: Adapters
 
 Before you can deploy your SvelteKit app, you need to _adapt_ it for your deployment target. Adapters are small plugins that take the built app as input and generate output for deployment.
 
-By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](#adapters-community-adapters) or [write one](#adapters-writing-custom-adapters).
+By default, projects are configured to use `@sveltejs/adapter-auto`, which detects your production environment and selects the appropriate adapter where possible. If your platform isn't (yet) supported, you may need to [install a custom adapter](/docs/adapters#community-adapters) or [write one](/docs/adapters#writing-custom-adapters).
 
 > See the [adapter-auto README](https://github.com/sveltejs/kit/tree/master/packages/adapter-auto) for information on adding support for new environments.
 
@@ -28,7 +28,7 @@ To create a simple Node server, install the `@sveltejs/adapter-node@next` packag
 +import adapter from '@sveltejs/adapter-node';
 ```
 
-With this, [svelte-kit build](#command-line-interface-svelte-kit-build) will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
+With this, [svelte-kit build](/docs/cli#svelte-kit-build) will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
 
 ```diff
 // svelte.config.js
@@ -44,7 +44,7 @@ export default {
 
 #### Static sites
 
-Most adapters will generate static HTML for any [prerenderable](#page-options-prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use `@sveltejs/adapter-static@next` to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
+Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use `@sveltejs/adapter-static@next` to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
 ```diff
 // svelte.config.js
@@ -56,7 +56,7 @@ You can also use `adapter-static` to generate single-page apps (SPAs) by specify
 
 #### Platform-specific context
 
-Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](#hooks) and [endpoints](#routing-endpoints) as the `platform` property — consult each adapter's documentation to learn more.
+Some adapters may have access to additional information about the request. For example, Cloudflare Workers can access an `env` object containing KV namespaces etc. This can be passed to the `RequestEvent` used in [hooks](/docs/hooks) and [endpoints](/docs/routing#endpoints) as the `platform` property — consult each adapter's documentation to learn more.
 
 ### Community adapters
 

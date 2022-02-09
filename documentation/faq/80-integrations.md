@@ -2,11 +2,11 @@
 title: How do I use X with SvelteKit?
 ---
 
-Make sure you've read the [documentation section on integrations](/docs#additional-resources-integrations). If you're still having trouble, solutions to common issues are listed below.
+Make sure you've read the [documentation section on integrations](/docs/additional-resources#integrations). If you're still having trouble, solutions to common issues are listed below.
 
 ### How do I setup a database?
 
-Put the code to query your database in [endpoints](/docs#routing-endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
+Put the code to query your database in [endpoints](/docs/routing#endpoints) - don't query the database in .svelte files. You can create a `db.js` or similar that sets up a connection immediately and makes the client accessible throughout the app as a singleton. You can execute any one-time setup code in `hooks.js` and import your database helpers into any endpoint that needs them.
 
 ### How do I use middleware?
 

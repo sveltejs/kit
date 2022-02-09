@@ -1,0 +1,233 @@
+.content {
+	inline-size: 100%;
+	margin: 0;
+	padding-inline: var(--side-nav);
+	padding-block: var(--top-offset);
+	tab-size: 2;
+	-moz-tab-size: 2;
+}
+
+@media (min-width: 832px) {
+	/* can't use vars in @media :( */
+	.content {
+		padding-inline-start: calc(var(--sidebar-w) + var(--side-nav));
+	}
+}
+
+.content h1 {
+	font-size: 3.2rem;
+	margin: 0;
+}
+
+.content h2 {
+	margin-block-start: 8rem;
+	padding-inline: 0.2rem 1.6rem;
+	padding-block: 2rem 4rem;
+	border-block-start: 2px solid #ddd;
+	line-height: 1;
+	font-size: var(--h3);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.content section:first-of-type > h2 {
+	margin-block-start: 0;
+}
+
+.content h4 {
+	margin-block: 2em 1em;
+}
+
+.content .offset-anchor {
+	position: relative;
+	display: block;
+	inset-block-start: calc(-1 * var(--top-offset));
+	inline-size: 0;
+	block-size: 0;
+}
+
+.content .anchor {
+	position: absolute;
+	display: block;
+	background: url(@sveltejs/site-kit/icons/link.svg) 0 50% no-repeat;
+	background-size: 1em 1em;
+	inline-size: 1.4em;
+	block-size: 1em;
+	inset-inline-start: -1.3em;
+	inset-block-end: 0.3rem;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.content h2 .anchor {
+	inset-block-end: 4rem;
+}
+
+.content h3 .anchor {
+	inset-block-end: 1rem;
+}
+
+@media (min-width: 400px) {
+	.content h1 {
+		font-size: 4.2rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.content h1 {
+		font-size: 5.4rem;
+	}
+
+	.content .anchor:focus,
+	.content h2:hover .anchor,
+	.content h3:hover .anchor,
+	.content h4:hover .anchor,
+	.content h5:hover .anchor,
+	.content h6:hover .anchor {
+		opacity: 1;
+	}
+}
+
+.content h3,
+.content h3 > code {
+	margin-inline: 0;
+	margin-block: 6.4rem 1rem;
+	padding-block-end: 1rem;
+	color: var(--text);
+	max-inline-size: var(--linemax);
+	border-block-end: 1px solid #ddd;
+	background: transparent;
+	line-height: 1;
+}
+
+.content h3:first-child {
+	border: none;
+	margin: 0;
+}
+
+/* avoid doubled border-top */
+.content h3 > code {
+	border-radius: 0 0 0 0;
+	border: none;
+	font-size: inherit;
+}
+
+.content h4,
+.content h4 > code {
+	font-family: inherit;
+	font-weight: 600;
+	font-size: 2.4rem;
+	color: var(--second);
+	margin-inline: 0;
+	margin-block: 6.4rem 1.6rem;
+	padding-inline-start: 0;
+	background: transparent;
+	line-height: 1;
+	padding-block-start: 0;
+	inset-block-start: 0;
+}
+
+.content h4::before {
+	display: block;
+	content: ' ';
+	block-size: var(--nav-h);
+	margin-block-start: calc(-1 * var(--nav-h));
+}
+
+.content h4 > em {
+	opacity: 0.7;
+}
+
+.content h5 {
+	font-size: 2.4rem;
+	margin-block: 2em 0.5em;
+}
+
+.content code {
+	padding: 0.4rem;
+	margin-inline: 0.2rem;
+	margin-block: 0;
+	inset-block-start: -0.1rem;
+	background: var(--back-api);
+}
+
+.content pre code {
+	padding: 0;
+	margin: 0;
+	inset-block-start: 0;
+	background: transparent;
+}
+
+.content pre {
+	margin: 0;
+	margin-block-end: 2rem;
+	inline-size: 100%;
+	max-inline-size: var(--linemax);
+	padding: 1rem;
+	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+}
+
+.content table {
+	margin: 0;
+	margin-block-end: 2em;
+}
+
+.content section p {
+	max-inline-size: var(--linemax);
+	margin-block: 1em;
+}
+
+.content small {
+	font-size: var(--h5);
+	float: inline-end;
+	pointer-events: all;
+	color: var(--prime);
+	cursor: pointer;
+}
+
+.content blockquote {
+	color: rgba(0, 0, 0, 0.7);
+	background-color: rgba(255, 62, 0, 0.1);
+	border-inline-start: 4px solid #ff3e00;
+	padding: 1rem;
+}
+
+.content blockquote :first-child {
+	margin-block-start: 0;
+}
+
+.content blockquote :last-child {
+	margin-block-end: 0;
+}
+
+.content blockquote code {
+	background: #d5e2ea;
+}
+
+.content section a:hover {
+	text-decoration: underline;
+}
+
+.content section a code {
+	color: inherit;
+	background: rgba(255, 62, 0, 0.1) !important;
+}
+
+/* this replaces the offset-anchor hack, which we should remove from this CSS
+   once https://github.com/sveltejs/action-deploy-docs/issues/1 is closed */
+.content h2[id],
+.content h3[id] {
+	padding-block-start: 10rem;
+	margin-block-start: -2rem;
+	border-block-start: none;
+}
+
+.content h2[id]::after {
+	content: '';
+	position: absolute;
+	inline-size: 100%;
+	inset-inline-start: 0;
+	inset-block-start: 8rem;
+	block-size: 2px;
+	background: #ddd;
+}

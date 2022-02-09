@@ -188,7 +188,7 @@ export class Router {
 			// This will ensure the `hashchange` event is fired
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
-			if (hash && base === location.href.split('#')[0]) {
+			if (hash !== undefined && base === location.href.split('#')[0]) {
 				// Call `pushState` to add url to history so going back works.
 				// Also make a delay, otherwise the browser default behaviour would not kick in
 				setTimeout(() => history.pushState({}, '', url.href));

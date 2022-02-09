@@ -10,11 +10,11 @@ SvelteKit makes a number of modules available to your application.
 import { amp, browser, dev, mode, prerendering } from '$app/env';
 ```
 
-- `amp` is `true` or `false` depending on the corresponding value in your [project configuration](#configuration)
+- `amp` is `true` or `false` depending on the corresponding value in your [project configuration](/docs/configuration)
 - `browser` is `true` or `false` depending on whether the app is running in the browser or on the server
 - `dev` is `true` in development mode, `false` in production
 - `mode` is the [Vite mode](https://vitejs.dev/guide/env-and-mode.html#modes), which is `development` in dev mode or `production` during build unless configured otherwise in `config.kit.vite.mode`.
-- `prerendering` is `true` when [prerendering](#page-options-prerender), `false` otherwise
+- `prerendering` is `true` when [prerendering](/docs/page-options#prerender), `false` otherwise
 
 ### $app/navigation
 
@@ -39,7 +39,7 @@ import {
   - `keepfocus` (boolean, default `false`) If `true`, the currently focused element will retain focus after navigation. Otherwise, focus will be reset to the body
   - `state` (object, default `{}`) The state of the new/updated history entry
 - `invalidate(href)` causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. It returns a `Promise` that resolves when the page is subsequently updated.
-- `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](#anchor-options-sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
+- `prefetch(href)` programmatically prefetches the given page, which means a) ensuring that the code for the page is loaded, and b) calling the page's `load` function with the appropriate options. This is the same behaviour that SvelteKit triggers when the user taps or mouses over an `<a>` element with [sveltekit:prefetch](/docs/a-options#sveltekit-prefetch). If the next navigation is to `href`, the values returned from `load` will be used, making navigation instantaneous. Returns a `Promise` that resolves when the prefetch is complete.
 - `prefetchRoutes(routes)` — programmatically prefetches the code for routes that haven't yet been fetched. Typically, you might call this to speed up subsequent navigation. If no argument is given, all routes will be fetched; otherwise, you can specify routes by any matching pathname such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`). Unlike `prefetch`, this won't call `load` for individual pages. Returns a `Promise` that resolves when the routes have been prefetched.
 
 ### $app/paths
@@ -48,10 +48,10 @@ import {
 import { base, assets } from '$app/paths';
 ```
 
-- `base` — a root-relative (i.e. begins with a `/`) string that matches [`config.kit.paths.base`](#configuration-paths), or the empty string if unspecified
-- `assets` — an absolute URL that matches [`config.kit.paths.assets`](#configuration-paths), if specified, otherwise equal to `base`
+- `base` — a root-relative (i.e. begins with a `/`) string that matches [`config.kit.paths.base`](/docs/configuration#paths), or the empty string if unspecified
+- `assets` — an absolute URL that matches [`config.kit.paths.assets`](/docs/configuration#paths), if specified, otherwise equal to `base`
 
-> If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](#command-line-interface-svelte-kit-dev) or [`svelte-kit preview`](#command-line-interface-svelte-kit-preview), since the assets don't yet live at their eventual URL.
+> If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](/docs/cli#svelte-kit-dev) or [`svelte-kit preview`](/docs/cli#svelte-kit-preview), since the assets don't yet live at their eventual URL.
 
 ### $app/stores
 
@@ -68,9 +68,9 @@ Because of that, the stores are not free-floating objects: they must be accessed
 The stores themselves attach to the correct context at the point of subscription, which means you can import and use them directly in components without boilerplate. However, it still needs to be called synchronously on component or page initialisation when the `$`-prefix isn't used. Use `getStores` to safely `.subscribe` asynchronously instead.
 
 - `navigating` is a [readable store](https://svelte.dev/tutorial/readable-stores). When navigating starts, its value is `{ from, to }`, where `from` and `to` are both [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL) instances. When navigating finishes, its value reverts to `null`.
-- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](#loading-input-params), [`stuff`](#loading-output-stuff), [`status`](#loading-output-status) and [`error`](#loading-output-error).
-- `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](#hooks-getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
-- `updated` is a [readable store](https://svelte.dev/tutorial/readable-stores) whose initial value is false. If [`version.pollInterval`](#configuration-version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
+- `page` contains an object with the current [`url`](https://developer.mozilla.org/en-US/docs/Web/API/URL), [`params`](/docs/loading#input-params), [`stuff`](/docs/loading#output-stuff), [`status`](/docs/loading#output-status) and [`error`](/docs/loading#output-error).
+- `session` is a [writable store](https://svelte.dev/tutorial/writable-stores) whose initial value is whatever was returned from [`getSession`](/docs/hooks#getsession). It can be written to, but this will _not_ cause changes to persist on the server — this is something you must implement yourself.
+- `updated` is a [readable store](https://svelte.dev/tutorial/readable-stores) whose initial value is false. If [`version.pollInterval`](/docs/configuration#version) is a non-zero value, SvelteKit will poll for new versions of the app and update the store value to `true` when it detects one. `updated.check()` will force an immediate check, regardless of polling.
 
 ### $lib
 
@@ -78,14 +78,14 @@ This is a simple alias to `src/lib`, or whatever directory is specified as [`con
 
 ### $service-worker
 
-This module is only available to [service workers](#service-workers).
+This module is only available to [service workers](/docs/service-workers).
 
 ```js
 import { build, files, timestamp } from '$service-worker';
 ```
 
 - `build` is an array of URL strings representing the files generated by Vite, suitable for caching with `cache.addAll(build)`
-- `files` is an array of URL strings representing the files in your `static` directory, or whatever directory is specified by [`config.kit.files.assets`](#configuration). You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](#configuration)
+- `files` is an array of URL strings representing the files in your `static` directory, or whatever directory is specified by [`config.kit.files.assets`](/docs/configuration). You can customize which files are included from `static` directory using [`config.kit.serviceWorker.files`](/docs/configuration)
 - `timestamp` is the result of calling `Date.now()` at build time. It's useful for generating unique cache names inside your service worker, so that a later deployment of your app can invalidate old caches
 
 ### @sveltejs/kit/hooks
