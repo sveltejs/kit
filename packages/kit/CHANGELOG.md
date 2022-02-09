@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.263
+
+### Patch Changes
+
+- Handle numeric headers ([#3716](https://github.com/sveltejs/kit/pull/3716))
+
+* [fix] replace broken escaping with a working version ([#3798](https://github.com/sveltejs/kit/pull/3798))
+
 ## 1.0.0-next.262
 
 ### Patch Changes
