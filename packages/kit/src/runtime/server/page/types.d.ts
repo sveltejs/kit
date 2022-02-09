@@ -9,4 +9,5 @@ export type Loaded = {
 	fetched: Array<{ url: string; body: string; json: string }>;
 	set_cookie_headers: string[];
 	uses_credentials: boolean;
+	response: Response | undefined;
 };

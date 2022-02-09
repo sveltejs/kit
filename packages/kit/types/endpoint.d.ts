@@ -36,4 +36,5 @@ export interface ShadowData {
 	redirect?: string;
 	cookies?: string[];
 	body?: JSONObject;
+	response?: Response;
 }

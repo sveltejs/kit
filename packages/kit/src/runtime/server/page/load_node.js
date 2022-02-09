@@ -58,8 +58,11 @@ export async function load_node({
 	 */
 	let set_cookie_headers = [];
 
-	/** @type {import('types/helper').Either<import('types/endpoint').Fallthrough, import('types/page').LoadOutput>} */
+	/** @type {import('types/helper').Eithber<import('types/endpoint').Fallthrough, import('types/page').LoadOutput>} */
 	let loaded;
+
+	/** @type Response | undefined */
+	let response;
 
 	/** @type {import('types/endpoint').ShadowData} */
 	const shadow = is_leaf
@@ -76,7 +79,10 @@ export async function load_node({
 		set_cookie_headers.push(...shadow.cookies);
 	}
 
-	if (shadow.error) {
+	if (shadow.response) {
+		response = shadow.response;
+		loaded = {};
+	} else if (shadow.error) {
 		loaded = {
 			status: shadow.status,
 			error: shadow.error
@@ -354,7 +360,8 @@ export async function load_node({
 		stuff: loaded.stuff || stuff,
 		fetched,
 		set_cookie_headers,
-		uses_credentials
+		uses_credentials,
+		response
 	};
 }
 
@@ -399,6 +406,13 @@ async function load_shadow_data(route, event, prerender) {
 
 			const { status = 200, headers = {}, body = {} } = result;
 
+			const contentType =
+				headers instanceof Headers ? headers.get('content-type') : headers['content-type'];
+
+			if (contentType === 'text/html') {
+				return { response: result };
+			}
+
 			validate_shadow_output(headers, body);
 
 			if (headers['set-cookie']) {
@@ -426,6 +440,13 @@ async function load_shadow_data(route, event, prerender) {
 			const result = await mod.get.call(null, event);
 
 			if (result.fallthrough) return result;
+
+			const contentType =
+				headers instanceof Headers ? headers.get('content-type') : headers['content-type'];
+
+			if (contentType === 'text/html') {
+				return { response: result };
+			}
 
 			const { status = 200, headers = {}, body = {} } = result;
 
