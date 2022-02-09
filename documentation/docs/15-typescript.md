@@ -22,16 +22,16 @@ By populating these interfaces, you will gain type safety when using `event.loca
 
 ### App.Locals
 
-The interface that defines `event.locals`, which can be accessed in [hooks](#hooks) (`handle`, `handleError` and `getSession`) and [endpoints](#routing-endpoints).
+The interface that defines `event.locals`, which can be accessed in [hooks](/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](/docs/routing#endpoints).
 
 ### App.Platform
 
-If your adapter provides [platform-specific context](#adapters-supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
+If your adapter provides [platform-specific context](/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 
 ### App.Session
 
-The interface that defines `session`, both as an argument to [`load`](#loading) functions and the value of the [session store](#modules-$app-stores).
+The interface that defines `session`, both as an argument to [`load`](/docs/loading) functions and the value of the [session store](/docs/modules#$app-stores).
 
 ### App.Stuff
 
-The interface that defines `stuff`, as input or output to [`load`](#loading) or as the value of the `stuff` property of the [page store](#modules-$app-stores).
+The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).

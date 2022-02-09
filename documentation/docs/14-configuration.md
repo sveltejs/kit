@@ -86,11 +86,11 @@ export default config;
 
 ### adapter
 
-Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](#adapters).
+Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
 
 ### amp
 
-Enable [AMP](#amp) mode.
+Enable [AMP](/docs/amp) mode.
 
 ### appDir
 
@@ -100,8 +100,8 @@ The directory relative to `paths.assets` where the built JS and CSS (and importe
 
 An object containing zero or more of the following `boolean` values:
 
-- `hydrate` — whether to [hydrate](#page-options-hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
-- `router` — enables or disables the client-side [router](#page-options-router) app-wide.
+- `hydrate` — whether to [hydrate](/docs/page-options#hydrate) the server-rendered HTML with a client-side app. (It's rare that you would set this to `false` on an app-wide basis.)
+- `router` — enables or disables the client-side [router](/docs/page-options#router) app-wide.
 
 ### csp
 
@@ -131,10 +131,10 @@ When pages are prerendered, the CSP header is added via a `<meta http-equiv>` ta
 An object containing zero or more of the following `string` values:
 
 - `assets` — a place to put static files that should have stable URLs and undergo no processing, such as `favicon.ico` or `manifest.json`
-- `hooks` — the location of your hooks module (see [Hooks](#hooks))
+- `hooks` — the location of your hooks module (see [Hooks](/docs/hooks))
 - `lib` — your app's internal library, accessible throughout the codebase as `$lib`
-- `routes` — the files that define the structure of your app (see [Routing](#routing))
-- `serviceWorker` — the location of your service worker's entry point (see [Service workers](#service-workers))
+- `routes` — the files that define the structure of your app (see [Routing](/docs/routing))
+- `serviceWorker` — the location of your service worker's entry point (see [Service workers](/docs/service-workers))
 - `template` — the location of the template for HTML responses
 
 ### floc
@@ -157,14 +157,14 @@ Inline CSS inside a `<style>` block at the head of the HTML. This option is a nu
 
 ### methodOverride
 
-See [HTTP Method Overrides](#routing-endpoints-http-method-overrides). An object containing zero or more of the following:
+See [HTTP Method Overrides](/docs/routing#endpoints-http-method-overrides). An object containing zero or more of the following:
 
 - `parameter` — query parameter name to use for passing the intended method value
 - `allowed` - array of HTTP methods that can be used when overriding the original request method
 
 ### package
 
-Options related to [creating a package](#packaging).
+Options related to [creating a package](/docs/packaging).
 
 - `dir` - output directory
 - `emitTypes` - by default, `svelte-kit package` will automatically generate types for your package in the form of `.d.ts` files. While generating types is configurable, we believe it is best for the ecosystem quality to generate types, always. Please make sure you have a good reason when setting it to `false` (for example when you want to provide handwritten type definitions instead)
@@ -199,7 +199,7 @@ An object containing zero or more of the following `string` values:
 
 ### prerender
 
-See [Prerendering](#page-options-prerender). An object containing zero or more of the following:
+See [Prerendering](/docs/page-options#prerender). An object containing zero or more of the following:
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
@@ -232,7 +232,7 @@ See [Prerendering](#page-options-prerender). An object containing zero or more o
 
 ### routes
 
-A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](#routing-private-modules).
+A `(filepath: string) => boolean` function that determines which files create routes and which are treated as [private modules](/docs/routing#private-modules).
 
 ### serviceWorker
 
@@ -249,7 +249,7 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"always"` — redirect `/x` to `/x/`
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
 
-> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](#hooks-handle) function.
+> Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](/docs/hooks#handle) function.
 
 ### version
 
@@ -260,7 +260,7 @@ An object containing zero or more of the following values:
 
 Client-side navigation can be buggy if you deploy a new version of your app while people are using it. If the code for the new page is already loaded, it may have stale content; if it isn't, the app's route manifest may point to a JavaScript file that no longer exists. SvelteKit solves this problem by falling back to traditional full-page navigation if it detects that a new version has been deployed, using the `name` specified here (which defaults to a timestamp of the build).
 
-If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](#modules-$app-stores) store to `true` when it detects one.
+If you set `pollInterval` to a non-zero value, SvelteKit will poll for new versions in the background and set the value of the [`updated`](/docs/modules#$app-stores) store to `true` when it detects one.
 
 ### vite
 

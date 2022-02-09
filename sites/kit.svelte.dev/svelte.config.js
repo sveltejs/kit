@@ -2,9 +2,13 @@ import * as path from 'path';
 import adapter from '@sveltejs/adapter-auto';
 import { imagetools } from 'vite-imagetools';
 
-export default {
+const config = {
 	kit: {
 		adapter: adapter(),
+
+		prerender: {
+			entries: ['*', '/content.json']
+		},
 
 		vite: {
 			plugins: [imagetools()],
@@ -23,3 +27,5 @@ export default {
 		}
 	}
 };
+
+export default config;

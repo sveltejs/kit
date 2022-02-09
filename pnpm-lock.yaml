@@ -221,8 +221,8 @@ importers:
       '@sveltejs/adapter-auto': link:../../../adapter-auto
       '@sveltejs/kit': link:../../../kit
       svelte: 3.44.2
-      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.5
-      typescript: 4.5.5
+      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.2
+      typescript: 4.5.2
 
   packages/kit:
     specifiers:
@@ -315,22 +315,26 @@ importers:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
       '@sveltejs/kit': workspace:*
-      '@sveltejs/site-kit': ^2.0.0
+      '@sveltejs/site-kit': ^2.0.2
       '@types/node': ^16.6.1
+      flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.4.7
       prismjs: ^1.26.0
       svelte: ^3.43.0
+      typescript: ^4.5.5
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
       '@sveltejs/kit': link:../../packages/kit
-      '@sveltejs/site-kit': 2.0.0
+      '@sveltejs/site-kit': 2.0.2
       '@types/node': 16.11.11
+      flexsearch: 0.7.21
       marked: 4.0.5
       prism-svelte: 0.4.7
       prismjs: 1.26.0
       svelte: 3.44.2
+      typescript: 4.5.5
       vite-imagetools: 4.0.3
 
 packages:
@@ -348,8 +352,6 @@ packages:
       '@octokit/core': 3.5.1
       '@octokit/plugin-paginate-rest': 2.17.0_@octokit+core@3.5.1
       '@octokit/plugin-rest-endpoint-methods': 4.15.1_@octokit+core@3.5.1
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /@actions/http-client/1.0.11:
@@ -1224,13 +1226,11 @@ packages:
     dependencies:
       '@octokit/auth-token': 2.5.0
       '@octokit/graphql': 4.8.0
-      '@octokit/request': 5.6.3
+      '@octokit/request': 5.6.2
       '@octokit/request-error': 2.1.0
       '@octokit/types': 6.34.0
       before-after-hook: 2.2.2
       universal-user-agent: 6.0.0
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /@octokit/endpoint/6.0.12:
@@ -1244,11 +1244,9 @@ packages:
   /@octokit/graphql/4.8.0:
     resolution: {integrity: sha512-0gv+qLSBLKF0z8TKaSKTsS39scVKF9dbMxJpj3U0vC7wjNWFuIpL/z76Qe2fiuCbDRcJSavkXsVtMS6/dtQQsg==}
     dependencies:
-      '@octokit/request': 5.6.3
+      '@octokit/request': 5.6.2
       '@octokit/types': 6.34.0
       universal-user-agent: 6.0.0
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /@octokit/openapi-types/11.2.0:
@@ -1282,17 +1280,15 @@ packages:
       once: 1.4.0
     dev: true
 
-  /@octokit/request/5.6.3:
-    resolution: {integrity: sha512-bFJl0I1KVc9jYTe9tdGGpAMPy32dLBXXo1dS/YwSCTL/2nd9XeHsY616RE3HPXDVk+a+dBuzyz5YdlXwcDTr2A==}
+  /@octokit/request/5.6.2:
+    resolution: {integrity: sha512-je66CvSEVf0jCpRISxkUcCa0UkxmFs6eGDRSbfJtAVwbLH5ceqF+YEyC8lj8ystKyZTy8adWr0qmkY52EfOeLA==}
     dependencies:
       '@octokit/endpoint': 6.0.12
       '@octokit/request-error': 2.1.0
       '@octokit/types': 6.34.0
       is-plain-object: 5.0.0
-      node-fetch: 2.6.7
+      node-fetch: 2.6.6
       universal-user-agent: 6.0.0
-    transitivePeerDependencies:
-      - encoding
     dev: true
 
   /@octokit/types/6.34.0:
@@ -1434,8 +1430,8 @@ packages:
       picomatch: 2.3.0
     dev: true
 
-  /@sveltejs/site-kit/2.0.0:
-    resolution: {integrity: sha512-/XdrL9A03RoqIoL9kYTaGB7rbMaHJOxlmcq+5XPTxkBJ2FOQAx7ILkOH1qQULUjjUM/OywgwhmwmdwBKeC/gQA==}
+  /@sveltejs/site-kit/2.0.2:
+    resolution: {integrity: sha512-YdA4YDz0As/G1yypUAs2gxF/unt6eo/itfwl67GHmfam6c7gJDYyLC0CZNZKdjPY4GfmvvYNqB/Ta4I4xHxGXQ==}
     dependencies:
       golden-fleece: 1.0.9
     dev: true
@@ -3104,6 +3100,10 @@ packages:
     resolution: {integrity: sha512-8/sOawo8tJ4QOBX8YlQBMxL8+RLZfxMQOif9o0KUKTNTjMYElWPE0r/m5VNFxTRd0NSw8qSy8dajrwX4RYI1Hw==}
     dev: true
 
+  /flexsearch/0.7.21:
+    resolution: {integrity: sha512-W7cHV7Hrwjid6lWmy0IhsWDFQboWSng25U3VVywpHOTJnnAZNPScog67G+cVpeX9f7yDD21ih0WDrMMT+JoaYg==}
+    dev: true
+
   /foreground-child/2.0.0:
     resolution: {integrity: sha512-dCIq9FpEcyQyXKCkyzmlPTFNgrCzPudOe+mhvJU5zAtlBnGVy2yKxtfsxK2tQBThwq225jcvBjpw1Gr40uzZCA==}
     engines: {node: '>=8.0.0'}
@@ -4204,18 +4204,6 @@ packages:
   /node-fetch/2.6.6:
     resolution: {integrity: sha512-Z8/6vRlTUChSdIgMa51jxQ4lrw/Jy5SOW10ObaA47/RElsAN2c5Pn8bTgFGWn/ibwzXTE8qwr1Yzx28vsecXEA==}
     engines: {node: 4.x || >=6.0.0}
-    dependencies:
-      whatwg-url: 5.0.0
-    dev: true
-
-  /node-fetch/2.6.7:
-    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
     dependencies:
       whatwg-url: 5.0.0
     dev: true
@@ -5355,8 +5343,8 @@ packages:
       sade: 1.7.4
       source-map: 0.7.3
       svelte: 3.44.2
-      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.5
-      typescript: 4.5.5
+      svelte-preprocess: 4.9.8_svelte@3.44.2+typescript@4.5.2
+      typescript: 4.5.2
     transitivePeerDependencies:
       - '@babel/core'
       - coffeescript
@@ -5429,7 +5417,7 @@ packages:
       typescript: 4.4.4
     dev: true
 
-  /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.5.5:
+  /svelte-preprocess/4.9.8_svelte@3.44.2+typescript@4.5.2:
     resolution: {integrity: sha512-EQS/oRZzMtYdAprppZxY3HcysKh11w54MgA63ybtL+TAZ4hVqYOnhw41JVJjWN9dhPnNjjLzvbZ2tMhTsla1Og==}
     engines: {node: '>= 9.11.2'}
     requiresBuild: true
@@ -5477,7 +5465,7 @@ packages:
       sorcery: 0.10.0
       strip-indent: 3.0.0
       svelte: 3.44.2
-      typescript: 4.5.5
+      typescript: 4.5.2
     dev: true
 
   /svelte/3.44.2:
@@ -5685,6 +5673,12 @@ packages:
 
   /typescript/4.4.4:
     resolution: {integrity: sha512-DqGhF5IKoBl8WNf8C1gu8q0xZSInh9j1kJJMqT3a94w1JzVaBU4EXOSMrz9yDqMT0xt3selp83fuFMQ0uzv6qA==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.5.2:
+    resolution: {integrity: sha512-5BlMof9H1yGt0P8/WF+wPNw6GfctgGjXp5hkblpyT+8rkASSmkUKMXrxR0Xg8ThVCi/JnHQiKXeBaEwCeQwMFw==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
@@ -6009,7 +6003,6 @@ packages:
       httpie: 1.1.2
       remark-gfm: 1.0.0
     transitivePeerDependencies:
-      - encoding
       - supports-color
     dev: true
 

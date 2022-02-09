@@ -39,7 +39,7 @@ interface Fallthrough {
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `App.Session` and `App.Stuff`.
+> See the [TypeScript](/docs/typescript) section for information on `App.Session` and `App.Stuff`.
 
 A page that loads data from an external API might look like this:
 
@@ -64,7 +64,7 @@ A page that loads data from an external API might look like this:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
-If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](/docs/routing#advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
@@ -72,11 +72,11 @@ SvelteKit's `load` receives an implementation of `fetch`, which has the followin
 - it can make requests against the app's own endpoints without issuing an HTTP call
 - it makes a copy of the response when you use it, and then sends it embedded in the initial page load for hydration
 
-`load` only applies to [page](#routing-pages) and [layout](#layouts) components (not components they import), and runs on both the server and in the browser with the default rendering options.
+`load` only applies to [page](/docs/routing#pages) and [layout](/docs/layouts) components (not components they import), and runs on both the server and in the browser with the default rendering options.
 
 > Code called inside `load` blocks:
 >
-> - should use the SvelteKit-provided [`fetch`](#loading-input-fetch) wrapper rather than using the native `fetch`
+> - should use the SvelteKit-provided [`fetch`](/docs/loading#input-fetch) wrapper rather than using the native `fetch`
 > - should not reference `window`, `document`, or any browser-specific objects
 > - should not directly reference any API keys or secrets, which will be exposed to the client, but instead call an endpoint that uses any required secrets
 
@@ -94,7 +94,7 @@ The `load` function receives an object containing six fields — `url`, `params`
 
 `url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams`.
 
-> In some environments this is derived from request headers, which you [may need to configure](#configuration-headers), during server-side rendering
+> In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node]/docs/adapters#supported-environments-node-js, for example, you may need to configure the adapter in order for the URL to be correct.
 
 #### params
 
@@ -123,7 +123,7 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### session
 
-`session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [`getSession`](#hooks-getsession) to learn how to use it.
+`session` can be used to pass data from the server related to the current request, e.g. the current user. By default it is `undefined`. See [`getSession`](/docs/hooks#getsession) to learn how to use it.
 
 #### stuff
 
@@ -161,4 +161,4 @@ If the `load` function returns a `props` object, the props will be passed to the
 
 This will be merged with any existing `stuff` and passed to the `load` functions of subsequent layout and page components.
 
-The combined `stuff` is available to components using the [page store](#modules-$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.
+The combined `stuff` is available to components using the [page store](/docs/modules#$app-stores) as `$page.stuff`, providing a mechanism for pages to pass data 'upward' to layouts.

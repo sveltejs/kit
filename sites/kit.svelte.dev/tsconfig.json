@@ -1,5 +1,7 @@
 {
 	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
 		"moduleResolution": "node",
 		"target": "es2017",
 		/**
@@ -16,7 +18,11 @@
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
-		"baseUrl": "."
+		"baseUrl": ".",
+		"paths": {
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"]
+		}
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules/*", ".svelte"]
