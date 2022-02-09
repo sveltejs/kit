@@ -29,11 +29,7 @@ const escape_json_string_in_html_dict = {
  * @param {string} str
  */
 export function escape_json_in_html(str) {
-	return escape(
-		str,
-		escape_json_in_html_dict,
-		(code) => `\\u${code.toString(16).toUpperCase()}`
-	);
+	return escape(str, escape_json_in_html_dict, (code) => `\\u${code.toString(16).toUpperCase()}`);
 }
 
 /**
