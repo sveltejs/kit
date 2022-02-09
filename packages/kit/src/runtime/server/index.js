@@ -141,6 +141,7 @@ export async function respond(request, options, state = {}) {
 					if (!match) continue;
 
 					event.params = route.params ? decode_params(route.params(match)) : {};
+					event.url = new URL(event.url.origin + decoded + event.url.search);
 
 					/** @type {Response | undefined} */
 					let response;

@@ -746,6 +746,7 @@ export class Renderer {
 					!previous ||
 					module !== previous.module ||
 					(changed.url && previous.uses.url) ||
+					(has_shadow && i === a.length - 1) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
 					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
@@ -757,7 +758,7 @@ export class Renderer {
 
 					if (has_shadow && i === a.length - 1) {
 						const res = await fetch(
-							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json`,
+							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
 									'x-sveltekit-noredirect': 'true'
