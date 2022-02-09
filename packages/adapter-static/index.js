@@ -7,7 +7,13 @@ import zlib from 'zlib';
 const pipe = promisify(pipeline);
 
 /** @type {import('.')} */
-export default function ({ pages = 'build', assets = pages, fallback, precompress = false } = {}) {
+export default function ({
+	pages = 'build',
+	assets = pages,
+	fallback,
+	precompress = false,
+	createIndexFiles = true
+} = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
 
@@ -21,7 +27,8 @@ export default function ({ pages = 'build', assets = pages, fallback, precompres
 			await builder.prerender({
 				fallback,
 				all: !fallback,
-				dest: pages
+				dest: pages,
+				createIndexFiles
 			});
 
 			if (precompress) {

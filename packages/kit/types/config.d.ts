@@ -86,7 +86,12 @@ export interface Builder {
 		}
 	): string[];
 
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<{
+	prerender(options: {
+		all?: boolean;
+		dest: string;
+		fallback?: string;
+		createIndexFiles?: boolean;
+	}): Promise<{
 		paths: string[];
 	}>;
 }
@@ -153,7 +158,6 @@ export interface Config {
 		prerender?: {
 			concurrency?: number;
 			crawl?: boolean;
-			createIndexFiles?: boolean;
 			enabled?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;

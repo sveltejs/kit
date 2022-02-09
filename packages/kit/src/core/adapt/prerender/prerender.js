@@ -47,11 +47,12 @@ const REDIRECT = 3;
  *   config: import('types/config').ValidatedConfig;
  *   build_data: import('types/internal').BuildData;
  *   fallback?: string;
+ *   index: boolean;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
  * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
-export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+export async function prerender({ cwd, out, log, config, build_data, fallback, all, index }) {
 	if (!config.kit.prerender.enabled && !fallback) {
 		return { paths: [] };
 	}
@@ -121,7 +122,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 		const parts = path.split('/');
 		if (is_html && parts[parts.length - 1] !== 'index.html') {
-			if (config.kit.prerender.createIndexFiles) {
+			if (index) {
 				parts.push('index.html');
 			} else {
 				parts[parts.length - 1] += '.html';

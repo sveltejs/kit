@@ -4,7 +4,9 @@ import adapter from '../../../../adapter-static/index.js';
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
+		adapter: adapter({
+			createIndexFiles: false
+		}),
 
 		csp: {
 			directives: {
@@ -15,10 +17,6 @@ const config = {
 		paths: {
 			base: '/path-base',
 			assets: 'https://cdn.example.com/stuff'
-		},
-
-		prerender: {
-			createIndexFiles: false
 		},
 
 		vite: {
