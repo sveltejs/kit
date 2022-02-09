@@ -18,7 +18,8 @@
     "~TODO~": "0.0.1",
     "prerendering-test-basics": "0.0.1",
     "prerendering-test-options": "0.0.1",
-    "kit.svelte.dev": "0.0.1"
+    "kit.svelte.dev": "0.0.1",
+    "default-template": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -441,6 +442,7 @@
     "proud-sloths-exercise",
     "proud-sloths-talk",
     "purple-cycles-build",
+    "purple-dragons-work",
     "purple-windows-wink",
     "quick-balloons-invite",
     "quick-maps-remain",
@@ -469,6 +471,7 @@
     "rich-seahorses-walk",
     "rotten-cats-pump",
     "rotten-gorillas-sort",
+    "rotten-rocks-mate",
     "rotten-singers-taste",
     "rotten-tips-teach",
     "rotten-wasps-beam",

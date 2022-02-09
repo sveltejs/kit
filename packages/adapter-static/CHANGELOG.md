@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.27
+
+### Patch Changes
+
+- `precompress` option also compress wasm files ([#3790](https://github.com/sveltejs/kit/pull/3790))
+
 ## 1.0.0-next.26
 
 ### Patch Changes
