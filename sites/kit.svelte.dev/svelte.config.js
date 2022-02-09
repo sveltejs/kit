@@ -7,7 +7,7 @@ const config = {
 		adapter: adapter(),
 
 		prerender: {
-			entries: ['*', '/content.json', '/docs/sections.json']
+			entries: ['*', '/content.json']
 		},
 
 		vite: {
