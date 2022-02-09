@@ -19,7 +19,7 @@ Remove `polka` or `express`, if you're using one of those, and any middleware su
 
 #### devDependencies
 
-Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](/docs#adapters) you plan to use (see [next section](#project-files-configuration)).
+Remove `sapper` from your `devDependencies` and replace it with `@sveltejs/kit` and whichever [adapter](/docs#adapters) you plan to use (see [next section](/docs/migrating#project-files-configuration)).
 
 #### scripts
 
@@ -79,7 +79,7 @@ Your custom error page component should be renamed from `_error.svelte` to `__er
 
 The `goto`, `prefetch` and `prefetchRoutes` imports from `@sapper/app` should be replaced with identical imports from [`$app/navigation`](/docs#modules-$app-navigation).
 
-The `stores` import from `@sapper/app` should be replaced — see the [Stores](#pages-and-layouts-stores) section below.
+The `stores` import from `@sapper/app` should be replaced — see the [Stores](/docs/migrating#pages-and-layouts-stores) section below.
 
 Any files you previously imported from directories in `src/node_modules` will need to be replaced with [`$lib`](/docs#modules-$lib) imports.
 
