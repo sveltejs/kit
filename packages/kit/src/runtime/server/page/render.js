@@ -2,7 +2,7 @@ import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
-import { escape_html_attr } from '../../../utils/escape.js';
+import { escape_html_attr, escape_json_string_in_html } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { Csp, csp_ready } from './csp.js';
@@ -260,24 +260,8 @@ export async function render_response({
 				.join('\n\t');
 
 			if (shadow_props) {
-				// adapted from https://github.com/vercel/next.js/blob/694407450638b037673c6d714bfe4126aeded740/packages/next/server/htmlescape.ts
-				// based on https://github.com/zertosh/htmlescape
-				// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
-				/**
-				 * @type { Record<string, string> }
-				 */
-				const escape_lookup = {
-					'&': '\\u0026',
-					'>': '\\u003e',
-					'<': '\\u003c',
-					'\u2028': '\\u2028',
-					'\u2029': '\\u2029'
-				};
-				const escaped_shadow_props = s(shadow_props).replace(
-					/[&><\u2028\u2029]/g,
-					(match) => escape_lookup[match]
-				);
-				body += `<script type="application/json" data-type="svelte-props">${escaped_shadow_props}</script>`;
+				// prettier-ignore
+				body += `<script type="application/json" data-type="svelte-props">${escape_json_string_in_html(s(shadow_props))}</script>`;
 			}
 		}
 
