@@ -7,12 +7,12 @@ export function to_headers(object) {
 			const value = object[key];
 			if (!value) continue;
 
-			if (typeof value === 'string') {
-				headers.set(key, value);
-			} else {
+			if (Array.isArray(value)) {
 				value.forEach((value) => {
-					headers.append(key, value);
+					headers.append(key, /** @type {string} */ (value));
 				});
+			} else {
+				headers.set(key, /** @type {string} */ (value));
 			}
 		}
 	}
