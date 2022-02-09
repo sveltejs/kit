@@ -80,7 +80,7 @@ interface Fallthrough {
 
 > See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
 
-A page like `src/routes/items/[id].svelte` could get its data from `src/routes/items/[id].js`:
+If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from `src/routes/items/[id].js`:
 
 ```js
 import db from '$lib/database';
