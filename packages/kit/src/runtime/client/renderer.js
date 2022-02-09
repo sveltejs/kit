@@ -354,9 +354,9 @@ export class Renderer {
 
 		if (this.started) {
 			this.current = navigation_result.state;
-			
+
 			this.root.$set({
-				components: [],
+				components: []
 			});
 			await tick();
 
