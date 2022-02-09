@@ -1,5 +1,4 @@
 // dict from https://github.com/yahoo/serialize-javascript/blob/183c18a776e4635a379fdc620f81771f219832bb/index.js#L25
-// code licensed under the New BSD License.
 /** @type {Record<string, string>} */
 const escape_json_in_html_dict = {
 	'<'     : '\\u003C',
@@ -9,12 +8,14 @@ const escape_json_in_html_dict = {
 	'\u2029': '\\u2029'
 };
 
+const escape_json_in_html_regex = new RegExp(`[${Object.keys(escape_json_in_html_dict).join('')}]`,'g');
+
 /**
- * Escape a stringified JSON object that's going to be embedded in a `<script>` tag
+ * Escape a JSONValue that's going to be embedded in a `<script>` tag
  * @param {import("@sveltejs/kit/types/helper").JSONValue} val
  */
 export function escape_json_in_html(val) {
-	return JSON.stringify(val).replace(/[/><\u2028\u2029]/g, (match) => escape_json_in_html_dict[match]);
+	return JSON.stringify(val).replace(escape_json_in_html_regex, (match) => escape_json_in_html_dict[match]);
 }
 
 /**
