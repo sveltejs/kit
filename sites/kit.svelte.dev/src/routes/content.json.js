@@ -5,11 +5,14 @@ import { slugify } from '../lib/docs';
 const categories = [
 	{
 		slug: 'docs',
-		label: null
+		label: null,
+		href: (parts) =>
+			parts.length > 1 ? `/docs/${parts[0]}#${parts.slice(1).join('-')}` : `/docs/${parts[0]}`
 	},
 	{
 		slug: 'faq',
-		label: 'FAQ'
+		label: 'FAQ',
+		href: (parts) => `/faq#${parts.join('-')}`
 	}
 ];
 
@@ -36,7 +39,7 @@ export function get() {
 
 			blocks.push({
 				breadcrumbs: [...breadcrumbs, metadata.title],
-				href: `/${category.slug}/${slug}`,
+				href: category.href([slug]),
 				content: plaintext(intro)
 			});
 
@@ -51,7 +54,7 @@ export function get() {
 
 				blocks.push({
 					breadcrumbs: [...breadcrumbs, metadata.title, h3],
-					href: `/${category.slug}/${slug}#${slugify(h3)}`,
+					href: category.href([slug, slugify(h3)]),
 					content: plaintext(intro)
 				});
 
@@ -61,7 +64,7 @@ export function get() {
 
 					blocks.push({
 						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
-						href: `/${category.slug}/${slug}#${slugify(h3)}-${slugify(h4)}`,
+						href: category.href([slug, slugify(h3), slugify(h4)]),
 						content: plaintext(lines.join('\n').trim())
 					});
 				}

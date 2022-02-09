@@ -28,12 +28,15 @@ export function read_file(dir, file) {
 	const match = /\d{2}-(.+)\.md/.exec(file);
 	if (!match) return null;
 
+	const slug = match[1];
+
 	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
 
 	return {
 		file: `${dir}/${file}`,
 		slug: match[1],
-		...parse(markdown, file)
+		// third argument is a gross hack to accommodate FAQ
+		...parse(markdown, file, dir === 'faq' ? slug : undefined)
 	};
 }
 
@@ -73,13 +76,12 @@ export function read_all(dir) {
 /**
  * @param {string} markdown
  * @param {string} file
+ * @param {string} [main_slug]
  */
-function parse(markdown, file) {
+function parse(markdown, file, main_slug) {
 	const { body, metadata } = extract_frontmatter(markdown);
 
-	const slug = slugify(metadata.title);
-
-	const headings = [];
+	const headings = main_slug ? [main_slug] : [];
 	const sections = [];
 
 	let section;
@@ -115,7 +117,7 @@ function parse(markdown, file) {
 				throw new Error(`Unexpected <h${level}> in ${file}`);
 			}
 
-			return `<h${level} id="${slug}">${html}</h${level}>`;
+			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
 		code(source, lang) {
 			// for no good reason at all, marked replaces tabs with spaces
