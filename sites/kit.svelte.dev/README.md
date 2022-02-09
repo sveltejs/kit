@@ -1,6 +1,6 @@
 # kit.svelte.dev
 
-This is the SvelteKit website. The docs are served via an API and live [here](../../documentation).
+This is the SvelteKit website. The docs live [here](../../documentation).
 
 ## Developing
 

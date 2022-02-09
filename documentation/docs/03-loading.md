@@ -64,7 +64,7 @@ A page that loads data from an external API might look like this:
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that it runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
-If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+If `load` returns `{fallthrough: true}`, SvelteKit will [fall through](#routing-advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 SvelteKit's `load` receives an implementation of `fetch`, which has the following special properties:
 
@@ -86,7 +86,7 @@ It is recommended that you not store pre-request state in global variables, but 
 
 ### Input
 
-The `load` function receives an object containing five fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
+The `load` function receives an object containing six fields — `url`, `params`, `props`, `fetch`, `session` and `stuff`. The `load` function is reactive, and will re-run when its parameters change, but only if they are used in the function. Specifically, if `url`, `session` or `stuff` are used in the function, they will be re-run whenever their value changes, and likewise for the individual properties of `params`.
 
 > Note that destructuring parameters in the function declaration is enough to count as using them.
 
