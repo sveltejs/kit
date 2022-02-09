@@ -128,10 +128,10 @@
 
 	nav::after {
 		content: '';
-		position: absolute;
+		position: fixed;
 		inset-inline-start: 0;
 		inset-block-end: 0;
-		inline-size: calc(100% - 2rem);
+		inline-size: var(--sidebar-w);
 		block-size: 2em;
 		pointer-events: none;
 		block-size: var(--top-offset);
