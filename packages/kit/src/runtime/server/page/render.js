@@ -2,7 +2,7 @@ import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
-import { escape_html_attr } from '../../../utils/escape.js';
+import { escape_html_attr, escape_json_in_html } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { Csp, csp_ready } from './csp.js';
@@ -261,7 +261,7 @@ export async function render_response({
 
 			if (shadow_props) {
 				// prettier-ignore
-				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props)}</script>`;
+				body += `<script type="application/json" data-type="svelte-props">${escape_json_in_html(s(shadow_props))}</script>`;
 			}
 		}
 

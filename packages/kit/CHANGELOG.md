@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.261
+
+### Patch Changes
+
+- Prevent full reload when router navigates and only removes hash ([#3757](https://github.com/sveltejs/kit/pull/3757))
+
+* fixes shadow hydration escaping ([#3793](https://github.com/sveltejs/kit/pull/3793))
+
+- fixes an error with fetching shadow endpoints if they are ending with '/' ([#3740](https://github.com/sveltejs/kit/pull/3740))
+
 ## 1.0.0-next.260
 
 ### Patch Changes
