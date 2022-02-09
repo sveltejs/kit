@@ -29,13 +29,7 @@ export function escape_json_in_html(str) {
 }
 
 /**
- * escape a json string to be embedded into a larger json object thats going to be embedded in html
- *
- * <script>
- *   {
- *     "foo":"output here"
- *   }
- * </script>
+ * Escape a stringified JSON object that's going to be embedded in a `<script>` tag
  * @param {string} str
  */
 export function escape_json_string_in_html(str) {
