@@ -73,7 +73,7 @@ A common pattern in Sapper apps is to put your internal library in a directory i
 
 #### Renamed files
 
-Your custom error page component should be renamed from `_error.svelte` to `__error.svelte`. Any `_layout.svelte` files should likewise be renamed `__layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](#routing-private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](docs#configuration-routes) config).
+Your custom error page component should be renamed from `_error.svelte` to `__error.svelte`. Any `_layout.svelte` files should likewise be renamed `__layout.svelte`. The double underscore prefix is reserved for SvelteKit; your own [private modules](#routing-private-modules) are still denoted with a single `_` prefix (configurable via [`routes`](/docs#configuration-routes) config).
 
 #### Imports
 

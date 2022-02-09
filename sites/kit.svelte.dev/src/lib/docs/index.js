@@ -42,7 +42,7 @@ export function read_file(dir, file) {
  * @param {string} slug
  */
 export function read(dir, slug) {
-	const files = fs.readdirSync(`${base}/${dir}`);
+	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
 	const index = files.findIndex((file) => file.slice(3, -3) === slug);
 
 	if (index === -1) return null;
