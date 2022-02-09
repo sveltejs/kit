@@ -320,7 +320,7 @@ Higher priority routes can _fall through_ to lower priority routes by returning 
 			return { fallthrough: true };
 		}
 
-		// ....
+		// ...
 	}
 </script>
 ```
