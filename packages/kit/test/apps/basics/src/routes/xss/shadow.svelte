@@ -1,5 +1,6 @@
 <script>
-	export let pwned;
+	/** @type {{ name: string }} */
+	export let user;
 </script>
-<h1>failed script inject is: {pwned}</h1>
+<h1>user.name is {user.name}</h1>
 
