@@ -60,7 +60,7 @@ export const test = base.extend({
 			if (javaScriptEnabled) {
 				await page.evaluate(() => {
 					window.navigated = new Promise((fulfil, reject) => {
-						const timeout = setTimeout(() => reject(new Error('Timed out')), 5000);
+						const timeout = setTimeout(() => reject(new Error('Timed out')), 2000);
 						addEventListener(
 							'sveltekit:navigation-end',
 							() => {
@@ -86,7 +86,7 @@ export const test = base.extend({
 			if (javaScriptEnabled) {
 				await page.evaluate(() => {
 					window.navigated = new Promise((fulfil, reject) => {
-						const timeout = setTimeout(() => reject(new Error('Timed out')), 5000);
+						const timeout = setTimeout(() => reject(new Error('Timed out')), 2000);
 						addEventListener(
 							'sveltekit:navigation-end',
 							() => {
@@ -189,7 +189,6 @@ export const config = {
 		command: process.env.DEV ? 'npm run dev' : 'npm run build && npm run preview',
 		port: 3000
 	},
-	workers: 8,
 	retries: process.env.CI ? 5 : 0,
 	projects: [
 		{
