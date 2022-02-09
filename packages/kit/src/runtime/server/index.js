@@ -141,7 +141,11 @@ export async function respond(request, options, state = {}) {
 					if (!match) continue;
 
 					event.params = route.params ? decode_params(route.params(match)) : {};
-					event.url = new URL(event.url.origin + decoded + event.url.search);
+					if (event.url.pathname.endsWith(DATA_SUFFIX)) {
+						event.url = new URL(
+							event.url.origin + event.url.pathname.slice(0, -DATA_SUFFIX.length) + event.url.search
+						);
+					}
 
 					/** @type {Response | undefined} */
 					let response;
