@@ -112,22 +112,7 @@ export const test = base.extend({
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
-			if (box !== null) return true;
-
-			// @ts-expect-error
-			return page.$eval(selector, async (element) => {
-				const { top, bottom } = element.getBoundingClientRect();
-
-				if (top > window.innerHeight || bottom < 0) {
-					// slightly more useful feedback than true/false
-					return {
-						top,
-						bottom
-					};
-				}
-
-				return true;
-			});
+			return !!box;
 		}
 
 		use(in_view);
