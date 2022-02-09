@@ -15,7 +15,7 @@ const escape_json_in_html_dict = {
 };
 
 /** @type {Record<string, string>} */
-const escape_json_string_in_html_dict = {
+const escape_json_value_in_html_dict = {
 	'"': '\\"',
 	...escape_json_in_html_dict
 };
@@ -25,42 +25,35 @@ const escape_json_string_in_html_dict = {
  * @param {string} str
  */
 export function escape_json_in_html(str) {
-	return escape(str, escape_json_in_html_dict, (code) => `\\u${code.toString(16).toUpperCase()}`);
+	// adapted from https://github.com/vercel/next.js/blob/694407450638b037673c6d714bfe4126aeded740/packages/next/server/htmlescape.ts
+	// based on https://github.com/zertosh/htmlescape
+	// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
+	/**
+	 * @type { Record<string, string> }
+	 */
+	const escape_lookup = {
+		'&': '\\u0026',
+		'>': '\\u003e',
+		'<': '\\u003c',
+		'\u2028': '\\u2028',
+		'\u2029': '\\u2029'
+	};
+	return str.replace(/[&><\u2028\u2029]/g, (match) => escape_lookup[match]);
 }
 
 /**
  * Escape a string JSON value to be embedded into a `<script>` tag
  * @param {string} str
  */
-export function escape_json_string_in_html(str) {
+export function escape_json_value_in_html(str) {
 	return escape(
 		str,
-		escape_json_string_in_html_dict,
+		escape_json_value_in_html_dict,
 		(code) => `\\u${code.toString(16).toUpperCase()}`
 	);
 }
 
-/** @type {Record<string, string>} */
-const escape_html_attr_dict = {
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;'
-};
-
 /**
- * use for escaping string values to be used html attributes on the page
- * e.g.
- * <script data-url="here">
- *
- * @param {string} str
- * @returns string escaped string
- */
-export function escape_html_attr(str) {
-	return '"' + escape(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
-}
-
-/**
- *
  * @param str {string} string to escape
  * @param dict {Record<string, string>} dictionary of character replacements
  * @param unicode_encoder {function(number): string} encoder to use for high unicode characters
@@ -91,4 +84,23 @@ function escape(str, dict, unicode_encoder) {
 	}
 
 	return result;
+}
+
+/** @type {Record<string, string>} */
+const escape_html_attr_dict = {
+	'<': '&lt;',
+	'>': '&gt;',
+	'"': '&quot;'
+};
+
+/**
+ * use for escaping string values to be used html attributes on the page
+ * e.g.
+ * <script data-url="here">
+ *
+ * @param {string} str
+ * @returns string escaped string
+ */
+export function escape_html_attr(str) {
+	return '"' + escape(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
 }
