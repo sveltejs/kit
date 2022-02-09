@@ -6,4 +6,4 @@
 '@sveltejs/kit': patch
 ---
 
-update to esbuild 0.14
+update to Vite 2.8 and esbuild 0.14
