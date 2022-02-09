@@ -1630,8 +1630,8 @@ test.describe.parallel('Routing', () => {
 			// also wait for network processing to complete, see
 			// https://playwright.dev/docs/network#network-events
 			await Promise.all([
-				app.prefetch('/routing/prefetched'),
-				page.waitForResponse(`${baseURL}/routing/prefetched.json`)
+				page.waitForResponse(`${baseURL}/routing/prefetched.json`),
+				app.prefetch('/routing/prefetched')
 			]);
 
 			// svelte request made is environment dependent
