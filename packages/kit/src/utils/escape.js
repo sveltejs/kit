@@ -1,6 +1,5 @@
 /** @type {Record<string, string>} */
-const escape_json_string_in_html_dict = {
-	'"': '\\"',
+const escape_json_in_html_dict = {
 	'<': '\\u003C',
 	'>': '\\u003E',
 	'/': '\\u002F',
@@ -15,7 +14,38 @@ const escape_json_string_in_html_dict = {
 	'\u2029': '\\u2029'
 };
 
-/** @param {string} str */
+/** @type {Record<string, string>} */
+const escape_json_string_in_html_dict = {
+	'"': '\\"',
+	...escape_json_in_html_dict
+};
+
+/**
+ * escape a json string to be embedded into a script data tag
+ *
+ * <script>
+ *   output here
+ * </script>
+ * @param {string} str
+ */
+export function escape_json_in_html(str) {
+	return escape(
+		str,
+		escape_json_in_html_dict,
+		(code) => `\\u${code.toString(16).toUpperCase()}`
+	);
+}
+
+/**
+ * escape a json string to be embedded into a larger json object thats going to be embedded in html
+ *
+ * <script>
+ *   {
+ *     "foo":"output here"
+ *   }
+ * </script>
+ * @param {string} str
+ */
 export function escape_json_string_in_html(str) {
 	return escape(
 		str,
