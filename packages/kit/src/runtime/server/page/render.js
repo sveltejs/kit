@@ -261,7 +261,7 @@ export async function render_response({
 
 			if (shadow_props) {
 				// prettier-ignore
-				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props)}</script>`;
+				body += `<script type="application/json" data-type="svelte-props">${s(shadow_props).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</script>`;
 			}
 		}
 

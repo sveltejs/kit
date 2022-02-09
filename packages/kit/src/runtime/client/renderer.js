@@ -223,7 +223,12 @@ export class Renderer {
 				if (is_leaf) {
 					const serialized = document.querySelector('[data-type="svelte-props"]');
 					if (serialized) {
-						props = JSON.parse(/** @type {string} */ (serialized.textContent));
+						props = JSON.parse(
+							/** @type {string} */ (serialized.textContent)
+								.replace(new RegExp('&amp;', 'g'), '&')
+								.replace(new RegExp('&lt;', 'g'), '<')
+								.replace(new RegExp('&gt;', 'g'), '>')
+						);
 					}
 				}
 
