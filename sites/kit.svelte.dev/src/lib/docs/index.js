@@ -137,7 +137,6 @@ function parse(markdown, file) {
 	});
 
 	return {
-		slug,
 		title: metadata.title,
 		sections,
 		content

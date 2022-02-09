@@ -71,14 +71,24 @@
 	<ul class="sidebar">
 		{#each contents as section}
 			<li>
-				<a class="section" class:active={section.path === path} href={section.path}>
+				<a
+					class="section"
+					sveltekit:prefetch
+					class:active={section.path === path}
+					href={section.path}
+				>
 					{section.title}
 				</a>
 
 				<ul>
 					{#each section.sections as subsection}
 						<li>
-							<a class="subsection" class:active={subsection.path === path} href={subsection.path}>
+							<a
+								class="subsection"
+								sveltekit:prefetch
+								class:active={subsection.path === path}
+								href={subsection.path}
+							>
 								{subsection.title}
 							</a>
 
@@ -89,6 +99,7 @@
 											class="nested subsection"
 											class:active={subsection.path === path}
 											href={subsection.path}
+											sveltekit:prefetch
 										>
 											{subsection.title}
 										</a>

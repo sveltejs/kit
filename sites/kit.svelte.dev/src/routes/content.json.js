@@ -5,18 +5,11 @@ import { slugify } from '../lib/docs';
 const categories = [
 	{
 		slug: 'docs',
-		label: null,
-		get_slug: ({ title }) => slugify(title)
+		label: null
 	},
 	{
 		slug: 'faq',
-		label: 'FAQ',
-		get_slug: ({ slug }) => slug
-	},
-	{
-		slug: 'migrating',
-		label: 'Migrating',
-		get_slug: ({ title }) => slugify(title)
+		label: 'FAQ'
 	}
 ];
 
@@ -36,19 +29,16 @@ export function get() {
 			const markdown = fs.readFileSync(filepath, 'utf-8');
 
 			const { body, metadata } = extract_frontmatter(markdown);
-			const page_slug = category.get_slug({ title: metadata.title, slug });
 
 			const sections = body.trim().split(/^### /m);
 
 			const intro = sections.shift().trim();
 
-			if (intro) {
-				blocks.push({
-					breadcrumbs: [...breadcrumbs, metadata.title],
-					href: `/${category.slug}/${page_slug}`,
-					content: plaintext(intro)
-				});
-			}
+			blocks.push({
+				breadcrumbs: [...breadcrumbs, metadata.title],
+				href: `/${category.slug}/${slug}`,
+				content: plaintext(intro)
+			});
 
 			for (const section of sections) {
 				const lines = section.split('\n');
@@ -59,13 +49,11 @@ export function get() {
 
 				const intro = subsections.shift().trim();
 
-				if (intro) {
-					blocks.push({
-						breadcrumbs: [...breadcrumbs, metadata.title, h3],
-						href: `/${category.slug}/${page_slug}#${slugify(h3)}`,
-						content: plaintext(intro)
-					});
-				}
+				blocks.push({
+					breadcrumbs: [...breadcrumbs, metadata.title, h3],
+					href: `/${category.slug}/${slug}#${slugify(h3)}`,
+					content: plaintext(intro)
+				});
 
 				for (const subsection of subsections) {
 					const lines = subsection.split('\n');
@@ -73,7 +61,7 @@ export function get() {
 
 					blocks.push({
 						breadcrumbs: [...breadcrumbs, metadata.title, h3, h4],
-						href: `/${category.slug}/${page_slug}#${slugify(h3)}-${slugify(h4)}`,
+						href: `/${category.slug}/${slug}#${slugify(h3)}-${slugify(h4)}`,
 						content: plaintext(lines.join('\n').trim())
 					});
 				}

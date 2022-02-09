@@ -27,7 +27,6 @@
 	<svelte:fragment slot="nav-right">
 		<NavItem href="/docs">Docs</NavItem>
 		<NavItem href="/faq">FAQ</NavItem>
-		<NavItem href="/migrating">Migrating</NavItem>
 
 		<li aria-hidden="true"><span class="separator" /></li>
 
