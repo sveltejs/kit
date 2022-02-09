@@ -21,7 +21,7 @@ const escape_json_string_in_html_dict = {
 };
 
 /**
- * Escape a JSON string to be embedded into a `<script>` tag
+ * Escape a stringified JSON object that's going to be embedded in a `<script>` tag
  * @param {string} str
  */
 export function escape_json_in_html(str) {
@@ -29,7 +29,7 @@ export function escape_json_in_html(str) {
 }
 
 /**
- * Escape a stringified JSON object that's going to be embedded in a `<script>` tag
+ * Escape a string JSON value to be embedded into a `<script>` tag
  * @param {string} str
  */
 export function escape_json_string_in_html(str) {
