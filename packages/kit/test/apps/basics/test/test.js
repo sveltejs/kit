@@ -1483,14 +1483,16 @@ test.describe.parallel('Redirects', () => {
 	});
 
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
-		await page.goto('/redirect-on-load');
+		const redirected_to_url = javaScriptEnabled
+			? `${baseURL}/redirect-on-load/redirected`
+			: `${baseURL}/redirect-on-load`;
+
+		await Promise.all([page.waitForResponse(redirected_to_url), page.goto('/redirect-on-load')]);
+
+		expect(page.url()).toBe(redirected_to_url);
 
 		if (javaScriptEnabled) {
-			await page.waitForTimeout(50); // TODO investigate why this test is flaky
-			expect(page.url()).toBe(`${baseURL}/redirect-on-load/redirected`);
 			expect(await page.textContent('h1')).toBe('Hazaa!');
-		} else {
-			expect(page.url()).toBe(`${baseURL}/redirect-on-load`);
 		}
 	});
 });
