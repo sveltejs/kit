@@ -78,7 +78,7 @@ async function compress(directory) {
 		return;
 	}
 
-	const files = await glob('**/*.{html,js,json,css,svg,xml}', {
+	const files = await glob('**/*.{html,js,json,css,svg,xml,wasm}', {
 		cwd: directory,
 		dot: true,
 		absolute: true,
