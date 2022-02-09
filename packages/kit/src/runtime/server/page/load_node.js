@@ -1,7 +1,7 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
-import {escape_json_in_html} from '../../../utils/escape.js';
+import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo } from '../utils.js';
