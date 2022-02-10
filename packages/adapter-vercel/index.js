@@ -5,6 +5,83 @@ import esbuild from 'esbuild';
 
 const dir = '.vercel_build_output';
 
+// rules for clean URLs and trailing slash handling,
+// generated with @vercel/routing-utils
+const redirects = {
+	always: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/\\.well-known(?:/.*)?$'
+		},
+		{
+			src: '^/((?:[^/]+/)*[^/\\.]+)$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/((?:[^/]+/)*[^/]+\\.\\w+)/$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	],
+	never: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)/$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	],
+	ignore: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	]
+};
+
 /** @type {import('.')} **/
 export default function ({ external = [] } = {}) {
 	return {
@@ -69,6 +146,7 @@ export default function ({ external = [] } = {}) {
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
+					...redirects[builder.trailingSlash],
 					{
 						src: `/${builder.appDir}/.+`,
 						headers: {

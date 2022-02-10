@@ -33,6 +33,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 		copy,
 
 		appDir: config.kit.appDir,
+		trailingSlash: config.kit.trailingSlash,
 
 		createEntries(fn) {
 			generated_manifest = true;
