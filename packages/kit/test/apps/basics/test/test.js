@@ -366,10 +366,8 @@ test.describe.parallel.only('Shadowed pages', () => {
 
 		const cookies = await context.cookies();
 		expect(cookies).toEqual(
-			expect.arrayContaining([
-			  expect.objectContaining({name: 'shadow-redirect', value: 'happy'})
-			])
-		  );
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
 	});
 
 	test('Handles POST redirects', async ({ page }) => {
@@ -385,10 +383,8 @@ test.describe.parallel.only('Shadowed pages', () => {
 
 		const cookies = await context.cookies();
 		expect(cookies).toEqual(
-			expect.arrayContaining([
-			  expect.objectContaining({name: 'shadow-redirect', value: 'happy'})
-			])
-		  );
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
 	});
 
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
