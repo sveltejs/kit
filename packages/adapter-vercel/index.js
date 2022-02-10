@@ -1,7 +1,8 @@
-import { writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'fs';
 import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
+import { config } from 'process';
 
 const dir = '.vercel_build_output';
 
@@ -102,7 +103,7 @@ export default function ({ external = [] } = {}) {
 
 			builder.log.minor('Prerendering static pages...');
 
-			await builder.prerender({
+			const prerendered = await builder.prerender({
 				dest: `${dir}/static`
 			});
 
@@ -143,10 +144,28 @@ export default function ({ external = [] } = {}) {
 			builder.log.minor('Writing routes...');
 
 			builder.mkdirp(`${dir}/config`);
+
+			const prerendered_routes = prerendered.paths
+				.map((path) => {
+					const file =
+						path === '/'
+							? '/index.html'
+							: path + (builder.trailingSlash === 'always' ? '/index.html' : '.html');
+
+					if (existsSync(`${dir}/static${file}`)) {
+						return {
+							src: path,
+							dest: file
+						};
+					}
+				})
+				.filter(Boolean);
+
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
 					// ...redirects[builder.trailingSlash],
+					...prerendered_routes,
 					{
 						src: `/${builder.appDir}/.+`,
 						headers: {
