@@ -201,7 +201,7 @@ export async function create_plugin(config, cwd) {
 						if (/** @type {any} */ (hooks).getContext) {
 							// TODO remove this for 1.0
 							throw new Error(
-								'The getContext hook has been removed. See https://kit.svelte.dev/docs#hooks'
+								'The getContext hook has been removed. See https://kit.svelte.dev/docs/hooks'
 							);
 						}
 
