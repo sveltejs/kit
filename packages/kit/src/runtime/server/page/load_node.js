@@ -376,7 +376,11 @@ async function load_shadow_data(route, event, prerender) {
 		}
 
 		const method = event.request.method.toLowerCase().replace('delete', 'del');
-		const handler = mod[method];
+		let handler = mod[method];
+
+		if (!handler && method == 'get') {
+			handler = async () => ({ body: {} });
+		}
 
 		if (!handler) {
 			return {
