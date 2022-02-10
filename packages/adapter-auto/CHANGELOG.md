@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.20
+
+### Patch Changes
+
+- fix links pointing to multi-page docs ([#3815](https://github.com/sveltejs/kit/pull/3815))
+
+- Updated dependencies []:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.10
+  - @sveltejs/adapter-netlify@1.0.0-next.45
+  - @sveltejs/adapter-vercel@1.0.0-next.41
+
 ## 1.0.0-next.19
 
 ### Patch Changes
