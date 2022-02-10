@@ -8,8 +8,6 @@ const TAG_OPEN = /[a-zA-Z]/;
 const TAG_CHAR = /[a-zA-Z0-9]/;
 const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
-const EXTERNAL = /\bexternal\b/;
-
 const WHITESPACE = /[\s\n\r]/;
 
 /** @param {string} html */
@@ -183,7 +181,7 @@ export function crawl(html) {
 					i += 1;
 				}
 
-				if (href && !EXTERNAL.test(rel)) {
+				if (href) {
 					hrefs.push(href);
 				}
 			}
