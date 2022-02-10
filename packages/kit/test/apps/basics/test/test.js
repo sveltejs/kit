@@ -388,6 +388,17 @@ test.describe.parallel('Shadowed pages', () => {
 
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
+
+	test('Same result with client and server-side rendering (URL)', async ({ page, clicknav, javaScriptEnabled }) => {
+		if (javaScriptEnabled) {
+			await page.goto('/shadowed/same-render-entry');
+			await clicknav('[href="/shadowed/same-render?param1=value1"]');
+			expect(await page.textContent('h1')).toBe('URL: http://localhost:3000/shadowed/same-render?param1=value1');
+		} else {
+			await page.goto('/shadowed/same-render?param1=value1');
+			expect(await page.textContent('h1')).toBe('URL: http://localhost:3000/shadowed/same-render?param1=value1');
+		}
+	});
 });
 
 test.describe.parallel('Endpoints', () => {

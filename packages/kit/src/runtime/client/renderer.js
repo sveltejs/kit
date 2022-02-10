@@ -615,9 +615,6 @@ export class Renderer {
 		if (props) {
 			// shadow endpoint props means we need to mark this URL as a dependency of itself
 			node.uses.dependencies.add(url.href);
-			for (const key in params) {
-				node.uses.params.add(key);
-			}
 		}
 
 		/** @type {Record<string, string>} */
@@ -746,7 +743,6 @@ export class Renderer {
 					!previous ||
 					module !== previous.module ||
 					(changed.url && previous.uses.url) ||
-					(has_shadow && i === a.length - 1) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
 					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
