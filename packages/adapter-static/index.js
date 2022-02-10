@@ -12,7 +12,7 @@ export default function ({
 	assets = pages,
 	fallback,
 	precompress = false,
-	createIndexFiles = true
+	createIndexFiles
 } = {}) {
 	return {
 		name: '@sveltejs/adapter-static',
