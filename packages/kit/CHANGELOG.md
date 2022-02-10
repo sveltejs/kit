@@ -218,9 +218,9 @@
 
 ### Patch Changes
 
-- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
-* [breaking] Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+* [breaking] Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
 - [breaking] change `app.render` signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
@@ -370,7 +370,7 @@
 
 ### Patch Changes
 
-- [breaking] Add `disableScrollHandling` function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+- [breaking] Add `disableScrollHandling` function (see https://kit.svelte.dev/docs/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
 
 ## 1.0.0-next.213
 
