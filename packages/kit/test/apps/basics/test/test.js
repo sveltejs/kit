@@ -398,12 +398,12 @@ test.describe.parallel('Shadowed pages', () => {
 			await page.goto('/shadowed/same-render-entry');
 			await clicknav('[href="/shadowed/same-render?param1=value1"]');
 			expect(await page.textContent('h1')).toBe(
-				'URL: http://localhost:3000/shadowed/same-render?param1=value1'
+				'Location: /shadowed/same-render?param1=value1'
 			);
 		} else {
 			await page.goto('/shadowed/same-render?param1=value1');
 			expect(await page.textContent('h1')).toBe(
-				'URL: http://localhost:3000/shadowed/same-render?param1=value1'
+				'Location: /shadowed/same-render?param1=value1'
 			);
 		}
 	});
