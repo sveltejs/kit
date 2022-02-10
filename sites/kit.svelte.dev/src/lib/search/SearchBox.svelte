@@ -52,8 +52,14 @@
 	});
 
 	function close() {
-		$searching = false;
-		document.body.focus();
+		if ($searching) {
+			$searching = false;
+			const scroll = -parseInt(document.body.style.top || '0');
+			document.body.style.position = '';
+			document.body.style.top = '';
+			document.body.focus();
+			window.scrollTo(0, scroll);
+		}
 	}
 
 	function update() {
@@ -91,13 +97,8 @@
 
 	$: if ($searching) {
 		update();
-		document.body.style.position = 'fixed';
 		document.body.style.top = `-${window.scrollY}px`;
-	} else {
-		const scroll = document.body.style.top;
-		document.body.style.position = '';
-		document.body.style.top = '';
-		window.scrollTo(0, -parseInt(scroll || '0'));
+		document.body.style.position = 'fixed';
 	}
 
 	$: recent_searches = lookup ? $recent.map((href) => lookup.get(href)).filter(Boolean) : [];
