@@ -5,7 +5,6 @@ importers:
   .:
     specifiers:
       '@changesets/cli': ^2.18.1
-      '@changesets/get-github-info': ^0.5.0
       '@rollup/plugin-commonjs': ^21.0.1
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.6
@@ -24,7 +23,6 @@ importers:
       typescript: ~4.5.5
     devDependencies:
       '@changesets/cli': 2.18.1
-      '@changesets/get-github-info': 0.5.0
       '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
       '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
