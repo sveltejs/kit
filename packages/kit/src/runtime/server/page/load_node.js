@@ -4,7 +4,7 @@ import { s } from '../../../utils/misc.js';
 import { escape_json_value_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { is_pojo } from '../utils.js';
+import { is_pojo, lowercase_keys } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -397,13 +397,8 @@ async function load_shadow_data(route, event, prerender) {
 
 			if (result.fallthrough) return result;
 
-			const { status = 200, headers = {}, body = {} } = result;
-
-			validate_shadow_output(headers, body);
-
-			if (headers['set-cookie']) {
-				/** @type {string[]} */ (data.cookies).push(...headers['set-cookie']);
-			}
+			const { status, headers, body } = validate_shadow_output(result);
+			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			// Redirects are respected...
 			if (status >= 300 && status < 400) {
@@ -427,13 +422,8 @@ async function load_shadow_data(route, event, prerender) {
 
 			if (result.fallthrough) return result;
 
-			const { status = 200, headers = {}, body = {} } = result;
-
-			validate_shadow_output(headers, body);
-
-			if (headers['set-cookie']) {
-				/** @type {string[]} */ (data.cookies).push(...headers['set-cookie']);
-			}
+			const { status, headers, body } = validate_shadow_output(result);
+			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			if (status >= 400) {
 				return {
@@ -464,17 +454,40 @@ async function load_shadow_data(route, event, prerender) {
 }
 
 /**
- * @param {Headers | Partial<import('types/helper').ResponseHeaders>} headers
- * @param {import('types/helper').JSONValue} body
+ * @param {string[]} target
+ * @param {Partial<import('types/helper').ResponseHeaders>} headers
  */
-function validate_shadow_output(headers, body) {
-	if (headers instanceof Headers && headers.has('set-cookie')) {
-		throw new Error(
-			'Shadow endpoint request handler cannot use Headers interface with Set-Cookie headers'
-		);
+function add_cookies(target, headers) {
+	const cookies = headers['set-cookie'];
+	if (cookies) {
+		if (Array.isArray(cookies)) {
+			target.push(...cookies);
+		} else {
+			target.push(/** @type {string} */ (cookies));
+		}
+	}
+}
+
+/**
+ * @param {import('types/endpoint').ShadowEndpointOutput} result
+ */
+function validate_shadow_output(result) {
+	const { status = 200, body = {} } = result;
+	let headers = result.headers || {};
+
+	if (headers instanceof Headers) {
+		if (headers.has('set-cookie')) {
+			throw new Error(
+				'Shadow endpoint request handler cannot use Headers interface with Set-Cookie headers'
+			);
+		}
+	} else {
+		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
 	}
 
 	if (!is_pojo(body)) {
 		throw new Error('Body returned from shadow endpoint request handler must be a plain object');
 	}
+
+	return { status, headers, body };
 }

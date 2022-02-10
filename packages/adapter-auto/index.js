@@ -33,7 +33,7 @@ export default function () {
 			}
 
 			builder.log.warn(
-				'Could not detect a supported production environment. See https://kit.svelte.dev/docs#adapters to learn how to configure your app to run on the platform of your choosing'
+				'Could not detect a supported production environment. See https://kit.svelte.dev/docs/adapters to learn how to configure your app to run on the platform of your choosing'
 			);
 		}
 	};

@@ -4,7 +4,7 @@ export type JSONObject = { [key: string]: JSONValue };
 export type JSONValue = string | number | boolean | null | ToJSON | JSONValue[] | JSONObject;
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
-export type ResponseHeaders = Record<string, string | string[]>;
+export type ResponseHeaders = Record<string, string | number | string[]>;
 
 // <-- Utility Types -->
 type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
