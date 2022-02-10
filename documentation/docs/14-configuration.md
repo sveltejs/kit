@@ -56,7 +56,6 @@ const config = {
 		prerender: {
 			concurrency: 1,
 			crawl: true,
-			createIndexFiles: true,
 			enabled: true,
 			entries: ['*'],
 			onError: 'fail'
@@ -203,7 +202,6 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
 
 - `concurrency` — how many pages can be prerendered simultaneously. JS is single-threaded, but in cases where prerendering performance is network-bound (for example loading content from a remote CMS) this can speed things up by processing other tasks while waiting on the network response
 - `crawl` — determines whether SvelteKit should find pages to prerender by following links from the seed page(s)
-- `createIndexFiles` - if set to `false`, will render `about.html` instead of `about/index.html`
 - `enabled` — set to `false` to disable prerendering altogether
 - `entries` — an array of pages to prerender, or start crawling from (if `crawl: true`). The `*` string includes all non-dynamic routes (i.e. pages with no `[parameters]` )
 - `onError`
@@ -248,6 +246,8 @@ Whether to remove, append, or ignore trailing slashes when resolving URLs to rou
 - `"never"` — redirect `/x/` to `/x`
 - `"always"` — redirect `/x` to `/x/`
 - `"ignore"` — don't automatically add or remove trailing slashes. `/x` and `/x/` will be treated equivalently
+
+This option also affects [prerendering](/docs/page-options#prerender). If `trailingSlash` is `always`, a route like `/about` will result in an `about/index.html` file, otherwise it will create `about.html`, mirroring static webserver conventions.
 
 > Ignoring trailing slashes is not recommended — the semantics of relative paths differ between the two cases (`./y` from `/x` is `/y`, but from `/x/` is `/x/y`), and `/x` and `/x/` are treated as separate URLs which is harmful to SEO. If you use this option, ensure that you implement logic for conditionally adding or removing trailing slashes from `request.path` inside your [`handle`](/docs/hooks#handle) function.
 
