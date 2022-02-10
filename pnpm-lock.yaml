@@ -311,6 +311,20 @@ importers:
       svelte: 3.44.2
       uvu: 0.5.2
 
+  sites/hn.svelte.dev:
+    specifiers:
+      '@sveltejs/adapter-auto': workspace:*
+      '@sveltejs/kit': workspace:*
+      prettier: ^2.5.1
+      prettier-plugin-svelte: ^2.6.0
+      svelte: ^3.46.3
+    devDependencies:
+      '@sveltejs/adapter-auto': link:../../packages/adapter-auto
+      '@sveltejs/kit': link:../../packages/kit
+      prettier: 2.5.1
+      prettier-plugin-svelte: 2.6.0_prettier@2.5.1+svelte@3.46.4
+      svelte: 3.46.4
+
   sites/kit.svelte.dev:
     specifiers:
       '@sveltejs/adapter-auto': workspace:*
@@ -4684,6 +4698,16 @@ packages:
       svelte: 3.44.2
     dev: true
 
+  /prettier-plugin-svelte/2.6.0_prettier@2.5.1+svelte@3.46.4:
+    resolution: {integrity: sha512-NPSRf6Y5rufRlBleok/pqg4+1FyGsL0zYhkYP6hnueeL1J/uCm3OfOZPsLX4zqD9VAdcXfyEL2PYqGv8ZoOSfA==}
+    peerDependencies:
+      prettier: ^1.16.4 || ^2.0.0
+      svelte: ^3.2.0
+    dependencies:
+      prettier: 2.5.1
+      svelte: 3.46.4
+    dev: true
+
   /prettier/1.19.1:
     resolution: {integrity: sha512-s7PoyDv/II1ObgQunCbB9PdLmUcBZcnWOcxDh7O0N/UwDEsHyqkW+Qh28jW+mVuCdx7gLB0BotYI1Y6uI9iyew==}
     engines: {node: '>=4'}
@@ -4692,6 +4716,12 @@ packages:
 
   /prettier/2.5.0:
     resolution: {integrity: sha512-FM/zAKgWTxj40rH03VxzIPdXmj39SwSjwG0heUcNFwI+EMZJnY93yAiKXM3dObIKAM5TA88werc8T/EwhB45eg==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    dev: true
+
+  /prettier/2.5.1:
+    resolution: {integrity: sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==}
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
@@ -5490,6 +5520,11 @@ packages:
 
   /svelte/3.44.2:
     resolution: {integrity: sha512-jrZhZtmH3ZMweXg1Q15onb8QlWD+a5T5Oca4C1jYvSURp2oD35h4A5TV6t6MEa93K4LlX6BkafZPdQoFjw/ylA==}
+    engines: {node: '>= 8'}
+    dev: true
+
+  /svelte/3.46.4:
+    resolution: {integrity: sha512-qKJzw6DpA33CIa+C/rGp4AUdSfii0DOTCzj/2YpSKKayw5WGSS624Et9L1nU1k2OVRS9vaENQXp2CVZNU+xvIg==}
     engines: {node: '>= 8'}
     dev: true
 

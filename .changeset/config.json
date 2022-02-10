@@ -5,5 +5,6 @@
 	"linked": [],
 	"access": "public",
 	"baseBranch": "master",
-	"updateInternalDependencies": "patch"
+	"updateInternalDependencies": "patch",
+	"ignore": ["hn.svelte.dev"]
 }
