@@ -1,20 +1,20 @@
 {
-  "name": "hn.svelte.dev",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "svelte-kit dev",
-    "build": "svelte-kit build",
-    "package": "svelte-kit package",
-    "preview": "svelte-kit preview",
-    "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. .",
-    "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
-  },
-  "devDependencies": {
-    "@sveltejs/adapter-auto": "workspace:*",
-    "@sveltejs/kit": "workspace:*",
-    "prettier": "^2.5.1",
-    "prettier-plugin-svelte": "^2.6.0",
-    "svelte": "^3.46.3"
-  },
-  "type": "module"
+	"name": "hn.svelte.dev",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "svelte-kit dev",
+		"build": "svelte-kit build",
+		"package": "svelte-kit package",
+		"preview": "svelte-kit preview",
+		"lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. .",
+		"format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. ."
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"prettier": "^2.5.1",
+		"prettier-plugin-svelte": "^2.6.0",
+		"svelte": "^3.46.3"
+	},
+	"type": "module"
 }
