@@ -47,7 +47,7 @@ export async function respond(request, options, state = {}) {
 				});
 			} else {
 				const verb = allowed.length === 0 ? 'enabled' : 'allowed';
-				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs#configuration-methodoverride`;
+				const body = `${parameter}=${method_override} is not ${verb}. See https://kit.svelte.dev/docs/configuration#methodoverride`;
 
 				return new Response(body, {
 					status: 400
