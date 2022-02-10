@@ -75,7 +75,7 @@ test('does not prerender page with shadow endpoint with non-GET handler', () => 
 
 test('load page with empty shadow endpoint', () => {
 	assert.ok(fs.existsSync(`${build}/shadowed-no-get/index.html`));
-	assert.ok(!fs.existsSync(`${build}/shadowed-no-get/__data.json`));
+	assert.ok(fs.existsSync(`${build}/shadowed-no-get/__data.json`));
 });
 
 test.run();
