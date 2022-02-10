@@ -10,6 +10,7 @@ importers:
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.6
       '@sveltejs/eslint-config': github:sveltejs/eslint-config#v5.8.0
+      '@svitejs/changesets-changelog-github-compact': ^0.1.0
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       action-deploy-docs: github:sveltejs/action-deploy-docs#main
@@ -28,6 +29,7 @@ importers:
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
       '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
       '@sveltejs/eslint-config': github.com/sveltejs/eslint-config/9a7d728e03ac433e5856a6e06775c17ee986d641_a447525fbf09647ead76db7292af4049
+      '@svitejs/changesets-changelog-github-compact': 0.1.0
       '@typescript-eslint/eslint-plugin': 5.5.0_f60175165d08edf988b5aad85994517a
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.5.5
       action-deploy-docs: github.com/sveltejs/action-deploy-docs/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91
@@ -1466,6 +1468,15 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: false
+
+  /@svitejs/changesets-changelog-github-compact/0.1.0:
+    resolution: {integrity: sha512-/40j9zRDYo1sR6s3e4+ic4UI03DnwKYnIDkmFRq3minp9MM6AfBisVthwbxBH0toD6kuGfS7wwICy7a2XM8YSA==}
+    engines: {node: ^12.20 || ^14.13.1 || >= 16}
+    dependencies:
+      '@changesets/get-github-info': 0.5.0
+      '@changesets/types': 4.0.2
+      dotenv: 16.0.0
+    dev: true
 
   /@types/amphtml-validator/1.0.1:
     resolution: {integrity: sha512-DWE7fy6KtC+Uw0KV/HAmjuH2GB/o8yskXlvmVWR7mOVsLDybp+XrwkzEeRFU9wGjWKeRMBNGsx+5DRq7sUsAwA==}
