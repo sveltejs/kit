@@ -2,7 +2,6 @@ import { existsSync, writeFileSync } from 'fs';
 import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
-import { config } from 'process';
 
 const dir = '.vercel_build_output';
 
