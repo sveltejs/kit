@@ -1,5 +1,11 @@
 # @sveltejs/adapter-static
 
+## 1.0.0-next.28
+
+### Patch Changes
+
+- [breaking] remove `createIndexFiles` option, derive from `trailingSlash` instead ([#3801](https://github.com/sveltejs/kit/pull/3801))
+
 ## 1.0.0-next.27
 
 ### Patch Changes

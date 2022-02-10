@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.265
+
+### Patch Changes
+
+- [breaking] remove `createIndexFiles` option, derive from `trailingSlash` instead ([#3801](https://github.com/sveltejs/kit/pull/3801))
+
+* Pass trailingSlash config to adapters ([#3820](https://github.com/sveltejs/kit/pull/3820))
+
 ## 1.0.0-next.264
 
 ### Patch Changes

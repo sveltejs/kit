@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.42
+
+### Patch Changes
+
+- Clean URLs and handle trailingSlash configuration ([#3820](https://github.com/sveltejs/kit/pull/3820))
+
 ## 1.0.0-next.41
 
 ### Patch Changes
