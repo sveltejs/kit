@@ -1,13 +1,6 @@
 import { onMount } from 'svelte';
 import { get_base_uri } from './utils';
 
-function scroll_state() {
-	return {
-		x: pageXOffset,
-		y: pageYOffset
-	};
-}
-
 /**
  * @param {Event} event
  * @returns {HTMLAnchorElement | SVGAElement | undefined}
@@ -72,14 +65,6 @@ export class Router {
 	}
 
 	init_listeners() {
-		if ('scrollRestoration' in history) {
-			history.scrollRestoration = 'manual';
-		}
-
-		// Adopted from Nuxt.js
-		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and back-navigation from other pages to use the browser to restore the
-		// scrolling position.
 		addEventListener('beforeunload', (e) => {
 			let should_block = false;
 
@@ -94,33 +79,7 @@ export class Router {
 			if (should_block) {
 				e.preventDefault();
 				e.returnValue = '';
-			} else {
-				history.scrollRestoration = 'auto';
 			}
-		});
-
-		// Setting scrollRestoration to manual again when returning to this page.
-		addEventListener('load', () => {
-			history.scrollRestoration = 'manual';
-		});
-
-		// There's no API to capture the scroll location right before the user
-		// hits the back/forward button, so we listen for scroll events
-
-		/** @type {NodeJS.Timeout} */
-		let scroll_timer;
-		addEventListener('scroll', () => {
-			clearTimeout(scroll_timer);
-			scroll_timer = setTimeout(() => {
-				// Store the scroll location in the history
-				// This will persist even if we navigate away from the site and come back
-				const new_state = {
-					...(history.state || {}),
-					'sveltekit:scroll': scroll_state()
-				};
-				history.replaceState(new_state, document.title, window.location.href);
-				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
-			}, 200);
 		});
 
 		/** @param {Event} event */
@@ -189,19 +148,17 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// Call `pushState` to add url to history so going back works.
-				// Also make a delay, otherwise the browser default behaviour would not kick in
-				setTimeout(() => history.pushState({}, '', url.href));
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
+				// TODO: do we need to update hash in page store?
+				// TODO: what is this focus management stuff doing? this seems hacky but makes the tests pass
+				// do we need it? react router perhaps doesn't do it? https://reactrouter.com/docs/en/v6/upgrading/reach
+				if (document.body.getAttribute('tabindex') === '-1') {
+					document.body.removeAttribute('tabindex');
 				}
 				return;
 			}
 
 			this._navigate({
 				url,
-				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 				keepfocus: false,
 				chain: [],
 				details: {
@@ -214,22 +171,23 @@ export class Router {
 		});
 
 		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
+			if (this.enabled) {
+				const state = event.state || {};
+
 				// if a popstate-driven navigation is cancelled, we need to counteract it
 				// with history.go, which means we end up back here, hence this check
-				if (event.state['sveltekit:index'] === this.current_history_index) return;
+				if (state['sveltekit:index'] === this.current_history_index) return;
 
 				this._navigate({
 					url: new URL(location.href),
-					scroll: event.state['sveltekit:scroll'],
 					keepfocus: false,
 					chain: [],
 					details: null,
 					accepted: () => {
-						this.current_history_index = event.state['sveltekit:index'];
+						this.current_history_index = state['sveltekit:index'];
 					},
 					blocked: () => {
-						const delta = this.current_history_index - event.state['sveltekit:index'];
+						const delta = this.current_history_index - state['sveltekit:index'];
 						history.go(delta);
 					}
 				});
@@ -269,17 +227,12 @@ export class Router {
 	 * @param {GotoParams[1]} opts
 	 * @param {string[]} chain
 	 */
-	async goto(
-		href,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
-		chain
-	) {
+	async goto(href, { replaceState = false, keepfocus = false, state = {} } = {}, chain) {
 		const url = new URL(href, get_base_uri(document));
 
 		if (this.enabled) {
 			return this._navigate({
 				url,
-				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
 				chain,
 				details: {
@@ -348,7 +301,6 @@ export class Router {
 	/**
 	 * @param {{
 	 *   url: URL;
-	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
 	 *   chain: string[];
 	 *   details: {
@@ -359,7 +311,7 @@ export class Router {
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
+	async _navigate({ url, keepfocus, chain, details, accepted, blocked }) {
 		const from = this.renderer.current.url;
 		let should_block = false;
 
@@ -409,7 +361,7 @@ export class Router {
 		}
 
 		await this.renderer.handle_navigation(info, chain, false, {
-			scroll,
+			from_history: !details,
 			keepfocus
 		});
 

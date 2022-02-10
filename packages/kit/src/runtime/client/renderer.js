@@ -294,7 +294,7 @@ export class Renderer {
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 * @param {{hash?: string, from_history: boolean, keepfocus: boolean}} [opts]
 	 */
 	async handle_navigation(info, chain, no_cache, opts) {
 		if (this.started) {
@@ -311,7 +311,7 @@ export class Renderer {
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 * @param {{hash?: string, from_history: boolean, keepfocus: boolean}} [opts]
 	 */
 	async update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
@@ -363,9 +363,7 @@ export class Renderer {
 
 		// opts must be passed if we're navigating
 		if (opts) {
-			const { scroll, keepfocus } = opts;
-
-			if (!keepfocus) {
+			if (!opts.keepfocus) {
 				getSelection()?.removeAllRanges();
 				document.body.focus();
 			}
@@ -373,14 +371,9 @@ export class Renderer {
 			// need to render the DOM before we can scroll to the rendered elements
 			await tick();
 
-			if (this.autoscroll) {
+			if (this.autoscroll && !opts.from_history) {
 				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
-				if (scroll) {
-					scrollTo(scroll.x, scroll.y);
-				} else if (deep_linked) {
-					// Here we use `scrollIntoView` on the element instead of `scrollTo`
-					// because it natively supports the `scroll-margin` and `scroll-behavior`
-					// CSS properties.
+				if (deep_linked) {
 					deep_linked.scrollIntoView();
 				} else {
 					scrollTo(0, 0);
