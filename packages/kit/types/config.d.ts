@@ -86,12 +86,7 @@ export interface Builder {
 		}
 	): string[];
 
-	prerender(options: {
-		all?: boolean;
-		dest: string;
-		fallback?: string;
-		createIndexFiles?: boolean;
-	}): Promise<{
+	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<{
 		paths: string[];
 	}>;
 }

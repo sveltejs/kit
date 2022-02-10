@@ -145,12 +145,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 			return copy(config.kit.files.assets, dest);
 		},
 
-		async prerender({
-			all = false,
-			dest,
-			fallback,
-			createIndexFiles = config.kit.trailingSlash === 'always'
-		}) {
+		async prerender({ all = false, dest, fallback }) {
 			if (generated_manifest) {
 				throw new Error(
 					'Adapters must call prerender(...) before createEntries(...) or generateManifest(...)'
@@ -164,7 +159,6 @@ export function create_builder({ cwd, config, build_data, log }) {
 				config,
 				build_data,
 				fallback,
-				index: createIndexFiles,
 				log
 			});
 
