@@ -187,7 +187,8 @@ const options = object(
 				concurrency: number(1),
 				crawl: boolean(true),
 				createIndexFiles: error(
-					(keypath) => `${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+					(keypath) =>
+						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
 				),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
