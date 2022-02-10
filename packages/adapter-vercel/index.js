@@ -146,7 +146,7 @@ export default function ({ external = [] } = {}) {
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
-					...redirects[builder.trailingSlash],
+					// ...redirects[builder.trailingSlash],
 					{
 						src: `/${builder.appDir}/.+`,
 						headers: {
