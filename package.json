@@ -39,7 +39,7 @@
 		"playwright-chromium": "^1.17.0",
 		"prettier": "^2.5.0",
 		"rollup": "^2.60.2",
-		"typescript": "~4.4.4"
+		"typescript": "~4.5.5"
 	},
 	"type": "module"
 }
