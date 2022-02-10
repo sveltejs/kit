@@ -390,6 +390,7 @@ test.describe.parallel('Shadowed pages', () => {
 	});
 
 	test('Same result with client and server-side rendering (URL)', async ({
+		baseURL,
 		page,
 		clicknav,
 		javaScriptEnabled
@@ -398,12 +399,12 @@ test.describe.parallel('Shadowed pages', () => {
 			await page.goto('/shadowed/same-render-entry');
 			await clicknav('[href="/shadowed/same-render?param1=value1"]');
 			expect(await page.textContent('h1')).toBe(
-				'Location: /shadowed/same-render?param1=value1'
+				`URL: ${baseURL}/shadowed/same-render?param1=value1`
 			);
 		} else {
 			await page.goto('/shadowed/same-render?param1=value1');
 			expect(await page.textContent('h1')).toBe(
-				'Location: /shadowed/same-render?param1=value1'
+				`URL: ${baseURL}/shadowed/same-render?param1=value1`
 			);
 		}
 	});

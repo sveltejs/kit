@@ -1,5 +1,5 @@
 <script>
     /** @type {string} */
-    export let location;
+    export let url;
 </script>
-<h1>Location: {location}</h1>
+<h1>URL: {url}</h1>
