@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.43
+
+### Patch Changes
+
+- Add prerendered routes to config ([#3822](https://github.com/sveltejs/kit/pull/3822))
+
 ## 1.0.0-next.42
 
 ### Patch Changes
