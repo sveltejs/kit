@@ -331,7 +331,7 @@ async function try_load_svelte2tsx() {
 			return await import('svelte2tsx');
 		} catch (e) {
 			throw new Error(
-				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs#packaging'
+				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs/packaging'
 			);
 		}
 	}

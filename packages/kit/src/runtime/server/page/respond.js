@@ -247,7 +247,7 @@ function get_page_config(leaf, options) {
 	// TODO remove for 1.0
 	if ('ssr' in leaf) {
 		throw new Error(
-			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'
+			'`export const ssr` has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'
 		);
 	}
 

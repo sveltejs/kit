@@ -1133,7 +1133,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.click('"No Override To GET"');
 
 		expect(await page.innerHTML('pre')).toBe(
-			'_method=GET is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+			'_method=GET is not allowed. See https://kit.svelte.dev/docs/configuration#methodoverride'
 		);
 	});
 
@@ -1142,7 +1142,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.click('"No Override To CONNECT"');
 
 		expect(await page.innerHTML('pre')).toBe(
-			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs/configuration#methodoverride'
 		);
 	});
 });
