@@ -126,22 +126,7 @@
 		color: white;
 	}
 
-	nav::after {
-		content: '';
-		position: fixed;
-		inset-inline-start: 0;
-		inset-block-end: 0;
-		inline-size: var(--sidebar-w);
-		block-size: 2em;
-		pointer-events: none;
-		block-size: var(--top-offset);
-		background: linear-gradient(
-			to bottom,
-			rgba(103, 103, 120, 0) 0%,
-			rgba(103, 103, 120, 0.7) 50%,
-			rgba(103, 103, 120, 1) 100%
-		);
-	}
+	
 
 	.sidebar {
 		padding-inline: 3.2rem 0;
@@ -221,6 +206,23 @@
 	}
 
 	@media (min-width: 832px) {
+		nav::after {
+			content: '';
+			position: fixed;
+			inset-inline-start: 0;
+			inset-block-end: 0;
+			inline-size: var(--sidebar-w);
+			block-size: 2em;
+			pointer-events: none;
+			block-size: var(--top-offset);
+			background: linear-gradient(
+				to bottom,
+				rgba(103, 103, 120, 0) 0%,
+				rgba(103, 103, 120, 0.7) 50%,
+				rgba(103, 103, 120, 1) 100%
+			);
+		}
+
 		.sidebar {
 			columns: 1;
 			padding-inline: 3.2rem 0;
