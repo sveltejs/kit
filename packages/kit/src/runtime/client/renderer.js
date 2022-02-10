@@ -745,8 +745,7 @@ export class Renderer {
 					(changed.url && previous.uses.url) ||
 					(has_shadow &&
 						i === a.length - 1 &&
-						(this.current.url.pathname !== url.pathname ||
-							this.current.url.search !== url.search)) ||
+						`${this.current.url.pathname}${this.current.url.search}` !== key) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
 					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
