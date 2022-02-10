@@ -3,4 +3,4 @@
 '@sveltejs/kit': patch
 ---
 
-Move createIndexFiles option from kit to adapter-static
+[breaking] remove `createIndexFiles` option, derive from `trailingSlash` instead
