@@ -14,7 +14,7 @@ test('prerenders /', () => {
 });
 
 test('renders a redirect', () => {
-	const content = read('redirect/index.html');
+	const content = read('redirect.html');
 	assert.equal(
 		content,
 		'<meta http-equiv="refresh" content="0;url=https://example.com/redirected">'
@@ -22,7 +22,7 @@ test('renders a redirect', () => {
 });
 
 test('does not double-encode redirect locations', () => {
-	const content = read('redirect-encoded/index.html');
+	const content = read('redirect-encoded.html');
 	assert.equal(
 		content,
 		'<meta http-equiv="refresh" content="0;url=https://example.com/redirected?returnTo=%2Ffoo%3Fbar%3Dbaz">'
@@ -30,7 +30,7 @@ test('does not double-encode redirect locations', () => {
 });
 
 test('escapes characters in redirect', () => {
-	const content = read('redirect-malicious/index.html');
+	const content = read('redirect-malicious.html');
 	assert.equal(
 		content,
 		'<meta http-equiv="refresh" content="0;url=https://example.com/&lt;/script&gt;alert(&quot;pwned&quot;)">'
@@ -38,12 +38,12 @@ test('escapes characters in redirect', () => {
 });
 
 test('inserts http-equiv tag for cache-control headers', () => {
-	const content = read('max-age/index.html');
+	const content = read('max-age.html');
 	assert.ok(content.includes('<meta http-equiv="cache-control" content="max-age=300">'));
 });
 
 test('renders page with data from endpoint', () => {
-	const content = read('fetch-endpoint/buffered/index.html');
+	const content = read('fetch-endpoint/buffered.html');
 	assert.ok(content.includes('<h1>the answer is 42</h1>'));
 
 	const json = read('fetch-endpoint/buffered.json');
@@ -51,7 +51,7 @@ test('renders page with data from endpoint', () => {
 });
 
 test('renders page with unbuffered data from endpoint', () => {
-	const content = read('fetch-endpoint/not-buffered/index.html');
+	const content = read('fetch-endpoint/not-buffered.html');
 	assert.ok(content.includes('<h1>content-type: application/json; charset=utf-8</h1>'), content);
 
 	const json = read('fetch-endpoint/not-buffered.json');
@@ -59,7 +59,7 @@ test('renders page with unbuffered data from endpoint', () => {
 });
 
 test('loads a file with spaces in the filename', () => {
-	const content = read('load-file-with-spaces/index.html');
+	const content = read('load-file-with-spaces.html');
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
@@ -69,7 +69,7 @@ test('generates __data.json file for shadow endpoint', () => {
 });
 
 test('does not prerender page with shadow endpoint with non-GET handler', () => {
-	assert.ok(!fs.existsSync(`${build}/shadowed-post/index.html`));
+	assert.ok(!fs.existsSync(`${build}/shadowed-post.html`));
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 

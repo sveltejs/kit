@@ -153,7 +153,6 @@ export interface Config {
 		prerender?: {
 			concurrency?: number;
 			crawl?: boolean;
-			createIndexFiles?: boolean;
 			enabled?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;

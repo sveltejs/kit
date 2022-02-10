@@ -23,7 +23,7 @@ run('spa', (test) => {
 	});
 
 	test('prerenders page with prerender=true', ({ cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/build/about/index.html`));
+		assert.ok(fs.existsSync(`${cwd}/build/about.html`));
 	});
 
 	test('renders content in fallback page when JS runs', async ({ base, page }) => {

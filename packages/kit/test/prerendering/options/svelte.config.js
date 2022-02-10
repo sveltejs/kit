@@ -17,9 +17,7 @@ const config = {
 			assets: 'https://cdn.example.com/stuff'
 		},
 
-		prerender: {
-			createIndexFiles: false
-		},
+		trailingSlash: 'always',
 
 		vite: {
 			build: {
