@@ -55,7 +55,7 @@ export default function () {
 				entryPoints: [`${tmp}/entry.js`],
 				outfile: `${entrypoint}/index.js`,
 				bundle: true,
-				target: 'es2020',
+				target: 'es2019',
 				platform: 'browser'
 			});
 
