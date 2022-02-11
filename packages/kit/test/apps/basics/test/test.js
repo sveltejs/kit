@@ -346,7 +346,7 @@ test.describe.parallel('CSS', () => {
 	});
 });
 
-test.describe.parallel.only('Shadowed pages', () => {
+test.describe.parallel('Shadowed pages', () => {
 	test('Loads props from an endpoint', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/simple"]');
