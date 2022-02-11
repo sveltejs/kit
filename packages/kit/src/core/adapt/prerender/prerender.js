@@ -97,11 +97,25 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	});
 
 	/**
+	 * Checks if path has extension
+	 * @param {string} path
+	 */
+	function has_ext(path) {
+		// has_ext('.htcaccess') === false
+		// has_ext('path/to/.htcaccess') === false
+		// has_ext('rss.xml') === true
+		// has_ext('robots.txt') === true
+		// has_ext('manifest.webmanifest') === true
+		const fname = path.split('/').pop()
+		return fname.slice((Math.max(0, fname.lastIndexOf(".")) || Infinity) + 1).length > 0;
+	}
+
+	/**
 	 * @param {string} path
 	 */
 	function normalize(path) {
 		if (config.kit.trailingSlash === 'always') {
-			return path.endsWith('/') ? path : `${path}/`;
+			return path.endsWith('/') || has_ext(path) ? path : `${path}/`;
 		} else if (config.kit.trailingSlash === 'never') {
 			return !path.endsWith('/') || path === '/' ? path : path.slice(0, -1);
 		}
