@@ -32,7 +32,6 @@
 	},
 	"devDependencies": {
 		"@cloudflare/kv-asset-handler": "^0.2.0",
-		"@cloudflare/workers-types": "^3.3.0",
 		"@sveltejs/kit": "workspace:*"
 	}
 }

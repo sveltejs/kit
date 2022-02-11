@@ -6,6 +6,10 @@ const app = new App(manifest);
 const prefix = `/${manifest.appDir}/`;
 
 export default {
+	/**
+	 * @param {Request} req
+	 * @param {any} env
+	 */
 	async fetch(req, env) {
 		const url = new URL(req.url);
 
