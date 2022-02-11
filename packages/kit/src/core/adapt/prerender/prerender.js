@@ -150,8 +150,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string?} referrer
 	 */
 	async function visit(encoded, decoded, referrer) {
-		if (!encoded.startsWith(config.kit.paths.base)) {
-			error({ status: 404, path: encoded, referrer, referenceType: 'linked' });
+		if (!decoded.startsWith(config.kit.paths.base)) {
+			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
 		}
 
@@ -246,12 +246,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				let pathname = decodeURI(parsed.pathname);
 
-				if (config.kit.paths.base) {
-					if (!pathname.startsWith(config.kit.paths.base)) continue;
-					pathname = pathname.slice(config.kit.paths.base.length) || '/';
-				}
-
-				const file = pathname.slice(1);
+				const file = pathname.slice(config.kit.paths.base.length + 1);
 				if (files.has(file)) continue;
 
 				if (parsed.search) {
