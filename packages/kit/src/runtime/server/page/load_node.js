@@ -255,8 +255,8 @@ export async function load_node({
 							if (!opts.body || typeof opts.body === 'string') {
 								// the json constructed below is later added to the dom in a script tag
 								// make sure the used values are safe
-								const statusNumber = Number(response.status);
-								if (isNaN(statusNumber)) {
+								const status_number = Number(response.status);
+								if (isNaN(status_number)) {
 									throw new Error(
 										`response.status is not a number. value: "${
 											response.status
@@ -267,7 +267,7 @@ export async function load_node({
 								fetched.push({
 									url: requested,
 									body: /** @type {string} */ (opts.body),
-									json: `{"status":${statusNumber},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
+									json: `{"status":${status_number},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
 								});
 							}
 
