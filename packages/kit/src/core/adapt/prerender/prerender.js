@@ -211,27 +211,33 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 
 		for (const [dependency_path, result] of dependencies) {
+			// this seems circuitous, but using new URL allows us to not care
+			// whether dependency_path is encoded or not
+			const decoded_dependency_path = decodeURI(
+				new URL(dependency_path, 'http://localhost').pathname
+			);
+
 			const { status, headers } = result.response;
 
 			const response_type = Math.floor(status / 100);
 
 			const is_html = headers.get('content-type') === 'text/html';
 
-			const file = `${out}${output_filename(dependency_path, is_html)}`;
+			const file = `${out}${output_filename(decoded_dependency_path, is_html)}`;
 			mkdirp(dirname(file));
 
 			writeFileSync(
 				file,
 				result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
 			);
-			paths.push(dependency_path);
+			paths.push(decoded_dependency_path);
 
 			if (response_type === OK) {
-				log.info(`${status} ${dependency_path}`);
+				log.info(`${status} ${decoded_dependency_path}`);
 			} else {
 				error({
 					status,
-					path: dependency_path,
+					path: decoded_dependency_path,
 					referrer: decoded,
 					referenceType: 'fetched'
 				});

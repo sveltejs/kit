@@ -209,9 +209,7 @@ export async function load_node({
 				} else {
 					// external
 					if (resolved.startsWith('//')) {
-						throw new Error(
-							`Cannot request protocol-relative URL (${requested}) in server-side fetch`
-						);
+						requested = event.url.protocol + requested;
 					}
 
 					// external fetch
