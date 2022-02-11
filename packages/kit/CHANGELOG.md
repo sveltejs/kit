@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.266
+
+### Patch Changes
+
+- fix casing of `.DS_Store` in the default config for `serviceWorker` ([#3823](https://github.com/sveltejs/kit/pull/3823))
+
+* [fix] avoid mutating response `Headers` ([#3829](https://github.com/sveltejs/kit/pull/3829))
+
 ## 1.0.0-next.265
 
 ### Patch Changes
