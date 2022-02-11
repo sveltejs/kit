@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-Copy endpoint response Headers instead of setting directly
+[fix] avoid mutating response `Headers`
