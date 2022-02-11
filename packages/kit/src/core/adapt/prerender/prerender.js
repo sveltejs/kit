@@ -58,22 +58,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	__fetch_polyfill();
 
-	mkdirp(out);
-
 	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
-
-	const seen = new Set();
 
 	/** @type {import('types/internal').AppModule} */
 	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	override({
 		paths: config.kit.paths,
 		prerendering: true,
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
-
-	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	const app = new App(manifest);
 
@@ -130,6 +125,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		}
 		return parts.join('/');
 	}
+
+	const seen = new Set();
 
 	/**
 	 * @param {string | null} referrer
