@@ -14,6 +14,11 @@ test('prerenders /path-base', () => {
 	assert.ok(content.includes('http://sveltekit-prerender/path-base'));
 });
 
+test('prerenders /rss.xml', () => {
+	const content = read('rss.xml');
+	assert.ok(content.includes('<title>Blog</title>'));
+});
+
 test('prerenders nested /path-base', () => {
 	const content = read('nested/index.html');
 	assert.ok(content.includes('<h1>nested hello</h1>'));
