@@ -106,8 +106,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		// has_ext('rss.xml') === true
 		// has_ext('robots.txt') === true
 		// has_ext('manifest.webmanifest') === true
-		const fname = path.split('/').pop()
-		return fname.slice((Math.max(0, fname.lastIndexOf(".")) || Infinity) + 1).length > 0;
+		const fname = path.split('/').pop();
+		return fname.slice((Math.max(0, fname.lastIndexOf('.')) || Infinity) + 1).length > 0;
 	}
 
 	/**
