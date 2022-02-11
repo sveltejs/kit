@@ -134,33 +134,33 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	/**
-	 * @param {string} decoded_path
+	 * @param {string} decoded
 	 * @param {string?} referrer
 	 */
-	function enqueue(decoded_path, referrer) {
-		const path = encodeURI(normalize(decoded_path));
+	function enqueue(decoded, referrer) {
+		const encoded = encodeURI(normalize(decoded));
 
-		if (seen.has(path)) return;
-		seen.add(path);
+		if (seen.has(encoded)) return;
+		seen.add(encoded);
 
-		return q.add(() => visit(path, decoded_path, referrer));
+		return q.add(() => visit(encoded, decoded, referrer));
 	}
 
 	/**
-	 * @param {string} path
-	 * @param {string} decoded_path
+	 * @param {string} encoded
+	 * @param {string} decoded
 	 * @param {string?} referrer
 	 */
-	async function visit(path, decoded_path, referrer) {
-		if (!path.startsWith(config.kit.paths.base)) {
-			error({ status: 404, path, referrer, referenceType: 'linked' });
+	async function visit(encoded, decoded, referrer) {
+		if (!encoded.startsWith(config.kit.paths.base)) {
+			error({ status: 404, path: encoded, referrer, referenceType: 'linked' });
 			return;
 		}
 
 		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await app.render(new Request(`http://sveltekit-prerender${path}`), {
+		const response = await app.render(new Request(`http://sveltekit-prerender${encoded}`), {
 			prerender: {
 				all,
 				dependencies
@@ -171,7 +171,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const type = response.headers.get('content-type');
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
-		const file = `${out}${output_filename(decoded_path, is_html)}`;
+		const file = `${out}${output_filename(decoded, is_html)}`;
 
 		if (response_type === REDIRECT) {
 			const location = response.headers.get('location');
@@ -179,19 +179,19 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			if (location) {
 				mkdirp(dirname(file));
 
-				log.warn(`${response.status} ${decoded_path} -> ${location}`);
+				log.warn(`${response.status} ${decoded} -> ${location}`);
 
 				writeFileSync(
 					file,
 					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
 				);
 
-				const resolved = resolve(path, location);
+				const resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(resolved, path);
+					enqueue(resolved, encoded);
 				}
 			} else {
-				log.warn(`location header missing on redirect received from ${decoded_path}`);
+				log.warn(`location header missing on redirect received from ${decoded}`);
 			}
 
 			return;
@@ -202,11 +202,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		if (response.status === 200) {
 			mkdirp(dirname(file));
 
-			log.info(`${response.status} ${decoded_path}`);
+			log.info(`${response.status} ${decoded}`);
 			writeFileSync(file, text);
-			paths.push(normalize(decoded_path));
+			paths.push(normalize(decoded));
 		} else if (response_type !== OK) {
-			error({ status: response.status, path, referrer, referenceType: 'linked' });
+			error({ status: response.status, path: encoded, referrer, referenceType: 'linked' });
 		}
 
 		for (const [dependency_path, result] of dependencies) {
@@ -231,7 +231,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				error({
 					status,
 					path: dependency_path,
-					referrer: path,
+					referrer: encoded,
 					referenceType: 'fetched'
 				});
 			}
@@ -241,7 +241,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			for (const href of crawl(text)) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
-				const resolved = resolve(path, href);
+				const resolved = resolve(encoded, href);
 				if (!is_root_relative(resolved)) continue;
 
 				const parsed = new URL(resolved, 'http://localhost');
@@ -260,7 +260,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				enqueue(pathname, path);
+				enqueue(pathname, encoded);
 			}
 		}
 	}
