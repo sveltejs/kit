@@ -49,11 +49,17 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	/** @type {import('types/config').Prerendered} */
+	const prerendered = {
+		pages: new Map(),
+		assets: new Map(),
+		redirects: new Map()
+	};
+
 	if (!config.kit.prerender.enabled && !fallback) {
-		return { paths: [] };
+		return prerendered;
 	}
 
 	__fetch_polyfill();
@@ -79,9 +85,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		...build_data.client.chunks.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`),
 		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
 	]);
-
-	/** @type {string[]} */
-	const paths = [];
 
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
@@ -214,7 +217,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 */
 	function save(response, body, decoded, encoded, referrer, referenceType) {
 		const response_type = Math.floor(response.status / 100);
-		const type = response.headers.get('content-type');
+		const type = /** @type {string} */ (response.headers.get('content-type'));
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
@@ -238,6 +241,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					resolved = normalize(resolved);
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
+
+				prerendered.redirects.set(decoded, {
+					status: response.status,
+					location: resolved
+				});
 			} else {
 				log.warn(`location header missing on redirect received from ${decoded}`);
 			}
@@ -250,7 +258,16 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 			log.info(`${response.status} ${decoded}`);
 			writeFileSync(dest, body);
-			paths.push(normalize(decoded));
+
+			if (is_html) {
+				prerendered.pages.set(decoded, {
+					file
+				});
+			} else {
+				prerendered.assets.set(decoded, {
+					type
+				});
+			}
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
@@ -284,7 +301,5 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		writeFileSync(file, await rendered.text());
 	}
 
-	return {
-		paths
-	};
+	return prerendered;
 }

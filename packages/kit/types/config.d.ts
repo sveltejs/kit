@@ -35,25 +35,23 @@ export interface AdapterEntry {
 	}) => void;
 }
 
-type Path = `/${string}`;
-
 export interface Prerendered {
 	pages: Map<
-		Path,
+		string,
 		{
 			/** The location of the .html file relative to the output directory */
 			file: string;
 		}
 	>;
 	assets: Map<
-		Path,
+		string,
 		{
 			/** The MIME type of the asset */
 			type: string;
 		}
 	>;
 	redirects: Map<
-		Path,
+		string,
 		{
 			status: number;
 			location: string;

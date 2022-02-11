@@ -163,10 +163,19 @@ export function create_builder({ cwd, config, build_data, log }) {
 				log
 			});
 
-			prerendered.paths.forEach((path) => {
+			for (const path of prerendered.pages.keys()) {
 				prerendered_paths.add(path);
-				prerendered_paths.add(path + '/');
-			});
+				prerendered_paths.add(path + '/'); // TODO is this right? could we already have a trailingSlash?
+			}
+
+			for (const path of prerendered.redirects.keys()) {
+				prerendered_paths.add(path);
+				prerendered_paths.add(path + '/'); // TODO is this right? could we already have a trailingSlash?
+			}
+
+			for (const path of prerendered.assets.keys()) {
+				prerendered_paths.add(path);
+			}
 
 			return prerendered;
 		}
