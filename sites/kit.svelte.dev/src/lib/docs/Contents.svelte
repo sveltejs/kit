@@ -116,31 +116,11 @@
 
 <style>
 	nav {
-		/* position: fixed; */
-		/* inline-size: var(--sidebar-w); */
-		/* block-size: 100vh; */
 		inset-block-start: 0;
 		inset-inline-start: 0;
 		overflow: hidden;
 		background-color: var(--second);
 		color: white;
-	}
-
-	nav::after {
-		content: '';
-		position: fixed;
-		inset-inline-start: 0;
-		inset-block-end: 0;
-		inline-size: var(--sidebar-w);
-		block-size: 2em;
-		pointer-events: none;
-		block-size: var(--top-offset);
-		background: linear-gradient(
-			to bottom,
-			rgba(103, 103, 120, 0) 0%,
-			rgba(103, 103, 120, 0.7) 50%,
-			rgba(103, 103, 120, 1) 100%
-		);
 	}
 
 	.sidebar {
@@ -224,6 +204,23 @@
 		.sidebar {
 			columns: 1;
 			padding-inline: 3.2rem 0;
+		}
+
+		nav::after {
+			content: '';
+			position: fixed;
+			inset-inline-start: 0;
+			inset-block-end: 0;
+			inline-size: var(--sidebar-w);
+			block-size: 2em;
+			pointer-events: none;
+			block-size: var(--top-offset);
+			background: linear-gradient(
+				to bottom,
+				rgba(103, 103, 120, 0) 0%,
+				rgba(103, 103, 120, 0.7) 50%,
+				rgba(103, 103, 120, 1) 100%
+			);
 		}
 	}
 </style>
