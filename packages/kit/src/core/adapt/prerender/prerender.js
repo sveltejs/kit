@@ -132,24 +132,26 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	/**
+	 * @param {string | null} referrer
 	 * @param {string} decoded
-	 * @param {string?} referrer
+	 * @param {string} [encoded]
 	 */
-	function enqueue(decoded, referrer) {
-		const encoded = encodeURI(normalize(decoded));
+	function enqueue(referrer, decoded, encoded) {
+		if (seen.has(decoded)) return;
+		seen.add(decoded);
 
-		if (seen.has(encoded)) return;
-		seen.add(encoded);
+		const file = decoded.slice(config.kit.paths.base.length + 1);
+		if (files.has(file)) return;
 
-		return q.add(() => visit(encoded, decoded, referrer));
+		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
 	}
 
 	/**
-	 * @param {string} encoded
 	 * @param {string} decoded
+	 * @param {string} encoded
 	 * @param {string?} referrer
 	 */
-	async function visit(encoded, decoded, referrer) {
+	async function visit(decoded, encoded, referrer) {
 		if (!decoded.startsWith(config.kit.paths.base)) {
 			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
 			return;
@@ -184,9 +186,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
 				);
 
-				const resolved = resolve(encoded, location);
+				let resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					enqueue(resolved, encoded);
+					resolved = normalize(resolved);
+					enqueue(decoded, decodeURI(resolved), resolved);
 				}
 			} else {
 				log.warn(`location header missing on redirect received from ${decoded}`);
@@ -204,7 +207,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			writeFileSync(file, text);
 			paths.push(normalize(decoded));
 		} else if (response_type !== OK) {
-			error({ status: response.status, path: encoded, referrer, referenceType: 'linked' });
+			error({ status: response.status, path: decoded, referrer, referenceType: 'linked' });
 		}
 
 		for (const [dependency_path, result] of dependencies) {
@@ -229,7 +232,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				error({
 					status,
 					path: dependency_path,
-					referrer: encoded,
+					referrer: decoded,
 					referenceType: 'fetched'
 				});
 			}
@@ -244,16 +247,12 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				const parsed = new URL(resolved, 'http://localhost');
 
-				let pathname = decodeURI(parsed.pathname);
-
-				const file = pathname.slice(config.kit.paths.base.length + 1);
-				if (files.has(file)) continue;
-
 				if (parsed.search) {
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				enqueue(pathname, encoded);
+				const pathname = normalize(parsed.pathname);
+				enqueue(decoded, decodeURI(pathname), pathname);
 			}
 		}
 	}
@@ -262,10 +261,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
-					enqueue(config.kit.paths.base + entry, null);
+					enqueue(null, normalize(config.kit.paths.base + entry)); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(config.kit.paths.base + entry, null);
+				enqueue(null, normalize(config.kit.paths.base + entry));
 			}
 		}
 
