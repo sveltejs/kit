@@ -73,4 +73,35 @@ test('does not prerender page with shadow endpoint with non-GET handler', () => 
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
+test('decodes paths when writing files', () => {
+	let content = read('encoding/path with spaces.html');
+	assert.ok(content.includes('<p id="a">path with spaces</p>'));
+	assert.ok(content.includes('<p id="b">path with encoded spaces</p>'));
+
+	content = read('encoding/dynamic path with spaces.html');
+	assert.ok(
+		content.includes('<h1>dynamic path with spaces / /encoding/dynamic%20path%20with%20spaces</h1>')
+	);
+
+	content = read('encoding/dynamic path with encoded spaces.html');
+	assert.ok(
+		content.includes(
+			'<h1>dynamic path with encoded spaces / /encoding/dynamic%20path%20with%20encoded%20spaces</h1>'
+		)
+	);
+
+	content = read('encoding/redirected path with encoded spaces.html');
+	assert.ok(
+		content.includes(
+			'<h1>redirected path with encoded spaces / /encoding/redirected%20path%20with%20encoded%20spaces</h1>'
+		)
+	);
+
+	content = read('encoding/path with spaces.json');
+	assert.equal(content, JSON.stringify({ path: 'path with spaces' }));
+
+	content = read('encoding/path with encoded spaces.json');
+	assert.equal(content, JSON.stringify({ path: 'path with encoded spaces' }));
+});
+
 test.run();
