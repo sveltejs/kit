@@ -150,28 +150,6 @@
 							modal.querySelector('a').click();
 						}
 					}
-
-					// ideally, opening the modal would create a history entry that we
-					// could use with browser back/forward buttons — this would be the
-					// best way to allow people to close the modal on mobile, for
-					// example. That's a little tricky to do right now — need to add
-					// new APIs to SvelteKit — but in the meantime we can close the
-					// modal when the backspace key is pressed. we _don't_ want that
-					// to happen when the backspace keydown fires repeatedly, so we
-					// track whether it was already pressed or not. (Sadly this
-					// doesn't work on mobile, longpress will close the modal)
-					if (e.key === 'Backspace') {
-						if ($query === '' && !backspace_pressed) {
-							close();
-						}
-
-						backspace_pressed = true;
-					}
-				}}
-				on:keyup={(e) => {
-					if (e.key === 'Backspace') {
-						backspace_pressed = false;
-					}
 				}}
 				on:input={(e) => {
 					$query = e.target.value;
