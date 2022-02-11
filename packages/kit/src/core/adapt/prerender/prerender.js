@@ -101,8 +101,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {string} path
 	 */
 	function has_ext(path) {
-		// has_ext('.htcaccess') === false
-		// has_ext('path/to/.htcaccess') === false
+		// has_ext('.htaccess') === false
+		// has_ext('path/to/.htaccess') === false
 		// has_ext('rss.xml') === true
 		// has_ext('robots.txt') === true
 		// has_ext('manifest.webmanifest') === true
