@@ -1,5 +1,5 @@
 export async function get() {
-  const body = `<?xml version="1.0"?>
+	const body = `<?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" media="screen" href="/rss.xsl"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
@@ -19,12 +19,12 @@ export async function get() {
     </item>
   </channel>
 </rss>`;
-  const headers = {
-    'cache-control': 'max-age=0, s-maxage=3600',
-    'content-type': 'application/xml'
-  };
-  return {
-    headers,
-    body
-  };
+	const headers = {
+		'cache-control': 'max-age=0, s-maxage=3600',
+		'content-type': 'application/xml'
+	};
+	return {
+		headers,
+		body
+	};
 }
