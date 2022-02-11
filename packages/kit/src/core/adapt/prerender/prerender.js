@@ -60,11 +60,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	mkdirp(out);
 
-	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
+	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	const seen = new Set();
-
-	const server_root = resolve_path(dir);
 
 	/** @type {import('types/internal').AppModule} */
 	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
