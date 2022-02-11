@@ -13,7 +13,6 @@ importers:
       '@typescript-eslint/eslint-plugin': ^5.5.0
       '@typescript-eslint/parser': ^5.5.0
       action-deploy-docs: github:sveltejs/action-deploy-docs#main
-      dotenv: ^16.0.0
       eslint: ^8.3.0
       eslint-plugin-import: ^2.25.3
       eslint-plugin-svelte3: ^3.2.1
@@ -31,7 +30,6 @@ importers:
       '@typescript-eslint/eslint-plugin': 5.5.0_f60175165d08edf988b5aad85994517a
       '@typescript-eslint/parser': 5.5.0_eslint@8.3.0+typescript@4.5.5
       action-deploy-docs: github.com/sveltejs/action-deploy-docs/4b34fbdb9caf29ad769ec1dfc955bd1c61755f91
-      dotenv: 16.0.0
       eslint: 8.3.0
       eslint-plugin-import: 2.25.3_eslint@8.3.0
       eslint-plugin-svelte3: 3.2.1_eslint@8.3.0
