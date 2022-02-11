@@ -164,84 +164,28 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			}
 		});
 
-		const response_type = Math.floor(response.status / 100);
-		const type = response.headers.get('content-type');
-		const is_html = response_type === REDIRECT || type === 'text/html';
-
-		const file = `${out}${output_filename(decoded, is_html)}`;
-
-		if (response_type === REDIRECT) {
-			const location = response.headers.get('location');
-
-			if (location) {
-				mkdirp(dirname(file));
-
-				log.warn(`${response.status} ${decoded} -> ${location}`);
-
-				writeFileSync(
-					file,
-					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
-				);
-
-				let resolved = resolve(encoded, location);
-				if (is_root_relative(resolved)) {
-					resolved = normalize(resolved);
-					enqueue(decoded, decodeURI(resolved), resolved);
-				}
-			} else {
-				log.warn(`location header missing on redirect received from ${decoded}`);
-			}
-
-			return;
-		}
-
 		const text = await response.text();
 
-		if (response.status === 200) {
-			mkdirp(dirname(file));
-
-			log.info(`${response.status} ${decoded}`);
-			writeFileSync(file, text);
-			paths.push(normalize(decoded));
-		} else if (response_type !== OK) {
-			error({ status: response.status, path: decoded, referrer, referenceType: 'linked' });
-		}
+		save(response, text, decoded, encoded, referrer, 'linked');
 
 		for (const [dependency_path, result] of dependencies) {
 			// this seems circuitous, but using new URL allows us to not care
 			// whether dependency_path is encoded or not
-			const decoded_dependency_path = decodeURI(
-				new URL(dependency_path, 'http://localhost').pathname
+			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
+			const decoded_dependency_path = decodeURI(encoded_dependency_path);
+
+			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
+			save(
+				result.response,
+				body,
+				decoded_dependency_path,
+				encoded_dependency_path,
+				decoded,
+				'fetched'
 			);
-
-			const { status, headers } = result.response;
-
-			const response_type = Math.floor(status / 100);
-
-			const is_html = headers.get('content-type') === 'text/html';
-
-			const file = `${out}${output_filename(decoded_dependency_path, is_html)}`;
-			mkdirp(dirname(file));
-
-			writeFileSync(
-				file,
-				result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
-			);
-			paths.push(decoded_dependency_path);
-
-			if (response_type === OK) {
-				log.info(`${status} ${decoded_dependency_path}`);
-			} else {
-				error({
-					status,
-					path: decoded_dependency_path,
-					referrer: decoded,
-					referenceType: 'fetched'
-				});
-			}
 		}
 
-		if (is_html && config.kit.prerender.crawl) {
+		if (config.kit.prerender.crawl && response.headers.get('content-type') === 'text/html') {
 			for (const href of crawl(text)) {
 				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
@@ -257,6 +201,58 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 				const pathname = normalize(parsed.pathname);
 				enqueue(decoded, decodeURI(pathname), pathname);
 			}
+		}
+	}
+
+	/**
+	 * @param {Response} response
+	 * @param {string | Uint8Array} body
+	 * @param {string} decoded
+	 * @param {string} encoded
+	 * @param {string | null} referrer
+	 * @param {'linked' | 'fetched'} referenceType
+	 */
+	function save(response, body, decoded, encoded, referrer, referenceType) {
+		const response_type = Math.floor(response.status / 100);
+		const type = response.headers.get('content-type');
+		const is_html = response_type === REDIRECT || type === 'text/html';
+
+		const file = output_filename(decoded, is_html);
+		const dest = out + file;
+
+		if (response_type === REDIRECT) {
+			const location = response.headers.get('location');
+
+			if (location) {
+				mkdirp(dirname(dest));
+
+				log.warn(`${response.status} ${decoded} -> ${location}`);
+
+				writeFileSync(
+					dest,
+					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
+				);
+
+				let resolved = resolve(encoded, location);
+				if (is_root_relative(resolved)) {
+					resolved = normalize(resolved);
+					enqueue(decoded, decodeURI(resolved), resolved);
+				}
+			} else {
+				log.warn(`location header missing on redirect received from ${decoded}`);
+			}
+
+			return;
+		}
+
+		if (response.status === 200) {
+			mkdirp(dirname(dest));
+
+			log.info(`${response.status} ${decoded}`);
+			writeFileSync(dest, body);
+			paths.push(normalize(decoded));
+		} else if (response_type !== OK) {
+			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 	}
 
