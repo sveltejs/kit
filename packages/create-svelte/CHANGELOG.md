@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.116
+
+### Patch Changes
+
+- use preserveValueImports flag ([#3064](https://github.com/sveltejs/kit/pull/3064))
+
 ## 2.0.0-next.115
 
 ### Patch Changes

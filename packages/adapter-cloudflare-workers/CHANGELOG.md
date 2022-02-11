@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare-workers
 
+## 1.0.0-next.33
+
+### Patch Changes
+
+- revert change to Cloudflare ES target version ([#3847](https://github.com/sveltejs/kit/pull/3847))
+
 ## 1.0.0-next.32
 
 ### Patch Changes
