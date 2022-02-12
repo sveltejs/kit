@@ -4,7 +4,7 @@ import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../../install-fetch.js';
 import { SVELTE_KIT } from '../../constants.js';
-import { is_root_relative, resolve } from '../../../utils/url.js';
+import { is_root_relative, normalize_path, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../../utils/escape.js';
@@ -91,19 +91,6 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			files.add(file.slice(0, -11));
 		}
 	});
-
-	/**
-	 * @param {string} path
-	 */
-	function normalize(path) {
-		if (config.kit.trailingSlash === 'always') {
-			return path.endsWith('/') ? path : `${path}/`;
-		} else if (config.kit.trailingSlash === 'never') {
-			return !path.endsWith('/') || path === '/' ? path : path.slice(0, -1);
-		}
-
-		return path;
-	}
 
 	const q = queue(config.kit.prerender.concurrency);
 
@@ -197,7 +184,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				const pathname = normalize(parsed.pathname);
+				const pathname = normalize_path(parsed.pathname, config.kit.trailingSlash);
 				enqueue(decoded, decodeURI(pathname), pathname);
 			}
 		}
@@ -234,7 +221,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 				let resolved = resolve(encoded, location);
 				if (is_root_relative(resolved)) {
-					resolved = normalize(resolved);
+					resolved = normalize_path(resolved, config.kit.trailingSlash);
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
 
@@ -273,10 +260,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
-					enqueue(null, normalize(config.kit.paths.base + entry)); // TODO can we pre-normalize these?
+					enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash)); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(null, normalize(config.kit.paths.base + entry));
+				enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash));
 			}
 		}
 
