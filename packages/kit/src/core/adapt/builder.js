@@ -2,6 +2,7 @@ import { SVELTE_KIT } from '../constants.js';
 import { copy, rimraf, mkdirp } from '../../utils/filesystem.js';
 import { prerender } from './prerender/prerender.js';
 import { generate_manifest } from '../generate_manifest/index.js';
+import { normalize_path } from '../../utils/url.js';
 
 /**
  * @param {{
@@ -164,13 +165,11 @@ export function create_builder({ cwd, config, build_data, log }) {
 			});
 
 			for (const path of prerendered.pages.keys()) {
-				prerendered_paths.add(path);
-				prerendered_paths.add(path + '/'); // TODO is this right? could we already have a trailingSlash?
+				prerendered_paths.add(normalize_path(path, 'never'));
 			}
 
 			for (const path of prerendered.redirects.keys()) {
-				prerendered_paths.add(path);
-				prerendered_paths.add(path + '/'); // TODO is this right? could we already have a trailingSlash?
+				prerendered_paths.add(normalize_path(path, 'never'));
 			}
 
 			for (const path of prerendered.assets.keys()) {
