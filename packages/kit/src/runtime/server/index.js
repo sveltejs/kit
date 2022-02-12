@@ -4,6 +4,7 @@ import { render_response } from './page/render.js';
 import { respond_with_error } from './page/respond_with_error.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { decode_params } from './utils.js';
+import { normalize_path } from '../../utils/url.js';
 
 const DATA_SUFFIX = '/__data.json';
 
@@ -11,26 +12,15 @@ const DATA_SUFFIX = '/__data.json';
 export async function respond(request, options, state = {}) {
 	const url = new URL(request.url);
 
-	if (url.pathname !== '/' && options.trailing_slash !== 'ignore') {
-		const has_trailing_slash = url.pathname.endsWith('/');
+	const normalized = normalize_path(url.pathname, options.trailing_slash);
 
-		if (
-			(has_trailing_slash && options.trailing_slash === 'never') ||
-			(!has_trailing_slash &&
-				options.trailing_slash === 'always' &&
-				!(url.pathname.split('/').pop() || '').includes('.'))
-		) {
-			url.pathname = has_trailing_slash ? url.pathname.slice(0, -1) : url.pathname + '/';
-
-			if (url.search === '?') url.search = '';
-
-			return new Response(undefined, {
-				status: 301,
-				headers: {
-					location: url.pathname + url.search
-				}
-			});
-		}
+	if (normalized !== url.pathname) {
+		return new Response(undefined, {
+			status: 301,
+			headers: {
+				location: normalized + (url.search === '?' ? '' : url.search)
+			}
+		});
 	}
 
 	const { parameter, allowed } = options.method_override;
