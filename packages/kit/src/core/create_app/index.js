@@ -23,7 +23,6 @@ export function write_if_changed(file, code) {
 
 /** @typedef {import('types/internal').ManifestData} ManifestData */
 
-
 /**
  * Updates or creates two files - manifest.js and root.svelte - in the specified output directory.
  * @param {Object} options
@@ -41,7 +40,7 @@ export function create_app({ manifest_data, output, cwd = process.cwd() }) {
 /**
  * Returns string without leading tabs and whitespace.
  * @param {string} str
- * 
+ *
  */
 function trim(str) {
 	return str.replace(/^\t\t/gm, '').trim();
@@ -50,17 +49,17 @@ function trim(str) {
 /**
  * Generates code for the `manifest.js` file which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and two arrays of components (`[__layout, page]` and `[error]`).
  * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and the app's __layout and error components.
- * @param {string} base - the base path to prepend to imports 
+ * @param {string} base - the base path to prepend to imports
  */
 function generate_client_manifest(manifest_data, base) {
 	/**Maps relative path of component to the component's index in `manifest_date.components`.
 	 * @type {Record<string, number>} */
 	const component_indexes = {};
 
-	/**Wraps `path.relative`. 
+	/**Wraps `path.relative`.
 	 * @param {string} c - component path */
 	const get_path = (c) => path.relative(base, c);
-	
+
 	const components = `[
 		${manifest_data.components
 			.map((component, i) => {
@@ -71,7 +70,7 @@ function generate_client_manifest(manifest_data, base) {
 			.join(',\n\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	/** 
+	/**
 	 * Matches components by path and returns an array of those components accessed within the `c`array.
 	 * @param {string[]} parts - array of component paths */
 	const get_indices = (parts) =>
