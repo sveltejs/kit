@@ -185,7 +185,7 @@ export class Router {
 			// Check if new url only differs by hash and use the browser default behavior in that case
 			// This will ensure the `hashchange` event is fired
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-			const [base, hash] = url.href.split('#');
+			/*const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				this.save_scroll_state();
 				setTimeout(() => {
@@ -196,7 +196,7 @@ export class Router {
 					return this.renderer.update(info, [], false);
 				}
 				return;
-			}
+			}*/
 
 			this._navigate({
 				url,
