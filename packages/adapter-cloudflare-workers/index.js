@@ -26,9 +26,8 @@ export default function () {
 			builder.rimraf(entrypoint);
 
 			builder.log.info('Prerendering static pages...');
-			const { pages } = await builder.prerender({
-				dest: bucket
-			});
+			const { pages } = await builder.prerender({ dest: bucket });
+			const prerendered = [...pages.keys()].map((path) => path.replace(/\/$/, '') || '/');
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -51,7 +50,7 @@ export default function () {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify([...pages.keys()])});\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(prerendered)});\n`
 			);
 
 			await esbuild.build({
