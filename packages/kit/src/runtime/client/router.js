@@ -149,7 +149,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
+		addEventListener('click', async (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js
@@ -181,6 +181,22 @@ export class Router {
 
 			// Ignore if <a> has a target
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
+
+			// Check if new url only differs by hash and use the browser default behavior in that case
+			// This will ensure the `hashchange` event is fired
+			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
+			const [base, hash] = url.href.split('#');
+			if (hash !== undefined && base === location.href.split('#')[0]) {
+				event.preventDefault();
+				this.save_scroll_state();
+				const info = this.parse(url);
+				if (info) {
+					await this.renderer.update(info, [], false);
+					location.hash = hash; // this will automatically pushState and set the state to null and then trigger hashchange event
+					this.save_scroll_state(); // by calling this method, it will also replaceState with object instead of null, we could also use history.replaceState({}, '', url.href);
+				}
+				return;
+			}
 
 			this._navigate({
 				url,
