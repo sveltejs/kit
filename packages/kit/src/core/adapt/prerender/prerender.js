@@ -112,21 +112,17 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		path = path.slice(config.kit.paths.base.length) || '/';
+		const file = path.slice(config.kit.paths.base.length + 1);
 
-		if (path === '/') {
-			return '/index.html';
+		if (file === '') {
+			return 'index.html';
 		}
 
-		const parts = path.split('/');
-		if (is_html && parts[parts.length - 1] !== 'index.html') {
-			if (config.kit.trailingSlash === 'always') {
-				parts.push('index.html');
-			} else {
-				parts[parts.length - 1] += '.html';
-			}
+		if (is_html && !file.endsWith('.html')) {
+			return file + (config.kit.trailingSlash === 'always' ? 'index.html' : '.html');
 		}
-		return parts.join('/');
+
+		return file;
 	}
 
 	const seen = new Set();
@@ -221,7 +217,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const is_html = response_type === REDIRECT || type === 'text/html';
 
 		const file = output_filename(decoded, is_html);
-		const dest = out + file;
+		const dest = `${out}/${file}`;
 
 		if (response_type === REDIRECT) {
 			const location = response.headers.get('location');
