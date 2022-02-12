@@ -60,7 +60,9 @@ export async function render_endpoint(event, mod) {
 
 	const { status = 200, body = {} } = response;
 	const headers =
-		response.headers instanceof Headers ? response.headers : to_headers(response.headers);
+		response.headers instanceof Headers
+			? new Headers(response.headers)
+			: to_headers(response.headers);
 
 	const type = headers.get('content-type');
 

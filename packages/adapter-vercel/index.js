@@ -5,6 +5,83 @@ import esbuild from 'esbuild';
 
 const dir = '.vercel_build_output';
 
+// rules for clean URLs and trailing slash handling,
+// generated with @vercel/routing-utils
+const redirects = {
+	always: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/\\.well-known(?:/.*)?$'
+		},
+		{
+			src: '^/((?:[^/]+/)*[^/\\.]+)$',
+			headers: {
+				Location: '/$1/'
+			},
+			status: 308
+		},
+		{
+			src: '^/((?:[^/]+/)*[^/]+\\.\\w+)/$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	],
+	never: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)/$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	],
+	ignore: [
+		{
+			src: '^/(?:(.+)/)?index(?:\\.html)?/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		},
+		{
+			src: '^/(.*)\\.html/?$',
+			headers: {
+				Location: '/$1'
+			},
+			status: 308
+		}
+	]
+};
+
 /** @type {import('.')} **/
 export default function ({ external = [] } = {}) {
 	return {
@@ -25,7 +102,7 @@ export default function ({ external = [] } = {}) {
 
 			builder.log.minor('Prerendering static pages...');
 
-			await builder.prerender({
+			const prerendered = await builder.prerender({
 				dest: `${dir}/static`
 			});
 
@@ -66,9 +143,26 @@ export default function ({ external = [] } = {}) {
 			builder.log.minor('Writing routes...');
 
 			builder.mkdirp(`${dir}/config`);
+
+			const prerendered_pages = Array.from(prerendered.pages, ([src, page]) => ({
+				src,
+				dest: page.file
+			}));
+
+			const prerendered_redirects = Array.from(prerendered.redirects, ([src, redirect]) => ({
+				src,
+				headers: {
+					Location: redirect.location
+				},
+				status: redirect.status
+			}));
+
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
+					...redirects[builder.trailingSlash],
+					...prerendered_pages,
+					...prerendered_redirects,
 					{
 						src: `/${builder.appDir}/.+`,
 						headers: {

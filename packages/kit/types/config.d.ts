@@ -35,12 +35,39 @@ export interface AdapterEntry {
 	}) => void;
 }
 
+export interface Prerendered {
+	pages: Map<
+		string,
+		{
+			/** The location of the .html file relative to the output directory */
+			file: string;
+		}
+	>;
+	assets: Map<
+		string,
+		{
+			/** The MIME type of the asset */
+			type: string;
+		}
+	>;
+	redirects: Map<
+		string,
+		{
+			status: number;
+			location: string;
+		}
+	>;
+	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
+	paths: string[];
+}
+
 export interface Builder {
 	log: Logger;
 	rimraf(dir: string): void;
 	mkdirp(dir: string): void;
 
 	appDir: string;
+	trailingSlash: 'always' | 'never' | 'ignore';
 
 	/**
 	 * Create entry points that map to individual functions
@@ -86,9 +113,7 @@ export interface Builder {
 		}
 	): string[];
 
-	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<{
-		paths: string[];
-	}>;
+	prerender(options: { all?: boolean; dest: string; fallback?: string }): Promise<Prerendered>;
 }
 
 export interface Adapter {
@@ -153,7 +178,6 @@ export interface Config {
 		prerender?: {
 			concurrency?: number;
 			crawl?: boolean;
-			createIndexFiles?: boolean;
 			enabled?: boolean;
 			entries?: string[];
 			onError?: PrerenderOnErrorValue;

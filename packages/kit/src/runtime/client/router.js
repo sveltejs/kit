@@ -1,4 +1,5 @@
 import { onMount } from 'svelte';
+import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
 function scroll_state() {
@@ -391,14 +392,7 @@ export class Router {
 		}
 		this.navigating++;
 
-		let { pathname } = url;
-
-		if (this.trailing_slash === 'never') {
-			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-		} else if (this.trailing_slash === 'always') {
-			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
-			if (!is_file && !pathname.endsWith('/')) pathname += '/';
-		}
+		const pathname = normalize_path(url.pathname, this.trailing_slash);
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 

@@ -13,7 +13,10 @@ export default function () {
 		async adapt(builder) {
 			const { site } = validate_config(builder);
 
-			const bucket = site.bucket;
+			// @ts-ignore
+			const { bucket } = site;
+
+			// @ts-ignore
 			const entrypoint = site['entry-point'] || 'workers-site';
 
 			const files = fileURLToPath(new URL('./files', import.meta.url));
@@ -23,9 +26,7 @@ export default function () {
 			builder.rimraf(entrypoint);
 
 			builder.log.info('Prerendering static pages...');
-			const { paths } = await builder.prerender({
-				dest: bucket
-			});
+			const prerendered = await builder.prerender({ dest: bucket });
 
 			builder.log.info('Installing worker dependencies...');
 			builder.copy(`${files}/_package.json`, `${tmp}/package.json`);
@@ -48,7 +49,7 @@ export default function () {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(paths)});\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(prerendered.paths)});\n`
 			);
 
 			await esbuild.build({
@@ -80,6 +81,7 @@ function validate_config(builder) {
 			throw err;
 		}
 
+		// @ts-ignore
 		if (!wrangler_config.site || !wrangler_config.site.bucket) {
 			throw new Error(
 				'You must specify site.bucket in wrangler.toml. Consult https://developers.cloudflare.com/workers/platform/sites/configuration'
