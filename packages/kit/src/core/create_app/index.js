@@ -4,7 +4,7 @@ import { s } from '../../utils/misc.js';
 import { mkdirp } from '../../utils/filesystem.js';
 
 /**
- * Maps file contents to file path
+ * Maps file contents to file path.
  *  @type {Map<string, string>} */
 const previous_contents = new Map();
 
@@ -48,15 +48,17 @@ function trim(str) {
 }
 
 /**
- * Generates code for the `manifest.js` file which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and two arrays of components (`[__layout, page]` and `[error]`)
+ * Generates code for the `manifest.js` file which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and two arrays of components (`[__layout, page]` and `[error]`).
  * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and the app's __layout and error components.
  * @param {string} base - the base path to prepend to imports 
  */
 function generate_client_manifest(manifest_data, base) {
-	/** @type {Record<string, number>} */
+	/**Maps relative path of component to the component's index in `manifest_date.components`.
+	 * @type {Record<string, number>} */
 	const component_indexes = {};
 
-	/** @param {string} c */
+	/**Wraps `path.relative`. 
+	 * @param {string} c - component path */
 	const get_path = (c) => path.relative(base, c);
 	
 	const components = `[
