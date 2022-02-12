@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.267
+
+### Patch Changes
+
+- Set cookies when redirecting from shadow endpoint ([#3874](https://github.com/sveltejs/kit/pull/3874))
+
 ## 1.0.0-next.266
 
 ### Patch Changes
