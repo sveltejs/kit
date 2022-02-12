@@ -48,8 +48,8 @@ function trim(str) {
 }
 
 /**
- * Generates code which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and an array of components ([layout, component, error])
- * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and __layout and error components
+ * Generates code for the `manifest.js` file which imports svelte components and exports the app's `routes`, an an array of arrays containing a pattern to match the route and two arrays of components (`[__layout, page]` and `[error]`)
+ * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and the app's __layout and error components.
  * @param {string} base - the base path to prepend to imports 
  */
 function generate_client_manifest(manifest_data, base) {
@@ -58,7 +58,7 @@ function generate_client_manifest(manifest_data, base) {
 
 	/** @param {string} c */
 	const get_path = (c) => path.relative(base, c);
-
+	
 	const components = `[
 		${manifest_data.components
 			.map((component, i) => {
@@ -69,7 +69,9 @@ function generate_client_manifest(manifest_data, base) {
 			.join(',\n\t\t\t\t')}
 	]`.replace(/^\t/gm, '');
 
-	/** @param {string[]} parts */
+	/** 
+	 * Matches components by path and returns an array of those components accessed within the `c`array.
+	 * @param {string[]} parts - array of component paths */
 	const get_indices = (parts) =>
 		`[${parts.map((part) => (part ? `c[${component_indexes[part]}]` : '')).join(', ')}]`;
 
@@ -116,7 +118,8 @@ function generate_client_manifest(manifest_data, base) {
 }
 
 /**
- * @param {ManifestData} manifest_data
+ * Generates the code for the `root.svelte` component.
+ * @param {ManifestData} manifest_data - object containing paths to the apps assets, user defined components, routes, and the app's __layout and error components.
  */
 function generate_app(manifest_data) {
 	// TODO remove default layout altogether
