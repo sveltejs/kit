@@ -152,7 +152,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
+		addEventListener('click', async (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js
@@ -196,7 +196,7 @@ export class Router {
 				if (info) {
 					await this.renderer.update(info, [], false);
 					location.hash = hash; // this will automatically pushState and set the state to null and then trigger hashchange event
-					this.save_scroll_state(); // by calling this method, it will also replaceState with object instead of null, we could also use history.replaceState({}, '', url.href);
+					history.replaceState({}, '', url.href);
 				}
 				return;
 			}
