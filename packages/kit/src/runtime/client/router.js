@@ -191,7 +191,6 @@ export class Router {
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				event.preventDefault();
-				this.save_scroll_state();
 				const info = this.parse(url);
 				if (info) {
 					await this.renderer.update(info, [], false);
