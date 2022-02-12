@@ -72,6 +72,20 @@ export class Router {
 		};
 	}
 
+	save_scroll_state() {
+		const new_state = {
+			...(history.state || {}),
+			'sveltekit:scroll': scroll_state()
+		};
+
+		// need this in case it was set in previous state
+		if (new_state['sveltekit:scroll'].x === 0 && new_state['sveltekit:scroll'].y === 0) {
+			delete new_state['sveltekit:scroll'];
+		}
+
+		history.replaceState(new_state, document.title, window.location.href);
+	}
+
 	init_listeners() {
 		if ('scrollRestoration' in history) {
 			history.scrollRestoration = 'manual';
@@ -96,6 +110,8 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
+				this.save_scroll_state();
+
 				history.scrollRestoration = 'auto';
 			}
 		});
@@ -103,25 +119,6 @@ export class Router {
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
 			history.scrollRestoration = 'manual';
-		});
-
-		// There's no API to capture the scroll location right before the user
-		// hits the back/forward button, so we listen for scroll events
-
-		/** @type {NodeJS.Timeout} */
-		let scroll_timer;
-		addEventListener('scroll', () => {
-			clearTimeout(scroll_timer);
-			scroll_timer = setTimeout(() => {
-				// Store the scroll location in the history
-				// This will persist even if we navigate away from the site and come back
-				const new_state = {
-					...(history.state || {}),
-					'sveltekit:scroll': scroll_state()
-				};
-				history.replaceState(new_state, document.title, window.location.href);
-				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
-			}, 200);
 		});
 
 		/** @param {Event} event */
@@ -190,11 +187,10 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// Call `pushState` to add url to history so going back works.
-				// Also make a delay, otherwise the browser default behaviour would not kick in
-				setTimeout(() => history.pushState({}, '', url.href));
+				this.save_scroll_state();
 				const info = this.parse(url);
 				if (info) {
+					history.pushState({}, '', url.href);
 					return this.renderer.update(info, [], false);
 				}
 				return;
@@ -376,6 +372,8 @@ export class Router {
 			blocked();
 			return;
 		}
+
+		this.save_scroll_state();
 
 		const info = this.parse(url);
 		if (!info) {
