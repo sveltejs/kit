@@ -15,11 +15,14 @@ import { normalize_path } from '../../utils/url.js';
  */
 export function create_builder({ cwd, config, build_data, log }) {
 	/** @type {Set<string>} */
-	const prerendered_paths = new Set();
+	let prerendered_paths;
+
 	let generated_manifest = false;
 
 	/** @param {import('types/internal').RouteData} route */
 	function not_prerendered(route) {
+		if (!prerendered_paths) return true;
+
 		if (route.type === 'page' && route.path) {
 			return !prerendered_paths.has(route.path);
 		}
@@ -164,17 +167,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 				log
 			});
 
-			for (const path of prerendered.pages.keys()) {
-				prerendered_paths.add(normalize_path(path, 'never'));
-			}
-
-			for (const path of prerendered.redirects.keys()) {
-				prerendered_paths.add(normalize_path(path, 'never'));
-			}
-
-			for (const path of prerendered.assets.keys()) {
-				prerendered_paths.add(path);
-			}
+			prerendered_paths = new Set(prerendered.paths);
 
 			return prerendered;
 		}
