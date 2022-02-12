@@ -764,6 +764,30 @@ test.describe.parallel('Errors', () => {
 		}
 	});
 
+	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow');
+
+		// should include stack trace
+		const lines = read_errors('/errors/endpoint-shadow').split('\n');
+		expect(lines[0]).toMatch('nope');
+
+		if (process.env.DEV) {
+			expect(lines[1]).toMatch('endpoint-shadow');
+		}
+
+		expect(res && res.status()).toBe(500);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint.svelte:12:15';
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
 	test('server-side 4xx status without error from load()', async ({ page }) => {
 		const response = await page.goto('/errors/load-status-without-error-server');
 

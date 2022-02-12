@@ -125,6 +125,8 @@ export async function respond(opts) {
 
 					if (loaded.loaded.error) {
 						({ status, error } = loaded.loaded);
+						const e = coalesce_to_error(error);
+						options.handle_error(e, event);
 					}
 				} catch (err) {
 					const e = coalesce_to_error(err);
