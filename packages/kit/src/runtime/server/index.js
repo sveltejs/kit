@@ -149,11 +149,11 @@ export async function respond(request, options, state = {}) {
 							const location = response.headers.get('location');
 
 							if (location) {
+								const headers = new Headers(response.headers);
+								headers.set('x-sveltekit-location', location);
 								response = new Response(undefined, {
 									status: 204,
-									headers: {
-										'x-sveltekit-location': location
-									}
+									headers
 								});
 							}
 						}

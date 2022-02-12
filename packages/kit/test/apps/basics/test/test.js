@@ -359,10 +359,32 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 	});
 
+	test('Handles GET redirects with cookies', async ({ page, context, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get-with-cookie"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
+	});
+
 	test('Handles POST redirects', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Handles POST redirects with cookies', async ({ page, context }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#redirect-post-with-cookie')]);
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
 	});
 
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
