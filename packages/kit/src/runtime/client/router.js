@@ -182,22 +182,6 @@ export class Router {
 			// Ignore if <a> has a target
 			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
 
-			// Check if new url only differs by hash and use the browser default behavior in that case
-			// This will ensure the `hashchange` event is fired
-			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-			/*const [base, hash] = url.href.split('#');
-			if (hash !== undefined && base === location.href.split('#')[0]) {
-				this.save_scroll_state();
-				setTimeout(() => {
-					history.replaceState({}, '', url.href);
-				});
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
-				}
-				return;
-			}*/
-
 			this._navigate({
 				url,
 				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
