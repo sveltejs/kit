@@ -187,6 +187,7 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
+				event.preventDefault();
 				this.save_scroll_state();
 				const info = this.parse(url);
 				if (info) {
