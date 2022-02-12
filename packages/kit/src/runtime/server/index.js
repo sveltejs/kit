@@ -18,7 +18,7 @@ export async function respond(request, options, state = {}) {
 		return new Response(undefined, {
 			status: 301,
 			headers: {
-				location: url.pathname + (url.search === '?' ? '' : url.search)
+				location: normalized + (url.search === '?' ? '' : url.search)
 			}
 		});
 	}
