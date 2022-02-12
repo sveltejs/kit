@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
