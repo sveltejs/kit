@@ -57,6 +57,8 @@ export interface Prerendered {
 			location: string;
 		}
 	>;
+	/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
+	paths: string[];
 }
 
 export interface Builder {

@@ -55,7 +55,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	const prerendered = {
 		pages: new Map(),
 		assets: new Map(),
-		redirects: new Map()
+		redirects: new Map(),
+		paths: []
 	};
 
 	if (!config.kit.prerender.enabled && !fallback) {
@@ -113,6 +114,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	const seen = new Set();
+	const written = new Set();
 
 	/**
 	 * @param {string | null} referrer
@@ -206,6 +208,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		const file = output_filename(decoded, is_html);
 		const dest = `${out}/${file}`;
 
+		if (written.has(file)) return;
+		written.add(file);
+
 		if (response_type === REDIRECT) {
 			const location = response.headers.get('location');
 
@@ -225,10 +230,14 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					enqueue(decoded, decodeURI(resolved), resolved);
 				}
 
-				prerendered.redirects.set(decoded, {
-					status: response.status,
-					location: resolved
-				});
+				if (!prerendered.redirects.has(decoded)) {
+					prerendered.redirects.set(decoded, {
+						status: response.status,
+						location: resolved
+					});
+
+					prerendered.paths.push(normalize_path(decoded, 'never'));
+				}
 			} else {
 				log.warn(`location header missing on redirect received from ${decoded}`);
 			}
@@ -251,6 +260,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 					type
 				});
 			}
+
+			prerendered.paths.push(normalize_path(decoded, 'never'));
 		} else if (response_type !== OK) {
 			error({ status: response.status, path: decoded, referrer, referenceType });
 		}

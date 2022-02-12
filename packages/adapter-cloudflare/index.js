@@ -19,8 +19,7 @@ export default function (options = {}) {
 			builder.writeStatic(dest);
 			builder.writeClient(dest);
 
-			const { pages } = await builder.prerender({ dest });
-			const prerendered = [...pages.keys()].map((path) => path.replace(/\/$/, '') || '/');
+			const prerendered = await builder.prerender({ dest });
 
 			const relativePath = posix.relative(tmp, builder.getServerDirectory());
 
@@ -28,7 +27,7 @@ export default function (options = {}) {
 				`${tmp}/manifest.js`,
 				`export const manifest = ${builder.generateManifest({
 					relativePath
-				})};\n\nexport const prerendered = new Set(${JSON.stringify(prerendered)});\n`
+				})};\n\nexport const prerendered = new Set(${JSON.stringify(prerendered.paths)});\n`
 			);
 
 			builder.copy(`${files}/worker.js`, `${tmp}/_worker.js`, {
