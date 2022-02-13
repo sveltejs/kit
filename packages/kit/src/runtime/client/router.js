@@ -386,6 +386,7 @@ export class Router {
 			});
 		}
 
+		this.save_scroll_position();
 		accepted();
 
 		if (!this.navigating) {
@@ -398,7 +399,6 @@ export class Router {
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
 		if (details) {
-			this.save_scroll_position();
 			const change = details.replaceState ? 0 : 1;
 			details.state['sveltekit:index'] = this.current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
