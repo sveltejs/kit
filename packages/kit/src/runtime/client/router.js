@@ -202,6 +202,7 @@ export class Router {
 				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
 					unsubscribe();
 					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+					location.hash = url.hash;
 					history.replaceState(
 						{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
 						'',
