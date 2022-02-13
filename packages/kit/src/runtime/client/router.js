@@ -188,18 +188,19 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				event.preventDefault(); // by preventing this click event and later invoking hashchange event on our own (with location.hash = url.hash) we remove the need for using that fiddly setTimeout hack
-				this.save_scroll_position();
-				location.hash = url.hash; // this will automatically pushState and set the state to null and then trigger hashchange event
-				history.replaceState(
-					{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
-					'',
-					location.href
-				);
-				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
-					unsubscribe();
-					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+				// Call `pushState` to add url to history so going back works.
+				// Also make a delay, otherwise the browser default behaviour would not kick in
+				setTimeout(() => {
+					history.replaceState(
+						{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
+						'',
+						location.href
+					);
 				});
+				const info = this.parse(url);
+				if (info) {
+					return this.renderer.update(info, [], false);
+				}
 				return;
 			}
 
