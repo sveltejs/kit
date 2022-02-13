@@ -196,6 +196,8 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
+				this.save_scroll_position();
+
 				// Call `replaceState` in timeout because this event will add pushState automatically and we need to store our own history state
 				// Timeout is being used to delay replaceState till next tick
 				setTimeout(() => {
