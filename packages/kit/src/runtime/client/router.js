@@ -80,13 +80,19 @@ export class Router {
 		);
 	}
 
-	/** @param {number} index */
+	/**
+	 *
+	 * @param {number} index
+	 * @returns {{x: number, y: number} | undefined}
+	 */
 	get_scroll_position(index) {
+		if (index == undefined) {
+			return;
+		}
 		const scroll = sessionStorage.getItem(`sveltekit:scroll:${index}`);
 		if (scroll) {
 			return JSON.parse(scroll);
 		}
-		return null;
 	}
 
 	init_listeners() {
