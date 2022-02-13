@@ -209,8 +209,9 @@ export class Router {
 						'',
 						url.href
 					);
+					unsubscribe();
 				});
-				setTimeout(unsubscribe, 20);
+				//setTimeout(unsubscribe, 20);
 				return;
 			}
 
