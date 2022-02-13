@@ -83,15 +83,17 @@ export class Router {
 	/**
 	 *
 	 * @param {number} index
-	 * @returns {{x: number, y: number} | undefined}
+	 * @returns {{x: number, y: number} | null}
 	 */
 	get_scroll_position(index) {
 		if (index == undefined) {
-			return;
+			return null;
 		}
 		const scroll = sessionStorage.getItem(`sveltekit:scroll:${index}`);
 		if (scroll) {
 			return JSON.parse(scroll);
+		} else {
+			return null;
 		}
 	}
 
