@@ -50,6 +50,12 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
+		/** @type {{current: string | null, positions: { [key: string]: {x: number, y: number} }}} */
+		this.scroll_positions = sessionStorage.getItem('sveltekit:scroll_positions')
+			? // @ts-ignore
+			  JSON.parse(sessionStorage.getItem('sveltekit:scroll_positions'))
+			: { current: null, positions: {} };
+
 		this.enabled = true;
 
 		// make it possible to reset focus
@@ -70,6 +76,29 @@ export class Router {
 			/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
 			after_navigate: []
 		};
+	}
+
+	save_scroll_state(from_popstate = false) {
+		const current_scroll = scroll_state();
+		if (!from_popstate) {
+			const new_state = history.state || {};
+
+			// in case X and Y are both 0, we don't need to store them
+			if (current_scroll.x === 0 && current_scroll.y === 0) {
+				this.scroll_positions.current = null;
+				if (new_state['sveltekit:scroll_key']) {
+					delete this.scroll_positions.positions[new_state['sveltekit:scroll_key']];
+					delete new_state['sveltekit:scroll_key'];
+				}
+			} else {
+				new_state['sveltekit:scroll_key'] = Math.random().toString(32).slice(2);
+				this.scroll_positions.positions[new_state['sveltekit:scroll_key']] = current_scroll;
+			}
+
+			history.replaceState(new_state, document.title, location.href);
+		} else {
+			// TODO
+		}
 	}
 
 	init_listeners() {
@@ -96,6 +125,8 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
+				// need this in case user navigates away and returns back to the page to be able to restore it
+				sessionStorage.setItem('sveltekit:scroll_positions', JSON.stringify(this.scroll_positions));
 				history.scrollRestoration = 'auto';
 			}
 		});
@@ -103,25 +134,6 @@ export class Router {
 		// Setting scrollRestoration to manual again when returning to this page.
 		addEventListener('load', () => {
 			history.scrollRestoration = 'manual';
-		});
-
-		// There's no API to capture the scroll location right before the user
-		// hits the back/forward button, so we listen for scroll events
-
-		/** @type {NodeJS.Timeout} */
-		let scroll_timer;
-		addEventListener('scroll', () => {
-			clearTimeout(scroll_timer);
-			scroll_timer = setTimeout(() => {
-				// Store the scroll location in the history
-				// This will persist even if we navigate away from the site and come back
-				const new_state = {
-					...(history.state || {}),
-					'sveltekit:scroll': scroll_state()
-				};
-				history.replaceState(new_state, document.title, window.location.href);
-				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
-			}, 200);
 		});
 
 		/** @param {Event} event */
@@ -152,7 +164,7 @@ export class Router {
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
-		addEventListener('click', async (event) => {
+		addEventListener('click', (event) => {
 			if (!this.enabled) return;
 
 			// Adapted from https://github.com/visionmedia/page.js
@@ -190,13 +202,10 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				event.preventDefault();
-				const info = this.parse(url);
-				if (info) {
-					await this.renderer.update(info, [], false);
-					location.hash = hash; // this will automatically pushState and set the state to null and then trigger hashchange event
-					history.replaceState({}, '', url.href);
-				}
+				event.preventDefault(); // by preventing this click event and later invoking hashchange event on our own (with location.hash = url.hash) we remove the need for using that fiddly setTimeout hack
+				this.save_scroll_state(false);
+				location.hash = url.hash; // this will automatically pushState and set the state to null and then trigger hashchange event
+				this.save_scroll_state(false); // by calling this method, it will also replaceState with object instead of null, we could also use history.replaceState({}, '', url.href);
 				return;
 			}
 
@@ -219,6 +228,8 @@ export class Router {
 				// if a popstate-driven navigation is cancelled, we need to counteract it
 				// with history.go, which means we end up back here, hence this check
 				if (event.state['sveltekit:index'] === this.current_history_index) return;
+
+				this.save_scroll_state(true);
 
 				this._navigate({
 					url: new URL(location.href),
@@ -376,6 +387,8 @@ export class Router {
 			blocked();
 			return;
 		}
+
+		this.save_scroll_state(false);
 
 		const info = this.parse(url);
 		if (!info) {
