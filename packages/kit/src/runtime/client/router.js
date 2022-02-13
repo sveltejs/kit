@@ -50,11 +50,11 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
-		/** @type {{current: string | null, positions: { [key: string]: {x: number, y: number} }}} */
+		/** @type {{current_key: string | null, positions: { [key: string]: {x: number, y: number} }}} */
 		this.scroll_positions = sessionStorage.getItem('sveltekit:scroll_positions')
 			? // @ts-ignore
 			  JSON.parse(sessionStorage.getItem('sveltekit:scroll_positions'))
-			: { current: null, positions: {} };
+			: { current_key: null, positions: {} };
 
 		this.enabled = true;
 
@@ -65,8 +65,10 @@ export class Router {
 		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
 
 		if (this.current_history_index === 0) {
+			const scroll_key = Math.random().toString(32).slice(2);
 			// create initial history entry, so we can return here
-			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+			history.replaceState({ ...history.state, 'sveltekit:index': 0, 'sveltekit:key': scroll_key }, '', location.href);
+			this.scroll_positions.current_key = scroll_key;
 		}
 
 		this.callbacks = {
