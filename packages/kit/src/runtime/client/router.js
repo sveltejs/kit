@@ -200,7 +200,7 @@ export class Router {
 				this.save_scroll_position();
 
 				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
-					console.log({page}); // testing
+					console.log({ page }); // testing
 					unsubscribe();
 					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
 					location.hash = url.hash;
