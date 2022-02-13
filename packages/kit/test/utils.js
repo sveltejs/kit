@@ -112,7 +112,8 @@ export const test = base.extend({
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
-			return !!box;
+			const view = await page.viewportSize();
+			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
 		use(in_view);
