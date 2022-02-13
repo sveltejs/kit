@@ -197,17 +197,28 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy;
+		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
 	});
 
-	test('scroll is restored after hitting the back button', async ({ back, clicknav, page }) => {
+	test('scroll is restored after hitting the back button', async ({
+		back,
+		baseURL,
+		clicknav,
+		page
+	}) => {
 		await page.goto('/anchor');
 		await page.click('#scroll-anchor');
 		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		await clicknav('#routing-page');
 		await back();
+		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		const scrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
 		expect(scrollY).toEqual(originalScrollY);
+		// TODO: fix this. it is failing due to duplicate history entries
+		// https://github.com/sveltejs/kit/issues/3636
+		// await page.goBack();
+		// expect(page.url()).toBe(baseURL + '/anchor');
+		// expect(scrollY).toEqual(0);
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
