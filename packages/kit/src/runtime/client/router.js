@@ -188,8 +188,8 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// Call `pushState` to add url to history so going back works.
-				// Also make a delay, otherwise the browser default behaviour would not kick in
+				// Call `replaceState` in timeout because this event will add pushState automatically and we need to store our own history state
+				// Timeout is being used to delay replaceState till next tick
 				setTimeout(() => {
 					history.replaceState(
 						{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
