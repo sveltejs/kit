@@ -5,7 +5,8 @@ import { mkdirp } from '../../utils/filesystem.js';
 
 /**
  * Maps file contents to file path.
- *  @type {Map<string, string>} */
+ * @type {Map<string, string>}
+ */
 const previous_contents = new Map();
 
 /**
