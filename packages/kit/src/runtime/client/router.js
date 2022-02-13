@@ -1,4 +1,4 @@
-import { onMount } from 'svelte';
+import { onMount, tick } from 'svelte';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
@@ -196,12 +196,10 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				console.log(this);
 				event.preventDefault();
 				this.save_scroll_position();
 
 				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
-					console.log({ page }); // testing
 					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
 					location.hash = url.hash;
 					history.replaceState(
@@ -209,9 +207,9 @@ export class Router {
 						'',
 						url.href
 					);
-					unsubscribe();
+					// @ts-ignore
+					tick.then(unsubscribe);
 				});
-				//setTimeout(unsubscribe, 20);
 				return;
 			}
 
