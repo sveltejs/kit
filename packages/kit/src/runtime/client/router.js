@@ -1,4 +1,4 @@
-import { onMount, tick } from 'svelte';
+import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
@@ -211,7 +211,7 @@ export class Router {
 						url.href
 					);
 					// @ts-ignore
-					tick.then(unsubscribe);
+					Promise.resolve().then(unsubscribe);
 				});
 				return;
 			}
