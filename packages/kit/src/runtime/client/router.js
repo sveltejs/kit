@@ -199,7 +199,10 @@ export class Router {
 				event.preventDefault();
 				this.save_scroll_position();
 
-				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
+				/** @type {function} */
+				let unsubscribe;
+				// eslint-disable-next-line prefer-const
+				unsubscribe = this.renderer.stores.page.subscribe((page) => {
 					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
 					location.hash = url.hash;
 					history.replaceState(
