@@ -72,7 +72,8 @@ function generate_client_manifest(manifest_data, base) {
 
 	/**
 	 * Matches components by path and returns an array of those components accessed within the `c`array.
-	 * @param {string[]} parts - array of component paths */
+	 * @param {string[]} parts - array of component paths
+	 */
 	const get_indices = (parts) =>
 		`[${parts.map((part) => (part ? `c[${component_indexes[part]}]` : '')).join(', ')}]`;
 
