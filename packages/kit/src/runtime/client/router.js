@@ -196,6 +196,10 @@ export class Router {
 					'',
 					location.href
 				);
+				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
+					unsubscribe();
+					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+				});
 				return;
 			}
 
