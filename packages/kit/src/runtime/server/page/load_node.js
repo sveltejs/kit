@@ -396,22 +396,21 @@ async function load_shadow_data(route, event, prerender) {
 			if (result.fallthrough) return result;
 
 			const { status, headers, body } = validate_shadow_output(result);
+			data.status = status;
+
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			// Redirects are respected...
 			if (status >= 300 && status < 400) {
-				return {
-					status,
-					redirect: /** @type {string} */ (
-						headers instanceof Headers ? headers.get('location') : headers.location
-					)
-				};
+				data.redirect = /** @type {string} */ (
+					headers instanceof Headers ? headers.get('location') : headers.location
+				);
+				return data;
 			}
 
 			// ...but 4xx and 5xx status codes _don't_ result in the error page
 			// rendering for non-GET requests — instead, we allow the page
 			// to render with any validation errors etc that were returned
-			data.status = status;
 			data.body = body;
 		}
 
@@ -422,21 +421,18 @@ async function load_shadow_data(route, event, prerender) {
 
 			const { status, headers, body } = validate_shadow_output(result);
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
+			data.status = status;
 
 			if (status >= 400) {
-				return {
-					status,
-					error: new Error('Failed to load data')
-				};
+				data.error = new Error('Failed to load data');
+				return data;
 			}
 
 			if (status >= 300) {
-				return {
-					status,
-					redirect: /** @type {string} */ (
-						headers instanceof Headers ? headers.get('location') : headers.location
-					)
-				};
+				data.redirect = /** @type {string} */ (
+					headers instanceof Headers ? headers.get('location') : headers.location
+				);
+				return data;
 			}
 
 			data.body = { ...body, ...data.body };

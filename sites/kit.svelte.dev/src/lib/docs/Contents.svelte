@@ -20,9 +20,6 @@
 		// wait for fonts to load...
 		const timeouts = [setTimeout(onresize, 1000), setTimeout(onscroll, 5000)];
 
-		update();
-		highlight();
-
 		return () => {
 			window.removeEventListener('scroll', onscroll, true);
 			window.removeEventListener('resize', onresize, true);

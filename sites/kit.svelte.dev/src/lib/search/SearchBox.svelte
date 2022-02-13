@@ -106,7 +106,7 @@
 
 <svelte:window
 	on:keydown={(e) => {
-		if (e.code === 'KeyK' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
+		if (e.key === 'k' && (navigator.platform === 'MacIntel' ? e.metaKey : e.ctrlKey)) {
 			e.preventDefault();
 			$query = '';
 			$searching = !$searching;
