@@ -50,25 +50,18 @@ export class Router {
 		this.renderer = renderer;
 		renderer.router = this;
 
-		/** @type {{current_key: string | null, positions: { [key: string]: {x: number, y: number} }}} */
-		this.scroll_positions = sessionStorage.getItem('sveltekit:scroll_positions')
-			? // @ts-ignore
-			  JSON.parse(sessionStorage.getItem('sveltekit:scroll_positions'))
-			: { current_key: null, positions: {} };
-
 		this.enabled = true;
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
 		// keeping track of the history index in order to prevent popstate navigation events if needed
+		/** @type {number} */
 		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
 
 		if (this.current_history_index === 0) {
-			const scroll_key = Math.random().toString(32).slice(2);
 			// create initial history entry, so we can return here
-			history.replaceState({ ...history.state, 'sveltekit:index': 0, 'sveltekit:key': scroll_key }, '', location.href);
-			this.scroll_positions.current_key = scroll_key;
+			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 		}
 
 		this.callbacks = {
@@ -80,27 +73,20 @@ export class Router {
 		};
 	}
 
-	save_scroll_state(from_popstate = false) {
-		const current_scroll = scroll_state();
-		if (!from_popstate) {
-			const new_state = history.state || {};
+	save_scroll_position() {
+		sessionStorage.setItem(
+			`sveltekit:scroll:${this.current_history_index}`,
+			JSON.stringify(scroll_state())
+		);
+	}
 
-			// in case X and Y are both 0, we don't need to store them
-			if (current_scroll.x === 0 && current_scroll.y === 0) {
-				this.scroll_positions.current = null;
-				if (new_state['sveltekit:scroll_key']) {
-					delete this.scroll_positions.positions[new_state['sveltekit:scroll_key']];
-					delete new_state['sveltekit:scroll_key'];
-				}
-			} else {
-				new_state['sveltekit:scroll_key'] = Math.random().toString(32).slice(2);
-				this.scroll_positions.positions[new_state['sveltekit:scroll_key']] = current_scroll;
-			}
-
-			history.replaceState(new_state, document.title, location.href);
-		} else {
-			// TODO
+	/** @param {number} index */
+	get_scroll_position(index) {
+		const scroll = sessionStorage.getItem(`sveltekit:scroll:${index}`);
+		if (scroll) {
+			return JSON.parse(scroll);
 		}
+		return null;
 	}
 
 	init_listeners() {
@@ -127,8 +113,6 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
-				// need this in case user navigates away and returns back to the page to be able to restore it
-				sessionStorage.setItem('sveltekit:scroll_positions', JSON.stringify(this.scroll_positions));
 				history.scrollRestoration = 'auto';
 			}
 		});
@@ -205,9 +189,13 @@ export class Router {
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				event.preventDefault(); // by preventing this click event and later invoking hashchange event on our own (with location.hash = url.hash) we remove the need for using that fiddly setTimeout hack
-				this.save_scroll_state(false);
+				this.save_scroll_position();
 				location.hash = url.hash; // this will automatically pushState and set the state to null and then trigger hashchange event
-				this.save_scroll_state(false); // by calling this method, it will also replaceState with object instead of null, we could also use history.replaceState({}, '', url.href);
+				history.replaceState(
+					{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
+					'',
+					location.href
+				);
 				return;
 			}
 
@@ -231,11 +219,11 @@ export class Router {
 				// with history.go, which means we end up back here, hence this check
 				if (event.state['sveltekit:index'] === this.current_history_index) return;
 
-				this.save_scroll_state(true);
+				this.save_scroll_position();
 
 				this._navigate({
 					url: new URL(location.href),
-					scroll: event.state['sveltekit:scroll'],
+					scroll: this.get_scroll_position(event.state['sveltekit:index']),
 					keepfocus: false,
 					chain: [],
 					details: null,
@@ -390,8 +378,6 @@ export class Router {
 			return;
 		}
 
-		this.save_scroll_state(false);
-
 		const info = this.parse(url);
 		if (!info) {
 			location.href = url.href;
@@ -412,6 +398,7 @@ export class Router {
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
 		if (details) {
+			this.save_scroll_position();
 			const change = details.replaceState ? 0 : 1;
 			details.state['sveltekit:index'] = this.current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
