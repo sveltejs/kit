@@ -202,7 +202,6 @@ export class Router {
 
 				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
 					console.log({ page }); // testing
-					unsubscribe();
 					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
 					location.hash = url.hash;
 					history.replaceState(
@@ -211,6 +210,7 @@ export class Router {
 						url.href
 					);
 				});
+				setTimeout(unsubscribe, 20);
 				return;
 			}
 
