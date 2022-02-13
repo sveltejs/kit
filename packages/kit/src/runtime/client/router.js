@@ -196,21 +196,18 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
+				event.preventDefault();
 				this.save_scroll_position();
 
-				// Call `replaceState` in timeout because this event will add pushState automatically and we need to store our own history state
-				// Timeout is being used to delay replaceState till next tick
-				setTimeout(() => {
+				const unsubscribe = this.renderer.stores.page.subscribe((page) => {
+					unsubscribe();
+					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
 					history.replaceState(
 						{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
 						'',
-						location.href
+						url.href
 					);
 				});
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
-				}
 				return;
 			}
 
