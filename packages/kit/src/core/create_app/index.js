@@ -53,8 +53,10 @@ function trim(str) {
  * @param {string} base - the base path to prepend to imports
  */
 function generate_client_manifest(manifest_data, base) {
-	/**Maps relative path of component to the component's index in `manifest_date.components`.
-	 * @type {Record<string, number>} */
+	/**
+	 * Maps relative path of component to the component's index in `manifest_date.components`.
+	 * @type {Record<string, number>}
+	 */
 	const component_indexes = {};
 
 	/**
