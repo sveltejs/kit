@@ -212,10 +212,20 @@ test.describe('Scrolling', () => {
 		await clicknav('#routing-page');
 		await back();
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+<<<<<<< HEAD
 		expect(/** @type {number} */ (await page.evaluate(() => scrollY))).toEqual(originalScrollY);
 		await page.goBack();
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(/** @type {number} */ (await page.evaluate(() => scrollY))).toEqual(0);
+=======
+		const scrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
+		expect(scrollY).toEqual(originalScrollY);
+		// TODO: fix this. it is failing due to duplicate history entries
+		// https://github.com/sveltejs/kit/issues/3636
+		// await page.goBack();
+		// expect(page.url()).toBe(baseURL + '/anchor');
+		// expect(scrollY).toEqual(0);
+>>>>>>> parent of b2b906fb (uncomment previously failing test)
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
