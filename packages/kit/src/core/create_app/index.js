@@ -57,8 +57,10 @@ function generate_client_manifest(manifest_data, base) {
 	 * @type {Record<string, number>} */
 	const component_indexes = {};
 
-	/**Wraps `path.relative`.
-	 * @param {string} c - component path */
+	/**
+	 * Wraps `path.relative`.
+	 * @param {string} c - component path
+	 */
 	const get_path = (c) => path.relative(base, c);
 
 	const components = `[
