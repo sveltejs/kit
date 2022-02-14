@@ -21,7 +21,7 @@
 .content h2 {
 	margin-top: 8rem;
 	padding: 2rem 1.6rem 4rem 0.2rem;
-	border-block-start: 2px solid #ddd;
+	border-top: 2px solid #ddd;
 	line-height: 1;
 	font-size: var(--h3);
 	letter-spacing: 0.05em;
@@ -33,7 +33,7 @@
 }
 
 .content h4 {
-	margin-block: 2em 1em;
+	margin: 2em 0 1em 0;
 }
 
 .content .offset-anchor {
@@ -89,10 +89,10 @@
 .content h3,
 .content h3 > code {
 	margin: 6.4rem 0 1rem 0;
-	padding-block-end: 1rem;
+	padding-bottom: 1rem;
 	color: var(--text);
 	max-width: var(--linemax);
-	border-block-end: 1px solid #ddd;
+	border-bottom: 1px solid #ddd;
 	background: transparent;
 	line-height: 1;
 }
@@ -119,7 +119,7 @@
 	padding-left: 0;
 	background: transparent;
 	line-height: 1;
-	padding-block-start: 0;
+	padding-top: 0;
 	top: 0;
 }
 
@@ -136,7 +136,7 @@
 
 .content h5 {
 	font-size: 2.4rem;
-	margin-block: 2em 0.5em;
+	margin: 2em 0 0.5em 0;
 }
 
 .content code {
@@ -169,12 +169,12 @@
 
 .content section p {
 	max-width: var(--linemax);
-	margin-block: 1em;
+	margin: 1em 0;
 }
 
 .content small {
 	font-size: var(--h5);
-	float: inline-end;
+	float: right;
 	pointer-events: all;
 	color: var(--prime);
 	cursor: pointer;
@@ -183,7 +183,7 @@
 .content blockquote {
 	color: rgba(0, 0, 0, 0.7);
 	background-color: rgba(255, 62, 0, 0.1);
-	border-inline-start: 4px solid #ff3e00;
+	border-left: 4px solid #ff3e00;
 	padding: 1rem;
 }
 
@@ -212,9 +212,9 @@
    once https://github.com/sveltejs/action-deploy-docs/issues/1 is closed */
 .content h2[id],
 .content h3[id] {
-	padding-block-start: 10rem;
+	padding-top: 10rem;
 	margin-top: -2rem;
-	border-block-start: none;
+	border-top: none;
 }
 
 .content h2[id]::after {

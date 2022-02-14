@@ -95,14 +95,14 @@
 	}
 
 	h2 {
-		margin-block: -4rem 1rem;
-		padding-block-start: 10rem;
-		padding-block-end: 0.2rem;
+		margin: -4rem 0 1rem 0;
+		padding-top: 10rem;
+		padding-bottom: 0.2rem;
 		color: var(--text);
 		/* max-width: 24em; */
 		font-size: var(--h3);
 		font-weight: 400;
-		border-block-end: 1px solid #ddd;
+		border-bottom: 1px solid #ddd;
 	}
 
 	.faqs :global(h3) {
@@ -110,7 +110,7 @@
 		font-weight: 600;
 		font-size: 2rem;
 		color: var(--second);
-		margin-block: 2rem 1.6rem;
+		margin: 2rem 0 1.6rem 0;
 		padding-left: 0;
 		background: transparent;
 		line-height: 1.3;
@@ -129,10 +129,9 @@
 	}
 
 	.faq:first-child {
-		margin: 0;
-		margin-block: 2rem;
-		padding-block-end: 4rem;
-		border-block-end: var(--border-w) solid #6767785b; /* based on --second */
+		margin: 2rem 0;
+		padding-bottom: 4rem;
+		border-bottom: var(--border-w) solid #6767785b; /* based on --second */
 	}
 	.faq:first-child h2 {
 		font-size: 4rem;

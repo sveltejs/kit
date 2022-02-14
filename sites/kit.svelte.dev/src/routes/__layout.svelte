@@ -56,7 +56,7 @@
 	main {
 		position: relative;
 		margin: 0 auto;
-		padding-block-start: var(--nav-h);
+		padding-top: var(--nav-h);
 		overflow-x: hidden;
 	}
 

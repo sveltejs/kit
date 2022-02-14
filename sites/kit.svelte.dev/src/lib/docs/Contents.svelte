@@ -140,7 +140,7 @@
 	a {
 		position: relative;
 		transition: color 0.2s;
-		border-block-end: none;
+		border-bottom: none;
 		padding: 0;
 		color: var(--sidebar-text);
 		user-select: none;
@@ -148,7 +148,7 @@
 
 	.section {
 		display: block;
-		padding-block-end: 0.8rem;
+		padding-bottom: 0.8rem;
 		font-size: var(--h6);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
@@ -159,7 +159,7 @@
 		display: block;
 		font-size: 1.6rem;
 		font-family: var(--font);
-		padding-block-end: 0.6em;
+		padding-bottom: 0.6em;
 	}
 
 	.active::after {
@@ -170,7 +170,7 @@
 		width: 0;
 		height: 0;
 		border: 6px solid transparent;
-		border-inline-end-color: white;
+		border-right-color: white;
 	}
 
 	.nested {
