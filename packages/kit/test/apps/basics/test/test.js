@@ -178,7 +178,7 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#third-anchor');
-		expect(await page.evaluate(() => pageYOffset === 0)).toBeTruthy();
+		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
 	});
 
 	test('url-supplied anchor works when navigated from bottom of page', async ({
@@ -197,7 +197,28 @@ test.describe('Scrolling', () => {
 	}) => {
 		await page.goto('/anchor');
 		await clicknav('#last-anchor-2');
-		expect(await page.evaluate(() => pageYOffset === 0)).toBeTruthy;
+		expect(await page.evaluate(() => scrollY === 0)).toBeTruthy();
+	});
+
+	test('scroll is restored after hitting the back button', async ({
+		back,
+		baseURL,
+		clicknav,
+		page
+	}) => {
+		await page.goto('/anchor');
+		await page.click('#scroll-anchor');
+		const originalScrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
+		await clicknav('#routing-page');
+		await back();
+		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
+		const scrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
+		expect(scrollY).toEqual(originalScrollY);
+		// TODO: fix this. it is failing due to duplicate history entries
+		// https://github.com/sveltejs/kit/issues/3636
+		// await page.goBack();
+		// expect(page.url()).toBe(baseURL + '/anchor');
+		// expect(scrollY).toEqual(0);
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
@@ -359,10 +380,32 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
 	});
 
+	test('Handles GET redirects with cookies', async ({ page, context, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/redirect-get-with-cookie"]');
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
+	});
+
 	test('Handles POST redirects', async ({ page }) => {
 		await page.goto('/shadowed');
 		await Promise.all([page.waitForNavigation(), page.click('#redirect-post')]);
 		expect(await page.textContent('h1')).toBe('Redirection was successful');
+	});
+
+	test('Handles POST redirects with cookies', async ({ page, context }) => {
+		await page.goto('/shadowed');
+		await Promise.all([page.waitForNavigation(), page.click('#redirect-post-with-cookie')]);
+		expect(await page.textContent('h1')).toBe('Redirection was successful');
+
+		const cookies = await context.cookies();
+		expect(cookies).toEqual(
+			expect.arrayContaining([expect.objectContaining({ name: 'shadow-redirect', value: 'happy' })])
+		);
 	});
 
 	test('Renders error page for 4xx and 5xx responses from GET', async ({ page, clicknav }) => {
@@ -740,6 +783,61 @@ test.describe.parallel('Errors', () => {
 		} else {
 			expect(contents).not.toMatch(location);
 		}
+	});
+
+	test('not ok response from endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-not-ok');
+
+		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-not-ok.svelte:12:15';
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow');
+
+		// should include stack trace
+		const lines = read_errors('/errors/endpoint-shadow').split('\n');
+		expect(lines[0]).toMatch('nope');
+
+		if (process.env.DEV) {
+			expect(lines[1]).toMatch('endpoint-shadow');
+		}
+
+		expect(res && res.status()).toBe(500);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "nope"'
+		);
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('not ok response from shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow-not-ok');
+
+		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Failed to load data"'
+		);
 	});
 
 	test('server-side 4xx status without error from load()', async ({ page }) => {
@@ -1133,7 +1231,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.click('"No Override To GET"');
 
 		expect(await page.innerHTML('pre')).toBe(
-			'_method=GET is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+			'_method=GET is not allowed. See https://kit.svelte.dev/docs/configuration#methodoverride'
 		);
 	});
 
@@ -1142,7 +1240,7 @@ test.describe.parallel('Method overrides', () => {
 		await page.click('"No Override To CONNECT"');
 
 		expect(await page.innerHTML('pre')).toBe(
-			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs#configuration-methodoverride'
+			'_method=CONNECT is not allowed. See https://kit.svelte.dev/docs/configuration#methodoverride'
 		);
 	});
 });

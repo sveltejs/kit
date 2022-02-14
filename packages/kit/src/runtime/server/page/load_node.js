@@ -1,7 +1,7 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
-import { escape_json_value_in_html } from '../../../utils/escape.js';
+import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys } from '../utils.js';
@@ -66,6 +66,7 @@ export async function load_node({
 		? await load_shadow_data(
 				/** @type {import('types/internal').SSRPage} */ (route),
 				event,
+				options,
 				!!state.prerender
 		  )
 		: {};
@@ -209,9 +210,7 @@ export async function load_node({
 				} else {
 					// external
 					if (resolved.startsWith('//')) {
-						throw new Error(
-							`Cannot request protocol-relative URL (${requested}) in server-side fetch`
-						);
+						requested = event.url.protocol + requested;
 					}
 
 					// external fetch
@@ -253,11 +252,21 @@ export async function load_node({
 							}
 
 							if (!opts.body || typeof opts.body === 'string') {
+								// the json constructed below is later added to the dom in a script tag
+								// make sure the used values are safe
+								const status_number = Number(response.status);
+								if (isNaN(status_number)) {
+									throw new Error(
+										`response.status is not a number. value: "${
+											response.status
+										}" type: ${typeof response.status}`
+									);
+								}
 								// prettier-ignore
 								fetched.push({
 									url: requested,
 									body: /** @type {string} */ (opts.body),
-									json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_value_in_html(body)}"}`
+									json: `{"status":${status_number},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
 								});
 							}
 
@@ -362,10 +371,11 @@ export async function load_node({
  *
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/hooks').RequestEvent} event
+ * @param {import('types/internal').SSROptions} options
  * @param {boolean} prerender
  * @returns {Promise<import('types/endpoint').ShadowData>}
  */
-async function load_shadow_data(route, event, prerender) {
+async function load_shadow_data(route, event, options, prerender) {
 	if (!route.shadow) return {};
 
 	try {
@@ -402,22 +412,21 @@ async function load_shadow_data(route, event, prerender) {
 			if (result.fallthrough) return result;
 
 			const { status, headers, body } = validate_shadow_output(result);
+			data.status = status;
+
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			// Redirects are respected...
 			if (status >= 300 && status < 400) {
-				return {
-					status,
-					redirect: /** @type {string} */ (
-						headers instanceof Headers ? headers.get('location') : headers.location
-					)
-				};
+				data.redirect = /** @type {string} */ (
+					headers instanceof Headers ? headers.get('location') : headers.location
+				);
+				return data;
 			}
 
 			// ...but 4xx and 5xx status codes _don't_ result in the error page
 			// rendering for non-GET requests — instead, we allow the page
 			// to render with any validation errors etc that were returned
-			data.status = status;
 			data.body = body;
 		}
 
@@ -428,21 +437,18 @@ async function load_shadow_data(route, event, prerender) {
 
 			const { status, headers, body } = validate_shadow_output(result);
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
+			data.status = status;
 
 			if (status >= 400) {
-				return {
-					status,
-					error: new Error('Failed to load data')
-				};
+				data.error = new Error('Failed to load data');
+				return data;
 			}
 
 			if (status >= 300) {
-				return {
-					status,
-					redirect: /** @type {string} */ (
-						headers instanceof Headers ? headers.get('location') : headers.location
-					)
-				};
+				data.redirect = /** @type {string} */ (
+					headers instanceof Headers ? headers.get('location') : headers.location
+				);
+				return data;
 			}
 
 			data.body = { ...body, ...data.body };
@@ -450,9 +456,12 @@ async function load_shadow_data(route, event, prerender) {
 
 		return data;
 	} catch (e) {
+		const error = coalesce_to_error(e);
+		options.handle_error(error, event);
+
 		return {
 			status: 500,
-			error: coalesce_to_error(e)
+			error
 		};
 	}
 }

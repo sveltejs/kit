@@ -60,3 +60,9 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: ${{ steps.browser_cache.outputs.cache-hit == 'true' }}
       - run: pnpm build --filter ./packages --filter !./packages/create-svelte/templates
       - run: pnpm test
+      - name: Upload failed tests screenshots
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}
+          path: '**/test-results'

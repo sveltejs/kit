@@ -54,14 +54,16 @@ export async function make_package(config, cwd = process.cwd()) {
 		const svelte_ext = config.extensions.find((ext) => file.endsWith(ext)); // unlike `ext`, could be e.g. `.svelte.md`
 
 		if (!config.kit.package.files(normalized)) {
-			const dts_file = (svelte_ext ? file : file.slice(0, -ext.length)) + '.d.ts';
-			const dts_path = path.join(package_dir, dts_file);
-			if (fs.existsSync(dts_path)) {
-				fs.unlinkSync(dts_path);
+			const base = svelte_ext ? file : file.slice(0, -ext.length);
+			for (const e of ['.d.ts', '.d.mts', '.d.cts']) {
+				const dts_path = path.join(package_dir, base + e);
+				if (fs.existsSync(dts_path)) {
+					fs.unlinkSync(dts_path);
 
-				const dir = path.dirname(dts_path);
-				if (fs.readdirSync(dir).length === 0) {
-					fs.rmdirSync(dir);
+					const dir = path.dirname(dts_path);
+					if (fs.readdirSync(dir).length === 0) {
+						fs.rmdirSync(dir);
+					}
 				}
 			}
 			continue;
@@ -331,7 +333,7 @@ async function try_load_svelte2tsx() {
 			return await import('svelte2tsx');
 		} catch (e) {
 			throw new Error(
-				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs#packaging'
+				'You need svelte2tsx and typescript if you want to generate type definitions. Install it through your package manager, or disable generation which is highly discouraged. See https://kit.svelte.dev/docs/packaging'
 			);
 		}
 	}
