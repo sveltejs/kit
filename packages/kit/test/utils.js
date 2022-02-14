@@ -111,21 +111,25 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			// source: https://stackoverflow.com/a/68848306
-			return await page.$eval(selector, async (/** @type {Element} */ element) => {
-				/** @type {number} */
-				const visibleRatio = await new Promise((resolve) => {
-					const observer = new IntersectionObserver((entries) => {
-						resolve(entries[0].intersectionRatio);
-						observer.disconnect();
-					});
-					observer.observe(element);
-					// Firefox doesn't call IntersectionObserver callback unless
-					// there are rafs.
-					requestAnimationFrame(() => {});
-				});
-				return visibleRatio > 0;
-			});
+			// source: https://stackoverflow.com/a/70174877
+			let isVisible = false;
+			await page.evaluate((/** @type {string} */ selector) => {
+				const element = document.querySelector(selector);
+				if (element) {
+					const rect = element.getBoundingClientRect();
+					if (rect.top >= 0 && rect.left >= 0) {
+						const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+						const vh = Math.max(
+							document.documentElement.clientHeight || 0,
+							window.innerHeight || 0
+						);
+						if (rect.right <= vw && rect.bottom <= vh) {
+							isVisible = true;
+						}
+					}
+				}
+			}, selector);
+			return isVisible;
 		}
 
 		use(in_view);
