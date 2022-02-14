@@ -1,6 +1,6 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, normalized_request_method } from './utils.js';
+import { is_pojo, normalize_request_method } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -40,7 +40,7 @@ export function is_text(content_type) {
  * @returns {Promise<Response | undefined>}
  */
 export async function render_endpoint(event, mod) {
-	const method = normalized_request_method(event);
+	const method = normalize_request_method(event);
 
 	/** @type {import('types/endpoint').RequestHandler} */
 	let handler = mod[method];

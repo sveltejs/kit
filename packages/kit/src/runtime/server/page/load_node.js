@@ -4,7 +4,7 @@ import { s } from '../../../utils/misc.js';
 import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { is_pojo, lowercase_keys, normalized_request_method } from '../utils.js';
+import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -383,7 +383,7 @@ async function load_shadow_data(route, event, prerender) {
 			throw new Error('Cannot prerender pages that have shadow endpoints with mutative methods');
 		}
 
-		const method = normalized_request_method(event);
+		const method = normalize_request_method(event);
 		const handler = method === 'head' ? mod.head || mod.get : mod[method];
 
 		if (!handler) {
