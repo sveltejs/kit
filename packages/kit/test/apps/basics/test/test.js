@@ -486,9 +486,7 @@ test.describe.parallel('Endpoints', () => {
 
 	test('HEAD with matching headers but without body', async ({ request }) => {
 		const url = '/endpoint-output/body';
-		/** @type {import('@playwright/test').APIResponse} */
 		const headResponse = await request.head(url);
-		/** @type {import('@playwright/test').APIResponse} */
 		const getResponse = await request.get(url);
 		expect(headResponse.status()).toBe(200);
 		expect(getResponse.status()).toBe(200);
