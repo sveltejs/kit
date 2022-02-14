@@ -68,6 +68,7 @@ export function generate_manifest(
 						return `{
 							type: 'page',
 							pattern: ${route.pattern},
+							key: '${route.key}',
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},
 							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
@@ -84,6 +85,7 @@ export function generate_manifest(
 						return `{
 							type: 'endpoint',
 							pattern: ${route.pattern},
+							key: '${route.key}',
 							params: ${get_params(route.params)},
 							load: ${importer(`${relative_path}/${build_data.server.vite_manifest[route.file].file}`)}
 						}`.replace(/^\t\t/gm, '');

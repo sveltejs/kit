@@ -165,6 +165,7 @@ export async function respond(request, options, state = {}) {
 					}
 
 					if (response) {
+						options.hooks.handleResponse({ event, response, route });
 						// respond with 304 if etag matches
 						if (response.status === 200 && response.headers.has('etag')) {
 							let if_none_match_value = request.headers.get('if-none-match');

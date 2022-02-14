@@ -41,6 +41,7 @@ const get_hooks = hooks => ({
 	getSession: hooks.getSession || (() => ({})),
 	handle: hooks.handle || (({ event, resolve }) => resolve(event)),
 	handleError: hooks.handleError || (({ error }) => console.error(error.stack)),
+	handleResponse: hooks.handleResponse || (() => {}),
 	externalFetch: hooks.externalFetch || fetch
 });
 

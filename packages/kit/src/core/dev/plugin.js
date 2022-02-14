@@ -107,6 +107,7 @@ export async function create_plugin(config, cwd) {
 								return {
 									type: 'page',
 									pattern: route.pattern,
+									key: route.key,
 									params: get_params(route.params),
 									shadow: route.shadow
 										? async () => {
@@ -122,6 +123,7 @@ export async function create_plugin(config, cwd) {
 							return {
 								type: 'endpoint',
 								pattern: route.pattern,
+								key: route.key,
 								params: get_params(route.params),
 								load: async () => {
 									const url = path.resolve(cwd, route.file);
@@ -184,6 +186,7 @@ export async function create_plugin(config, cwd) {
 							// @ts-expect-error this picks up types that belong to the tests
 							getSession: user_hooks.getSession || (() => ({})),
 							handle: amp ? sequence(amp, handle) : handle,
+							handleResponse: user_hooks.handleResponse || (() => {}),
 							handleError:
 								user_hooks.handleError ||
 								(({ /** @type {Error & { frame?: string }} */ error }) => {

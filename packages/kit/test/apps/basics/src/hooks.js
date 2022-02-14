@@ -45,6 +45,12 @@ export const handle = sequence(
 	}
 );
 
+export const handleResponse = ({ event, response, route }) => {
+	console.log(
+		`request to '${event.url.pathname}' gave response '${response.status}' from route '${route.key}'.`
+	);
+};
+
 /** @type {import('@sveltejs/kit').ExternalFetch} */
 export async function externalFetch(request) {
 	let newRequest = request;
