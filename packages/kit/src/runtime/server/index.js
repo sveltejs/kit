@@ -76,7 +76,7 @@ export async function respond(request, options, state = {}) {
 		get: () => {
 			throw new Error(
 				'To access the request body use the text/json/arrayBuffer/formData methods, e.g. `body = await request.json()`' +
-					details
+				details
 			);
 		}
 	};
@@ -98,6 +98,9 @@ export async function respond(request, options, state = {}) {
 			event,
 			resolve: async (event, opts) => {
 				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
+				if (opts && 'transformPage' in opts && typeof opts.transformPage === 'function') options.transformPage = /** @type {import('types/internal').SSROptions['transformPage']} */ (opts.transformPage);
+
+				// options.transformPage = transformPage;
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({

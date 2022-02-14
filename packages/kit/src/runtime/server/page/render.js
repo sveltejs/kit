@@ -164,8 +164,8 @@ export async function render_response({
 			target: document.querySelector('[data-hydrate="${target}"]').parentNode,
 			paths: ${s(options.paths)},
 			session: ${try_serialize($session, (error) => {
-				throw new Error(`Failed to serialize session data: ${error.message}`);
-			})},
+		throw new Error(`Failed to serialize session data: ${error.message}`);
+	})},
 			route: ${!!page_config.router},
 			spa: ${!ssr},
 			trailing_slash: ${s(options.trailing_slash)},
@@ -174,8 +174,8 @@ export async function render_response({
 				error: ${serialize_error(error)},
 				nodes: [
 					${(branch || [])
-					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-					.join(',\n\t\t\t\t\t\t')}
+				.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+				.join(',\n\t\t\t\t\t\t')}
 				],
 				url: new URL(${s(url.href)}),
 				params: ${devalue(params)}
@@ -295,7 +295,7 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) });
+	const html = options.transformPage({ html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }) });
 
 	const headers = new Headers({
 		'content-type': 'text/html',

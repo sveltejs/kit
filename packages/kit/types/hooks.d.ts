@@ -16,6 +16,7 @@ export interface GetSession {
 
 export interface ResolveOpts {
 	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => string;
 }
 
 export interface Handle {

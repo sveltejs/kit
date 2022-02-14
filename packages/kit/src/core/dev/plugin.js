@@ -110,9 +110,9 @@ export async function create_plugin(config, cwd) {
 									params: get_params(route.params),
 									shadow: route.shadow
 										? async () => {
-												const url = path.resolve(cwd, /** @type {string} */ (route.shadow));
-												return await vite.ssrLoadModule(url);
-										  }
+											const url = path.resolve(cwd, /** @type {string} */(route.shadow));
+											return await vite.ssrLoadModule(url);
+										}
 										: null,
 									a: route.a.map((id) => manifest_data.components.indexOf(id)),
 									b: route.b.map((id) => manifest_data.components.indexOf(id))
@@ -268,6 +268,7 @@ export async function create_plugin(config, cwd) {
 							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 							root,
 							router: config.kit.browser.router,
+							transformPage: ({ html }) => html,
 							template: ({ head, body, assets, nonce }) => {
 								return (
 									template

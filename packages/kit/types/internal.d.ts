@@ -146,6 +146,7 @@ export interface SSROptions {
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
+	transformPage: ({ html }: { html: string }) => string;
 	template({
 		head,
 		body,
