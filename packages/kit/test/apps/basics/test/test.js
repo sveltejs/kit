@@ -434,29 +434,34 @@ test.describe.parallel('Shadowed pages', () => {
 
 	test('responds to HEAD requests from endpoint', async ({ request }) => {
 		const url = '/shadowed/simple';
-		/** @type {import('@playwright/test').APIResponse} */
-		const headResponse = await request.head(url, {
+
+		const opts = {
 			headers: {
 				accept: 'application/json'
 			}
+		};
+
+		const responses = {
+			head: await request.head(url, opts),
+			get: await request.get(url, opts)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.json()).toEqual({ answer: 42 });
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
 		});
-		/** @type {import('@playwright/test').APIResponse} */
-		const getResponse = await request.get(url, {
-			headers: {
-				accept: 'application/json'
-			}
-		});
-		expect(headResponse.status()).toBe(200);
-		expect(getResponse.status()).toBe(200);
-		expect(await headResponse.text()).toBe('');
-		expect(await getResponse.json()).toEqual({ answer: 42 });
-		const headHeaders = headResponse.headers();
-		const getHeaders = getResponse.headers();
-		['date', 'transfer-encoding'].forEach((headerToSkip) => {
-			delete headHeaders[headerToSkip];
-			delete getHeaders[headerToSkip];
-		});
-		expect(headHeaders).toEqual(getHeaders);
+
+		expect(headers.head).toEqual(headers.get);
 	});
 });
 
