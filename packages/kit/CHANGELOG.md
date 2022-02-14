@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.268
+
+### Patch Changes
+
+- refactor: use one escape function for json in html script body instead of two slightly different ([#3804](https://github.com/sveltejs/kit/pull/3804))
+
 ## 1.0.0-next.267
 
 ### Patch Changes

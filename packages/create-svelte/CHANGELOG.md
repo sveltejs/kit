@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.117
+
+### Patch Changes
+
+- update comment to remove outdated reference ([#3898](https://github.com/sveltejs/kit/pull/3898))
+
 ## 2.0.0-next.116
 
 ### Patch Changes
