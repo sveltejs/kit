@@ -16,16 +16,11 @@
 	/** @type {number[]} */
 	let positions = [];
 
-	onMount(() => {
-		// wait for fonts to load...
-		const timeouts = [setTimeout(onresize, 1000), setTimeout(onscroll, 5000)];
+	onMount(async () => {
+		await document.fonts.ready;
 
-		return () => {
-			window.removeEventListener('scroll', onscroll, true);
-			window.removeEventListener('resize', onresize, true);
-
-			timeouts.forEach((timeout) => clearTimeout(timeout));
-		};
+		update();
+		highlight();
 	});
 
 	afterNavigate(() => {
