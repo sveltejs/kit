@@ -1,8 +1,7 @@
 .content {
 	inline-size: 100%;
 	margin: 0;
-	padding-inline: var(--side-nav);
-	padding-block: var(--top-offset);
+	padding: var(--top-offset) var(--side-nav);
 	tab-size: 2;
 	-moz-tab-size: 2;
 }
