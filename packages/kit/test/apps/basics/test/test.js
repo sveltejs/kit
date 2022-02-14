@@ -764,6 +764,24 @@ test.describe.parallel('Errors', () => {
 		}
 	});
 
+	test('not ok response from endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-not-ok');
+
+		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-not-ok.svelte:12:15';
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
 	test('error in shadow endpoint', async ({ page, read_errors }) => {
 		const res = await page.goto('/errors/endpoint-shadow');
 
@@ -776,16 +794,29 @@ test.describe.parallel('Errors', () => {
 		}
 
 		expect(res && res.status()).toBe(500);
-		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "nope"'
+		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint.svelte:12:15';
+		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
 		} else {
 			expect(contents).not.toMatch(location);
 		}
+	});
+
+	test('not ok response from shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow-not-ok');
+
+		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Failed to load data"'
+		);
 	});
 
 	test('server-side 4xx status without error from load()', async ({ page }) => {
