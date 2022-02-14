@@ -111,9 +111,21 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			const box = await page.locator(selector).boundingBox();
-			const view = await page.viewportSize();
-			return box && view && box.y < view.height && box.y + box.height > 0;
+			// source: https://stackoverflow.com/a/68848306
+			return await page.$eval(selector, async (/** @type {Element} */ element) => {
+				/** @type {number} */
+				const visibleRatio = await new Promise((resolve) => {
+					const observer = new IntersectionObserver((entries) => {
+						resolve(entries[0].intersectionRatio);
+						observer.disconnect();
+					});
+					observer.observe(element);
+					// Firefox doesn't call IntersectionObserver callback unless
+					// there are rafs.
+					requestAnimationFrame(() => {});
+				});
+				return visibleRatio > 0;
+			});
 		}
 
 		use(in_view);
