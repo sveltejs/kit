@@ -493,19 +493,28 @@ test.describe.parallel('Endpoints', () => {
 
 	test('HEAD with matching headers but without body', async ({ request }) => {
 		const url = '/endpoint-output/body';
-		const headResponse = await request.head(url);
-		const getResponse = await request.get(url);
-		expect(headResponse.status()).toBe(200);
-		expect(getResponse.status()).toBe(200);
-		expect(await headResponse.text()).toBe('');
-		expect(await getResponse.text()).toBe('{}');
-		const headHeaders = headResponse.headers();
-		const getHeaders = getResponse.headers();
-		['date', 'transfer-encoding'].forEach((headerToSkip) => {
-			delete headHeaders[headerToSkip];
-			delete getHeaders[headerToSkip];
+
+		const responses = {
+			head: await request.head(url),
+			get: await request.get(url)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.text()).toBe('{}');
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
 		});
-		expect(headHeaders).toEqual(getHeaders);
+
+		expect(headers.head).toEqual(headers.get);
 	});
 
 	test('200 status by default', async ({ request }) => {
