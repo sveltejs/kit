@@ -81,7 +81,6 @@ export class Router {
 	}
 
 	/**
-	 *
 	 * @param {number} index
 	 * @returns {{x: number, y: number} | null}
 	 */
