@@ -66,6 +66,7 @@ export async function load_node({
 		? await load_shadow_data(
 				/** @type {import('types/internal').SSRPage} */ (route),
 				event,
+				options,
 				!!state.prerender
 		  )
 		: {};
@@ -370,10 +371,11 @@ export async function load_node({
  *
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/hooks').RequestEvent} event
+ * @param {import('types/internal').SSROptions} options
  * @param {boolean} prerender
  * @returns {Promise<import('types/endpoint').ShadowData>}
  */
-async function load_shadow_data(route, event, prerender) {
+async function load_shadow_data(route, event, options, prerender) {
 	if (!route.shadow) return {};
 
 	try {
@@ -450,9 +452,12 @@ async function load_shadow_data(route, event, prerender) {
 
 		return data;
 	} catch (e) {
+		const error = coalesce_to_error(e);
+		options.handle_error(error, event);
+
 		return {
 			status: 500,
-			error: coalesce_to_error(e)
+			error
 		};
 	}
 }

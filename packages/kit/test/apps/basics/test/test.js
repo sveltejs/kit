@@ -785,6 +785,61 @@ test.describe.parallel('Errors', () => {
 		}
 	});
 
+	test('not ok response from endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-not-ok');
+
+		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-not-ok.svelte:12:15';
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow');
+
+		// should include stack trace
+		const lines = read_errors('/errors/endpoint-shadow').split('\n');
+		expect(lines[0]).toMatch('nope');
+
+		if (process.env.DEV) {
+			expect(lines[1]).toMatch('endpoint-shadow');
+		}
+
+		expect(res && res.status()).toBe(500);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "nope"'
+		);
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('not ok response from shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow-not-ok');
+
+		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Failed to load data"'
+		);
+	});
+
 	test('server-side 4xx status without error from load()', async ({ page }) => {
 		const response = await page.goto('/errors/load-status-without-error-server');
 
