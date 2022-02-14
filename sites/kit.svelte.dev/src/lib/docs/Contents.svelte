@@ -16,16 +16,11 @@
 	/** @type {number[]} */
 	let positions = [];
 
-	onMount(() => {
-		// wait for fonts to load...
-		const timeout = setTimeout(() => {
-			update();
-			highlight();
-		}, 1000);
+	onMount(async () => {
+		await document.fonts.ready;
 
-		return () => {
-			clearTimeout(timeout);
-		};
+		update();
+		highlight();
 	});
 
 	afterNavigate(() => {
