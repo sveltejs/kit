@@ -431,6 +431,44 @@ test.describe.parallel('Shadowed pages', () => {
 
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
+
+	test('responds to HEAD requests from endpoint', async ({ request }) => {
+		const url = '/shadowed/simple';
+
+		const opts = {
+			headers: {
+				accept: 'application/json'
+			}
+		};
+
+		const responses = {
+			head: await request.head(url, opts),
+			get: await request.get(url, opts)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.json()).toEqual({ answer: 42 });
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
+		});
+
+		expect(headers.head).toEqual(headers.get);
+	});
+
+	test.only('Works with missing get handler', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/no-get"]');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
@@ -457,6 +495,32 @@ test.describe.parallel('Endpoints', () => {
 		const response = await request.get('/endpoint-output/headers');
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(response.headers()['set-cookie']).toBeDefined();
+	});
+
+	test('HEAD with matching headers but without body', async ({ request }) => {
+		const url = '/endpoint-output/body';
+
+		const responses = {
+			head: await request.head(url),
+			get: await request.get(url)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.text()).toBe('{}');
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
+		});
+
+		expect(headers.head).toEqual(headers.get);
 	});
 
 	test('200 status by default', async ({ request }) => {

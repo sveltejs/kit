@@ -1,1 +1,0 @@
-<h1>Site without props</h1>

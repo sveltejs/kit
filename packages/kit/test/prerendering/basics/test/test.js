@@ -73,11 +73,6 @@ test('does not prerender page with shadow endpoint with non-GET handler', () => 
 	assert.ok(!fs.existsSync(`${build}/shadowed-post/__data.json`));
 });
 
-test('load page with empty shadow endpoint', () => {
-	assert.ok(fs.existsSync(`${build}/shadowed-no-get/index.html`));
-	assert.ok(fs.existsSync(`${build}/shadowed-no-get/__data.json`));
-});
-
 test('decodes paths when writing files', () => {
 	let content = read('encoding/path with spaces.html');
 	assert.ok(content.includes('<p id="a">path with spaces</p>'));
