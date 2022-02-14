@@ -96,7 +96,7 @@ export async function render_endpoint(event, mod) {
 		}
 	}
 
-	return new Response(method !==  'head' ? normalized_body : '' , {
+	return new Response(method !== 'head' ? normalized_body : '', {
 		status,
 		headers
 	});
