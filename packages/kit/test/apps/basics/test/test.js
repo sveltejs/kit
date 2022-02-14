@@ -431,6 +431,33 @@ test.describe.parallel('Shadowed pages', () => {
 
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
+
+	test('responds to HEAD requests from endpoint', async ({ request }) => {
+		const url = '/shadowed/simple';
+		/** @type {import('@playwright/test').APIResponse} */
+		const headResponse = await request.head(url, {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+		/** @type {import('@playwright/test').APIResponse} */
+		const getResponse = await request.get(url, {
+			headers: {
+				accept: 'application/json'
+			}
+		});
+		expect(headResponse.status()).toBe(200);
+		expect(getResponse.status()).toBe(200);
+		expect(await headResponse.text()).toBe('');
+		expect(await getResponse.json()).toEqual({ answer: 42 });
+		const headHeaders = headResponse.headers();
+		const getHeaders = getResponse.headers();
+		['date', 'transfer-encoding'].forEach((headerToSkip) => {
+			delete headHeaders[headerToSkip];
+			delete getHeaders[headerToSkip];
+		});
+		expect(headHeaders).toEqual(getHeaders);
+	});
 });
 
 test.describe.parallel('Endpoints', () => {

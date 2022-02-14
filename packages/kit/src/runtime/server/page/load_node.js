@@ -384,7 +384,7 @@ async function load_shadow_data(route, event, prerender) {
 		}
 
 		const method = event.request.method.toLowerCase().replace('delete', 'del');
-		const handler = mod[method];
+		const handler = method === 'head' ? mod.head || mod.get : mod[method];
 
 		if (!handler) {
 			return {
@@ -400,7 +400,7 @@ async function load_shadow_data(route, event, prerender) {
 			body: {}
 		};
 
-		if (method !== 'get') {
+		if (method !== 'get' && method !== 'head') {
 			const result = await handler(event);
 
 			if (result.fallthrough) return result;
@@ -424,8 +424,9 @@ async function load_shadow_data(route, event, prerender) {
 			data.body = body;
 		}
 
-		if (mod.get) {
-			const result = await mod.get.call(null, event);
+		const resultHandler = (method === 'head' && mod.head) || mod.get;
+		if (resultHandler) {
+			const result = await resultHandler.call(null, event);
 
 			if (result.fallthrough) return result;
 
