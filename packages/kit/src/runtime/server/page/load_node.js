@@ -4,7 +4,7 @@ import { s } from '../../../utils/misc.js';
 import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { is_pojo, lowercase_keys } from '../utils.js';
+import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -385,8 +385,8 @@ async function load_shadow_data(route, event, options, prerender) {
 			throw new Error('Cannot prerender pages that have shadow endpoints with mutative methods');
 		}
 
-		const method = event.request.method.toLowerCase().replace('delete', 'del');
-		const handler = mod[method];
+		const method = normalize_request_method(event);
+		const handler = method === 'head' ? mod.head || mod.get : mod[method];
 
 		if (!handler) {
 			return {
@@ -402,7 +402,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			body: {}
 		};
 
-		if (method !== 'get') {
+		if (method !== 'get' && method !== 'head') {
 			const result = await handler(event);
 
 			if (result.fallthrough) return result;
@@ -426,8 +426,9 @@ async function load_shadow_data(route, event, options, prerender) {
 			data.body = body;
 		}
 
-		if (mod.get) {
-			const result = await mod.get.call(null, event);
+		const get = (method === 'head' && mod.head) || mod.get;
+		if (get) {
+			const result = await get(event);
 
 			if (result.fallthrough) return result;
 
