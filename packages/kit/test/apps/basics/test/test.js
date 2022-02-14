@@ -434,13 +434,11 @@ test.describe.parallel('Shadowed pages', () => {
 
 	test('responds to HEAD requests from endpoint', async ({ request }) => {
 		const url = '/shadowed/simple';
-		/** @type {import('@playwright/test').APIResponse} */
 		const headResponse = await request.head(url, {
 			headers: {
 				accept: 'application/json'
 			}
 		});
-		/** @type {import('@playwright/test').APIResponse} */
 		const getResponse = await request.get(url, {
 			headers: {
 				accept: 'application/json'

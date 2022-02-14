@@ -424,9 +424,9 @@ async function load_shadow_data(route, event, prerender) {
 			data.body = body;
 		}
 
-		const resultHandler = (method === 'head' && mod.head) || mod.get;
-		if (resultHandler) {
-			const result = await resultHandler.call(null, event);
+		const get = (method === 'head' && mod.head) || mod.get;
+		if (get) {
+			const result = await get(event);
 
 			if (result.fallthrough) return result;
 
