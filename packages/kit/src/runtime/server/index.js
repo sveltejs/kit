@@ -98,13 +98,10 @@ export async function respond(request, options, state = {}) {
 			event,
 			resolve: async (event, opts) => {
 				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
-				if (opts && 'transformPage' in opts && typeof opts.transformPage === 'function')
-					options.transformPage =
-						/** @type {import('types/internal').SSROptions['transformPage']} */ (
-							opts.transformPage
-						);
 
-				// options.transformPage = transformPage;
+				if (opts && 'transformPage' in opts && typeof opts.transformPage === 'function') {
+					options.transformPage = opts.transformPage;
+				}
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
