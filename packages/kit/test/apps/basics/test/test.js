@@ -459,6 +459,26 @@ test.describe.parallel('Endpoints', () => {
 		expect(response.headers()['set-cookie']).toBeDefined();
 	});
 
+	test.only('HEAD with matching headers but without body', async ({ request }) => {
+		const url = '/endpoint-output/body'
+		const headResponse = await request.head(url);
+		const getResponse = await request.get(url);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (headResponse).status()).toBe(200);
+		expect(/** @type {import('@playwright/test').APIResponse} */ (getResponse).status()).toBe(200);
+		expect(await headResponse.text()).toBe('');
+		expect(await getResponse.text()).toBe('{}');
+		const headHeaders = await headResponse.headers();
+		const getHeaders = await getResponse.headers();
+		[
+			'date', // could be different
+			'transfer-encoding' // head has no body so no transfer-encoding
+		].forEach(headerToSkip => {
+			delete headHeaders[headerToSkip];
+			delete getHeaders[headerToSkip];
+		});
+		expect(headHeaders).toEqual(getHeaders);
+	});
+
 	test('200 status by default', async ({ request }) => {
 		const response = await request.get('/endpoint-output/body');
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);

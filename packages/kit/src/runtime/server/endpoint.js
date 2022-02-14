@@ -40,9 +40,13 @@ export function is_text(content_type) {
  * @returns {Promise<Response | undefined>}
  */
 export async function render_endpoint(event, mod) {
+	const method = event.request.method.toLowerCase().replace('delete', 'del'); // 'delete' is a reserved word
 	/** @type {import('types/endpoint').RequestHandler} */
-	const handler = mod[event.request.method.toLowerCase().replace('delete', 'del')]; // 'delete' is a reserved word
+	let handler = mod[method];
 
+	if (!handler && method === 'head') {
+		handler = mod.get;
+	}
 	if (!handler) {
 		return;
 	}
@@ -92,7 +96,7 @@ export async function render_endpoint(event, mod) {
 		}
 	}
 
-	return new Response(normalized_body, {
+	return new Response(method !==  'head' ? normalized_body : '' , {
 		status,
 		headers
 	});
