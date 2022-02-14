@@ -1,5 +1,5 @@
 .content {
-	inline-size: 100%;
+	width: 100%;
 	margin: 0;
 	padding: var(--top-offset) var(--side-nav);
 	tab-size: 2;
@@ -9,7 +9,7 @@
 @media (min-width: 832px) {
 	/* can't use vars in @media :( */
 	.content {
-		padding-inline-start: calc(var(--sidebar-w) + var(--side-nav));
+		padding-left: calc(var(--sidebar-w) + var(--side-nav));
 	}
 }
 
@@ -19,9 +19,8 @@
 }
 
 .content h2 {
-	margin-block-start: 8rem;
-	padding-inline: 0.2rem 1.6rem;
-	padding-block: 2rem 4rem;
+	margin-top: 8rem;
+	padding: 2rem 1.6rem 4rem 0.2rem;
 	border-block-start: 2px solid #ddd;
 	line-height: 1;
 	font-size: var(--h3);
@@ -30,7 +29,7 @@
 }
 
 .content section:first-of-type > h2 {
-	margin-block-start: 0;
+	margin-top: 0;
 }
 
 .content h4 {
@@ -41,8 +40,8 @@
 	position: relative;
 	display: block;
 	top: calc(-1 * var(--top-offset));
-	inline-size: 0;
-	block-size: 0;
+	width: 0;
+	height: 0;
 }
 
 .content .anchor {
@@ -50,8 +49,8 @@
 	display: block;
 	background: url(@sveltejs/site-kit/icons/link.svg) 0 50% no-repeat;
 	background-size: 1em 1em;
-	inline-size: 1.4em;
-	block-size: 1em;
+	width: 1.4em;
+	height: 1em;
 	left: -1.3em;
 	bottom: 0.3rem;
 	opacity: 0;
@@ -89,11 +88,10 @@
 
 .content h3,
 .content h3 > code {
-	margin-inline: 0;
-	margin-block: 6.4rem 1rem;
+	margin: 6.4rem 0 1rem 0;
 	padding-block-end: 1rem;
 	color: var(--text);
-	max-inline-size: var(--linemax);
+	max-width: var(--linemax);
 	border-block-end: 1px solid #ddd;
 	background: transparent;
 	line-height: 1;
@@ -117,9 +115,8 @@
 	font-weight: 600;
 	font-size: 2.4rem;
 	color: var(--second);
-	margin-inline: 0;
-	margin-block: 6.4rem 1.6rem;
-	padding-inline-start: 0;
+	margin: 6.4rem 0 1.6rem 0;
+	padding-left: 0;
 	background: transparent;
 	line-height: 1;
 	padding-block-start: 0;
@@ -129,8 +126,8 @@
 .content h4::before {
 	display: block;
 	content: ' ';
-	block-size: var(--nav-h);
-	margin-block-start: calc(-1 * var(--nav-h));
+	height: var(--nav-h);
+	margin-top: calc(-1 * var(--nav-h));
 }
 
 .content h4 > em {
@@ -144,8 +141,7 @@
 
 .content code {
 	padding: 0.4rem;
-	margin-inline: 0.2rem;
-	margin-block: 0;
+	margin: 0 0.2rem;
 	top: -0.1rem;
 	background: var(--back-api);
 }
@@ -159,20 +155,20 @@
 
 .content pre {
 	margin: 0;
-	margin-block-end: 2rem;
-	inline-size: 100%;
-	max-inline-size: var(--linemax);
+	margin-bottom: 2rem;
+	width: 100%;
+	max-width: var(--linemax);
 	padding: 1rem;
 	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 }
 
 .content table {
 	margin: 0;
-	margin-block-end: 2em;
+	margin-bottom: 2em;
 }
 
 .content section p {
-	max-inline-size: var(--linemax);
+	max-width: var(--linemax);
 	margin-block: 1em;
 }
 
@@ -192,11 +188,11 @@
 }
 
 .content blockquote :first-child {
-	margin-block-start: 0;
+	margin-top: 0;
 }
 
 .content blockquote :last-child {
-	margin-block-end: 0;
+	margin-bottom: 0;
 }
 
 .content blockquote code {
@@ -217,16 +213,16 @@
 .content h2[id],
 .content h3[id] {
 	padding-block-start: 10rem;
-	margin-block-start: -2rem;
+	margin-top: -2rem;
 	border-block-start: none;
 }
 
 .content h2[id]::after {
 	content: '';
 	position: absolute;
-	inline-size: 100%;
+	width: 100%;
 	left: 0;
 	top: 8rem;
-	block-size: 2px;
+	height: 2px;
 	background: #ddd;
 }

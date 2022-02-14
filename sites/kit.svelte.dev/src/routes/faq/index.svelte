@@ -37,12 +37,10 @@
 	.faqs {
 		grid-template-columns: 1fr 1fr;
 		grid-gap: 1em;
-		min-block-size: calc(100vh - var(--nav-h));
-		padding-inline: var(--side-nav);
-		padding-block: var(--top-offset) 6rem;
-		max-inline-size: var(--main-width);
-		margin-inline: auto;
-		margin-block: 0;
+		min-height: calc(100vh - var(--nav-h));
+		padding: var(--top-offset) var(--side-nav) 6rem var(--side-nav);
+		max-width: var(--main-width);
+		margin: 0 auto;
 		tab-size: 2;
 	}
 
@@ -55,11 +53,10 @@
 
 	.faqs :global(pre) {
 		margin: 0;
-		margin-block-end: 2rem;
-		inline-size: 100%;
-		max-inline-size: var(--linemax);
-		padding-inline: 2.5rem;
-		padding-block: 1.5rem;
+		margin-bottom: 2rem;
+		width: 100%;
+		max-width: var(--linemax);
+		padding: 1.5rem 2.5rem;
 		border-radius: 0.5rem;
 		font-size: 0.8rem;
 	}
@@ -69,8 +66,8 @@
 		display: block;
 		background: url(@sveltejs/site-kit/icons/link.svg) 0 50% no-repeat;
 		background-size: 1em 1em;
-		inline-size: 1.4em;
-		block-size: 1em;
+		width: 1.4em;
+		height: 1em;
 		left: -1.3em;
 		opacity: 0;
 		transition: opacity 0.2s;
@@ -102,7 +99,7 @@
 		padding-block-start: 10rem;
 		padding-block-end: 0.2rem;
 		color: var(--text);
-		/* max-inline-size: 24em; */
+		/* max-width: 24em; */
 		font-size: var(--h3);
 		font-weight: 400;
 		border-block-end: 1px solid #ddd;
@@ -114,7 +111,7 @@
 		font-size: 2rem;
 		color: var(--second);
 		margin-block: 2rem 1.6rem;
-		padding-inline-start: 0;
+		padding-left: 0;
 		background: transparent;
 		line-height: 1.3;
 		padding: 0;
@@ -144,7 +141,7 @@
 	}
 
 	:global(.faqs .faq ul) {
-		margin-inline-start: 3.2rem;
+		margin-left: 3.2rem;
 	}
 
 	@media (max-width: 768px) {

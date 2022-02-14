@@ -121,13 +121,12 @@
 	}
 
 	.sidebar {
-		padding-inline: 3.2rem 0;
-		padding-block: var(--top-offset) 6.4rem;
+		padding: var(--top-offset) 0 6.4rem 3.2rem;
 		font-family: var(--font);
 		overflow-y: auto;
-		block-size: 100%;
+		height: 100%;
 		bottom: auto;
-		inline-size: 100%;
+		width: 100%;
 		columns: 2;
 	}
 
@@ -135,7 +134,7 @@
 		display: block;
 		line-height: 1.2;
 		margin: 0;
-		margin-block-end: 4rem;
+		margin-bottom: 4rem;
 	}
 
 	a {
@@ -168,14 +167,14 @@
 		position: absolute;
 		right: 0;
 		top: 2px;
-		inline-size: 0;
-		block-size: 0;
+		width: 0;
+		height: 0;
 		border: 6px solid transparent;
 		border-inline-end-color: white;
 	}
 
 	.nested {
-		padding-inline-start: 1.2rem;
+		padding-left: 1.2rem;
 	}
 
 	ul ul,
@@ -193,14 +192,16 @@
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
-			padding-inline: var(--side-nav);
+			padding-left: var(--side-nav);
+			padding-right: var(--side-nav);
 		}
 	}
 
 	@media (min-width: 832px) {
 		.sidebar {
 			columns: 1;
-			padding-inline: 3.2rem 0;
+			padding-left: 3.2rem;
+			padding-right: 0;
 		}
 
 		nav::after {
@@ -208,10 +209,10 @@
 			position: fixed;
 			left: 0;
 			bottom: 0;
-			inline-size: var(--sidebar-w);
-			block-size: 2em;
+			width: var(--sidebar-w);
+			height: 2em;
 			pointer-events: none;
-			block-size: var(--top-offset);
+			height: var(--top-offset);
 			background: linear-gradient(
 				to bottom,
 				rgba(103, 103, 120, 0) 0%,
