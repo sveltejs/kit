@@ -113,8 +113,8 @@
 
 <style>
 	nav {
-		inset-block-start: 0;
-		inset-inline-start: 0;
+		top: 0;
+		left: 0;
 		overflow: hidden;
 		background-color: var(--second);
 		color: white;
@@ -126,7 +126,7 @@
 		font-family: var(--font);
 		overflow-y: auto;
 		block-size: 100%;
-		inset-block-end: auto;
+		bottom: auto;
 		inline-size: 100%;
 		columns: 2;
 	}
@@ -166,8 +166,8 @@
 	.active::after {
 		content: '';
 		position: absolute;
-		inset-inline-end: 0;
-		inset-block-start: 2px;
+		right: 0;
+		top: 2px;
 		inline-size: 0;
 		block-size: 0;
 		border: 6px solid transparent;
@@ -206,8 +206,8 @@
 		nav::after {
 			content: '';
 			position: fixed;
-			inset-inline-start: 0;
-			inset-block-end: 0;
+			left: 0;
+			bottom: 0;
 			inline-size: var(--sidebar-w);
 			block-size: 2em;
 			pointer-events: none;

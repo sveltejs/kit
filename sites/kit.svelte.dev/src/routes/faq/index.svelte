@@ -49,7 +49,7 @@
 	.faqs :global(pre) :global(code) {
 		padding: 0;
 		margin: 0;
-		inset-block-start: 0;
+		top: 0;
 		background: transparent;
 	}
 
@@ -71,14 +71,14 @@
 		background-size: 1em 1em;
 		inline-size: 1.4em;
 		block-size: 1em;
-		inset-inline-start: -1.3em;
+		left: -1.3em;
 		opacity: 0;
 		transition: opacity 0.2s;
 	}
 
 	.faqs :global(h2 > .anchor),
 	.faqs :global(h3 > .anchor) {
-		inset-block-end: 0.3em;
+		bottom: 0.3em;
 	}
 
 	@media (min-width: 768px) {
@@ -93,7 +93,7 @@
 
 		.faqs :global(h5) :global(.anchor),
 		.faqs :global(h6) :global(.anchor) {
-			inset-block-end: 0.25em;
+			bottom: 0.25em;
 		}
 	}
 
@@ -118,7 +118,7 @@
 		background: transparent;
 		line-height: 1.3;
 		padding: 0;
-		inset-block-start: 0;
+		top: 0;
 	}
 
 	.faqs :global(a) {
@@ -151,7 +151,7 @@
 		.faqs :global(.anchor) {
 			transform: scale(0.6);
 			opacity: 1;
-			inset-inline-start: -1em;
+			left: -1em;
 		}
 	}
 </style>

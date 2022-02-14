@@ -40,7 +40,7 @@
 .content .offset-anchor {
 	position: relative;
 	display: block;
-	inset-block-start: calc(-1 * var(--top-offset));
+	top: calc(-1 * var(--top-offset));
 	inline-size: 0;
 	block-size: 0;
 }
@@ -52,18 +52,18 @@
 	background-size: 1em 1em;
 	inline-size: 1.4em;
 	block-size: 1em;
-	inset-inline-start: -1.3em;
-	inset-block-end: 0.3rem;
+	left: -1.3em;
+	bottom: 0.3rem;
 	opacity: 0;
 	transition: opacity 0.2s;
 }
 
 .content h2 .anchor {
-	inset-block-end: 4rem;
+	bottom: 4rem;
 }
 
 .content h3 .anchor {
-	inset-block-end: 1rem;
+	bottom: 1rem;
 }
 
 @media (min-width: 400px) {
@@ -123,7 +123,7 @@
 	background: transparent;
 	line-height: 1;
 	padding-block-start: 0;
-	inset-block-start: 0;
+	top: 0;
 }
 
 .content h4::before {
@@ -146,14 +146,14 @@
 	padding: 0.4rem;
 	margin-inline: 0.2rem;
 	margin-block: 0;
-	inset-block-start: -0.1rem;
+	top: -0.1rem;
 	background: var(--back-api);
 }
 
 .content pre code {
 	padding: 0;
 	margin: 0;
-	inset-block-start: 0;
+	top: 0;
 	background: transparent;
 }
 
@@ -225,8 +225,8 @@
 	content: '';
 	position: absolute;
 	inline-size: 100%;
-	inset-inline-start: 0;
-	inset-block-start: 8rem;
+	left: 0;
+	top: 8rem;
 	block-size: 2px;
 	background: #ddd;
 }
