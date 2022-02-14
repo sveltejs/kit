@@ -295,7 +295,9 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.transformPage({ html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) }) });
+	const html = options.transformPage({
+		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
+	});
 
 	const headers = new Headers({
 		'content-type': 'text/html',
