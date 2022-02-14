@@ -1,7 +1,7 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
 import { s } from '../../../utils/misc.js';
-import { escape_json_value_in_html } from '../../../utils/escape.js';
+import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys } from '../utils.js';
@@ -251,11 +251,21 @@ export async function load_node({
 							}
 
 							if (!opts.body || typeof opts.body === 'string') {
+								// the json constructed below is later added to the dom in a script tag
+								// make sure the used values are safe
+								const status_number = Number(response.status);
+								if (isNaN(status_number)) {
+									throw new Error(
+										`response.status is not a number. value: "${
+											response.status
+										}" type: ${typeof response.status}`
+									);
+								}
 								// prettier-ignore
 								fetched.push({
 									url: requested,
 									body: /** @type {string} */ (opts.body),
-									json: `{"status":${response.status},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":"${escape_json_value_in_html(body)}"}`
+									json: `{"status":${status_number},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
 								});
 							}
 
