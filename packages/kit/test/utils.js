@@ -111,19 +111,32 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			// source: https://stackoverflow.com/a/68848306
 			return await page.$eval(selector, async (/** @type {Element} */ element) => {
-				/** @type {number} */
-				const visibleRatio = await new Promise((resolve) => {
-					const observer = new IntersectionObserver((entries) => {
-						resolve(entries[0].intersectionRatio);
-						observer.disconnect();
-					});
-					observer.observe(element);
-					// Firefox doesn't call IntersectionObserver callback unless there are rafs.
-					// requestAnimationFrame(() => {});
-				});
-				return visibleRatio > 0;
+				// @ts-ignore
+				let top = element.offsetTop;
+				// @ts-ignore
+				let left = element.offsetLeft;
+				// @ts-ignore
+				const width = element.offsetWidth;
+				// @ts-ignore
+				const height = element.offsetHeight;
+
+				// @ts-ignore
+				while (element.offsetParent) {
+					// @ts-ignore
+					element = element.offsetParent;
+					// @ts-ignore
+					top += element.offsetTop;
+					// @ts-ignore
+					left += element.offsetLeft;
+				}
+
+				return top < window.pageYOffset + window.innerHeight &&
+					left < window.pageXOffset + window.innerWidth &&
+					top + height > window.pageYOffset &&
+					left + width > window.pageXOffset
+					? true
+					: { top, left, width, height };
 			});
 		}
 
