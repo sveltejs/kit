@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.269
+
+### Patch Changes
+
+- Ensure handleError hook is called for shadow endpoint errors ([#3879](https://github.com/sveltejs/kit/pull/3879))
+
 ## 1.0.0-next.268
 
 ### Patch Changes
