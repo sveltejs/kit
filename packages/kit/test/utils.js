@@ -117,6 +117,7 @@ export const test = base.extend({
 				const element = document.querySelector(selector);
 				if (element) {
 					const rect = element.getBoundingClientRect();
+					console.log({ rect });
 					if (rect.top >= 0 && rect.left >= 0) {
 						const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 						const vh = Math.max(
