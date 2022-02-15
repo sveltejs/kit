@@ -77,7 +77,6 @@ export class Router {
 			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
 
-		/** @type {boolean} */
 		this.hash_navigating = false;
 
 		this.callbacks = {
