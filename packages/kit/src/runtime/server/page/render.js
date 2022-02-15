@@ -146,7 +146,7 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const inlined_style = Array.from(styles.values()).join('\n');
+	const rendered_styles = Array.from(styles.values()).join('\n');
 
 	await csp_ready;
 	const csp = new Csp(options.csp, {
@@ -195,7 +195,7 @@ export async function render_response({
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>
 
-		<style amp-custom>${inlined_style}\n${rendered.css.code}</style>`;
+		<style amp-custom>${rendered_styles}\n${rendered.css.code}</style>`;
 
 		if (options.service_worker) {
 			head +=
@@ -204,14 +204,14 @@ export async function render_response({
 			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
 		}
 	} else {
-		if (inlined_style) {
+		if (rendered_styles) {
 			const attributes = [];
 			if (options.dev) attributes.push(' data-svelte');
 			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-			csp.add_style(inlined_style);
+			csp.add_style(rendered_styles);
 
-			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
+			head += `\n\t<style${attributes.join('')}>${rendered_styles}</style>`;
 		}
 
 		// prettier-ignore

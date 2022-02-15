@@ -13,6 +13,7 @@ export function generate_manifest(
 	routes = build_data.manifest_data.routes,
 	format = 'esm'
 ) {
+	/** @type {Map<string, {index:number, path:string}>} */
 	const bundled_nodes = new Map();
 
 	// 0 and 1 are special, they correspond to the root layout and root error nodes
@@ -71,8 +72,8 @@ export function generate_manifest(
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},
 							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
-							a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
-							b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
+							a: ${s(route.a.map(component => component && bundled_nodes.get(component)?.index))},
+							b: ${s(route.b.map(component => component && bundled_nodes.get(component)?.index))}
 						}`.replace(/^\t\t/gm, '');
 					} else {
 						if (!build_data.server.vite_manifest[route.file]) {
