@@ -127,7 +127,7 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### stuff
 
-`stuff` is passed from layouts to descendant layouts and pages and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
+`stuff` is passed from layouts to descendant layouts and pages, and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
 
 ### Output
 
