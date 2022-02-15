@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.270
+
+### Patch Changes
+
+- handle HEAD requests in endpoints ([#3903](https://github.com/sveltejs/kit/pull/3903))
+
+* Use shadow endpoint without defining a `get` endpoint ([#3816](https://github.com/sveltejs/kit/pull/3816))
+
 ## 1.0.0-next.269
 
 ### Patch Changes
