@@ -165,7 +165,7 @@ export async function render_response({
 			paths: ${s(options.paths)},
 			session: ${try_serialize($session, (error) => {
 				throw new Error(`Failed to serialize session data: ${error.message}`);
-	        })},
+			})},
 			route: ${!!page_config.router},
 			spa: ${!ssr},
 			trailing_slash: ${s(options.trailing_slash)},
@@ -174,8 +174,8 @@ export async function render_response({
 				error: ${serialize_error(error)},
 				nodes: [
 					${(branch || [])
-				    .map(({ node }) => `import(${s(options.prefix + node.entry)})`)
-				    .join(',\n\t\t\t\t\t\t')}
+					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
+					.join(',\n\t\t\t\t\t\t')}
 				],
 				url: new URL(${s(url.href)}),
 				params: ${devalue(params)}
