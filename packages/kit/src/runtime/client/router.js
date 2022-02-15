@@ -2,6 +2,10 @@ import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
+const SCROLL_KEY = 'sveltekit:scroll';
+
+const scroll_positions = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}');
+
 function scroll_state() {
 	return {
 		x: pageXOffset,
@@ -63,6 +67,11 @@ export class Router {
 			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 		}
 
+		// if we reload the page, or Cmd-Shift-T back to it,
+		// recover scroll position
+		const scroll = scroll_positions[this.current_history_index];
+		if (scroll) scrollTo(scroll.x, scroll.y);
+
 		this.hash_navigating = false;
 
 		this.callbacks = {
@@ -98,6 +107,8 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
+				scroll_positions[this.current_history_index] = scroll_state();
+				sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
 				history.scrollRestoration = 'auto';
 			}
 		});
@@ -109,22 +120,6 @@ export class Router {
 
 		// There's no API to capture the scroll location right before the user
 		// hits the back/forward button, so we listen for scroll events
-
-		/** @type {NodeJS.Timeout} */
-		let scroll_timer;
-		addEventListener('scroll', () => {
-			clearTimeout(scroll_timer);
-			scroll_timer = setTimeout(() => {
-				// Store the scroll location in the history
-				// This will persist even if we navigate away from the site and come back
-				const new_state = {
-					...(history.state || {}),
-					'sveltekit:scroll': scroll_state()
-				};
-				history.replaceState(new_state, document.title, window.location.href);
-				// iOS scroll event intervals happen between 30-150ms, sometimes around 200ms
-			}, 200);
-		});
 
 		/** @param {Event} event */
 		const trigger_prefetch = (event) => {
@@ -223,7 +218,7 @@ export class Router {
 
 				this._navigate({
 					url: new URL(location.href),
-					scroll: event.state['sveltekit:scroll'],
+					scroll: scroll_positions[event.state['sveltekit:index']],
 					keepfocus: false,
 					chain: [],
 					details: null,
@@ -396,6 +391,8 @@ export class Router {
 				// never resolves
 			});
 		}
+
+		scroll_positions[this.current_history_index] = scroll_state();
 
 		accepted();
 
