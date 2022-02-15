@@ -4,7 +4,7 @@ import { s } from '../../../utils/misc.js';
 import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { is_pojo, lowercase_keys } from '../utils.js';
+import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -66,6 +66,7 @@ export async function load_node({
 		? await load_shadow_data(
 				/** @type {import('types/internal').SSRPage} */ (route),
 				event,
+				options,
 				!!state.prerender
 		  )
 		: {};
@@ -370,10 +371,11 @@ export async function load_node({
  *
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/hooks').RequestEvent} event
+ * @param {import('types/internal').SSROptions} options
  * @param {boolean} prerender
  * @returns {Promise<import('types/endpoint').ShadowData>}
  */
-async function load_shadow_data(route, event, prerender) {
+async function load_shadow_data(route, event, options, prerender) {
 	if (!route.shadow) return {};
 
 	try {
@@ -383,10 +385,11 @@ async function load_shadow_data(route, event, prerender) {
 			throw new Error('Cannot prerender pages that have shadow endpoints with mutative methods');
 		}
 
-		const method = event.request.method.toLowerCase().replace('delete', 'del');
-		const handler = mod[method];
+		const method = normalize_request_method(event);
+		const is_get = method === 'head' || method === 'get';
+		const handler = method === 'head' ? mod.head || mod.get : mod[method];
 
-		if (!handler) {
+		if (!handler && !is_get) {
 			return {
 				status: 405,
 				error: new Error(`${method} method not allowed`)
@@ -400,7 +403,7 @@ async function load_shadow_data(route, event, prerender) {
 			body: {}
 		};
 
-		if (method !== 'get') {
+		if (!is_get) {
 			const result = await handler(event);
 
 			if (result.fallthrough) return result;
@@ -424,8 +427,9 @@ async function load_shadow_data(route, event, prerender) {
 			data.body = body;
 		}
 
-		if (mod.get) {
-			const result = await mod.get.call(null, event);
+		const get = (method === 'head' && mod.head) || mod.get;
+		if (get) {
+			const result = await get(event);
 
 			if (result.fallthrough) return result;
 
@@ -450,9 +454,12 @@ async function load_shadow_data(route, event, prerender) {
 
 		return data;
 	} catch (e) {
+		const error = coalesce_to_error(e);
+		options.handle_error(error, event);
+
 		return {
 			status: 500,
-			error: coalesce_to_error(e)
+			error
 		};
 	}
 }
