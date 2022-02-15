@@ -79,6 +79,8 @@ export class Router {
 			history.scrollRestoration = 'manual';
 		}
 
+		// if we reload the page, or Cmd-Shift-T back to it,
+		// recover scroll position
 		const scroll = history.state?.['sveltekit:scroll'];
 		if (scroll) {
 			scrollTo(scroll.x, scroll.y);
