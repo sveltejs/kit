@@ -128,6 +128,7 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
+				this.#save_scroll_position();
 				sessionStorage.setItem('sveltekit:index', String(this.current_history_index));
 			}
 		});
