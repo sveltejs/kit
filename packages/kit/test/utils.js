@@ -127,7 +127,6 @@ export const test = base.extend({
 						setTimeout(() => {
 							reject(new Error('Timed out'));
 						}, 5000);
-
 						addEventListener('sveltekit:start', () => {
 							fulfil();
 						});
