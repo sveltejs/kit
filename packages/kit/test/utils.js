@@ -167,17 +167,6 @@ export const test = base.extend({
 	}
 });
 
-// If there's a more elegant/declarative way to do this, let me know
-if (process.env.CI) {
-	test.only =
-		test.describe.only =
-		test.describe.serial.only =
-		test.describe.parallel.only =
-			() => {
-				throw new Error('You must remove .only from tests before merging');
-			};
-}
-
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
   forbidOnly: !!process.env.CI,
