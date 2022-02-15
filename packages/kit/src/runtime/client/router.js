@@ -206,11 +206,13 @@ export class Router {
 				// Call `replaceState` in Promise.resolve because this event will add pushState automatically and we need to store our own history state
 				// Promise.resolve is being used to delay replaceState till next tick
 				Promise.resolve(() => {
-					history.replaceState(
-						{ ...history.state, 'sveltekit:index': ++this.current_history_index },
-						'',
-						location.href
-					);
+					setTimeout(() => {
+						history.replaceState(
+							{ ...history.state, 'sveltekit:index': ++this.current_history_index },
+							'',
+							location.href
+						);
+					});
 				});
 				const info = this.parse(url);
 				if (info) {
