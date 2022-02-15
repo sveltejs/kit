@@ -70,9 +70,9 @@ export class Router {
 				'',
 				location.href
 			);
-		} else if (sessionStorage.getItem('sveltekit:left_page') === 'true') {
+		} else if (sessionStorage.getItem('sveltekit:exited') === 'true') {
 			// detects return to the page
-			sessionStorage.removeItem('sveltekit:left_page');
+			sessionStorage.removeItem('sveltekit:exited');
 			const scroll = this.#get_scroll_position(this.current_history_index);
 			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
@@ -108,10 +108,6 @@ export class Router {
 	}
 
 	init_listeners() {
-		// Adopted from Nuxt.js
-		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and back-navigation from other pages to use the browser to restore the
-		// scrolling position.
 		addEventListener('beforeunload', (e) => {
 			let should_block = false;
 
@@ -129,7 +125,7 @@ export class Router {
 			} else {
 				this.#save_scroll_position();
 				sessionStorage.setItem('sveltekit:index', String(this.current_history_index));
-				sessionStorage.setItem('sveltekit:left_page', 'true');
+				sessionStorage.setItem('sveltekit:exited', 'true');
 			}
 		});
 
@@ -206,20 +202,18 @@ export class Router {
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				this.#save_scroll_position();
+				
+				event.preventDefault();
 
-				// Call `replaceState` in timeout because this event will add pushState automatically and we need to store our own history state
-				// Timeout is being used to delay replaceState till next tick
-				setTimeout(() => {
+				this.renderer.stores.page.subscribe((page) => {
+					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+					location.hash = url.hash;
 					history.replaceState(
 						{ ...history.state, 'sveltekit:index': ++this.current_history_index },
 						'',
 						location.href
 					);
-				});
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
-				}
+				})();
 				return;
 			}
 
