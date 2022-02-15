@@ -450,6 +450,7 @@ test.describe.parallel('Shadowed pages', () => {
 				`URL: ${baseURL}/shadowed/same-render?param1=value1`
 			);
 		}
+	});
 
 	test('responds to HEAD requests from endpoint', async ({ request }) => {
 		const url = '/shadowed/simple';
