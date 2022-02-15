@@ -4,7 +4,7 @@ import { pathToFileURL, URL } from 'url';
 import { mkdirp } from '../../../utils/filesystem.js';
 import { __fetch_polyfill } from '../../../install-fetch.js';
 import { SVELTE_KIT } from '../../constants.js';
-import { is_root_relative, resolve } from '../../../utils/url.js';
+import { is_root_relative, normalize_path, resolve } from '../../../utils/url.js';
 import { queue } from './queue.js';
 import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../../utils/escape.js';
@@ -15,21 +15,21 @@ import { escape_html_attr } from '../../../utils/escape.js';
  * @typedef {import('types/internal').Logger} Logger
  */
 
-/** @type {(errorDetails: Parameters<PrerenderErrorHandler>[0] ) => string} */
-function errorDetailsToString({ status, path, referrer, referenceType }) {
+/** @type {(details: Parameters<PrerenderErrorHandler>[0] ) => string} */
+function format_error({ status, path, referrer, referenceType }) {
 	return `${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`;
 }
 
 /** @type {(log: Logger, onError: OnError) => PrerenderErrorHandler} */
-function chooseErrorHandler(log, onError) {
+function normalise_error_handler(log, onError) {
 	switch (onError) {
 		case 'continue':
-			return (errorDetails) => {
-				log.error(errorDetailsToString(errorDetails));
+			return (details) => {
+				log.error(format_error(details));
 			};
 		case 'fail':
-			return (errorDetails) => {
-				throw new Error(errorDetailsToString(errorDetails));
+			return (details) => {
+				throw new Error(format_error(details));
 			};
 		default:
 			return onError;
@@ -49,25 +49,27 @@ const REDIRECT = 3;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
- * @returns {Promise<{ paths: string[] }>} returns a promise that resolves to an array of paths corresponding to the files that have been prerendered.
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
+	/** @type {import('types/config').Prerendered} */
+	const prerendered = {
+		pages: new Map(),
+		assets: new Map(),
+		redirects: new Map(),
+		paths: []
+	};
+
 	if (!config.kit.prerender.enabled && !fallback) {
-		return { paths: [] };
+		return prerendered;
 	}
 
 	__fetch_polyfill();
 
-	mkdirp(out);
-
-	const dir = resolve_path(cwd, `${SVELTE_KIT}/output`);
-
-	const seen = new Set();
-
-	const server_root = resolve_path(dir);
+	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
 	/** @type {import('types/internal').AppModule} */
 	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	override({
 		paths: config.kit.paths,
@@ -75,11 +77,9 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
-
 	const app = new App(manifest);
 
-	const error = chooseErrorHandler(log, config.kit.prerender.onError);
+	const error = normalise_error_handler(log, config.kit.prerender.onError);
 
 	const files = new Set([
 		...build_data.static,
@@ -87,27 +87,11 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		...build_data.client.assets.map((chunk) => `${config.kit.appDir}/${chunk.fileName}`)
 	]);
 
-	/** @type {string[]} */
-	const paths = [];
-
 	build_data.static.forEach((file) => {
 		if (file.endsWith('/index.html')) {
 			files.add(file.slice(0, -11));
 		}
 	});
-
-	/**
-	 * @param {string} path
-	 */
-	function normalize(path) {
-		if (config.kit.trailingSlash === 'always') {
-			return path.endsWith('/') ? path : `${path}/`;
-		} else if (config.kit.trailingSlash === 'never') {
-			return !path.endsWith('/') || path === '/' ? path : path.slice(0, -1);
-		}
-
-		return path;
-	}
 
 	const q = queue(config.kit.prerender.concurrency);
 
@@ -116,150 +100,170 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	 * @param {boolean} is_html
 	 */
 	function output_filename(path, is_html) {
-		if (path === '/') {
-			return '/index.html';
+		const file = path.slice(config.kit.paths.base.length + 1);
+
+		if (file === '') {
+			return 'index.html';
 		}
-		const parts = path.split('/');
-		if (is_html && parts[parts.length - 1] !== 'index.html') {
-			if (config.kit.prerender.createIndexFiles) {
-				parts.push('index.html');
-			} else {
-				parts[parts.length - 1] += '.html';
-			}
+
+		if (is_html && !file.endsWith('.html')) {
+			return file + (config.kit.trailingSlash === 'always' ? 'index.html' : '.html');
 		}
-		return parts.join('/');
+
+		return file;
+	}
+
+	const seen = new Set();
+	const written = new Set();
+
+	/**
+	 * @param {string | null} referrer
+	 * @param {string} decoded
+	 * @param {string} [encoded]
+	 */
+	function enqueue(referrer, decoded, encoded) {
+		if (seen.has(decoded)) return;
+		seen.add(decoded);
+
+		const file = decoded.slice(config.kit.paths.base.length + 1);
+		if (files.has(file)) return;
+
+		return q.add(() => visit(decoded, encoded || encodeURI(decoded), referrer));
 	}
 
 	/**
-	 * @param {string} decoded_path
+	 * @param {string} decoded
+	 * @param {string} encoded
 	 * @param {string?} referrer
 	 */
-	function enqueue(decoded_path, referrer) {
-		const path = encodeURI(normalize(decoded_path));
+	async function visit(decoded, encoded, referrer) {
+		if (!decoded.startsWith(config.kit.paths.base)) {
+			error({ status: 404, path: decoded, referrer, referenceType: 'linked' });
+			return;
+		}
 
-		if (seen.has(path)) return;
-		seen.add(path);
-
-		return q.add(() => visit(path, decoded_path, referrer));
-	}
-
-	/**
-	 * @param {string} path
-	 * @param {string} decoded_path
-	 * @param {string?} referrer
-	 */
-	async function visit(path, decoded_path, referrer) {
 		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const render_path = config.kit.paths?.base
-			? `http://sveltekit-prerender${config.kit.paths.base}${path === '/' ? '' : path}`
-			: `http://sveltekit-prerender${path}`;
-
-		const rendered = await app.render(new Request(render_path), {
+		const response = await app.render(new Request(`http://sveltekit-prerender${encoded}`), {
 			prerender: {
 				all,
 				dependencies
 			}
 		});
 
-		if (rendered) {
-			const response_type = Math.floor(rendered.status / 100);
-			const type = rendered.headers.get('content-type');
-			const is_html = response_type === REDIRECT || type === 'text/html';
+		const text = await response.text();
 
-			const file = `${out}${output_filename(decoded_path, is_html)}`;
+		save(response, text, decoded, encoded, referrer, 'linked');
 
-			if (response_type === REDIRECT) {
-				const location = rendered.headers.get('location');
+		for (const [dependency_path, result] of dependencies) {
+			// this seems circuitous, but using new URL allows us to not care
+			// whether dependency_path is encoded or not
+			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
+			const decoded_dependency_path = decodeURI(encoded_dependency_path);
 
-				if (location) {
-					mkdirp(dirname(file));
+			const body = result.body ?? new Uint8Array(await result.response.arrayBuffer());
+			save(
+				result.response,
+				body,
+				decoded_dependency_path,
+				encoded_dependency_path,
+				decoded,
+				'fetched'
+			);
+		}
 
-					log.warn(`${rendered.status} ${decoded_path} -> ${location}`);
+		if (config.kit.prerender.crawl && response.headers.get('content-type') === 'text/html') {
+			for (const href of crawl(text)) {
+				if (href.startsWith('data:') || href.startsWith('#')) continue;
 
-					writeFileSync(
-						file,
-						`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
-					);
+				const resolved = resolve(encoded, href);
+				if (!is_root_relative(resolved)) continue;
 
-					const resolved = resolve(path, location);
-					if (is_root_relative(resolved)) {
-						enqueue(resolved, path);
-					}
-				} else {
-					log.warn(`location header missing on redirect received from ${decoded_path}`);
+				const parsed = new URL(resolved, 'http://localhost');
+
+				if (parsed.search) {
+					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
-				return;
+				const pathname = normalize_path(parsed.pathname, config.kit.trailingSlash);
+				enqueue(decoded, decodeURI(pathname), pathname);
 			}
+		}
+	}
 
-			const text = await rendered.text();
+	/**
+	 * @param {Response} response
+	 * @param {string | Uint8Array} body
+	 * @param {string} decoded
+	 * @param {string} encoded
+	 * @param {string | null} referrer
+	 * @param {'linked' | 'fetched'} referenceType
+	 */
+	function save(response, body, decoded, encoded, referrer, referenceType) {
+		const response_type = Math.floor(response.status / 100);
+		const type = /** @type {string} */ (response.headers.get('content-type'));
+		const is_html = response_type === REDIRECT || type === 'text/html';
 
-			if (rendered.status === 200) {
-				mkdirp(dirname(file));
+		const file = output_filename(decoded, is_html);
+		const dest = `${out}/${file}`;
 
-				log.info(`${rendered.status} ${decoded_path}`);
-				writeFileSync(file, text);
-				paths.push(normalize(decoded_path));
-			} else if (response_type !== OK) {
-				error({ status: rendered.status, path, referrer, referenceType: 'linked' });
-			}
+		if (written.has(file)) return;
+		written.add(file);
 
-			for (const [dependency_path, result] of dependencies) {
-				const { status, headers } = result.response;
+		if (response_type === REDIRECT) {
+			const location = response.headers.get('location');
 
-				const response_type = Math.floor(status / 100);
+			if (location) {
+				mkdirp(dirname(dest));
 
-				const is_html = headers.get('content-type') === 'text/html';
-
-				const file = `${out}${output_filename(dependency_path, is_html)}`;
-				mkdirp(dirname(file));
+				log.warn(`${response.status} ${decoded} -> ${location}`);
 
 				writeFileSync(
-					file,
-					result.body === null ? new Uint8Array(await result.response.arrayBuffer()) : result.body
+					dest,
+					`<meta http-equiv="refresh" content=${escape_html_attr(`0;url=${location}`)}>`
 				);
-				paths.push(dependency_path);
 
-				if (response_type === OK) {
-					log.info(`${status} ${dependency_path}`);
-				} else {
-					error({
-						status,
-						path: dependency_path,
-						referrer: path,
-						referenceType: 'fetched'
+				let resolved = resolve(encoded, location);
+				if (is_root_relative(resolved)) {
+					resolved = normalize_path(resolved, config.kit.trailingSlash);
+					enqueue(decoded, decodeURI(resolved), resolved);
+				}
+
+				if (!prerendered.redirects.has(decoded)) {
+					prerendered.redirects.set(decoded, {
+						status: response.status,
+						location: resolved
 					});
+
+					prerendered.paths.push(normalize_path(decoded, 'never'));
 				}
+			} else {
+				log.warn(`location header missing on redirect received from ${decoded}`);
 			}
 
-			if (is_html && config.kit.prerender.crawl) {
-				for (const href of crawl(text)) {
-					if (href.startsWith('data:') || href.startsWith('#')) continue;
+			return;
+		}
 
-					const resolved = resolve(path, href);
-					if (!is_root_relative(resolved)) continue;
+		if (response.status === 200) {
+			mkdirp(dirname(dest));
 
-					const parsed = new URL(resolved, 'http://localhost');
+			log.info(`${response.status} ${decoded}`);
+			writeFileSync(dest, body);
 
-					let pathname = decodeURI(parsed.pathname);
-
-					if (config.kit.paths.base) {
-						if (!pathname.startsWith(config.kit.paths.base)) continue;
-						pathname = pathname.slice(config.kit.paths.base.length) || '/';
-					}
-
-					const file = pathname.slice(1);
-					if (files.has(file)) continue;
-
-					if (parsed.search) {
-						// TODO warn that query strings have no effect on statically-exported pages
-					}
-
-					enqueue(pathname, path);
-				}
+			if (is_html) {
+				prerendered.pages.set(decoded, {
+					file
+				});
+			} else {
+				prerendered.assets.set(decoded, {
+					type
+				});
 			}
+
+			prerendered.paths.push(normalize_path(decoded, 'never'));
+		} else if (response_type !== OK) {
+			error({ status: response.status, path: decoded, referrer, referenceType });
 		}
 	}
 
@@ -267,10 +271,10 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		for (const entry of config.kit.prerender.entries) {
 			if (entry === '*') {
 				for (const entry of build_data.entries) {
-					enqueue(entry, null);
+					enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash)); // TODO can we pre-normalize these?
 				}
 			} else {
-				enqueue(entry, null);
+				enqueue(null, normalize_path(config.kit.paths.base + entry, config.kit.trailingSlash));
 			}
 		}
 
@@ -291,7 +295,5 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		writeFileSync(file, await rendered.text());
 	}
 
-	return {
-		paths
-	};
+	return prerendered;
 }

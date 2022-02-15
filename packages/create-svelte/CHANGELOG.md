@@ -1,5 +1,25 @@
 # create-svelte
 
+## 2.0.0-next.117
+
+### Patch Changes
+
+- update comment to remove outdated reference ([#3898](https://github.com/sveltejs/kit/pull/3898))
+
+## 2.0.0-next.116
+
+### Patch Changes
+
+- use preserveValueImports flag ([#3064](https://github.com/sveltejs/kit/pull/3064))
+
+## 2.0.0-next.115
+
+### Patch Changes
+
+- fix links pointing to multi-page docs ([#3815](https://github.com/sveltejs/kit/pull/3815))
+
+* upgrade to TypeScript 4.5 ([#3809](https://github.com/sveltejs/kit/pull/3809))
+
 ## 2.0.0-next.114
 
 ### Patch Changes

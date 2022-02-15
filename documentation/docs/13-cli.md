@@ -21,15 +21,15 @@ Starts a development server. It accepts the following options:
 
 ### svelte-kit build
 
-Builds a production version of your app, and runs your adapter if you have one specified in your [config](#configuration). It accepts the following option:
+Builds a production version of your app, and runs your adapter if you have one specified in your [config](/docs/configuration). It accepts the following option:
 
 - `--verbose` — log more detail
 
-After building the app, you can reference the documentation of your chosen [adapter](#adapters) and hosting platform for specific instructions on how to serve your app.
+After building the app, you can reference the documentation of your chosen [adapter](/docs/adapters) and hosting platform for specific instructions on how to serve your app.
 
 ### svelte-kit preview
 
-After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an [adapter](#adapters).
+After you've built your app with `svelte-kit build`, you can start the production version (irrespective of any adapter that has been applied) locally with `svelte-kit preview`. This is intended for testing the production build locally, **not for serving your app**, for which you should always use an [adapter](/docs/adapters).
 
 Like `svelte-kit dev`, it accepts the following options:
 
@@ -40,4 +40,4 @@ Like `svelte-kit dev`, it accepts the following options:
 
 ### svelte-kit package
 
-For package authors, see [packaging](#packaging).
+For package authors, see [packaging](/docs/packaging).
