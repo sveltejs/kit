@@ -53,8 +53,8 @@
 			height: 100vh;
 			overflow: auto;
 			position: fixed;
-			inset-inline-start: 0;
-			inset-block-start: 0;
+			left: 0;
+			top: 0;
 		}
 	}
 </style>

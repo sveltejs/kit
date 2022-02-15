@@ -16,16 +16,11 @@
 	/** @type {number[]} */
 	let positions = [];
 
-	onMount(() => {
-		// wait for fonts to load...
-		const timeouts = [setTimeout(onresize, 1000), setTimeout(onscroll, 5000)];
+	onMount(async () => {
+		await document.fonts.ready;
 
-		return () => {
-			window.removeEventListener('scroll', onscroll, true);
-			window.removeEventListener('resize', onresize, true);
-
-			timeouts.forEach((timeout) => clearTimeout(timeout));
-		};
+		update();
+		highlight();
 	});
 
 	afterNavigate(() => {
@@ -113,21 +108,20 @@
 
 <style>
 	nav {
-		inset-block-start: 0;
-		inset-inline-start: 0;
+		top: 0;
+		left: 0;
 		overflow: hidden;
 		background-color: var(--second);
 		color: white;
 	}
 
 	.sidebar {
-		padding-inline: 3.2rem 0;
-		padding-block: var(--top-offset) 6.4rem;
+		padding: var(--top-offset) 0 6.4rem 3.2rem;
 		font-family: var(--font);
 		overflow-y: auto;
-		block-size: 100%;
-		inset-block-end: auto;
-		inline-size: 100%;
+		height: 100%;
+		bottom: auto;
+		width: 100%;
 		columns: 2;
 	}
 
@@ -135,13 +129,13 @@
 		display: block;
 		line-height: 1.2;
 		margin: 0;
-		margin-block-end: 4rem;
+		margin-bottom: 4rem;
 	}
 
 	a {
 		position: relative;
 		transition: color 0.2s;
-		border-block-end: none;
+		border-bottom: none;
 		padding: 0;
 		color: var(--sidebar-text);
 		user-select: none;
@@ -149,7 +143,7 @@
 
 	.section {
 		display: block;
-		padding-block-end: 0.8rem;
+		padding-bottom: 0.8rem;
 		font-size: var(--h6);
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
@@ -160,22 +154,22 @@
 		display: block;
 		font-size: 1.6rem;
 		font-family: var(--font);
-		padding-block-end: 0.6em;
+		padding-bottom: 0.6em;
 	}
 
 	.active::after {
 		content: '';
 		position: absolute;
-		inset-inline-end: 0;
-		inset-block-start: 2px;
-		inline-size: 0;
-		block-size: 0;
+		right: 0;
+		top: 2px;
+		width: 0;
+		height: 0;
 		border: 6px solid transparent;
-		border-inline-end-color: white;
+		border-right-color: white;
 	}
 
 	.nested {
-		padding-inline-start: 1.2rem;
+		padding-left: 1.2rem;
 	}
 
 	ul ul,
@@ -193,25 +187,27 @@
 	@media (min-width: 600px) {
 		.sidebar {
 			columns: 2;
-			padding-inline: var(--side-nav);
+			padding-left: var(--side-nav);
+			padding-right: var(--side-nav);
 		}
 	}
 
 	@media (min-width: 832px) {
 		.sidebar {
 			columns: 1;
-			padding-inline: 3.2rem 0;
+			padding-left: 3.2rem;
+			padding-right: 0;
 		}
 
 		nav::after {
 			content: '';
 			position: fixed;
-			inset-inline-start: 0;
-			inset-block-end: 0;
-			inline-size: var(--sidebar-w);
-			block-size: 2em;
+			left: 0;
+			bottom: 0;
+			width: var(--sidebar-w);
+			height: 2em;
 			pointer-events: none;
-			block-size: var(--top-offset);
+			height: var(--top-offset);
 			background: linear-gradient(
 				to bottom,
 				rgba(103, 103, 120, 0) 0%,

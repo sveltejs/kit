@@ -1,5 +1,31 @@
 # @sveltejs/kit
 
+## 1.0.0-next.271
+
+### Patch Changes
+
+- Add `transformPage` option to `resolve` ([#3914](https://github.com/sveltejs/kit/pull/3914))
+
+## 1.0.0-next.270
+
+### Patch Changes
+
+- handle HEAD requests in endpoints ([#3903](https://github.com/sveltejs/kit/pull/3903))
+
+* Use shadow endpoint without defining a `get` endpoint ([#3816](https://github.com/sveltejs/kit/pull/3816))
+
+## 1.0.0-next.269
+
+### Patch Changes
+
+- Ensure handleError hook is called for shadow endpoint errors ([#3879](https://github.com/sveltejs/kit/pull/3879))
+
+## 1.0.0-next.268
+
+### Patch Changes
+
+- refactor: use one escape function for json in html script body instead of two slightly different ([#3804](https://github.com/sveltejs/kit/pull/3804))
+
 ## 1.0.0-next.267
 
 ### Patch Changes

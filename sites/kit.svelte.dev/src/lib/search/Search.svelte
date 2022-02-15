@@ -55,6 +55,8 @@
 
 	input[type='search'] {
 		text-align: center;
+		appearance: none;
+		-webkit-appearance: none;
 	}
 
 	.search-container svg {

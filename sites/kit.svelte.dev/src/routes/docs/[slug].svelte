@@ -75,9 +75,9 @@
 		position: relative;
 		top: -0.1rem;
 		left: 0.3rem;
-		inline-size: 1.4rem;
-		block-size: 1.4rem;
-		margin-inline-end: 0.5rem;
+		width: 1.4rem;
+		height: 1.4rem;
+		margin-right: 0.5rem;
 	}
 
 	.controls {

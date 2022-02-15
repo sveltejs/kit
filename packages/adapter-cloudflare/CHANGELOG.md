@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.11
+
+### Patch Changes
+
+- Add `context` to `event.platform` object ([#3868](https://github.com/sveltejs/kit/pull/3868))
+
 ## 1.0.0-next.10
 
 ### Patch Changes

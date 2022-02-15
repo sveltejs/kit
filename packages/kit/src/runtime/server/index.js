@@ -8,6 +8,9 @@ import { normalize_path } from '../../utils/url.js';
 
 const DATA_SUFFIX = '/__data.json';
 
+/** @param {{ html: string }} opts */
+const default_transform = ({ html }) => html;
+
 /** @type {import('types/internal').Respond} */
 export async function respond(request, options, state = {}) {
 	const url = new URL(request.url);
@@ -91,13 +94,22 @@ export async function respond(request, options, state = {}) {
 		rawBody: body_getter
 	});
 
-	let ssr = true;
+	/** @type {import('types/hooks').RequiredResolveOptions} */
+	let resolve_opts = {
+		ssr: true,
+		transformPage: default_transform
+	};
 
 	try {
 		const response = await options.hooks.handle({
 			event,
 			resolve: async (event, opts) => {
-				if (opts && 'ssr' in opts) ssr = /** @type {boolean} */ (opts.ssr);
+				if (opts) {
+					resolve_opts = {
+						ssr: opts.ssr !== false,
+						transformPage: opts.transformPage || default_transform
+					};
+				}
 
 				if (state.prerender && state.prerender.fallback) {
 					return await render_response({
@@ -110,7 +122,10 @@ export async function respond(request, options, state = {}) {
 						stuff: {},
 						status: 200,
 						branch: [],
-						ssr: false
+						resolve_opts: {
+							...resolve_opts,
+							ssr: false
+						}
 					});
 				}
 
@@ -138,22 +153,30 @@ export async function respond(request, options, state = {}) {
 					if (is_data_request && route.type === 'page' && route.shadow) {
 						response = await render_endpoint(event, await route.shadow());
 
-						// since redirects are opaque to the browser, we need to repackage
-						// 3xx responses as 200s with a custom header
-						if (
-							response &&
-							response.status >= 300 &&
-							response.status < 400 &&
-							request.headers.get('x-sveltekit-noredirect') === 'true'
-						) {
-							const location = response.headers.get('location');
+						// loading data for a client-side transition is a special case
+						if (request.headers.get('x-sveltekit-load') === 'true') {
+							if (response) {
+								// since redirects are opaque to the browser, we need to repackage
+								// 3xx responses as 200s with a custom header
+								if (response.status >= 300 && response.status < 400) {
+									const location = response.headers.get('location');
 
-							if (location) {
-								const headers = new Headers(response.headers);
-								headers.set('x-sveltekit-location', location);
-								response = new Response(undefined, {
-									status: 204,
-									headers
+									if (location) {
+										const headers = new Headers(response.headers);
+										headers.set('x-sveltekit-location', location);
+										response = new Response(undefined, {
+											status: 204,
+											headers
+										});
+									}
+								}
+							} else {
+								// TODO ideally, the client wouldn't request this data
+								// in the first place (at least in production)
+								response = new Response('{}', {
+									headers: {
+										'content-type': 'application/json'
+									}
 								});
 							}
 						}
@@ -161,7 +184,7 @@ export async function respond(request, options, state = {}) {
 						response =
 							route.type === 'endpoint'
 								? await render_endpoint(event, await route.load())
-								: await render_page(event, route, options, state, ssr);
+								: await render_page(event, route, options, state, resolve_opts);
 					}
 
 					if (response) {
@@ -213,7 +236,7 @@ export async function respond(request, options, state = {}) {
 						$session,
 						status: 404,
 						error: new Error(`Not found: ${event.url.pathname}`),
-						ssr
+						resolve_opts
 					});
 				}
 
@@ -249,7 +272,7 @@ export async function respond(request, options, state = {}) {
 				$session,
 				status: 500,
 				error,
-				ssr
+				resolve_opts
 			});
 		} catch (/** @type {unknown} */ e) {
 			const error = coalesce_to_error(e);

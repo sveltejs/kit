@@ -213,6 +213,7 @@ test.describe('Scrolling', () => {
 		await back();
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
 		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
+
 		await page.goBack();
 		expect(page.url()).toBe(baseURL + '/anchor');
 		expect(await page.evaluate(() => scrollY)).toEqual(0);
@@ -428,6 +429,44 @@ test.describe.parallel('Shadowed pages', () => {
 
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
+
+	test('responds to HEAD requests from endpoint', async ({ request }) => {
+		const url = '/shadowed/simple';
+
+		const opts = {
+			headers: {
+				accept: 'application/json'
+			}
+		};
+
+		const responses = {
+			head: await request.head(url, opts),
+			get: await request.get(url, opts)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.json()).toEqual({ answer: 42 });
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
+		});
+
+		expect(headers.head).toEqual(headers.get);
+	});
+
+	test('Works with missing get handler', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/no-get"]');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
@@ -454,6 +493,32 @@ test.describe.parallel('Endpoints', () => {
 		const response = await request.get('/endpoint-output/headers');
 		expect(/** @type {import('@playwright/test').APIResponse} */ (response).status()).toBe(200);
 		expect(response.headers()['set-cookie']).toBeDefined();
+	});
+
+	test('HEAD with matching headers but without body', async ({ request }) => {
+		const url = '/endpoint-output/body';
+
+		const responses = {
+			head: await request.head(url),
+			get: await request.get(url)
+		};
+
+		const headers = {
+			head: responses.head.headers(),
+			get: responses.get.headers()
+		};
+
+		expect(responses.head.status()).toBe(200);
+		expect(responses.get.status()).toBe(200);
+		expect(await responses.head.text()).toBe('');
+		expect(await responses.get.text()).toBe('{}');
+
+		['date', 'transfer-encoding'].forEach((name) => {
+			delete headers.head[name];
+			delete headers.get[name];
+		});
+
+		expect(headers.head).toEqual(headers.get);
 	});
 
 	test('200 status by default', async ({ request }) => {
@@ -780,6 +845,61 @@ test.describe.parallel('Errors', () => {
 		} else {
 			expect(contents).not.toMatch(location);
 		}
+	});
+
+	test('not ok response from endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-not-ok');
+
+		expect(read_errors('/errors/endpoint-not-ok.json')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe('This is your custom error page saying: ""');
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-not-ok.svelte:12:15';
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('error in shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow');
+
+		// should include stack trace
+		const lines = read_errors('/errors/endpoint-shadow').split('\n');
+		expect(lines[0]).toMatch('nope');
+
+		if (process.env.DEV) {
+			expect(lines[1]).toMatch('endpoint-shadow');
+		}
+
+		expect(res && res.status()).toBe(500);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "nope"'
+		);
+
+		const contents = await page.textContent('#stack');
+		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+
+		if (process.env.DEV) {
+			expect(contents).toMatch(location);
+		} else {
+			expect(contents).not.toMatch(location);
+		}
+	});
+
+	test('not ok response from shadow endpoint', async ({ page, read_errors }) => {
+		const res = await page.goto('/errors/endpoint-shadow-not-ok');
+
+		expect(read_errors('/errors/endpoint-shadow-not-ok')).toBeUndefined();
+
+		expect(res && res.status()).toBe(555);
+		expect(await page.textContent('#message')).toBe(
+			'This is your custom error page saying: "Failed to load data"'
+		);
 	});
 
 	test('server-side 4xx status without error from load()', async ({ page }) => {
@@ -1302,6 +1422,11 @@ test.describe.parallel('Page options', () => {
 			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 		}
+	});
+
+	test('transformPage can change the html output', async ({ page }) => {
+		await page.goto('/transform-page');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {

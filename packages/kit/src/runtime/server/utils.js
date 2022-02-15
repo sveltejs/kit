@@ -49,3 +49,11 @@ export function is_pojo(body) {
 
 	return true;
 }
+/**
+ * @param {import('types/hooks').RequestEvent} event
+ * @returns string
+ */
+export function normalize_request_method(event) {
+	const method = event.request.method.toLowerCase();
+	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
+}
