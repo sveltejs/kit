@@ -79,6 +79,11 @@ export class Router {
 			history.scrollRestoration = 'manual';
 		}
 
+		const scroll = history.state?.['sveltekit:scroll'];
+		if (scroll) {
+			scrollTo(scroll.x, scroll.y);
+		}
+
 		// Adopted from Nuxt.js
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
 		// and back-navigation from other pages to use the browser to restore the
