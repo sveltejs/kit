@@ -386,9 +386,10 @@ async function load_shadow_data(route, event, options, prerender) {
 		}
 
 		const method = normalize_request_method(event);
+		const is_get = method === 'head' || method === 'get';
 		const handler = method === 'head' ? mod.head || mod.get : mod[method];
 
-		if (!handler) {
+		if (!handler && !is_get) {
 			return {
 				status: 405,
 				error: new Error(`${method} method not allowed`)
@@ -402,7 +403,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			body: {}
 		};
 
-		if (method !== 'get' && method !== 'head') {
+		if (!is_get) {
 			const result = await handler(event);
 
 			if (result.fallthrough) return result;

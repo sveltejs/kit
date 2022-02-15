@@ -463,6 +463,12 @@ test.describe.parallel('Shadowed pages', () => {
 
 		expect(headers.head).toEqual(headers.get);
 	});
+
+	test('Works with missing get handler', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/no-get"]');
+		expect(await page.textContent('h1')).toBe('hello');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {
