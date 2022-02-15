@@ -16,19 +16,19 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   options: SSROptions;
  *   state: SSRState;
  *   $session: any;
+ *   resolve_opts: import('types/hooks').RequiredResolveOptions;
  *   route: import('types/internal').SSRPage;
  *   params: Record<string, string>;
- *   ssr: boolean;
  * }} opts
  * @returns {Promise<Response | undefined>}
  */
 export async function respond(opts) {
-	const { event, options, state, $session, route, ssr } = opts;
+	const { event, options, state, $session, route, resolve_opts } = opts;
 
 	/** @type {Array<SSRNode | undefined>} */
 	let nodes;
 
-	if (!ssr) {
+	if (!resolve_opts.ssr) {
 		return await render_response({
 			...opts,
 			branch: [],
@@ -58,7 +58,7 @@ export async function respond(opts) {
 			$session,
 			status: 500,
 			error,
-			ssr
+			resolve_opts
 		});
 	}
 
@@ -89,7 +89,7 @@ export async function respond(opts) {
 
 	let stuff = {};
 
-	ssr: if (ssr) {
+	ssr: if (resolve_opts.ssr) {
 		for (let i = 0; i < nodes.length; i += 1) {
 			const node = nodes[i];
 
@@ -194,7 +194,7 @@ export async function respond(opts) {
 							$session,
 							status,
 							error,
-							ssr
+							resolve_opts
 						}),
 						set_cookie_headers
 					);

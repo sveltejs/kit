@@ -268,7 +268,6 @@ export async function create_plugin(config, cwd) {
 							read: (file) => fs.readFileSync(path.join(config.kit.files.assets, file)),
 							root,
 							router: config.kit.browser.router,
-							transformPage: ({ html }) => html,
 							template: ({ head, body, assets, nonce }) => {
 								return (
 									template
