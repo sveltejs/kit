@@ -63,7 +63,7 @@ const config = {
 		routes: (filepath) => !/(?:(?:^_|\/_)|(?:^\.|\/\.)(?!well-known))/.test(filepath),
 		serviceWorker: {
 			register: true,
-			files: (filepath) => !/\.DS_STORE/.test(filepath)
+			files: (filepath) => !/\.DS_Store/.test(filepath)
 		},
 		trailingSlash: 'never',
 		version: {

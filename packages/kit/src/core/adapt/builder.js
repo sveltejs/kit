@@ -14,11 +14,14 @@ import { generate_manifest } from '../generate_manifest/index.js';
  */
 export function create_builder({ cwd, config, build_data, log }) {
 	/** @type {Set<string>} */
-	const prerendered_paths = new Set();
+	let prerendered_paths;
+
 	let generated_manifest = false;
 
 	/** @param {import('types/internal').RouteData} route */
 	function not_prerendered(route) {
+		if (!prerendered_paths) return true;
+
 		if (route.type === 'page' && route.path) {
 			return !prerendered_paths.has(route.path);
 		}
@@ -163,10 +166,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 				log
 			});
 
-			prerendered.paths.forEach((path) => {
-				prerendered_paths.add(path);
-				prerendered_paths.add(path + '/');
-			});
+			prerendered_paths = new Set(prerendered.paths);
 
 			return prerendered;
 		}

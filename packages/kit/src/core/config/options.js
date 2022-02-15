@@ -245,7 +245,7 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
-				files: fun((filename) => !/\.DS_STORE/.test(filename))
+				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
 			// TODO remove this for 1.0

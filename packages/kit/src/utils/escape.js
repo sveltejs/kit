@@ -1,49 +1,26 @@
+// dict from https://github.com/yahoo/serialize-javascript/blob/183c18a776e4635a379fdc620f81771f219832bb/index.js#L25
 /** @type {Record<string, string>} */
 const escape_json_in_html_dict = {
-	'&': '\\u0026',
-	'>': '\\u003e',
-	'<': '\\u003c',
-	'\u2028': '\\u2028',
-	'\u2029': '\\u2029'
-};
-
-/** @type {Record<string, string>} */
-const escape_json_value_in_html_dict = {
-	'"': '\\"',
 	'<': '\\u003C',
 	'>': '\\u003E',
 	'/': '\\u002F',
-	'\\': '\\\\',
-	'\b': '\\b',
-	'\f': '\\f',
-	'\n': '\\n',
-	'\r': '\\r',
-	'\t': '\\t',
-	'\0': '\\0',
 	'\u2028': '\\u2028',
 	'\u2029': '\\u2029'
 };
 
-/**
- * Escape a stringified JSON object that's going to be embedded in a `<script>` tag
- * @param {string} str
- */
-export function escape_json_in_html(str) {
-	// adapted from https://github.com/vercel/next.js/blob/694407450638b037673c6d714bfe4126aeded740/packages/next/server/htmlescape.ts
-	// based on https://github.com/zertosh/htmlescape
-	// License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
-	return str.replace(/[&><\u2028\u2029]/g, (match) => escape_json_in_html_dict[match]);
-}
+const escape_json_in_html_regex = new RegExp(
+	`[${Object.keys(escape_json_in_html_dict).join('')}]`,
+	'g'
+);
 
 /**
- * Escape a string JSON value to be embedded into a `<script>` tag
- * @param {string} str
+ * Escape a JSONValue that's going to be embedded in a `<script>` tag
+ * @param {import("@sveltejs/kit/types/helper").JSONValue} val
  */
-export function escape_json_value_in_html(str) {
-	return escape(
-		str,
-		escape_json_value_in_html_dict,
-		(code) => `\\u${code.toString(16).toUpperCase()}`
+export function escape_json_in_html(val) {
+	return JSON.stringify(val).replace(
+		escape_json_in_html_regex,
+		(match) => escape_json_in_html_dict[match]
 	);
 }
 

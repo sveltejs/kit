@@ -112,7 +112,8 @@ export const test = base.extend({
 		/** @param {string} selector */
 		async function in_view(selector) {
 			const box = await page.locator(selector).boundingBox();
-			return !!box;
+			const view = await page.viewportSize();
+			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
 		use(in_view);
@@ -168,6 +169,7 @@ export const test = base.extend({
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
+	forbidOnly: !!process.env.CI,
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {

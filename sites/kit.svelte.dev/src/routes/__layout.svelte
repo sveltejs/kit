@@ -55,9 +55,8 @@
 <style>
 	main {
 		position: relative;
-		margin-inline: auto;
-		margin-block: 0;
-		padding-block-start: var(--nav-h);
+		margin: 0 auto;
+		padding-top: var(--nav-h);
 		overflow-x: hidden;
 	}
 
@@ -108,12 +107,12 @@
 	/* this is an unfortunate hack, but necessary to temporarily avoid
 	   breaking changes to site-kit */
 	:global(ul.external) {
-		inline-size: 40rem !important;
+		width: 40rem !important;
 	}
 
 	@media (min-width: 960px) {
 		:global(ul.external) {
-			inline-size: 30rem !important;
+			width: 30rem !important;
 		}
 	}
 </style>

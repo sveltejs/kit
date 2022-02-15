@@ -10,7 +10,7 @@
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "workspace:*",
 		"@sveltejs/kit": "workspace:*",
-		"@sveltejs/site-kit": "^2.0.2",
+		"@sveltejs/site-kit": "^2.0.3",
 		"@types/node": "^16.6.1",
 		"flexsearch": "^0.7.21",
 		"marked": "^4.0.5",

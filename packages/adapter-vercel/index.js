@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { posix } from 'path';
 import { fileURLToPath } from 'url';
 import esbuild from 'esbuild';
@@ -144,27 +144,25 @@ export default function ({ external = [] } = {}) {
 
 			builder.mkdirp(`${dir}/config`);
 
-			const prerendered_routes = prerendered.paths
-				.map((path) => {
-					const file =
-						path === '/'
-							? '/index.html'
-							: path + (builder.trailingSlash === 'always' ? '/index.html' : '.html');
+			const prerendered_pages = Array.from(prerendered.pages, ([src, page]) => ({
+				src,
+				dest: page.file
+			}));
 
-					if (existsSync(`${dir}/static${file}`)) {
-						return {
-							src: path,
-							dest: file
-						};
-					}
-				})
-				.filter(Boolean);
+			const prerendered_redirects = Array.from(prerendered.redirects, ([src, redirect]) => ({
+				src,
+				headers: {
+					Location: redirect.location
+				},
+				status: redirect.status
+			}));
 
 			writeFileSync(
 				`${dir}/config/routes.json`,
 				JSON.stringify([
 					...redirects[builder.trailingSlash],
-					...prerendered_routes,
+					...prerendered_pages,
+					...prerendered_redirects,
 					{
 						src: `/${builder.appDir}/.+`,
 						headers: {

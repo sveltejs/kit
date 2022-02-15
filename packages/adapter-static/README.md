@@ -1,6 +1,6 @@
 # @sveltejs/adapter-static
 
-[Adapter](https://kit.svelte.dev/docs/adapters) for SvelteKit apps that prerenders your site as a collection of static files.
+[Adapter](https://kit.svelte.dev/docs/adapters) for SvelteKit apps that prerenders your entire site as a collection of static files. If you'd like to prerender only some pages, you will need to use a different adapter together with [the `prerender` option](https://kit.svelte.dev/docs/page-options#prerender).
 
 ## Usage
 
