@@ -211,7 +211,7 @@ export class Router {
 				// Timeout is being used to delay replaceState till next tick
 				setTimeout(() => {
 					history.replaceState(
-						{ ...(history.state || {}), 'sveltekit:index': ++this.current_history_index },
+						{ ...history.state, 'sveltekit:index': ++this.current_history_index },
 						'',
 						location.href
 					);
