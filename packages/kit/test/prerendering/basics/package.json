@@ -1,7 +1,7 @@
 {
 	"name": "prerendering-test-basics",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.2-next.0",
 	"scripts": {
 		"dev": "node ../../cli.js dev",
 		"build": "node ../../cli.js build",
