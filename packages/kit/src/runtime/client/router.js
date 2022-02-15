@@ -77,6 +77,9 @@ export class Router {
 			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
 
+		/** @type {boolean} */
+		this.hash_navigating = false;
+
 		this.callbacks = {
 			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
 			before_navigate: [],
@@ -202,18 +205,8 @@ export class Router {
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				this.#save_scroll_position();
+				this.hash_navigating = true;
 
-				// Call `replaceState` in Promise.resolve because this event will add pushState automatically and we need to store our own history state
-				// Promise.resolve is being used to delay replaceState till next tick
-				Promise.resolve(() => {
-					setTimeout(() => {
-						history.replaceState(
-							{ ...history.state, 'sveltekit:index': ++this.current_history_index },
-							'',
-							location.href
-						);
-					});
-				});
 				const info = this.parse(url);
 				if (info) {
 					return this.renderer.update(info, [], false);
@@ -257,6 +250,17 @@ export class Router {
 						history.go(delta);
 					}
 				});
+			}
+		});
+
+		addEventListener('hashchange', () => {
+			if (this.hash_navigating) {
+				this.hash_navigating = false;
+				history.replaceState(
+					{ ...history.state, 'sveltekit:index': ++this.current_history_index },
+					'',
+					location.href
+				);
 			}
 		});
 	}
