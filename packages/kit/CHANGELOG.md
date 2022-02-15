@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.271
+
+### Patch Changes
+
+- Add `transformPage` option to `resolve` ([#3914](https://github.com/sveltejs/kit/pull/3914))
+
 ## 1.0.0-next.270
 
 ### Patch Changes
