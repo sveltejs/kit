@@ -65,4 +65,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: test-failure-${{ github.run_id }}-${{ matrix.os }}-${{ matrix.node-version }}
-          path: '**/test-results'
+          path: packages/kit/**/test-results

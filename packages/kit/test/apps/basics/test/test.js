@@ -212,13 +212,11 @@ test.describe('Scrolling', () => {
 		await clicknav('#routing-page');
 		await back();
 		expect(page.url()).toBe(baseURL + '/anchor#last-anchor-2');
-		const scrollY = /** @type {number} */ (await page.evaluate(() => scrollY));
-		expect(scrollY).toEqual(originalScrollY);
-		// TODO: fix this. it is failing due to duplicate history entries
-		// https://github.com/sveltejs/kit/issues/3636
-		// await page.goBack();
-		// expect(page.url()).toBe(baseURL + '/anchor');
-		// expect(scrollY).toEqual(0);
+		expect(await page.evaluate(() => scrollY)).toEqual(originalScrollY);
+
+		await page.goBack();
+		expect(page.url()).toBe(baseURL + '/anchor');
+		expect(await page.evaluate(() => scrollY)).toEqual(0);
 	});
 
 	test('url-supplied anchor is ignored with onMount() scrolling on direct page load', async ({
@@ -430,6 +428,12 @@ test.describe.parallel('Shadowed pages', () => {
 		});
 
 		expect(await response.json()).toEqual({ answer: 42 });
+	});
+
+	test('Endpoint receives consistent URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shadowed/same-render-entry');
+		await clicknav('[href="/shadowed/same-render?param1=value1"]');
+		expect(await page.textContent('h1')).toBe(`URL: ${baseURL}/shadowed/same-render?param1=value1`);
 	});
 
 	test('responds to HEAD requests from endpoint', async ({ request }) => {
@@ -1438,6 +1442,11 @@ test.describe.parallel('Page options', () => {
 			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 		}
+	});
+
+	test('transformPage can change the html output', async ({ page }) => {
+		await page.goto('/transform-page');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {

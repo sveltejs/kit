@@ -6,7 +6,7 @@ So far, we've treated pages as entirely standalone components — upon navigatio
 
 But in many apps, there are elements that should be visible on _every_ page, such as top-level navigation or a footer. Instead of repeating them in every page, we can use _layout_ components.
 
-To create a layout component that applies to every page, make a file called `src/routes/__layout.svelte`. The default layout component (the one that SvelteKit uses if you don't bring your own) looks like this...
+To create a layout that applies to every page, make a file called `src/routes/__layout.svelte`. The default layout (the one that SvelteKit uses if you don't bring your own) looks like this...
 
 ```html
 <slot></slot>
@@ -70,7 +70,7 @@ Layout resets are otherwise identical to normal layout components.
 
 ### Error pages
 
-If a page fails to load (see [Loading](/docs/loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layout and page components.
+If a page fails to load (see [Loading](/docs/loading)), SvelteKit will render an error page. You can customise this page by creating `__error.svelte` components alongside your layouts and pages.
 
 For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
 
@@ -108,6 +108,6 @@ If an error component has a [`load`](/docs/loading) function, it will be called 
 <h1>{title}</h1>
 ```
 
-> Layout components also have access to `error` and `status` via the [page store](/docs/modules#$app-stores)
+> Layouts also have access to `error` and `status` via the [page store](/docs/modules#$app-stores)
 >
 > Server-side stack traces will be removed from `error` in production, to avoid exposing privileged information to users.

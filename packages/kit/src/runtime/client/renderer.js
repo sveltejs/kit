@@ -757,7 +757,7 @@ export class Renderer {
 
 					if (is_shadow_page) {
 						const res = await fetch(
-							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json`,
+							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
 									'x-sveltekit-load': 'true'

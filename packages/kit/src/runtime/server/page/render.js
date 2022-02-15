@@ -25,7 +25,7 @@ const updated = {
  *   error?: Error;
  *   url: URL;
  *   params: Record<string, string>;
- *   ssr: boolean;
+ *   resolve_opts: import('types/hooks').RequiredResolveOptions;
  *   stuff: Record<string, any>;
  * }} opts
  */
@@ -39,7 +39,7 @@ export async function render_response({
 	error,
 	url,
 	params,
-	ssr,
+	resolve_opts,
 	stuff
 }) {
 	if (state.prerender) {
@@ -71,7 +71,7 @@ export async function render_response({
 		error.stack = options.get_stack(error);
 	}
 
-	if (ssr) {
+	if (resolve_opts.ssr) {
 		branch.forEach(({ node, props, loaded, fetched, uses_credentials }) => {
 			if (node.css) node.css.forEach((url) => stylesheets.add(url));
 			if (node.js) node.js.forEach((url) => modulepreloads.add(url));
@@ -167,9 +167,9 @@ export async function render_response({
 				throw new Error(`Failed to serialize session data: ${error.message}`);
 			})},
 			route: ${!!page_config.router},
-			spa: ${!ssr},
+			spa: ${!resolve_opts.ssr},
 			trailing_slash: ${s(options.trailing_slash)},
-			hydrate: ${ssr && page_config.hydrate ? `{
+			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},
 				error: ${serialize_error(error)},
 				nodes: [
@@ -295,7 +295,9 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) });
+	const html = resolve_opts.transformPage({
+		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
+	});
 
 	const headers = new Headers({
 		'content-type': 'text/html',

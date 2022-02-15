@@ -85,7 +85,7 @@ Any files you previously imported from directories in `src/node_modules` will ne
 
 #### Preload
 
-As before, pages and layout components can export a function that allows data to be loaded before rendering takes place.
+As before, pages and layouts can export a function that allows data to be loaded before rendering takes place.
 
 This function has been renamed from `preload` to [`load`](/docs/loading), and its API has changed. Instead of two arguments — `page` and `session` — there is a single argument that includes both, along with `fetch` (which replaces `this.fetch`) and a new `stuff` object.
 
