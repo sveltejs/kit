@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-feat: transformPage
+Add `transformPage` option to `resolve`
