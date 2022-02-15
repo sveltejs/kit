@@ -277,17 +277,61 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 
 > `src/routes/a/[...rest]/z.svelte` will match `/a/z` as well as `/a/b/z` and `/a/b/c/z` and so on. Make sure you check that the value of the rest parameter is valid.
 
-#### Fallthrough routes
+#### Sorting
 
-Finally, if you have multiple routes that match a given path, SvelteKit will try each of them until one responds. For example if you have these routes...
+It's possible for multiple routes to match a given path. For example each of these routes would match `/foo-abc`:
 
 ```bash
-src/routes/[baz].js
-src/routes/[baz].svelte
-src/routes/[qux].svelte
+src/routes/[a].js
+src/routes/[b].svelte
+src/routes/[c].svelte
+src/routes/[...catchall].svelte
 src/routes/foo-[bar].svelte
 ```
 
-... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](/docs/loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
-If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.
+- More specific routes are higher priority
+- Standalone endpoints have higher priority than pages with the same specificity
+- Rest parameters have lowest priority
+- Ties are resolved alphabetically
+
+...resulting in this ordering, meaning that `/foo-abc` will invoke `src/routes/foo-[bar].svelte` rather than a less specific route:
+
+```bash
+src/routes/foo-[bar].svelte
+src/routes/[a].js
+src/routes/[b].svelte
+src/routes/[c].svelte
+src/routes/[...catchall].svelte
+```
+
+#### Fallthrough routes
+
+In rare cases, the ordering above might not be want you want for a given path. For example, perhaps `/foo-abc` should resolve to `src/routes/foo-[bar].svelte`, but `/foo-def` should resolve to `src/routes/[b].svelte`.
+
+Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
+
+```svelte
+<!-- src/routes/foo-[bar].svelte -->
+<script context="module">
+	export function load({ params }) {
+		if (params.bar === 'def') {
+			return { fallthrough: true };
+		}
+
+		// ...
+	}
+</script>
+```
+
+```js
+// src/routes/[a].js
+export function get({ params }) {
+	if (params.a === 'foo-def') {
+		return { fallthrough: true };
+	}
+
+	// ...
+}
+```
