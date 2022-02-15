@@ -6,7 +6,12 @@ const app = new App(manifest);
 const prefix = `/${manifest.appDir}/`;
 
 export default {
-	async fetch(req, env) {
+	/**
+	 * @param {Request} req
+	 * @param {any} env
+	 * @param {any} context
+	 */
+	async fetch(req, env, context) {
 		const url = new URL(req.url);
 
 		// static assets
@@ -45,7 +50,7 @@ export default {
 
 		// dynamically-generated pages
 		try {
-			return await app.render(req, { platform: { env } });
+			return await app.render(req, { platform: { env, context } });
 		} catch (e) {
 			return new Response('Error rendering route: ' + (e.message || e.toString()), { status: 500 });
 		}

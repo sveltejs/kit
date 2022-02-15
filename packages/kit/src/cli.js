@@ -110,7 +110,7 @@ prog
 
 			// prettier-ignore
 			console.log(
-				`See ${colors.bold().cyan('https://kit.svelte.dev/docs#adapters')} to learn how to configure your app to run on the platform of your choosing`
+				`See ${colors.bold().cyan('https://kit.svelte.dev/docs/adapters')} to learn how to configure your app to run on the platform of your choosing`
 			);
 		} catch (error) {
 			handle_error(error);

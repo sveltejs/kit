@@ -1,6 +1,6 @@
 /*
-	This module is used by the /todos and /todos/[uid]
-	endpoints to make calls to api.svelte.dev, which stores todos
+	This module is used by the /todos endpoint to 
+	make calls to api.svelte.dev, which stores todos
 	for each user. The leading underscore indicates that this is
 	a private module, _not_ an endpoint — visiting /todos/_api
 	will net you a 404 response.

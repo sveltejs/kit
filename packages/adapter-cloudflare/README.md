@@ -1,6 +1,6 @@
 # adapter-cloudflare
 
-[Adapter](https://kit.svelte.dev/docs#adapters) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
+[Adapter](https://kit.svelte.dev/docs/adapters) for building SvelteKit applications on [Cloudflare Pages](https://developers.cloudflare.com/pages/) with [Workers integration](https://developers.cloudflare.com/pages/platform/functions).
 
 If you're using [adapter-auto](../adapter-auto), you don't need to install this — it's already included.
 
@@ -53,7 +53,7 @@ When configuring your project settings, you must use the following settings:
 
 ## Environment variables
 
-The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property, meaning you can access it in hooks and endpoints:
+The [`env`](https://developers.cloudflare.com/workers/runtime-apis/fetch-event#parameters) object, containing KV namespaces etc, is passed to SvelteKit via the `platform` property along with `context`, meaning you can access it in hooks and endpoints:
 
 ```diff
 // src/app.d.ts
@@ -64,6 +64,9 @@ declare namespace App {
 +		env: {
 +			COUNTER: DurableObjectNamespace;
 +		};
++		context: {
++			waitUntil(promise: Promise<any>): void;
++		}
 +	}
 
 	interface Session {}

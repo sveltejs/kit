@@ -1,6 +1,6 @@
 # @sveltejs/adapter-node
 
-[Adapter](https://kit.svelte.dev/docs#adapters) for SvelteKit apps that generates a standalone Node server.
+[Adapter](https://kit.svelte.dev/docs/adapters) for SvelteKit apps that generates a standalone Node server.
 
 ## Usage
 

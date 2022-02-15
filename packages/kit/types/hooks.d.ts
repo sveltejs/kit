@@ -14,14 +14,17 @@ export interface GetSession {
 	(event: RequestEvent): MaybePromise<App.Session>;
 }
 
-export interface ResolveOpts {
-	ssr?: boolean;
+export interface RequiredResolveOptions {
+	ssr: boolean;
+	transformPage: ({ html }: { html: string }) => string;
 }
+
+export type ResolveOptions = Partial<RequiredResolveOptions>;
 
 export interface Handle {
 	(input: {
 		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOpts): MaybePromise<Response>;
+		resolve(event: RequestEvent, opts?: ResolveOptions): MaybePromise<Response>;
 	}): MaybePromise<Response>;
 }
 

@@ -33,7 +33,7 @@ const options = object(
 						message += ', rather than the name of an adapter';
 					}
 
-					throw new Error(`${message}. See https://kit.svelte.dev/docs#adapters`);
+					throw new Error(`${message}. See https://kit.svelte.dev/docs/adapters`);
 				}
 
 				return input;
@@ -47,7 +47,7 @@ const options = object(
 				if (input) {
 					if (input.startsWith('/') || input.endsWith('/')) {
 						throw new Error(
-							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs#configuration"
+							"config.kit.appDir cannot start or end with '/'. See https://kit.svelte.dev/docs/configuration"
 						);
 					}
 				} else {
@@ -156,7 +156,7 @@ const options = object(
 
 					if (input !== '' && (input.endsWith('/') || !input.startsWith('/'))) {
 						throw new Error(
-							`${keypath} option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs#configuration-paths`
+							`${keypath} option must be a root-relative path that starts but doesn't end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 						);
 					}
 
@@ -168,13 +168,13 @@ const options = object(
 					if (input) {
 						if (!/^[a-z]+:\/\//.test(input)) {
 							throw new Error(
-								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs#configuration-paths`
+								`${keypath} option must be an absolute path, if specified. See https://kit.svelte.dev/docs/configuration#paths`
 							);
 						}
 
 						if (input.endsWith('/')) {
 							throw new Error(
-								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs#configuration-paths`
+								`${keypath} option must not end with '/'. See https://kit.svelte.dev/docs/configuration#paths`
 							);
 						}
 					}
@@ -186,7 +186,10 @@ const options = object(
 			prerender: object({
 				concurrency: number(1),
 				crawl: boolean(true),
-				createIndexFiles: boolean(true),
+				createIndexFiles: error(
+					(keypath) =>
+						`${keypath} has been removed — it is now controlled by the trailingSlash option. See https://kit.svelte.dev/docs/configuration#trailingslash`
+				),
 				enabled: boolean(true),
 				entries: validate(['*'], (input, keypath) => {
 					if (!Array.isArray(input) || !input.every((page) => typeof page === 'string')) {
@@ -242,13 +245,13 @@ const options = object(
 
 			serviceWorker: object({
 				register: boolean(true),
-				files: fun((filename) => !/\.DS_STORE/.test(filename))
+				files: fun((filename) => !/\.DS_Store/.test(filename))
 			}),
 
 			// TODO remove this for 1.0
 			ssr: error(
 				(keypath) =>
-					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs#hooks-handle'`
+					`${keypath} has been removed — use the handle hook instead: https://kit.svelte.dev/docs/hooks#handle'`
 			),
 
 			// TODO remove this for 1.0

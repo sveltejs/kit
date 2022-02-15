@@ -1,5 +1,41 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.23
+
+### Patch Changes
+
+- Updated dependencies [[`9ee49342`](https://github.com/sveltejs/kit/commit/9ee493426a5571b20d5d84eb59b4b7ded9f3438d)]:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.11
+  - @sveltejs/adapter-netlify@1.0.0-next.45
+  - @sveltejs/adapter-vercel@1.0.0-next.43
+
+## 1.0.0-next.22
+
+### Patch Changes
+
+- Updated dependencies [[`b05c9f13`](https://github.com/sveltejs/kit/commit/b05c9f13ec4b61053962b99a62794ee3831bf345)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.43
+
+## 1.0.0-next.21
+
+### Patch Changes
+
+- Updated dependencies [[`68fd6843`](https://github.com/sveltejs/kit/commit/68fd684344a0650420a5b9bffa1c91333dcbaa98)]:
+  - @sveltejs/adapter-vercel@1.0.0-next.42
+  - @sveltejs/adapter-cloudflare@1.0.0-next.10
+  - @sveltejs/adapter-netlify@1.0.0-next.45
+
+## 1.0.0-next.20
+
+### Patch Changes
+
+- fix links pointing to multi-page docs ([#3815](https://github.com/sveltejs/kit/pull/3815))
+
+- Updated dependencies []:
+  - @sveltejs/adapter-cloudflare@1.0.0-next.10
+  - @sveltejs/adapter-netlify@1.0.0-next.45
+  - @sveltejs/adapter-vercel@1.0.0-next.41
+
 ## 1.0.0-next.19
 
 ### Patch Changes

@@ -1,5 +1,63 @@
 # @sveltejs/kit
 
+## 1.0.0-next.270
+
+### Patch Changes
+
+- handle HEAD requests in endpoints ([#3903](https://github.com/sveltejs/kit/pull/3903))
+
+* Use shadow endpoint without defining a `get` endpoint ([#3816](https://github.com/sveltejs/kit/pull/3816))
+
+## 1.0.0-next.269
+
+### Patch Changes
+
+- Ensure handleError hook is called for shadow endpoint errors ([#3879](https://github.com/sveltejs/kit/pull/3879))
+
+## 1.0.0-next.268
+
+### Patch Changes
+
+- refactor: use one escape function for json in html script body instead of two slightly different ([#3804](https://github.com/sveltejs/kit/pull/3804))
+
+## 1.0.0-next.267
+
+### Patch Changes
+
+- Set cookies when redirecting from shadow endpoint ([#3874](https://github.com/sveltejs/kit/pull/3874))
+
+## 1.0.0-next.266
+
+### Patch Changes
+
+- fix casing of `.DS_Store` in the default config for `serviceWorker` ([#3823](https://github.com/sveltejs/kit/pull/3823))
+
+* [fix] avoid mutating response `Headers` ([#3829](https://github.com/sveltejs/kit/pull/3829))
+
+## 1.0.0-next.265
+
+### Patch Changes
+
+- [breaking] remove `createIndexFiles` option, derive from `trailingSlash` instead ([#3801](https://github.com/sveltejs/kit/pull/3801))
+
+* Pass trailingSlash config to adapters ([#3820](https://github.com/sveltejs/kit/pull/3820))
+
+## 1.0.0-next.264
+
+### Patch Changes
+
+- fix links pointing to multi-page docs ([#3815](https://github.com/sveltejs/kit/pull/3815))
+
+* upgrade to TypeScript 4.5 ([#3809](https://github.com/sveltejs/kit/pull/3809))
+
+## 1.0.0-next.263
+
+### Patch Changes
+
+- Handle numeric headers ([#3716](https://github.com/sveltejs/kit/pull/3716))
+
+* [fix] replace broken escaping with a working version ([#3798](https://github.com/sveltejs/kit/pull/3798))
+
 ## 1.0.0-next.262
 
 ### Patch Changes
@@ -210,9 +268,9 @@
 
 ### Patch Changes
 
-- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+- Allow endpoints to return a [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response), or an object with [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
-* [breaking] Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs#routing-endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
+* [breaking] Expose standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object to endpoints and hooks. `method`, `headers`, and `body` now accessed through `request` field ([docs](https://kit.svelte.dev/docs/routing#endpoints), [#3384](https://github.com/sveltejs/kit/pull/3384))
 
 - [breaking] change `app.render` signature to (request: Request) => Promise<Response> ([#3384](https://github.com/sveltejs/kit/pull/3384))
 
@@ -362,7 +420,7 @@
 
 ### Patch Changes
 
-- [breaking] Add `disableScrollHandling` function (see https://kit.svelte.dev/docs#modules-$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
+- [breaking] Add `disableScrollHandling` function (see https://kit.svelte.dev/docs/modules#$app-navigation) ([#3182](https://github.com/sveltejs/kit/pull/3182))
 
 ## 1.0.0-next.213
 
