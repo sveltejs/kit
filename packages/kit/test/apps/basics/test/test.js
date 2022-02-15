@@ -1426,6 +1426,11 @@ test.describe.parallel('Page options', () => {
 		}
 	});
 
+	test('transformPage can change the html output', async ({ page }) => {
+		await page.goto('/transform-page');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
+	});
+
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/no-ssr');
 

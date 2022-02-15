@@ -14,4 +14,11 @@ export {
 } from './config';
 export { EndpointOutput, RequestHandler } from './endpoint';
 export { ErrorLoad, ErrorLoadInput, Load, LoadInput, LoadOutput } from './page';
-export { ExternalFetch, GetSession, Handle, HandleError, RequestEvent, ResolveOpts } from './hooks';
+export {
+	ExternalFetch,
+	GetSession,
+	Handle,
+	HandleError,
+	RequestEvent,
+	ResolveOptions
+} from './hooks';
