@@ -127,7 +127,7 @@ If the page you're loading has an endpoint, the data returned from it is accessi
 
 #### stuff
 
-`stuff` is passed from layout components to child layouts and page components and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
+`stuff` is passed from layouts to descendant layouts and pages, and can be filled with anything else you need to make available. For the root `__layout.svelte` component, it is equal to `{}`, but if that component's `load` function returns an object with a `stuff` property, it will be available to subsequent `load` functions.
 
 ### Output
 
@@ -151,7 +151,7 @@ The `redirect` string should be a [properly encoded](https://developer.mozilla.o
 
 To cause pages to be cached, return a `number` describing the page's max age in seconds. The resulting cache header will include `private` if user data was involved in rendering the page (either via `session`, or because a credentialed `fetch` was made in a `load` function), but otherwise will include `public` so that it can be cached by CDNs.
 
-This only applies to page components, _not_ layout components.
+This only applies to pages, _not_ layouts.
 
 #### props
 
