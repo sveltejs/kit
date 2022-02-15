@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.272
+
+### Patch Changes
+
+- Make shadow endpoint `event.url` consistent between server and client navigation ([#3780](https://github.com/sveltejs/kit/pull/3780))
+
+* Prevent duplicated history when navigating via hash link ([#3931](https://github.com/sveltejs/kit/pull/3931))
+
 ## 1.0.0-next.271
 
 ### Patch Changes
