@@ -122,7 +122,10 @@ export async function respond(request, options, state = {}) {
 						stuff: {},
 						status: 200,
 						branch: [],
-						resolve_opts
+						resolve_opts: {
+							...resolve_opts,
+							ssr: false
+						}
 					});
 				}
 
