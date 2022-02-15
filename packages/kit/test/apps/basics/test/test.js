@@ -1542,8 +1542,6 @@ test.describe.parallel('$app/stores', () => {
 				page.textContent('#navigating')
 			]);
 
-			throw new Error('boom');
-
 			expect(res[1]).toBe('navigating from /store/navigating/a to /store/navigating/b');
 
 			await page.waitForSelector('#not-navigating');
