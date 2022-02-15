@@ -89,7 +89,7 @@ importers:
   packages/adapter-netlify:
     specifiers:
       '@iarna/toml': ^2.2.5
-      '@netlify/functions': ^0.11.0
+      '@netlify/functions': ^1.0.0
       '@rollup/plugin-commonjs': ^21.0.0
       '@rollup/plugin-json': ^4.1.0
       '@rollup/plugin-node-resolve': ^13.0.5
@@ -103,7 +103,7 @@ importers:
       esbuild: 0.14.21
       tiny-glob: 0.2.9
     devDependencies:
-      '@netlify/functions': 0.11.0
+      '@netlify/functions': 1.0.0
       '@rollup/plugin-commonjs': 21.0.1_rollup@2.60.2
       '@rollup/plugin-json': 4.1.0_rollup@2.60.2
       '@rollup/plugin-node-resolve': 13.0.6_rollup@2.60.2
@@ -1183,8 +1183,8 @@ packages:
       read-yaml-file: 1.1.0
     dev: true
 
-  /@netlify/functions/0.11.0:
-    resolution: {integrity: sha512-+WWX081UCkLZYkfh1Ru+PH5HTujNXugeskATGhZLTyS1U3Cqh2gYLArdG1a/vU8WWopu/wjpxEOdWq8/T5Nw5Q==}
+  /@netlify/functions/1.0.0:
+    resolution: {integrity: sha512-7fnJv3vr8uyyyOYPChwoec6MjzsCw1CoRUO2DhQ1BD6bOyJRlD4DUaOOGlMILB2LCT8P24p5LexEGx8AJb7xdA==}
     engines: {node: '>=8.3.0'}
     dependencies:
       is-promise: 4.0.0
