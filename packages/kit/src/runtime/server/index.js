@@ -139,7 +139,17 @@ export async function respond(request, options, state = {}) {
 				}
 
 				const is_data_request = decoded.endsWith(DATA_SUFFIX);
-				if (is_data_request) decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+
+				if (is_data_request) {
+					decoded = decoded.slice(0, -DATA_SUFFIX.length) || '/';
+
+					const normalized = normalize_path(
+						url.pathname.slice(0, -DATA_SUFFIX.length),
+						options.trailing_slash
+					);
+
+					event.url = new URL(event.url.origin + normalized + event.url.search);
+				}
 
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);

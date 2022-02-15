@@ -430,6 +430,12 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await response.json()).toEqual({ answer: 42 });
 	});
 
+	test('Endpoint receives consistent URL', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/shadowed/same-render-entry');
+		await clicknav('[href="/shadowed/same-render?param1=value1"]');
+		expect(await page.textContent('h1')).toBe(`URL: ${baseURL}/shadowed/same-render?param1=value1`);
+	});
+
 	test('responds to HEAD requests from endpoint', async ({ request }) => {
 		const url = '/shadowed/simple';
 

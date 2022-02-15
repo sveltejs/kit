@@ -754,7 +754,7 @@ export class Renderer {
 
 					if (has_shadow && i === a.length - 1) {
 						const res = await fetch(
-							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json`,
+							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
 									'x-sveltekit-load': 'true'
