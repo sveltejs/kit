@@ -86,7 +86,6 @@ export function crawl(html) {
 					}
 				}
 
-				let rel = '';
 				let href = '';
 
 				while (i < html.length) {
@@ -147,9 +146,7 @@ export function crawl(html) {
 								i -= 1;
 							}
 
-							if (name === 'rel') {
-								rel = value;
-							} else if (name === 'href') {
+							if (name === 'href') {
 								href = value;
 							} else if (name === 'src') {
 								hrefs.push(value);
