@@ -28,6 +28,7 @@ export interface RequestEvent {
 
 export interface ResolveOpts {
 	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => string;
 }
 
 export interface Handle {
@@ -58,13 +59,15 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr` (boolean, default `true`) — specifies whether the page will be loaded and rendered on the server.
+- `ssr: boolean` (default `true`) — if `false`, renders an empty 'shell' page instead of server-side rendering
+- `transformPage(opts: { html: string }): string` — applies custom transforms to HTML
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
-		ssr: !event.url.pathname.startsWith('/admin')
+		ssr: !event.url.pathname.startsWith('/admin'),
+		transformPage: ({ html }) => html.replace('old', 'new')
 	});
 
 	return response;
