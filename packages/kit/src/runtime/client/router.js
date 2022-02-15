@@ -63,7 +63,7 @@ export class Router {
 			sessionStorage.getItem('sveltekit:index') ?? history.state?.['sveltekit:index'] ?? 0
 		);
 
-		if (!history.state || history.state['sveltekit:index'] == undefined) {
+		if (history.state?.['sveltekit:index'] === undefined) {
 			// create initial history entry, so we can return here
 			history.replaceState(
 				{ ...(history.state || {}), 'sveltekit:index': this.current_history_index },
