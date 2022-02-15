@@ -1428,10 +1428,7 @@ test.describe.parallel('Page options', () => {
 
 	test('transformPage can change the html output', async ({ page }) => {
 		await page.goto('/transform-page');
-		expect(
-			// @ts-ignore
-			await page.evaluate(() => document.querySelector('meta[name="transform-page"]')?.content)
-		).toBe('Worked!');
+		expect(await page.getAttribute('meta[name="transform-page"]', 'content')).toBe('Worked!');
 	});
 
 	test('does not SSR page with ssr=false', async ({ page, javaScriptEnabled }) => {
