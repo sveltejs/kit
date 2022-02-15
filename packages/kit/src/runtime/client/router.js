@@ -63,6 +63,8 @@ export class Router {
 			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 		}
 
+		this.hash_navigating = false;
+
 		this.callbacks = {
 			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
 			before_navigate: [],
@@ -190,9 +192,8 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// Call `pushState` to add url to history so going back works.
-				// Also make a delay, otherwise the browser default behaviour would not kick in
-				setTimeout(() => history.pushState({}, '', url.href));
+				this.hash_navigating = true;
+
 				const info = this.parse(url);
 				if (info) {
 					return this.renderer.update(info, [], false);
@@ -234,6 +235,17 @@ export class Router {
 						history.go(delta);
 					}
 				});
+			}
+		});
+
+		addEventListener('hashchange', () => {
+			if (this.hash_navigating) {
+				this.hash_navigating = false;
+				history.replaceState(
+					{ ...history.state, 'sveltekit:index': ++this.current_history_index },
+					'',
+					location.href
+				);
 			}
 		});
 	}
