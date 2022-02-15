@@ -21,7 +21,6 @@ import { set_paths } from '../paths.js';
  *     status: number;
  *     error: Error;
  *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
- *     url: URL;
  *     params: Record<string, string>;
  *   };
  * }} opts
