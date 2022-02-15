@@ -70,10 +70,9 @@ export class Router {
 				'',
 				location.href
 			);
-		} else if (performance.navigation?.type === 2) {
-			// performance.navigation.type is deprecated, but it's the only way to safely detect return to page
-			// and even if it's not supported, the only thing not working is ability to restore scroll state
-			// when returned to the page from different origin
+		} else if (sessionStorage.getItem('sveltekit:left_page') === 'true') {
+			// detects return to the page
+			sessionStorage.removeItem('sveltekit:left_page');
 			const scroll = this.#get_scroll_position(this.current_history_index);
 			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
@@ -130,6 +129,7 @@ export class Router {
 			} else {
 				this.#save_scroll_position();
 				sessionStorage.setItem('sveltekit:index', String(this.current_history_index));
+				sessionStorage.setItem('sveltekit:left_page', 'true');
 			}
 		});
 
