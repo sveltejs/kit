@@ -111,33 +111,9 @@ export const test = base.extend({
 	in_view: async ({ page }, use) => {
 		/** @param {string} selector */
 		async function in_view(selector) {
-			return await page.$eval(selector, async (/** @type {Element} */ element) => {
-				// @ts-ignore
-				let top = element.offsetTop;
-				// @ts-ignore
-				let left = element.offsetLeft;
-				// @ts-ignore
-				const width = element.offsetWidth;
-				// @ts-ignore
-				const height = element.offsetHeight;
-
-				// @ts-ignore
-				while (element.offsetParent) {
-					// @ts-ignore
-					element = element.offsetParent;
-					// @ts-ignore
-					top += element.offsetTop;
-					// @ts-ignore
-					left += element.offsetLeft;
-				}
-
-				return top < window.pageYOffset + window.innerHeight &&
-					left < window.pageXOffset + window.innerWidth &&
-					top + height > window.pageYOffset &&
-					left + width > window.pageXOffset
-					? true
-					: { top, left, width, height };
-			});
+			const box = await page.locator(selector).boundingBox();
+			const view = await page.viewportSize();
+			return box && view && box.y < view.height && box.y + box.height > 0;
 		}
 
 		use(in_view);
@@ -151,7 +127,6 @@ export const test = base.extend({
 						setTimeout(() => {
 							reject(new Error('Timed out'));
 						}, 5000);
-
 						addEventListener('sveltekit:start', () => {
 							fulfil();
 						});
