@@ -231,8 +231,6 @@
 		border: none;
 		border-bottom: 1px solid #eee;
 		font-weight: 600;
-		appearance: none;
-		-webkit-appearance: none;
 	}
 
 	input::selection {
