@@ -16,10 +16,18 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   status: number;
  *   error: Error;
- *   ssr: boolean;
+ *   resolve_opts: import('types/hooks').RequiredResolveOptions;
  * }} opts
  */
-export async function respond_with_error({ event, options, state, $session, status, error, ssr }) {
+export async function respond_with_error({
+	event,
+	options,
+	state,
+	$session,
+	status,
+	error,
+	resolve_opts
+}) {
 	try {
 		const default_layout = await options.manifest._.nodes[0](); // 0 is always the root layout
 		const default_error = await options.manifest._.nodes[1](); // 1 is always the root error
@@ -75,7 +83,7 @@ export async function respond_with_error({ event, options, state, $session, stat
 			branch: [layout_loaded, error_loaded],
 			url: event.url,
 			params,
-			ssr
+			resolve_opts
 		});
 	} catch (err) {
 		const error = coalesce_to_error(err);

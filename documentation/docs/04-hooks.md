@@ -4,11 +4,11 @@ title: Hooks
 
 An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exports four functions, all optional, that run on the server — **handle**, **handleError**, **getSession**, and **externalFetch**.
 
-> The location of this file can be [configured](#configuration) as `config.kit.files.hooks`
+> The location of this file can be [configured](/docs/configuration) as `config.kit.files.hooks`
 
 ### handle
 
-This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](#page-options-prerender) — and determines the response. It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
+This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the response. It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
 > Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
@@ -28,6 +28,7 @@ export interface RequestEvent {
 
 export interface ResolveOpts {
 	ssr?: boolean;
+	transformPage?: ({ html }: { html: string }) => string;
 }
 
 export interface Handle {
@@ -38,7 +39,7 @@ export interface Handle {
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
+> See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
 
 To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
 
@@ -54,24 +55,26 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can add call multiple `handle` functions with [the `sequence` helper function](#modules-sveltejs-kit-hooks).
+You can add call multiple `handle` functions with [the `sequence` helper function](/docs/modules#sveltejs-kit-hooks).
 
 `resolve` also supports a second, optional parameter that gives you more control over how the response will be rendered. That parameter is an object that can have the following fields:
 
-- `ssr` (boolean, default `true`) — specifies whether the page will be loaded and rendered on the server.
+- `ssr: boolean` (default `true`) — if `false`, renders an empty 'shell' page instead of server-side rendering
+- `transformPage(opts: { html: string }): string` — applies custom transforms to HTML
 
 ```js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
-		ssr: !event.url.pathname.startsWith('/admin')
+		ssr: !event.url.pathname.startsWith('/admin'),
+		transformPage: ({ html }) => html.replace('old', 'new')
 	});
 
 	return response;
 }
 ```
 
-> Disabling [server-side rendering](#appendix-ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](#appendix-csr-and-spa). In most situations this is not recommended ([see appendix](#appendix-ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
+> Disabling [server-side rendering](/docs/appendix#ssr) effectively turns your SvelteKit app into a [**single-page app** or SPA](/docs/appendix#csr-and-spa). In most situations this is not recommended ([see appendix](/docs/appendix#ssr)). Consider whether it's truly appropriate to disable it, and do so selectively rather than for all requests.
 
 ### handleError
 
@@ -99,7 +102,7 @@ export async function handleError({ error, event }) {
 
 ### getSession
 
-This function takes the `event` object and returns a `session` object that is [accessible on the client](#modules-$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
+This function takes the `event` object and returns a `session` object that is [accessible on the client](/docs/modules#$app-stores) and therefore must be safe to expose to users. It runs whenever SvelteKit server-renders a page.
 
 If unimplemented, session is `{}`.
 

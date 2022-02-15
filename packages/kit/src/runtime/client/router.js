@@ -1,4 +1,5 @@
 import { onMount } from 'svelte';
+import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
 function scroll_state() {
@@ -188,7 +189,7 @@ export class Router {
 			// This will ensure the `hashchange` event is fired
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
-			if (hash && base === location.href.split('#')[0]) {
+			if (hash !== undefined && base === location.href.split('#')[0]) {
 				// Call `pushState` to add url to history so going back works.
 				// Also make a delay, otherwise the browser default behaviour would not kick in
 				setTimeout(() => history.pushState({}, '', url.href));
@@ -391,14 +392,7 @@ export class Router {
 		}
 		this.navigating++;
 
-		let { pathname } = url;
-
-		if (this.trailing_slash === 'never') {
-			if (pathname !== '/' && pathname.endsWith('/')) pathname = pathname.slice(0, -1);
-		} else if (this.trailing_slash === 'always') {
-			const is_file = /** @type {string} */ (url.pathname.split('/').pop()).includes('.');
-			if (!is_file && !pathname.endsWith('/')) pathname += '/';
-		}
+		const pathname = normalize_path(url.pathname, this.trailing_slash);
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 

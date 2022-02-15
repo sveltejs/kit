@@ -4,17 +4,17 @@ title: Routing
 
 At the heart of SvelteKit is a _filesystem-based router_. This means that the structure of your application is defined by the structure of your codebase — specifically, the contents of `src/routes`.
 
-> You can change this to a different directory by editing the [project config](#configuration).
+> You can change this to a different directory by editing the [project config](/docs/configuration).
 
 There are two types of route — **pages** and **endpoints**.
 
 Pages typically generate HTML to display to the user (as well as any CSS and JavaScript needed for the page). By default, pages are rendered on both the client and server, though this behaviour is configurable.
 
-Endpoints run only on the server (or when you build your site, if [prerendering](#page-options-prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
+Endpoints run only on the server (or when you build your site, if [prerendering](/docs/page-options#prerender)). This means it's the place to do things like access databases or APIs that require private credentials or return data that lives on a machine in your production network. Pages can request data from endpoints. Endpoints return JSON by default, though may also return data in other formats.
 
 ### Pages
 
-Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](#configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
+Pages are Svelte components written in `.svelte` files (or any file with an extension listed in [`config.extensions`](/docs/configuration)). By default, when a user first visits the application, they will be served a server-rendered version of the page in question, plus some JavaScript that 'hydrates' the page and initialises a client-side router. From that point forward, navigating to other pages is handled entirely on the client for a fast, app-like feel where the common portions in the layout do not need to be rerendered.
 
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
@@ -78,9 +78,9 @@ interface Fallthrough {
 }
 ```
 
-> See the [TypeScript](#typescript) section for information on `App.Locals` and `App.Platform`.
+> See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
 
-A page like `src/routes/items/[id].svelte` could get its data from `src/routes/items/[id].js`:
+If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from `src/routes/items/[id].js`:
 
 ```js
 import db from '$lib/database';
@@ -102,7 +102,7 @@ export async function get({ params }) {
 }
 ```
 
-> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](#modules-$lib).
+> All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib).
 
 The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
@@ -111,7 +111,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 - `4xx` — client error
 - `5xx` — server error
 
-> If `{fallthrough: true}` is returned SvelteKit will [fall through](#routing-advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
+> If `{fallthrough: true}` is returned SvelteKit will [fall through](/docs/routing#advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
 The returned `body` corresponds to the page's props:
 
@@ -223,7 +223,7 @@ return {
 
 #### HTTP method overrides
 
-HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](#configuration-methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
+HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](/docs/configuration#methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 
 ```js
 // svelte.config.js
@@ -252,7 +252,7 @@ Most commonly, endpoints exist to provide data to the page with which they're pa
 
 ### Private modules
 
-Files and directories with a leading `_` or `.` (other than [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI)) are private by default, meaning that they do not create routes (but can be imported by files that do). You can configure which modules are considered public or private with the [`routes`](#configuration-routes) configuration.
+Files and directories with a leading `_` or `.` (other than [`.well-known`](https://en.wikipedia.org/wiki/Well-known_URI)) are private by default, meaning that they do not create routes (but can be imported by files that do). You can configure which modules are considered public or private with the [`routes`](/docs/configuration#routes) configuration.
 
 ### Advanced routing
 
@@ -288,6 +288,6 @@ src/routes/[qux].svelte
 src/routes/foo-[bar].svelte
 ```
 
-... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](#loading) or has no `load` function, or an endpoint that returns something — will handle the request.
+... and you navigate to `/foo-xyz`, then SvelteKit will first try `foo-[bar].svelte` because it is the best match. If that yields no response, SvelteKit will try other less specific yet still valid matches for `/foo-xyz`. Since endpoints have higher precedence than pages, the next attempt will be `[baz].js`. Then alphabetical order takes precedence and thus `[baz].svelte` will be tried before `[qux].svelte`. The first route that responds — a page that returns something from [`load`](/docs/loading) or has no `load` function, or an endpoint that returns something — will handle the request.
 
 If no page or endpoint responds to a request, SvelteKit will respond with a generic 404.

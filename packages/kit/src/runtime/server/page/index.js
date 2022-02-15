@@ -6,10 +6,10 @@ import { respond } from './respond.js';
  * @param {import('types/internal').SSRPage} route
  * @param {import('types/internal').SSROptions} options
  * @param {import('types/internal').SSRState} state
- * @param {boolean} ssr
+ * @param {import('types/hooks').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response | undefined>}
  */
-export async function render_page(event, route, options, state, ssr) {
+export async function render_page(event, route, options, state, resolve_opts) {
 	if (state.initiator === route) {
 		// infinite request cycle detected
 		return new Response(`Not found: ${event.url.pathname}`, {
@@ -35,9 +35,9 @@ export async function render_page(event, route, options, state, ssr) {
 		options,
 		state,
 		$session,
+		resolve_opts,
 		route,
-		params: event.params, // TODO this is redundant
-		ssr
+		params: event.params // TODO this is redundant
 	});
 
 	if (response) {

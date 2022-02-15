@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.68
+
+### Patch Changes
+
+- `precompress` option also compress wasm files ([#3812](https://github.com/sveltejs/kit/pull/3812))
+
 ## 1.0.0-next.67
 
 ### Patch Changes
