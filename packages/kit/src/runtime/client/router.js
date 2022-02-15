@@ -192,6 +192,8 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
+				// set this flag to distinguish between navigations triggered by
+				// clicking a hash link and those triggered by popstate
 				this.hash_navigating = true;
 
 				const info = this.parse(url);
@@ -239,6 +241,8 @@ export class Router {
 		});
 
 		addEventListener('hashchange', () => {
+			// if the hashchange happened as a result of clicking on a link,
+			// we need to update history, otherwise we have to leave it alone
 			if (this.hash_navigating) {
 				this.hash_navigating = false;
 				history.replaceState(
