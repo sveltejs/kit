@@ -292,7 +292,7 @@ src/routes/foo-[bar].svelte
 SvelteKit needs to know which route is being requested. To do so, it sorts them according to the following rules...
 
 - More specific routes are higher priority
-- Standalone endpoints have higher priority than equivalently specific pages
+- Standalone endpoints have higher priority than pages with the same specificity
 - Rest parameters have lowest priority
 - Ties are resolved alphabetically
 
