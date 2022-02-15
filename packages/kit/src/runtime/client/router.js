@@ -132,12 +132,6 @@ export class Router {
 			}
 		});
 
-		// Setting scrollRestoration to manual again when returning to this page.
-		// We can probably safely delete this because constructor executes when returned to the page, but we need to test this to be sure, letting it stay for now.
-		addEventListener('load', () => {
-			history.scrollRestoration = 'manual';
-		});
-
 		/** @param {Event} event */
 		const trigger_prefetch = (event) => {
 			const a = find_anchor(event);
