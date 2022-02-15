@@ -66,7 +66,7 @@ export class Router {
 		if (history.state?.['sveltekit:index'] === undefined) {
 			// create initial history entry, so we can return here
 			history.replaceState(
-				{ ...(history.state || {}), 'sveltekit:index': this.current_history_index },
+				{ ...history.state, 'sveltekit:index': this.current_history_index },
 				'',
 				location.href
 			);
