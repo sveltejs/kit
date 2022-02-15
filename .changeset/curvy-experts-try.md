@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fixes a inconsistent render on client/server-side (URL)
+Make shadow endpoint `event.url` consistent between server and client navigation
