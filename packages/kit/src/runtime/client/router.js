@@ -55,13 +55,27 @@ export class Router {
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
 
+		history.scrollRestoration = 'manual';
+
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		/** @type {number} */
-		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
+		this.current_history_index = Number(
+			sessionStorage.getItem('sveltekit:index') ?? history.state?.['sveltekit:index'] ?? 0
+		);
 
-		if (this.current_history_index === 0) {
+		if (!history.state || history.state['sveltekit:index'] == undefined) {
 			// create initial history entry, so we can return here
-			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+			history.replaceState(
+				{ ...(history.state || {}), 'sveltekit:index': this.current_history_index },
+				'',
+				location.href
+			);
+		} else if (performance.navigation?.type === 2) {
+			// performance.navigation.type is deprecated, but it's the only way to safely detect return to page
+			// and even if it's not supported, the only thing not working is ability to restore scroll state
+			// when returned to the page from different origin
+			const scroll = this.#get_scroll_position(this.current_history_index);
+			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
 
 		this.callbacks = {
@@ -73,7 +87,7 @@ export class Router {
 		};
 	}
 
-	save_scroll_position() {
+	#save_scroll_position() {
 		sessionStorage.setItem(
 			`sveltekit:scroll:${this.current_history_index}`,
 			JSON.stringify(scroll_state())
@@ -84,10 +98,8 @@ export class Router {
 	 * @param {number} index
 	 * @returns {{x: number, y: number} | null}
 	 */
-	get_scroll_position(index) {
-		if (index == undefined) {
-			return null;
-		}
+	#get_scroll_position(index) {
+		if (index == undefined) return null;
 		const scroll = sessionStorage.getItem(`sveltekit:scroll:${index}`);
 		if (scroll) {
 			return JSON.parse(scroll);
@@ -97,10 +109,6 @@ export class Router {
 	}
 
 	init_listeners() {
-		if ('scrollRestoration' in history) {
-			history.scrollRestoration = 'manual';
-		}
-
 		// Adopted from Nuxt.js
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
 		// and back-navigation from other pages to use the browser to restore the
@@ -120,11 +128,12 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
-				history.scrollRestoration = 'auto';
+				sessionStorage.setItem('sveltekit:index', String(this.current_history_index));
 			}
 		});
 
 		// Setting scrollRestoration to manual again when returning to this page.
+		// We can probably safely delete this because constructor executes when returned to the page, but we need to test this to be sure, letting it stay for now.
 		addEventListener('load', () => {
 			history.scrollRestoration = 'manual';
 		});
@@ -195,7 +204,7 @@ export class Router {
 			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
 			const [base, hash] = url.href.split('#');
 			if (hash !== undefined && base === location.href.split('#')[0]) {
-				this.save_scroll_position();
+				this.#save_scroll_position();
 
 				// Call `replaceState` in timeout because this event will add pushState automatically and we need to store our own history state
 				// Timeout is being used to delay replaceState till next tick
@@ -233,11 +242,11 @@ export class Router {
 				// with history.go, which means we end up back here, hence this check
 				if (event.state['sveltekit:index'] === this.current_history_index) return;
 
-				this.save_scroll_position();
+				this.#save_scroll_position();
 
 				this._navigate({
 					url: new URL(location.href),
-					scroll: this.get_scroll_position(event.state['sveltekit:index']),
+					scroll: this.#get_scroll_position(event.state['sveltekit:index']),
 					keepfocus: false,
 					chain: [],
 					details: null,
@@ -400,7 +409,7 @@ export class Router {
 			});
 		}
 
-		this.save_scroll_position();
+		this.#save_scroll_position();
 		accepted();
 
 		if (!this.navigating) {
