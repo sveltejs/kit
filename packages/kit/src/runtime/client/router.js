@@ -203,17 +203,19 @@ export class Router {
 			if (hash !== undefined && base === location.href.split('#')[0]) {
 				this.#save_scroll_position();
 
-				event.preventDefault();
-
-				this.renderer.stores.page.subscribe((page) => {
-					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
-					location.hash = url.hash;
+				// Call `replaceState` in Promise.resolve because this event will add pushState automatically and we need to store our own history state
+				// Promise.resolve is being used to delay replaceState till next tick
+				Promise.resolve(() => {
 					history.replaceState(
 						{ ...history.state, 'sveltekit:index': ++this.current_history_index },
 						'',
 						location.href
 					);
-				})();
+				});
+				const info = this.parse(url);
+				if (info) {
+					return this.renderer.update(info, [], false);
+				}
 				return;
 			}
 
