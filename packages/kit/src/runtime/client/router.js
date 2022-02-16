@@ -12,7 +12,7 @@ const SCROLL_KEY = 'sveltekit:scroll';
 /** @type {Record<number, ScrollPosition>} */
 let scroll_positions = {};
 try {
-	scroll_positions = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}');
+	scroll_positions = JSON.parse(sessionStorage[SCROLL_KEY]);
 } catch {
 	// do nothing
 }
@@ -125,7 +125,7 @@ export class Router {
 				this.#update_scroll_positions();
 
 				try {
-					sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
+					sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
 				} catch {
 					// do nothing
 				}
