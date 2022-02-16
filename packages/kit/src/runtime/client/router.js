@@ -111,9 +111,14 @@ export class Router {
 				e.preventDefault();
 				e.returnValue = '';
 			} else {
+				history.scrollRestoration = 'auto';
+			}
+		});
+
+		addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'hidden') {
 				scroll_positions[this.current_history_index] = scroll_state();
 				sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
-				history.scrollRestoration = 'auto';
 			}
 		});
 
