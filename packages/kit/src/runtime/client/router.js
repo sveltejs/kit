@@ -115,7 +115,7 @@ export class Router {
 
 		addEventListener('visibilitychange', () => {
 			if (document.visibilityState === 'hidden') {
-				scroll_positions[this.current_history_index] = scroll_state();
+				this.#update_scroll_positions();
 				sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
 			}
 		});
@@ -190,6 +190,8 @@ export class Router {
 				// clicking a hash link and those triggered by popstate
 				this.hash_navigating = true;
 
+				this.#update_scroll_positions();
+
 				const info = this.parse(url);
 				if (info) {
 					return this.renderer.update(info, [], false);
@@ -246,6 +248,10 @@ export class Router {
 				);
 			}
 		});
+	}
+
+	#update_scroll_positions() {
+		scroll_positions[this.current_history_index] = scroll_state();
 	}
 
 	/**
@@ -395,7 +401,7 @@ export class Router {
 			});
 		}
 
-		scroll_positions[this.current_history_index] = scroll_state();
+		this.#update_scroll_positions();
 
 		accepted();
 
