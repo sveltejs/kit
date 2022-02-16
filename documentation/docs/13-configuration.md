@@ -89,7 +89,7 @@ Required when running `svelte-kit build` and determines how the output is conver
 
 ### amp
 
-Enable [AMP](/docs/amp) mode.
+Enable [AMP](/docs/seo#amp) mode.
 
 ### appDir
 
