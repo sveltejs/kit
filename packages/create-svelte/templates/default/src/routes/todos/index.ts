@@ -2,8 +2,13 @@ import { api } from './_api';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const get: RequestHandler = async ({ request, locals }) => {
+	// the API needs a request instance where the method is GET.
+	// when this endpoint is called to render a page after a POST,
+	// the original request method is POST, not GET.
+	const api_request = new Request(request.url);
+
 	// locals.userid comes from src/hooks.js
-	const response = await api(request, `todos/${locals.userid}`);
+	const response = await api(api_request, `todos/${locals.userid}`);
 
 	if (response.status === 404) {
 		// user hasn't created a todo list.
@@ -31,22 +36,37 @@ export const get: RequestHandler = async ({ request, locals }) => {
 export const post: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}`, {
+	const response = await api(request, `todos/${locals.userid}`, {
 		text: form.get('text')
 	});
+
+	return {
+		status: response.status,
+		body: await response.json()
+	};
 };
 
 export const patch: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}/${form.get('uid')}`, {
+	const response = await api(request, `todos/${locals.userid}/${form.get('uid')}`, {
 		text: form.has('text') ? form.get('text') : undefined,
 		done: form.has('done') ? !!form.get('done') : undefined
 	});
+
+	return {
+		status: response.status,
+		body: await response.json()
+	};
 };
 
 export const del: RequestHandler = async ({ request, locals }) => {
 	const form = await request.formData();
 
-	return api(request, `todos/${locals.userid}/${form.get('uid')}`);
+	const response = await api(request, `todos/${locals.userid}/${form.get('uid')}`);
+
+	return {
+		status: response.status,
+		body: await response.json()
+	};
 };
