@@ -4,7 +4,7 @@ title: SEO
 
 The most important aspect of SEO is to create high-quality content that is widely linked to from around the web. However, there are a few technical considerations for building sites that rank well.
 
-### Zero config SEO benefits
+### Out of the box
 
 #### SSR
 
