@@ -14,9 +14,7 @@ While search engines have got better in recent years at indexing content that wa
 
 #### Performance
 
-Search engines take site performance into account as a ranking factor. [Web Vitals](https://web.dev/vitals/) is a term coined by Google to provide performance metrics regarding a site's load speed. [Google takes the Core Web Vitals into account](https://developers.google.com/search/blog/2020/11/timing-for-page-experience) in deciding which sites to show at the top of the rankings.
-
-SvelteKit is optimized to give great scores out-of-the-box. Check out [how this site performs on Google PageSpeed Insights](https://pagespeed.web.dev/report?url=https%3A%2F%2Fkit.svelte.dev%2F). We invite you to compare against sites built with other frameworks. If scores on your site are not high, we recommend trying to minimize the size of included dependencies and to use the developer tools provided by your browser to diagnose.
+Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites.
 
 #### Normalized URLs
 
