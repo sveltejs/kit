@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.276
+
+### Patch Changes
+
+- Track scroll position without scroll listener, and recover on reload ([#3938](https://github.com/sveltejs/kit/pull/3938))
+
 ## 1.0.0-next.275
 
 ### Patch Changes
