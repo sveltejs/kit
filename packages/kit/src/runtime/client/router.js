@@ -2,15 +2,13 @@ import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
-const SCROLL_KEY = 'sveltekit:scroll';
-
-/** @typedef {{ x: number, y: number }} ScrollPosition */
-
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
 // state we're navigating from
+const SCROLL_KEY = 'sveltekit:scroll';
 
+/** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
 let scroll_positions = {};
 try {
