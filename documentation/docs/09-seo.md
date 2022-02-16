@@ -14,7 +14,7 @@ While search engines have got better in recent years at indexing content that wa
 
 #### Performance
 
-Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites.
+Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impact search engine ranking. Because Svelte and SvelteKit introduce minimal overhead, it's easier to build high performance sites. You can test your site's performance using [Google's PageSpeed Insights](https://pagespeed.web.dev/) or the [Lighthouse](https://developers.google.com/web/tools/lighthouse).
 
 #### Normalized URLs
 
@@ -74,7 +74,7 @@ export async function get() {
 
 #### AMP
 
-An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages](https://amp.dev/) (AMP) version of your site. In SvelteKit this can be done by setting the [`amp`](/docs/configuration#amp) config option, which has the following effects:
+An unfortunate reality of modern web development is that it is sometimes necessary to create an [Accelerated Mobile Pages (AMP)](https://amp.dev/) version of your site. In SvelteKit this can be done by setting the [`amp`](/docs/configuration#amp) config option, which has the following effects:
 
 - Client-side JavaScript, including the router, is disabled
 - Styles are concatenated into `<style amp-custom>`, and the [AMP boilerplate](https://amp.dev/boilerplate/) is injected
