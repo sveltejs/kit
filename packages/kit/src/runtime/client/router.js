@@ -324,7 +324,7 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async prefetch(url) {
 		const info = this.parse(url);
