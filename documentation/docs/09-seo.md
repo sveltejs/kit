@@ -40,6 +40,9 @@ export async function get() {
 	return {
 		headers: {
 			'Content-Type': 'application/xml'
+	return {
+		headers: {
+			'Content-Type': 'application/xml'
 		},
 		body: `
 			<?xml version="1.0" encoding="UTF-8" ?>
