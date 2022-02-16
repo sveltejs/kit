@@ -143,6 +143,7 @@ importers:
   packages/adapter-static:
     specifiers:
       '@sveltejs/kit': workspace:*
+      devalue: ^2.0.1
       playwright-chromium: ^1.17.0
       port-authority: ^1.1.2
       sirv: ^2.0.0
@@ -153,6 +154,7 @@ importers:
       tiny-glob: 0.2.9
     devDependencies:
       '@sveltejs/kit': link:../kit
+      devalue: 2.0.1
       playwright-chromium: 1.17.0
       port-authority: 1.1.2
       sirv: 2.0.0

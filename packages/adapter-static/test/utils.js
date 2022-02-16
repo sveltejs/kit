@@ -29,7 +29,8 @@ export function run(app, callback) {
 	suite.before(async (context) => {
 		try {
 			const cwd = fileURLToPath(new URL(`apps/${app}`, import.meta.url));
-			const cli_path = fileURLToPath(new URL('../../kit/dist/cli.js', import.meta.url));
+			const mode = process.env.CI ? 'dist' : 'src';
+			const cli_path = fileURLToPath(new URL(`../../kit/${mode}/cli.js`, import.meta.url));
 
 			rimraf(`${cwd}/build`);
 
