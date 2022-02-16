@@ -473,6 +473,20 @@ test.describe.parallel('Shadowed pages', () => {
 		await clicknav('[href="/shadowed/no-get"]');
 		expect(await page.textContent('h1')).toBe('hello');
 	});
+
+	test('Invalidates shadow data when URL changes', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/dynamic/foo"]');
+		expect(await page.textContent('h1')).toBe('slug: foo');
+
+		await clicknav('[href="/shadowed/dynamic/bar"]');
+		expect(await page.textContent('h1')).toBe('slug: bar');
+
+		await page.goto('/shadowed/dynamic/foo');
+		expect(await page.textContent('h1')).toBe('slug: foo');
+		await clicknav('[href="/shadowed/dynamic/bar"]');
+		expect(await page.textContent('h1')).toBe('slug: bar');
+	});
 });
 
 test.describe.parallel('Endpoints', () => {

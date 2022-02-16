@@ -237,6 +237,7 @@ export class Renderer {
 
 				if (props) {
 					node.uses.dependencies.add(url.href);
+					node.uses.url = true;
 				}
 
 				branch.push(node);
@@ -750,7 +751,9 @@ export class Renderer {
 					/** @type {Record<string, any>} */
 					let props = {};
 
-					if (has_shadow && i === a.length - 1) {
+					const is_shadow_page = has_shadow && i === a.length - 1;
+
+					if (is_shadow_page) {
 						const res = await fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
@@ -788,25 +791,31 @@ export class Renderer {
 						});
 					}
 
-					if (node && node.loaded) {
-						if (node.loaded.fallthrough) {
-							return;
-						}
-						if (node.loaded.error) {
-							status = node.loaded.status;
-							error = node.loaded.error;
+					if (node) {
+						if (is_shadow_page) {
+							node.uses.url = true;
 						}
 
-						if (node.loaded.redirect) {
-							return {
-								redirect: node.loaded.redirect,
-								props: {},
-								state: this.current
-							};
-						}
+						if (node.loaded) {
+							if (node.loaded.fallthrough) {
+								return;
+							}
+							if (node.loaded.error) {
+								status = node.loaded.status;
+								error = node.loaded.error;
+							}
 
-						if (node.loaded.stuff) {
-							stuff_changed = true;
+							if (node.loaded.redirect) {
+								return {
+									redirect: node.loaded.redirect,
+									props: {},
+									state: this.current
+								};
+							}
+
+							if (node.loaded.stuff) {
+								stuff_changed = true;
+							}
 						}
 					}
 				} else {
