@@ -11,13 +11,11 @@ const read = (file) => fs.readFileSync(`${build}/${file}`, 'utf-8');
 test('prerenders /path-base', () => {
 	const content = read('index.html');
 	assert.ok(content.includes('<h1>hello</h1>'));
-	assert.ok(content.includes('http://sveltekit-prerender/path-base'));
 });
 
 test('prerenders nested /path-base', () => {
 	const content = read('nested/index.html');
 	assert.ok(content.includes('<h1>nested hello</h1>'));
-	assert.ok(content.includes('http://sveltekit-prerender/path-base/nested'));
 });
 
 test('adds CSP headers via meta tag', () => {

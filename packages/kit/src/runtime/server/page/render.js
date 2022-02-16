@@ -177,7 +177,6 @@ export async function render_response({
 					.map(({ node }) => `import(${s(options.prefix + node.entry)})`)
 					.join(',\n\t\t\t\t\t\t')}
 				],
-				url: new URL(${s(url.href)}),
 				params: ${devalue(params)}
 			}` : 'null'}
 		});

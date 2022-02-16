@@ -44,6 +44,8 @@ You can run the test server with `cd packages/kit/test/apps/basics; pnpm run dev
 
 You may need to install some dependencies first, e.g. with `npx playwright install-deps` (which only works on Ubuntu).
 
+If there are tests that fail on the CI, you can retrieve the failed screenshots by going to the summary page of the CI run. You can usually find this by clicking on "Details" of the check results, click "Summary" at the top-left corner, and then scroll to the bottom "Artifacts" section to download the archive.
+
 ## Working on Vite and other dependencies
 
 If you would like to test local changes to Vite or another dependency, you can build it and then use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:

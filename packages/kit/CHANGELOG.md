@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 1.0.0-next.274
+
+### Patch Changes
+
+- Set `$page.url` to current URL in browser ([#3942](https://github.com/sveltejs/kit/pull/3942))
+
+## 1.0.0-next.273
+
+### Patch Changes
+
+- Correctly identify readable node streams ([#3941](https://github.com/sveltejs/kit/pull/3941))
+
+* remove 'Shadow' from error message ([#3943](https://github.com/sveltejs/kit/pull/3943))
+
 ## 1.0.0-next.272
 
 ### Patch Changes
