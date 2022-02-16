@@ -74,7 +74,7 @@ The stores themselves attach to the correct context at the point of subscription
 
 ### $lib
 
-This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`]. It allows you to access common components and utility modules without `../../../../` nonsense.
+This is a simple alias to `src/lib`, or whatever directory is specified as [`config.kit.files.lib`](/docs/configuration#files). It allows you to access common components and utility modules without `../../../../` nonsense.
 
 ### $service-worker
 
@@ -112,7 +112,10 @@ export const handle = sequence(first, second);
 ```
 
 The example above would print:
->first pre-processing
->second pre-processing
->second post-processing
->first post-processing
+
+```
+first pre-processing
+second pre-processing
+second post-processing
+first post-processing
+```
