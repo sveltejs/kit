@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.275
+
+### Patch Changes
+
+- Invalidate shadow endpoint data when URL changes ([#3925](https://github.com/sveltejs/kit/pull/3925))
+
 ## 1.0.0-next.274
 
 ### Patch Changes
