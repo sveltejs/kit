@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.274
+
+### Patch Changes
+
+- Set `$page.url` to current URL in browser ([#3942](https://github.com/sveltejs/kit/pull/3942))
+
 ## 1.0.0-next.273
 
 ### Patch Changes
