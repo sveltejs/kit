@@ -20,11 +20,13 @@ Signals such as [Core Web Vitals](https://web.dev/vitals/#core-web-vitals) impac
 
 SvelteKit redirects URLs with trailing slashes to versions without trailing slash or vice versa depending on your [configuration](configuration#trailingslash).
 
-### SEO setup
+### Manual setup
 
-#### `meta` tags
+#### `title` and `meta`
 
-It is generally recommended to add `meta` HTML tags to your page. These can be created just as any other Svelte element. The Svelte Society website has an [example](https://github.com/svelte-society/sveltesociety.dev/blob/staging/src/lib/components/Seo.svelte). You may also find the [`stuff`](loading#input-stuff) feature as helpful for constructing `meta` tags in some cases where you want to pass content from a page to a layout.
+Every page should have well-written and unique `<title>` and `<meta name="description">` elements inside a [`<svelte:head>`](https://svelte.dev/docs#template-syntax-svelte-head). Guidance on how to write descriptive titles and descriptions, along with other suggestions on making content understandable by search engines, can be found on Google's [Lighthouse SEO audits](https://web.dev/lighthouse-seo/) documentation.
+
+> A common pattern is to return SEO-related [`stuff`](/docs/loading#output-stuff) from page `load` functions, then use it (as [`$page.stuff`](/docs/modules#$app-stores)) in a `<svelte:head>` in your root [layout](/docs/layouts).
 
 #### Structured data
 
