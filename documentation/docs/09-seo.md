@@ -28,13 +28,8 @@ It is generally recommended to add `meta` HTML tags to your page. These can be c
 
 #### Structured data
 
-There is not too much special you need to do in SvelteKit to provide structured data, so we recommend that you reference [Google's documentation regarding structured data](https://developers.google.com/search/docs/advanced/structured-data/intro-structured-data). If you're using `svelte-preprocess`, please note that [you'll currently need to use the `preserve` option](https://github.com/sveltejs/svelte-preprocess/issues/305):
+[Structured data](https://developers.google.com/search/docs/advanced/structured-data/intro-structured-data) helps search engines understand the content of a page. If you're using structured data alongside [`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess), you will need to explicitly preserve `ld+json` data (this [may change in future](https://github.com/sveltejs/svelte-preprocess/issues/305)):
 
-```
-	preprocess: sveltePreprocess({
-		preserve: ['ld+json']
-	})
-```
 
 #### Sitemaps
 
