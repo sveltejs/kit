@@ -98,6 +98,7 @@ export async function create_plugin(config, cwd) {
 									entry: url.endsWith('.svelte') ? url : url + '?import',
 									css: [],
 									js: [],
+									// in dev we inline all styles to avoid FOUC
 									styles
 								};
 							};

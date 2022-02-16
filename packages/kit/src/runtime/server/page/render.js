@@ -146,7 +146,7 @@ export async function render_response({
 
 	let { head, html: body } = rendered;
 
-	const rendered_styles = Array.from(styles.values()).join('\n');
+	const inlined_style = Array.from(styles.values()).join('\n');
 
 	await csp_ready;
 	const csp = new Csp(options.csp, {
@@ -190,12 +190,15 @@ export async function render_response({
 	`;
 
 	if (options.amp) {
+		// inline_style contains CSS files (i.e. `import './styles.css'`)
+		// rendered.css contains the CSS from `<style>` tags in Svelte components
+		const styles = `${inlined_style}\n${rendered.css.code}`;
 		head += `
 		<style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style>
 		<noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
 		<script async src="https://cdn.ampproject.org/v0.js"></script>
 
-		<style amp-custom>${rendered_styles}\n${rendered.css.code}</style>`;
+		<style amp-custom>${styles}</style>`;
 
 		if (options.service_worker) {
 			head +=
@@ -204,14 +207,14 @@ export async function render_response({
 			body += `<amp-install-serviceworker src="${options.service_worker}" layout="nodisplay"></amp-install-serviceworker>`;
 		}
 	} else {
-		if (rendered_styles) {
+		if (inlined_style) {
 			const attributes = [];
 			if (options.dev) attributes.push(' data-svelte');
 			if (csp.style_needs_nonce) attributes.push(` nonce="${csp.nonce}"`);
 
-			csp.add_style(rendered_styles);
+			csp.add_style(inlined_style);
 
-			head += `\n\t<style${attributes.join('')}>${rendered_styles}</style>`;
+			head += `\n\t<style${attributes.join('')}>${inlined_style}</style>`;
 		}
 
 		// prettier-ignore
@@ -227,6 +230,8 @@ export async function render_response({
 				}
 
 				if (styles.has(dep)) {
+					// don't load stylesheets that are already inlined
+					// include them in disabled state so that Vite can detect them and doesn't try to add them
 					attributes.push('disabled', 'media="(max-width: 0)"');
 				}
 
