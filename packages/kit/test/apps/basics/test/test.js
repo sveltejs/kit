@@ -253,6 +253,19 @@ test.describe('Scrolling', () => {
 		expect(await in_view('#input')).toBe(true);
 		expect(await page.locator('#input')).toBeFocused();
 	});
+
+	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
+		await page.goto('/anchor');
+		await page.evaluate(() => window.scrollTo(0, 1000));
+		await app.goto('/anchor/anchor');
+		await page.evaluate(() => window.scrollTo(0, 1000));
+
+		await page.reload();
+		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+
+		await back();
+		expect(await page.evaluate(() => window.scrollY)).toBe(1000);
+	});
 });
 
 test.describe.parallel('Imports', () => {
