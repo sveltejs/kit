@@ -18,7 +18,7 @@ Search engines take site performance into account as a ranking factor. [Web Vita
 
 SvelteKit is optimized to give great scores out-of-the-box. Check out [how this site performs on Google PageSpeed Insights](https://pagespeed.web.dev/report?url=https%3A%2F%2Fkit.svelte.dev%2F). We invite you to compare against sites built with other frameworks. If scores on your site are not high, we recommend trying to minimize the size of included dependencies and to use the developer tools provided by your browser to diagnose.
 
-#### Canonicalized URLs
+#### Normalized URLs
 
 SvelteKit redirects URLs with trailing slashes to versions without trailing slash or vice versa depending on your [configuration](configuration#trailingslash).
 
