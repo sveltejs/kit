@@ -39,7 +39,7 @@ A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte
 <p>TODO...</p>
 ```
 
-Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`.
+Dynamic parameters are encoded using `[brackets]`. For example, a blog post might be defined by `src/routes/blog/[slug].svelte`. These parameters can be accessed in a [`load`](/docs/loading#input-params) function or via the [`page`](/docs/modules#$app-stores) store.
 
 A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
 
