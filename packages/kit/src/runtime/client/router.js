@@ -4,6 +4,10 @@ import { get_base_uri } from './utils';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 
+// We track the scroll position associated with each history entry in sessionStorage,
+// rather than on history.state itself, because when navigation is driven by
+// popstate it's too late to update the scroll position associated with the
+// state we're navigating from
 const scroll_positions = JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}');
 
 function scroll_state() {
