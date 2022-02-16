@@ -11,18 +11,12 @@
 
 const base = 'https://api.svelte.dev';
 
-export async function api(method: string, resource: string, data?: Record<string, unknown>) {
-	const res = await fetch(`${base}/${resource}`, {
+export function api(method: string, resource: string, data?: Record<string, unknown>) {
+	return fetch(`${base}/${resource}`, {
 		method,
 		headers: {
 			'content-type': 'application/json'
 		},
 		body: data && JSON.stringify(data)
 	});
-
-	return {
-		status: res.status,
-		headers: res.headers,
-		body: await res.json()
-	};
 }
