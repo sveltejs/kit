@@ -88,9 +88,7 @@ export class Router {
 	}
 
 	init_listeners() {
-		if ('scrollRestoration' in history) {
-			history.scrollRestoration = 'manual';
-		}
+		history.scrollRestoration = 'manual';
 
 		// Adopted from Nuxt.js
 		// Reset scrollRestoration to auto when leaving page, allowing page reload
@@ -121,14 +119,6 @@ export class Router {
 				sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
 			}
 		});
-
-		// Setting scrollRestoration to manual again when returning to this page.
-		addEventListener('load', () => {
-			history.scrollRestoration = 'manual';
-		});
-
-		// There's no API to capture the scroll location right before the user
-		// hits the back/forward button, so we listen for scroll events
 
 		/** @param {Event} event */
 		const trigger_prefetch = (event) => {
