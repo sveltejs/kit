@@ -33,28 +33,29 @@ It is generally recommended to add `meta` HTML tags to your page. These can be c
 
 #### Sitemaps
 
-Sitemaps can be used to help search engines properly prioritize crawling on your site and are most useful when your site is really large. Frontend frameworks have no way of knowing what content on your site might have been recently added or updated, so this is largely something you'll have to create yourself. You can create an endpoint that dynamically generates a sitemap according to [the sitemap specification](https://www.sitemaps.org/protocol.html) by reading from your content source such as an API or database and then outputting the appropriate XML content. If you're building a site hosting video, images, or news you may also want to consider adding [sitemap extensions](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap#extensions).
+[Sitemaps](https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap) help search engines prioritize pages within your site, particularly when you have a large amount of content. You can create a sitemap dynamically using a `src/routes/sitemap.xml.js` endpoint:
 
-Here's a `src/routes/sitemap.xml.js` endpoint that returns an empty sitemap with multimedia support to get you started:
 ```js
 export async function get() {
-	const headers = {
-		'Content-Type': 'application/xml',
-	};
 	return {
-		headers,
-		body: `<?xml version="1.0" encoding="UTF-8" ?>
-		<urlset
-			xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-			xmlns:xhtml="https://www.w3.org/1999/xhtml"
-			xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
-			xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
-			xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
-			xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
-		></urlset>`,
+		headers: {
+			'Content-Type': 'application/xml'
+		},
+		body: `
+			<?xml version="1.0" encoding="UTF-8" ?>
+			<urlset
+				xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
+				xmlns:xhtml="https://www.w3.org/1999/xhtml"
+				xmlns:mobile="https://www.google.com/schemas/sitemap-mobile/1.0"
+				xmlns:news="https://www.google.com/schemas/sitemap-news/0.9"
+				xmlns:image="https://www.google.com/schemas/sitemap-image/1.1"
+				xmlns:video="https://www.google.com/schemas/sitemap-video/1.1"
+			>
+				<!-- <url> elements go here -->
+			</urlset>
+		`.trim()
 	};
 }
-```
 
 #### AMP
 
