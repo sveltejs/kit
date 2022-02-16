@@ -32,20 +32,6 @@ export function decode_params(params) {
 	return params;
 }
 
-/** @param {any} obj **/
-function is_readable_node_stream(obj) {
-	// Copied from nodejs sources
-	return !!(
-		(
-			obj &&
-			typeof obj.pipe === 'function' &&
-			typeof obj.on === 'function' &&
-			(!obj._writableState || obj._readableState?.readable !== false) && // Duplex
-			(!obj._writableState || obj._readableState)
-		) // Writable has .pipe.
-	);
-}
-
 /** @param {any} body */
 export function is_pojo(body) {
 	if (typeof body !== 'object') return false;
@@ -53,7 +39,9 @@ export function is_pojo(body) {
 	if (body) {
 		if (body instanceof Uint8Array) return false;
 
-		if (is_readable_node_stream(body)) return false;
+		// body could be a node Readable, but we don't want to import
+		// node built-ins, so we use duck typing
+		if (body._readableState && typeof body.pipe === 'function') return false;
 
 		// similarly, it could be a web ReadableStream
 		if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) return false;
