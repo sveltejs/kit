@@ -63,7 +63,7 @@ jobs:
       - name: archive test results
         if: failure()
         shell: bash
-        run: find . -type d -name test-results | tar -czf test-results.tar.gz --exclude='*-retry*' --files-from=-
+        run: find packages -type d -name test-results -not -empty | tar -czf test-results.tar.gz --exclude='*-retry*' --files-from=-
       - name: Upload failed tests screenshots
         if: failure()
         uses: actions/upload-artifact@v2
