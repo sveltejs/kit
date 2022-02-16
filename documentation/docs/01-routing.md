@@ -43,6 +43,15 @@ Dynamic parameters are encoded using `[brackets]`. For example, a blog post migh
 
 A file or directory can have multiple dynamic parts, like `[id]-[category].svelte`. (Parameters are 'non-greedy'; in an ambiguous case like `x-y-z`, `id` would be `x` and `category` would be `y-z`.)
 
+The slug values can be accessed via the `params` object of the page store:
+```html
+<!-- src/routes/blog/[postId].svelte -->
+<script>
+	import { page } from '$app/stores';
+</script>
+{$page.params.postId}
+```
+
 ### Endpoints
 
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
