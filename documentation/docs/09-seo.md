@@ -8,7 +8,9 @@ The most important aspect of SEO is to create high-quality content that is widel
 
 #### SSR
 
-By default, SvelteKit does server-side rendering. While some search engines can index client-side content, not all do. For those that do, there will often be a larger delay between publishing content and having it indexed with client-side rendering compared to server-side rendering. Thus, it is recommended that you leave SSR on for best results. SvelteKit offers highly configurable rendering that will allow you to do things like [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) where you serve server-side rendered pages to search engines and client-rendered pages to your users. This is not necessarily something that we recommend for a number of reasons such as the increased possibility of having breakages visible only to search engines, the difficulty in creating an exhaustive whitelist of search engine user agents, and a worse experience for users with JavaScript disabled. However, the fact that it would be fairly easy to setup does show off SvelteKit's abilities rather well.
+While search engines have got better in recent years at indexing content that was rendered with client-side JavaScript, server-side rendered content is indexed more frequently and reliably. SvelteKit employs SSR by default, and while you can disable it in [`handle`](/docs/hooks#handle), you should leave it on unless you have a good reason not to.
+
+> SvelteKit's rendering is highly configurable and you can implement [dynamic rendering](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering) if necessary. It's not generally recommended, since SSR has other benefits beyond SEO.
 
 #### Performance
 
