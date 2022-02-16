@@ -13,7 +13,9 @@ const SCROLL_KEY = 'sveltekit:scroll';
 let scroll_positions = {};
 try {
 	scroll_positions = JSON.parse(/** @type {string} */ (sessionStorage.getItem(SCROLL_KEY)));
-} catch {}
+} catch {
+	// do nothing
+}
 
 function scroll_state() {
 	return {
@@ -124,7 +126,9 @@ export class Router {
 
 				try {
 					sessionStorage.setItem(SCROLL_KEY, JSON.stringify(scroll_positions));
-				} catch {}
+				} catch {
+					// do nothing
+				}
 			}
 		});
 
