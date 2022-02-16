@@ -382,7 +382,7 @@ async function load_shadow_data(route, event, options, prerender) {
 		const mod = await route.shadow();
 
 		if (prerender && (mod.post || mod.put || mod.del || mod.patch)) {
-			throw new Error('Cannot prerender pages that have shadow endpoints with mutative methods');
+			throw new Error('Cannot prerender pages that have endpoints with mutative methods');
 		}
 
 		const method = normalize_request_method(event);
@@ -489,7 +489,7 @@ function validate_shadow_output(result) {
 	if (headers instanceof Headers) {
 		if (headers.has('set-cookie')) {
 			throw new Error(
-				'Shadow endpoint request handler cannot use Headers interface with Set-Cookie headers'
+				'Endpoint request handler cannot use Headers interface with Set-Cookie headers'
 			);
 		}
 	} else {
@@ -497,7 +497,7 @@ function validate_shadow_output(result) {
 	}
 
 	if (!is_pojo(body)) {
-		throw new Error('Body returned from shadow endpoint request handler must be a plain object');
+		throw new Error('Body returned from endpoint request handler must be a plain object');
 	}
 
 	return { status, headers, body };
