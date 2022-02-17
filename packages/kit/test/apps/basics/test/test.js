@@ -2112,6 +2112,15 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing/rest/complex/prefix-one/two/three');
 		expect(await page.textContent('h1')).toBe('parts: one/two/three');
 	});
+
+	test('links to unmatched routes result in a full page navigation, not a 404', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing');
+		await clicknav('[href="/static.json"]');
+		expect(await page.textContent('body')).toBe('"static file"\n');
+	});
 });
 
 test.describe.parallel('Session', () => {

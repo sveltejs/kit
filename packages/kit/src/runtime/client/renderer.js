@@ -149,7 +149,7 @@ export class Renderer {
 		/** @type {Map<string, import('./types').NavigationResult>} */
 		this.cache = new Map();
 
-		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult> | null}} */
+		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
 		this.loading = {
 			id: null,
 			promise: null
@@ -316,6 +316,11 @@ export class Renderer {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
+		if (!navigation_result) {
+			location.href = info.url.href;
+			return;
+		}
+
 		// abort if user navigated during update
 		if (token !== this.token) return;
 
@@ -411,7 +416,7 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	load(info) {
 		this.loading.promise = this._get_navigation_result(info, false);
@@ -471,7 +476,7 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {boolean} no_cache
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id && this.loading.promise) {
@@ -504,11 +509,13 @@ export class Renderer {
 			if (result) return result;
 		}
 
-		return await this._load_error({
-			status: 404,
-			error: new Error(`Not found: ${info.url.pathname}`),
-			url: info.url
-		});
+		if (info.initial) {
+			return await this._load_error({
+				status: 404,
+				error: new Error(`Not found: ${info.url.pathname}`),
+				url: info.url
+			});
+		}
 	}
 
 	/**

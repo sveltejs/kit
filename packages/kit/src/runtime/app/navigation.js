@@ -45,8 +45,8 @@ async function invalidate_(resource) {
 /**
  * @type {import('$app/navigation').prefetch}
  */
-function prefetch_(href) {
-	return router.prefetch(new URL(href, get_base_uri(document)));
+async function prefetch_(href) {
+	await router.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**

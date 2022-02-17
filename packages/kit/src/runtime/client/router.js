@@ -66,6 +66,7 @@ export class Router {
 		renderer.router = this;
 
 		this.enabled = true;
+		this.initialized = false;
 
 		// make it possible to reset focus
 		document.body.setAttribute('tabindex', '-1');
@@ -257,6 +258,8 @@ export class Router {
 				);
 			}
 		});
+
+		this.initialized = true;
 	}
 
 	#update_scroll_positions() {
@@ -283,7 +286,8 @@ export class Router {
 				id: url.pathname + url.search,
 				routes: this.routes.filter(([pattern]) => pattern.test(path)),
 				url,
-				path
+				path,
+				initial: !this.initialized
 			};
 		}
 	}
@@ -333,7 +337,7 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult>}
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async prefetch(url) {
 		const info = this.parse(url);
