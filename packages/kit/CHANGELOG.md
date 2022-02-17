@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.278
+
+### Patch Changes
+
+- [breaking] Crawl rel="external" links when prerendering ([#3826](https://github.com/sveltejs/kit/pull/3826))
+
 ## 1.0.0-next.277
 
 ### Patch Changes
