@@ -204,10 +204,9 @@ export class Router {
 
 				this.#update_scroll_positions();
 
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
-				}
+				this.renderer.stores.page.subscribe((page) => {
+					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+				})();
 				return;
 			}
 
