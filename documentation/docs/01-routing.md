@@ -47,46 +47,21 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
-```ts
-// Type declarations for endpoints (declarations marked with
-// an `export` keyword can be imported from `@sveltejs/kit`)
-
-export interface RequestHandler<Output = Record<string, any>> {
-	(event: RequestEvent): MaybePromise<
-		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
-	>;
-}
-
-export interface RequestEvent {
-	request: Request;
-	url: URL;
-	params: Record<string, string>;
-	locals: App.Locals;
-	platform: App.Platform;
-}
-
-export interface EndpointOutput<Output = Record<string, any>> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Record<string, any>;
-}
-
-type MaybePromise<T> = T | Promise<T>;
-
-interface Fallthrough {
-	fallthrough: true;
-}
-```
-
-> See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
-
 If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from `src/routes/items/[id].js`:
 
 ```js
+// @filename: ambient.d.ts
+declare module '$lib/database' {
+	type Item = {};
+	export const get: (id: string) => Promise<Item>;
+}
+
+// @filename: index.js
+// ---cut---
 import db from '$lib/database';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export async function get({ params }) {
+export const get = async ({ params }) => {
 	// `params.id` comes from [id].js
 	const item = await db.get(params.id);
 
@@ -99,7 +74,7 @@ export async function get({ params }) {
 	return {
 		status: 404
 	};
-}
+};
 ```
 
 > All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib).
@@ -129,6 +104,7 @@ The returned `body` corresponds to the page's props:
 Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
 
 ```js
+// @noErrors
 export function post(event) {...}
 export function put(event) {...}
 export function patch(event) {...}
@@ -138,9 +114,20 @@ export function del(event) {...} // `delete` is a reserved word
 These functions can, like `get`, return a `body` that will be passed to the page as props. Whereas 4xx/5xx responses from `get` will result in an error page rendering, similar responses to non-GET requests do not, allowing you to do things like render form validation errors:
 
 ```js
+// @filename: ambient.d.ts
+declare module '$lib/database' {
+	type Item = { id: string };
+	type Error = {};
+	export const list: () => Promise<Item[]>;
+	export const create: (request: Request) => Promise<[Error[], Item]>;
+}
+
+// @filename: index.js
+// ---cut---
 // src/routes/items.js
 import * as db from '$lib/database';
 
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get() {
 	const items = await db.list();
 
@@ -149,6 +136,7 @@ export async function get() {
 	};
 }
 
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function post({ request }) {
 	const [errors, item] = await db.create(request);
 
@@ -204,8 +192,21 @@ If you request the route with an `accept: application/json` header, SvelteKit wi
 The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
 ```js
+// @filename: ambient.d.ts
+declare global {
+	const create: (data: any) => any;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function post({ request }) {
 	const data = await request.formData(); // or .json(), or .text(), etc
+
+	const item = await create(data);
+	return { status: 201 };
 }
 ```
 
@@ -214,11 +215,23 @@ export async function post({ request }) {
 Endpoints can set cookies by returning a `headers` object with `set-cookie`. To set multiple cookies simultaneously, return an array:
 
 ```js
-return {
-	headers: {
-		'set-cookie': [cookie1, cookie2]
-	}
-};
+// @filename: ambient.d.ts
+declare global {
+	const cookie1: string;
+	const cookie2: string;
+}
+
+export {};
+
+/** @type {import('@sveltejs/kit').RequestHandler} */
+// ---cut---
+export function get() {
+	return {
+		headers: {
+			'set-cookie': [cookie1, cookie2]
+		}
+	};
+}
 ```
 
 #### HTTP method overrides
@@ -267,6 +280,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 ...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
 
 ```js
+// @noErrors
 {
 	org: 'sveltejs',
 	repo: 'kit',
@@ -326,6 +340,9 @@ Higher priority routes can _fall through_ to lower priority routes by returning 
 ```
 
 ```js
+// @errors: 2366
+/** @type {import('@sveltejs/kit').RequestHandler} */
+// ---cut---
 // src/routes/[a].js
 export function get({ params }) {
 	if (params.a === 'foo-def') {

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
@@ -20,6 +21,8 @@ const languages = {
 
 const base = '../../documentation';
 
+const highlighter = await createShikiHighlighter({ theme: 'dark-plus' });
+
 /**
  * @param {string} dir
  * @param {string} file
@@ -36,7 +39,52 @@ export function read_file(dir, file) {
 		file: `${dir}/${file}`,
 		slug: match[1],
 		// third argument is a gross hack to accommodate FAQ
-		...parse(markdown, file, dir === 'faq' ? slug : undefined)
+		...parse(markdown, file, dir === 'faq' ? slug : undefined, (source, lang) => {
+			// for no good reason at all, marked replaces tabs with spaces
+			source = source.replace(/^(    )+/gm, (match) => {
+				let tabs = '';
+				for (let i = 0; i < match.length; i += 4) {
+					tabs += '\t';
+				}
+				return tabs;
+			});
+
+			try {
+				if (lang === 'js' || lang === 'ts') {
+					const twoslash = runTwoSlash(source, lang, {
+						defaultOptions: {
+							// showEmit: true
+						},
+						defaultCompilerOptions: {
+							allowJs: true,
+							checkJs: true,
+							target: 'es2021'
+						}
+					});
+
+					const html = renderCodeToHTML(
+						twoslash.code,
+						'ts',
+						['twoslash'],
+						{},
+						highlighter,
+						twoslash
+					);
+
+					return html;
+				}
+			} catch (e) {
+				console.error(e.message);
+				return `<pre>${e.message}</pre>`;
+			}
+
+			const plang = languages[lang];
+			const highlighted = plang
+				? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+				: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+			return `<div class="code-block"><pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+		})
 	};
 }
 
@@ -73,12 +121,34 @@ export function read_all(dir) {
 		.filter(Boolean);
 }
 
+/** @param {string} dir */
+export function read_headings(dir) {
+	return fs
+		.readdirSync(`${base}/${dir}`)
+		.map((file) => {
+			const match = /\d{2}-(.+)\.md/.exec(file);
+			if (!match) return null;
+
+			const slug = match[1];
+
+			const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+
+			return {
+				file: `${dir}/${file}`,
+				slug: match[1],
+				// third argument is a gross hack to accommodate FAQ
+				...parse(markdown, file, dir === 'faq' ? slug : undefined, () => '')
+			};
+		})
+		.filter(Boolean);
+}
+
 /**
  * @param {string} markdown
  * @param {string} file
  * @param {string} [main_slug]
  */
-function parse(markdown, file, main_slug) {
+function parse(markdown, file, main_slug, code) {
 	const { body, metadata } = extract_frontmatter(markdown);
 
 	const headings = main_slug ? [main_slug] : [];
@@ -119,23 +189,7 @@ function parse(markdown, file, main_slug) {
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
-		code(source, lang) {
-			// for no good reason at all, marked replaces tabs with spaces
-			source = source.replace(/^(    )+/gm, (match) => {
-				let tabs = '';
-				for (let i = 0; i < match.length; i += 4) {
-					tabs += '\t';
-				}
-				return tabs;
-			});
-
-			const plang = languages[lang];
-			const highlighted = plang
-				? PrismJS.highlight(source, PrismJS.languages[plang], lang)
-				: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-			return `<div class="code-block"><pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
-		}
+		code
 	});
 
 	return {
