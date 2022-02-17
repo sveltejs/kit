@@ -53,6 +53,7 @@ function get_raw_body(req) {
 /** @type {import('@sveltejs/kit/node').GetRequest} */
 export async function getRequest(base, req) {
 	let headers = /** @type {Record<string, string>} */ (req.headers);
+	headers['remote_addr'] = req.socket.remoteAddress;
 	if (req.httpVersionMajor === 2) {
 		// we need to strip out the HTTP/2 pseudo-headers because node-fetch's
 		// Request implementation doesn't like them
