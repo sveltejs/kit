@@ -243,6 +243,10 @@
 		outline: none;
 	}
 
+	input:focus-visible::placeholder {
+		color: rgba(255, 255, 255, 0.5);
+	}
+
 	button[aria-label='Close'] {
 		--size: 2rem;
 		position: absolute;
