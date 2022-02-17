@@ -205,6 +205,11 @@ export class Router {
 
 				this.#update_scroll_positions();
 
+				/** @ŧype {Record<string, any>} */
+				const page = get(this.renderer.stores.page);
+				this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+				this.renderer.stores.page.notify();
+
 				return;
 			}
 
@@ -255,10 +260,6 @@ export class Router {
 					'',
 					location.href
 				);
-
-				/** @ŧype {Record<string, any>} */
-				const page = get(this.renderer.stores.page);
-				this.renderer.stores.page.set({ ...page, url: new URL(location.href) });
 			}
 		});
 	}
