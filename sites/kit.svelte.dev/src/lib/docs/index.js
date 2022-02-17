@@ -21,19 +21,19 @@ const languages = {
 
 const base = '../../documentation';
 
-const highlighter = await createShikiHighlighter({ theme: 'dark-plus' });
-
 /**
  * @param {string} dir
  * @param {string} file
  */
-export function read_file(dir, file) {
+export async function read_file(dir, file) {
 	const match = /\d{2}-(.+)\.md/.exec(file);
 	if (!match) return null;
 
 	const slug = match[1];
 
 	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+
+	const highlighter = await createShikiHighlighter({ theme: 'dark-plus' });
 
 	return {
 		file: `${dir}/${file}`,
@@ -92,7 +92,7 @@ export function read_file(dir, file) {
  * @param {string} dir
  * @param {string} slug
  */
-export function read(dir, slug) {
+export async function read(dir, slug) {
 	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
 	const index = files.findIndex((file) => file.slice(3, -3) === slug);
 
@@ -109,16 +109,20 @@ export function read(dir, slug) {
 	return {
 		prev: prev && summarise(prev),
 		next: next && summarise(next),
-		section: read_file(dir, files[index])
+		section: await read_file(dir, files[index])
 	};
 }
 
 /** @param {string} dir */
-export function read_all(dir) {
-	return fs
-		.readdirSync(`${base}/${dir}`)
-		.map((file) => read_file(dir, file))
-		.filter(Boolean);
+export async function read_all(dir) {
+	const result = [];
+
+	for (const file of fs.readdirSync(`${base}/${dir}`)) {
+		const section = await read_file(dir, file);
+		if (section) result.push(section);
+	}
+
+	return result;
 }
 
 /** @param {string} dir */
