@@ -21,6 +21,7 @@
 	import { Icon } from '@sveltejs/site-kit';
 	import '@sveltejs/site-kit/code.css';
 	import './_/docs.css';
+	import './_/shiki.css';
 
 	export let prev;
 	export let next;

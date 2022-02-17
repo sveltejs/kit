@@ -71,10 +71,10 @@ export async function read_file(dir, file) {
 						twoslash
 					);
 
-					return html;
+					// preserve blank lines in output (maybe there's a more correct way to do this?)
+					return html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
 				}
 			} catch (e) {
-				console.error(e.message);
 				return `<pre>${e.message}</pre>`;
 			}
 
