@@ -61,7 +61,7 @@ declare module '$lib/database' {
 import db from '$lib/database';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export const get = async ({ params }) => {
+export async function get({ params }) {
 	// `params.id` comes from [id].js
 	const item = await db.get(params.id);
 
