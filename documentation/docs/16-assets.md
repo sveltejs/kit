@@ -14,7 +14,7 @@ To include hashes in your asset file names and cache them, you can have Vite pro
 <img src="{imageSrc}" />
 ```
 
-If you prefer to directly import in the markup, you can use a preprocessors to assist with this such as [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets) or [svelte-image](https://github.com/matyunya/svelte-image).
+If you prefer to reference assets directly in the markup, you can use a preprocessor such as [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets) or [svelte-image](https://github.com/matyunya/svelte-image).
 
 For assets included via `url()` in you may find the [`experimental.useVitePreprocess`](https://github.com/sveltejs/vite-plugin-svelte/blob/main/docs/config.md#usevitepreprocess) option in `vite-plugin-svelte` to be useful.
 
