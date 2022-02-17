@@ -203,11 +203,8 @@ export class Router {
 				this.hash_navigating = true;
 
 				this.#update_scroll_positions();
+				this.renderer.update_page_store(new URL(url.href));
 
-				const info = this.parse(url);
-				if (info) {
-					return this.renderer.update(info, [], false);
-				}
 				return;
 			}
 
