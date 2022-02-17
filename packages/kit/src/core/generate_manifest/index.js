@@ -13,6 +13,8 @@ export function generate_manifest(
 	routes = build_data.manifest_data.routes,
 	format = 'esm'
 ) {
+	/** @typedef {{ index: number, path: string }} LookupEntry */
+	/** @type {Map<string, LookupEntry>} */
 	const bundled_nodes = new Map();
 
 	// 0 and 1 are special, they correspond to the root layout and root error nodes
@@ -52,6 +54,9 @@ export function generate_manifest(
 		assets.push(build_data.service_worker);
 	}
 
+	/** @param {string} id */
+	const get_index = (id) => id && /** @type {LookupEntry} */ (bundled_nodes.get(id)).index;
+
 	// prettier-ignore
 	return `{
 		appDir: ${s(build_data.app_dir)},
@@ -71,8 +76,8 @@ export function generate_manifest(
 							params: ${get_params(route.params)},
 							path: ${route.path ? s(route.path) : null},
 							shadow: ${route.shadow ? importer(`${relative_path}/${build_data.server.vite_manifest[route.shadow].file}`) : null},
-							a: ${s(route.a.map(component => component && bundled_nodes.get(component).index))},
-							b: ${s(route.b.map(component => component && bundled_nodes.get(component).index))}
+							a: ${s(route.a.map(get_index))},
+							b: ${s(route.b.map(get_index))}
 						}`.replace(/^\t\t/gm, '');
 					} else {
 						if (!build_data.server.vite_manifest[route.file]) {
