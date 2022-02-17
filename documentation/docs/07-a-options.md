@@ -43,3 +43,5 @@ Adding a `rel=external` attribute to a link...
 ```
 
 ...will trigger a browser navigation when the link is clicked.
+
+> SvelteKit does not exclude root-relative external links from prerendering, which will cause 404s if these URLs are intended to be served by a separate app. Use a custom [`prerender.onError`](/docs/configuration#prerender) handler if you need to ignore them.
