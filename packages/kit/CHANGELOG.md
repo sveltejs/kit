@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.277
+
+### Patch Changes
+
+- Fall back to full page reload if link href does not match route manifest ([#3969](https://github.com/sveltejs/kit/pull/3969))
+
+* Update page store without rerunning load when hash changes ([#3975](https://github.com/sveltejs/kit/pull/3975))
+
 ## 1.0.0-next.276
 
 ### Patch Changes
