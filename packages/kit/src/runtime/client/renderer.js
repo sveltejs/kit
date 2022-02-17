@@ -496,6 +496,14 @@ export class Renderer {
 			);
 			if (result) return result;
 		}
+
+		if (info.initial) {
+			return await this._load_error({
+				status: 404,
+				error: new Error(`Not found: ${info.url.pathname}`),
+				url: info.url
+			});
+		}
 	}
 
 	/**
