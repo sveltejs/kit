@@ -1,4 +1,5 @@
 import { onMount } from 'svelte';
+import { get } from 'svelte/store';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
@@ -204,9 +205,10 @@ export class Router {
 
 				this.#update_scroll_positions();
 
-				this.renderer.stores.page.subscribe((page) => {
-					this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
-				})();
+				/** @ŧype {Record<string, any>} */
+				const page = get(this.renderer.stores.page);
+				this.renderer.stores.page.set({ ...page, url: new URL(url.href) });
+
 				return;
 			}
 
