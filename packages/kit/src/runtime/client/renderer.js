@@ -395,6 +395,10 @@ export class Renderer {
 		this.autoscroll = true;
 		this.updating = false;
 
+		if (navigation_result.props.page) {
+			this.page = navigation_result.props.page;
+		}
+
 		if (!this.router) return;
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
@@ -432,12 +436,20 @@ export class Renderer {
 		return this.invalidating;
 	}
 
+	/** @param {URL} url */
+	update_page_store(url) {
+		this.stores.page.set({ ...this.page, url });
+		this.stores.page.notify();
+	}
+
 	/** @param {import('./types').NavigationResult} result */
 	_init(result) {
 		this.current = result.state;
 
 		const style = document.querySelector('style[data-svelte]');
 		if (style) style.remove();
+
+		this.page = result.props.page;
 
 		this.root = new this.Root({
 			target: this.target,
