@@ -8,10 +8,10 @@ To include hashes in your asset file names and cache them, you can have Vite pro
 
 ```html
 <script>
-	import imageSrc from '$lib/assets/image.png';
+	import logo from '$lib/assets/logo.png';
 </script>
 
-<img src="{imageSrc}" />
+<img alt="The project logo" src={logo} />
 ```
 
 If you prefer to reference assets directly in the markup, you can use a preprocessor such as [svelte-preprocess-import-assets](https://github.com/bluwy/svelte-preprocess-import-assets) or [svelte-image](https://github.com/matyunya/svelte-image).
