@@ -360,16 +360,16 @@ export interface PrerenderErrorHandler {
 	}): void;
 }
 
-export interface RequestEvent {
+export interface RequestEvent<Params = Record<string, string>> {
 	request: Request;
 	url: URL;
-	params: Record<string, string>;
+	params: Params;
 	locals: App.Locals;
 	platform: Readonly<App.Platform>;
 }
 
-export interface RequestHandler<Output extends Body = Body> {
-	(event: RequestEvent): MaybePromise<
+export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
+	(event: RequestEvent<Params>): MaybePromise<
 		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
 	>;
 }
