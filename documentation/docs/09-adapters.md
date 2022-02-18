@@ -75,15 +75,22 @@ We recommend [looking at the source for an adapter](https://github.com/sveltejs/
 Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
+// @filename: ambient.d.ts
+const AdapterSpecificOptions = any;
+
+// @filename: index.js
+// ---cut---
 /** @param {AdapterSpecificOptions} options */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
-	return {
+	const adapter = {
 		name: 'adapter-package-name',
 		async adapt(builder) {
 			// adapter implementation
 		}
 	};
+
+	return adapter;
 }
 ```
 

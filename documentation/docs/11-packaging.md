@@ -19,10 +19,20 @@ The `"exports"` field contains the package's entry points. By default, all files
 For example, if you had a `src/lib/Foo.svelte` component and a `src/lib/index.js` module that re-exported it, a consumer of your library could do either of the following:
 
 ```js
+// @filename: ambient.d.ts
+declare module 'your-library';
+
+// @filename: index.js
+// ---cut---
 import { Foo } from 'your-library';
 ```
 
 ```js
+// @filename: ambient.d.ts
+declare module 'your-library/Foo.svelte';
+
+// @filename: index.js
+// ---cut---
 import Foo from 'your-library/Foo.svelte';
 ```
 

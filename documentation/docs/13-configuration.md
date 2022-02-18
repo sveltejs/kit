@@ -5,16 +5,17 @@ title: Configuration
 Your project's configuration lives in a `svelte.config.js` file. All values are optional. The complete list of options, with defaults, is shown here:
 
 ```js
+/// file: svelte.config.js
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// options passed to svelte.compile (https://svelte.dev/docs#compile-time-svelte-compile)
-	compilerOptions: null,
+	compilerOptions: {},
 
 	// an array of file extensions that should be treated as Svelte components
 	extensions: ['.svelte'],
 
 	kit: {
-		adapter: null,
+		adapter: undefined,
 		amp: false,
 		appDir: '_app',
 		browser: {
@@ -112,11 +113,19 @@ An object containing zero or more of the following values:
 [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy) configuration. CSP helps to protect your users against cross-site scripting (XSS) attacks, by limiting the places resources can be loaded from. For example, a configuration like this...
 
 ```js
-{
-	directives: {
-		'script-src': ['self']
+/// file: svelte.config.js
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	kit: {
+		csp: {
+			directives: {
+				'script-src': ['self']
+			}
+		}
 	}
-}
+};
+
+export default config;
 ```
 
 ...would prevent scripts loading from external sites. SvelteKit will augment the specified directives with nonces or hashes (depending on `mode`) for any inline styles and scripts it generates.
@@ -173,10 +182,16 @@ Options related to [creating a package](/docs/packaging).
 For advanced `filepath` matching, you can use `exports` and `files` options in conjunction with a globbing library:
 
 ```js
-// svelte.config.js
+// @filename: ambient.d.ts
+declare module 'micromatch';
+
+/// file: svelte.config.js
+// @filename: index.js
+// ---cut---
 import mm from 'micromatch';
 
-export default {
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		package: {
 			exports: (filepath) => {
@@ -187,6 +202,8 @@ export default {
 		}
 	}
 };
+
+export default config;
 ```
 
 ### paths
@@ -210,15 +227,17 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
   - `'continue'` — allows the build to continue, despite routing errors
   - `function` — custom error handler allowing you to log, `throw` and fail the build, or take other action of your choosing based on the details of the crawl
 
-    ```ts
+    ```js
     import adapter from '@sveltejs/adapter-static';
+
     /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
     const handleError = ({ status, path, referrer, referenceType }) => {
     	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
     	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
     };
 
-    export default {
+    /** @type {import('@sveltejs/kit').Config} */
+    const config = {
     	kit: {
     		adapter: adapter(),
     		prerender: {
@@ -226,6 +245,8 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     		}
     	}
     };
+
+    export default config;
     ```
 
 ### routes
