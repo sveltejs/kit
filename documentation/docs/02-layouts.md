@@ -76,17 +76,6 @@ For example, if `src/routes/settings/notifications/index.svelte` failed to load,
 
 > SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommended that you bring your own.
 
-```ts
-// declaration type
-// * also see type for `LoadOutput` in the Loading section
-
-export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
-	extends LoadInput<Params> {
-	status?: number;
-	error?: Error;
-}
-```
-
 If an error component has a [`load`](/docs/loading) function, it will be called with `error` and `status` properties:
 
 ```html

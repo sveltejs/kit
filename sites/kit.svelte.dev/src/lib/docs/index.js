@@ -89,7 +89,7 @@ export async function read_file(dir, file) {
 						)}</div>`;
 					}
 				} catch (e) {
-					return `<pre>${e.message}</pre>`;
+					return `<pre style="background-color: rgba(255,0,0,0.1); color: red">${e.message}</pre>`;
 				}
 
 				const plang = languages[lang];
