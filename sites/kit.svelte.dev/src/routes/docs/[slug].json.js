@@ -1,4 +1,4 @@
-import { read } from '$lib/docs';
+import { read } from '$lib/docs/server';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ params }) {

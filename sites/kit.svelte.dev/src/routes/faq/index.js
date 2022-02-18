@@ -1,4 +1,4 @@
-import { read_all } from '$lib/docs';
+import { read_all } from '$lib/docs/server';
 
 export async function get() {
 	return {

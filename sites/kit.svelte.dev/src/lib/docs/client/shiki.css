@@ -21,19 +21,6 @@ pre.twoslash .error-behind {
 	display: none;
 }
 
-pre.twoslash data-lsp:hover::before {
-	content: attr(lsp);
-	position: absolute;
-	transform: translate(0, 2rem);
-
-	background-color: var(--second);
-	color: #fff;
-	text-align: left;
-	padding: 0.4rem 0.6rem;
-	border-radius: var(--border-r);
-	font-family: inherit;
-	font-size: 1.2rem;
-	white-space: pre-wrap;
-	z-index: 100;
-	filter: drop-shadow(2px 4px 6px #67677866);
+pre.twoslash data-lsp {
+	border-bottom: 1px dotted rgba(0, 0, 0, 0.2);
 }

@@ -4,10 +4,13 @@
 
 <script>
 	import { Permalink } from '@sveltejs/site-kit';
-	import '$lib/docs/docs.css';
-	import '$lib/docs/shiki.css';
+	import '$lib/docs/client/docs.css';
+	import '$lib/docs/client/shiki.css';
+	import * as hovers from '$lib/docs/client/hovers.js';
 
 	export let sections;
+
+	hovers.setup();
 </script>
 
 <svelte:head>

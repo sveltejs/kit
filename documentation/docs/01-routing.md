@@ -119,12 +119,10 @@ These functions can, like `get`, return a `body` that will be passed to the page
 ```js
 /// file: src/routes/items.js
 // @filename: ambient.d.ts
-declare global {
-	type Item = {
-		id: string;
-	};
-	type ValidationError = {};
-}
+type Item = {
+	id: string;
+};
+type ValidationError = {};
 
 declare module '$lib/database' {
 	export const list: () => Promise<Item[]>;
