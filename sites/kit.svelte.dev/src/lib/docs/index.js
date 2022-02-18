@@ -63,9 +63,6 @@ export async function read_file(dir, file) {
 				try {
 					if (lang === 'js' || lang === 'ts') {
 						const twoslash = runTwoSlash(source, lang, {
-							defaultOptions: {
-								// showEmit: true
-							},
 							defaultCompilerOptions: {
 								allowJs: true,
 								checkJs: true,

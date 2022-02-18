@@ -315,7 +315,7 @@ importers:
       '@sveltejs/adapter-static': workspace:^1.0.0-next.28
       '@sveltejs/kit': workspace:*
       '@sveltejs/site-kit': ^2.0.3
-      '@types/node': ^16.6.1
+      '@types/node': ^16.11.11
       flexsearch: ^0.7.21
       marked: ^4.0.5
       prism-svelte: ^0.4.7
@@ -323,6 +323,7 @@ importers:
       shiki-twoslash: ^3.0.2
       svelte: ^3.43.0
       typescript: ~4.5.5
+      vite: ^2.8.0
       vite-imagetools: ^4.0.3
     devDependencies:
       '@sveltejs/adapter-auto': link:../../packages/adapter-auto
@@ -337,6 +338,7 @@ importers:
       shiki-twoslash: 3.0.2
       svelte: 3.44.2
       typescript: 4.5.5
+      vite: 2.8.0
       vite-imagetools: 4.0.3
 
 packages:
@@ -2595,7 +2597,6 @@ packages:
     cpu: [arm64]
     os: [android]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-darwin-64/0.14.21:
@@ -2604,7 +2605,6 @@ packages:
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-darwin-arm64/0.14.21:
@@ -2613,7 +2613,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-freebsd-64/0.14.21:
@@ -2622,7 +2621,6 @@ packages:
     cpu: [x64]
     os: [freebsd]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-freebsd-arm64/0.14.21:
@@ -2631,7 +2629,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-32/0.14.21:
@@ -2640,7 +2637,6 @@ packages:
     cpu: [ia32]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-64/0.14.21:
@@ -2649,7 +2645,6 @@ packages:
     cpu: [x64]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-arm/0.14.21:
@@ -2658,7 +2653,6 @@ packages:
     cpu: [arm]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-arm64/0.14.21:
@@ -2667,7 +2661,6 @@ packages:
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-mips64le/0.14.21:
@@ -2676,7 +2669,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-ppc64le/0.14.21:
@@ -2685,7 +2677,6 @@ packages:
     cpu: [ppc64]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-riscv64/0.14.21:
@@ -2694,7 +2685,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-linux-s390x/0.14.21:
@@ -2703,7 +2693,6 @@ packages:
     cpu: [s390x]
     os: [linux]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-netbsd-64/0.14.21:
@@ -2712,7 +2701,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-openbsd-64/0.14.21:
@@ -2721,7 +2709,6 @@ packages:
     cpu: [x64]
     os: [openbsd]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-sunos-64/0.14.21:
@@ -2730,7 +2717,6 @@ packages:
     cpu: [x64]
     os: [sunos]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-windows-32/0.14.21:
@@ -2739,7 +2725,6 @@ packages:
     cpu: [ia32]
     os: [win32]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-windows-64/0.14.21:
@@ -2748,7 +2733,6 @@ packages:
     cpu: [x64]
     os: [win32]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild-windows-arm64/0.14.21:
@@ -2757,7 +2741,6 @@ packages:
     cpu: [arm64]
     os: [win32]
     requiresBuild: true
-    dev: false
     optional: true
 
   /esbuild/0.14.21:
@@ -2785,7 +2768,6 @@ packages:
       esbuild-windows-32: 0.14.21
       esbuild-windows-64: 0.14.21
       esbuild-windows-arm64: 0.14.21
-    dev: false
 
   /escalade/3.1.1:
     resolution: {integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==}
@@ -3545,7 +3527,6 @@ packages:
     resolution: {integrity: sha512-SdNCUs284hr40hFTFP6l0IfZ/RSrMXF3qgoRHd3/79unUTvrFO/JoXwkGm+5J/Oe3E/b5GsnG330uUNgRpu1PA==}
     dependencies:
       has: 1.0.3
-    dev: false
 
   /is-date-object/1.0.5:
     resolution: {integrity: sha512-9YQaSxsAiSwcvS33MBk3wTCVnWK+HhF8VZR2jRxehM16QcVOdHqPn4VPHmRK4lSr38n9JriurInLcP90xsYNfQ==}
@@ -4227,7 +4208,6 @@ packages:
     resolution: {integrity: sha512-fmsZYa9lpn69Ad5eDn7FMcnnSR+8R34W9qJEijxYhTbfOWzr22n1QxCMzXLK+ODyW2973V3Fux959iQoUxzUIA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
-    dev: false
 
   /napi-build-utils/1.0.2:
     resolution: {integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==}
@@ -4687,7 +4667,6 @@ packages:
       nanoid: 3.2.0
       picocolors: 1.0.0
       source-map-js: 1.0.2
-    dev: false
 
   /prebuild-install/7.0.1:
     resolution: {integrity: sha512-QBSab31WqkyxpnMWQxubYAHR5S9B2+r81ucocew34Fkl98FhvKIF50jIJnNOBmAZfyNV7vE5T6gd3hTVWgY6tg==}
@@ -4969,7 +4948,6 @@ packages:
       is-core-module: 2.8.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: false
 
   /retry/0.12.0:
     resolution: {integrity: sha1-G0KmJmoh8HQh0bC1S33BZ7AcATs=}
@@ -5219,7 +5197,6 @@ packages:
   /source-map-js/1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
-    dev: false
 
   /source-map-support/0.4.18:
     resolution: {integrity: sha512-try0/JqxPLF9nOjvSta7tVondkP5dwgyLDjVoyMDlmjugT2lRZ1OfsrYTkCd2hkDnJTKRbO/Rl3orm8vlsUzbA==}
@@ -5416,7 +5393,6 @@ packages:
   /supports-preserve-symlinks-flag/1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
-    dev: false
 
   /svelte-check/2.2.10_svelte@3.44.2:
     resolution: {integrity: sha512-UVLd/N7hUIG2v6dytofsw8MxYn2iS2hpNSglsGz9Z9b8ZfbJ5jayl4Mm1SXhNwiFs5aklG90zSBJtd7NTK8dTg==}
@@ -5879,7 +5855,6 @@ packages:
       rollup: 2.60.2
     optionalDependencies:
       fsevents: 2.3.2
-    dev: false
 
   /vscode-textmate/5.2.0:
     resolution: {integrity: sha512-Uw5ooOQxRASHgu6C7GVvUxisKXfSgW4oFlO+aa+PAkgmH89O3CXxEEzNRNtHSqtXFTl0nAC1uYj0GMSH27uwtQ==}

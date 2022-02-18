@@ -13,6 +13,7 @@ Put the code to query your database in [endpoints](/docs/routing#endpoints) - do
 `adapter-node` builds a middleware that you can use with your own server for production mode. In dev, you can add middleware to Vite by using a Vite plugin. For example:
 
 ```js
+/** @type {import('vite').Plugin} */
 const myPlugin = {
 	name: 'log-request-middleware',
 	configureServer(server) {
@@ -42,6 +43,8 @@ See [Vite's `configureServer` docs](https://vitejs.dev/guide/api-plugin.html#con
 If you need access to the `document` or `window` variables or otherwise need code to run only on the client-side you can wrap it in a `browser` check:
 
 ```js
+/// <reference types="@sveltejs/kit" />
+// ---cut---
 import { browser } from '$app/env';
 
 if (browser) {
@@ -52,6 +55,12 @@ if (browser) {
 You can also run code in `onMount` if you'd like to run it after the component has been first rendered to the DOM:
 
 ```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library';
+
+// @filename: index.js
+// ---cut---
 import { onMount } from 'svelte';
 
 onMount(async () => {
@@ -63,6 +72,12 @@ onMount(async () => {
 If the library you'd like to use is side-effect free you can also statically import it and it will be tree-shaken out in the server-side build where `onMount` will be automatically replaced with a no-op:
 
 ```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library';
+
+// @filename: index.js
+// ---cut---
 import { onMount } from 'svelte';
 import { method } from 'some-browser-only-library';
 
@@ -74,6 +89,12 @@ onMount(() => {
 Otherwise, if the library has side effects and you'd still prefer to use static imports, check out [vite-plugin-iso-import](https://github.com/bluwy/vite-plugin-iso-import) to support the `?client` import suffix. The import will be stripped out in SSR builds. However, note that you will lose the ability to use VS Code Intellisense if you use this method.
 
 ```js
+// @filename: ambient.d.ts
+// @lib: ES2015
+declare module 'some-browser-only-library?client';
+
+// @filename: index.js
+// ---cut---
 import { onMount } from 'svelte';
 import { method } from 'some-browser-only-library?client';
 
