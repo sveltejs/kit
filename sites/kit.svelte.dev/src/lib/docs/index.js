@@ -60,33 +60,29 @@ export async function read_file(dir, file) {
 						return tabs;
 					});
 
-				try {
-					if (lang === 'js' || lang === 'ts') {
-						const twoslash = runTwoSlash(source, lang, {
-							defaultCompilerOptions: {
-								allowJs: true,
-								checkJs: true,
-								target: 'es2021'
-							}
-						});
+				if (lang === 'js' || lang === 'ts') {
+					const twoslash = runTwoSlash(source, lang, {
+						defaultCompilerOptions: {
+							allowJs: true,
+							checkJs: true,
+							target: 'es2021'
+						}
+					});
 
-						const html = renderCodeToHTML(
-							twoslash.code,
-							'ts',
-							{ twoslash: true },
-							{},
-							highlighter,
-							twoslash
-						);
+					const html = renderCodeToHTML(
+						twoslash.code,
+						'ts',
+						{ twoslash: true },
+						{},
+						highlighter,
+						twoslash
+					);
 
-						// preserve blank lines in output (maybe there's a more correct way to do this?)
-						return `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
-							/<div class='line'><\/div>/g,
-							'<div class="line"> </div>'
-						)}</div>`;
-					}
-				} catch (e) {
-					return `<pre style="background-color: rgba(255,0,0,0.1); color: red">${e.message}</pre>`;
+					// preserve blank lines in output (maybe there's a more correct way to do this?)
+					return `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
+						/<div class='line'><\/div>/g,
+						'<div class="line"> </div>'
+					)}</div>`;
 				}
 
 				const plang = languages[lang];

@@ -33,14 +33,23 @@ Every page should have well-written and unique `<title>` and `<meta name="descri
 [Structured data](https://developers.google.com/search/docs/advanced/structured-data/intro-structured-data) helps search engines understand the content of a page. If you're using structured data alongside [`svelte-preprocess`](https://github.com/sveltejs/svelte-preprocess), you will need to explicitly preserve `ld+json` data (this [may change in future](https://github.com/sveltejs/svelte-preprocess/issues/305)):
 
 ```js
-// svelte.config.js
+/// file: svelte.config.js
+// @filename: ambient.d.ts
+declare module 'svelte-preprocess';
+
+// @filename: index.js
+// ---cut---
 import preprocess from 'svelte-preprocess';
-export default {
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	preprocess: preprocess({
 		preserve: ['ld+json']
 		// ...
 	})
 };
+
+export default config;
 ```
 
 #### Sitemaps

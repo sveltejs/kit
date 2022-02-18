@@ -98,6 +98,11 @@ Lastly, if your page has a `load` method, make sure to return something otherwis
 In Sapper, you would get references to provided stores like so:
 
 ```js
+// @filename: ambient.d.ts
+declare module '@sapper/app';
+
+// @filename: index.js
+// ---cut---
 import { stores } from '@sapper/app';
 const { preloading, page, session } = stores();
 ```
@@ -138,6 +143,12 @@ See [the FAQ](/faq#integrations) for detailed information about integrations.
 Sapper includes `html-minifier` by default. SvelteKit does not include this, but it can be added as a [hook](/docs/hooks#handle):
 
 ```js
+// @filename: ambient.d.ts
+/// <reference types="@sveltejs/kit" />
+declare module 'html-minifier';
+
+// @filename: index.js
+// ---cut---
 import { minify } from 'html-minifier';
 import { prerendering } from '$app/env';
 
@@ -160,6 +171,7 @@ const minification_options = {
 	sortClassName: true
 };
 
+/** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event);
 
