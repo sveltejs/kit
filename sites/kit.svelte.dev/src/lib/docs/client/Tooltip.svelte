@@ -1,17 +1,33 @@
 <script>
+	import { tick } from 'svelte';
+
 	export let text = '';
 	export let x = 0;
 	export let y = 0;
+
+	let width = 1;
+	let tooltip;
+
+	// bit of a gross hack but it works — this prevents the
+	// tooltip from disappearing off the side of the screen
+	$: if (text && tooltip) {
+		tick().then(() => {
+			width = tooltip.getBoundingClientRect().width;
+		});
+	}
 </script>
 
-<div class="tooltip" style="left: {x}px; top: {y}px">
-	{text}
+<div
+	bind:this={tooltip}
+	class="tooltip"
+	style="left: {x}px; top: {y}px; --offset: {Math.min(-10, window.innerWidth - (x + width + 10))}px"
+>
+	<span>{text}</span>
 </div>
 
 <style>
 	.tooltip {
 		--bg: var(--second);
-		--offset: -1rem;
 		--arrow-size: 0.4rem;
 		position: absolute;
 		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
