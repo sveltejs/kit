@@ -251,7 +251,7 @@
 	font-size: 1.2rem;
 	font-weight: 400;
 	padding: 1rem 1rem 0.8rem 1rem;
-	margin: 0 0 0.5rem 0;
+	margin: 0;
 	color: var(--text);
 	background: var(--back-api);
 	border-radius: var(--border-r) var(--border-r) 0 0;

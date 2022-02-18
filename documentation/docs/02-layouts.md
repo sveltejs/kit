@@ -15,7 +15,7 @@ To create a layout that applies to every page, make a file called `src/routes/__
 ...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
-<!-- src/routes/__layout.svelte -->
+/// file: src/routes/__layout.svelte
 <nav>
 	<a href="/">Home</a>
 	<a href="/about">About</a>
@@ -28,17 +28,17 @@ To create a layout that applies to every page, make a file called `src/routes/__
 If we create pages for `/`, `/about` and `/settings`...
 
 ```html
-<!-- src/routes/index.svelte -->
+/// file: src/routes/index.svelte
 <h1>Home</h1>
 ```
 
 ```html
-<!-- src/routes/about.svelte -->
+/// file: src/routes/about.svelte
 <h1>About</h1>
 ```
 
 ```html
-<!-- src/routes/settings.svelte -->
+/// file: src/routes/settings.svelte
 <h1>Settings</h1>
 ```
 
@@ -51,7 +51,7 @@ Suppose we don't just have a single `/settings` page, but instead have nested pa
 We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
 
 ```html
-<!-- src/routes/settings/__layout.svelte -->
+/// file: src/routes/settings/__layout.svelte
 <h1>Settings</h1>
 
 <div class="submenu">
