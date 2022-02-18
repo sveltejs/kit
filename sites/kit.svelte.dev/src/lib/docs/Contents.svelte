@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { escape } from './markdown';
 
 	export let contents = [];
 
@@ -55,6 +56,14 @@
 
 		path = $page.url.pathname;
 	}
+
+	/**
+	 * Escapes HTML input, preserving `<code>` tags.
+	 * @param {string} heading
+	 */
+	function printHeading(heading) {
+		return escape(heading, false).replace(/&lt;code&gt;(.+?)&lt;\/code&gt;/g, '<code>$1</code>');
+	}
 </script>
 
 <svelte:window on:scroll={highlight} on:resize={update} />
@@ -81,7 +90,7 @@
 								class:active={subsection.path === path}
 								href={subsection.path}
 							>
-								{subsection.title}
+								{@html printHeading(subsection.title)}
 							</a>
 
 							<ul>
@@ -93,7 +102,7 @@
 											href={subsection.path}
 											sveltekit:prefetch
 										>
-											{subsection.title}
+											{@html printHeading(subsection.title)}
 										</a>
 									</li>
 								{/each}
