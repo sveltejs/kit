@@ -52,9 +52,7 @@ If an endpoint has the same filename as a page (except for the extension), the p
 ```js
 /// file: src/routes/items/[id].js
 // @filename: ambient.d.ts
-declare global {
-	type Item = {};
-}
+type Item = {};
 
 declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
@@ -121,11 +119,16 @@ These functions can, like `get`, return a `body` that will be passed to the page
 ```js
 /// file: src/routes/items.js
 // @filename: ambient.d.ts
+declare global {
+	type Item = {
+		id: string;
+	};
+	type ValidationError = {};
+}
+
 declare module '$lib/database' {
-	type Item = { id: string };
-	type Error = {};
 	export const list: () => Promise<Item[]>;
-	export const create: (request: Request) => Promise<[Error[], Item]>;
+	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
 }
 
 // @filename: index.js
@@ -210,7 +213,7 @@ export {};
 export async function post({ request }) {
 	const data = await request.formData(); // or .json(), or .text(), etc
 
-	const item = await create(data);
+	await create(data);
 	return { status: 201 };
 }
 ```
@@ -221,12 +224,10 @@ Endpoints can set cookies by returning a `headers` object with `set-cookie`. To 
 
 ```js
 // @filename: ambient.d.ts
-declare global {
-	const cookie1: string;
-	const cookie2: string;
-}
+const cookie1: string;
+const cookie2: string;
 
-// TODO why is this not recognised as a RequestHandler by shiki-twoslash?
+// @filename: index.js
 // ---cut---
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export function get() {
