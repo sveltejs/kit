@@ -39,55 +39,69 @@ export async function read_file(dir, file) {
 		file: `${dir}/${file}`,
 		slug: match[1],
 		// third argument is a gross hack to accommodate FAQ
-		...parse(markdown, file, dir === 'faq' ? slug : undefined, (source, lang) => {
-			// for no good reason at all, marked replaces tabs with spaces
-			source = source.replace(/^(    )+/gm, (match) => {
-				let tabs = '';
-				for (let i = 0; i < match.length; i += 4) {
-					tabs += '\t';
-				}
-				return tabs;
-			});
+		...parse(
+			markdown,
+			file,
+			dir === 'faq' ? slug : undefined,
+			(/** @type {string} */ source, /** @type {string} */ lang) => {
+				let file = '';
 
-			try {
-				if (lang === 'js' || lang === 'ts') {
-					const twoslash = runTwoSlash(source, lang, {
-						defaultOptions: {
-							// showEmit: true
-						},
-						defaultCompilerOptions: {
-							allowJs: true,
-							checkJs: true,
-							target: 'es2021'
+				source = source
+					.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
+						file = value;
+						return '';
+					})
+					.replace(/^(    )+/gm, (match) => {
+						// for no good reason at all, marked replaces tabs with spaces
+						let tabs = '';
+						for (let i = 0; i < match.length; i += 4) {
+							tabs += '\t';
 						}
+						return tabs;
 					});
 
-					const html = renderCodeToHTML(
-						twoslash.code,
-						'ts',
-						{ twoslash: true },
-						{},
-						highlighter,
-						twoslash
-					);
+				try {
+					if (lang === 'js' || lang === 'ts') {
+						const twoslash = runTwoSlash(source, lang, {
+							defaultOptions: {
+								// showEmit: true
+							},
+							defaultCompilerOptions: {
+								allowJs: true,
+								checkJs: true,
+								target: 'es2021'
+							}
+						});
 
-					// preserve blank lines in output (maybe there's a more correct way to do this?)
-					return `<div class="code-block">${html.replace(
-						/<div class='line'><\/div>/g,
-						'<div class="line"> </div>'
-					)}</div>`;
+						const html = renderCodeToHTML(
+							twoslash.code,
+							'ts',
+							{ twoslash: true },
+							{},
+							highlighter,
+							twoslash
+						);
+
+						// preserve blank lines in output (maybe there's a more correct way to do this?)
+						return `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
+							/<div class='line'><\/div>/g,
+							'<div class="line"> </div>'
+						)}</div>`;
+					}
+				} catch (e) {
+					return `<pre>${e.message}</pre>`;
 				}
-			} catch (e) {
-				return `<pre>${e.message}</pre>`;
+
+				const plang = languages[lang];
+				const highlighted = plang
+					? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+				return `<div class="code-block">${
+					file ? `<h5>${file}</h5>` : ''
+				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
 			}
-
-			const plang = languages[lang];
-			const highlighted = plang
-				? PrismJS.highlight(source, PrismJS.languages[plang], lang)
-				: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-			return `<div class="code-block"><pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
-		})
+		)
 	};
 }
 

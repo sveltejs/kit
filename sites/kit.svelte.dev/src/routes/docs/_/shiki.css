@@ -4,7 +4,7 @@
 
 pre.twoslash {
 	--shiki-color-text: var(--code-base);
-	--shiki-color-background: var(--code-bg);
+	--shiki-color-background: transparent;
 	--shiki-token-constant: var(--code-base);
 	--shiki-token-string: var(--code-string);
 	--shiki-token-comment: var(--code-comment);

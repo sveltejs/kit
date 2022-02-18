@@ -19,7 +19,7 @@ Pages are Svelte components written in `.svelte` files (or any file with an exte
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
 ```html
-<!-- src/routes/index.svelte -->
+/// file: src/routes/index.svelte
 <svelte:head>
 	<title>Welcome</title>
 </svelte:head>
@@ -30,7 +30,7 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
 
 ```html
-<!-- src/routes/about.svelte -->
+/// file: src/routes/about.svelte
 <svelte:head>
 	<title>About</title>
 </svelte:head>
@@ -47,12 +47,16 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
-If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from `src/routes/items/[id].js`:
+If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from this file:
 
 ```js
+/// file: src/routes/items/[id].js
 // @filename: ambient.d.ts
-declare module '$lib/database' {
+declare global {
 	type Item = {};
+}
+
+declare module '$lib/database' {
 	export const get: (id: string) => Promise<Item>;
 }
 
@@ -91,6 +95,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 The returned `body` corresponds to the page's props:
 
 ```svelte
+/// file: src/routes/items/[id].svelte
 <script>
 	// populated with data from the endpoint
 	export let item;
@@ -114,6 +119,7 @@ export function del(event) {...} // `delete` is a reserved word
 These functions can, like `get`, return a `body` that will be passed to the page as props. Whereas 4xx/5xx responses from `get` will result in an error page rendering, similar responses to non-GET requests do not, allowing you to do things like render form validation errors:
 
 ```js
+/// file: src/routes/items.js
 // @filename: ambient.d.ts
 declare module '$lib/database' {
 	type Item = { id: string };
@@ -124,7 +130,6 @@ declare module '$lib/database' {
 
 // @filename: index.js
 // ---cut---
-// src/routes/items.js
 import * as db from '$lib/database';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
@@ -159,7 +164,7 @@ export async function post({ request }) {
 ```
 
 ```svelte
-<!-- src/routes/items.svelte -->
+/// file: src/routes/items.svelte
 <script>
 	// The page always has access to props from `get`...
 	export let items;
@@ -221,10 +226,9 @@ declare global {
 	const cookie2: string;
 }
 
-export {};
-
-/** @type {import('@sveltejs/kit').RequestHandler} */
+// TODO why is this not recognised as a RequestHandler by shiki-twoslash?
 // ---cut---
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export function get() {
 	return {
 		headers: {
@@ -239,14 +243,17 @@ export function get() {
 HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](/docs/configuration#methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 
 ```js
-// svelte.config.js
-export default {
+/// file: svelte.config.js
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		methodOverride: {
 			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };
+
+export default config;
 ```
 
 ```html
@@ -327,7 +334,7 @@ In rare cases, the ordering above might not be want you want for a given path. F
 Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
 
 ```svelte
-<!-- src/routes/foo-[bar].svelte -->
+/// file: src/routes/foo-[bar].svelte
 <script context="module">
 	export function load({ params }) {
 		if (params.bar === 'def') {
@@ -340,10 +347,10 @@ Higher priority routes can _fall through_ to lower priority routes by returning 
 ```
 
 ```js
+/// file: src/routes/[a].js
 // @errors: 2366
 /** @type {import('@sveltejs/kit').RequestHandler} */
 // ---cut---
-// src/routes/[a].js
 export function get({ params }) {
 	if (params.a === 'foo-def') {
 		return { fallthrough: true };
