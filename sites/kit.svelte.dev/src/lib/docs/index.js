@@ -33,7 +33,7 @@ export async function read_file(dir, file) {
 
 	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
 
-	const highlighter = await createShikiHighlighter({ theme: 'dark-plus' });
+	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
 	return {
 		file: `${dir}/${file}`,
@@ -65,14 +65,17 @@ export async function read_file(dir, file) {
 					const html = renderCodeToHTML(
 						twoslash.code,
 						'ts',
-						['twoslash'],
+						{ twoslash: true },
 						{},
 						highlighter,
 						twoslash
 					);
 
 					// preserve blank lines in output (maybe there's a more correct way to do this?)
-					return html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>');
+					return `<div class="code-block">${html.replace(
+						/<div class='line'><\/div>/g,
+						'<div class="line"> </div>'
+					)}</div>`;
 				}
 			} catch (e) {
 				return `<pre>${e.message}</pre>`;
