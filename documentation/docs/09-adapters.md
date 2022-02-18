@@ -23,7 +23,7 @@ You can deploy to the following platforms with the default adapter, `adapter-aut
 To create a simple Node server, install the [`@sveltejs/adapter-node@next`](https://github.com/sveltejs/kit/tree/master/packages/adapter-node) package and update your `svelte.config.js`:
 
 ```diff
-// svelte.config.js
+/// file: svelte.config.js
 -import adapter from '@sveltejs/adapter-auto';
 +import adapter from '@sveltejs/adapter-node';
 ```
@@ -31,7 +31,7 @@ To create a simple Node server, install the [`@sveltejs/adapter-node@next`](http
 With this, [svelte-kit build](/docs/cli#svelte-kit-build) will generate a self-contained Node app inside the `build` directory. You can pass options to adapters, such as customising the output directory:
 
 ```diff
-// svelte.config.js
+/// file: svelte.config.js
 import adapter from '@sveltejs/adapter-node';
 
 export default {
@@ -47,7 +47,7 @@ export default {
 Most adapters will generate static HTML for any [prerenderable](/docs/page-options#prerender) pages of your site. In some cases, your entire app might be prerenderable, in which case you can use [`@sveltejs/adapter-static@next`](https://github.com/sveltejs/kit/tree/master/packages/adapter-static) to generate static HTML for _all_ your pages. A fully static site can be hosted on a wide variety of platforms, including static hosts like [GitHub Pages](https://pages.github.com/).
 
 ```diff
-// svelte.config.js
+/// file: svelte.config.js
 -import adapter from '@sveltejs/adapter-auto';
 +import adapter from '@sveltejs/adapter-static';
 ```
@@ -63,7 +63,7 @@ Some adapters may have access to additional information about the request. For e
 Additional [community-provided adapters](https://sveltesociety.dev/components#adapters) exist for other platforms. After installing the relevant adapter with your package manager, update your `svelte.config.js`:
 
 ```diff
-// svelte.config.js
+/// file: svelte.config.js
 -import adapter from '@sveltejs/adapter-auto';
 +import adapter from 'svelte-adapter-[x]';
 ```
@@ -75,15 +75,22 @@ We recommend [looking at the source for an adapter](https://github.com/sveltejs/
 Adapters packages must implement the following API, which creates an `Adapter`:
 
 ```js
+// @filename: ambient.d.ts
+const AdapterSpecificOptions = any;
+
+// @filename: index.js
+// ---cut---
 /** @param {AdapterSpecificOptions} options */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
-	return {
+	const adapter = {
 		name: 'adapter-package-name',
 		async adapt(builder) {
 			// adapter implementation
 		}
 	};
+
+	return adapter;
 }
 ```
 

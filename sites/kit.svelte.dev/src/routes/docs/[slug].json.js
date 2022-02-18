@@ -1,8 +1,8 @@
-import { read } from '$lib/docs';
+import { read } from '$lib/docs/server';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
-export function get({ params }) {
-	const { prev, next, section } = read('docs', params.slug);
+export async function get({ params }) {
+	const { prev, next, section } = await read('docs', params.slug);
 
 	return {
 		body: {

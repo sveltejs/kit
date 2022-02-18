@@ -19,7 +19,7 @@ Pages are Svelte components written in `.svelte` files (or any file with an exte
 The filename determines the route. For example, `src/routes/index.svelte` is the root of your site:
 
 ```html
-<!-- src/routes/index.svelte -->
+/// file: src/routes/index.svelte
 <svelte:head>
 	<title>Welcome</title>
 </svelte:head>
@@ -30,7 +30,7 @@ The filename determines the route. For example, `src/routes/index.svelte` is the
 A file called either `src/routes/about.svelte` or `src/routes/about/index.svelte` would correspond to the `/about` route:
 
 ```html
-<!-- src/routes/about.svelte -->
+/// file: src/routes/about.svelte
 <svelte:head>
 	<title>About</title>
 </svelte:head>
@@ -47,42 +47,19 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
-```ts
-// Type declarations for endpoints (declarations marked with
-// an `export` keyword can be imported from `@sveltejs/kit`)
-
-export interface RequestHandler<Output = Record<string, any>> {
-	(event: RequestEvent): MaybePromise<
-		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
-	>;
-}
-
-export interface RequestEvent {
-	request: Request;
-	url: URL;
-	params: Record<string, string>;
-	locals: App.Locals;
-	platform: App.Platform;
-}
-
-export interface EndpointOutput<Output = Record<string, any>> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Record<string, any>;
-}
-
-type MaybePromise<T> = T | Promise<T>;
-
-interface Fallthrough {
-	fallthrough: true;
-}
-```
-
-> See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
-
-If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from `src/routes/items/[id].js`:
+If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from this file:
 
 ```js
+/// file: src/routes/items/[id].js
+// @filename: ambient.d.ts
+type Item = {};
+
+declare module '$lib/database' {
+	export const get: (id: string) => Promise<Item>;
+}
+
+// @filename: index.js
+// ---cut---
 import db from '$lib/database';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
@@ -99,7 +76,7 @@ export async function get({ params }) {
 	return {
 		status: 404
 	};
-}
+};
 ```
 
 > All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib).
@@ -116,6 +93,7 @@ The job of this function is to return a `{ status, headers, body }` object repre
 The returned `body` corresponds to the page's props:
 
 ```svelte
+/// file: src/routes/items/[id].svelte
 <script>
 	// populated with data from the endpoint
 	export let item;
@@ -129,6 +107,7 @@ The returned `body` corresponds to the page's props:
 Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
 
 ```js
+// @noErrors
 export function post(event) {...}
 export function put(event) {...}
 export function patch(event) {...}
@@ -138,9 +117,23 @@ export function del(event) {...} // `delete` is a reserved word
 These functions can, like `get`, return a `body` that will be passed to the page as props. Whereas 4xx/5xx responses from `get` will result in an error page rendering, similar responses to non-GET requests do not, allowing you to do things like render form validation errors:
 
 ```js
-// src/routes/items.js
+/// file: src/routes/items.js
+// @filename: ambient.d.ts
+type Item = {
+	id: string;
+};
+type ValidationError = {};
+
+declare module '$lib/database' {
+	export const list: () => Promise<Item[]>;
+	export const create: (request: Request) => Promise<[Record<string, ValidationError>, Item]>;
+}
+
+// @filename: index.js
+// ---cut---
 import * as db from '$lib/database';
 
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get() {
 	const items = await db.list();
 
@@ -149,6 +142,7 @@ export async function get() {
 	};
 }
 
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function post({ request }) {
 	const [errors, item] = await db.create(request);
 
@@ -171,7 +165,7 @@ export async function post({ request }) {
 ```
 
 ```svelte
-<!-- src/routes/items.svelte -->
+/// file: src/routes/items.svelte
 <script>
 	// The page always has access to props from `get`...
 	export let items;
@@ -204,8 +198,21 @@ If you request the route with an `accept: application/json` header, SvelteKit wi
 The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
 
 ```js
+// @filename: ambient.d.ts
+declare global {
+	const create: (data: any) => any;
+}
+
+export {};
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').RequestHandler} */
 export async function post({ request }) {
 	const data = await request.formData(); // or .json(), or .text(), etc
+
+	await create(data);
+	return { status: 201 };
 }
 ```
 
@@ -214,11 +221,20 @@ export async function post({ request }) {
 Endpoints can set cookies by returning a `headers` object with `set-cookie`. To set multiple cookies simultaneously, return an array:
 
 ```js
-return {
-	headers: {
-		'set-cookie': [cookie1, cookie2]
-	}
-};
+// @filename: ambient.d.ts
+const cookie1: string;
+const cookie2: string;
+
+// @filename: index.js
+// ---cut---
+/** @type {import('@sveltejs/kit').RequestHandler} */
+export function get() {
+	return {
+		headers: {
+			'set-cookie': [cookie1, cookie2]
+		}
+	};
+}
 ```
 
 #### HTTP method overrides
@@ -226,14 +242,17 @@ return {
 HTML `<form>` elements only support `GET` and `POST` methods natively. You can allow other methods, like `PUT` and `DELETE`, by specifying them in your [configuration](/docs/configuration#methodoverride) and adding a `_method=VERB` parameter (you can configure the name) to the form's `action`:
 
 ```js
-// svelte.config.js
-export default {
+/// file: svelte.config.js
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
 	kit: {
 		methodOverride: {
 			allowed: ['PUT', 'PATCH', 'DELETE']
 		}
 	}
 };
+
+export default config;
 ```
 
 ```html
@@ -267,6 +286,7 @@ A route can have multiple dynamic parameters, for example `src/routes/[category]
 ...in which case a request for `/sveltejs/kit/tree/master/documentation/docs/01-routing.md` would result in the following parameters being available to the page:
 
 ```js
+// @noErrors
 {
 	org: 'sveltejs',
 	repo: 'kit',
@@ -313,7 +333,7 @@ In rare cases, the ordering above might not be want you want for a given path. F
 Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
 
 ```svelte
-<!-- src/routes/foo-[bar].svelte -->
+/// file: src/routes/foo-[bar].svelte
 <script context="module">
 	export function load({ params }) {
 		if (params.bar === 'def') {
@@ -326,7 +346,10 @@ Higher priority routes can _fall through_ to lower priority routes by returning 
 ```
 
 ```js
-// src/routes/[a].js
+/// file: src/routes/[a].js
+// @errors: 2366
+/** @type {import('@sveltejs/kit').RequestHandler} */
+// ---cut---
 export function get({ params }) {
 	if (params.a === 'foo-def') {
 		return { fallthrough: true };

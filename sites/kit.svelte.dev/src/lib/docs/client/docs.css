@@ -226,3 +226,34 @@
 	height: 2px;
 	background: #ddd;
 }
+
+/** hacky overrides to allow filenames inside code blocks —
+    TODO change the CSS in site-kit so we can get rid of this */
+.code-block {
+	background-color: var(--code-bg);
+	color: var(--code-base);
+	border-radius: 0.5rem;
+	margin: 0 0 1rem 0;
+	font-size: 14px;
+	max-width: var(--linemax);
+	box-shadow: inset 1px 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+	overflow: hidden;
+}
+
+.code-block pre {
+	background-color: transparent;
+	margin: 0;
+	box-shadow: none;
+}
+
+.code-block h5 {
+	font-family: var(--font-mono);
+	font-size: 1.2rem;
+	font-weight: 400;
+	padding: 1rem 1rem 0.8rem 1rem;
+	margin: 0;
+	color: var(--text);
+	background: var(--back-api);
+	border-radius: var(--border-r) var(--border-r) 0 0;
+	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+}

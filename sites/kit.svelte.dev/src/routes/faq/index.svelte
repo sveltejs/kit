@@ -4,8 +4,13 @@
 
 <script>
 	import { Permalink } from '@sveltejs/site-kit';
+	import '$lib/docs/client/docs.css';
+	import '$lib/docs/client/shiki.css';
+	import * as hovers from '$lib/docs/client/hovers.js';
 
 	export let sections;
+
+	hovers.setup();
 </script>
 
 <svelte:head>
@@ -42,23 +47,6 @@
 		max-width: var(--main-width);
 		margin: 0 auto;
 		tab-size: 2;
-	}
-
-	.faqs :global(pre) :global(code) {
-		padding: 0;
-		margin: 0;
-		top: 0;
-		background: transparent;
-	}
-
-	.faqs :global(pre) {
-		margin: 0;
-		margin-bottom: 2rem;
-		width: 100%;
-		max-width: var(--linemax);
-		padding: 1.5rem 2.5rem;
-		border-radius: 0.5rem;
-		font-size: 0.8rem;
 	}
 
 	.faqs :global(.anchor) {

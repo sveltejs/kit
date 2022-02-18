@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { extract_frontmatter, transform } from '$lib/docs/markdown';
-import { slugify } from '../lib/docs';
+import { extract_frontmatter, transform } from '$lib/docs/server/markdown';
+import { slugify } from '../lib/docs/server';
 
 const categories = [
 	{

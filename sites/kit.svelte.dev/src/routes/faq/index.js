@@ -1,9 +1,9 @@
-import { read_all } from '$lib/docs';
+import { read_all } from '$lib/docs/server';
 
-export function get() {
+export async function get() {
 	return {
 		body: {
-			sections: read_all('faq')
+			sections: await read_all('faq')
 		}
 	};
 }

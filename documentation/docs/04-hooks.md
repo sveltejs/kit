@@ -10,40 +10,47 @@ An optional `src/hooks.js` (or `src/hooks.ts`, or `src/hooks/index.js`) file exp
 
 This function runs every time SvelteKit receives a request — whether that happens while the app is running, or during [prerendering](/docs/page-options#prerender) — and determines the response. It receives an `event` object representing the request and a function called `resolve`, which invokes SvelteKit's router and generates a response (rendering a page, or invoking an endpoint) accordingly. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing endpoints programmatically, for example).
 
-> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
+```js
+/// file: src/hooks.js
+/** @type {import('@sveltejs/kit').Handle} */
+export async function handle({ event, resolve }) {
+	if (event.request.url.startsWith('/custom')) {
+		return new Response('custom response');
+	}
 
-If unimplemented, defaults to `({ event, resolve }) => resolve(event)`.
-
-```ts
-// Type declarations for `handle` (declarations marked with
-// an `export` keyword can be imported from `@sveltejs/kit`)
-
-export interface RequestEvent {
-	request: Request;
-	url: URL;
-	params: Record<string, string>;
-	locals: App.Locals;
-	platform: App.Platform;
-}
-
-export interface ResolveOpts {
-	ssr?: boolean;
-	transformPage?: ({ html }: { html: string }) => string;
-}
-
-export interface Handle {
-	(input: {
-		event: RequestEvent;
-		resolve(event: RequestEvent, opts?: ResolveOpts): MaybePromise<Response>;
-	}): MaybePromise<Response>;
+	const response = await resolve(event);
+	return response;
 }
 ```
 
-> See the [TypeScript](/docs/typescript) section for information on `App.Locals` and `App.Platform`.
+> Requests for static assets — which includes pages that were already prerendered — are _not_ handled by SvelteKit.
 
-To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
+If unimplemented, defaults to `({ event, resolve }) => resolve(event)`. To add custom data to the request, which is passed to endpoints, populate the `event.locals` object, as shown below.
 
 ```js
+/// file: src/hooks.js
+// @filename: ambient.d.ts
+type User = {
+	name: string;
+}
+
+declare namespace App {
+	interface Locals {
+		user: User;
+	}
+	interface Platform {}
+	interface Session {}
+	interface Stuff {}
+}
+
+const getUserInformation: (cookie: string | null) => Promise<User>;
+
+// declare global {
+// 	const getUserInformation: (cookie: string) => Promise<User>;
+// }
+
+// @filename: index.js
+// ---cut---
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	event.locals.user = await getUserInformation(event.request.headers.get('cookie'));
@@ -63,6 +70,7 @@ You can add call multiple `handle` functions with [the `sequence` helper functio
 - `transformPage(opts: { html: string }): string` — applies custom transforms to HTML
 
 ```js
+/// file: src/hooks.js
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event, {
@@ -84,13 +92,13 @@ During development, if an error occurs because of a syntax error in your Svelte 
 
 If unimplemented, SvelteKit will log the error with default formatting.
 
-```ts
-export interface HandleError {
-	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
-}
-```
-
 ```js
+/// file: src/hooks.js
+// @filename: ambient.d.ts
+const Sentry: any;
+
+// @filename: index.js
+// ---cut---
 /** @type {import('@sveltejs/kit').HandleError} */
 export async function handleError({ error, event }) {
 	// example integration with https://sentry.io/
@@ -106,13 +114,31 @@ This function takes the `event` object and returns a `session` object that is [a
 
 If unimplemented, session is `{}`.
 
-```ts
-export interface GetSession {
-	(event: RequestEvent): MaybePromise<App.Session>;
-}
-```
-
 ```js
+/// file: src/hooks.js
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {
+		user: {
+			name: string;
+			email: string;
+			avatar: string;
+			token: string;
+		}
+	}
+	interface Session {
+		user?: {
+			name: string;
+			email: string;
+			avatar: string;
+		}
+	}
+}
+
+type MaybePromise<T> = T | Promise<T>;
+
+// @filename: index.js
+// ---cut---
 /** @type {import('@sveltejs/kit').GetSession} */
 export function getSession(event) {
 	return event.locals.user
@@ -137,12 +163,6 @@ export function getSession(event) {
 This function allows you to modify (or replace) a `fetch` request for an external resource that happens inside a `load` function that runs on the server (or during pre-rendering).
 
 For example, your `load` function might make a request to a public URL like `https://api.yourapp.com` when the user performs a client-side navigation to the respective page, but during SSR it might make sense to hit the API directly (bypassing whatever proxies and load balancers sit between it and the public internet).
-
-```ts
-export interface ExternalFetch {
-	(req: Request): Promise<Response>;
-}
-```
 
 ```js
 /** @type {import('@sveltejs/kit').ExternalFetch} */

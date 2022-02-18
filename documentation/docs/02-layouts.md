@@ -15,7 +15,7 @@ To create a layout that applies to every page, make a file called `src/routes/__
 ...but we can add whatever markup, styles and behaviour we want. The only requirement is that the component includes a `<slot>` for the page content. For example, let's add a nav bar:
 
 ```html
-<!-- src/routes/__layout.svelte -->
+/// file: src/routes/__layout.svelte
 <nav>
 	<a href="/">Home</a>
 	<a href="/about">About</a>
@@ -28,17 +28,17 @@ To create a layout that applies to every page, make a file called `src/routes/__
 If we create pages for `/`, `/about` and `/settings`...
 
 ```html
-<!-- src/routes/index.svelte -->
+/// file: src/routes/index.svelte
 <h1>Home</h1>
 ```
 
 ```html
-<!-- src/routes/about.svelte -->
+/// file: src/routes/about.svelte
 <h1>About</h1>
 ```
 
 ```html
-<!-- src/routes/settings.svelte -->
+/// file: src/routes/settings.svelte
 <h1>Settings</h1>
 ```
 
@@ -51,7 +51,7 @@ Suppose we don't just have a single `/settings` page, but instead have nested pa
 We can create a layout that only applies to pages below `/settings` (while inheriting the root layout with the top-level nav):
 
 ```html
-<!-- src/routes/settings/__layout.svelte -->
+/// file: src/routes/settings/__layout.svelte
 <h1>Settings</h1>
 
 <div class="submenu">
@@ -75,17 +75,6 @@ If a page fails to load (see [Loading](/docs/loading)), SvelteKit will render an
 For example, if `src/routes/settings/notifications/index.svelte` failed to load, SvelteKit would render `src/routes/settings/notifications/__error.svelte` in the same layout, if it existed. If not, it would render `src/routes/settings/__error.svelte` in the parent layout, or `src/routes/__error.svelte` in the root layout.
 
 > SvelteKit provides a default error page in case you don't supply `src/routes/__error.svelte`, but it's recommended that you bring your own.
-
-```ts
-// declaration type
-// * also see type for `LoadOutput` in the Loading section
-
-export interface ErrorLoadInput<Params extends Record<string, string> = Record<string, string>>
-	extends LoadInput<Params> {
-	status?: number;
-	error?: Error;
-}
-```
 
 If an error component has a [`load`](/docs/loading) function, it will be called with `error` and `status` properties:
 

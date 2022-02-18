@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { renderCodeToHTML, runTwoSlash, createShikiHighlighter } from 'shiki-twoslash';
 import PrismJS from 'prismjs';
 import 'prismjs/components/prism-bash.js';
 import 'prismjs/components/prism-diff.js';
@@ -24,7 +25,7 @@ const base = '../../documentation';
  * @param {string} dir
  * @param {string} file
  */
-export function read_file(dir, file) {
+export async function read_file(dir, file) {
 	const match = /\d{2}-(.+)\.md/.exec(file);
 	if (!match) return null;
 
@@ -32,11 +33,68 @@ export function read_file(dir, file) {
 
 	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
 
+	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
+
 	return {
 		file: `${dir}/${file}`,
 		slug: match[1],
 		// third argument is a gross hack to accommodate FAQ
-		...parse(markdown, file, dir === 'faq' ? slug : undefined)
+		...parse(
+			markdown,
+			file,
+			dir === 'faq' ? slug : undefined,
+			(/** @type {string} */ source, /** @type {string} */ lang) => {
+				let file = '';
+
+				source = source
+					.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
+						file = value;
+						return '';
+					})
+					.replace(/^(    )+/gm, (match) => {
+						// for no good reason at all, marked replaces tabs with spaces
+						let tabs = '';
+						for (let i = 0; i < match.length; i += 4) {
+							tabs += '\t';
+						}
+						return tabs;
+					});
+
+				if (lang === 'js' || lang === 'ts') {
+					const twoslash = runTwoSlash(source, lang, {
+						defaultCompilerOptions: {
+							allowJs: true,
+							checkJs: true,
+							target: 'es2021'
+						}
+					});
+
+					const html = renderCodeToHTML(
+						twoslash.code,
+						'ts',
+						{ twoslash: true },
+						{},
+						highlighter,
+						twoslash
+					);
+
+					// preserve blank lines in output (maybe there's a more correct way to do this?)
+					return `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
+						/<div class='line'><\/div>/g,
+						'<div class="line"> </div>'
+					)}</div>`;
+				}
+
+				const plang = languages[lang];
+				const highlighted = plang
+					? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+				return `<div class="code-block">${
+					file ? `<h5>${file}</h5>` : ''
+				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+			}
+		)
 	};
 }
 
@@ -44,7 +102,7 @@ export function read_file(dir, file) {
  * @param {string} dir
  * @param {string} slug
  */
-export function read(dir, slug) {
+export async function read(dir, slug) {
 	const files = fs.readdirSync(`${base}/${dir}`).filter((file) => /^\d{2}-(.+)\.md$/.test(file));
 	const index = files.findIndex((file) => file.slice(3, -3) === slug);
 
@@ -61,15 +119,41 @@ export function read(dir, slug) {
 	return {
 		prev: prev && summarise(prev),
 		next: next && summarise(next),
-		section: read_file(dir, files[index])
+		section: await read_file(dir, files[index])
 	};
 }
 
 /** @param {string} dir */
-export function read_all(dir) {
+export async function read_all(dir) {
+	const result = [];
+
+	for (const file of fs.readdirSync(`${base}/${dir}`)) {
+		const section = await read_file(dir, file);
+		if (section) result.push(section);
+	}
+
+	return result;
+}
+
+/** @param {string} dir */
+export function read_headings(dir) {
 	return fs
 		.readdirSync(`${base}/${dir}`)
-		.map((file) => read_file(dir, file))
+		.map((file) => {
+			const match = /\d{2}-(.+)\.md/.exec(file);
+			if (!match) return null;
+
+			const slug = match[1];
+
+			const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+
+			return {
+				file: `${dir}/${file}`,
+				slug: match[1],
+				// third argument is a gross hack to accommodate FAQ
+				...parse(markdown, file, dir === 'faq' ? slug : undefined, () => '')
+			};
+		})
 		.filter(Boolean);
 }
 
@@ -78,7 +162,7 @@ export function read_all(dir) {
  * @param {string} file
  * @param {string} [main_slug]
  */
-function parse(markdown, file, main_slug) {
+function parse(markdown, file, main_slug, code) {
 	const { body, metadata } = extract_frontmatter(markdown);
 
 	const headings = main_slug ? [main_slug] : [];
@@ -119,23 +203,7 @@ function parse(markdown, file, main_slug) {
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
-		code(source, lang) {
-			// for no good reason at all, marked replaces tabs with spaces
-			source = source.replace(/^(    )+/gm, (match) => {
-				let tabs = '';
-				for (let i = 0; i < match.length; i += 4) {
-					tabs += '\t';
-				}
-				return tabs;
-			});
-
-			const plang = languages[lang];
-			const highlighted = plang
-				? PrismJS.highlight(source, PrismJS.languages[plang], lang)
-				: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-			return `<div class="code-block"><pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
-		}
+		code
 	});
 
 	return {

@@ -20,11 +20,15 @@
 <script>
 	import { Icon } from '@sveltejs/site-kit';
 	import '@sveltejs/site-kit/code.css';
-	import './_/docs.css';
+	import '$lib/docs/client/docs.css';
+	import '$lib/docs/client/shiki.css';
+	import * as hovers from '$lib/docs/client/hovers.js';
 
 	export let prev;
 	export let next;
 	export let section;
+
+	hovers.setup();
 </script>
 
 <svelte:head>

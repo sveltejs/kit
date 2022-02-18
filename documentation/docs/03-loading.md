@@ -7,6 +7,18 @@ A component that defines a page or a layout can export a `load` function that ru
 If the data for a page comes from its endpoint, you may not need a `load` function. It's useful when you need more flexibility, for example loading data from an external API.
 
 ```ts
+// @filename: ambient.d.ts
+declare namespace App {
+	interface Locals {}
+	interface Platform {}
+	interface Session {}
+	interface Stuff {}
+}
+
+type Either<T, U> = Only<T, U> | Only<U, T>;
+
+// @filename: index.ts
+// ---cut---
 // Type declarations for `load` (declarations marked with
 // an `export` keyword can be imported from `@sveltejs/kit`)
 
@@ -14,7 +26,7 @@ export interface Load<Params = Record<string, string>, Props = Record<string, an
 	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
 }
 
-export interface LoadInput<Params extends Record<string, string> = Record<string, string>> {
+export interface LoadInput<Params = Record<string, string>> {
 	url: URL;
 	params: Params;
 	props: Record<string, any>;
@@ -23,7 +35,7 @@ export interface LoadInput<Params extends Record<string, string> = Record<string
 	stuff: Partial<App.Stuff>;
 }
 
-export interface LoadOutput<Props extends Record<string, any> = Record<string, any>> {
+export interface LoadOutput<Props = Record<string, any>> {
 	status?: number;
 	error?: string | Error;
 	redirect?: string;
@@ -44,7 +56,7 @@ interface Fallthrough {
 A page that loads data from an external API might look like this:
 
 ```html
-<!-- src/routes/blog/[slug].svelte -->
+/// file: src/routes/blog/[slug].svelte
 <script context="module">
 	/** @type {import('@sveltejs/kit').Load} */
 	export async function load({ params, fetch, session, stuff }) {
@@ -102,7 +114,7 @@ The `load` function receives an object containing six fields — `url`, `params`
 
 For a route filename example like `src/routes/a/[b]/[...c]` and a `url.pathname` of `/a/x/y/z`, the `params` object would look like this:
 
-```js
+```json
 {
 	"b": "x",
 	"c": "y/z"
