@@ -45,7 +45,7 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await app.render(request, { 'platform':  {'remoteAddress' : req.socket.remoteAddress}  }));
+	setResponse(res, await app.render(request, { platform:  {remoteAddress : req.socket.remoteAddress}  }));
 };
 
 /** @param {import('polka').Middleware[]} handlers */
