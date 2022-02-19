@@ -1,5 +1,6 @@
-import fs, { stat } from 'fs';
+import fs from 'fs';
 import ts from 'typescript';
+import prettier from 'prettier';
 
 const code = fs.readFileSync('types/index.d.ts', 'utf-8');
 const node = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest);
@@ -30,7 +31,13 @@ for (const statement of node.statements) {
 		const i = code.indexOf('export', start);
 		start = i + 6;
 
-		const snippet = code.slice(start, statement.end).trim();
+		const snippet = prettier.format(code.slice(start, statement.end).trim(), {
+			parser: 'typescript',
+			printWidth: 60,
+			useTabs: true,
+			singleQuote: true,
+			trailingComma: 'none'
+		});
 
 		types.push({ name, comment, snippet });
 	}
