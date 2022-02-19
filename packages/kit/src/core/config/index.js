@@ -6,7 +6,7 @@ import options from './options.js';
 
 /**
  * @param {string} cwd
- * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types').ValidatedConfig} config
  */
 export function load_template(cwd, config) {
 	const { template } = config.kit.files;
@@ -51,8 +51,8 @@ export async function load_config({ cwd = process.cwd() } = {}) {
 }
 
 /**
- * @param {import('types/config').Config} config
- * @returns {import('types/config').ValidatedConfig}
+ * @param {import('types').Config} config
+ * @returns {import('types').ValidatedConfig}
  */
 export function validate_config(config) {
 	if (typeof config !== 'object') {

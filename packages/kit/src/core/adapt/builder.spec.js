@@ -13,7 +13,7 @@ const __dirname = join(__filename, '..');
 test('copy files', () => {
 	const cwd = join(__dirname, 'fixtures/basic');
 
-	/** @type {import('types/config').Config} */
+	/** @type {import('types').Config} */
 	const mocked = {
 		extensions: ['.svelte'],
 		kit: {
@@ -26,7 +26,7 @@ test('copy files', () => {
 
 	const builder = create_builder({
 		cwd,
-		config: /** @type {import('types/config').ValidatedConfig} */ (mocked),
+		config: /** @type {import('types').ValidatedConfig} */ (mocked),
 		// @ts-expect-error
 		build_data: {},
 		// @ts-expect-error
@@ -40,7 +40,7 @@ test('copy files', () => {
 
 	assert.equal(
 		glob('**', {
-			cwd: /** @type {import('types/config').ValidatedConfig} */ (mocked).kit.files.assets
+			cwd: /** @type {import('types').ValidatedConfig} */ (mocked).kit.files.assets
 		}),
 		glob('**', { cwd: dest })
 	);

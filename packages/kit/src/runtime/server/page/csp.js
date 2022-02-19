@@ -58,19 +58,19 @@ export class Csp {
 	/** @type {boolean} */
 	#style_needs_csp;
 
-	/** @type {import('types/csp').CspDirectives} */
+	/** @type {import('types').CspDirectives} */
 	#directives;
 
-	/** @type {import('types/csp').Source[]} */
+	/** @type {import('types').Csp.Source[]} */
 	#script_src;
 
-	/** @type {import('types/csp').Source[]} */
+	/** @type {import('types').Csp.Source[]} */
 	#style_src;
 
 	/**
 	 * @param {{
 	 *   mode: string,
-	 *   directives: import('types/csp').CspDirectives
+	 *   directives: import('types').CspDirectives
 	 * }} config
 	 * @param {{
 	 *   dev: boolean;

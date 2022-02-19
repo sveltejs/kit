@@ -6,11 +6,11 @@ import { generate_manifest } from '../generate_manifest/index.js';
 /**
  * @param {{
  *   cwd: string;
- *   config: import('types/config').ValidatedConfig;
- *   build_data: import('types/internal').BuildData;
- *   log: import('types/internal').Logger;
+ *   config: import('types').ValidatedConfig;
+ *   build_data: import('types').BuildData;
+ *   log: import('types').Logger;
  * }} opts
- * @returns {import('types/config').Builder}
+ * @returns {import('types').Builder}
  */
 export function create_builder({ cwd, config, build_data, log }) {
 	/** @type {Set<string>} */
@@ -18,7 +18,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 
 	let generated_manifest = false;
 
-	/** @param {import('types/internal').RouteData} route */
+	/** @param {import('types').RouteData} route */
 	function not_prerendered(route) {
 		if (!prerendered_paths) return true;
 
@@ -43,7 +43,7 @@ export function create_builder({ cwd, config, build_data, log }) {
 
 			const { routes } = build_data.manifest_data;
 
-			/** @type {import('types/config').RouteDefinition[]} */
+			/** @type {import('types').RouteDefinition[]} */
 			const facades = routes.map((route) => ({
 				type: route.type,
 				segments: route.segments,

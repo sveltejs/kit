@@ -11,7 +11,7 @@ const DATA_SUFFIX = '/__data.json';
 /** @param {{ html: string }} opts */
 const default_transform = ({ html }) => html;
 
-/** @type {import('types/internal').Respond} */
+/** @type {import('types').Respond} */
 export async function respond(request, options, state = {}) {
 	const url = new URL(request.url);
 
@@ -51,7 +51,7 @@ export async function respond(request, options, state = {}) {
 		}
 	}
 
-	/** @type {import('types/hooks').RequestEvent} */
+	/** @type {import('types').RequestEvent} */
 	const event = {
 		request,
 		url,
@@ -94,7 +94,7 @@ export async function respond(request, options, state = {}) {
 		rawBody: body_getter
 	});
 
-	/** @type {import('types/hooks').RequiredResolveOptions} */
+	/** @type {import('types').RequiredResolveOptions} */
 	let resolve_opts = {
 		ssr: true,
 		transformPage: default_transform

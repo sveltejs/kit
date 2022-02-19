@@ -1,5 +1,4 @@
-import { JSONValue } from '@sveltejs/kit/types/helper';
-import { NormalizedLoadOutput, SSRNode } from 'types/internal';
+import { JSONValue, NormalizedLoadOutput, SSRNode } from 'types';
 
 export type Loaded = {
 	node: SSRNode;

@@ -5,19 +5,19 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSRNode} SSRNode
- * @typedef {import('types/internal').SSROptions} SSROptions
- * @typedef {import('types/internal').SSRState} SSRState
+ * @typedef {import('types').SSRNode} SSRNode
+ * @typedef {import('types').SSROptions} SSROptions
+ * @typedef {import('types').SSRState} SSRState
  */
 
 /**
  * @param {{
- *   event: import('types/hooks').RequestEvent;
+ *   event: import('types').RequestEvent;
  *   options: SSROptions;
  *   state: SSRState;
  *   $session: any;
- *   resolve_opts: import('types/hooks').RequiredResolveOptions;
- *   route: import('types/internal').SSRPage;
+ *   resolve_opts: import('types').RequiredResolveOptions;
+ *   route: import('types').SSRPage;
  *   params: Record<string, string>;
  * }} opts
  * @returns {Promise<Response | undefined>}
@@ -240,7 +240,7 @@ export async function respond(opts) {
 }
 
 /**
- * @param {import('types/internal').SSRComponent} leaf
+ * @param {import('types').SSRComponent} leaf
  * @param {SSROptions} options
  */
 function get_page_config(leaf, options) {

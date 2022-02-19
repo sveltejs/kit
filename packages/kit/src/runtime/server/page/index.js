@@ -2,11 +2,11 @@ import { render_endpoint } from '../endpoint.js';
 import { respond } from './respond.js';
 
 /**
- * @param {import('types/hooks').RequestEvent} event
- * @param {import('types/internal').SSRPage} route
- * @param {import('types/internal').SSROptions} options
- * @param {import('types/internal').SSRState} state
- * @param {import('types/hooks').RequiredResolveOptions} resolve_opts
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSRPage} route
+ * @param {import('types').SSROptions} options
+ * @param {import('types').SSRState} state
+ * @param {import('types').RequiredResolveOptions} resolve_opts
  * @returns {Promise<Response | undefined>}
  */
 export async function render_page(event, route, options, state, resolve_opts) {

@@ -2,9 +2,9 @@ import { s } from '../../utils/misc.js';
 import { get_mime_lookup } from '../utils.js';
 
 /**
- * @param {import('../../../types/internal').BuildData} build_data;
+ * @param {import('types').BuildData} build_data;
  * @param {string} relative_path;
- * @param {import('../../../types/internal').RouteData[]} routes;
+ * @param {import('types').RouteData[]} routes;
  * @param {'esm' | 'cjs'} format
  */
 export function generate_manifest(

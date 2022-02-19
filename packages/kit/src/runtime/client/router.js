@@ -49,8 +49,8 @@ export class Router {
 	/**
 	 * @param {{
 	 *    base: string;
-	 *    routes: import('types/internal').CSRRoute[];
-	 *    trailing_slash: import('types/internal').TrailingSlash;
+	 *    routes: import('types').CSRRoute[];
+	 *    trailing_slash: import('types').TrailingSlash;
 	 *    renderer: import('./renderer').Renderer
 	 * }} opts
 	 */

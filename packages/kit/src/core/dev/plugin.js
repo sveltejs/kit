@@ -14,12 +14,12 @@ import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
 
 /**
- * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  * @returns {Promise<import('vite').Plugin>}
  */
 export async function create_plugin(config, cwd) {
-	/** @type {import('types/hooks').Handle} */
+	/** @type {import('types').Handle} */
 	let amp;
 
 	if (config.kit.amp) {
@@ -29,7 +29,7 @@ export async function create_plugin(config, cwd) {
 
 	process.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL = '0';
 
-	/** @type {import('types/internal').Respond} */
+	/** @type {import('types').Respond} */
 	const respond = (await import(`${runtime}/server/index.js`)).respond;
 
 	return {
@@ -38,7 +38,7 @@ export async function create_plugin(config, cwd) {
 		configureServer(vite) {
 			__fetch_polyfill();
 
-			/** @type {import('types/app').SSRManifest} */
+			/** @type {import('types').SSRManifest} */
 			let manifest;
 
 			function update_manifest() {
@@ -60,7 +60,7 @@ export async function create_plugin(config, cwd) {
 							return async () => {
 								const url = id.startsWith('..') ? `/@fs${path.posix.resolve(id)}` : `/${id}`;
 
-								const module = /** @type {import('types/internal').SSRComponent} */ (
+								const module = /** @type {import('types').SSRComponent} */ (
 									await vite.ssrLoadModule(url)
 								);
 								const node = await vite.moduleGraph.getModuleByUrl(url);
@@ -173,14 +173,14 @@ export async function create_plugin(config, cwd) {
 
 						if (!decoded.startsWith(config.kit.paths.base)) return not_found(res);
 
-						/** @type {Partial<import('types/internal').Hooks>} */
+						/** @type {Partial<import('types').Hooks>} */
 						const user_hooks = resolve_entry(config.kit.files.hooks)
 							? await vite.ssrLoadModule(`/${config.kit.files.hooks}`)
 							: {};
 
 						const handle = user_hooks.handle || (({ event, resolve }) => resolve(event));
 
-						/** @type {import('types/internal').Hooks} */
+						/** @type {import('types').Hooks} */
 						const hooks = {
 							// @ts-expect-error this picks up types that belong to the tests
 							getSession: user_hooks.getSession || (() => ({})),

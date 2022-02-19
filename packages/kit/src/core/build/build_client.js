@@ -13,8 +13,8 @@ import { posixify } from '../../utils/filesystem.js';
  * @param {{
  *   cwd: string;
  *   assets_base: string;
- *   config: import('types/config').ValidatedConfig
- *   manifest_data: import('types/internal').ManifestData
+ *   config: import('types').ValidatedConfig
+ *   manifest_data: import('types').ManifestData
  *   output_dir: string;
  *   client_entry_file: string;
  *   service_worker_entry_file: string | null;

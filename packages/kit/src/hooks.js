@@ -1,6 +1,6 @@
 /**
- * @param {...import('types/hooks').Handle} handlers
- * @returns {import('types/hooks').Handle}
+ * @param {...import('types').Handle} handlers
+ * @returns {import('types').Handle}
  */
 export function sequence(...handlers) {
 	const length = handlers.length;
@@ -11,8 +11,8 @@ export function sequence(...handlers) {
 
 		/**
 		 * @param {number} i
-		 * @param {import('types/hooks').RequestEvent} event
-		 * @returns {import('types/helper').MaybePromise<Response>}
+		 * @param {import('types').RequestEvent} event
+		 * @returns {import('types').MaybePromise<Response>}
 		 */
 		function apply_handle(i, event) {
 			const handle = handlers[i];

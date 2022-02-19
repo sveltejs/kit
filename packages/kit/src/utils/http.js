@@ -1,4 +1,4 @@
-/** @param {Partial<import('types/helper').ResponseHeaders> | undefined} object */
+/** @param {Partial<import('types').ResponseHeaders> | undefined} object */
 export function to_headers(object) {
 	const headers = new Headers();
 

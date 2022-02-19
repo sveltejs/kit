@@ -1,6 +1,6 @@
 /**
- * @param {import('types/page').LoadOutput} loaded
- * @returns {import('types/internal').NormalizedLoadOutput}
+ * @param {import('types').LoadOutput} loaded
+ * @returns {import('types').NormalizedLoadOutput}
  */
 export function normalize(loaded) {
 	const has_error_status =
@@ -60,5 +60,5 @@ export function normalize(loaded) {
 		);
 	}
 
-	return /** @type {import('types/internal').NormalizedLoadOutput} */ (loaded);
+	return /** @type {import('types').NormalizedLoadOutput} */ (loaded);
 }

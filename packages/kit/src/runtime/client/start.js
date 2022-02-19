@@ -16,11 +16,11 @@ import { set_paths } from '../paths.js';
  *   session: any;
  *   route: boolean;
  *   spa: boolean;
- *   trailing_slash: import('types/internal').TrailingSlash;
+ *   trailing_slash: import('types').TrailingSlash;
  *   hydrate: {
  *     status: number;
  *     error: Error;
- *     nodes: Array<Promise<import('types/internal').CSRComponent>>;
+ *     nodes: Array<Promise<import('types').CSRComponent>>;
  *     params: Record<string, string>;
  *   };
  * }} opts
