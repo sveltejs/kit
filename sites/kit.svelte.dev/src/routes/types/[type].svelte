@@ -25,7 +25,7 @@
 		<h2>Constructors</h2>
 		<ul>
 			{#each constructors as constructor}
-				{#each constructor.signatures as signature}
+				{#each (constructor.signatures || []) as signature}
 					<li>
 						{signature.name}({#each signature.parameters as parameter}
 							{parameter.name}: {parameter.type.name}
@@ -49,9 +49,9 @@
 		<h2>Methods</h2>
 		<ul>
 			{#each methods as method}
-				{#each method.signatures as signature}
+				{#each (method.signatures || []) as signature}
 					<li>
-						{signature.name}({#each signature.parameters as parameter}
+						{signature.name}({#each (signature.parameters || []) as parameter}
 							{parameter.name}: {parameter.type.name}
 						{/each})
 					</li>

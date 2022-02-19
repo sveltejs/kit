@@ -2,7 +2,10 @@ import fs from 'fs';
 
 export function get({ params }) {
 	const types = JSON.parse(fs.readFileSync('../../documentation/types.json'));
-	const type = types.children.find((item) => item.name === params.type);
+	const type = (types.children || []).find((item) => item.name === params.type);
+	if (!type) {
+		return {};
+	}
 	const result = {
 		name: type.name,
 		kindString: type.kindString,
@@ -10,7 +13,7 @@ export function get({ params }) {
 		properties: [],
 		methods: []
 	};
-	for (child of type.children) {
+	for (let child of (type.children || [])) {
 		if (child.kindString === 'Constructor') {
 			result.constructors.push(child);
 		}
