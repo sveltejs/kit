@@ -19,8 +19,11 @@ for (const statement of node.statements) {
 		let start = statement.pos;
 		let comment = '';
 
+		// @ts-ignore i think typescript is bad at typescript
 		if (statement.jsDoc) {
+			// @ts-ignore
 			comment = statement.jsDoc[0].comment;
+			// @ts-ignore
 			start = statement.jsDoc[0].end;
 		}
 
