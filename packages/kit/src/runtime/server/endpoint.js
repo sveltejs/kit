@@ -35,14 +35,14 @@ export function is_text(content_type) {
 }
 
 /**
- * @param {import('types/hooks').RequestEvent} event
- * @param {{ [method: string]: import('types/endpoint').RequestHandler }} mod
+ * @param {import('types').RequestEvent} event
+ * @param {{ [method: string]: import('types').RequestHandler }} mod
  * @returns {Promise<Response | undefined>}
  */
 export async function render_endpoint(event, mod) {
 	const method = normalize_request_method(event);
 
-	/** @type {import('types/endpoint').RequestHandler} */
+	/** @type {import('types').RequestHandler} */
 	let handler = mod[method];
 
 	if (!handler && method === 'head') {
@@ -77,14 +77,14 @@ export async function render_endpoint(event, mod) {
 		);
 	}
 
-	/** @type {import('types/hooks').StrictBody} */
+	/** @type {import('types').StrictBody} */
 	let normalized_body;
 
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
 		normalized_body = JSON.stringify(body);
 	} else {
-		normalized_body = /** @type {import('types/hooks').StrictBody} */ (body);
+		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}
 
 	if (

@@ -10,8 +10,8 @@ import { build_client } from './build_client.js';
 import { build_server } from './build_server.js';
 
 /**
- * @param {import('types/config').ValidatedConfig} config
- * @returns {Promise<import('types/internal').BuildData>}
+ * @param {import('types').ValidatedConfig} config
+ * @returns {Promise<import('types').BuildData>}
  */
 export async function build(config) {
 	const cwd = process.cwd(); // TODO is this necessary?

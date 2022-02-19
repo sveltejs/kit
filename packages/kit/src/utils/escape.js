@@ -15,7 +15,7 @@ const escape_json_in_html_regex = new RegExp(
 
 /**
  * Escape a JSONValue that's going to be embedded in a `<script>` tag
- * @param {import("@sveltejs/kit/types/helper").JSONValue} val
+ * @param {import('types').JSONValue} val
  */
 export function escape_json_in_html(val) {
 	return JSON.stringify(val).replace(

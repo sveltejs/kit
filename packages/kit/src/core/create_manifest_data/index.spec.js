@@ -9,7 +9,7 @@ const cwd = fileURLToPath(new URL('./test', import.meta.url));
 
 /**
  * @param {string} dir
- * @param {import('types/config').Config} config
+ * @param {import('types').Config} config
  * @returns
  */
 const create = (dir, config = {}) => {
@@ -19,7 +19,7 @@ const create = (dir, config = {}) => {
 	initial.kit.files.routes = path.resolve(cwd, dir);
 
 	return create_manifest_data({
-		config: /** @type {import('types/config').ValidatedConfig} */ (initial),
+		config: /** @type {import('types').ValidatedConfig} */ (initial),
 		fallback: cwd,
 		cwd
 	});

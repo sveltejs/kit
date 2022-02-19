@@ -6,7 +6,7 @@ import { normalize } from '../load.js';
 import { base } from '../paths.js';
 
 /**
- * @typedef {import('types/internal').CSRComponent} CSRComponent
+ * @typedef {import('types').CSRComponent} CSRComponent
  * @typedef {{ from: URL; to: URL }} Navigating
  */
 
@@ -652,7 +652,7 @@ export class Renderer {
 		if (module.load) {
 			const { started } = this;
 
-			/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
+			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 			const load_input = {
 				params: uses_params,
 				props: props || {},
@@ -687,8 +687,8 @@ export class Renderer {
 			}
 
 			if (error) {
-				/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
-				/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
+				/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
+				/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
 			}
 
 			const loaded = await module.load.call(null, load_input);

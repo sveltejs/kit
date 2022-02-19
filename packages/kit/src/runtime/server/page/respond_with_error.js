@@ -4,19 +4,19 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @typedef {import('./types.js').Loaded} Loaded
- * @typedef {import('types/internal').SSROptions} SSROptions
- * @typedef {import('types/internal').SSRState} SSRState
+ * @typedef {import('types').SSROptions} SSROptions
+ * @typedef {import('types').SSRState} SSRState
  */
 
 /**
  * @param {{
- *   event: import('types/hooks').RequestEvent;
+ *   event: import('types').RequestEvent;
  *   options: SSROptions;
  *   state: SSRState;
  *   $session: any;
  *   status: number;
  *   error: Error;
- *   resolve_opts: import('types/hooks').RequiredResolveOptions;
+ *   resolve_opts: import('types').RequiredResolveOptions;
  * }} opts
  */
 export async function respond_with_error({

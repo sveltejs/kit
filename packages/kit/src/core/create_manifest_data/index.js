@@ -29,11 +29,11 @@ const specials = new Set(['__layout', '__layout.reset', '__error']);
 
 /**
  * @param {{
- *   config: import('types/config').ValidatedConfig;
+ *   config: import('types').ValidatedConfig;
  *   fallback?: string;
  *   cwd?: string;
  * }} opts
- * @returns {import('types/internal').ManifestData}
+ * @returns {import('types').ManifestData}
  */
 export default function create_manifest_data({
 	config,
@@ -52,7 +52,7 @@ export default function create_manifest_data({
 	/** @type {string[]} */
 	const components = [];
 
-	/** @type {import('types/internal').RouteData[]} */
+	/** @type {import('types').RouteData[]} */
 	const routes = [];
 
 	const default_layout = posixify(path.relative(cwd, `${fallback}/layout.svelte`));
@@ -435,10 +435,10 @@ function get_pattern(segments, add_trailing_slash) {
 
 /**
  * @param {{
- *  config: import('types/config').ValidatedConfig;
+ *  config: import('types').ValidatedConfig;
  * 	dir: string;
  * 	path: string;
- * 	files?: import('types/internal').Asset[]
+ * 	files?: import('types').Asset[]
  * }} args
  */
 function list_files({ config, dir, path, files = [] }) {

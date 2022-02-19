@@ -10,9 +10,9 @@ import { crawl } from './crawl.js';
 import { escape_html_attr } from '../../../utils/escape.js';
 
 /**
- * @typedef {import('types/config').PrerenderErrorHandler} PrerenderErrorHandler
- * @typedef {import('types/config').PrerenderOnErrorValue} OnError
- * @typedef {import('types/internal').Logger} Logger
+ * @typedef {import('types').PrerenderErrorHandler} PrerenderErrorHandler
+ * @typedef {import('types').PrerenderOnErrorValue} OnError
+ * @typedef {import('types').Logger} Logger
  */
 
 /** @type {(details: Parameters<PrerenderErrorHandler>[0] ) => string} */
@@ -44,14 +44,14 @@ const REDIRECT = 3;
  *   cwd: string;
  *   out: string;
  *   log: Logger;
- *   config: import('types/config').ValidatedConfig;
- *   build_data: import('types/internal').BuildData;
+ *   config: import('types').ValidatedConfig;
+ *   build_data: import('types').BuildData;
  *   fallback?: string;
  *   all: boolean; // disregard `export const prerender = true`
  * }} opts
  */
 export async function prerender({ cwd, out, log, config, build_data, fallback, all }) {
-	/** @type {import('types/config').Prerendered} */
+	/** @type {import('types').Prerendered} */
 	const prerendered = {
 		pages: new Map(),
 		assets: new Map(),
@@ -67,7 +67,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
-	/** @type {import('types/internal').AppModule} */
+	/** @type {import('types').AppModule} */
 	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
 	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
@@ -142,7 +142,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 			return;
 		}
 
-		/** @type {Map<string, import('types/internal').PrerenderDependency>} */
+		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
 		const response = await app.render(new Request(`http://sveltekit-prerender${encoded}`), {

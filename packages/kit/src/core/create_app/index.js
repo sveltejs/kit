@@ -18,7 +18,7 @@ export function write_if_changed(file, code) {
 	}
 }
 
-/** @typedef {import('types/internal').ManifestData} ManifestData */
+/** @typedef {import('types').ManifestData} ManifestData */
 
 /**
  * @param {{

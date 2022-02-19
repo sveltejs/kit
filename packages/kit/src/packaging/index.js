@@ -8,7 +8,7 @@ import { mkdirp, rimraf, walk } from '../utils/filesystem.js';
 const essential_files = ['README', 'LICENSE', 'CHANGELOG', '.gitignore', '.npmignore'];
 
 /**
- * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @param {string} cwd
  */
 export async function make_package(config, cwd = process.cwd()) {
@@ -187,7 +187,7 @@ export async function make_package(config, cwd = process.cwd()) {
  *
  * @param {string} file Relative to the lib root
  * @param {string} content
- * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types').ValidatedConfig} config
  * @returns {string}
  */
 function resolve_$lib_alias(file, content, config) {
@@ -306,7 +306,7 @@ function write(file, contents) {
 }
 
 /**
- * @param {import('types/config').ValidatedConfig} config
+ * @param {import('types').ValidatedConfig} config
  */
 export async function emit_dts(config) {
 	const require = createRequire(import.meta.url);

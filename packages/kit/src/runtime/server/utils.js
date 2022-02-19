@@ -50,7 +50,7 @@ export function is_pojo(body) {
 	return true;
 }
 /**
- * @param {import('types/hooks').RequestEvent} event
+ * @param {import('types').RequestEvent} event
  * @returns string
  */
 export function normalize_request_method(event) {

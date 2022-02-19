@@ -1,7 +1,7 @@
 /** @type {import('amphtml-validator').Validator} */
 const amp = await (await import('amphtml-validator')).getInstance();
 
-/** @type {import('types/hooks').Handle} */
+/** @type {import('types').Handle} */
 export async function handle({ event, resolve }) {
 	const response = await resolve(event);
 	if (response.headers.get('content-type') !== 'text/html') {

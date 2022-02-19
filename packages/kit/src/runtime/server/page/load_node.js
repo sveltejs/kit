@@ -9,13 +9,13 @@ import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
  * @param {{
- *   event: import('types/hooks').RequestEvent;
- *   options: import('types/internal').SSROptions;
- *   state: import('types/internal').SSRState;
- *   route: import('types/internal').SSRPage | null;
+ *   event: import('types').RequestEvent;
+ *   options: import('types').SSROptions;
+ *   state: import('types').SSRState;
+ *   route: import('types').SSRPage | null;
  *   url: URL;
  *   params: Record<string, string>;
- *   node: import('types/internal').SSRNode;
+ *   node: import('types').SSRNode;
  *   $session: any;
  *   stuff: Record<string, any>;
  *   is_error: boolean;
@@ -58,13 +58,13 @@ export async function load_node({
 	 */
 	let set_cookie_headers = [];
 
-	/** @type {import('types/helper').Either<import('types/endpoint').Fallthrough, import('types/page').LoadOutput>} */
+	/** @type {import('types').Either<import('types').Fallthrough, import('types').LoadOutput>} */
 	let loaded;
 
-	/** @type {import('types/endpoint').ShadowData} */
+	/** @type {import('types').ShadowData} */
 	const shadow = is_leaf
 		? await load_shadow_data(
-				/** @type {import('types/internal').SSRPage} */ (route),
+				/** @type {import('types').SSRPage} */ (route),
 				event,
 				options,
 				!!state.prerender
@@ -88,7 +88,7 @@ export async function load_node({
 			redirect: shadow.redirect
 		};
 	} else if (module.load) {
-		/** @type {import('types/page').LoadInput | import('types/page').ErrorLoadInput} */
+		/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 		const load_input = {
 			url: state.prerender ? create_prerendering_url_proxy(url) : url,
 			params,
@@ -146,7 +146,7 @@ export async function load_node({
 				/** @type {Response} */
 				let response;
 
-				/** @type {import('types/internal').PrerenderDependency} */
+				/** @type {import('types').PrerenderDependency} */
 				let dependency;
 
 				// handle fetch requests for static assets. e.g. prebaked data, etc.
@@ -241,7 +241,7 @@ export async function load_node({
 						async function text() {
 							const body = await response.text();
 
-							/** @type {import('types/helper').ResponseHeaders} */
+							/** @type {import('types').ResponseHeaders} */
 							const headers = {};
 							for (const [key, value] of response.headers) {
 								if (key === 'set-cookie') {
@@ -323,8 +323,8 @@ export async function load_node({
 		}
 
 		if (is_error) {
-			/** @type {import('types/page').ErrorLoadInput} */ (load_input).status = status;
-			/** @type {import('types/page').ErrorLoadInput} */ (load_input).error = error;
+			/** @type {import('types').ErrorLoadInput} */ (load_input).status = status;
+			/** @type {import('types').ErrorLoadInput} */ (load_input).error = error;
 		}
 
 		loaded = await module.load.call(null, load_input);
@@ -369,11 +369,11 @@ export async function load_node({
 
 /**
  *
- * @param {import('types/internal').SSRPage} route
- * @param {import('types/hooks').RequestEvent} event
- * @param {import('types/internal').SSROptions} options
+ * @param {import('types').SSRPage} route
+ * @param {import('types').RequestEvent} event
+ * @param {import('types').SSROptions} options
  * @param {boolean} prerender
- * @returns {Promise<import('types/endpoint').ShadowData>}
+ * @returns {Promise<import('types').ShadowData>}
  */
 async function load_shadow_data(route, event, options, prerender) {
 	if (!route.shadow) return {};
@@ -396,7 +396,7 @@ async function load_shadow_data(route, event, options, prerender) {
 			};
 		}
 
-		/** @type {import('types/endpoint').ShadowData} */
+		/** @type {import('types').ShadowData} */
 		const data = {
 			status: 200,
 			cookies: [],
@@ -466,7 +466,7 @@ async function load_shadow_data(route, event, options, prerender) {
 
 /**
  * @param {string[]} target
- * @param {Partial<import('types/helper').ResponseHeaders>} headers
+ * @param {Partial<import('types').ResponseHeaders>} headers
  */
 function add_cookies(target, headers) {
 	const cookies = headers['set-cookie'];
@@ -480,7 +480,7 @@ function add_cookies(target, headers) {
 }
 
 /**
- * @param {import('types/endpoint').ShadowEndpointOutput} result
+ * @param {import('types').ShadowEndpointOutput} result
  */
 function validate_shadow_output(result) {
 	const { status = 200, body = {} } = result;

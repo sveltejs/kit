@@ -71,7 +71,7 @@ export async function getRequest(base, req) {
 
 /** @type {import('@sveltejs/kit/node').SetResponse} */
 export async function setResponse(res, response) {
-	/** @type {import('../types/helper').ResponseHeaders} */
+	/** @type {import('types').ResponseHeaders} */
 	const headers = Object.fromEntries(response.headers);
 
 	if (response.headers.has('set-cookie')) {

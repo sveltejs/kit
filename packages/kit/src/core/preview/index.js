@@ -19,7 +19,7 @@ const mutable = (dir) =>
  * @param {{
  *   port: number;
  *   host?: string;
- *   config: import('types/config').ValidatedConfig;
+ *   config: import('types').ValidatedConfig;
  *   https?: boolean;
  *   cwd?: string;
  * }} opts
@@ -36,7 +36,7 @@ export async function preview({
 	const app_file = resolve(cwd, `${SVELTE_KIT}/output/server/app.js`);
 	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
 
-	/** @type {import('types/internal').AppModule} */
+	/** @type {import('types').AppModule} */
 	const { App, override } = await import(pathToFileURL(app_file).href);
 
 	const { manifest } = await import(pathToFileURL(manifest_file).href);

@@ -12,7 +12,7 @@ import { s } from '../../utils/misc.js';
 /**
  * @param {{
  *   hooks: string;
- *   config: import('types/config').ValidatedConfig;
+ *   config: import('types').ValidatedConfig;
  *   has_service_worker: boolean;
  *   template: string;
  * }} opts
@@ -109,8 +109,8 @@ export class App {
  * @param {{
  *   cwd: string;
  *   assets_base: string;
- *   config: import('types/config').ValidatedConfig
- *   manifest_data: import('types/internal').ManifestData
+ *   config: import('types').ValidatedConfig
+ *   manifest_data: import('types').ManifestData
  *   build_dir: string;
  *   output_dir: string;
  *   service_worker_entry_file: string | null;
@@ -307,7 +307,7 @@ const method_names = {
  *
  * @param {string} cwd
  * @param {import('rollup').OutputChunk[]} output
- * @param {import('types/internal').ManifestData} manifest_data
+ * @param {import('types').ManifestData} manifest_data
  */
 function get_methods(cwd, output, manifest_data) {
 	/** @type {Record<string, string[]>} */
@@ -318,14 +318,14 @@ function get_methods(cwd, output, manifest_data) {
 		lookup[id] = chunk.exports;
 	});
 
-	/** @type {Record<string, import('types/internal').HttpMethod[]>} */
+	/** @type {Record<string, import('types').HttpMethod[]>} */
 	const methods = {};
 	manifest_data.routes.forEach((route) => {
 		const file = route.type === 'endpoint' ? route.file : route.shadow;
 
 		if (file && lookup[file]) {
 			methods[file] = lookup[file]
-				.map((x) => /** @type {import('types/internal').HttpMethod} */ (method_names[x]))
+				.map((x) => /** @type {import('types').HttpMethod} */ (method_names[x]))
 				.filter(Boolean);
 		}
 	});

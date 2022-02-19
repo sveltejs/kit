@@ -41,7 +41,7 @@ function noop() {}
 
 /** @param {{ verbose: boolean }} opts */
 export function logger({ verbose }) {
-	/** @type {import('types/internal').Logger} */
+	/** @type {import('types').Logger} */
 	const log = (msg) => console.log(msg.replace(/^/gm, '  '));
 
 	/** @param {string} msg */

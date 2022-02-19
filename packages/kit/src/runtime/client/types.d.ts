@@ -1,4 +1,4 @@
-import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types/internal';
+import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
 
 export type NavigationInfo = {
 	id: string;

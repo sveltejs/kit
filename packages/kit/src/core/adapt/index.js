@@ -3,8 +3,8 @@ import { logger } from '../utils.js';
 import { create_builder } from './builder.js';
 
 /**
- * @param {import('types/config').ValidatedConfig} config
- * @param {import('types/internal').BuildData} build_data
+ * @param {import('types').ValidatedConfig} config
+ * @param {import('types').BuildData} build_data
  * @param {{ cwd?: string, verbose: boolean }} opts
  */
 export async function adapt(config, build_data, { cwd = process.cwd(), verbose }) {

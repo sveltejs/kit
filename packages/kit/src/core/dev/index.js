@@ -13,9 +13,9 @@ import { create_plugin } from './plugin.js';
  *   port: number,
  *   host?: string,
  *   https: boolean,
- *   config: import('types/config').ValidatedConfig
+ *   config: import('types').ValidatedConfig
  * }} Options
- * @typedef {import('types/internal').SSRComponent} SSRComponent
+ * @typedef {import('types').SSRComponent} SSRComponent
  */
 
 /** @param {Options} opts */
