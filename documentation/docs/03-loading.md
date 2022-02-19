@@ -51,7 +51,7 @@ interface Fallthrough {
 }
 ```
 
-> See the [TypeScript](/docs/typescript) section for information on `App.Session` and `App.Stuff`.
+> See the [TypeScript](/docs/types) section for information on `App.Session` and `App.Stuff`.
 
 A page that loads data from an external API might look like this:
 
