@@ -33,7 +33,7 @@ test('escapes characters in redirect', () => {
 	const content = read('redirect-malicious.html');
 	assert.equal(
 		content,
-		'<meta http-equiv="refresh" content="0;url=https://example.com/&lt;/script&gt;alert(&quot;pwned&quot;)">'
+		'<meta http-equiv="refresh" content="0;url=https://example.com/</script>alert(&quot;pwned&quot;)">'
 	);
 });
 

@@ -59,8 +59,7 @@ function escape(str, dict, unicode_encoder) {
 
 /** @type {Record<string, string>} */
 const escape_html_attr_dict = {
-	'<': '&lt;',
-	'>': '&gt;',
+	'&': '&amp;',
 	'"': '&quot;'
 };
 
