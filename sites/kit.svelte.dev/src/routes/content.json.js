@@ -2,6 +2,8 @@ import fs from 'fs';
 import { extract_frontmatter, transform } from '$lib/docs/server/markdown';
 import { slugify } from '../lib/docs/server';
 
+// TODO need to take generated type summaries into account when building index
+
 const categories = [
 	{
 		slug: 'docs',

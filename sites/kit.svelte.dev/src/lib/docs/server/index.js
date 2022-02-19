@@ -6,6 +6,7 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
+import { types } from '../../../../../../documentation/types.js';
 
 const languages = {
 	bash: 'bash',
@@ -21,6 +22,13 @@ const languages = {
 
 const base = '../../documentation';
 
+const type_regex = new RegExp(
+	`(import\\(&apos;@sveltejs\\/kit&apos;\\)\\.)?\\b(${types
+		.map((type) => type.name)
+		.join('|')})\\b`,
+	'g'
+);
+
 /**
  * @param {string} dir
  * @param {string} file
@@ -31,7 +39,11 @@ export async function read_file(dir, file) {
 
 	const slug = match[1];
 
-	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8').replace('**TYPES**', () => {
+		return types
+			.map((type) => `#### ${type.name}\n\n${type.comment}\n\n\`\`\`ts\n${type.snippet}\n\`\`\``)
+			.join('\n\n');
+	});
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
@@ -45,6 +57,7 @@ export async function read_file(dir, file) {
 			dir === 'faq' ? slug : undefined,
 			(/** @type {string} */ source, /** @type {string} */ lang) => {
 				let file = '';
+				let html = '';
 
 				source = source
 					.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
@@ -60,7 +73,7 @@ export async function read_file(dir, file) {
 						return tabs;
 					});
 
-				if (lang === 'js' || lang === 'ts') {
+				if (lang === 'js') {
 					const twoslash = runTwoSlash(source, lang, {
 						defaultCompilerOptions: {
 							allowJs: true,
@@ -69,7 +82,7 @@ export async function read_file(dir, file) {
 						}
 					});
 
-					const html = renderCodeToHTML(
+					html = renderCodeToHTML(
 						twoslash.code,
 						'ts',
 						{ twoslash: true },
@@ -79,20 +92,28 @@ export async function read_file(dir, file) {
 					);
 
 					// preserve blank lines in output (maybe there's a more correct way to do this?)
-					return `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
+					html = `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
 						/<div class='line'><\/div>/g,
 						'<div class="line"> </div>'
 					)}</div>`;
+				} else {
+					const plang = languages[lang];
+					const highlighted = plang
+						? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+						: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+					html = `<div class="code-block">${
+						file ? `<h5>${file}</h5>` : ''
+					}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
 				}
 
-				const plang = languages[lang];
-				const highlighted = plang
-					? PrismJS.highlight(source, PrismJS.languages[plang], lang)
-					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+				type_regex.lastIndex = 0;
 
-				return `<div class="code-block">${
-					file ? `<h5>${file}</h5>` : ''
-				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+				return html.replace(type_regex, (match, prefix, content) => {
+					// TODO we don't want to linkify Foo in the block that documents Foo
+					const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
+					return `${prefix || ''}${link}`;
+				});
 			}
 		)
 	};

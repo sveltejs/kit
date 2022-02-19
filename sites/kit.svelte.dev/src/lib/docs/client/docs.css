@@ -257,3 +257,12 @@
 	border-radius: var(--border-r) var(--border-r) 0 0;
 	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
 }
+
+.code-block a {
+	border-bottom: 1px dotted var(--prime);
+}
+
+.code-block a:hover {
+	border-bottom: 1px solid var(--prime);
+	text-decoration: none !important;
+}
