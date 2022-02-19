@@ -318,7 +318,7 @@ importers:
       '@types/node': ^16.11.11
       flexsearch: ^0.7.21
       marked: ^4.0.5
-      prism-svelte: ^0.4.7
+      prism-svelte: ^0.5.0
       prismjs: ^1.26.0
       shiki-twoslash: ^3.0.2
       svelte: ^3.43.0
@@ -333,7 +333,7 @@ importers:
       '@types/node': 16.11.11
       flexsearch: 0.7.21
       marked: 4.0.5
-      prism-svelte: 0.4.7
+      prism-svelte: 0.5.0
       prismjs: 1.26.0
       shiki-twoslash: 3.0.2
       svelte: 3.44.2
@@ -4735,8 +4735,8 @@ packages:
       react-is: 17.0.2
     dev: true
 
-  /prism-svelte/0.4.7:
-    resolution: {integrity: sha512-yABh19CYbM24V7aS7TuPYRNMqthxwbvx6FF/Rw920YbyBWO3tnyPIqRMgHuSVsLmuHkkBS1Akyof463FVdkeDQ==}
+  /prism-svelte/0.5.0:
+    resolution: {integrity: sha512-db91Bf3pRGKDPz1lAqLFSJXeW13mulUJxhycysFpfXV5MIK7RgWWK2E5aPAa71s8TCzQUXxF5JOV42/iOs6QkA==}
     dev: true
 
   /prismjs/1.26.0:

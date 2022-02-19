@@ -15,7 +15,7 @@
 		"@types/node": "^16.11.11",
 		"flexsearch": "^0.7.21",
 		"marked": "^4.0.5",
-		"prism-svelte": "^0.4.7",
+		"prism-svelte": "^0.5.0",
 		"prismjs": "^1.26.0",
 		"shiki-twoslash": "^3.0.2",
 		"svelte": "^3.43.0",
