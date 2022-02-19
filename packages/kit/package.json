@@ -42,6 +42,7 @@
 		"svelte-preprocess": "^4.9.8",
 		"svelte2tsx": "~0.5.0",
 		"tiny-glob": "^0.2.9",
+		"typedoc": "^0.22.11",
 		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {

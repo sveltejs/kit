@@ -17,5 +17,14 @@
 		}
 	},
 	"include": ["src/**/*", "test/**/*", "types/**/*"],
-	"exclude": ["src/packaging/test/fixtures/**/*", "test/prerendering/*/build/**/*"]
+	"exclude": ["src/packaging/test/fixtures/**/*", "test/prerendering/*/build/**/*"],
+	"typedocOptions": {
+		"name": "SvelteKit",
+		"entryPoints": ["types/index.d.ts"],
+		"githubPages": false,
+		"readme": "none",
+		"excludeExternals": true,
+		"includeVersion": true,
+		"json": "../../documentation/types.json"
+	}
 }

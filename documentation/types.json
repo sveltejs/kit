@@ -1,0 +1,5111 @@
+{
+	"id": 0,
+	"name": "SvelteKit - v1.0.0-next.278",
+	"kind": 1,
+	"kindString": "Project",
+	"flags": {},
+	"originalName": "SvelteKit",
+	"children": [
+		{
+			"id": 1,
+			"name": "App",
+			"kind": 128,
+			"kindString": "Class",
+			"flags": {},
+			"children": [
+				{
+					"id": 2,
+					"name": "constructor",
+					"kind": 512,
+					"kindString": "Constructor",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "app.d.ts",
+							"line": 8,
+							"character": 1
+						}
+					],
+					"signatures": [
+						{
+							"id": 3,
+							"name": "new App",
+							"kind": 16384,
+							"kindString": "Constructor signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 4,
+									"name": "manifest",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"id": 9,
+										"name": "SSRManifest"
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"id": 1,
+								"name": "App"
+							}
+						}
+					]
+				},
+				{
+					"id": 5,
+					"name": "render",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "app.d.ts",
+							"line": 9,
+							"character": 1
+						}
+					],
+					"signatures": [
+						{
+							"id": 6,
+							"name": "render",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 7,
+									"name": "request",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "Request",
+										"package": ".pnpm",
+										"name": "Request"
+									}
+								},
+								{
+									"id": 8,
+									"name": "options",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {
+										"isOptional": true
+									},
+									"type": {
+										"type": "reference",
+										"typeArguments": [
+											{
+												"type": "reference",
+												"typeArguments": [
+													{
+														"type": "intrinsic",
+														"name": "string"
+													},
+													{
+														"type": "intrinsic",
+														"name": "any"
+													}
+												],
+												"qualifiedName": "Record",
+												"package": ".pnpm",
+												"name": "Record"
+											}
+										],
+										"name": "RequestOptions"
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"qualifiedName": "Response",
+										"package": ".pnpm",
+										"name": "Response"
+									}
+								],
+								"qualifiedName": "Promise",
+								"package": ".pnpm",
+								"name": "Promise"
+							}
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Constructors",
+					"kind": 512,
+					"children": [
+						2
+					]
+				},
+				{
+					"title": "Methods",
+					"kind": 2048,
+					"children": [
+						5
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "app.d.ts",
+					"line": 7,
+					"character": 13
+				}
+			]
+		},
+		{
+			"id": 22,
+			"name": "Adapter",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 24,
+					"name": "headers",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 121,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reflection",
+						"declaration": {
+							"id": 25,
+							"name": "__type",
+							"kind": 65536,
+							"kindString": "Type literal",
+							"flags": {},
+							"children": [
+								{
+									"id": 26,
+									"name": "host",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 122,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								},
+								{
+									"id": 27,
+									"name": "protocol",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 123,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"groups": [
+								{
+									"title": "Properties",
+									"kind": 1024,
+									"children": [
+										26,
+										27
+									]
+								}
+							]
+						}
+					}
+				},
+				{
+					"id": 23,
+					"name": "name",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 120,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "string"
+					}
+				},
+				{
+					"id": 28,
+					"name": "adapt",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 29,
+							"name": "adapt",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 30,
+									"name": "builder",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"id": 31,
+										"name": "Builder"
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "intrinsic",
+										"name": "void"
+									}
+								],
+								"qualifiedName": "Promise",
+								"package": ".pnpm",
+								"name": "Promise"
+							}
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						24,
+						23
+					]
+				},
+				{
+					"title": "Methods",
+					"kind": 2048,
+					"children": [
+						28
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 119,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 31,
+			"name": "Builder",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 39,
+					"name": "appDir",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 69,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "string"
+					}
+				},
+				{
+					"id": 32,
+					"name": "log",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 65,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"name": "Logger"
+					}
+				},
+				{
+					"id": 40,
+					"name": "trailingSlash",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 70,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "literal",
+								"value": "always"
+							},
+							{
+								"type": "literal",
+								"value": "never"
+							},
+							{
+								"type": "literal",
+								"value": "ignore"
+							}
+						]
+					}
+				},
+				{
+					"id": 71,
+					"name": "copy",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 72,
+							"name": "copy",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"comment": {
+								"returns": "an array of paths corresponding to the files that have been created by the copy\n"
+							},
+							"parameters": [
+								{
+									"id": 73,
+									"name": "from",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "the source file or folder"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								},
+								{
+									"id": 74,
+									"name": "to",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "the destination file or folder"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								},
+								{
+									"id": 75,
+									"name": "opts",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {
+										"isOptional": true
+									},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 76,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 80,
+													"name": "replace",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"comment": {
+														"shortText": "a map of strings to replace"
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 112,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "reference",
+														"typeArguments": [
+															{
+																"type": "intrinsic",
+																"name": "string"
+															},
+															{
+																"type": "intrinsic",
+																"name": "string"
+															}
+														],
+														"qualifiedName": "Record",
+														"package": ".pnpm",
+														"name": "Record"
+													}
+												},
+												{
+													"id": 77,
+													"name": "filter",
+													"kind": 2048,
+													"kindString": "Method",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 111,
+															"character": 3
+														}
+													],
+													"signatures": [
+														{
+															"id": 78,
+															"name": "filter",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"comment": {
+																"shortText": "a function to determine whether a file or folder should be copied"
+															},
+															"parameters": [
+																{
+																	"id": 79,
+																	"name": "basename",
+																	"kind": 32768,
+																	"kindString": "Parameter",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "boolean"
+															}
+														}
+													]
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														80
+													]
+												},
+												{
+													"title": "Methods",
+													"kind": 2048,
+													"children": [
+														77
+													]
+												}
+											]
+										}
+									}
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					]
+				},
+				{
+					"id": 41,
+					"name": "createEntries",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 42,
+							"name": "createEntries",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"comment": {
+								"shortText": "Create entry points that map to individual functions"
+							},
+							"parameters": [
+								{
+									"id": 43,
+									"name": "fn",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "A function that groups a set of routes into an entry point\n"
+									},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 44,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"signatures": [
+												{
+													"id": 45,
+													"name": "__type",
+													"kind": 4096,
+													"kindString": "Call signature",
+													"flags": {},
+													"parameters": [
+														{
+															"id": 46,
+															"name": "route",
+															"kind": 32768,
+															"kindString": "Parameter",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"name": "RouteDefinition"
+															}
+														}
+													],
+													"type": {
+														"type": "reference",
+														"name": "AdapterEntry"
+													}
+												}
+											]
+										}
+									}
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "void"
+							}
+						}
+					]
+				},
+				{
+					"id": 47,
+					"name": "generateManifest",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 78,
+							"character": 1
+						}
+					],
+					"signatures": [
+						{
+							"id": 48,
+							"name": "generateManifest",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 49,
+									"name": "opts",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 50,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 52,
+													"name": "format",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 78,
+															"character": 50
+														}
+													],
+													"type": {
+														"type": "union",
+														"types": [
+															{
+																"type": "literal",
+																"value": "esm"
+															},
+															{
+																"type": "literal",
+																"value": "cjs"
+															}
+														]
+													}
+												},
+												{
+													"id": 51,
+													"name": "relativePath",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 78,
+															"character": 28
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														52,
+														51
+													]
+												}
+											]
+										}
+									}
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					]
+				},
+				{
+					"id": 53,
+					"name": "getBuildDirectory",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 54,
+							"name": "getBuildDirectory",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 55,
+									"name": "name",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					]
+				},
+				{
+					"id": 56,
+					"name": "getClientDirectory",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 57,
+							"name": "getClientDirectory",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					]
+				},
+				{
+					"id": 58,
+					"name": "getServerDirectory",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 59,
+							"name": "getServerDirectory",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					]
+				},
+				{
+					"id": 60,
+					"name": "getStaticDirectory",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 61,
+							"name": "getStaticDirectory",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"type": {
+								"type": "intrinsic",
+								"name": "string"
+							}
+						}
+					]
+				},
+				{
+					"id": 36,
+					"name": "mkdirp",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 37,
+							"name": "mkdirp",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 38,
+									"name": "dir",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "void"
+							}
+						}
+					]
+				},
+				{
+					"id": 81,
+					"name": "prerender",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 82,
+							"name": "prerender",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 83,
+									"name": "options",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 84,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 85,
+													"name": "all",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 116,
+															"character": 22
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 86,
+													"name": "dest",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 116,
+															"character": 37
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 87,
+													"name": "fallback",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 116,
+															"character": 51
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														85,
+														86,
+														87
+													]
+												}
+											]
+										}
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 157,
+										"name": "Prerendered"
+									}
+								],
+								"qualifiedName": "Promise",
+								"package": ".pnpm",
+								"name": "Promise"
+							}
+						}
+					]
+				},
+				{
+					"id": 33,
+					"name": "rimraf",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 34,
+							"name": "rimraf",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 35,
+									"name": "dir",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "intrinsic",
+								"name": "void"
+							}
+						}
+					]
+				},
+				{
+					"id": 62,
+					"name": "writeClient",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 63,
+							"name": "writeClient",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"comment": {
+								"returns": "an array of paths corresponding to the files that have been created by the copy\n"
+							},
+							"parameters": [
+								{
+									"id": 64,
+									"name": "dest",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "the destination folder to which files should be copied"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					]
+				},
+				{
+					"id": 65,
+					"name": "writeServer",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 66,
+							"name": "writeServer",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"comment": {
+								"returns": "an array of paths corresponding to the files that have been created by the copy\n"
+							},
+							"parameters": [
+								{
+									"id": 67,
+									"name": "dest",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "the destination folder to which files should be copied"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					]
+				},
+				{
+					"id": 68,
+					"name": "writeStatic",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 69,
+							"name": "writeStatic",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"comment": {
+								"returns": "an array of paths corresponding to the files that have been created by the copy\n"
+							},
+							"parameters": [
+								{
+									"id": 70,
+									"name": "dest",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"comment": {
+										"shortText": "the destination folder to which files should be copied"
+									},
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								}
+							],
+							"type": {
+								"type": "array",
+								"elementType": {
+									"type": "intrinsic",
+									"name": "string"
+								}
+							}
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						39,
+						32,
+						40
+					]
+				},
+				{
+					"title": "Methods",
+					"kind": 2048,
+					"children": [
+						71,
+						41,
+						47,
+						53,
+						56,
+						58,
+						60,
+						36,
+						81,
+						33,
+						62,
+						65,
+						68
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 64,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 88,
+			"name": "Config",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 89,
+					"name": "compilerOptions",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 140,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "CompileOptions",
+						"package": ".pnpm",
+						"name": "CompileOptions"
+					}
+				},
+				{
+					"id": 90,
+					"name": "extensions",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 141,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "array",
+						"elementType": {
+							"type": "intrinsic",
+							"name": "string"
+						}
+					}
+				},
+				{
+					"id": 91,
+					"name": "kit",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 142,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reflection",
+						"declaration": {
+							"id": 92,
+							"name": "__type",
+							"kind": 65536,
+							"kindString": "Type literal",
+							"flags": {},
+							"children": [
+								{
+									"id": 93,
+									"name": "adapter",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 143,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reference",
+										"id": 22,
+										"name": "Adapter"
+									}
+								},
+								{
+									"id": 94,
+									"name": "amp",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 144,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "boolean"
+									}
+								},
+								{
+									"id": 95,
+									"name": "appDir",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 145,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "string"
+									}
+								},
+								{
+									"id": 96,
+									"name": "browser",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 146,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 97,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 98,
+													"name": "hydrate",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 147,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 99,
+													"name": "router",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 148,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														98,
+														99
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 100,
+									"name": "csp",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 150,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 101,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 103,
+													"name": "directives",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 152,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "reference",
+														"name": "CspDirectives"
+													}
+												},
+												{
+													"id": 102,
+													"name": "mode",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 151,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "union",
+														"types": [
+															{
+																"type": "literal",
+																"value": "hash"
+															},
+															{
+																"type": "literal",
+																"value": "nonce"
+															},
+															{
+																"type": "literal",
+																"value": "auto"
+															}
+														]
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														103,
+														102
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 104,
+									"name": "files",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 154,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 105,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 106,
+													"name": "assets",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 155,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 107,
+													"name": "hooks",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 156,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 108,
+													"name": "lib",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 157,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 109,
+													"name": "routes",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 158,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 110,
+													"name": "serviceWorker",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 159,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 111,
+													"name": "template",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 160,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														106,
+														107,
+														108,
+														109,
+														110,
+														111
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 112,
+									"name": "floc",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 162,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "boolean"
+									}
+								},
+								{
+									"id": 113,
+									"name": "inlineStyleThreshold",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 163,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "intrinsic",
+										"name": "number"
+									}
+								},
+								{
+									"id": 114,
+									"name": "methodOverride",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 164,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 115,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 117,
+													"name": "allowed",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 166,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "array",
+														"elementType": {
+															"type": "intrinsic",
+															"name": "string"
+														}
+													}
+												},
+												{
+													"id": 116,
+													"name": "parameter",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 165,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														117,
+														116
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 118,
+									"name": "package",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 168,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 119,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 120,
+													"name": "dir",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 169,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 121,
+													"name": "emitTypes",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 170,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 122,
+													"name": "exports",
+													"kind": 2048,
+													"kindString": "Method",
+													"flags": {
+														"isOptional": true
+													},
+													"signatures": [
+														{
+															"id": 123,
+															"name": "exports",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"parameters": [
+																{
+																	"id": 124,
+																	"name": "filepath",
+																	"kind": 32768,
+																	"kindString": "Parameter",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "boolean"
+															}
+														}
+													]
+												},
+												{
+													"id": 125,
+													"name": "files",
+													"kind": 2048,
+													"kindString": "Method",
+													"flags": {
+														"isOptional": true
+													},
+													"signatures": [
+														{
+															"id": 126,
+															"name": "files",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"parameters": [
+																{
+																	"id": 127,
+																	"name": "filepath",
+																	"kind": 32768,
+																	"kindString": "Parameter",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "boolean"
+															}
+														}
+													]
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														120,
+														121
+													]
+												},
+												{
+													"title": "Methods",
+													"kind": 2048,
+													"children": [
+														122,
+														125
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 128,
+									"name": "paths",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 174,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 129,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 130,
+													"name": "assets",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 175,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 131,
+													"name": "base",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 176,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														130,
+														131
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 132,
+									"name": "prerender",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 178,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 133,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 134,
+													"name": "concurrency",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 179,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "number"
+													}
+												},
+												{
+													"id": 135,
+													"name": "crawl",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 180,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 136,
+													"name": "enabled",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 181,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 137,
+													"name": "entries",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 182,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "array",
+														"elementType": {
+															"type": "intrinsic",
+															"name": "string"
+														}
+													}
+												},
+												{
+													"id": 138,
+													"name": "onError",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 183,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "reference",
+														"name": "PrerenderOnErrorValue"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														134,
+														135,
+														136,
+														137,
+														138
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 142,
+									"name": "serviceWorker",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 186,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 143,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 144,
+													"name": "register",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 187,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "boolean"
+													}
+												},
+												{
+													"id": 145,
+													"name": "files",
+													"kind": 2048,
+													"kindString": "Method",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 188,
+															"character": 3
+														}
+													],
+													"signatures": [
+														{
+															"id": 146,
+															"name": "files",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"parameters": [
+																{
+																	"id": 147,
+																	"name": "filepath",
+																	"kind": 32768,
+																	"kindString": "Parameter",
+																	"flags": {},
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																}
+															],
+															"type": {
+																"type": "intrinsic",
+																"name": "boolean"
+															}
+														}
+													]
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														144
+													]
+												},
+												{
+													"title": "Methods",
+													"kind": 2048,
+													"children": [
+														145
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 148,
+									"name": "trailingSlash",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 190,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reference",
+										"name": "TrailingSlash"
+									}
+								},
+								{
+									"id": 149,
+									"name": "version",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 191,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 150,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 151,
+													"name": "name",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 192,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 152,
+													"name": "pollInterval",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {
+														"isOptional": true
+													},
+													"sources": [
+														{
+															"fileName": "config.d.ts",
+															"line": 193,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "number"
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														151,
+														152
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 153,
+									"name": "vite",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 195,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "union",
+										"types": [
+											{
+												"type": "reference",
+												"qualifiedName": "UserConfig",
+												"package": ".pnpm",
+												"name": "UserConfig"
+											},
+											{
+												"type": "reflection",
+												"declaration": {
+													"id": 154,
+													"name": "__type",
+													"kind": 65536,
+													"kindString": "Type literal",
+													"flags": {},
+													"signatures": [
+														{
+															"id": 155,
+															"name": "__type",
+															"kind": 4096,
+															"kindString": "Call signature",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"typeArguments": [
+																	{
+																		"type": "reference",
+																		"qualifiedName": "UserConfig",
+																		"package": ".pnpm",
+																		"name": "UserConfig"
+																	}
+																],
+																"name": "MaybePromise"
+															}
+														}
+													]
+												}
+											}
+										]
+									}
+								},
+								{
+									"id": 139,
+									"name": "routes",
+									"kind": 2048,
+									"kindString": "Method",
+									"flags": {
+										"isOptional": true
+									},
+									"sources": [
+										{
+											"fileName": "config.d.ts",
+											"line": 185,
+											"character": 2
+										}
+									],
+									"signatures": [
+										{
+											"id": 140,
+											"name": "routes",
+											"kind": 4096,
+											"kindString": "Call signature",
+											"flags": {},
+											"parameters": [
+												{
+													"id": 141,
+													"name": "filepath",
+													"kind": 32768,
+													"kindString": "Parameter",
+													"flags": {},
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "boolean"
+											}
+										}
+									]
+								}
+							],
+							"groups": [
+								{
+									"title": "Properties",
+									"kind": 1024,
+									"children": [
+										93,
+										94,
+										95,
+										96,
+										100,
+										104,
+										112,
+										113,
+										114,
+										118,
+										128,
+										132,
+										142,
+										148,
+										149,
+										153
+									]
+								},
+								{
+									"title": "Methods",
+									"kind": 2048,
+									"children": [
+										139
+									]
+								}
+							]
+						}
+					}
+				},
+				{
+					"id": 156,
+					"name": "preprocess",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 197,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "any"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						89,
+						90,
+						91,
+						156
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 139,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 178,
+			"name": "EndpointOutput",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 181,
+					"name": "body",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "endpoint.d.ts",
+							"line": 9,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"id": 182,
+						"name": "Output"
+					}
+				},
+				{
+					"id": 180,
+					"name": "headers",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "endpoint.d.ts",
+							"line": 8,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "reference",
+								"qualifiedName": "Headers",
+								"package": ".pnpm",
+								"name": "Headers"
+							},
+							{
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"name": "ResponseHeaders"
+									}
+								],
+								"qualifiedName": "Partial",
+								"package": ".pnpm",
+								"name": "Partial"
+							}
+						]
+					}
+				},
+				{
+					"id": 179,
+					"name": "status",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "endpoint.d.ts",
+							"line": 7,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "number"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						181,
+						180,
+						179
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "endpoint.d.ts",
+					"line": 6,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 182,
+					"name": "Output",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"type": {
+						"type": "reference",
+						"name": "Body"
+					},
+					"default": {
+						"type": "reference",
+						"name": "Body"
+					}
+				}
+			]
+		},
+		{
+			"id": 187,
+			"name": "ErrorLoad",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "page.d.ts",
+					"line": 31,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 188,
+					"name": "Params",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				},
+				{
+					"id": 189,
+					"name": "Props",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "any"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				}
+			],
+			"signatures": [
+				{
+					"id": 190,
+					"name": "ErrorLoad",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 191,
+							"name": "input",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"id": 192,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 188,
+										"name": "Params"
+									}
+								],
+								"name": "ErrorLoadInput"
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"id": 221,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 189,
+										"name": "Props"
+									}
+								],
+								"name": "LoadOutput"
+							}
+						],
+						"name": "MaybePromise"
+					}
+				}
+			]
+		},
+		{
+			"id": 192,
+			"name": "ErrorLoadInput",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 194,
+					"name": "error",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 15,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "Error",
+						"package": ".pnpm",
+						"name": "Error"
+					}
+				},
+				{
+					"id": 196,
+					"name": "params",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 6,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"id": 204,
+						"name": "Params"
+					},
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 212,
+						"name": "LoadInput.params"
+					}
+				},
+				{
+					"id": 197,
+					"name": "props",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 7,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "any"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					},
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 213,
+						"name": "LoadInput.props"
+					}
+				},
+				{
+					"id": 202,
+					"name": "session",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 9,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"name": "Session"
+					},
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 218,
+						"name": "LoadInput.session"
+					}
+				},
+				{
+					"id": 193,
+					"name": "status",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 14,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "number"
+					}
+				},
+				{
+					"id": 203,
+					"name": "stuff",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 10,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"name": "Stuff"
+							}
+						],
+						"qualifiedName": "Partial",
+						"package": ".pnpm",
+						"name": "Partial"
+					},
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 219,
+						"name": "LoadInput.stuff"
+					}
+				},
+				{
+					"id": 195,
+					"name": "url",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 5,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "URL",
+						"package": ".pnpm",
+						"name": "URL"
+					},
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 211,
+						"name": "LoadInput.url"
+					}
+				},
+				{
+					"id": 198,
+					"name": "fetch",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 199,
+							"name": "fetch",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 200,
+									"name": "info",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "RequestInfo",
+										"package": ".pnpm",
+										"name": "RequestInfo"
+									}
+								},
+								{
+									"id": 201,
+									"name": "init",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {
+										"isOptional": true
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "RequestInit",
+										"package": ".pnpm",
+										"name": "RequestInit"
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"qualifiedName": "Response",
+										"package": ".pnpm",
+										"name": "Response"
+									}
+								],
+								"qualifiedName": "Promise",
+								"package": ".pnpm",
+								"name": "Promise"
+							},
+							"inheritedFrom": {
+								"type": "reference",
+								"id": 215,
+								"name": "LoadInput.fetch"
+							}
+						}
+					],
+					"inheritedFrom": {
+						"type": "reference",
+						"id": 214,
+						"name": "LoadInput.fetch"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						194,
+						196,
+						197,
+						202,
+						193,
+						203,
+						195
+					]
+				},
+				{
+					"title": "Methods",
+					"kind": 2048,
+					"children": [
+						198
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "page.d.ts",
+					"line": 13,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 204,
+					"name": "Params",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				}
+			],
+			"extendedTypes": [
+				{
+					"type": "reference",
+					"id": 210,
+					"typeArguments": [
+						{
+							"type": "reference",
+							"id": 204,
+							"name": "Params"
+						}
+					],
+					"name": "LoadInput"
+				}
+			]
+		},
+		{
+			"id": 229,
+			"name": "ExternalFetch",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 35,
+					"character": 17
+				}
+			],
+			"signatures": [
+				{
+					"id": 230,
+					"name": "ExternalFetch",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 231,
+							"name": "req",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"qualifiedName": "Request",
+								"package": ".pnpm",
+								"name": "Request"
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"qualifiedName": "Response",
+								"package": ".pnpm",
+								"name": "Response"
+							}
+						],
+						"qualifiedName": "Promise",
+						"package": ".pnpm",
+						"name": "Promise"
+					}
+				}
+			]
+		},
+		{
+			"id": 232,
+			"name": "GetSession",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 13,
+					"character": 17
+				}
+			],
+			"signatures": [
+				{
+					"id": 233,
+					"name": "GetSession",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 234,
+							"name": "event",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"id": 252,
+								"name": "RequestEvent"
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"name": "Session"
+							}
+						],
+						"name": "MaybePromise"
+					}
+				}
+			]
+		},
+		{
+			"id": 235,
+			"name": "Handle",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 24,
+					"character": 17
+				}
+			],
+			"signatures": [
+				{
+					"id": 236,
+					"name": "Handle",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 237,
+							"name": "input",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 238,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 239,
+											"name": "event",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "hooks.d.ts",
+													"line": 26,
+													"character": 2
+												}
+											],
+											"type": {
+												"type": "reference",
+												"id": 252,
+												"name": "RequestEvent"
+											}
+										},
+										{
+											"id": 240,
+											"name": "resolve",
+											"kind": 2048,
+											"kindString": "Method",
+											"flags": {},
+											"signatures": [
+												{
+													"id": 241,
+													"name": "resolve",
+													"kind": 4096,
+													"kindString": "Call signature",
+													"flags": {},
+													"parameters": [
+														{
+															"id": 242,
+															"name": "event",
+															"kind": 32768,
+															"kindString": "Parameter",
+															"flags": {},
+															"type": {
+																"type": "reference",
+																"id": 252,
+																"name": "RequestEvent"
+															}
+														},
+														{
+															"id": 243,
+															"name": "opts",
+															"kind": 32768,
+															"kindString": "Parameter",
+															"flags": {
+																"isOptional": true
+															},
+															"type": {
+																"type": "reference",
+																"typeArguments": [
+																	{
+																		"type": "reference",
+																		"name": "RequiredResolveOptions"
+																	}
+																],
+																"qualifiedName": "Partial",
+																"package": ".pnpm",
+																"name": "Partial"
+															}
+														}
+													],
+													"type": {
+														"type": "reference",
+														"typeArguments": [
+															{
+																"type": "reference",
+																"qualifiedName": "Response",
+																"package": ".pnpm",
+																"name": "Response"
+															}
+														],
+														"name": "MaybePromise"
+													}
+												}
+											]
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												239
+											]
+										},
+										{
+											"title": "Methods",
+											"kind": 2048,
+											"children": [
+												240
+											]
+										}
+									]
+								}
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"qualifiedName": "Response",
+								"package": ".pnpm",
+								"name": "Response"
+							}
+						],
+						"name": "MaybePromise"
+					}
+				}
+			]
+		},
+		{
+			"id": 244,
+			"name": "HandleError",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 31,
+					"character": 17
+				}
+			],
+			"signatures": [
+				{
+					"id": 245,
+					"name": "HandleError",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 246,
+							"name": "input",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 247,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 248,
+											"name": "error",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "hooks.d.ts",
+													"line": 32,
+													"character": 11
+												}
+											],
+											"type": {
+												"type": "intersection",
+												"types": [
+													{
+														"type": "reference",
+														"qualifiedName": "Error",
+														"package": ".pnpm",
+														"name": "Error"
+													},
+													{
+														"type": "reflection",
+														"declaration": {
+															"id": 249,
+															"name": "__type",
+															"kind": 65536,
+															"kindString": "Type literal",
+															"flags": {},
+															"children": [
+																{
+																	"id": 250,
+																	"name": "frame",
+																	"kind": 1024,
+																	"kindString": "Property",
+																	"flags": {
+																		"isOptional": true
+																	},
+																	"sources": [
+																		{
+																			"fileName": "hooks.d.ts",
+																			"line": 32,
+																			"character": 28
+																		}
+																	],
+																	"type": {
+																		"type": "intrinsic",
+																		"name": "string"
+																	}
+																}
+															],
+															"groups": [
+																{
+																	"title": "Properties",
+																	"kind": 1024,
+																	"children": [
+																		250
+																	]
+																}
+															]
+														}
+													}
+												]
+											}
+										},
+										{
+											"id": 251,
+											"name": "event",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "hooks.d.ts",
+													"line": 32,
+													"character": 46
+												}
+											],
+											"type": {
+												"type": "reference",
+												"id": 252,
+												"name": "RequestEvent"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												248,
+												251
+											]
+										}
+									]
+								}
+							}
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "void"
+					}
+				}
+			]
+		},
+		{
+			"id": 205,
+			"name": "Load",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "page.d.ts",
+					"line": 27,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 206,
+					"name": "Params",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				},
+				{
+					"id": 207,
+					"name": "Props",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "any"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				}
+			],
+			"signatures": [
+				{
+					"id": 208,
+					"name": "Load",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 209,
+							"name": "input",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"id": 210,
+								"typeArguments": [
+									{
+										"type": "reference",
+										"id": 206,
+										"name": "Params"
+									}
+								],
+								"name": "LoadInput"
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"name": "Fallthrough"
+									},
+									{
+										"type": "reference",
+										"id": 221,
+										"typeArguments": [
+											{
+												"type": "reference",
+												"id": 207,
+												"name": "Props"
+											}
+										],
+										"name": "LoadOutput"
+									}
+								],
+								"name": "Either"
+							}
+						],
+						"name": "MaybePromise"
+					}
+				}
+			]
+		},
+		{
+			"id": 210,
+			"name": "LoadInput",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 212,
+					"name": "params",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 6,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"id": 220,
+						"name": "Params"
+					}
+				},
+				{
+					"id": 213,
+					"name": "props",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 7,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "any"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				},
+				{
+					"id": 218,
+					"name": "session",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 9,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"name": "Session"
+					}
+				},
+				{
+					"id": 219,
+					"name": "stuff",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 10,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"name": "Stuff"
+							}
+						],
+						"qualifiedName": "Partial",
+						"package": ".pnpm",
+						"name": "Partial"
+					}
+				},
+				{
+					"id": 211,
+					"name": "url",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 5,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "URL",
+						"package": ".pnpm",
+						"name": "URL"
+					}
+				},
+				{
+					"id": 214,
+					"name": "fetch",
+					"kind": 2048,
+					"kindString": "Method",
+					"flags": {},
+					"signatures": [
+						{
+							"id": 215,
+							"name": "fetch",
+							"kind": 4096,
+							"kindString": "Call signature",
+							"flags": {},
+							"parameters": [
+								{
+									"id": 216,
+									"name": "info",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "RequestInfo",
+										"package": ".pnpm",
+										"name": "RequestInfo"
+									}
+								},
+								{
+									"id": 217,
+									"name": "init",
+									"kind": 32768,
+									"kindString": "Parameter",
+									"flags": {
+										"isOptional": true
+									},
+									"type": {
+										"type": "reference",
+										"qualifiedName": "RequestInit",
+										"package": ".pnpm",
+										"name": "RequestInit"
+									}
+								}
+							],
+							"type": {
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "reference",
+										"qualifiedName": "Response",
+										"package": ".pnpm",
+										"name": "Response"
+									}
+								],
+								"qualifiedName": "Promise",
+								"package": ".pnpm",
+								"name": "Promise"
+							}
+						}
+					]
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						212,
+						213,
+						218,
+						219,
+						211
+					]
+				},
+				{
+					"title": "Methods",
+					"kind": 2048,
+					"children": [
+						214
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "page.d.ts",
+					"line": 4,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 220,
+					"name": "Params",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				}
+			],
+			"extendedBy": [
+				{
+					"type": "reference",
+					"id": 192,
+					"name": "ErrorLoadInput"
+				}
+			]
+		},
+		{
+			"id": 221,
+			"name": "LoadOutput",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 223,
+					"name": "error",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 20,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "union",
+						"types": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "reference",
+								"qualifiedName": "Error",
+								"package": ".pnpm",
+								"name": "Error"
+							}
+						]
+					}
+				},
+				{
+					"id": 227,
+					"name": "maxage",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 24,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "number"
+					}
+				},
+				{
+					"id": 225,
+					"name": "props",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 22,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"id": 228,
+						"name": "Props"
+					}
+				},
+				{
+					"id": 224,
+					"name": "redirect",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 21,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "string"
+					}
+				},
+				{
+					"id": 222,
+					"name": "status",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 19,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "number"
+					}
+				},
+				{
+					"id": 226,
+					"name": "stuff",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {
+						"isOptional": true
+					},
+					"sources": [
+						{
+							"fileName": "page.d.ts",
+							"line": 23,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"name": "Stuff"
+							}
+						],
+						"qualifiedName": "Partial",
+						"package": ".pnpm",
+						"name": "Partial"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						223,
+						227,
+						225,
+						224,
+						222,
+						226
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "page.d.ts",
+					"line": 18,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 228,
+					"name": "Props",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"default": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "any"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				}
+			]
+		},
+		{
+			"id": 169,
+			"name": "PrerenderErrorHandler",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 128,
+					"character": 17
+				}
+			],
+			"signatures": [
+				{
+					"id": 170,
+					"name": "PrerenderErrorHandler",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 171,
+							"name": "details",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reflection",
+								"declaration": {
+									"id": 172,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 174,
+											"name": "path",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 131,
+													"character": 2
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 176,
+											"name": "referenceType",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 133,
+													"character": 2
+												}
+											],
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "literal",
+														"value": "linked"
+													},
+													{
+														"type": "literal",
+														"value": "fetched"
+													}
+												]
+											}
+										},
+										{
+											"id": 175,
+											"name": "referrer",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 132,
+													"character": 2
+												}
+											],
+											"type": {
+												"type": "union",
+												"types": [
+													{
+														"type": "literal",
+														"value": null
+													},
+													{
+														"type": "intrinsic",
+														"name": "string"
+													}
+												]
+											}
+										},
+										{
+											"id": 173,
+											"name": "status",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 130,
+													"character": 2
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "number"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												174,
+												176,
+												175,
+												173
+											]
+										}
+									]
+								}
+							}
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "void"
+					}
+				}
+			]
+		},
+		{
+			"id": 157,
+			"name": "Prerendered",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 161,
+					"name": "assets",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 46,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "reflection",
+								"declaration": {
+									"id": 162,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 163,
+											"name": "type",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "The MIME type of the asset"
+											},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 50,
+													"character": 3
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												163
+											]
+										}
+									]
+								}
+							}
+						],
+						"qualifiedName": "Map",
+						"package": ".pnpm",
+						"name": "Map"
+					}
+				},
+				{
+					"id": 158,
+					"name": "pages",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 39,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "reflection",
+								"declaration": {
+									"id": 159,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 160,
+											"name": "file",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"comment": {
+												"shortText": "The location of the .html file relative to the output directory"
+											},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 43,
+													"character": 3
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												160
+											]
+										}
+									]
+								}
+							}
+						],
+						"qualifiedName": "Map",
+						"package": ".pnpm",
+						"name": "Map"
+					}
+				},
+				{
+					"id": 168,
+					"name": "paths",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"comment": {
+						"shortText": "An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config)"
+					},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 61,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "array",
+						"elementType": {
+							"type": "intrinsic",
+							"name": "string"
+						}
+					}
+				},
+				{
+					"id": 164,
+					"name": "redirects",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "config.d.ts",
+							"line": 53,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "reflection",
+								"declaration": {
+									"id": 165,
+									"name": "__type",
+									"kind": 65536,
+									"kindString": "Type literal",
+									"flags": {},
+									"children": [
+										{
+											"id": 167,
+											"name": "location",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 57,
+													"character": 3
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "string"
+											}
+										},
+										{
+											"id": 166,
+											"name": "status",
+											"kind": 1024,
+											"kindString": "Property",
+											"flags": {},
+											"sources": [
+												{
+													"fileName": "config.d.ts",
+													"line": 56,
+													"character": 3
+												}
+											],
+											"type": {
+												"type": "intrinsic",
+												"name": "number"
+											}
+										}
+									],
+									"groups": [
+										{
+											"title": "Properties",
+											"kind": 1024,
+											"children": [
+												167,
+												166
+											]
+										}
+									]
+								}
+							}
+						],
+						"qualifiedName": "Map",
+						"package": ".pnpm",
+						"name": "Map"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						161,
+						158,
+						168,
+						164
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 38,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 252,
+			"name": "RequestEvent",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 256,
+					"name": "locals",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "hooks.d.ts",
+							"line": 9,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"name": "Locals"
+					}
+				},
+				{
+					"id": 255,
+					"name": "params",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "hooks.d.ts",
+							"line": 8,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							},
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Record",
+						"package": ".pnpm",
+						"name": "Record"
+					}
+				},
+				{
+					"id": 257,
+					"name": "platform",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "hooks.d.ts",
+							"line": 10,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"name": "Platform"
+							}
+						],
+						"qualifiedName": "Readonly",
+						"package": ".pnpm",
+						"name": "Readonly"
+					}
+				},
+				{
+					"id": 253,
+					"name": "request",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "hooks.d.ts",
+							"line": 6,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "Request",
+						"package": ".pnpm",
+						"name": "Request"
+					}
+				},
+				{
+					"id": 254,
+					"name": "url",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "hooks.d.ts",
+							"line": 7,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"qualifiedName": "URL",
+						"package": ".pnpm",
+						"name": "URL"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						256,
+						255,
+						257,
+						253,
+						254
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 5,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 183,
+			"name": "RequestHandler",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "endpoint.d.ts",
+					"line": 16,
+					"character": 17
+				}
+			],
+			"typeParameter": [
+				{
+					"id": 184,
+					"name": "Output",
+					"kind": 131072,
+					"kindString": "Type parameter",
+					"flags": {},
+					"type": {
+						"type": "reference",
+						"name": "Body"
+					},
+					"default": {
+						"type": "reference",
+						"name": "Body"
+					}
+				}
+			],
+			"signatures": [
+				{
+					"id": 185,
+					"name": "RequestHandler",
+					"kind": 4096,
+					"kindString": "Call signature",
+					"flags": {},
+					"parameters": [
+						{
+							"id": 186,
+							"name": "event",
+							"kind": 32768,
+							"kindString": "Parameter",
+							"flags": {},
+							"type": {
+								"type": "reference",
+								"id": 252,
+								"name": "RequestEvent"
+							}
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "reference",
+								"typeArguments": [
+									{
+										"type": "conditional",
+										"checkType": {
+											"type": "reference",
+											"id": 184,
+											"name": "Output"
+										},
+										"extendsType": {
+											"type": "reference",
+											"qualifiedName": "Response",
+											"package": ".pnpm",
+											"name": "Response"
+										},
+										"trueType": {
+											"type": "reference",
+											"qualifiedName": "Response",
+											"package": ".pnpm",
+											"name": "Response"
+										},
+										"falseType": {
+											"type": "reference",
+											"id": 178,
+											"typeArguments": [
+												{
+													"type": "reference",
+													"id": 184,
+													"name": "Output"
+												}
+											],
+											"name": "EndpointOutput"
+										}
+									},
+									{
+										"type": "reference",
+										"name": "Fallthrough"
+									}
+								],
+								"name": "Either"
+							}
+						],
+						"name": "MaybePromise"
+					}
+				}
+			]
+		},
+		{
+			"id": 9,
+			"name": "SSRManifest",
+			"kind": 256,
+			"kindString": "Interface",
+			"flags": {},
+			"children": [
+				{
+					"id": 12,
+					"name": "_",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"comment": {
+						"shortText": "private fields"
+					},
+					"sources": [
+						{
+							"fileName": "app.d.ts",
+							"line": 25,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reflection",
+						"declaration": {
+							"id": 13,
+							"name": "__type",
+							"kind": 65536,
+							"kindString": "Type literal",
+							"flags": {},
+							"children": [
+								{
+									"id": 15,
+									"name": "entry",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "app.d.ts",
+											"line": 27,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reflection",
+										"declaration": {
+											"id": 16,
+											"name": "__type",
+											"kind": 65536,
+											"kindString": "Type literal",
+											"flags": {},
+											"children": [
+												{
+													"id": 19,
+													"name": "css",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"sources": [
+														{
+															"fileName": "app.d.ts",
+															"line": 30,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "array",
+														"elementType": {
+															"type": "intrinsic",
+															"name": "string"
+														}
+													}
+												},
+												{
+													"id": 17,
+													"name": "file",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"sources": [
+														{
+															"fileName": "app.d.ts",
+															"line": 28,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "intrinsic",
+														"name": "string"
+													}
+												},
+												{
+													"id": 18,
+													"name": "js",
+													"kind": 1024,
+													"kindString": "Property",
+													"flags": {},
+													"sources": [
+														{
+															"fileName": "app.d.ts",
+															"line": 29,
+															"character": 3
+														}
+													],
+													"type": {
+														"type": "array",
+														"elementType": {
+															"type": "intrinsic",
+															"name": "string"
+														}
+													}
+												}
+											],
+											"groups": [
+												{
+													"title": "Properties",
+													"kind": 1024,
+													"children": [
+														19,
+														17,
+														18
+													]
+												}
+											]
+										}
+									}
+								},
+								{
+									"id": 14,
+									"name": "mime",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "app.d.ts",
+											"line": 26,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "reference",
+										"typeArguments": [
+											{
+												"type": "intrinsic",
+												"name": "string"
+											},
+											{
+												"type": "intrinsic",
+												"name": "string"
+											}
+										],
+										"qualifiedName": "Record",
+										"package": ".pnpm",
+										"name": "Record"
+									}
+								},
+								{
+									"id": 20,
+									"name": "nodes",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "app.d.ts",
+											"line": 32,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "array",
+										"elementType": {
+											"type": "reference",
+											"name": "SSRNodeLoader"
+										}
+									}
+								},
+								{
+									"id": 21,
+									"name": "routes",
+									"kind": 1024,
+									"kindString": "Property",
+									"flags": {},
+									"sources": [
+										{
+											"fileName": "app.d.ts",
+											"line": 33,
+											"character": 2
+										}
+									],
+									"type": {
+										"type": "array",
+										"elementType": {
+											"type": "reference",
+											"name": "SSRRoute"
+										}
+									}
+								}
+							],
+							"groups": [
+								{
+									"title": "Properties",
+									"kind": 1024,
+									"children": [
+										15,
+										14,
+										20,
+										21
+									]
+								}
+							]
+						}
+					}
+				},
+				{
+					"id": 10,
+					"name": "appDir",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "app.d.ts",
+							"line": 22,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "intrinsic",
+						"name": "string"
+					}
+				},
+				{
+					"id": 11,
+					"name": "assets",
+					"kind": 1024,
+					"kindString": "Property",
+					"flags": {},
+					"sources": [
+						{
+							"fileName": "app.d.ts",
+							"line": 23,
+							"character": 1
+						}
+					],
+					"type": {
+						"type": "reference",
+						"typeArguments": [
+							{
+								"type": "intrinsic",
+								"name": "string"
+							}
+						],
+						"qualifiedName": "Set",
+						"package": ".pnpm",
+						"name": "Set"
+					}
+				}
+			],
+			"groups": [
+				{
+					"title": "Properties",
+					"kind": 1024,
+					"children": [
+						12,
+						10,
+						11
+					]
+				}
+			],
+			"sources": [
+				{
+					"fileName": "app.d.ts",
+					"line": 21,
+					"character": 17
+				}
+			]
+		},
+		{
+			"id": 258,
+			"name": "ResolveOptions",
+			"kind": 4194304,
+			"kindString": "Type alias",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "hooks.d.ts",
+					"line": 22,
+					"character": 12
+				}
+			],
+			"type": {
+				"type": "reference",
+				"typeArguments": [
+					{
+						"type": "reference",
+						"name": "RequiredResolveOptions"
+					}
+				],
+				"qualifiedName": "Partial",
+				"package": ".pnpm",
+				"name": "Partial"
+			}
+		},
+		{
+			"id": 177,
+			"name": "ValidatedConfig",
+			"kind": 4194304,
+			"kindString": "Type alias",
+			"flags": {},
+			"sources": [
+				{
+					"fileName": "config.d.ts",
+					"line": 200,
+					"character": 12
+				}
+			],
+			"type": {
+				"type": "reference",
+				"typeArguments": [
+					{
+						"type": "reference",
+						"id": 88,
+						"name": "Config"
+					}
+				],
+				"name": "RecursiveRequired"
+			}
+		}
+	],
+	"groups": [
+		{
+			"title": "Classes",
+			"kind": 128,
+			"children": [
+				1
+			]
+		},
+		{
+			"title": "Interfaces",
+			"kind": 256,
+			"children": [
+				22,
+				31,
+				88,
+				178,
+				187,
+				192,
+				229,
+				232,
+				235,
+				244,
+				205,
+				210,
+				221,
+				169,
+				157,
+				252,
+				183,
+				9
+			]
+		},
+		{
+			"title": "Type aliases",
+			"kind": 4194304,
+			"children": [
+				258,
+				177
+			]
+		}
+	],
+	"sources": [
+		{
+			"fileName": "index.d.ts",
+			"line": 4,
+			"character": 0
+		}
+	]
+}
