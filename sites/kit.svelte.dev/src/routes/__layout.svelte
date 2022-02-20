@@ -115,4 +115,8 @@
 			width: 30rem !important;
 		}
 	}
+
+	:global(body) {
+		font-size: 1.6rem !important;
+	}
 </style>
