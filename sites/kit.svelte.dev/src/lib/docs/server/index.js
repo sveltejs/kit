@@ -47,75 +47,73 @@ export async function read_file(dir, file) {
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
+	const { metadata, body } = extract_frontmatter(markdown);
+
+	const { content } = parse({
+		body,
+		file,
+		// gross hack to accommodate FAQ
+		slug: dir === 'faq' ? slug : undefined,
+		code: (/** @type {string} */ source, /** @type {string} */ lang) => {
+			let file = '';
+			let html = '';
+
+			source = source
+				.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
+					file = value;
+					return '';
+				})
+				.replace(/^(    )+/gm, (match) => {
+					// for no good reason at all, marked replaces tabs with spaces
+					let tabs = '';
+					for (let i = 0; i < match.length; i += 4) {
+						tabs += '\t';
+					}
+					return tabs;
+				});
+
+			if (lang === 'js') {
+				const twoslash = runTwoSlash(source, lang, {
+					defaultCompilerOptions: {
+						allowJs: true,
+						checkJs: true,
+						target: 'es2021'
+					}
+				});
+
+				html = renderCodeToHTML(twoslash.code, 'ts', { twoslash: true }, {}, highlighter, twoslash);
+
+				// preserve blank lines in output (maybe there's a more correct way to do this?)
+				html = `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
+					/<div class='line'><\/div>/g,
+					'<div class="line"> </div>'
+				)}</div>`;
+			} else {
+				const plang = languages[lang];
+				const highlighted = plang
+					? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+				html = `<div class="code-block">${
+					file ? `<h5>${file}</h5>` : ''
+				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
+			}
+
+			type_regex.lastIndex = 0;
+
+			return html.replace(type_regex, (match, prefix, content) => {
+				// TODO we don't want to linkify Foo in the block that documents Foo
+				const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
+				return `${prefix || ''}${link}`;
+			});
+		}
+	});
+
 	return {
 		file: `${dir}/${file}`,
 		slug: match[1],
-		// third argument is a gross hack to accommodate FAQ
-		...parse(
-			markdown,
-			file,
-			dir === 'faq' ? slug : undefined,
-			(/** @type {string} */ source, /** @type {string} */ lang) => {
-				let file = '';
-				let html = '';
-
-				source = source
-					.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
-						file = value;
-						return '';
-					})
-					.replace(/^(    )+/gm, (match) => {
-						// for no good reason at all, marked replaces tabs with spaces
-						let tabs = '';
-						for (let i = 0; i < match.length; i += 4) {
-							tabs += '\t';
-						}
-						return tabs;
-					});
-
-				if (lang === 'js') {
-					const twoslash = runTwoSlash(source, lang, {
-						defaultCompilerOptions: {
-							allowJs: true,
-							checkJs: true,
-							target: 'es2021'
-						}
-					});
-
-					html = renderCodeToHTML(
-						twoslash.code,
-						'ts',
-						{ twoslash: true },
-						{},
-						highlighter,
-						twoslash
-					);
-
-					// preserve blank lines in output (maybe there's a more correct way to do this?)
-					html = `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
-						/<div class='line'><\/div>/g,
-						'<div class="line"> </div>'
-					)}</div>`;
-				} else {
-					const plang = languages[lang];
-					const highlighted = plang
-						? PrismJS.highlight(source, PrismJS.languages[plang], lang)
-						: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-
-					html = `<div class="code-block">${
-						file ? `<h5>${file}</h5>` : ''
-					}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
-				}
-
-				type_regex.lastIndex = 0;
-
-				return html.replace(type_regex, (match, prefix, content) => {
-					// TODO we don't want to linkify Foo in the block that documents Foo
-					const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
-					return `${prefix || ''}${link}`;
-				});
-			}
-		)
+		title: metadata.title,
+		content
 	};
 }
 
@@ -168,25 +166,35 @@ export function read_headings(dir) {
 
 			const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
 
+			const { body, metadata } = extract_frontmatter(markdown);
+
+			const { sections } = parse({
+				body,
+				file,
+				// gross hack to accommodate FAQ
+				slug: dir === 'faq' ? slug : undefined,
+				code: () => ''
+			});
+
 			return {
-				file: `${dir}/${file}`,
 				slug: match[1],
-				// third argument is a gross hack to accommodate FAQ
-				...parse(markdown, file, dir === 'faq' ? slug : undefined, () => '')
+				title: metadata.title,
+				sections
 			};
 		})
 		.filter(Boolean);
 }
 
 /**
- * @param {string} markdown
- * @param {string} file
- * @param {string} [main_slug]
+ * @param {{
+ *   body: string;
+ *   file: string;
+ *   slug: string;
+ *   code: (code: string, lang: string) => string;
+ * }} opts
  */
-function parse(markdown, file, main_slug, code) {
-	const { body, metadata } = extract_frontmatter(markdown);
-
-	const headings = main_slug ? [main_slug] : [];
+function parse({ body, file, slug, code }) {
+	const headings = slug ? [slug] : [];
 	const sections = [];
 
 	let section;
@@ -194,6 +202,7 @@ function parse(markdown, file, main_slug, code) {
 	const content = transform(body, {
 		heading(html, level) {
 			const title = html
+				.replace(/<\/?code>/g, '')
 				.replace(/&quot;/g, '"')
 				.replace(/&lt;/g, '<')
 				.replace(/&gt;/g, '>');
@@ -228,7 +237,6 @@ function parse(markdown, file, main_slug, code) {
 	});
 
 	return {
-		title: metadata.title,
 		sections,
 		content
 	};
