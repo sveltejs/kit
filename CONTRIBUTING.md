@@ -22,6 +22,7 @@ You can now run SvelteKit by linking it into your project with [pnpm `overrides`
 ## Code structure
 
 Entry points to be aware of are:
+
 - [`packages/create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte) - code that's run when you create a new project with `npm init svelte@next`
 - [`packages/kit/src/packaging`](https://github.com/sveltejs/kit/tree/master/packages/kit/src/packaging) - for the `svelte-kit package` command
 - [`packages/kit/src/core/dev/index.js`](https://github.com/sveltejs/kit/blob/master/packages/kit/src/core/dev/index.js) - for the dev-mode server
@@ -66,13 +67,14 @@ If you would like to test local changes to Vite or another dependency, you can b
 
 ## Documentation changes
 
-All documentation for SvelteKit is in the `documentation` directory, and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites` repository](https://github.com/sveltejs/sites) and can be run locally to preview changes.
+All documentation for SvelteKit is in the [`documentation` directory](https://github.com/sveltejs/kit/tree/master/documentation), and any improvements should be made as a Pull Request to this repository. The site itself is located in the [`sites/kit.svelte.dev` directory](https://github.com/sveltejs/kit/tree/master/sites/kit.svelte.dev) and can be run locally to preview changes.
 
 ## Sending PRs
 
 ### Coding style
 
 There are a few guidelines we follow:
+
 - Internal variables are written with `snake_case` while external APIs are written with `camelCase`
 - Provide a single object as the argument to public APIs. This object can have multiple properties
 - Avoid creating new test projects under `packages/kit/test/apps` but reuse an existing one when possible
