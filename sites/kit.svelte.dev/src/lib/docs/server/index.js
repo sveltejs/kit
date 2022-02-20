@@ -168,7 +168,11 @@ export function read_headings(dir) {
 
 			const slug = match[1];
 
-			const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8');
+			const markdown = fs
+				.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
+				.replace('**TYPES**', () => {
+					return types.map((type) => `#### ${type.name}`).join('\n\n');
+				});
 
 			const { body, metadata } = extract_frontmatter(markdown);
 
