@@ -54,7 +54,7 @@ export async function read_file(dir, file) {
 		file,
 		// gross hack to accommodate FAQ
 		slug: dir === 'faq' ? slug : undefined,
-		code: (/** @type {string} */ source, /** @type {string} */ lang) => {
+		code: (source, language, current) => {
 			let file = '';
 			let html = '';
 
@@ -72,8 +72,8 @@ export async function read_file(dir, file) {
 					return tabs;
 				});
 
-			if (lang === 'js') {
-				const twoslash = runTwoSlash(source, lang, {
+			if (language === 'js') {
+				const twoslash = runTwoSlash(source, language, {
 					defaultCompilerOptions: {
 						allowJs: true,
 						checkJs: true,
@@ -89,9 +89,9 @@ export async function read_file(dir, file) {
 					'<div class="line"> </div>'
 				)}</div>`;
 			} else {
-				const plang = languages[lang];
+				const plang = languages[language];
 				const highlighted = plang
-					? PrismJS.highlight(source, PrismJS.languages[plang], lang)
+					? PrismJS.highlight(source, PrismJS.languages[plang], language)
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 				html = `<div class="code-block">${
@@ -102,7 +102,11 @@ export async function read_file(dir, file) {
 			type_regex.lastIndex = 0;
 
 			return html.replace(type_regex, (match, prefix, content) => {
-				// TODO we don't want to linkify Foo in the block that documents Foo
+				if (content === current) {
+					// we don't want e.g. RequestHandler to link to RequestHandler
+					return match;
+				}
+
 				const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
 				return `${prefix || ''}${link}`;
 			});
@@ -190,7 +194,7 @@ export function read_headings(dir) {
  *   body: string;
  *   file: string;
  *   slug: string;
- *   code: (code: string, lang: string) => string;
+ *   code: (source: string, language: string, current: string) => string;
  * }} opts
  */
 function parse({ body, file, slug, code }) {
@@ -199,6 +203,10 @@ function parse({ body, file, slug, code }) {
 
 	let section;
 
+	// this is a bit hacky, but it allows us to prevent type declarations
+	// from linking to themselves
+	let current = '';
+
 	const content = transform(body, {
 		heading(html, level) {
 			const title = html
@@ -206,6 +214,8 @@ function parse({ body, file, slug, code }) {
 				.replace(/&quot;/g, '"')
 				.replace(/&lt;/g, '<')
 				.replace(/&gt;/g, '>');
+
+			current = title;
 
 			const normalized = slugify(title);
 
@@ -233,7 +243,7 @@ function parse({ body, file, slug, code }) {
 
 			return `<h${level} id="${slug}">${html}<a href="#${slug}" class="anchor"><span class="visually-hidden">permalink</span></a></h${level}>`;
 		},
-		code
+		code: (source, language) => code(source, language, current)
 	});
 
 	return {
