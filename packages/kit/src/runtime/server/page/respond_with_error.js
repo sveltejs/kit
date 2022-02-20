@@ -16,7 +16,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   $session: any;
  *   status: number;
  *   error: Error;
- *   resolve_opts: import('types').RequiredResolveOptions;
+ *   resolve_opts: Required<import('types').ResolveOptions>;
  * }} opts
  */
 export async function respond_with_error({

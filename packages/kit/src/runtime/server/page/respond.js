@@ -16,7 +16,7 @@ import { coalesce_to_error } from '../../../utils/error.js';
  *   options: SSROptions;
  *   state: SSRState;
  *   $session: any;
- *   resolve_opts: import('types').RequiredResolveOptions;
+ *   resolve_opts: Required<import('types').ResolveOptions>;
  *   route: import('types').SSRPage;
  *   params: Record<string, string>;
  * }} opts

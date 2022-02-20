@@ -6,7 +6,7 @@ import { respond } from './respond.js';
  * @param {import('types').SSRPage} route
  * @param {import('types').SSROptions} options
  * @param {import('types').SSRState} state
- * @param {import('types').RequiredResolveOptions} resolve_opts
+ * @param {Required<import('types').ResolveOptions>} resolve_opts
  * @returns {Promise<Response | undefined>}
  */
 export async function render_page(event, route, options, state, resolve_opts) {

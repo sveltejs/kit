@@ -39,7 +39,9 @@ for (const statement of node.statements) {
 			trailingComma: 'none'
 		});
 
-		types.push({ name, comment, snippet });
+		if (snippet) {
+			types.push({ name, comment, snippet });
+		}
 	}
 }
 

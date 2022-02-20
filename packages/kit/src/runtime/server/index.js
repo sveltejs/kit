@@ -94,7 +94,7 @@ export async function respond(request, options, state = {}) {
 		rawBody: body_getter
 	});
 
-	/** @type {import('types').RequiredResolveOptions} */
+	/** @type {Required<import('types').ResolveOptions>} */
 	let resolve_opts = {
 		ssr: true,
 		transformPage: default_transform

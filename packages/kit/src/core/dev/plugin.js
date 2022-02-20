@@ -38,7 +38,7 @@ export async function create_plugin(config, cwd) {
 		configureServer(vite) {
 			__fetch_polyfill();
 
-			/** @type {import('types').SSRManifest} */
+			/** @type {import('types').SSRManifestInternal} */
 			let manifest;
 
 			function update_manifest() {

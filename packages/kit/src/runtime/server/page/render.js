@@ -25,7 +25,7 @@ const updated = {
  *   error?: Error;
  *   url: URL;
  *   params: Record<string, string>;
- *   resolve_opts: import('types').RequiredResolveOptions;
+ *   resolve_opts: Required<import('types').ResolveOptions>;
  *   stuff: Record<string, any>;
  * }} opts
  */
