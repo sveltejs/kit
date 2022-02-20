@@ -53,6 +53,8 @@ prog
 		try {
 			if (H) throw new Error('-H is no longer supported — use --https instead');
 
+			await check_port(port);
+
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 			const config = await load_config();
 
