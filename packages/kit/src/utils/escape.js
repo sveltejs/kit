@@ -57,20 +57,25 @@ function escape(str, dict, unicode_encoder) {
 	return result;
 }
 
-/** @type {Record<string, string>} */
+/**
+ * When inside a double-quoted attribute value, only `&` and `"` hold special meaning.
+ * @see https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
+ * @type {Record<string, string>}
+ */
 const escape_html_attr_dict = {
-	'<': '&lt;',
-	'>': '&gt;',
+	'&': '&amp;',
 	'"': '&quot;'
 };
 
 /**
- * use for escaping string values to be used html attributes on the page
- * e.g.
- * <script data-url="here">
+ * Formats a string to be used as an attribute's value in raw HTML.
+ *
+ * It escapes unpaired surrogates (which are allowed in js strings but invalid in HTML), escapes
+ * characters that are special in attributes, and surrounds the whole string in double-quotes.
  *
  * @param {string} str
- * @returns string escaped string
+ * @returns {string} Escaped string surrounded by double-quotes.
+ * @example const html = `<tag data-value=${escape_html_attr('value')}>...</tag>`;
  */
 export function escape_html_attr(str) {
 	return '"' + escape(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
