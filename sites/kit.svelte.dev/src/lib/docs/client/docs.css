@@ -87,7 +87,7 @@
 }
 
 .content h3 {
-	margin: 6.4rem 0 1rem -1rem;
+	margin: 0 0 1rem -1rem;
 	padding-bottom: 1rem;
 	color: var(--heading);
 	max-width: var(--linemax);
@@ -99,7 +99,7 @@
 	font-weight: 400;
 	font-size: 2rem;
 	color: var(--heading);
-	margin: 6.4rem 0 1.6rem -1rem;
+	margin: 0 0 1.6rem -1rem;
 	padding-left: 0;
 	line-height: 1;
 	padding-top: 0;
@@ -121,8 +121,8 @@
 .content h4::before {
 	display: block;
 	content: ' ';
-	height: var(--nav-h);
-	margin-top: calc(-1 * var(--nav-h));
+	height: calc(var(--nav-h) + 3rem);
+	margin-top: calc(-1 * var(--nav-h) + 3rem);
 }
 
 .content h4 > em {
