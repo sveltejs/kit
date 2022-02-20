@@ -1,0 +1,9 @@
+{
+	"name": "SvelteKit",
+	"entryPoints": ["types/index.d.ts"],
+	"githubPages": false,
+	"readme": "none",
+	"includeVersion": true,
+	"json": "typedoc-output.json",
+	"treatWarningsAsErrors": true
+}

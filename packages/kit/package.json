@@ -42,6 +42,7 @@
 		"svelte-preprocess": "^4.9.8",
 		"svelte2tsx": "~0.5.0",
 		"tiny-glob": "^0.2.9",
+		"typedoc": "^0.22.12",
 		"uvu": "^0.5.2"
 	},
 	"peerDependencies": {
@@ -59,7 +60,8 @@
 	"scripts": {
 		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components",
 		"dev": "rollup -cw",
-		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
+		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format && npm run lint-types",
+		"lint-types": "typedoc && rm typedoc-output.json",
 		"check": "tsc && svelte-check --ignore test/prerendering,src/packaging/test",
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
