@@ -102,6 +102,8 @@ The returned `body` corresponds to the page's props:
 <h1>{item.title}</h1>
 ```
 
+You can directly access the data returned by one of these simple endpoints by adding `/__data.json` to the end of your page URL. Following the previous examples, if our `[id]` is `1234`, our direct endpoint URL would be: `/items/1234/__data.json`.
+
 #### POST, PUT, PATCH, DELETE
 
 Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
@@ -268,6 +270,13 @@ export default config;
 Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a string or a `Uint8Array`.
 
 > Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
+
+Standalone endpoints can be given a file extension if desired, or accessed directly if not:
+
+| Filename | Endpoint |
+| - | - |
+| about.json.js | /about.json |
+| about.js | /about |
 
 ### Private modules
 
