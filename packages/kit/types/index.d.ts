@@ -20,11 +20,6 @@ import {
 } from './internal';
 import './ambient';
 
-export class App {
-	constructor(manifest: SSRManifest);
-	render(request: Request, options?: RequestOptions): Promise<Response>;
-}
-
 export interface Adapter {
 	name: string;
 	adapt(builder: Builder): Promise<void>;
@@ -370,6 +365,11 @@ export interface RequestOptions {
 }
 
 export type ResolveOptions = Partial<RequiredResolveOptions>;
+
+export class Server {
+	constructor(manifest: SSRManifest);
+	respond(request: Request, options?: RequestOptions): Promise<Response>;
+}
 
 export interface SSRManifest {
 	appDir: string;

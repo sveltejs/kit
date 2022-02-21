@@ -1,9 +1,9 @@
 import './shims';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { App } from 'APP';
+import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
-const app = new App(manifest);
+const server = new Server(manifest);
 
 /**
  * @param {import('http').IncomingMessage} req
@@ -19,5 +19,5 @@ export default async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await app.render(request));
+	setResponse(res, await server.respond(request));
 };

@@ -1,15 +1,15 @@
 import './shims';
-import { App } from '0APP';
+import { Server } from '0SERVER';
 
 /**
  * @param {import('@sveltejs/kit').SSRManifest} manifest
  * @returns {import('@netlify/functions').Handler}
  */
 export function init(manifest) {
-	const app = new App(manifest);
+	const server = new Server(manifest);
 
 	return async (event) => {
-		const rendered = await app.render(to_request(event));
+		const rendered = await server.respond(to_request(event));
 
 		const partial_response = {
 			statusCode: rendered.status,

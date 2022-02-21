@@ -67,8 +67,8 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 
 	const server_root = resolve_path(cwd, `${SVELTE_KIT}/output`);
 
-	/** @type {import('types').AppModule} */
-	const { App, override } = await import(pathToFileURL(`${server_root}/server/app.js`).href);
+	/** @type {import('types').ServerModule} */
+	const { Server, override } = await import(pathToFileURL(`${server_root}/server/index.js`).href);
 	const { manifest } = await import(pathToFileURL(`${server_root}/server/manifest.js`).href);
 
 	override({
@@ -77,7 +77,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		read: (file) => readFileSync(join(config.kit.files.assets, file))
 	});
 
-	const app = new App(manifest);
+	const server = new Server(manifest);
 
 	const error = normalise_error_handler(log, config.kit.prerender.onError);
 
@@ -145,7 +145,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 		/** @type {Map<string, import('types').PrerenderDependency>} */
 		const dependencies = new Map();
 
-		const response = await app.render(new Request(`http://sveltekit-prerender${encoded}`), {
+		const response = await server.respond(new Request(`http://sveltekit-prerender${encoded}`), {
 			prerender: {
 				all,
 				dependencies
@@ -282,7 +282,7 @@ export async function prerender({ cwd, out, log, config, build_data, fallback, a
 	}
 
 	if (fallback) {
-		const rendered = await app.render(new Request('http://sveltekit-prerender/[fallback]'), {
+		const rendered = await server.respond(new Request('http://sveltekit-prerender/[fallback]'), {
 			prerender: {
 				fallback,
 				all: false,

@@ -1,8 +1,8 @@
-import { App } from 'APP';
+import { Server } from 'SERVER';
 import { manifest, prerendered } from 'MANIFEST';
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
 
-const app = new App(manifest);
+const server = new Server(manifest);
 
 const prefix = `/${manifest.appDir}/`;
 
@@ -50,7 +50,7 @@ async function handle(event) {
 
 	// dynamically-generated pages
 	try {
-		return await app.render(request);
+		return await server.respond(request);
 	} catch (e) {
 		return new Response('Error rendering route:' + (e.message || e.toString()), { status: 500 });
 	}

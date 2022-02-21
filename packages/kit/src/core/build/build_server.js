@@ -18,7 +18,7 @@ import { s } from '../../utils/misc.js';
  * }} opts
  * @returns
  */
-const app_template = ({ config, hooks, has_service_worker, template }) => `
+const server_template = ({ config, hooks, has_service_worker, template }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
@@ -55,7 +55,7 @@ export function override(settings) {
 	read = settings.read;
 }
 
-export class App {
+export class Server {
 	constructor(manifest) {
 		const hooks = get_hooks(user_hooks);
 
@@ -95,7 +95,7 @@ export class App {
 		};
 	}
 
-	render(request, options = {}) {
+	respond(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
@@ -139,7 +139,7 @@ export async function build_server(
 
 	/** @type {Record<string, string>} */
 	const input = {
-		app: `${build_dir}/app.js`
+		index: `${build_dir}/index.js`
 	};
 
 	// add entry points for every endpoint...
@@ -172,8 +172,8 @@ export async function build_server(
 	};
 
 	fs.writeFileSync(
-		input.app,
-		app_template({
+		input.index,
+		server_template({
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
