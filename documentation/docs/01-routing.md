@@ -328,7 +328,7 @@ src/routes/[...catchall].svelte
 
 #### Fallthrough routes
 
-In rare cases, the ordering above might not be want you want for a given path. For example, perhaps `/foo-abc` should resolve to `src/routes/foo-[bar].svelte`, but `/foo-def` should resolve to `src/routes/[b].svelte`.
+In rare cases, the ordering above might not be what you want for a given path. For example, perhaps `/foo-abc` should resolve to `src/routes/foo-[bar].svelte`, but `/foo-def` should resolve to `src/routes/[b].svelte`.
 
 Higher priority routes can _fall through_ to lower priority routes by returning `{ fallthrough: true }`, either from `load` (for pages) or a request handler (for endpoints):
 
