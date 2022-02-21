@@ -29,14 +29,29 @@ export function load_template(cwd, config) {
 
 export async function load_config({ cwd = process.cwd() } = {}) {
 	const config_file = path.join(cwd, 'svelte.config.js');
+	const ts_config_file = path.join(cwd, 'svelte.config.ts');
+	let config;
 
-	if (!fs.existsSync(config_file)) {
-		throw new Error(
-			'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs/configuration'
-		);
+	if (fs.existsSync(config_file)) {
+		config = await import(url.pathToFileURL(config_file).href);
+	} else {
+		if (fs.existsSync(ts_config_file)) {
+			const { loadConfigFromFile } = await import('vite');
+			const resolved_config = await loadConfigFromFile(
+				{
+					command: 'build',
+					mode: process.env.NODE_ENV || 'production'
+				},
+				ts_config_file,
+				cwd
+			);
+			config = { default: resolved_config?.config };
+		} else {
+			throw new Error(
+				'You need to create a svelte.config.js file. See https://kit.svelte.dev/docs/configuration'
+			);
+		}
 	}
-
-	const config = await import(url.pathToFileURL(config_file).href);
 
 	const validated = validate_config(config.default);
 
