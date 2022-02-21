@@ -112,7 +112,7 @@ export default function ({ external = [] } = {}) {
 
 			builder.copy(files, tmp, {
 				replace: {
-					APP: `${relativePath}/app.js`,
+					SERVER: `${relativePath}/index.js`,
 					MANIFEST: './manifest.js'
 				}
 			});
