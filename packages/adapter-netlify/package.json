@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-netlify",
-	"version": "1.0.0-next.45",
+	"version": "1.0.0-next.46",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",

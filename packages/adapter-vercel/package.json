@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-vercel",
-	"version": "1.0.0-next.43",
+	"version": "1.0.0-next.44",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
