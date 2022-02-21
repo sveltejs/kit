@@ -299,7 +299,7 @@ export async function render_response({
 	const assets =
 		options.paths.assets || (segments.length > 0 ? segments.map(() => '..').join('/') : '.');
 
-	const html = resolve_opts.transformPage({
+	const html = await resolve_opts.transformPage({
 		html: options.template({ head, body, assets, nonce: /** @type {string} */ (csp.nonce) })
 	});
 
