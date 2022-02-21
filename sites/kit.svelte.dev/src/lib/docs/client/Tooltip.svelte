@@ -31,13 +31,13 @@
 
 <style>
 	.tooltip-container {
+		--bg: var(--second);
+		--arrow-size: 0.4rem;
 		position: absolute;
+		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
 	}
 
 	.tooltip {
-		--bg: var(--second);
-		--arrow-size: 0.4rem;
-		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
 		margin: 0 2rem 0 0;
 		background-color: var(--bg);
 		color: #fff;
