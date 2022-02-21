@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.281
+
+### Patch Changes
+
+- Allow the `transformPage` resolve option to return a promise ([#4036](https://github.com/sveltejs/kit/pull/4036))
+
 ## 1.0.0-next.280
 
 ### Patch Changes
