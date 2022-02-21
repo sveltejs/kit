@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.279
+
+### Patch Changes
+
+- Fix escaped html attributes ([#4015](https://github.com/sveltejs/kit/pull/4015))
+
 ## 1.0.0-next.278
 
 ### Patch Changes
