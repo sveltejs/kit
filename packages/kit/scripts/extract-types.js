@@ -28,11 +28,13 @@ for (const statement of node.statements) {
 			start = statement.jsDoc[0].end;
 		}
 
-		start = Math.min(...([
+		start = Math.min(
+			...[
 				code.indexOf('class', start),
 				code.indexOf('interface', start),
 				code.indexOf('type', start)
-			].filter(i => i >= 0)));
+			].filter((i) => i >= 0)
+		);
 
 		const snippet = prettier.format(code.slice(start, statement.end).trim(), {
 			parser: 'typescript',
