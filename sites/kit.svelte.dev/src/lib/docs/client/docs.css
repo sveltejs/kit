@@ -266,3 +266,38 @@
 	border-bottom: 1px solid var(--prime);
 	text-decoration: none !important;
 }
+
+/** TODO another thing that belongs in site-kit */
+pre.language-diff code {
+	color: rgba(0, 0, 0, 0.4);
+}
+
+.language-diff .inserted,
+.language-diff .deleted {
+	position: relative;
+}
+
+.language-diff .inserted {
+	color: hsl(120, 100%, 25%);
+}
+
+.language-diff .deleted {
+	color: hsl(2, 80%, 47%);
+	user-select: none;
+}
+
+.language-diff .inserted::before,
+.language-diff .deleted::before {
+	position: absolute;
+	left: -0.6rem;
+	top: -0.2rem;
+	font-size: 1.2rem;
+}
+
+.language-diff .inserted::before {
+	content: '+';
+}
+
+.language-diff .deleted::before {
+	content: '-';
+}

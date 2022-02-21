@@ -63,13 +63,15 @@ export async function read_file(dir, file) {
 					file = value;
 					return '';
 				})
-				.replace(/^(    )+/gm, (match) => {
+				.replace(/^([\-\+])?((?:    )+)/gm, (match, prefix = '', spaces) => {
+					if (prefix && language !== 'diff') return match;
+
 					// for no good reason at all, marked replaces tabs with spaces
 					let tabs = '';
-					for (let i = 0; i < match.length; i += 4) {
+					for (let i = 0; i < spaces.length; i += 4) {
 						tabs += '\t';
 					}
-					return tabs;
+					return prefix + tabs;
 				});
 
 			if (language === 'js') {
@@ -88,6 +90,26 @@ export async function read_file(dir, file) {
 					/<div class='line'><\/div>/g,
 					'<div class="line"> </div>'
 				)}</div>`;
+			} else if (language === 'diff') {
+				const lines = source.split('\n').map((content) => {
+					let type = null;
+					if (/^[\+\-]/.test(content)) {
+						type = content[0] === '+' ? 'inserted' : 'deleted';
+						content = content.slice(1);
+					}
+
+					return {
+						type,
+						content
+					};
+				});
+
+				html = `<div class="code-block"><pre class="language-diff"><code>${lines
+					.map((line) => {
+						if (line.type) return `<span class="${line.type}">${line.content}\n</span>`;
+						return line.content + '\n';
+					})
+					.join('')}</code></pre></div>`;
 			} else {
 				const plang = languages[language];
 				const highlighted = plang
