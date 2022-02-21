@@ -18,7 +18,7 @@ import { s } from '../../utils/misc.js';
  * }} opts
  * @returns
  */
-const app_template = ({ config, hooks, has_service_worker, template }) => `
+const server_template = ({ config, hooks, has_service_worker, template }) => `
 import root from '__GENERATED__/root.svelte';
 import { respond } from '${runtime}/server/index.js';
 import { set_paths, assets, base } from '${runtime}/paths.js';
@@ -139,7 +139,7 @@ export async function build_server(
 
 	/** @type {Record<string, string>} */
 	const input = {
-		app: `${build_dir}/index.js`
+		index: `${build_dir}/index.js`
 	};
 
 	// add entry points for every endpoint...
@@ -172,8 +172,8 @@ export async function build_server(
 	};
 
 	fs.writeFileSync(
-		input.app,
-		app_template({
+		input.index,
+		server_template({
 			config,
 			hooks: app_relative(hooks_file),
 			has_service_worker: service_worker_register && !!service_worker_entry_file,
