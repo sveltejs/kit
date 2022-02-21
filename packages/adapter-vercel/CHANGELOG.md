@@ -1,5 +1,11 @@
 # @sveltejs/adapter-vercel
 
+## 1.0.0-next.44
+
+### Patch Changes
+
+- [breaking] rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
+
 ## 1.0.0-next.43
 
 ### Patch Changes

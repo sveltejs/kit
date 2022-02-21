@@ -1,5 +1,13 @@
 # @sveltejs/kit
 
+## 1.0.0-next.280
+
+### Patch Changes
+
+- [breaking] rename `app.render` to `server.respond` ([#4034](https://github.com/sveltejs/kit/pull/4034))
+
+* [breaking] allow providing `Params` type argument for `RequestHandler` ([#3989](https://github.com/sveltejs/kit/pull/3989))
+
 ## 1.0.0-next.279
 
 ### Patch Changes
