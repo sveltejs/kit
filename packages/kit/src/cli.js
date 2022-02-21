@@ -54,7 +54,7 @@ prog
 			if (H) throw new Error('-H is no longer supported — use --https instead');
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-			const config = await load_config();
+			const config = await load_config({ mode: process.env.NODE_ENV });
 
 			const { dev } = await import('./core/dev/index.js');
 
@@ -89,7 +89,7 @@ prog
 	.action(async ({ verbose }) => {
 		try {
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
+			const config = await load_config({ mode: process.env.NODE_ENV });
 
 			const { build } = await import('./core/build/index.js');
 			const build_data = await build(config);
@@ -132,7 +132,7 @@ prog
 			await check_port(port);
 
 			process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-			const config = await load_config();
+			const config = await load_config({ mode: process.env.NODE_ENV });
 
 			const { preview } = await import('./core/preview/index.js');
 

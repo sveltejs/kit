@@ -84,8 +84,6 @@ const config = {
 export default config;
 ```
 
-SvelteKit also directly supports TS config files (`svelte.config.ts`).
-
 ### adapter
 
 Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
