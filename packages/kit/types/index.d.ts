@@ -427,11 +427,11 @@ interface RouteSegment {
 	rest: boolean;
 }
 
-type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
-
-type TrailingSlash = 'never' | 'always' | 'ignore';
-
 export interface SSRManifest {
 	appDir: string;
 	assets: Set<string>;
 }
+
+type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
+
+type TrailingSlash = 'never' | 'always' | 'ignore';

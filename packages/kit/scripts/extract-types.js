@@ -28,8 +28,11 @@ for (const statement of node.statements) {
 			start = statement.jsDoc[0].end;
 		}
 
-		const i = code.indexOf('export', start);
-		start = i + 6;
+		start = Math.min(...([
+				code.indexOf('class', start),
+				code.indexOf('interface', start),
+				code.indexOf('type', start)
+			].filter(i => i >= 0)));
 
 		const snippet = prettier.format(code.slice(start, statement.end).trim(), {
 			parser: 'typescript',
@@ -39,9 +42,7 @@ for (const statement of node.statements) {
 			trailingComma: 'none'
 		});
 
-		if (snippet) {
-			types.push({ name, comment, snippet });
-		}
+		types.push({ name, comment, snippet });
 	}
 }
 
