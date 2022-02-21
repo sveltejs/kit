@@ -57,7 +57,7 @@
 		"svelte-kit.js"
 	],
 	"scripts": {
-		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components",
+		"build": "rollup -c && node scripts/cp.js src/runtime/components assets/components && npm run types",
 		"dev": "rollup -cw",
 		"lint": "eslint --ignore-path .gitignore --ignore-pattern \"src/packaging/test/**\" \"{src,test}/**/*.{ts,mjs,js,svelte}\" && npm run check-format",
 		"check": "tsc && svelte-check --ignore test/prerendering,src/packaging/test",
@@ -74,7 +74,8 @@
 		"test:integration:amp": "cd test/apps/amp && pnpm test",
 		"test:integration:basics": "cd test/apps/basics && pnpm test",
 		"test:integration:options": "cd test/apps/options && pnpm test",
-		"test:integration:options-2": "cd test/apps/options-2 && pnpm test"
+		"test:integration:options-2": "cd test/apps/options-2 && pnpm test",
+		"types": "node scripts/extract-types.js"
 	},
 	"exports": {
 		"./package.json": "./package.json",

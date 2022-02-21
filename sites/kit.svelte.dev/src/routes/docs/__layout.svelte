@@ -39,9 +39,6 @@
 </div>
 
 <style>
-	.grid {
-	}
-
 	@media (min-width: 832px) {
 		.grid {
 			grid-template-rows: unset;

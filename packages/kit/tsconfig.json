@@ -14,6 +14,6 @@
 			"types": ["./types/internal"]
 		}
 	},
-	"include": ["src/**/*", "test/**/*", "types/**/*"],
+	"include": ["scripts/**/*", "src/**/*", "test/**/*", "types/**/*"],
 	"exclude": ["src/packaging/test/fixtures/**/*", "test/prerendering/*/build/**/*"]
 }
