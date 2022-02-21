@@ -69,7 +69,7 @@ export async function read_file(dir, file) {
 					// for no good reason at all, marked replaces tabs with spaces
 					let tabs = '';
 					for (let i = 0; i < spaces.length; i += 4) {
-						tabs += '\t';
+						tabs += '  ';
 					}
 					return prefix + tabs;
 				});
@@ -123,15 +123,33 @@ export async function read_file(dir, file) {
 
 			type_regex.lastIndex = 0;
 
-			return html.replace(type_regex, (match, prefix, content) => {
-				if (content === current) {
-					// we don't want e.g. RequestHandler to link to RequestHandler
-					return match;
-				}
+			return html
+				.replace(type_regex, (match, prefix, content) => {
+					if (content === current) {
+						// we don't want e.g. RequestHandler to link to RequestHandler
+						return match;
+					}
 
-				const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
-				return `${prefix || ''}${link}`;
-			});
+					const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
+					return `${prefix || ''}${link}`;
+				})
+				.replace(
+					/^(\s+)<span class="token comment">([\s\S]+?)<\/span>\n/gm,
+					(match, intro_whitespace, content) => {
+						// we use some CSS trickery to make comments break onto multiple lines while preserving indentation
+						const lines = (intro_whitespace + content).split('\n');
+						return lines
+							.map((line) => {
+								const match = /^(\s*)(.*)/.exec(line);
+								const indent = (match[1] ?? '').replace(/\t/g, '  ').length;
+
+								return `<span class="token comment wrapped" style="--indent: ${indent}ch">${
+									line ?? ''
+								}</span>`;
+							})
+							.join('');
+					}
+				);
 		}
 	});
 

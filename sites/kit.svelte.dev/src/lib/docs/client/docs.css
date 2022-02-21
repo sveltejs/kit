@@ -301,3 +301,11 @@ pre.language-diff code {
 .language-diff .deleted::before {
 	content: '-';
 }
+
+/** make long comments wrap on mobile */
+.token.comment.wrapped {
+	display: block;
+	white-space: pre-wrap;
+	padding-left: calc(var(--indent) + 2ch);
+	text-indent: calc(-1 * var(--indent) - 2ch);
+}
