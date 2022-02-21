@@ -4,12 +4,12 @@ import path from 'path';
 import sirv from 'sirv';
 import { fileURLToPath } from 'url';
 import { getRequest, setResponse } from '@sveltejs/kit/node';
-import { App } from 'APP';
+import { Server } from 'SERVER';
 import { manifest } from 'MANIFEST';
 
 /* global ORIGIN, PROTOCOL_HEADER, HOST_HEADER */
 
-const app = new App(manifest);
+const server = new Server(manifest);
 const origin = ORIGIN;
 const protocol_header = PROTOCOL_HEADER && process.env[PROTOCOL_HEADER];
 const host_header = (HOST_HEADER && process.env[HOST_HEADER]) || 'host';
@@ -45,7 +45,7 @@ const ssr = async (req, res) => {
 		return res.end(err.reason || 'Invalid request body');
 	}
 
-	setResponse(res, await app.render(request));
+	setResponse(res, await server.respond(request));
 };
 
 /** @param {import('polka').Middleware[]} handlers */

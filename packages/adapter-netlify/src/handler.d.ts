@@ -1,3 +1,3 @@
-declare module '0APP' {
-	export { App } from '@sveltejs/kit';
+declare module '0SERVER' {
+	export { Server } from '@sveltejs/kit';
 }

@@ -1,5 +1,5 @@
-declare module 'APP' {
-	export { App } from '@sveltejs/kit';
+declare module 'SERVER' {
+	export { Server } from '@sveltejs/kit';
 }
 
 declare module 'MANIFEST' {

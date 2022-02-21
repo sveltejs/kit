@@ -55,7 +55,7 @@ export function override(settings) {
 	read = settings.read;
 }
 
-export class App {
+export class Server {
 	constructor(manifest) {
 		const hooks = get_hooks(user_hooks);
 
@@ -95,7 +95,7 @@ export class App {
 		};
 	}
 
-	render(request, options = {}) {
+	respond(request, options = {}) {
 		if (!(request instanceof Request)) {
 			throw new Error('The first argument to app.render must be a Request object. See https://github.com/sveltejs/kit/pull/3384 for details');
 		}
@@ -139,7 +139,7 @@ export async function build_server(
 
 	/** @type {Record<string, string>} */
 	const input = {
-		app: `${build_dir}/app.js`
+		app: `${build_dir}/index.js`
 	};
 
 	// add entry points for every endpoint...

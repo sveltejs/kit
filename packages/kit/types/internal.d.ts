@@ -9,9 +9,9 @@ import {
 	Handle,
 	HandleError,
 	RequestEvent,
-	App,
 	RequestOptions,
-	PrerenderErrorHandler
+	PrerenderErrorHandler,
+	Server
 } from './index';
 
 export interface AdapterEntry {
@@ -38,8 +38,8 @@ export interface AdapterEntry {
 	}) => void;
 }
 
-export interface AppModule {
-	App: typeof InternalApp;
+export interface ServerModule {
+	Server: typeof InternalServer;
 
 	override(options: {
 		paths: {
@@ -117,8 +117,8 @@ export interface Hooks {
 
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
-export class InternalApp extends App {
-	render(
+export class InternalServer extends Server {
+	respond(
 		request: Request,
 		options?: RequestOptions & {
 			prerender?: PrerenderOptions;
