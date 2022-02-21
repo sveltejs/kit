@@ -25,39 +25,6 @@ export function escape_json_in_html(val) {
 }
 
 /**
- * @param str {string} string to escape
- * @param dict {Record<string, string>} dictionary of character replacements
- * @param unicode_encoder {function(number): string} encoder to use for high unicode characters
- * @returns {string}
- */
-function escape(str, dict, unicode_encoder) {
-	let result = '';
-
-	for (let i = 0; i < str.length; i += 1) {
-		const char = str.charAt(i);
-		const code = char.charCodeAt(0);
-
-		if (char in dict) {
-			result += dict[char];
-		} else if (code >= 0xd800 && code <= 0xdfff) {
-			const next = str.charCodeAt(i + 1);
-
-			// If this is the beginning of a [high, low] surrogate pair,
-			// add the next two characters, otherwise escape
-			if (code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
-				result += char + str[++i];
-			} else {
-				result += unicode_encoder(code);
-			}
-		} else {
-			result += char;
-		}
-	}
-
-	return result;
-}
-
-/**
  * When inside a double-quoted attribute value, only `&` and `"` hold special meaning.
  * @see https://html.spec.whatwg.org/multipage/parsing.html#attribute-value-(double-quoted)-state
  * @type {Record<string, string>}
@@ -66,6 +33,20 @@ const escape_html_attr_dict = {
 	'&': '&amp;',
 	'"': '&quot;'
 };
+
+const escape_html_attr_regex = new RegExp(
+	// special characters
+	`[${Object.keys(escape_html_attr_dict).join('')}]|` +
+		// high surrogate without paired low surrogate
+		'[\\ud800-\\udbff](?![\\udc00-\\udfff])|' +
+		// a valid surrogate pair, the only match with 2 code units
+		// we match it so that we can match unpaired low surrogates in the same pass
+		// TODO: use lookbehind assertions once they are widely supported: (?<![\ud800-udbff])[\udc00-\udfff]
+		'[\\ud800-\\udbff][\\udc00-\\udfff]|' +
+		// unpaired low surrogate (see previous match)
+		'[\\udc00-\\udfff]',
+	'g'
+);
 
 /**
  * Formats a string to be used as an attribute's value in raw HTML.
@@ -78,5 +59,14 @@ const escape_html_attr_dict = {
  * @example const html = `<tag data-value=${escape_html_attr('value')}>...</tag>`;
  */
 export function escape_html_attr(str) {
-	return '"' + escape(str, escape_html_attr_dict, (code) => `&#${code};`) + '"';
+	const escaped_str = str.replace(escape_html_attr_regex, (match) => {
+		if (match.length === 2) {
+			// valid surrogate pair
+			return match;
+		}
+
+		return escape_html_attr_dict[match] ?? `&#${match.charCodeAt(0)};`;
+	});
+
+	return `"${escaped_str}"`;
 }
