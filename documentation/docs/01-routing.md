@@ -273,10 +273,12 @@ Most commonly, endpoints exist to provide data to the page with which they're pa
 
 Standalone endpoints can be given a file extension if desired, or accessed directly if not:
 
-| Filename | Endpoint |
-| - | - |
-| about.json.js | /about.json |
-| about.js | /about |
+| filename                      | endpoint   |
+| ----------------------------- | ---------- |
+| src/routes/data/index.json.js | /data.json |
+| src/routes/data.json.js       | /data.json |
+| src/routes/data/index.js      | /data      |
+| src/routes/data.js            | /data      |
 
 ### Private modules
 
