@@ -30,9 +30,14 @@ for (const statement of node.statements) {
 
 		start = Math.min(
 			...[
-				code.indexOf('class', start),
-				code.indexOf('interface', start),
-				code.indexOf('type', start)
+				code.indexOf('export class ', start),
+				code.indexOf('export namespace ', start),
+				code.indexOf('export interface ', start),
+				code.indexOf('export type ', start),
+				code.indexOf('class ', start),
+				code.indexOf('namespace ', start),
+				code.indexOf('interface ', start),
+				code.indexOf('type ', start)
 			].filter((i) => i >= 0)
 		);
 
