@@ -1,7 +1,7 @@
 <script>
 	import { tick } from 'svelte';
 
-	export let text = '';
+	export let html = '';
 	export let x = 0;
 	export let y = 0;
 
@@ -10,27 +10,34 @@
 
 	// bit of a gross hack but it works — this prevents the
 	// tooltip from disappearing off the side of the screen
-	$: if (text && tooltip) {
+	$: if (html && tooltip) {
 		tick().then(() => {
 			width = tooltip.getBoundingClientRect().width;
 		});
 	}
 </script>
 
+<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 <div
-	bind:this={tooltip}
-	class="tooltip"
+	on:mouseenter
+	on:mouseleave
+	class="tooltip-container"
 	style="left: {x}px; top: {y}px; --offset: {Math.min(-10, window.innerWidth - (x + width + 10))}px"
 >
-	<span>{text}</span>
+	<div bind:this={tooltip} class="tooltip">
+		<span>{@html html}</span>
+	</div>
 </div>
 
 <style>
-	.tooltip {
+	.tooltip-container {
 		--bg: var(--second);
 		--arrow-size: 0.4rem;
 		position: absolute;
 		transform: translate(var(--offset), calc(2rem + var(--arrow-size)));
+	}
+
+	.tooltip {
 		margin: 0 2rem 0 0;
 		background-color: var(--bg);
 		color: #fff;
@@ -51,5 +58,10 @@
 		top: calc(-2 * var(--arrow-size));
 		border: var(--arrow-size) solid transparent;
 		border-bottom-color: var(--bg);
+	}
+
+	.tooltip :global(a) {
+		color: white;
+		text-decoration: underline;
 	}
 </style>

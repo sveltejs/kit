@@ -4,23 +4,36 @@ import Tooltip from './Tooltip.svelte';
 export function setup() {
 	onMount(() => {
 		let tooltip;
+		let timeout;
 
 		function over(event) {
 			if (event.target.tagName === 'DATA-LSP') {
+				clearTimeout(timeout);
+
 				if (!tooltip) {
 					tooltip = new Tooltip({
 						target: document.body
 					});
+
+					tooltip.$on('mouseenter', () => {
+						clearTimeout(timeout);
+					});
+
+					tooltip.$on('mouseleave', () => {
+						clearTimeout(timeout);
+						tooltip.$destroy();
+						tooltip = null;
+					});
 				}
 
 				const rect = event.target.getBoundingClientRect();
-				const text = event.target.getAttribute('lsp');
+				const html = event.target.getAttribute('lsp');
 
 				const x = (rect.left + rect.right) / 2 + window.scrollX;
 				const y = rect.top + window.scrollY;
 
 				tooltip.$set({
-					text,
+					html,
 					x,
 					y
 				});
@@ -29,8 +42,10 @@ export function setup() {
 
 		function out(event) {
 			if (event.target.tagName === 'DATA-LSP') {
-				tooltip.$destroy();
-				tooltip = null;
+				timeout = setTimeout(() => {
+					tooltip.$destroy();
+					tooltip = null;
+				}, 200);
 			}
 		}
 

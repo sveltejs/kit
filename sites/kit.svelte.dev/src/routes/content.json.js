@@ -1,6 +1,9 @@
 import fs from 'fs';
 import { extract_frontmatter, transform } from '$lib/docs/server/markdown';
 import { slugify } from '../lib/docs/server';
+import { types } from '../../../../documentation/types.js';
+
+// TODO need to take generated type summaries into account when building index
 
 const categories = [
 	{
@@ -29,7 +32,13 @@ export function get() {
 			const slug = match[1];
 
 			const filepath = `../../documentation/${category.slug}/${file}`;
-			const markdown = fs.readFileSync(filepath, 'utf-8');
+			const markdown = fs.readFileSync(filepath, 'utf-8').replace('**TYPES**', () => {
+				return types
+					.map(
+						(type) => `#### ${type.name}\n\n${type.comment}\n\n\`\`\`ts\n${type.snippet}\n\`\`\``
+					)
+					.join('\n\n');
+			});
 
 			const { body, metadata } = extract_frontmatter(markdown);
 

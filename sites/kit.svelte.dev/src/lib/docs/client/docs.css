@@ -86,48 +86,43 @@
 	}
 }
 
-.content h3,
-.content h3 > code {
-	margin: 6.4rem 0 1rem 0;
+.content h3 {
+	margin: 0 0 1rem -1rem;
 	padding-bottom: 1rem;
-	color: var(--text);
+	color: var(--heading);
 	max-width: var(--linemax);
 	border-bottom: 1px solid #ddd;
-	background: transparent;
 	line-height: 1;
 }
 
-.content h3:first-child {
-	border: none;
-	margin: 0;
-}
-
-/* avoid doubled border-top */
-.content h3 > code {
-	border-radius: 0 0 0 0;
-	border: none;
-	font-size: inherit;
-}
-
-.content h4,
-.content h4 > code {
-	font-family: inherit;
-	font-weight: 600;
-	font-size: 2.4rem;
-	color: var(--second);
-	margin: 6.4rem 0 1.6rem 0;
+.content h4 {
+	font-weight: 400;
+	font-size: 2rem;
+	color: var(--heading);
+	margin: 0 0 1.6rem -1rem;
 	padding-left: 0;
-	background: transparent;
 	line-height: 1;
 	padding-top: 0;
 	top: 0;
 }
 
+.content h3 > code,
+.content h4 code {
+	background: transparent;
+	color: inherit;
+	font-family: inherit;
+	top: 0;
+	margin: 0;
+	padding: 0;
+	border-radius: 0 0 0 0;
+	font-size: inherit;
+}
+
 .content h4::before {
 	display: block;
 	content: ' ';
-	height: var(--nav-h);
-	margin-top: calc(-1 * var(--nav-h));
+	height: calc(var(--nav-h) + 3rem);
+	margin-top: calc(-1 * var(--nav-h) + 3rem);
 }
 
 .content h4 > em {
@@ -140,7 +135,7 @@
 }
 
 .content code {
-	padding: 0.4rem;
+	padding: 0.2rem 0.4rem;
 	margin: 0 0.2rem;
 	top: -0.1rem;
 	background: var(--back-api);
@@ -167,7 +162,12 @@
 	margin-bottom: 2em;
 }
 
+.content section {
+	padding: 0 0 0 1rem;
+}
+
 .content section p {
+	font-size: 1.6rem;
 	max-width: var(--linemax);
 	margin: 1em 0;
 }
@@ -256,4 +256,56 @@
 	background: var(--back-api);
 	border-radius: var(--border-r) var(--border-r) 0 0;
 	box-shadow: 0 1px 6px hsla(205.7, 63.6%, 30.8%, 0.06);
+}
+
+.code-block a {
+	border-bottom: 1px dotted var(--prime);
+}
+
+.code-block a:hover {
+	border-bottom: 1px solid var(--prime);
+	text-decoration: none !important;
+}
+
+/** TODO another thing that belongs in site-kit */
+pre.language-diff code {
+	color: rgba(0, 0, 0, 0.4);
+}
+
+.language-diff .inserted,
+.language-diff .deleted {
+	position: relative;
+}
+
+.language-diff .inserted {
+	color: hsl(120, 100%, 25%);
+}
+
+.language-diff .deleted {
+	color: hsl(2, 80%, 47%);
+	user-select: none;
+}
+
+.language-diff .inserted::before,
+.language-diff .deleted::before {
+	position: absolute;
+	left: -0.6rem;
+	top: -0.2rem;
+	font-size: 1.2rem;
+}
+
+.language-diff .inserted::before {
+	content: '+';
+}
+
+.language-diff .deleted::before {
+	content: '-';
+}
+
+/** make long comments wrap on mobile */
+.token.comment.wrapped {
+	display: block;
+	white-space: pre-wrap;
+	padding-left: calc(var(--indent) + 2ch);
+	text-indent: calc(-1 * var(--indent) - 2ch);
 }

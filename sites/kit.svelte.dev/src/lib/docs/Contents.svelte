@@ -84,20 +84,22 @@
 								{subsection.title}
 							</a>
 
-							<ul>
-								{#each subsection.sections as subsection}
-									<li>
-										<a
-											class="nested subsection"
-											class:active={subsection.path === path}
-											href={subsection.path}
-											sveltekit:prefetch
-										>
-											{subsection.title}
-										</a>
-									</li>
-								{/each}
-							</ul>
+							{#if section.path === $page.url.pathname}
+								<ul>
+									{#each subsection.sections as subsection}
+										<li>
+											<a
+												class="nested subsection"
+												class:active={subsection.path === path}
+												href={subsection.path}
+												sveltekit:prefetch
+											>
+												{subsection.title}
+											</a>
+										</li>
+									{/each}
+								</ul>
+							{/if}
 						</li>
 					{/each}
 				</ul>
