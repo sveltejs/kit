@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-allow to type `Params` of `RequestHandler`
+[breaking] allow providing `Params` type argument for `RequestHandler`
