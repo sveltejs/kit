@@ -206,7 +206,7 @@ export type RecursiveRequired<T> = {
 
 export interface RequiredResolveOptions {
 	ssr: boolean;
-	transformPage: ({ html }: { html: string }) => string;
+	transformPage: ({ html }: { html: string }) => MaybePromise<string>;
 }
 
 export interface Respond {
