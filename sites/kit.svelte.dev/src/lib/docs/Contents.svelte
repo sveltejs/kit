@@ -1,6 +1,5 @@
 <script>
 	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 
@@ -86,7 +85,7 @@
 							</a>
 
 							{#if section.path === $page.url.pathname}
-								<ul transition:slide={{ duration: 200 }}>
+								<ul>
 									{#each subsection.sections as subsection}
 										<li>
 											<a
