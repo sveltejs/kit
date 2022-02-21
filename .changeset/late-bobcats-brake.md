@@ -7,4 +7,4 @@
 '@sveltejs/kit': patch
 ---
 
-Rename app.render to server.respond
+[breaking] rename `app.render` to `server.respond`
