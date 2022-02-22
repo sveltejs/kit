@@ -28,7 +28,7 @@ function scroll_state() {
  * @param {Event} event
  * @returns {HTMLAnchorElement | SVGAElement | undefined}
  */
-function find_anchor(event) {
+export function find_anchor(event) {
 	const node = event
 		.composedPath()
 		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
@@ -39,7 +39,7 @@ function find_anchor(event) {
  * @param {HTMLAnchorElement | SVGAElement} node
  * @returns {URL}
  */
-function get_href(node) {
+export function get_href(node) {
 	return node instanceof SVGAElement
 		? new URL(node.href.baseVal, document.baseURI)
 		: new URL(node.href);
@@ -132,33 +132,6 @@ export class Router {
 				}
 			}
 		});
-
-		/** @param {Event} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(event);
-			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(get_href(a));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-				// add a layer of indirection to address that
-				event.target?.dispatchEvent(
-					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-				);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
@@ -333,20 +306,6 @@ export class Router {
 
 	disable() {
 		this.enabled = false;
-	}
-
-	/**
-	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
-	 */
-	async prefetch(url) {
-		const info = this.parse(url);
-
-		if (!info) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
-		}
-
-		return this.renderer.load(info);
 	}
 
 	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */

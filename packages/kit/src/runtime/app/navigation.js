@@ -1,4 +1,4 @@
-import { router, renderer } from '../client/singletons.js';
+import { router, prefetcher, renderer } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 /**
@@ -46,7 +46,7 @@ async function invalidate_(resource) {
  * @type {import('$app/navigation').prefetch}
  */
 async function prefetch_(href) {
-	await router.prefetch(new URL(href, get_base_uri(document)));
+	await prefetcher?.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**

@@ -38,3 +38,7 @@ export type NavigationState = {
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
 };
+
+export interface PrefetchHandler {
+	(info: NavigationInfo): Promise<NavigationResult | undefined>;
+}
