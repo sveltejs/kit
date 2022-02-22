@@ -45,7 +45,7 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem) and return it to the browser via an HTTP `fetch`.
+Endpoints are modules written in `.js` (or `.ts`) files that export [request handler](/docs/types#sveltejs-kit-requesthandler) functions corresponding to HTTP methods. Their job is to make it possible to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
 ```js
 /// file: src/routes/items/[id].js
