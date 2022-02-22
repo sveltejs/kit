@@ -90,7 +90,7 @@ This function takes a [`RequestEvent`](types#sveltejs-kit-requestevent) and typi
 
 #### Page endpoints
 
-If an endpoint has the same filename as a page (except for the extension), the page get its props from the endpoint. SvelteKit will get the props for the corresponding page by providing a default [`load`](loading) implementation. On the client, it will issue the necessary HTTP `fetch` call to the endpoint, but on the server it will call the code directly and optimize out the HTTP call.
+If an endpoint has the same filename as a page (except for the extension), the page gets its props from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR.
 
 A page like `src/routes/items/[id].svelte` could get its props from the `body` in the endpoint above:
 
