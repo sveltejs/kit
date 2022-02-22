@@ -4,7 +4,7 @@ title: Types
 
 ### @sveltejs/kit
 
-All APIs in SvelteKit are fully typed. The following types can be imported from `@sveltejs/kit`:
+All APIs in SvelteKit are fully typed. The following types are defined by `@sveltejs/kit`:
 
 **TYPES**
 
