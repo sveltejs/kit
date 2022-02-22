@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.119
+
+### Patch Changes
+
+- [fix] update docs URL for App namespace interfaces ([#4042](https://github.com/sveltejs/kit/pull/4042))
+
 ## 2.0.0-next.118
 
 ### Patch Changes
