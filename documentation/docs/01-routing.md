@@ -102,8 +102,6 @@ The returned `body` corresponds to the page's props:
 <h1>{item.title}</h1>
 ```
 
-You can directly access the data returned by one of these simple endpoints by adding `/__data.json` to the end of your page URL. Following the previous examples, if our `[id]` is `1234`, our direct endpoint URL would be: `/items/1234/__data.json`.
-
 #### POST, PUT, PATCH, DELETE
 
 Endpoints can handle any HTTP method — not just `GET` — by exporting the corresponding function:
@@ -193,7 +191,7 @@ export async function post({ request }) {
 </form>
 ```
 
-If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML.
+If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
 
 #### Body parsing
 
