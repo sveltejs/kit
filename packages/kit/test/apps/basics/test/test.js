@@ -906,7 +906,7 @@ test.describe.parallel('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow');
+			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -961,6 +961,13 @@ test.describe.parallel('Errors', () => {
 			'This is your custom error page saying: "Error in handle"'
 		);
 		expect(await page.innerHTML('h1')).toBe('500');
+	});
+
+	test('error evaluating module', async ({ request }) => {
+		const response = await request.get('/errors/init-error-endpoint');
+
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 });
 
