@@ -14,7 +14,7 @@ export function get_base_uri(doc) {
  * @param {Event} event
  * @returns {HTMLAnchorElement | SVGAElement | undefined}
  */
- export function find_anchor(event) {
+export function find_anchor(event) {
 	const node = event
 		.composedPath()
 		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
