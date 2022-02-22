@@ -232,17 +232,26 @@ export async function create_plugin(config, cwd) {
 
 						const template = load_template(cwd, config);
 
+						// we want to avoid double-fixing stack traces, since
+						// that will typically make everything much worse
+						const fixed_errors = new WeakSet();
+
 						const rendered = await respond(request, {
 							amp: config.kit.amp,
 							csp: config.kit.csp,
 							dev: true,
 							floc: config.kit.floc,
 							get_stack: (error) => {
-								vite.ssrFixStacktrace(error);
+								if (!fixed_errors.has(error)) {
+									vite.ssrFixStacktrace(error);
+								}
+
 								return error.stack;
 							},
 							handle_error: (error, event) => {
 								vite.ssrFixStacktrace(error);
+								fixed_errors.add(error);
+
 								hooks.handleError({
 									error,
 									event,

@@ -915,7 +915,7 @@ test.describe.parallel('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
