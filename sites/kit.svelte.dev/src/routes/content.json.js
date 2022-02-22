@@ -103,14 +103,10 @@ function plaintext(markdown) {
 		listitem: block,
 		checkbox: block,
 		paragraph: (text) => `${text}\n\n`,
-		table: () => {
-			throw new Error('TODO implement tables');
-		},
-		tablerow: () => {
-			throw new Error('TODO implement tables');
-		},
-		tablecell: () => {
-			throw new Error('TODO implement tables');
+		table: block,
+		tablerow: block,
+		tablecell: (text, opts) => {
+			return text + ' ';
 		},
 		strong: inline,
 		em: inline,

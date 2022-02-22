@@ -160,6 +160,7 @@
 .content table {
 	margin: 0;
 	margin-bottom: 2em;
+	max-width: var(--linemax);
 }
 
 .content section {

@@ -191,7 +191,7 @@ export async function post({ request }) {
 </form>
 ```
 
-If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML.
+If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
 
 #### Body parsing
 
@@ -268,6 +268,15 @@ export default config;
 Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a string or a `Uint8Array`.
 
 > Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
+
+Standalone endpoints can be given a file extension if desired, or accessed directly if not:
+
+| filename                      | endpoint   |
+| ----------------------------- | ---------- |
+| src/routes/data/index.json.js | /data.json |
+| src/routes/data.json.js       | /data.json |
+| src/routes/data/index.js      | /data      |
+| src/routes/data.js            | /data      |
 
 ### Private modules
 
