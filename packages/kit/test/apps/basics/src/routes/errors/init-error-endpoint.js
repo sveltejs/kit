@@ -1,4 +1,5 @@
-thisvariableisnotdefined;
+// @ts-expect-error
+thisvariableisnotdefined; // eslint-disable-line
 
 export function get() {
 	return {

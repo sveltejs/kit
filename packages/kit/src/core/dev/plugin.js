@@ -259,7 +259,7 @@ export async function create_plugin(config, cwd) {
 							handle_error: (error, event) => {
 								hooks.handleError({
 									error: new Proxy(error, {
-										get: (target, property, receiver) => {
+										get: (target, property) => {
 											if (property === 'stack') {
 												return fix_stack_trace(error);
 											}
