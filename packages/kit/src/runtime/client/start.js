@@ -47,7 +47,7 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 
 	if (hydrate) await renderer.start(hydrate);
 	if (router) {
-		if (spa) router.goto(location.href, { replaceState: true }, []);
+		if (spa) await router.goto(location.href, { replaceState: true }, []);
 		router.init_listeners();
 	}
 
