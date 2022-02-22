@@ -17,6 +17,11 @@ try {
 	// do nothing
 }
 
+/** @param {number} index */
+function update_scroll_positions(index) {
+	scroll_positions[index] = scroll_state();
+}
+
 function scroll_state() {
 	return {
 		x: pageXOffset,
@@ -123,7 +128,7 @@ export class Router {
 
 		addEventListener('visibilitychange', () => {
 			if (document.visibilityState === 'hidden') {
-				this.#update_scroll_positions();
+				update_scroll_positions(this.current_history_index);
 
 				try {
 					sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
@@ -203,7 +208,7 @@ export class Router {
 				// clicking a hash link and those triggered by popstate
 				this.hash_navigating = true;
 
-				this.#update_scroll_positions();
+				update_scroll_positions(this.current_history_index);
 				this.renderer.update_page_store(new URL(url.href));
 
 				return;
@@ -260,10 +265,6 @@ export class Router {
 		});
 
 		this.initialized = true;
-	}
-
-	#update_scroll_positions() {
-		scroll_positions[this.current_history_index] = scroll_state();
 	}
 
 	/**
@@ -414,7 +415,7 @@ export class Router {
 			});
 		}
 
-		this.#update_scroll_positions();
+		update_scroll_positions(this.current_history_index);
 
 		accepted();
 
