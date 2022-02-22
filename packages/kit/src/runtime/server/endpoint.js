@@ -1,6 +1,11 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, normalize_request_method } from './utils.js';
+import {
+	is_pojo,
+	normalize_request_method,
+	stringify_safe,
+	enumerate_error_props
+} from './utils.js';
 
 /** @param {string} body */
 function error(body) {
@@ -82,7 +87,9 @@ export async function render_endpoint(event, mod) {
 
 	if (is_pojo(body) && (!type || type.startsWith('application/json'))) {
 		headers.set('content-type', 'application/json; charset=utf-8');
-		normalized_body = JSON.stringify(body);
+		normalized_body = stringify_safe(body);
+	} else if (body instanceof Error) {
+		normalized_body = stringify_safe(enumerate_error_props(body));
 	} else {
 		normalized_body = /** @type {import('types').StrictBody} */ (body);
 	}

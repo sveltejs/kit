@@ -796,7 +796,12 @@ export class Renderer {
 							props = await res.json();
 						} else {
 							status = res.status;
-							error = new Error('Failed to load data');
+
+							try {
+								error = await res.json();
+							} catch (e) {
+								error = new Error('Failed to load data');
+							}
 						}
 					}
 

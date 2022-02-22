@@ -38,6 +38,7 @@ export function is_pojo(body) {
 
 	if (body) {
 		if (body instanceof Uint8Array) return false;
+		if (body instanceof Error) return false;
 
 		// body could be a node Readable, but we don't want to import
 		// node built-ins, so we use duck typing
@@ -56,4 +57,42 @@ export function is_pojo(body) {
 export function normalize_request_method(event) {
 	const method = event.request.method.toLowerCase();
 	return method === 'delete' ? 'del' : method; // 'delete' is a reserved word
+}
+
+export function enumerate_error_props(error) {
+	const seen = new Set();
+
+	return (function loop(error) {
+		if (seen.has(error)) return error;
+		seen.add(error);
+		const { name, message, stack } = error;
+		const obj = { ...error, name, message, stack };
+		for (const [key, val] of Object.entries(obj)) {
+			if (val instanceof Error) {
+				obj[key] = loop(val);
+			}
+		}
+		return obj;
+	})(error);
+}
+
+// Something like https://github.com/moll/json-stringify-safe
+export function stringify_safe(obj) {
+	const stack = [];
+	const keys = [];
+	const cycleReplacer = function (key, value) {
+		if (stack[0] === value) return '[Circular ~]';
+		return '[Circular ~.' + keys.slice(0, stack.indexOf(value)).join('.') + ']';
+	};
+
+	return JSON.stringify(obj, function (key, value) {
+		if (stack.length > 0) {
+			const thisPos = stack.indexOf(this);
+			~thisPos ? stack.splice(thisPos + 1) : stack.push(this);
+			~thisPos ? keys.splice(thisPos, Infinity, key) : keys.push(key);
+			if (~stack.indexOf(value)) value = cycleReplacer.call(this, key, value);
+		} else stack.push(value);
+
+		return value;
+	});
 }

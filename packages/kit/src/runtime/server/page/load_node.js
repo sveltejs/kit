@@ -403,14 +403,13 @@ async function load_shadow_data(route, event, options, prerender) {
 			body: {}
 		};
 
-		if (!is_get) {
+		if (handler) {
 			const result = await handler(event);
 
 			if (result.fallthrough) return result;
 
 			const { status, headers, body } = validate_shadow_output(result);
 			data.status = status;
-
 			add_cookies(/** @type {string[]} */ (data.cookies), headers);
 
 			// Redirects are respected...
@@ -421,35 +420,17 @@ async function load_shadow_data(route, event, options, prerender) {
 				return data;
 			}
 
-			// ...but 4xx and 5xx status codes _don't_ result in the error page
-			// rendering for non-GET requests — instead, we allow the page
-			// to render with any validation errors etc that were returned
+			// ...errors are propagated to the page...
+			if (status >= 400 && body instanceof Error) {
+				data.error = body;
+				return data;
+			}
+
+			// ...but 4xx and 5xx status codes (if they are accompanied by a
+			// non-Error body) _don't_ result in the error page rendering —
+			// instead, we allow the page to render with any validation errors
+			// etc that were returned
 			data.body = body;
-		}
-
-		const get = (method === 'head' && mod.head) || mod.get;
-		if (get) {
-			const result = await get(event);
-
-			if (result.fallthrough) return result;
-
-			const { status, headers, body } = validate_shadow_output(result);
-			add_cookies(/** @type {string[]} */ (data.cookies), headers);
-			data.status = status;
-
-			if (status >= 400) {
-				data.error = new Error('Failed to load data');
-				return data;
-			}
-
-			if (status >= 300) {
-				data.redirect = /** @type {string} */ (
-					headers instanceof Headers ? headers.get('location') : headers.location
-				);
-				return data;
-			}
-
-			data.body = { ...body, ...data.body };
 		}
 
 		return data;
@@ -496,7 +477,7 @@ function validate_shadow_output(result) {
 		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
 	}
 
-	if (!is_pojo(body)) {
+	if (!is_pojo(body) && !(body instanceof Error)) {
 		throw new Error('Body returned from endpoint request handler must be a plain object');
 	}
 
