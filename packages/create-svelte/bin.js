@@ -96,7 +96,7 @@ async function main() {
 				{
 					type: 'toggle',
 					name: 'playwright',
-					message: 'Add Playwright for end-to-end browser testing?',
+					message: 'Add Playwright for browser testing?',
 					initial: false,
 					active: 'Yes',
 					inactive: 'No'
