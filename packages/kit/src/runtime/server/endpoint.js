@@ -1,17 +1,12 @@
 import { to_headers } from '../../utils/http.js';
 import { hash } from '../hash.js';
-import { is_pojo, normalize_request_method } from './utils.js';
+import { is_pojo, is_string, normalize_request_method } from './utils.js';
 
 /** @param {string} body */
 function error(body) {
 	return new Response(body, {
 		status: 500
 	});
-}
-
-/** @param {unknown} s */
-function is_string(s) {
-	return typeof s === 'string' || s instanceof String;
 }
 
 const text_types = new Set([

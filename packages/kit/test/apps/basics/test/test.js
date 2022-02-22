@@ -385,6 +385,12 @@ test.describe.parallel('Shadowed pages', () => {
 		expect(await page.textContent('h1')).toBe('The answer is 42');
 	});
 
+	test('Loads props from an endpoint returning a string', async ({ page, clicknav }) => {
+		await page.goto('/shadowed');
+		await clicknav('[href="/shadowed/string"]');
+		expect(await page.textContent('h1')).toBe('The answer is 42');
+	});
+
 	test('Handles GET redirects', async ({ page, clicknav }) => {
 		await page.goto('/shadowed');
 		await clicknav('[href="/shadowed/redirect-get"]');

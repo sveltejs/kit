@@ -4,7 +4,7 @@ import { s } from '../../../utils/misc.js';
 import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
-import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
+import { is_pojo, is_string, lowercase_keys, normalize_request_method } from '../utils.js';
 import { coalesce_to_error } from '../../../utils/error.js';
 
 /**
@@ -496,9 +496,10 @@ function validate_shadow_output(result) {
 		headers = lowercase_keys(/** @type {Record<string, string>} */ (headers));
 	}
 
-	if (!is_pojo(body)) {
-		throw new Error('Body returned from endpoint request handler must be a plain object');
+	const parsed = is_string(body) ? JSON.parse(body) : body || {};
+	if (!is_pojo(parsed)) {
+		throw new Error('Body returned from endpoint request handler must be a string or plain object');
 	}
 
-	return { status, headers, body };
+	return { status, headers, body: parsed };
 }

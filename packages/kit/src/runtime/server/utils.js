@@ -32,6 +32,14 @@ export function decode_params(params) {
 	return params;
 }
 
+/**
+ * @param {unknown} s
+ * @return {s is string}
+ */
+export function is_string(s) {
+	return typeof s === 'string' || s instanceof String;
+}
+
 /** @param {any} body */
 export function is_pojo(body) {
 	if (typeof body !== 'object') return false;

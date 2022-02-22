@@ -1,4 +1,5 @@
 <a href="/shadowed/simple">simple</a>
+<a href="/shadowed/string">string</a>
 <a href="/shadowed/redirect-get">redirect-get</a>
 <a href="/shadowed/redirect-get-with-cookie">redirect-get-with-cookie</a>
 <a href="/shadowed/error-get">error-get</a>

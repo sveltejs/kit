@@ -265,7 +265,7 @@ export default config;
 
 ### Standalone endpoints
 
-Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a string or a `Uint8Array`.
+Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a `Uint8Array`.
 
 > Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
 
