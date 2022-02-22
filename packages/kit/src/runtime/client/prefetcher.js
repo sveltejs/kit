@@ -1,4 +1,4 @@
-import { find_anchor, get_href } from './router';
+import { find_anchor, get_href } from './utils';
 
 export class Prefetcher {
 	/**

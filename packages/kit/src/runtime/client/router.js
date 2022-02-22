@@ -1,6 +1,6 @@
 import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
-import { get_base_uri } from './utils';
+import { find_anchor, get_base_uri, get_href } from './utils';
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -27,27 +27,6 @@ function scroll_state() {
 		x: pageXOffset,
 		y: pageYOffset
 	};
-}
-
-/**
- * @param {Event} event
- * @returns {HTMLAnchorElement | SVGAElement | undefined}
- */
-export function find_anchor(event) {
-	const node = event
-		.composedPath()
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
-}
-
-/**
- * @param {HTMLAnchorElement | SVGAElement} node
- * @returns {URL}
- */
-export function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
 }
 
 export class Router {
