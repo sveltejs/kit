@@ -134,6 +134,22 @@ export async function create_plugin(config, cwd) {
 				};
 			}
 
+			/** @param {Error} error */
+			function fix_stack_trace(error) {
+				// ideally vite would expose ssrRewriteStacktrace, but
+				// in lieu of that, we can implement it ourselves. we
+				// don't want to mutate the error object, because
+				// the stack trace could be 'fixed' multiple times,
+				// and Vite will fix stack traces before we even
+				// see them if they occur during ssrLoadModule
+				const original = error.stack;
+				vite.ssrFixStacktrace(error);
+				const fixed = error.stack;
+				error.stack = original;
+
+				return fixed;
+			}
+
 			update_manifest();
 
 			vite.watcher.on('add', update_manifest);
@@ -232,28 +248,25 @@ export async function create_plugin(config, cwd) {
 
 						const template = load_template(cwd, config);
 
-						// we want to avoid double-fixing stack traces, since
-						// that will typically make everything much worse
-						const fixed_errors = new WeakSet();
-
 						const rendered = await respond(request, {
 							amp: config.kit.amp,
 							csp: config.kit.csp,
 							dev: true,
 							floc: config.kit.floc,
 							get_stack: (error) => {
-								if (!fixed_errors.has(error)) {
-									vite.ssrFixStacktrace(error);
-								}
-
-								return error.stack;
+								return fix_stack_trace(error);
 							},
 							handle_error: (error, event) => {
-								vite.ssrFixStacktrace(error);
-								fixed_errors.add(error);
-
 								hooks.handleError({
-									error,
+									error: new Proxy(error, {
+										get: (target, property, receiver) => {
+											if (property === 'stack') {
+												return fix_stack_trace(error);
+											}
+
+											return Reflect.get(target, property, target);
+										}
+									}),
 									event,
 
 									// TODO remove for 1.0
