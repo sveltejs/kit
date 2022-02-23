@@ -120,9 +120,9 @@ declare module '$app/stores' {
 		updated: typeof updated;
 	};
 
-	interface Page {
+	interface Page<Params extends Record<string, string> = Record<string, string>> {
 		url: URL;
-		params: Record<string, string>;
+		params: Params;
 		stuff: App.Stuff;
 		status: number;
 		error: Error | null;
