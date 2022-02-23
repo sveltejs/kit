@@ -433,7 +433,7 @@ export class Router {
 		});
 
 		this.navigating--;
-		
+
 		// navigation was aborted
 		if (this.navigating_token !== token) return;
 		if (!this.navigating) {
