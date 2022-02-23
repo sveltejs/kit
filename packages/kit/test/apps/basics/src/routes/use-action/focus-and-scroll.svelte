@@ -10,8 +10,8 @@
 </script>
 
 <div>They (don't) see me scrollin'...</div>
-<div style="background-color: hotpink; height: 180vh; background-color: peru;">
+<div style="height: 180vh; background-color: peru;">
 	<label for="input">Focus! </label>
 	<input use:focusAndScroll id="input" type="text" />
 </div>
-<div style="background-color: hotpink; height: 180vh; background-color: teal;">They (not) focusin'</div>
+<div style="height: 180vh; background-color: teal;">They (not) focusin'</div>
