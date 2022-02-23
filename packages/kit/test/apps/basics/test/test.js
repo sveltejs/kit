@@ -106,10 +106,10 @@ test.describe.parallel('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		try {
-			await clicknav('[href="/before-navigate/a"]');
+			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
 			expect(false).toBe(true);
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Timed out');
+			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
 		}
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
