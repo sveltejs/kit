@@ -136,6 +136,8 @@ export async function create_plugin(config, cwd) {
 
 			/** @param {Error} error */
 			function fix_stack_trace(error) {
+				// TODO https://github.com/vitejs/vite/issues/7045
+
 				// ideally vite would expose ssrRewriteStacktrace, but
 				// in lieu of that, we can implement it ourselves. we
 				// don't want to mutate the error object, because
