@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.285
+
+### Patch Changes
+
+- [breaking] referer header sent by fetch in load matches page's referer header, not the page itself ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+* [breaking] remove sveltekit:navigation-{start,end} events ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+- [breaking] defer pushState until navigation occurs ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
 ## 1.0.0-next.284
 
 ### Patch Changes
