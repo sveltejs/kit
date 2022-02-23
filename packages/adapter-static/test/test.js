@@ -36,15 +36,3 @@ run('spa', (test) => {
 		assert.equal(await page.textContent('h1'), '404');
 	});
 });
-
-run('shadowed', (test) => {
-	test('Should create root __data.json', async ({ base, page, cwd }) => {
-		assert.ok(fs.existsSync(`${cwd}/build/__data.json`));
-		await page.goto(`${base}`);
-		assert.equal(await page.textContent('h1'), 'This is root page!');
-		await page.click('a');
-		assert.equal(await page.textContent('h1'), 'This is link page!');
-		await page.click('a');
-		assert.equal(await page.textContent('h1'), 'This is root page!');
-	});
-});
