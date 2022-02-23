@@ -432,10 +432,10 @@ export class Router {
 			keepfocus
 		});
 
+		this.navigating--;
+		
 		// navigation was aborted
 		if (this.navigating_token !== token) return;
-
-		this.navigating--;
 		if (!this.navigating) {
 			const navigation = { from, to: url };
 			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
