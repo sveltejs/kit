@@ -180,12 +180,18 @@ export class Router {
 
 			if (!a.href) return;
 
+			const is_svg_a_element = a instanceof SVGAElement;
 			const url = get_href(a);
 			const url_string = url.toString();
 			if (url_string === location.href) {
 				if (!location.hash) event.preventDefault();
 				return;
 			}
+
+			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+			// MEMO: Without this condition, firefox will open mailer twice.
+			// See: https://github.com/sveltejs/kit/issues/4045
+			if (!is_svg_a_element && url.origin === 'null') return;
 
 			// Ignore if tag has
 			// 1. 'download' attribute
@@ -197,7 +203,7 @@ export class Router {
 			}
 
 			// Ignore if <a> has a target
-			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
+			if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
 			// Check if new url only differs by hash and use the browser default behavior in that case
 			// This will ensure the `hashchange` event is fired
