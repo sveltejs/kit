@@ -171,7 +171,7 @@ export namespace Csp {
 	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
-	type HostNameScheme = `${string}.${string}` | `localhost`;
+	type HostNameScheme = `${string}.${string}` | 'localhost';
 	type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
 	type HostProtocolSchemes = `${string}://` | '';
 	type HttpDelineator = '/' | '?' | '#' | '\\';
