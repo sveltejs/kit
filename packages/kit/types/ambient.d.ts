@@ -119,16 +119,18 @@ declare module '$app/stores' {
 		session: Writable<App.Session>;
 		updated: typeof updated;
 	};
-	/**
-	 * A readable store whose value contains page data.
-	 */
-	export const page: Readable<{
+
+	interface Page {
 		url: URL;
 		params: Record<string, string>;
 		stuff: App.Stuff;
 		status: number;
 		error: Error | null;
-	}>;
+	}
+	/**
+	 * A readable store whose value contains page data.
+	 */
+	export const page: Readable<Page>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is `{ from: URL, to: URL }`
