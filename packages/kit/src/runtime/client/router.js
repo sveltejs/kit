@@ -419,9 +419,6 @@ export class Router {
 
 		accepted();
 
-		if (!this.navigating) {
-			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
-		}
 		this.navigating++;
 
 		const pathname = normalize_path(url.pathname, this.trailing_slash);
@@ -435,8 +432,6 @@ export class Router {
 
 		this.navigating--;
 		if (!this.navigating) {
-			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
-
 			const navigation = { from, to: url };
 			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}

@@ -58,20 +58,6 @@ export const test = base.extend({
 	back: async ({ page, javaScriptEnabled }, use) => {
 		use(async () => {
 			if (javaScriptEnabled) {
-				await page.evaluate(() => {
-					window.navigated = new Promise((fulfil, reject) => {
-						const timeout = setTimeout(() => reject(new Error('Timed out')), 2000);
-						addEventListener(
-							'sveltekit:navigation-end',
-							() => {
-								clearTimeout(timeout);
-								fulfil();
-							},
-							{ once: true }
-						);
-					});
-				});
-
 				await Promise.all([page.goBack(), page.evaluate(() => window.navigated)]);
 			} else {
 				return page.goBack().then(() => void 0);
