@@ -76,7 +76,10 @@ function get_types(code, statements) {
 
 	for (const statement of node.statements) {
 		if (ts.isModuleDeclaration(statement)) {
+			// @ts-ignore
 			const name = statement.name.text || statement.name.escapedText;
+
+			// @ts-ignore
 			modules[name] = get_types(code, statement.body.statements);
 		}
 	}
