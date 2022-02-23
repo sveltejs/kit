@@ -1,10 +1,10 @@
-<script context="module">
-  import { base } from '$app/paths'
+<script context='module'>
+  import { base } from '$app/paths';
 </script>
 
 <script>
 	/** @type {string} */
-  export let message
+  export let message;
 </script>
 
 <h1>{message}</h1>

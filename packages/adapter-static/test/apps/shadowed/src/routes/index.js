@@ -1,5 +1,5 @@
 export async function get() {
-  return {
-    body: { message: 'This is root page!' },
-  };
+	return {
+		body: { message: 'This is root page!' }
+	};
 }
