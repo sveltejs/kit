@@ -1,11 +1,7 @@
 import { to_headers } from '../../utils/http.js';
+import { enumerate_error_props, stringify_safe } from '../../utils/object.js';
 import { hash } from '../hash.js';
-import {
-	is_pojo,
-	normalize_request_method,
-	stringify_safe,
-	enumerate_error_props
-} from './utils.js';
+import { is_pojo, normalize_request_method } from './utils.js';
 
 /** @param {string} body */
 function error(body) {

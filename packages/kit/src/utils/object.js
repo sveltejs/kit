@@ -94,3 +94,70 @@ function merge_into(a, b, conflicts = [], path = []) {
 		}
 	}
 }
+
+export function enumerate_error_props(error) {
+	const seen = new Map();
+	const replacements = new Set();
+
+	function loop(error) {
+		const { name, message, stack } = error;
+		const obj = { ...error, name, message, stack };
+
+		for (const [key, val] of Object.entries(obj)) {
+			if (val instanceof Error) {
+				if (seen.has(val)) {
+					// Store a reference so the error can be replaced with an
+					// enumerated object once recursion is complete.
+					replacements.add({ obj, key, error: val });
+				} else {
+					// Set a placeholder to prevent infinite recursion.
+					seen.set(val, 'placeholder');
+
+					// Recurse into the error.
+					const enumerated = loop(val);
+
+					// Overwrite the placeholder with the enumerated error object.
+					seen.set(val, enumerated);
+					obj[key] = enumerated;
+				}
+			}
+		}
+
+		return obj;
+	}
+
+	const output = loop(error);
+
+	for (const item of replacements) {
+		const { obj, key, error } = item;
+		const enumerated = seen.get(error);
+		if (enumerated) {
+			obj[key] = enumerated;
+		}
+	}
+
+	return output;
+}
+
+// Something like https://github.com/moll/json-stringify-safe. Similar to
+// devalue, but intentionaly *breaks* circular references so the object can be
+// serialized to JSON
+export function stringify_safe(obj) {
+	const stack = [];
+	const keys = [];
+	const cycleReplacer = function (key, value) {
+		if (stack[0] === value) return '[Circular ~]';
+		return '[Circular ~.' + keys.slice(0, stack.indexOf(value)).join('.') + ']';
+	};
+
+	return JSON.stringify(obj, function (key, value) {
+		if (stack.length > 0) {
+			const thisPos = stack.indexOf(this);
+			~thisPos ? stack.splice(thisPos + 1) : stack.push(this);
+			~thisPos ? keys.splice(thisPos, Infinity, key) : keys.push(key);
+			if (~stack.indexOf(value)) value = cycleReplacer.call(this, key, value);
+		} else stack.push(value);
+
+		return value;
+	});
+}

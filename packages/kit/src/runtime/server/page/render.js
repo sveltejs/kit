@@ -1,6 +1,7 @@
 import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
+import { enumerate_error_props } from '../../../utils/object.js';
 import { hash } from '../../hash.js';
 import { escape_html_attr, escape_json_in_html } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
@@ -347,6 +348,7 @@ function try_serialize(data, fail) {
 /** @param {(Error & {frame?: string} & {loc?: object}) | undefined | null} error */
 function serialize_error(error) {
 	if (!error) return null;
+	error = enumerate_error_props(error);
 	let serialized = try_serialize(error);
 	if (!serialized) {
 		const { name, message, stack } = error;
