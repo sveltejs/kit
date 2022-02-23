@@ -31,7 +31,7 @@ export interface Builder {
 	mkdirp(dir: string): void;
 
 	appDir: string;
-	trailingSlash: 'always' | 'never' | 'ignore';
+	trailingSlash: TrailingSlash;
 
 	/**
 	 * Create entry points that map to individual functions
