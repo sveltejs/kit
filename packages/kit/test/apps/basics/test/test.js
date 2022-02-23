@@ -253,7 +253,7 @@ test.describe('Scrolling', () => {
 		await page.goto('/use-action');
 		await clicknav('[href="/use-action/focus-and-scroll"]');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('input')).toBeFocused();
 	});
 
 	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
