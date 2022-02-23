@@ -225,7 +225,7 @@ importers:
   packages/kit:
     specifiers:
       '@playwright/test': ^1.17.1
-      '@rollup/plugin-replace': ^3.0.0
+      '@rollup/plugin-replace': ^4.0.0
       '@sveltejs/vite-plugin-svelte': ^1.0.0-next.32
       '@types/amphtml-validator': ^1.0.1
       '@types/cookie': ^0.4.1
@@ -261,7 +261,7 @@ importers:
       vite: 2.8.0
     devDependencies:
       '@playwright/test': 1.17.1
-      '@rollup/plugin-replace': 3.0.0_rollup@2.60.2
+      '@rollup/plugin-replace': 4.0.0_rollup@2.60.2
       '@types/amphtml-validator': 1.0.1
       '@types/cookie': 0.4.1
       '@types/marked': 4.0.1
@@ -1402,8 +1402,8 @@ packages:
       rollup: 2.60.2
     dev: true
 
-  /@rollup/plugin-replace/3.0.0_rollup@2.60.2:
-    resolution: {integrity: sha512-3c7JCbMuYXM4PbPWT4+m/4Y6U60SgsnDT/cCyAyUKwFHg7pTSfsSQzIpETha3a3ig6OdOKzZz87D9ZXIK3qsDg==}
+  /@rollup/plugin-replace/4.0.0_rollup@2.60.2:
+    resolution: {integrity: sha512-+rumQFiaNac9y64OHtkHGmdjm7us9bo1PlbgQfdihQtuNxzjpaB064HbRnewUOggLQxVCCyINfStkgmBeQpv1g==}
     peerDependencies:
       rollup: ^1.20.0 || ^2.0.0
     dependencies:

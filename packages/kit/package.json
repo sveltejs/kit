@@ -16,7 +16,7 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.17.1",
-		"@rollup/plugin-replace": "^3.0.0",
+		"@rollup/plugin-replace": "^4.0.0",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.1",
 		"@types/marked": "^4.0.1",
