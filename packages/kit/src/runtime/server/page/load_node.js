@@ -139,8 +139,6 @@ export async function load_node({
 					}
 				}
 
-				opts.headers.set('referer', event.url.href);
-
 				const resolved = resolve(event.url.pathname, requested.split('?')[0]);
 
 				/** @type {Response} */

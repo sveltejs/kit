@@ -106,10 +106,10 @@ test.describe.parallel('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		try {
-			await clicknav('[href="/before-navigate/a"]');
+			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
 			expect(false).toBe(true);
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Timed out');
+			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
 		}
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
@@ -1269,8 +1269,12 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/fetch-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
-		expect(JSON.parse(json)).toEqual({
-			referer: `${baseURL}/load/fetch-headers`,
+		const headers = JSON.parse(json);
+
+		expect(headers).toEqual({
+			// the referer will be the previous page in the client-side
+			// navigation case
+			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
 			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
@@ -1631,13 +1635,17 @@ test.describe.parallel('searchParams', () => {
 });
 
 test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ page, clicknav }) => {
+	test('redirect', async ({ baseURL, page, clicknav, back }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
 
 		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await back();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
@@ -2122,6 +2130,21 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing');
 		await clicknav('[href="/static.json"]');
 		expect(await page.textContent('body')).toBe('"static file"\n');
+	});
+
+	test('navigation is cancelled upon subsequent navigation', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/cancellation');
+		await page.click('[href="/routing/cancellation/a"]');
+		await clicknav('[href="/routing/cancellation/b"]');
+
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+
+		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 	});
 });
 
