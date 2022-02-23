@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-create `__data.json` for root endpoint
+create `__data.json` for pathnames with trailing slashes, including `/`
