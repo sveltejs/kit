@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.283
+
+### Patch Changes
+
+- create `__data.json` for pathnames with trailing slashes, including `/` ([#4066](https://github.com/sveltejs/kit/pull/4066))
+
 ## 1.0.0-next.282
 
 ### Patch Changes
