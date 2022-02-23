@@ -6,7 +6,7 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
-import { types } from '../../../../../../documentation/types.js';
+import { types, modules } from '../../../../../../documentation/types.js';
 
 const languages = {
 	bash: 'bash',
@@ -29,6 +29,12 @@ const type_regex = new RegExp(
 	'g'
 );
 
+function render_types(types) {
+	return types
+		.map((type) => `#### ${type.name}\n\n${type.comment}\n\n\`\`\`ts\n${type.snippet}\n\`\`\``)
+		.join('\n\n');
+}
+
 /**
  * @param {string} dir
  * @param {string} file
@@ -40,9 +46,12 @@ export async function read_file(dir, file) {
 	const slug = match[1];
 
 	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8').replace('**TYPES**', () => {
-		return types
-			.map((type) => `#### ${type.name}\n\n${type.comment}\n\n\`\`\`ts\n${type.snippet}\n\`\`\``)
-			.join('\n\n');
+		return [
+			render_types(types),
+			...Object.entries(modules).map(([name, types]) => {
+				return `### ${name}\n\n${render_types(types)}`;
+			})
+		].join('\n\n');
 	});
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
