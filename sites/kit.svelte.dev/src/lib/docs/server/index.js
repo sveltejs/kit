@@ -33,7 +33,7 @@ const type_regex = new RegExp(
  * @param {string} dir
  * @param {string} file
  */
-export async function read_file(dir, file) {
+async function read_file(dir, file) {
 	const match = /\d{2}-(.+)\.md/.exec(file);
 	if (!match) return null;
 
