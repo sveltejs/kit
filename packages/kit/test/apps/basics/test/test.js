@@ -53,7 +53,7 @@ test.describe.parallel('a11y', () => {
 				page.type('#input', 'bar'),
 				page.waitForFunction(() => window.location.search === '?foo=bar')
 			]);
-			expect(await page.locator('#input')).toBeFocused();
+			await expect(page.locator('#input')).toBeFocused();
 		}
 	});
 
@@ -242,7 +242,7 @@ test.describe('Scrolling', () => {
 	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
 		await page.goto('/use-action/focus-and-scroll');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('#input')).toBeFocused();
 	});
 
 	test('app-supplied scroll and focus work on navigation to page', async ({
