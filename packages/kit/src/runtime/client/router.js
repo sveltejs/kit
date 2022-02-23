@@ -428,12 +428,6 @@ export class Router {
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
-		if (details) {
-			const change = details.replaceState ? 0 : 1;
-			details.state['sveltekit:index'] = this.current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
-		}
-
 		await this.renderer.handle_navigation(info, chain, false, {
 			scroll,
 			keepfocus
@@ -445,6 +439,12 @@ export class Router {
 
 			const navigation = { from, to: url };
 			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
+		}
+
+		if (details) {
+			const change = details.replaceState ? 0 : 1;
+			details.state['sveltekit:index'] = this.current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
 		}
 	}
 }

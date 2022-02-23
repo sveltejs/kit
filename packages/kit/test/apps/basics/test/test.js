@@ -1267,8 +1267,12 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/fetch-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
-		expect(JSON.parse(json)).toEqual({
-			referer: `${baseURL}/load/fetch-headers`,
+		const headers = JSON.parse(json);
+
+		expect(headers).toEqual({
+			// the referer will be the previous page in the client-side
+			// navigation case
+			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
 			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
