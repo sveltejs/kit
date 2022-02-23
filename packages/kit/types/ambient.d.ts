@@ -1,5 +1,3 @@
-/* eslint-disable import/no-duplicates */
-
 declare namespace App {
 	interface Locals {}
 	interface Platform {}
