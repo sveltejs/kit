@@ -45,9 +45,7 @@ A file or directory can have multiple dynamic parts, like `[id]-[category].svelt
 
 ### Endpoints
 
-Endpoints are modules written in `.js` (or `.ts`) files that export functions corresponding to HTTP methods. Their job is to allow pages to read and write data that is only available on the server (for example in a database, or on the filesystem).
-
-If an endpoint has the same filename as a page (except for the extension), the page will get its props from the endpoint. So a page like `src/routes/items/[id].svelte` could get its props from this file:
+Endpoints are modules written in `.js` (or `.ts`) files that export [request handler](/docs/types#sveltejs-kit-requesthandler) functions corresponding to HTTP methods. Their job is to make it possible to read and write data that is only available on the server (for example in a database, or on the filesystem).
 
 ```js
 /// file: src/routes/items/[id].js
@@ -81,7 +79,7 @@ export async function get({ params }) {
 
 > All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib).
 
-The job of this function is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
+The job of a [request handler](/docs/types#sveltejs-kit-requesthandler) is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
 - `2xx` — successful response (default is `200`)
 - `3xx` — redirection (should be accompanied by a `location` header)
@@ -90,7 +88,11 @@ The job of this function is to return a `{ status, headers, body }` object repre
 
 > If `{fallthrough: true}` is returned SvelteKit will [fall through](/docs/routing#advanced-routing-fallthrough-routes) to other routes until something responds, or will respond with a generic 404.
 
-The returned `body` corresponds to the page's props:
+#### Page endpoints
+
+If an endpoint has the same filename as a page (except for the extension), the page gets its props from the endpoint — via `fetch` during client-side navigation, or via direct function call during SSR.
+
+A page like `src/routes/items/[id].svelte` could get its props from the `body` in the endpoint above:
 
 ```svelte
 /// file: src/routes/items/[id].svelte
@@ -101,6 +103,23 @@ The returned `body` corresponds to the page's props:
 
 <h1>{item.title}</h1>
 ```
+
+Because the page and route have the same URL, you will need to include an `accept: application/json` header to get JSON from the endpoint rather than HTML from the page. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
+
+#### Standalone endpoints
+
+Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a `Uint8Array`.
+
+Standalone endpoints can be given a file extension if desired, or accessed directly if not:
+
+| filename                      | endpoint   |
+| ----------------------------- | ---------- |
+| src/routes/data/index.json.js | /data.json |
+| src/routes/data.json.js       | /data.json |
+| src/routes/data/index.js      | /data      |
+| src/routes/data.js            | /data      |
+
+> Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
 
 #### POST, PUT, PATCH, DELETE
 
@@ -191,8 +210,6 @@ export async function post({ request }) {
 </form>
 ```
 
-If you request the route with an `accept: application/json` header, SvelteKit will render the endpoint data as JSON, rather than the page as HTML. You can also get the raw data by appending `/__data.json` to the URL, e.g. `/items/__data.json`.
-
 #### Body parsing
 
 The `request` object is an instance of the standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) class. As such, accessing the request body is easy:
@@ -262,21 +279,6 @@ export default config;
 ```
 
 > Using native `<form>` behaviour ensures your app continues to work when JavaScript fails or is disabled.
-
-### Standalone endpoints
-
-Most commonly, endpoints exist to provide data to the page with which they're paired. They can, however, exist separately from pages. Standalone endpoints have slightly more flexibility over the returned `body` type — in addition to objects, they can return a string or a `Uint8Array`.
-
-> Support for streaming request and response bodies is [coming soon](https://github.com/sveltejs/kit/issues/3419).
-
-Standalone endpoints can be given a file extension if desired, or accessed directly if not:
-
-| filename                      | endpoint   |
-| ----------------------------- | ---------- |
-| src/routes/data/index.json.js | /data.json |
-| src/routes/data.json.js       | /data.json |
-| src/routes/data/index.js      | /data      |
-| src/routes/data.js            | /data      |
 
 ### Private modules
 
