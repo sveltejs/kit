@@ -188,10 +188,10 @@ export class Router {
 				return;
 			}
 
-			// Ignore if url is mailto link
+			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
 			// MEMO: Without this condition, firefox will open mailer twice.
 			// See: https://github.com/sveltejs/kit/issues/4045
-			if (!is_svg_a_element && a.href.startsWith('mailto:')) return;
+			if (!is_svg_a_element && url.origin === 'null') return;
 
 			// Ignore if tag has
 			// 1. 'download' attribute
