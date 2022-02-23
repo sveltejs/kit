@@ -230,11 +230,13 @@ test.describe('Scrolling', () => {
 	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
+		javaScriptEnabled,
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
 		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
-		expect(await in_view('#abcde')).toBe(true);
+		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
+		else expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
