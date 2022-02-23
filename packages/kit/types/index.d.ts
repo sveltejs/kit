@@ -3,20 +3,20 @@
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
+	AdapterEntry,
+	Body,
+	Either,
+	Fallthrough,
 	Logger,
+	MaybePromise,
 	PrerenderOnErrorValue,
+	RecursiveRequired,
+	RequiredResolveOptions,
+	ResponseHeaders,
+	RouteDefinition,
 	SSRNodeLoader,
 	SSRRoute,
-	TrailingSlash,
-	Either,
-	MaybePromise,
-	RecursiveRequired,
-	RouteDefinition,
-	AdapterEntry,
-	ResponseHeaders,
-	Fallthrough,
-	RequiredResolveOptions,
-	Body
+	TrailingSlash
 } from './internal';
 import './ambient';
 
