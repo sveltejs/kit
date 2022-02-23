@@ -79,7 +79,7 @@ export async function get({ params }) {
 
 > All server-side code, including endpoints, has access to `fetch` in case you need to request data from external APIs. Don't worry about the `$lib` import, we'll get to that [later](/docs/modules#$lib).
 
-This function takes a [`RequestEvent`](types#sveltejs-kit-requestevent) and typically returns an [`EndpointOutput`](types#sveltejs-kit-endpointoutput) (`{ status, headers, body }`) object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
+The job of a [request handler](/docs/types#sveltejs-kit-requesthandler) is to return a `{ status, headers, body }` object representing the response, where `status` is an [HTTP status code](https://httpstatusdogs.com):
 
 - `2xx` — successful response (default is `200`)
 - `3xx` — redirection (should be accompanied by a `location` header)
