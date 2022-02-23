@@ -1,5 +1,11 @@
 # @sveltejs/adapter-auto
 
+## 1.0.0-next.25
+
+### Patch Changes
+
+- Attempt to bump @next version of adapter-auto ([#4082](https://github.com/sveltejs/kit/pull/4082))
+
 ## 1.0.0-next.24
 
 ### Patch Changes
