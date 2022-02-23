@@ -1635,7 +1635,7 @@ test.describe.parallel('searchParams', () => {
 });
 
 test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ baseURL, page, clicknav }) => {
+	test('redirect', async ({ baseURL, page, clicknav, back }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
@@ -1643,6 +1643,9 @@ test.describe.parallel('Redirects', () => {
 		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
 		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await back();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
