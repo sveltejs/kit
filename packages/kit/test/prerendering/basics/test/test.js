@@ -63,9 +63,9 @@ test('loads a file with spaces in the filename', () => {
 	assert.ok(content.includes('<h1>answer: 42</h1>'), content);
 });
 
-test('generates __data.json file for shadow endpoint', () => {
-	const json = read('shadowed-get/__data.json');
-	assert.equal(json, JSON.stringify({ answer: 42 }));
+test('generates __data.json file for shadow endpoints', () => {
+	assert.equal(read('__data.json'), JSON.stringify({ message: 'hello' }));
+	assert.equal(read('shadowed-get/__data.json'), JSON.stringify({ answer: 42 }));
 });
 
 test('does not prerender page with shadow endpoint with non-GET handler', () => {

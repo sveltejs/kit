@@ -39,7 +39,7 @@ export function is_root_relative(path) {
 
 /**
  * @param {string} path
- * @param {'always' | 'never' | 'ignore'} trailing_slash
+ * @param {import('types').TrailingSlash} trailing_slash
  */
 export function normalize_path(path, trailing_slash) {
 	if (path === '/' || trailing_slash === 'ignore') return path;
