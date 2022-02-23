@@ -1633,13 +1633,14 @@ test.describe.parallel('searchParams', () => {
 });
 
 test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ page, clicknav }) => {
+	test('redirect', async ({ baseURL, page, clicknav }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
 
 		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
 	});
 
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
