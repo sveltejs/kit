@@ -1,6 +1,8 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+import './ambient';
+
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	AdapterEntry,
@@ -18,7 +20,6 @@ import {
 	SSRRoute,
 	TrailingSlash
 } from './internal';
-import './ambient';
 
 export interface Adapter {
 	name: string;
