@@ -2126,7 +2126,11 @@ test.describe.parallel('Routing', () => {
 		expect(await page.textContent('body')).toBe('"static file"\n');
 	});
 
-	test('navigation is cancelled upon subsequent navigation', async ({ baseURL, page, clicknav }) => {
+	test('navigation is cancelled upon subsequent navigation', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
 		await page.goto('/routing/cancellation');
 		await page.click('[href="/routing/cancellation/a"]');
 		await clicknav('[href="/routing/cancellation/b"]');
