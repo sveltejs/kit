@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-create '\_\_data.json' for root endpoint
+create `__data.json` for root endpoint
