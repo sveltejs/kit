@@ -107,7 +107,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	type Navigating = { from: URL; to: URL };
+	export type Navigating = { from: URL; to: URL };
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
@@ -120,7 +120,7 @@ declare module '$app/stores' {
 		updated: typeof updated;
 	};
 
-	interface Page<Params extends Record<string, string> = Record<string, string>> {
+	export interface Page<Params extends Record<string, string> = Record<string, string>> {
 		url: URL;
 		params: Params;
 		stuff: App.Stuff;
