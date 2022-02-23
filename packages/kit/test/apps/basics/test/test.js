@@ -2125,6 +2125,17 @@ test.describe.parallel('Routing', () => {
 		await clicknav('[href="/static.json"]');
 		expect(await page.textContent('body')).toBe('"static file"\n');
 	});
+
+	test('navigation is cancelled upon subsequent navigation', async ({ baseURL, page, clicknav }) => {
+		await page.goto('/routing/cancellation');
+		await page.click('[href="/routing/cancellation/a"]');
+		await clicknav('[href="/routing/cancellation/b"]');
+
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+
+		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+	});
 });
 
 test.describe.parallel('Session', () => {

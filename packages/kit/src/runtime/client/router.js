@@ -425,10 +425,15 @@ export class Router {
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
+		const token = this.navigating_token = {};
+
 		await this.renderer.handle_navigation(info, chain, false, {
 			scroll,
 			keepfocus
 		});
+
+		// navigation was aborted
+		if (this.navigating_token !== token) return;
 
 		this.navigating--;
 		if (!this.navigating) {
