@@ -425,7 +425,7 @@ export class Router {
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
-		const token = this.navigating_token = {};
+		const token = (this.navigating_token = {});
 
 		await this.renderer.handle_navigation(info, chain, false, {
 			scroll,
