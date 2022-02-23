@@ -1,24 +1,25 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+import './ambient';
+
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
+	AdapterEntry,
+	Body,
+	Either,
+	Fallthrough,
 	Logger,
+	MaybePromise,
 	PrerenderOnErrorValue,
+	RecursiveRequired,
+	RequiredResolveOptions,
+	ResponseHeaders,
+	RouteDefinition,
 	SSRNodeLoader,
 	SSRRoute,
-	TrailingSlash,
-	Either,
-	MaybePromise,
-	RecursiveRequired,
-	RouteDefinition,
-	AdapterEntry,
-	ResponseHeaders,
-	Fallthrough,
-	RequiredResolveOptions,
-	Body
+	TrailingSlash
 } from './internal';
-import './ambient';
 
 export interface Adapter {
 	name: string;
@@ -31,7 +32,7 @@ export interface Builder {
 	mkdirp(dir: string): void;
 
 	appDir: string;
-	trailingSlash: 'always' | 'never' | 'ignore';
+	trailingSlash: TrailingSlash;
 
 	/**
 	 * Create entry points that map to individual functions
@@ -171,7 +172,7 @@ export namespace Csp {
 	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
-	type HostNameScheme = `${string}.${string}` | `localhost`;
+	type HostNameScheme = `${string}.${string}` | 'localhost';
 	type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
 	type HostProtocolSchemes = `${string}://` | '';
 	type HttpDelineator = '/' | '?' | '#' | '\\';
