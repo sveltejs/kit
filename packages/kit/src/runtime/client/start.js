@@ -38,18 +38,20 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 				base: paths.base,
 				routes,
 				trailing_slash,
-				renderer
+				navigation_handler: renderer.handle_navigation.bind(renderer)
 		  })
 		: null;
+	renderer.router = router;
 
 	init({ router, renderer });
 	set_paths(paths);
 
 	if (hydrate) await renderer.start(hydrate);
 	if (router) {
-		if (spa) router.goto(location.href, { replaceState: true }, []);
+		if (spa) router.goto(location.href, { replaceState: true });
 		router.init_listeners();
 	}
+	renderer.init_listeners();
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
 }

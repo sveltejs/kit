@@ -9,3 +9,18 @@ export function get_base_uri(doc) {
 
 	return baseURI;
 }
+
+/** @param {Event} event */
+export function find_anchor(event) {
+	const node = event
+		.composedPath()
+		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
+	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
+}
+
+/** @param {HTMLAnchorElement | SVGAElement} node */
+export function get_href(node) {
+	return node instanceof SVGAElement
+		? new URL(node.href.baseVal, document.baseURI)
+		: new URL(node.href);
+}

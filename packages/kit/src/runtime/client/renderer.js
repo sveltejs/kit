@@ -4,6 +4,7 @@ import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
 import { base } from '../paths.js';
+import { find_anchor, get_href } from './utils';
 
 /**
  * @typedef {import('types').CSRComponent} CSRComponent
@@ -125,7 +126,7 @@ export class Renderer {
 		this.Root = Root;
 		this.fallback = fallback;
 
-		/** @type {import('./router').Router | undefined} */
+		/** @type {import('./router').Router | null} */
 		this.router;
 
 		this.target = target;
@@ -175,9 +176,39 @@ export class Renderer {
 			this.session_id += 1;
 
 			const info = this.router.parse(new URL(location.href));
-			if (info) this.update(info, [], true);
+			if (info) this.update(info, [], undefined, true);
 		});
 		ready = true;
+	}
+
+	init_listeners() {
+		/** @param {Event} event */
+		const trigger_prefetch = (event) => {
+			const a = find_anchor(event);
+			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+				this.prefetch(get_href(a));
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent|TouchEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
+				// add a layer of indirection to address that
+				event.target?.dispatchEvent(
+					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+				);
+			}, 20);
+		};
+
+		addEventListener('touchstart', trigger_prefetch);
+		addEventListener('mousemove', handle_mousemove);
+		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+		addEventListener('hashchange', () => this.update_page_store(new URL(window.location.href)));
 	}
 
 	disable_scroll_handling() {
@@ -289,35 +320,46 @@ export class Renderer {
 		this._init(result);
 	}
 
+	/** @param {URL} url */
+	async prefetch(url) {
+		if (!this.router) return;
+		const info = this.router.parse(url);
+		if (!info) throw new Error('Attempted to prefetch a URL that does not belong to this app');
+		return this.load(info);
+	}
+
 	/**
-	 * @param {import('./types').NavigationInfo} info
-	 * @param {string[]} chain
-	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 * @param {URL} url
+	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} opts
+	 * @param {string[]} redirect_chain
+	 * @param {boolean} [no_cache]
 	 */
-	async handle_navigation(info, chain, no_cache, opts) {
+	async handle_navigation(url, opts, redirect_chain, no_cache) {
+		const info = this.router?.parse(url);
+		if (!info) throw new Error('Attempted to navigate to a URL that does not belong to this app');
+		info.url = url;
 		if (this.started) {
 			this.stores.navigating.set({
 				from: this.current.url,
 				to: info.url
 			});
 		}
-
-		await this.update(info, chain, no_cache, opts);
+		await this.update(info, redirect_chain, opts, no_cache);
 	}
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {string[]} chain
-	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
+	 * @param {boolean} [no_cache]
 	 */
-	async update(info, chain, no_cache, opts) {
+	async update(info, chain, opts, no_cache) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
+		const { url } = info;
 		if (!navigation_result) {
-			location.href = info.url.href;
+			location.href = url.href;
 			return;
 		}
 
@@ -327,17 +369,17 @@ export class Renderer {
 		this.invalid.clear();
 
 		if (navigation_result.redirect) {
-			if (chain.length > 10 || chain.includes(info.url.pathname)) {
+			if (chain.length > 10 || chain.includes(url.pathname)) {
 				navigation_result = await this._load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
-					url: info.url
+					url
 				});
 			} else {
 				if (this.router) {
-					this.router.goto(new URL(navigation_result.redirect, info.url).href, {}, [
+					this.router.redirect(new URL(navigation_result.redirect, url).href, [
 						...chain,
-						info.url.pathname
+						url.pathname
 					]);
 				} else {
 					location.href = new URL(navigation_result.redirect, location.href).href;
@@ -348,7 +390,7 @@ export class Renderer {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await this.stores.updated.check();
 			if (updated) {
-				location.href = info.url.href;
+				location.href = url.href;
 				return;
 			}
 		}
@@ -377,7 +419,7 @@ export class Renderer {
 			await tick();
 
 			if (this.autoscroll) {
-				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
+				const deep_linked = url.hash && document.getElementById(url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -389,9 +431,6 @@ export class Renderer {
 					scrollTo(0, 0);
 				}
 			}
-		} else {
-			// in this case we're simply invalidating
-			await tick();
 		}
 
 		this.loading.promise = null;
@@ -431,7 +470,7 @@ export class Renderer {
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
 				const info = this.router && this.router.parse(new URL(location.href));
-				if (info) await this.update(info, [], true);
+				if (info) await this.update(info, [], undefined, true);
 
 				this.invalidating = null;
 			});
@@ -474,7 +513,7 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
-	 * @param {boolean} no_cache
+	 * @param {boolean} [no_cache]
 	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
 	async _get_navigation_result(info, no_cache) {
@@ -518,7 +557,6 @@ export class Renderer {
 	}
 
 	/**
-	 *
 	 * @param {{
 	 *   url: URL;
 	 *   params: Record<string, string>;
@@ -612,7 +650,6 @@ export class Renderer {
 	 *   stuff: Record<string, any>;
 	 *   props?: Record<string, any>;
 	 * }} options
-	 * @returns
 	 */
 	async _load_node({ status, error, module, url, params, stuff, props }) {
 		/** @type {import('./types').BranchNode} */
@@ -707,7 +744,7 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
-	 * @param {boolean} no_cache
+	 * @param {boolean} [no_cache]
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
 	async _load({ route, info: { url, path } }, no_cache) {

@@ -1,6 +1,6 @@
 import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
-import { get_base_uri } from './utils';
+import { find_anchor, get_base_uri, get_href } from './utils';
 
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
@@ -29,46 +29,24 @@ function scroll_state() {
 	};
 }
 
-/**
- * @param {Event} event
- * @returns {HTMLAnchorElement | SVGAElement | undefined}
- */
-function find_anchor(event) {
-	const node = event
-		.composedPath()
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
-}
-
-/**
- * @param {HTMLAnchorElement | SVGAElement} node
- * @returns {URL}
- */
-function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
-}
-
 export class Router {
 	/**
 	 * @param {{
 	 *    base: string;
 	 *    routes: import('types').CSRRoute[];
 	 *    trailing_slash: import('types').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    navigation_handler: import('./types').NavigationHandler;
 	 * }} opts
 	 */
-	constructor({ base, routes, trailing_slash, renderer }) {
+	constructor({ base, routes, trailing_slash, navigation_handler }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
 
-		/** @type {import('./renderer').Renderer} */
-		this.renderer = renderer;
-		renderer.router = this;
+		/** @type {import('./types').NavigationHandler} */
+		this.navigation_handler = navigation_handler;
 
 		this.enabled = true;
 		this.initialized = false;
@@ -111,7 +89,7 @@ export class Router {
 			let should_block = false;
 
 			const intent = {
-				from: this.renderer.current.url,
+				from: new URL(window.location.href),
 				to: null,
 				cancel: () => (should_block = true)
 			};
@@ -137,33 +115,6 @@ export class Router {
 				}
 			}
 		});
-
-		/** @param {Event} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(event);
-			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(get_href(a));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-				// add a layer of indirection to address that
-				event.target?.dispatchEvent(
-					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-				);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
 
 		/** @param {MouseEvent} event */
 		addEventListener('click', (event) => {
@@ -213,10 +164,7 @@ export class Router {
 				// set this flag to distinguish between navigations triggered by
 				// clicking a hash link and those triggered by popstate
 				this.hash_navigating = true;
-
 				update_scroll_positions(this.current_history_index);
-				this.renderer.update_page_store(new URL(url.href));
-
 				return;
 			}
 
@@ -224,7 +172,7 @@ export class Router {
 				url,
 				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 				keepfocus: false,
-				chain: [],
+				redirect_chain: [],
 				details: {
 					state: {},
 					replaceState: false
@@ -244,7 +192,7 @@ export class Router {
 					url: new URL(location.href),
 					scroll: scroll_positions[event.state['sveltekit:index']],
 					keepfocus: false,
-					chain: [],
+					redirect_chain: [],
 					details: null,
 					accepted: () => {
 						this.current_history_index = event.state['sveltekit:index'];
@@ -281,10 +229,7 @@ export class Router {
 		return url.origin === location.origin && url.pathname.startsWith(this.base);
 	}
 
-	/**
-	 * @param {URL} url
-	 * @returns {import('./types').NavigationInfo | undefined}
-	 */
+	/** @param {URL} url */
 	parse(url) {
 		if (this.owns(url)) {
 			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
@@ -299,17 +244,33 @@ export class Router {
 		}
 	}
 
+	/** @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams */
+
 	/**
-	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
-	 *
+	 * @param {string} href
+	 * @param {string[]} [chain] list of previously redirected URLs for loop detection
+	 */
+	async redirect(href, chain) {
+		return await this._goto(href, {}, chain);
+	}
+
+	/**
 	 * @param {GotoParams[0]} href
 	 * @param {GotoParams[1]} opts
-	 * @param {string[]} chain
 	 */
-	async goto(
+	async goto(href, opts) {
+		return await this._goto(href, opts);
+	}
+
+	/**
+	 * @param {GotoParams[0]} href
+	 * @param {GotoParams[1]} opts
+	 * @param {string[]} [redirect_chain]
+	 */
+	async _goto(
 		href,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
-		chain
+		redirect_chain
 	) {
 		const url = new URL(href, get_base_uri(document));
 
@@ -318,7 +279,7 @@ export class Router {
 				url,
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
-				chain,
+				redirect_chain: redirect_chain || [],
 				details: {
 					state,
 					replaceState
@@ -342,20 +303,6 @@ export class Router {
 		this.enabled = false;
 	}
 
-	/**
-	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
-	 */
-	async prefetch(url) {
-		const info = this.parse(url);
-
-		if (!info) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
-		}
-
-		return this.renderer.load(info);
-	}
-
 	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
 	after_navigate(fn) {
 		onMount(() => {
@@ -368,9 +315,7 @@ export class Router {
 		});
 	}
 
-	/**
-	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
-	 */
+	/** @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn */
 	before_navigate(fn) {
 		onMount(() => {
 			this.callbacks.before_navigate.push(fn);
@@ -387,7 +332,7 @@ export class Router {
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
-	 *   chain: string[];
+	 *   redirect_chain: string[];
 	 *   details: {
 	 *     replaceState: boolean;
 	 *     state: any;
@@ -396,8 +341,8 @@ export class Router {
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
-		const from = this.renderer.current.url;
+	async _navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
+		const from = new URL(window.location.href);
 		let should_block = false;
 
 		const intent = {
@@ -413,8 +358,7 @@ export class Router {
 			return;
 		}
 
-		const info = this.parse(url);
-		if (!info) {
+		if (!this.owns(url)) {
 			location.href = url.href;
 			return new Promise(() => {
 				// never resolves
@@ -426,18 +370,13 @@ export class Router {
 		accepted();
 
 		this.navigating++;
-
-		const pathname = normalize_path(url.pathname, this.trailing_slash);
-
-		info.url = new URL(url.origin + pathname + url.search + url.hash);
-
 		const token = (this.navigating_token = {});
 
-		await this.renderer.handle_navigation(info, chain, false, {
-			scroll,
-			keepfocus
-		});
+		const pathname = normalize_path(url.pathname, this.trailing_slash);
+		url = new URL(url.origin + pathname + url.search + url.hash);
+		const opts = { scroll, keepfocus };
 
+		await this.navigation_handler(url, opts, redirect_chain);
 		this.navigating--;
 
 		// navigation was aborted
@@ -450,7 +389,7 @@ export class Router {
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
 			details.state['sveltekit:index'] = this.current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', url);
 		}
 	}
 }

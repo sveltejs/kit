@@ -31,7 +31,7 @@ async function disableScrollHandling_() {
  * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
-	return router.goto(href, opts, []);
+	return router.goto(href, opts);
 }
 
 /**
@@ -39,14 +39,14 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
-	return router.renderer.invalidate(href);
+	return renderer.invalidate(href);
 }
 
 /**
  * @type {import('$app/navigation').prefetch}
  */
 async function prefetch_(href) {
-	await router.prefetch(new URL(href, get_base_uri(document)));
+	await renderer.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**

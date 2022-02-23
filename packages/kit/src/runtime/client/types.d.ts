@@ -1,25 +1,34 @@
 import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
 
-export type NavigationInfo = {
+export interface NavigationHandler {
+	(
+		url: URL,
+		opts: { hash?: string; scroll: { x: number; y: number } | null; keepfocus: boolean },
+		redirect_chain: string[],
+		no_cache?: boolean
+	): Promise<void>;
+}
+
+export interface NavigationInfo {
 	id: string;
 	routes: CSRRoute[];
 	url: URL;
 	path: string;
 	initial: boolean;
-};
+}
 
-export type NavigationCandidate = {
+export interface NavigationCandidate {
 	route: CSRRoute;
 	info: NavigationInfo;
-};
+}
 
-export type NavigationResult = {
+export interface NavigationResult {
 	redirect?: string;
 	state: NavigationState;
 	props: Record<string, any>;
-};
+}
 
-export type BranchNode = {
+export interface BranchNode {
 	module: CSRComponent;
 	loaded: NormalizedLoadOutput | null;
 	uses: {
@@ -30,11 +39,11 @@ export type BranchNode = {
 		dependencies: Set<string>;
 	};
 	stuff: Record<string, any>;
-};
+}
 
-export type NavigationState = {
+export interface NavigationState {
 	url: URL;
 	params: Record<string, string>;
 	branch: Array<BranchNode | undefined>;
 	session_id: number;
-};
+}
