@@ -908,7 +908,7 @@ test.describe.parallel('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow');
+			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -917,7 +917,7 @@ test.describe.parallel('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -963,6 +963,14 @@ test.describe.parallel('Errors', () => {
 			'This is your custom error page saying: "Error in handle"'
 		);
 		expect(await page.innerHTML('h1')).toBe('500');
+	});
+
+	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
+	test.skip('error evaluating module', async ({ request }) => {
+		const response = await request.get('/errors/init-error-endpoint');
+
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 });
 
