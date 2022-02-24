@@ -18,7 +18,9 @@ export function generate_tsconfig(config) {
 	paths['$lib/*'] = [path.relative(SVELTE_KIT, config.kit.files.lib) + '/*'];
 
 	if (user_file) {
-		const user_tsconfig = JSON.parse(fs.readFileSync(user_file, 'utf-8'));
+		// we have to eval the file, since it's not parseable as JSON (contains comments)
+		const user_tsconfig_json = fs.readFileSync(user_file, 'utf-8');
+		const user_tsconfig = (0, eval)(`(${user_tsconfig_json})`);
 
 		// we need to check that the user's tsconfig extends the framework config
 		const extend = user_tsconfig.extends;
