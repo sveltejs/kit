@@ -4,7 +4,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        Thanks for taking the time to fill out this bug report! **Before you start, make sure you have the latest versions of the packages you're using, including adapters.**
   - type: textarea
     id: bug-description
     attributes:
