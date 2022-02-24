@@ -286,17 +286,6 @@ export interface RequestEvent<Params = Record<string, string>> {
 	platform: Readonly<App.Platform>;
 }
 
-export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
-	Either<
-		{
-			status?: number;
-			headers?: Headers | Partial<ResponseHeaders>;
-			body?: Output;
-		},
-		Fallthrough
-	>
->;
-
 export interface RequestOptions {
 	platform?: App.Platform;
 }

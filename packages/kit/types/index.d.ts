@@ -16,8 +16,8 @@ import {
 	MaybePromise,
 	PrerenderOnErrorValue,
 	RequestEvent,
-	RequestHandlerOutput,
 	ResolveOptions,
+	ResponseHeaders,
 	TrailingSlash
 } from './private';
 
@@ -136,3 +136,14 @@ export interface Navigation {
 export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
+
+export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
+	Either<
+		{
+			status?: number;
+			headers?: Headers | Partial<ResponseHeaders>;
+			body?: Output;
+		},
+		Fallthrough
+	>
+>;
