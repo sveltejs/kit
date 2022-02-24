@@ -9,7 +9,6 @@ const modules = [];
 
 /**
  * @param {string} code
- * @param {string} comment
  * @param {ts.NodeArray<ts.Statement>} statements
  */
 function get_types(code, statements) {
@@ -92,6 +91,7 @@ function get_types(code, statements) {
 			// @ts-ignore
 			const name = statement.name.text || statement.name.escapedText;
 
+			// @ts-ignore
 			const comment = statement.jsDoc?.[0].comment ?? '';
 
 			modules.push({
