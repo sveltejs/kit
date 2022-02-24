@@ -1,11 +1,9 @@
 import '../src/shims.js';
-import { suite } from 'uvu';
+import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 import { split_headers } from '../src/headers.js';
 
-const split_headers_test = suite('split_headers');
-
-split_headers_test('empty headers', () => {
+test('empty headers', () => {
 	const headers = new Headers();
 
 	const result = split_headers(headers);
@@ -16,7 +14,7 @@ split_headers_test('empty headers', () => {
 	});
 });
 
-split_headers_test('single-value headers', () => {
+test('single-value headers', () => {
 	const headers = new Headers();
 	headers.append('Location', '/apple');
 	headers.append('Content-Type', 'application/json');
@@ -33,7 +31,7 @@ split_headers_test('single-value headers', () => {
 	});
 });
 
-split_headers_test('multi-value headers', () => {
+test('multi-value headers', () => {
 	// https://httpwg.org/specs/rfc7231.html#http.date
 	const wednesday = 'Wed, 23 Feb 2022 21:01:48 GMT';
 	const thursday = 'Thu, 24 Feb 2022 21:01:48 GMT';
@@ -53,4 +51,4 @@ split_headers_test('multi-value headers', () => {
 	});
 });
 
-split_headers_test.run();
+test.run();
