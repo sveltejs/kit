@@ -44,7 +44,7 @@ export async function create_plugin(config, cwd) {
 			function update_manifest() {
 				const manifest_data = create_manifest_data({ config, cwd });
 
-				create_app({ manifest_data, output: `${SVELTE_KIT}/generated`, cwd });
+				create_app({ config, manifest_data, cwd });
 
 				manifest = {
 					appDir: config.kit.appDir,

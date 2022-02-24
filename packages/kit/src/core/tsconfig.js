@@ -14,8 +14,8 @@ export function generate_tsconfig(config) {
 
 	const paths = {};
 
-	paths['$lib'] = [path.relative(SVELTE_KIT, config.kit.files.lib)];
-	paths['$lib/*'] = [path.relative(SVELTE_KIT, config.kit.files.lib) + '/*'];
+	paths['$lib'] = [path.relative('.', config.kit.files.lib)];
+	paths['$lib/*'] = [path.relative('.', config.kit.files.lib) + '/*'];
 
 	if (user_file) {
 		// we have to eval the file, since it's not parseable as JSON (contains comments)
@@ -89,7 +89,8 @@ export function generate_tsconfig(config) {
 					baseUrl: path.relative(SVELTE_KIT, '.'),
 					allowJs: true,
 					checkJs: true,
-					paths
+					paths,
+					rootDirs: [path.relative(SVELTE_KIT, '.'), './types']
 				},
 				include: ['../**/*.d.ts', '../**/*.js', '../**/*.ts', '../**/*.svelte'],
 				exclude: ['../node_modules/**']
