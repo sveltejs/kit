@@ -101,7 +101,7 @@ export function get_mime_lookup(manifest_data) {
 	return mime;
 }
 
-/** @param {import('@sveltejs/kit').ValidatedConfig} config */
+/** @param {import('types').ValidatedConfig} config */
 export function get_aliases(config) {
 	const alias = {
 		__GENERATED__: path.posix.resolve(`${SVELTE_KIT}/generated`),

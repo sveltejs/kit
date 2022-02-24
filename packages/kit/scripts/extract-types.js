@@ -83,6 +83,18 @@ function get_types(code, statements) {
 }
 
 {
+	const code = fs.readFileSync('types/private.d.ts', 'utf-8');
+	const node = ts.createSourceFile('private.d.ts', code, ts.ScriptTarget.Latest);
+
+	modules.push({
+		name: 'Additional types',
+		comment:
+			'The following are referenced by the public types documented above, but cannot be imported directly:',
+		...get_types(code, node.statements)
+	});
+}
+
+{
 	const code = fs.readFileSync('types/ambient.d.ts', 'utf-8');
 	const node = ts.createSourceFile('ambient.d.ts', code, ts.ScriptTarget.Latest);
 
