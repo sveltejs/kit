@@ -66,7 +66,6 @@ During compilation, redirect rules are automatically appended to your `_redirect
 
 [functions]
   directory = "functions"
-  node_bundler = "esbuild"
 ```
 
 ## Changelog

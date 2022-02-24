@@ -53,7 +53,7 @@ test.describe.parallel('a11y', () => {
 				page.type('#input', 'bar'),
 				page.waitForFunction(() => window.location.search === '?foo=bar')
 			]);
-			expect(await page.locator('#input')).toBeFocused();
+			await expect(page.locator('#input')).toBeFocused();
 		}
 	});
 
@@ -106,10 +106,10 @@ test.describe.parallel('beforeNavigate', () => {
 		await page.goto('/before-navigate/prevent-navigation');
 
 		try {
-			await clicknav('[href="/before-navigate/a"]');
+			await clicknav('[href="/before-navigate/a"]', { timeout: 1000 });
 			expect(false).toBe(true);
 		} catch (/** @type {any} */ e) {
-			expect(e.message).toMatch('Timed out');
+			expect(e.message).toMatch('page.waitForNavigation: Timeout 1000ms exceeded');
 		}
 
 		expect(page.url()).toBe(baseURL + '/before-navigate/prevent-navigation');
@@ -230,17 +230,19 @@ test.describe('Scrolling', () => {
 	test('url-supplied anchor is ignored with onMount() scrolling on navigation to page', async ({
 		page,
 		clicknav,
+		javaScriptEnabled,
 		in_view
 	}) => {
 		await page.goto('/anchor-with-manual-scroll');
 		await clicknav('[href="/anchor-with-manual-scroll/anchor#go-to-element"]');
-		expect(await in_view('#abcde')).toBe(true);
+		if (javaScriptEnabled) expect(await in_view('#abcde')).toBe(true);
+		else expect(await in_view('#go-to-element')).toBe(true);
 	});
 
 	test('app-supplied scroll and focus work on direct page load', async ({ page, in_view }) => {
 		await page.goto('/use-action/focus-and-scroll');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('#input')).toBeFocused();
 	});
 
 	test('app-supplied scroll and focus work on navigation to page', async ({
@@ -251,7 +253,7 @@ test.describe('Scrolling', () => {
 		await page.goto('/use-action');
 		await clicknav('[href="/use-action/focus-and-scroll"]');
 		expect(await in_view('#input')).toBe(true);
-		expect(await page.locator('#input')).toBeFocused();
+		await expect(page.locator('input')).toBeFocused();
 	});
 
 	test('scroll positions are recovered on reloading the page', async ({ page, back, app }) => {
@@ -906,7 +908,7 @@ test.describe.parallel('Errors', () => {
 		expect(lines[0]).toMatch('nope');
 
 		if (process.env.DEV) {
-			expect(lines[1]).toMatch('endpoint-shadow');
+			expect(lines[1]).toMatch('endpoint-shadow.js:3:8');
 		}
 
 		expect(res && res.status()).toBe(500);
@@ -915,7 +917,7 @@ test.describe.parallel('Errors', () => {
 		);
 
 		const contents = await page.textContent('#stack');
-		const location = 'endpoint-shadow.js:1:8'; // TODO this is the wrong location, but i'm not going to open the sourcemap can of worms just now
+		const location = 'endpoint-shadow.js:3:8';
 
 		if (process.env.DEV) {
 			expect(contents).toMatch(location);
@@ -961,6 +963,14 @@ test.describe.parallel('Errors', () => {
 			'This is your custom error page saying: "Error in handle"'
 		);
 		expect(await page.innerHTML('h1')).toBe('500');
+	});
+
+	// TODO re-enable this if https://github.com/vitejs/vite/issues/7046 is implemented
+	test.skip('error evaluating module', async ({ request }) => {
+		const response = await request.get('/errors/init-error-endpoint');
+
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toMatch('thisvariableisnotdefined is not defined');
 	});
 });
 
@@ -1267,8 +1277,12 @@ test.describe.parallel('Load', () => {
 		await clicknav('[href="/load/fetch-headers"]');
 
 		const json = /** @type {string} */ (await page.textContent('pre'));
-		expect(JSON.parse(json)).toEqual({
-			referer: `${baseURL}/load/fetch-headers`,
+		const headers = JSON.parse(json);
+
+		expect(headers).toEqual({
+			// the referer will be the previous page in the client-side
+			// navigation case
+			referer: `${baseURL}/load`,
 			// these headers aren't particularly useful, but they allow us to verify
 			// that page headers are being forwarded
 			'sec-fetch-dest': javaScriptEnabled ? 'empty' : 'document',
@@ -1629,13 +1643,17 @@ test.describe.parallel('searchParams', () => {
 });
 
 test.describe.parallel('Redirects', () => {
-	test('redirect', async ({ page, clicknav }) => {
+	test('redirect', async ({ baseURL, page, clicknav, back }) => {
 		await page.goto('/redirect');
 
 		await clicknav('[href="/redirect/a"]');
 
 		await page.waitForURL('/redirect/c');
 		expect(await page.textContent('h1')).toBe('c');
+		expect(page.url()).toBe(`${baseURL}/redirect/c`);
+
+		await back();
+		expect(page.url()).toBe(`${baseURL}/redirect`);
 	});
 
 	test('prevents redirect loops', async ({ baseURL, page, javaScriptEnabled }) => {
@@ -2120,6 +2138,21 @@ test.describe.parallel('Routing', () => {
 		await page.goto('/routing');
 		await clicknav('[href="/static.json"]');
 		expect(await page.textContent('body')).toBe('"static file"\n');
+	});
+
+	test('navigation is cancelled upon subsequent navigation', async ({
+		baseURL,
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/cancellation');
+		await page.click('[href="/routing/cancellation/a"]');
+		await clicknav('[href="/routing/cancellation/b"]');
+
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
+
+		await page.evaluate('window.fulfil_navigation && window.fulfil_navigation()');
+		expect(await page.url()).toBe(`${baseURL}/routing/cancellation/b`);
 	});
 });
 

@@ -278,7 +278,7 @@ export async function render_response({
 		}
 	}
 
-	if (state.prerender) {
+	if (state.prerender && !options.amp) {
 		const http_equiv = [];
 
 		const csp_headers = csp.get_meta();

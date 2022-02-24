@@ -1,6 +1,8 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+import './ambient';
+
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import './ambient';
 
@@ -181,7 +183,7 @@ export namespace Csp {
 	type BaseSource = 'self' | 'unsafe-eval' | 'unsafe-hashes' | 'unsafe-inline' | 'none';
 	type CryptoSource = `${'nonce' | 'sha256' | 'sha384' | 'sha512'}-${string}`;
 	type FrameSource = HostSource | SchemeSource | 'self' | 'none';
-	type HostNameScheme = `${string}.${string}` | `localhost`;
+	type HostNameScheme = `${string}.${string}` | 'localhost';
 	type HostSource = `${HostProtocolSchemes}${HostNameScheme}${PortScheme}`;
 	type HostProtocolSchemes = `${string}://` | '';
 	type HttpDelineator = '/' | '?' | '#' | '\\';
@@ -338,7 +340,20 @@ interface Logger {
 
 type MaybePromise<T> = T | Promise<T>;
 
+export interface Navigation {
+	from: URL;
+	to: URL;
+}
+
 type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
+
+export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	url: URL;
+	params: Params;
+	stuff: App.Stuff;
+	status: number;
+	error: Error | null;
+}
 
 export interface Prerendered {
 	pages: Map<

@@ -55,6 +55,7 @@
 	bottom: 0.3rem;
 	opacity: 0;
 	transition: opacity 0.2s;
+	user-select: none;
 }
 
 .content h2 .anchor {
@@ -160,6 +161,7 @@
 .content table {
 	margin: 0;
 	margin-bottom: 2em;
+	max-width: var(--linemax);
 }
 
 .content section {

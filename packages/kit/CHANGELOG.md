@@ -1,5 +1,35 @@
 # @sveltejs/kit
 
+## 1.0.0-next.285
+
+### Patch Changes
+
+- [breaking] referer header sent by fetch in load matches page's referer header, not the page itself ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+* [breaking] remove sveltekit:navigation-{start,end} events ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+- [breaking] defer pushState until navigation occurs ([#4070](https://github.com/sveltejs/kit/pull/4070))
+
+## 1.0.0-next.284
+
+### Patch Changes
+
+- Disable meta http-equiv tags for static amp configuration ([#4073](https://github.com/sveltejs/kit/pull/4073))
+
+* Ignore click event if url does not have origin (e.g. `mailto:`, `tel:`) ([#4072](https://github.com/sveltejs/kit/pull/4072))
+
+## 1.0.0-next.283
+
+### Patch Changes
+
+- create `__data.json` for pathnames with trailing slashes, including `/` ([#4066](https://github.com/sveltejs/kit/pull/4066))
+
+## 1.0.0-next.282
+
+### Patch Changes
+
+- [fix] remove private methods to make Safari 14.1 work ([#4054](https://github.com/sveltejs/kit/pull/4054))
+
 ## 1.0.0-next.281
 
 ### Patch Changes
