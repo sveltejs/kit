@@ -230,18 +230,17 @@ See [Prerendering](/docs/page-options#prerender). An object containing zero or m
     ```js
     import adapter from '@sveltejs/adapter-static';
 
-    /** @type {import('@sveltejs/kit').PrerenderErrorHandler} */
-    const handleError = ({ status, path, referrer, referenceType }) => {
-    	if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
-    	console.warn(`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`);
-    };
-
     /** @type {import('@sveltejs/kit').Config} */
     const config = {
     	kit: {
     		adapter: adapter(),
     		prerender: {
-    			onError: handleError
+    			onError: ({ status, path, referrer, referenceType }) => {
+    				if (path.startsWith('/blog')) throw new Error('Missing a blog page!');
+    				console.warn(
+    					`${status} ${path}${referrer ? ` (${referenceType} from ${referrer})` : ''}`
+    				);
+    			}
     		}
     	}
     };
