@@ -5,7 +5,7 @@ import { join, resolve } from 'path';
 import sirv from 'sirv';
 import { pathToFileURL } from 'url';
 import { getRequest, setResponse } from '../../node.js';
-import { __fetch_polyfill } from '../../install-fetch.js';
+import { installFetch } from '../../install-fetch.js';
 import { SVELTE_KIT, SVELTE_KIT_ASSETS } from '../constants.js';
 
 /** @param {string} dir */
@@ -31,7 +31,7 @@ export async function preview({
 	https: use_https = false,
 	cwd = process.cwd()
 }) {
-	__fetch_polyfill();
+	installFetch();
 
 	const index_file = resolve(cwd, `${SVELTE_KIT}/output/server/index.js`);
 	const manifest_file = resolve(cwd, `${SVELTE_KIT}/output/server/manifest.js`);
