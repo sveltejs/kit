@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 1.0.0-next.14
+
+### Patch Changes
+
+- Bumping versions again ([#4090](https://github.com/sveltejs/kit/pull/4090))
+
 ## 1.0.0-next.13
 
 ### Patch Changes

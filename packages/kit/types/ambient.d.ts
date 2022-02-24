@@ -173,7 +173,7 @@ declare module '$app/paths' {
  */
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Navigation } from '@sveltejs/kit';
+	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
 	 * A convenience function around `getContext`. Must be called during component initialization.
@@ -185,16 +185,11 @@ declare module '$app/stores' {
 		session: typeof session;
 		updated: typeof updated;
 	};
+
 	/**
 	 * A readable store whose value contains page data.
 	 */
-	export const page: Readable<{
-		url: URL;
-		params: Record<string, string>;
-		stuff: App.Stuff;
-		status: number;
-		error: Error | null;
-	}>;
+	export const page: Readable<Page>;
 	/**
 	 * A readable store.
 	 * When navigating starts, its value is `{ from: URL, to: URL }`,

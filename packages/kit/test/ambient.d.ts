@@ -6,6 +6,7 @@ declare global {
 		// used in tests
 		oops: string;
 		pageContext: any;
+		fulfil_navigation: (value: any) => void;
 	}
 
 	const goto: (
