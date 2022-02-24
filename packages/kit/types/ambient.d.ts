@@ -278,17 +278,6 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 /**
- * Utilities used by adapters for Node-like environments.
- */
-declare module '@sveltejs/kit/node' {
-	export function getRequest(
-		base: string,
-		request: import('http').IncomingMessage
-	): Promise<Request>;
-	export function setResponse(res: import('http').ServerResponse, response: Response): void;
-}
-
-/**
  * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
 declare module '@sveltejs/kit/install-fetch' {
@@ -297,4 +286,15 @@ declare module '@sveltejs/kit/install-fetch' {
 	export function __fetch_polyfill(): void;
 
 	export { fetch, Headers, Request, Response };
+}
+
+/**
+ * Utilities used by adapters for Node-like environments.
+ */
+declare module '@sveltejs/kit/node' {
+	export function getRequest(
+		base: string,
+		request: import('http').IncomingMessage
+	): Promise<Request>;
+	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }

@@ -77,7 +77,7 @@ function get_types(code, statements) {
 
 	modules.push({
 		name: '@sveltejs/kit',
-		comment: '',
+		comment: 'The following types can be imported from `@sveltejs/kit`:',
 		...get_types(code, node.statements)
 	});
 }
@@ -103,16 +103,6 @@ function get_types(code, statements) {
 		}
 	}
 }
-
-modules.sort((a, b) => {
-	if (a.name === 'App') return +1;
-	if (b.name === 'App') return -1;
-
-	if (a.name[0] === '@' && b.name[0] === '$') return +1;
-	if (a.name[0] === '$' && b.name[0] === '@') return -1;
-
-	return a.name < b.name ? -1 : 1;
-});
 
 fs.writeFileSync(
 	'../../documentation/types.js',
