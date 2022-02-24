@@ -88,11 +88,15 @@
 	font-weight: 400;
 	font-size: 2rem;
 	color: var(--heading);
-	margin: 7rem 0 1.6rem -1rem;
+	margin: 5rem 0 1.6rem -1rem;
 	padding-left: 0;
 	line-height: 1;
 	padding-top: 0;
 	top: 0;
+}
+
+.content h3 + h4 {
+	margin-top: 2.5rem !important;
 }
 
 .content h3 > code,

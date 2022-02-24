@@ -46,7 +46,7 @@ declare namespace App {
  */
 declare module '$app/env' {
 	/**
-	 * Whether or not app is in AMP mode.
+	 * Whether or not the app is running in [AMP mode](/docs/seo#manual-setup-amp).
 	 */
 	export const amp: boolean;
 	/**
@@ -100,12 +100,12 @@ declare module '$app/navigation' {
 	export function goto(
 		href: string,
 		opts?: { replaceState?: boolean; noscroll?: boolean; keepfocus?: boolean; state?: any }
-	): Promise<any>;
+	): Promise<void>;
 	/**
 	 * Causes any `load` functions belonging to the currently active page to re-run if they `fetch` the resource in question. Returns a `Promise` that resolves when the page is subsequently updated.
 	 * @param href The invalidated resource
 	 */
-	export function invalidate(href: string): Promise<any>;
+	export function invalidate(href: string): Promise<void>;
 	/**
 	 * Programmatically prefetches the given page, which means
 	 *  1. ensuring that the code for the page is loaded, and
@@ -117,7 +117,7 @@ declare module '$app/navigation' {
 	 *
 	 * @param href Page to prefetch
 	 */
-	export function prefetch(href: string): Promise<any>;
+	export function prefetch(href: string): Promise<void>;
 	/**
 	 * Programmatically prefetches the code for routes that haven't yet been fetched.
 	 * Typically, you might call this to speed up subsequent navigation.
@@ -128,20 +128,20 @@ declare module '$app/navigation' {
 	 * Unlike prefetch, this won't call preload for individual pages.
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
-	export function prefetchRoutes(routes?: string[]): Promise<any>;
+	export function prefetchRoutes(routes?: string[]): Promise<void>;
 
 	/**
 	 * A navigation interceptor that triggers before we navigate to a new URL (internal or external) whether by clicking a link, calling `goto`, or using the browser back/forward controls.
 	 * This is helpful if we want to conditionally prevent a navigation from completing or lookup the upcoming url.
 	 */
 	export function beforeNavigate(
-		fn: ({ from, to, cancel }: { from: URL; to: URL | null; cancel: () => void }) => void
-	): any;
+		fn: (navigation: { from: URL; to: URL | null; cancel: () => void }) => void
+	): void;
 
 	/**
 	 * A lifecycle function that runs when the page mounts, and also whenever SvelteKit navigates to a new URL but stays on this component.
 	 */
-	export function afterNavigate(fn: ({ from, to }: { from: URL | null; to: URL }) => void): any;
+	export function afterNavigate(fn: (navigation: { from: URL | null; to: URL }) => void): void;
 }
 
 /**
@@ -151,11 +151,11 @@ declare module '$app/navigation' {
  */
 declare module '$app/paths' {
 	/**
-	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`
+	 * A string that matches [`config.kit.paths.base`](/docs/configuration#paths). It must begin, but not end, with a `/`.
 	 */
 	export const base: `/${string}`;
 	/**
-	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths)
+	 * An absolute path that matches [`config.kit.paths.assets`](/docs/configuration#paths).
 	 *
 	 * > If a value for `config.kit.paths.assets` is specified, it will be replaced with `'/_svelte_kit_assets'` during [`svelte-kit dev`](/docs/cli#svelte-kit-dev) or [`svelte-kit preview`](/docs/cli#svelte-kit-preview), since the assets don't yet live at their eventual URL.
 	 */
@@ -286,10 +286,11 @@ declare module '@sveltejs/kit/hooks' {
  * Utilities used by adapters for Node-like environments.
  */
 declare module '@sveltejs/kit/node' {
-	import { IncomingMessage, ServerResponse } from 'http';
-
-	export function getRequest(base: string, request: IncomingMessage): Promise<Request>;
-	export function setResponse(res: ServerResponse, response: Response): void;
+	export function getRequest(
+		base: string,
+		request: import('http').IncomingMessage
+	): Promise<Request>;
+	export function setResponse(res: import('http').ServerResponse, response: Response): void;
 }
 
 /**
