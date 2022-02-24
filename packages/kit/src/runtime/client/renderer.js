@@ -174,7 +174,7 @@ export class Renderer {
 			if (!ready || !this.router) return;
 			this.session_id += 1;
 
-			const info = this.router.parse(new URL(location.href));
+			const info = this.router.parse(new URL(location.href), true);
 			if (info) this.update(info, [], true);
 		});
 		ready = true;

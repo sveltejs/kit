@@ -283,9 +283,10 @@ export class Router {
 
 	/**
 	 * @param {URL} url
+	 * @param {boolean} [skip_browser_reload]
 	 * @returns {import('./types').NavigationInfo | undefined}
 	 */
-	parse(url) {
+	parse(url, skip_browser_reload) {
 		if (this.owns(url)) {
 			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
@@ -294,7 +295,7 @@ export class Router {
 				routes: this.routes.filter(([pattern]) => pattern.test(path)),
 				url,
 				path,
-				initial: !this.initialized
+				initial: skip_browser_reload ?? !this.initialized
 			};
 		}
 	}
