@@ -105,8 +105,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	import { Page } from '@sveltejs/kit';
-	export type Navigating = { from: URL; to: URL };
+	import { Navigation, Page } from '@sveltejs/kit';
 
 	/**
 	 * A convenience function around `getContext` that returns `{ navigating, page, session }`.
@@ -128,7 +127,7 @@ declare module '$app/stores' {
 	 * When navigating starts, its value is `{ from: URL, to: URL }`
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<Navigating | null>;
+	export const navigating: Readable<Navigation | null>;
 	/**
 	 * A writable store whose initial value is whatever was returned from `getSession`.
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
