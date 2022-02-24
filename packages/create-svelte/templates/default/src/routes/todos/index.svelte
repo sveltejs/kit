@@ -124,7 +124,7 @@
 	.done {
 		transform: none;
 		opacity: 0.4;
-		filter: drop-shadow(0px 0px 1px rgba(0, 0, 0, 0.1));
+		filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.1));
 	}
 
 	form.text {
