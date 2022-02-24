@@ -1,10 +1,10 @@
-import { mode, prerendering } from '$app/env';
+import { dev, prerendering } from '$app/env';
 import { read } from '$lib/docs/server';
 
 /** @type {import('@sveltejs/kit').RequestHandler} */
 export async function get({ params }) {
 	// TODO https://github.com/sveltejs/kit/issues/4093
-	if (!prerendering && mode === 'production') {
+	if (!prerendering && !dev) {
 		return { status: 404 };
 	}
 
