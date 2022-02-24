@@ -53,7 +53,7 @@ export interface Logger {
 
 export type MaybePromise<T> = T | Promise<T>;
 
-type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
+export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
 
 export type PrerenderOnErrorValue = 'fail' | 'continue' | PrerenderErrorHandler;
 
@@ -89,6 +89,6 @@ export interface RouteSegment {
 	rest: boolean;
 }
 
-type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
+export type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
