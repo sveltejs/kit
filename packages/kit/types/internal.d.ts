@@ -1,16 +1,12 @@
 import { OutputAsset, OutputChunk } from 'rollup';
 import {
-	SSRManifest,
-	ValidatedConfig,
 	RequestHandler,
 	Load,
 	ExternalFetch,
 	GetSession,
 	Handle,
 	HandleError,
-	RequestEvent,
-	RequestOptions,
-	Server
+	Config
 } from './index';
 import {
 	Either,
@@ -18,8 +14,13 @@ import {
 	HttpMethod,
 	JSONObject,
 	MaybePromise,
+	RequestEvent,
+	RequestOptions,
+	ResolveOptions,
 	ResponseHeaders,
 	RouteSegment,
+	Server,
+	SSRManifest,
 	TrailingSlash
 } from './private';
 
@@ -148,6 +149,19 @@ export interface PrerenderOptions {
 	all: boolean;
 	dependencies: Map<string, PrerenderDependency>;
 }
+
+export type RecursiveRequired<T> = {
+	// Recursive implementation of TypeScript's Required utility type.
+	// Will recursively continue until it reaches primitive or union
+	// with a Function in it, except those commented below
+	[K in keyof T]-?: Extract<T[K], Function> extends never // If it does not have a Function type
+		? RecursiveRequired<T[K]> // recursively continue through.
+		: K extends 'vite' // If it reaches the 'vite' key
+		? Extract<T[K], Function> // only take the Function type.
+		: T[K]; // Use the exact type for everything else
+};
+
+export type RequiredResolveOptions = Required<ResolveOptions>;
 
 export interface Respond {
 	(request: Request, options: SSROptions, state?: SSRState): Promise<Response>;
@@ -288,6 +302,9 @@ export interface SSRState {
 }
 
 export type StrictBody = string | Uint8Array;
+
+// TODO should this be public?
+export type ValidatedConfig = RecursiveRequired<Config>;
 
 export * from './index';
 export * from './private';
