@@ -195,12 +195,6 @@ export type CspDirectives = {
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 
-export interface EndpointOutput<Output extends Body = Body> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
-}
-
 export interface ErrorLoadInput<Params = Record<string, string>> extends LoadInput<Params> {
 	status?: number;
 	error?: Error;
