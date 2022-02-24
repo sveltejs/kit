@@ -4,7 +4,9 @@
 import './ambient';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
+import { SSRNodeLoader, SSRRoute } from './internal';
 import {
+	AdapterEntry,
 	Body,
 	Either,
 	Fallthrough,
@@ -12,14 +14,11 @@ import {
 	MaybePromise,
 	PrerenderOnErrorValue,
 	RecursiveRequired,
-	RequiredResolveOptions,
 	ResponseHeaders,
+	RequiredResolveOptions,
 	RouteDefinition,
-	SSRNodeLoader,
-	SSRRoute,
 	TrailingSlash
-} from './internal';
-import { AdapterEntry } from './private';
+} from './private';
 
 export interface Adapter {
 	name: string;
