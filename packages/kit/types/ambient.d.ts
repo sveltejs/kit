@@ -21,22 +21,22 @@ declare namespace App {
 	/**
 	 * The interface that defines `event.locals`, which can be accessed in [hooks](/docs/hooks) (`handle`, `handleError` and `getSession`) and [endpoints](/docs/routing#endpoints).
 	 */
-	interface Locals {}
+	export interface Locals {}
 
 	/**
 	 * If your adapter provides [platform-specific context](/docs/adapters#supported-environments-platform-specific-context) via `event.platform`, you can specify it here.
 	 */
-	interface Platform {}
+	export interface Platform {}
 
 	/**
 	 * The interface that defines `session`, both as an argument to [`load`](/docs/loading) functions and the value of the [session store](/docs/modules#$app-stores).
 	 */
-	interface Session {}
+	export interface Session {}
 
 	/**
 	 * The interface that defines `stuff`, as input or output to [`load`](/docs/loading) or as the value of the `stuff` property of the [page store](/docs/modules#$app-stores).
 	 */
-	interface Stuff {}
+	export interface Stuff {}
 }
 
 /**
@@ -173,7 +173,7 @@ declare module '$app/paths' {
  */
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
-	type Navigating = { from: URL; to: URL };
+	import { Navigation } from '@sveltejs/kit';
 
 	/**
 	 * A convenience function around `getContext`. Must be called during component initialization.
@@ -200,7 +200,7 @@ declare module '$app/stores' {
 	 * When navigating starts, its value is `{ from: URL, to: URL }`,
 	 * When navigating finishes, its value reverts to `null`.
 	 */
-	export const navigating: Readable<Navigating | null>;
+	export const navigating: Readable<Navigation | null>;
 	/**
 	 * A writable store whose initial value is whatever was returned from [`getSession`](/docs/hooks#getsession).
 	 * It can be written to, but this will not cause changes to persist on the server — this is something you must implement yourself.
