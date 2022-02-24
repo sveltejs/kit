@@ -180,12 +180,18 @@ export class Router {
 
 			if (!a.href) return;
 
+			const is_svg_a_element = a instanceof SVGAElement;
 			const url = get_href(a);
 			const url_string = url.toString();
 			if (url_string === location.href) {
 				if (!location.hash) event.preventDefault();
 				return;
 			}
+
+			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+			// MEMO: Without this condition, firefox will open mailer twice.
+			// See: https://github.com/sveltejs/kit/issues/4045
+			if (!is_svg_a_element && url.origin === 'null') return;
 
 			// Ignore if tag has
 			// 1. 'download' attribute
@@ -197,7 +203,7 @@ export class Router {
 			}
 
 			// Ignore if <a> has a target
-			if (a instanceof SVGAElement ? a.target.baseVal : a.target) return;
+			if (is_svg_a_element ? a.target.baseVal : a.target) return;
 
 			// Check if new url only differs by hash and use the browser default behavior in that case
 			// This will ensure the `hashchange` event is fired
@@ -419,20 +425,13 @@ export class Router {
 
 		accepted();
 
-		if (!this.navigating) {
-			dispatchEvent(new CustomEvent('sveltekit:navigation-start'));
-		}
 		this.navigating++;
 
 		const pathname = normalize_path(url.pathname, this.trailing_slash);
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
-		if (details) {
-			const change = details.replaceState ? 0 : 1;
-			details.state['sveltekit:index'] = this.current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
-		}
+		const token = (this.navigating_token = {});
 
 		await this.renderer.handle_navigation(info, chain, false, {
 			scroll,
@@ -440,11 +439,18 @@ export class Router {
 		});
 
 		this.navigating--;
-		if (!this.navigating) {
-			dispatchEvent(new CustomEvent('sveltekit:navigation-end'));
 
+		// navigation was aborted
+		if (this.navigating_token !== token) return;
+		if (!this.navigating) {
 			const navigation = { from, to: url };
 			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
+		}
+
+		if (details) {
+			const change = details.replaceState ? 0 : 1;
+			details.state['sveltekit:index'] = this.current_history_index += change;
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
 		}
 	}
 }

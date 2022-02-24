@@ -4,6 +4,7 @@ export type Options = {
 	typescript: boolean;
 	prettier: boolean;
 	eslint: boolean;
+	playwright: boolean;
 };
 
 export type File = {
@@ -11,7 +12,13 @@ export type File = {
 	contents: string;
 };
 
-export type Condition = 'eslint' | 'prettier' | 'typescript' | 'skeleton' | 'default';
+export type Condition =
+	| 'eslint'
+	| 'prettier'
+	| 'typescript'
+	| 'playwright'
+	| 'skeleton'
+	| 'default';
 
 export type Common = {
 	files: Array<{

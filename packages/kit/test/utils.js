@@ -58,20 +58,6 @@ export const test = base.extend({
 	back: async ({ page, javaScriptEnabled }, use) => {
 		use(async () => {
 			if (javaScriptEnabled) {
-				await page.evaluate(() => {
-					window.navigated = new Promise((fulfil, reject) => {
-						const timeout = setTimeout(() => reject(new Error('Timed out')), 2000);
-						addEventListener(
-							'sveltekit:navigation-end',
-							() => {
-								clearTimeout(timeout);
-								fulfil();
-							},
-							{ once: true }
-						);
-					});
-				});
-
 				await Promise.all([page.goBack(), page.evaluate(() => window.navigated)]);
 			} else {
 				return page.goBack().then(() => void 0);
@@ -81,24 +67,13 @@ export const test = base.extend({
 
 	// @ts-expect-error
 	clicknav: async ({ page, javaScriptEnabled }, use) => {
-		/** @param {string} selector */
-		async function clicknav(selector) {
+		/**
+		 * @param {string} selector
+		 * @param {{ timeout: number }} options
+		 */
+		async function clicknav(selector, options) {
 			if (javaScriptEnabled) {
-				await page.evaluate(() => {
-					window.navigated = new Promise((fulfil, reject) => {
-						const timeout = setTimeout(() => reject(new Error('Timed out')), 2000);
-						addEventListener(
-							'sveltekit:navigation-end',
-							() => {
-								clearTimeout(timeout);
-								fulfil();
-							},
-							{ once: true }
-						);
-					});
-				});
-
-				await Promise.all([page.click(selector), page.evaluate(() => window.navigated)]);
+				await Promise.all([page.click(selector), page.waitForNavigation(options)]);
 			} else {
 				await page.click(selector);
 			}

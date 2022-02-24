@@ -1,5 +1,17 @@
 # create-svelte
 
+## 2.0.0-next.121
+
+### Patch Changes
+
+- Add option to create integration tests with Playwright ([#4056](https://github.com/sveltejs/kit/pull/4056))
+
+## 2.0.0-next.120
+
+### Patch Changes
+
+- fix `@typescript-eslint/no-empty-interface` lint error when starting a new app with eslint ([#4077](https://github.com/sveltejs/kit/pull/4077))
+
 ## 2.0.0-next.119
 
 ### Patch Changes
