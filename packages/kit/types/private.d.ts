@@ -195,12 +195,6 @@ export type CspDirectives = {
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 
-export interface EndpointOutput<Output extends Body = Body> {
-	status?: number;
-	headers?: Headers | Partial<ResponseHeaders>;
-	body?: Output;
-}
-
 export interface ErrorLoadInput<Params = Record<string, string>> extends LoadInput<Params> {
 	status?: number;
 	error?: Error;
@@ -291,6 +285,17 @@ export interface RequestEvent<Params = Record<string, string>> {
 	locals: App.Locals;
 	platform: Readonly<App.Platform>;
 }
+
+export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
+	Either<
+		{
+			status?: number;
+			headers?: Headers | Partial<ResponseHeaders>;
+			body?: Output;
+		},
+		Fallthrough
+	>
+>;
 
 export interface RequestOptions {
 	platform?: App.Platform;

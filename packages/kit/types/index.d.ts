@@ -9,7 +9,6 @@ import {
 	Builder,
 	CspDirectives,
 	Either,
-	EndpointOutput,
 	ErrorLoadInput,
 	Fallthrough,
 	LoadInput,
@@ -17,6 +16,7 @@ import {
 	MaybePromise,
 	PrerenderOnErrorValue,
 	RequestEvent,
+	RequestHandlerOutput,
 	ResolveOptions,
 	TrailingSlash
 } from './private';
@@ -134,7 +134,5 @@ export interface Navigation {
  * JavaScript, delete handles are called `del` instead.
  */
 export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
-	(event: RequestEvent<Params>): MaybePromise<
-		Either<Output extends Response ? Response : EndpointOutput<Output>, Fallthrough>
-	>;
+	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
