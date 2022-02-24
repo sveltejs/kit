@@ -99,6 +99,12 @@ export async function read_file(dir, file) {
 
 				html = renderCodeToHTML(twoslash.code, 'ts', { twoslash: true }, {}, highlighter, twoslash);
 
+				// we need to be able to inject the LSP attributes as HTML, not text, so we
+				// turn &lt; into &amp;lt;
+				html = html.replace(/<data-lsp lsp='(.+?)' *>(\w+)<\/data-lsp>/g, (match, lsp, name) => {
+					return `<data-lsp lsp='${lsp.replace(/&/g, '&amp;')}'>${name}</data-lsp>`;
+				});
+
 				// preserve blank lines in output (maybe there's a more correct way to do this?)
 				html = `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
 					/<div class='line'><\/div>/g,
