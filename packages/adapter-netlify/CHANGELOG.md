@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.47
+
+### Patch Changes
+
+- Fix incorrect set-cookie header handling on adapter-netlify ([#4096](https://github.com/sveltejs/kit/pull/4096))
+
 ## 1.0.0-next.46
 
 ### Patch Changes

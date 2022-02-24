@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 1.0.0-next.286
+
+### Patch Changes
+
+- Prevent double-fixing of error stack traces in dev mode ([#4041](https://github.com/sveltejs/kit/pull/4041))
+
+* Expose Navigation type ([#4076](https://github.com/sveltejs/kit/pull/4076))
+
+- add new `Page` type ([#4076](https://github.com/sveltejs/kit/pull/4076))
+
+* [breaking] separate public from private-but-documented types ([#4104](https://github.com/sveltejs/kit/pull/4104))
+
 ## 1.0.0-next.285
 
 ### Patch Changes
