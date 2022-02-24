@@ -306,6 +306,14 @@ export interface LoadOutput<Props = Record<string, any>> {
 	maxage?: number;
 }
 
+export interface Page<Params extends Record<string, string> = Record<string, string>> {
+	url: URL;
+	params: Params;
+	stuff: App.Stuff;
+	status: number;
+	error: Error | null;
+}
+
 export interface Prerendered {
 	pages: Map<
 		string,

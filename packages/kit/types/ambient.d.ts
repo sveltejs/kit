@@ -105,6 +105,7 @@ declare module '$app/paths' {
 
 declare module '$app/stores' {
 	import { Readable, Writable } from 'svelte/store';
+	import { Page } from '@sveltejs/kit';
 	export type Navigating = { from: URL; to: URL };
 
 	/**
@@ -118,13 +119,6 @@ declare module '$app/stores' {
 		updated: typeof updated;
 	};
 
-	export interface Page<Params extends Record<string, string> = Record<string, string>> {
-		url: URL;
-		params: Params;
-		stuff: App.Stuff;
-		status: number;
-		error: Error | null;
-	}
 	/**
 	 * A readable store whose value contains page data.
 	 */
