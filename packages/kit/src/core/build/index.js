@@ -8,6 +8,7 @@ import { generate_manifest } from '../generate_manifest/index.js';
 import { build_service_worker } from './build_service_worker.js';
 import { build_client } from './build_client.js';
 import { build_server } from './build_server.js';
+import { generate_tsconfig } from '../tsconfig.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -23,6 +24,8 @@ export async function build(config) {
 	const output_dir = path.resolve(`${SVELTE_KIT}/output`);
 	rimraf(output_dir);
 	mkdirp(output_dir);
+
+	generate_tsconfig(config);
 
 	const options = {
 		cwd,
