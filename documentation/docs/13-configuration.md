@@ -84,6 +84,18 @@ const config = {
 export default config;
 ```
 
+### typescript config file
+
+Thanks to [unconfig](https://www.github.com/antfu/unconfig), you can also use a typescript configuration file. Simply rename `svelte.config.js` to `svelte.config.ts` and replace the beginning of the file with:
+
+```ts
+/// file: svelte.config.ts
+import type { Config } from 'sveltejs/kit';
+const config: Config = {
+	// Contents
+}
+```
+
 ### adapter
 
 Required when running `svelte-kit build` and determines how the output is converted for different platforms. See [Adapters](/docs/adapters).
