@@ -303,7 +303,6 @@ export interface SSRState {
 
 export type StrictBody = string | Uint8Array;
 
-// TODO should this be public?
 export type ValidatedConfig = RecursiveRequired<Config>;
 
 export * from './index';
