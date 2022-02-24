@@ -4,4 +4,4 @@
 '@sveltejs/adapter-vercel': patch
 ---
 
-Rename \_\_fetch_polyfill to installFetch
+Rename `__fetch_polyfill` to `installFetch`
