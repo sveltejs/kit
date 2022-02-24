@@ -25,11 +25,23 @@ const base = '../../documentation';
 
 const type_regex = new RegExp(
 	`(import\\(&apos;@sveltejs\\/kit&apos;\\)\\.)?\\b(${modules
-		.find((mod) => mod.name === '@sveltejs/kit')
-		.types.map((type) => type.name)
+		.map((module) => module.types)
+		.flat()
+		.map((type) => type.name)
 		.join('|')})\\b`,
 	'g'
 );
+
+const type_links = new Map();
+
+modules.forEach((module) => {
+	const slug = slugify(module.name);
+
+	module.types.forEach((type) => {
+		const link = `/docs/types#${slug}-${slugify(type.name)}`;
+		type_links.set(type.name, link);
+	});
+});
 
 /**
  * @param {string} dir
@@ -126,13 +138,13 @@ export async function read_file(dir, file) {
 			type_regex.lastIndex = 0;
 
 			return html
-				.replace(type_regex, (match, prefix, content) => {
-					if (content === current) {
+				.replace(type_regex, (match, prefix, name) => {
+					if (name === current) {
 						// we don't want e.g. RequestHandler to link to RequestHandler
 						return match;
 					}
 
-					const link = `<a href="/docs/types#sveltejs-kit-${slugify(content)}">${content}</a>`;
+					const link = `<a href="${type_links.get(name)}">${name}</a>`;
 					return `${prefix || ''}${link}`;
 				})
 				.replace(

@@ -5,7 +5,6 @@ import './ambient';
 
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
-	AdapterEntry,
 	Body,
 	Either,
 	Fallthrough,
@@ -20,6 +19,7 @@ import {
 	SSRRoute,
 	TrailingSlash
 } from './internal';
+import { AdapterEntry } from './private';
 
 export interface Adapter {
 	name: string;
