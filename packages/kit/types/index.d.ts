@@ -364,9 +364,9 @@ export interface RequestEvent<Params = Record<string, string>> {
 
 /**
  * A function exported from an endpoint that corresponds to an
- * HTTP verb (get, put, patch, etc) and handles requests with
+ * HTTP verb (`get`, `put`, `patch`, etc) and handles requests with
  * that method. Note that since 'delete' is a reserved word in
- * JavaScript, delete handles are called 'del' instead.
+ * JavaScript, delete handles are called `del` instead.
  */
 export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
 	(event: RequestEvent<Params>): MaybePromise<

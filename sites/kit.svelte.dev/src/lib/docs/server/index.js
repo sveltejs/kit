@@ -6,7 +6,8 @@ import 'prismjs/components/prism-diff.js';
 import 'prismjs/components/prism-typescript.js';
 import 'prism-svelte';
 import { extract_frontmatter, transform } from './markdown';
-import { types } from '../../../../../../documentation/types.js';
+import { modules } from '../../../../../../documentation/types.js';
+import { render_modules } from './modules';
 
 const languages = {
 	bash: 'bash',
@@ -23,8 +24,9 @@ const languages = {
 const base = '../../documentation';
 
 const type_regex = new RegExp(
-	`(import\\(&apos;@sveltejs\\/kit&apos;\\)\\.)?\\b(${types
-		.map((type) => type.name)
+	`(import\\(&apos;@sveltejs\\/kit&apos;\\)\\.)?\\b(${modules
+		.find((mod) => mod.name === '@sveltejs/kit')
+		.types.map((type) => type.name)
 		.join('|')})\\b`,
 	'g'
 );
@@ -39,11 +41,10 @@ export async function read_file(dir, file) {
 
 	const slug = match[1];
 
-	const markdown = fs.readFileSync(`${base}/${dir}/${file}`, 'utf-8').replace('**TYPES**', () => {
-		return types
-			.map((type) => `#### ${type.name}\n\n${type.comment}\n\n\`\`\`ts\n${type.snippet}\n\`\`\``)
-			.join('\n\n');
-	});
+	const markdown = fs
+		.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
+		.replace('**TYPES**', () => render_modules('types'))
+		.replace('**EXPORTS**', () => render_modules('exports'));
 
 	const highlighter = await createShikiHighlighter({ theme: 'css-variables' });
 
@@ -72,7 +73,8 @@ export async function read_file(dir, file) {
 						tabs += '  ';
 					}
 					return prefix + tabs;
-				});
+				})
+				.replace(/\*\\\//g, '*/');
 
 			if (language === 'js') {
 				const twoslash = runTwoSlash(source, language, {
@@ -210,9 +212,8 @@ export function read_headings(dir) {
 
 			const markdown = fs
 				.readFileSync(`${base}/${dir}/${file}`, 'utf-8')
-				.replace('**TYPES**', () => {
-					return types.map((type) => `#### ${type.name}`).join('\n\n');
-				});
+				.replace('**TYPES**', () => render_modules('types'))
+				.replace('**EXPORTS**', () => render_modules('exports'));
 
 			const { body, metadata } = extract_frontmatter(markdown);
 

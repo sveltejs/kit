@@ -32,18 +32,6 @@
 	margin-top: 0;
 }
 
-.content h4 {
-	margin: 2em 0 1em 0;
-}
-
-.content .offset-anchor {
-	position: relative;
-	display: block;
-	top: calc(-1 * var(--top-offset));
-	width: 0;
-	height: 0;
-}
-
 .content .anchor {
 	position: absolute;
 	display: block;
@@ -88,7 +76,7 @@
 }
 
 .content h3 {
-	margin: 0 0 1rem -1rem;
+	margin: 7rem 0 1rem -1rem;
 	padding-bottom: 1rem;
 	color: var(--heading);
 	max-width: var(--linemax);
@@ -100,11 +88,15 @@
 	font-weight: 400;
 	font-size: 2rem;
 	color: var(--heading);
-	margin: 0 0 1.6rem -1rem;
+	margin: 5rem 0 1.6rem -1rem;
 	padding-left: 0;
 	line-height: 1;
 	padding-top: 0;
 	top: 0;
+}
+
+.content h3 + h4 {
+	margin-top: 2.5rem !important;
 }
 
 .content h3 > code,
@@ -119,11 +111,10 @@
 	font-size: inherit;
 }
 
-.content h4::before {
-	display: block;
-	content: ' ';
-	height: calc(var(--nav-h) + 3rem);
-	margin-top: calc(-1 * var(--nav-h) + 3rem);
+.content h2,
+.content h3,
+.content h4 {
+	scroll-margin-top: calc(var(--nav-h) + 4rem);
 }
 
 .content h4 > em {
@@ -208,25 +199,6 @@
 .content section a code {
 	color: inherit;
 	background: rgba(255, 62, 0, 0.1) !important;
-}
-
-/* this replaces the offset-anchor hack, which we should remove from this CSS
-   once https://github.com/sveltejs/action-deploy-docs/issues/1 is closed */
-.content h2[id],
-.content h3[id] {
-	padding-top: 10rem;
-	margin-top: -2rem;
-	border-top: none;
-}
-
-.content h2[id]::after {
-	content: '';
-	position: absolute;
-	width: 100%;
-	left: 0;
-	top: 8rem;
-	height: 2px;
-	background: #ddd;
 }
 
 /** hacky overrides to allow filenames inside code blocks —
