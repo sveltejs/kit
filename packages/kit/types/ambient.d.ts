@@ -294,7 +294,7 @@ declare module '@sveltejs/kit/node' {
 }
 
 /**
- * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation
+ * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
 declare module '@sveltejs/kit/install-fetch' {
 	import fetch, { Headers, Request, Response } from 'node-fetch';
