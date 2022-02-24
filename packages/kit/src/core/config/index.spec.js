@@ -351,20 +351,16 @@ test('load default config (esm)', async () => {
 	assert.equal(config, defaults);
 });
 
-test('errors on loading config with incorrect default export', async () => {
-	let message = null;
+test('defaults used when using loading config with incorrect default export', async () => {
+	const cwd = join(__dirname, 'fixtures/export-string');
 
-	try {
-		const cwd = join(__dirname, 'fixtures', 'export-string');
-		await load_config({ cwd });
-	} catch (/** @type {any} */ e) {
-		message = e.message;
-	}
+	const config = await load_config({ cwd });
+	remove_keys(config, ([, v]) => typeof v === 'function');
 
-	assert.equal(
-		message,
-		'svelte.config.js must have a configuration object as its default export. See https://kit.svelte.dev/docs/configuration'
-	);
+	const defaults = get_defaults(cwd + '/');
+	defaults.kit.version.name = config.kit.version.name;
+
+	assert.equal(config, defaults);
 });
 
 test.run();
