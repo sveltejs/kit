@@ -36,8 +36,6 @@ const render_json_payload_script_regex = new RegExp(
  *
  * Attribute names must be type-checked so we don't need to escape them.
  *
- * **INTERPOLATING THIS STRING INTO AN UNRELATED SCRIPT ELEMENT IS NOT SAFE.**
- *
  * @param {import('types').PayloadScriptAttributes} attrs A list of attributes to be added to the element.
  * @param {import('types').JSONValue} payload The data to be carried by the element. Must be serializable to JSON.
  * @returns {string} The raw HTML of a script element carrying the JSON payload.
