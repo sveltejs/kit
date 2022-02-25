@@ -73,7 +73,7 @@ export const test = base.extend({
 		 */
 		async function clicknav(selector, options) {
 			if (javaScriptEnabled) {
-				await Promise.all([page.click(selector), page.waitForNavigation(options)]);
+				await Promise.all([page.waitForNavigation(options), page.click(selector)]);
 			} else {
 				await page.click(selector);
 			}
