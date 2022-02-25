@@ -36,6 +36,28 @@ export const response_instance: RequestHandler = () => {
 	return new Response();
 };
 
+// valid - body instance of Uint8Array should be allowed
+export const uint8array_body: RequestHandler = () => {
+	return {
+		body: new Uint8Array()
+	};
+};
+
+// valid - body instance of ReadableStream should be allowed
+export const readable_stream_body: RequestHandler = () => {
+	return {
+		body: new ReadableStream()
+	};
+};
+
+// valid - body instance of stream.Readable should be allowed
+export const stream_readable_body: RequestHandler = async () => {
+	const { Readable } = await import('stream');
+	return {
+		body: new Readable()
+	};
+};
+
 // valid - different header pairs should be allowed
 export const differential_headers_assignment: RequestHandler = () => {
 	if (Math.random() < 0.5) {
@@ -63,7 +85,7 @@ export const differential_headers_assignment: RequestHandler = () => {
 // @ts-expect-error - should not have undefined (should it not?)
 export const error_no_undefined: RequestHandler = () => {
 	return {
-		body: { no: undefined }
+		body: { no: Math.random() < 0.5 ? undefined : 'something' }
 	};
 };
 
@@ -71,6 +93,13 @@ export const error_no_undefined: RequestHandler = () => {
 export const error_body_must_be_serializable: RequestHandler = () => {
 	return {
 		body: () => {}
+	};
+};
+
+// @ts-expect-error - body typed array must only be Uint8Array
+export const error_other_typed_array_instances: RequestHandler = () => {
+	return {
+		body: new Uint16Array()
 	};
 };
 
