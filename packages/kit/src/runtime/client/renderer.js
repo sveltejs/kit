@@ -130,9 +130,8 @@ export class Renderer {
 		this.router;
 
 		this.target = target;
-
+		this.has_hydrated = false;
 		this.started = false;
-
 		this.session_id = 1;
 		this.invalid = new Set();
 		this.invalidating = null;
@@ -147,10 +146,10 @@ export class Renderer {
 			branch: []
 		};
 
-		/** @type {Map<string, import('./types').NavigationResult>} */
+		/** @type {Map<string, import('./types').LoadResult>} */
 		this.cache = new Map();
 
-		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
+		/** @type {{id: string | null, promise: Promise<import('./types').LoadResult | undefined> | null}} */
 		this.loading = {
 			id: null,
 			promise: null
@@ -238,7 +237,7 @@ export class Renderer {
 		/** @type {Record<string, any>} */
 		let stuff = {};
 
-		/** @type {import('./types').NavigationResult | undefined} */
+		/** @type {import('./types').LoadResult | undefined} */
 		let result;
 
 		let error_args;
@@ -309,6 +308,8 @@ export class Renderer {
 				url
 			});
 		}
+
+		this.has_hydrated = true;
 
 		if (result.redirect) {
 			// this is a real edge case — `load` would need to return
@@ -454,7 +455,7 @@ export class Renderer {
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
+	 * @returns {Promise<import('./types').LoadResult | undefined>}
 	 */
 	load(info) {
 		this.loading.promise = this._get_navigation_result(info, false);
@@ -485,7 +486,7 @@ export class Renderer {
 		this.stores.page.notify();
 	}
 
-	/** @param {import('./types').NavigationResult} result */
+	/** @param {import('./types').LoadResult} result */
 	_init(result) {
 		this.current = result.state;
 
@@ -514,7 +515,7 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {boolean} [no_cache]
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
+	 * @returns {Promise<import('./types').LoadResult | undefined>}
 	 */
 	async _get_navigation_result(info, no_cache) {
 		if (this.loading.id === info.id && this.loading.promise) {
@@ -547,7 +548,7 @@ export class Renderer {
 			if (result) return result;
 		}
 
-		if (info.initial) {
+		if (!this.has_hydrated) {
 			return await this._load_error({
 				status: 404,
 				error: new Error(`Not found: ${info.url.pathname}`),
@@ -570,7 +571,7 @@ export class Renderer {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
-		/** @type {import('./types').NavigationResult} */
+		/** @type {import('./types').LoadResult} */
 		const result = {
 			redirect: redirect && redirect.loaded ? redirect.loaded.redirect : undefined,
 			state: {
@@ -745,7 +746,7 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} [no_cache]
-	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
+	 * @returns {Promise<import('./types').LoadResult | undefined>} undefined if fallthrough
 	 */
 	async _load({ route, info: { url, path } }, no_cache) {
 		const key = url.pathname + url.search;

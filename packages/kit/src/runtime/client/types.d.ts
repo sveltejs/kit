@@ -4,8 +4,7 @@ export interface NavigationHandler {
 	(
 		url: URL,
 		opts: { hash?: string; scroll: { x: number; y: number } | null; keepfocus: boolean },
-		redirect_chain: string[],
-		no_cache?: boolean
+		redirect_chain: string[]
 	): Promise<void>;
 }
 
@@ -14,7 +13,6 @@ export interface NavigationInfo {
 	routes: CSRRoute[];
 	url: URL;
 	path: string;
-	initial: boolean;
 }
 
 export interface NavigationCandidate {
@@ -22,7 +20,7 @@ export interface NavigationCandidate {
 	info: NavigationInfo;
 }
 
-export interface NavigationResult {
+export interface LoadResult {
 	redirect?: string;
 	state: NavigationState;
 	props: Record<string, any>;
