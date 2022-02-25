@@ -82,6 +82,8 @@ export const differential_headers_assignment: RequestHandler = () => {
 // 	};
 // };
 
+// --- invalid cases ---
+
 // @ts-expect-error - should not have undefined (should it not?)
 export const error_no_undefined: RequestHandler = () => {
 	return {
