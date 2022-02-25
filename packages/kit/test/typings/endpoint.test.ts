@@ -103,6 +103,13 @@ export const error_other_typed_array_instances: RequestHandler = () => {
 	};
 };
 
+// @ts-expect-error - instances cannot be nested
+export const error_nested_instances: RequestHandler = () => {
+	return {
+		body: { typed: new Uint8Array() }
+	};
+};
+
 // @ts-expect-error - fallthrough must be isolated
 export const error_fallthrough_not_isolated: RequestHandler = () => {
 	return {
