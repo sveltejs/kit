@@ -1,5 +1,11 @@
 # create-svelte
 
+## 2.0.0-next.122
+
+### Patch Changes
+
+- remove unnecessary CSS units ([#4115](https://github.com/sveltejs/kit/pull/4115))
+
 ## 2.0.0-next.121
 
 ### Patch Changes

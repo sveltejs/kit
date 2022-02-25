@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 1.0.0-next.287
+
+### Patch Changes
+
+- [breaking] Rename `__fetch_polyfill` to `installFetch`, remove fetch exports ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
 ## 1.0.0-next.286
 
 ### Patch Changes
