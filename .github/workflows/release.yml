@@ -21,7 +21,7 @@ jobs:
         with:
           version: 6.23.2
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16.x
           cache: pnpm
