@@ -1,7 +1,6 @@
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
-import { escape_html_attr } from '../../utils/escape.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
 import { base } from '../paths.js';
@@ -96,9 +95,9 @@ function create_updated_store() {
  * @param {RequestInit} [opts]
  */
 function initial_fetch(resource, opts) {
-	const url = typeof resource === 'string' ? resource : resource.url;
+	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
 
-	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${JSON.stringify(url)}]`;
+	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
 
 	if (opts && typeof opts.body === 'string') {
 		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
