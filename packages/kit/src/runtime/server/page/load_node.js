@@ -1,7 +1,5 @@
 import { normalize } from '../../load.js';
 import { respond } from '../index.js';
-import { s } from '../../../utils/misc.js';
-import { escape_json_in_html } from '../../../utils/escape.js';
 import { is_root_relative, resolve } from '../../../utils/url.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { is_pojo, lowercase_keys, normalize_request_method } from '../utils.js';
@@ -48,7 +46,7 @@ export async function load_node({
 	 * @type {Array<{
 	 *   url: string;
 	 *   body: string;
-	 *   json: string;
+	 *   json: import('types').JSONValue;
 	 * }>}
 	 */
 	const fetched = [];
@@ -264,7 +262,12 @@ export async function load_node({
 								fetched.push({
 									url: requested,
 									body: /** @type {string} */ (opts.body),
-									json: `{"status":${status_number},"statusText":${s(response.statusText)},"headers":${s(headers)},"body":${escape_json_in_html(body)}}`
+									json: {
+										status: status_number,
+										statusText: response.statusText,
+										headers,
+										body
+									}
 								});
 							}
 

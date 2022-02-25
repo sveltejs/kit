@@ -5,7 +5,7 @@ export type Loaded = {
 	props: JSONValue | undefined;
 	loaded: NormalizedLoadOutput;
 	stuff: Record<string, any>;
-	fetched: Array<{ url: string; body: string; json: string }>;
+	fetched: Array<{ url: string; body: string; json: JSONValue }>;
 	set_cookie_headers: string[];
 	uses_credentials: boolean;
 };
