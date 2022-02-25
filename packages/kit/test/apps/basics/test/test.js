@@ -1422,8 +1422,8 @@ test.describe.parallel('Page options', () => {
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
 		if (javaScriptEnabled) {
-			await Promise.all([page.click('[href="/no-hydrate/other"]'), page.waitForNavigation()]);
-			await Promise.all([page.click('[href="/no-hydrate"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
 
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
@@ -1457,7 +1457,7 @@ test.describe.parallel('Page options', () => {
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 
 			await page.click('button');
@@ -1466,7 +1466,7 @@ test.describe.parallel('Page options', () => {
 			await clicknav('[href="/no-router/a"]');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 		}
 	});
