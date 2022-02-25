@@ -1,4 +1,33 @@
 /**
+ * Inside a script element, only `</script` and `<!--` hold special meaning to the HTML parser.
+ *
+ * The first closes the script element, so everything after is treated as raw HTML.
+ * The second disables further parsing until `-->`, so the script element might be unexpectedly
+ * kept open until until an unrelated HTML comment in the page.
+ *
+ * U+2028 LINE SEPARATOR and U+2029 PARAGRAPH SEPARATOR are escaped for the sake of pre-2018
+ * browsers.
+ *
+ * @see tests for unsafe parsing examples.
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#restrictions-for-contents-of-script-elements
+ * @see https://html.spec.whatwg.org/multipage/syntax.html#cdata-rcdata-restrictions
+ * @see https://html.spec.whatwg.org/multipage/parsing.html#script-data-state
+ * @see https://html.spec.whatwg.org/multipage/parsing.html#script-data-double-escaped-state
+ * @see https://github.com/tc39/proposal-json-superset
+ * @type {Record<string, string>}
+ */
+const render_json_payload_script_dict = {
+	'<': '\\u003C',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+const render_json_payload_script_regex = new RegExp(
+	`[${Object.keys(render_json_payload_script_dict).join('')}]`,
+	'g'
+);
+
+/**
  * Generates a raw HTML string containing a safe script element carrying JSON data and associated attributes.
  *
  * It escapes all the special characters needed to guarantee the element is unbroken, but care must
@@ -15,20 +44,10 @@
  * @example const html = render_json_payload_script({ type: 'data', url: '/data.json' }, { foo: 'bar' });
  */
 export function render_json_payload_script(attrs, payload) {
-	/**
-	 * Inside a script element, only `</script` and `<!--` hold special meaning to the HTML parser.
-	 *
-	 * The first closes the script element, so everything after is treated as raw HTML.
-	 * The second disables further parsing until `-->`, so the script element might be unexpectedly
-	 * kept open until until an unrelated HTML comment in the page.
-	 *
-	 * @see tests for unsafe parsing examples.
-	 * @see https://html.spec.whatwg.org/multipage/scripting.html#restrictions-for-contents-of-script-elements
-	 * @see https://html.spec.whatwg.org/multipage/syntax.html#cdata-rcdata-restrictions
-	 * @see https://html.spec.whatwg.org/multipage/parsing.html#script-data-state
-	 * @see https://html.spec.whatwg.org/multipage/parsing.html#script-data-double-escaped-state
-	 */
-	const safe_payload = JSON.stringify(payload).replace(/</g, '\\u003C');
+	const safe_payload = JSON.stringify(payload).replace(
+		render_json_payload_script_regex,
+		(match) => render_json_payload_script_dict[match]
+	);
 
 	let safe_attrs = '';
 	for (const [key, value] of Object.entries(attrs)) {
