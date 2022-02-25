@@ -3,7 +3,7 @@ import path from 'path';
 import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
-import { __fetch_polyfill } from '../../install-fetch.js';
+import { installFetch } from '../../install-fetch.js';
 import { create_app } from '../create_app/index.js';
 import create_manifest_data from '../create_manifest_data/index.js';
 import { getRequest, setResponse } from '../../node.js';
@@ -36,7 +36,7 @@ export async function create_plugin(config, cwd) {
 		name: 'vite-plugin-svelte-kit',
 
 		configureServer(vite) {
-			__fetch_polyfill();
+			installFetch();
 
 			/** @type {import('types').SSRManifest} */
 			let manifest;
