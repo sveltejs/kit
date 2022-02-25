@@ -96,9 +96,9 @@ function create_updated_store() {
  * @param {RequestInit} [opts]
  */
 function initial_fetch(resource, opts) {
-	const url = escape_html_attr(typeof resource === 'string' ? resource : resource.url);
+	const url = typeof resource === 'string' ? resource : resource.url;
 
-	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
+	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${JSON.stringify(url)}]`;
 
 	if (opts && typeof opts.body === 'string') {
 		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
