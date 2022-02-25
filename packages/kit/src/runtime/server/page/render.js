@@ -57,7 +57,7 @@ export async function render_response({
 	/** @type {Map<string, string>} */
 	const styles = new Map();
 
-	/** @type {Array<{ url: string, body: string, json: import('types').JSONValue }>} */
+	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
 
 	let shadow_props;
@@ -254,10 +254,10 @@ export async function render_response({
 			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
 			body += serialized_data
-				.map(({ url, body, json }) =>
+				.map(({ url, body, response }) =>
 					render_json_payload_script(
-						{ type: 'data', url, body: body !== undefined ? hash(body) : undefined },
-						json
+						{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
+						response
 					)
 				)
 				.join('\n\t');

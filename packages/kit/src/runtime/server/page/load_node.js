@@ -42,13 +42,7 @@ export async function load_node({
 
 	let uses_credentials = false;
 
-	/**
-	 * @type {Array<{
-	 *   url: string;
-	 *   body: string;
-	 *   json: import('types').JSONValue;
-	 * }>}
-	 */
+	/** @type {Array<import('./types').Fetched>} */
 	const fetched = [];
 
 	/**
@@ -248,8 +242,6 @@ export async function load_node({
 							}
 
 							if (!opts.body || typeof opts.body === 'string') {
-								// the json constructed below is later added to the dom in a script tag
-								// make sure the used values are safe
 								const status_number = Number(response.status);
 								if (isNaN(status_number)) {
 									throw new Error(
@@ -258,11 +250,11 @@ export async function load_node({
 										}" type: ${typeof response.status}`
 									);
 								}
-								// prettier-ignore
+
 								fetched.push({
 									url: requested,
-									body: /** @type {string} */ (opts.body),
-									json: {
+									body: opts.body,
+									response: {
 										status: status_number,
 										statusText: response.statusText,
 										headers,
