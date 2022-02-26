@@ -326,7 +326,8 @@ export class Renderer {
 		if (!this.router) return;
 		const info = this.router.get_navigation_candidates(url);
 		if (!info) throw new Error('Attempted to prefetch a URL that does not belong to this app');
-		return this.load(info);
+		this.loading.id = url_to_id(info.url);
+		return (this.loading.promise = this._get_load_result(info, false));
 	}
 
 	/**
@@ -337,7 +338,6 @@ export class Renderer {
 	async handle_navigation(url, opts, redirect_chain) {
 		const info = this.router?.get_navigation_candidates(url);
 		if (!info) throw new Error('Attempted to navigate to a URL that does not belong to this app');
-		info.url = url;
 		if (this.started) {
 			this.stores.navigating.set({
 				from: this.current.url,
@@ -452,23 +452,14 @@ export class Renderer {
 		}
 	}
 
-	/**
-	 * @param {import('./types').NavigationInfo} info
-	 * @returns {Promise<import('./types').LoadResult | undefined>}
-	 */
-	load(info) {
-		this.loading.promise = this._get_load_result(info, false);
-		this.loading.id = url_to_id(info.url);
-
-		return this.loading.promise;
-	}
-
 	/** @param {string} href */
 	invalidate(href) {
 		this.invalid.add(href);
 
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
+				// Rerun the load function. We still need to loop through possible routes until one returns
+				// because load may change which routes are falling though (e.g. due to change in session)
 				const info = this.router && this.router.get_navigation_candidates(new URL(location.href));
 				if (info) await this._update(info, [], undefined, true);
 
