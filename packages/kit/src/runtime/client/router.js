@@ -227,12 +227,11 @@ export class Router {
 	}
 
 	/** @param {URL} url */
-	parse(url) {
+	get_navigation_candidates(url) {
 		if (this.owns(url)) {
 			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
 			return {
-				id: url.pathname + url.search,
 				routes: this.routes.filter(([pattern]) => pattern.test(path)),
 				url,
 				path

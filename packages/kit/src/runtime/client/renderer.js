@@ -174,8 +174,7 @@ export class Renderer {
 			if (!ready || !this.router) return;
 			this.session_id += 1;
 
-			const info = this.router.parse(new URL(location.href));
-			if (info) this.update(info, [], undefined, true);
+			this.invalidate(location.href);
 		});
 		ready = true;
 	}
@@ -207,7 +206,7 @@ export class Renderer {
 		addEventListener('touchstart', trigger_prefetch);
 		addEventListener('mousemove', handle_mousemove);
 		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
-		addEventListener('hashchange', () => this.update_page_store(new URL(window.location.href)));
+		addEventListener('hashchange', () => this._update_page_store(new URL(window.location.href)));
 	}
 
 	disable_scroll_handling() {
@@ -221,6 +220,7 @@ export class Renderer {
 	}
 
 	/**
+	 * TODO: we should ensure the routes version from the server matches the version here
 	 * @param {{
 	 *   status: number;
 	 *   error: Error;
@@ -228,7 +228,7 @@ export class Renderer {
 	 *   params: Record<string, string>;
 	 * }} selected
 	 */
-	async start({ status, error, nodes, params }) {
+	async hydrate({ status, error, nodes, params }) {
 		const url = new URL(location.href);
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
@@ -324,7 +324,7 @@ export class Renderer {
 	/** @param {URL} url */
 	async prefetch(url) {
 		if (!this.router) return;
-		const info = this.router.parse(url);
+		const info = this.router.get_navigation_candidates(url);
 		if (!info) throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		return this.load(info);
 	}
@@ -333,10 +333,9 @@ export class Renderer {
 	 * @param {URL} url
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} opts
 	 * @param {string[]} redirect_chain
-	 * @param {boolean} [no_cache]
 	 */
-	async handle_navigation(url, opts, redirect_chain, no_cache) {
-		const info = this.router?.parse(url);
+	async handle_navigation(url, opts, redirect_chain) {
+		const info = this.router?.get_navigation_candidates(url);
 		if (!info) throw new Error('Attempted to navigate to a URL that does not belong to this app');
 		info.url = url;
 		if (this.started) {
@@ -345,7 +344,7 @@ export class Renderer {
 				to: info.url
 			});
 		}
-		await this.update(info, redirect_chain, opts, no_cache);
+		await this._update(info, redirect_chain, opts);
 	}
 
 	/**
@@ -354,9 +353,9 @@ export class Renderer {
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 * @param {boolean} [no_cache]
 	 */
-	async update(info, chain, opts, no_cache) {
+	async _update(info, chain, opts, no_cache) {
 		const token = (this.token = {});
-		let navigation_result = await this._get_navigation_result(info, no_cache);
+		let navigation_result = await this._get_load_result(info, no_cache);
 
 		const { url } = info;
 		if (!navigation_result) {
@@ -458,8 +457,8 @@ export class Renderer {
 	 * @returns {Promise<import('./types').LoadResult | undefined>}
 	 */
 	load(info) {
-		this.loading.promise = this._get_navigation_result(info, false);
-		this.loading.id = info.id;
+		this.loading.promise = this._get_load_result(info, false);
+		this.loading.id = url_to_id(info.url);
 
 		return this.loading.promise;
 	}
@@ -470,8 +469,8 @@ export class Renderer {
 
 		if (!this.invalidating) {
 			this.invalidating = Promise.resolve().then(async () => {
-				const info = this.router && this.router.parse(new URL(location.href));
-				if (info) await this.update(info, [], undefined, true);
+				const info = this.router && this.router.get_navigation_candidates(new URL(location.href));
+				if (info) await this._update(info, [], undefined, true);
 
 				this.invalidating = null;
 			});
@@ -481,7 +480,7 @@ export class Renderer {
 	}
 
 	/** @param {URL} url */
-	update_page_store(url) {
+	_update_page_store(url) {
 		this.stores.page.set({ ...this.page, url });
 		this.stores.page.notify();
 	}
@@ -517,8 +516,8 @@ export class Renderer {
 	 * @param {boolean} [no_cache]
 	 * @returns {Promise<import('./types').LoadResult | undefined>}
 	 */
-	async _get_navigation_result(info, no_cache) {
-		if (this.loading.id === info.id && this.loading.promise) {
+	async _get_load_result(info, no_cache) {
+		if (this.loading.id === url_to_id(info.url) && this.loading.promise) {
 			return this.loading.promise;
 		}
 
@@ -989,3 +988,6 @@ export class Renderer {
 		});
 	}
 }
+
+/** @param {URL} url */
+const url_to_id = (url) => url.pathname + url.search;

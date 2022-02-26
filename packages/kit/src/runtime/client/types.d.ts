@@ -9,7 +9,6 @@ export interface NavigationHandler {
 }
 
 export interface NavigationInfo {
-	id: string;
 	routes: CSRRoute[];
 	url: URL;
 	path: string;

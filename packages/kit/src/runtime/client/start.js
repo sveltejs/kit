@@ -46,7 +46,7 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 	init({ router, renderer });
 	set_paths(paths);
 
-	if (hydrate) await renderer.start(hydrate);
+	if (hydrate) await renderer.hydrate(hydrate);
 	if (router) {
 		if (spa) router.goto(location.href, { replaceState: true });
 		router.init_listeners();
