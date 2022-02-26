@@ -25,6 +25,8 @@ test.describe.parallel('a11y', () => {
 		await page.keyboard.press('Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
 	});
 
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {

@@ -369,8 +369,18 @@ export class Renderer {
 			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
+				const root = document.documentElement;
+				const tabindex = root.getAttribute('tabindex');
+
 				getSelection()?.removeAllRanges();
-				document.body.focus();
+				root.tabIndex = -1;
+				root.focus();
+
+				if (tabindex !== null) {
+					root.setAttribute('tabindex', tabindex);
+				} else {
+					root.removeAttribute('tabindex');
+				}
 			}
 
 			// need to render the DOM before we can scroll to the rendered elements
