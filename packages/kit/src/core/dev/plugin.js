@@ -107,6 +107,7 @@ export async function create_plugin(config, cwd) {
 							if (route.type === 'page') {
 								return {
 									type: 'page',
+									key: route.key,
 									pattern: route.pattern,
 									params: get_params(route.params),
 									shadow: route.shadow

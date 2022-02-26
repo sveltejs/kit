@@ -718,7 +718,7 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params, has_shadow] = route;
+		const [pattern, a, b, get_params, has_shadow, routeKey] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
@@ -776,11 +776,10 @@ export class Renderer {
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
 								headers: {
-									'x-sveltekit-load': 'true'
+									'x-sveltekit-load': routeKey
 								}
 							}
 						);
-
 						if (res.ok) {
 							const redirect = res.headers.get('x-sveltekit-location');
 
@@ -791,7 +790,7 @@ export class Renderer {
 									state: this.current
 								};
 							}
-
+							if (res.status === 204) return;
 							props = await res.json();
 						} else {
 							status = res.status;

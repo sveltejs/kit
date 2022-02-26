@@ -86,8 +86,8 @@ function generate_client_manifest(manifest_data, base) {
 
 					// optional items
 					if (params || route.shadow) tuple.push(params || 'null');
-					if (route.shadow) tuple.push('1');
 
+					if (route.shadow) tuple.push('1', `'${route.key}'`);
 					return `// ${route.a[route.a.length - 1]}\n\t\t[${tuple.join(', ')}]`;
 				}
 			})

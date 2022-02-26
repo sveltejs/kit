@@ -151,6 +151,33 @@ export async function respond(request, options, state = {}) {
 					event.url = new URL(event.url.origin + normalized + event.url.search);
 				}
 
+				const requestRouteKey = request.headers.get('x-sveltekit-load');
+				if (requestRouteKey !== null) {
+					const route = options.manifest._.routes.find((route) => route.key === requestRouteKey);
+					const shadow = route?.shadow;
+					if (shadow) {
+						const match = route.pattern.exec(decoded);
+						if (match) {
+							event.params = route.params ? decode_params(route.params(match)) : {};
+							const response = await render_endpoint(event, await shadow());
+							if (response) {
+								if (response.status >= 300 && response.status < 400) {
+									const location = response.headers.get('location');
+									if (location) {
+										const headers = new Headers(response.headers);
+										headers.set('x-sveltekit-location', location);
+										return new Response(undefined, {
+											status: 204,
+											headers
+										});
+									}
+								}
+								return response;
+							}
+						}
+					}
+				}
+
 				for (const route of options.manifest._.routes) {
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
@@ -183,11 +210,7 @@ export async function respond(request, options, state = {}) {
 							} else {
 								// TODO ideally, the client wouldn't request this data
 								// in the first place (at least in production)
-								response = new Response('{}', {
-									headers: {
-										'content-type': 'application/json'
-									}
-								});
+								return new Response(null, { status: 204 });
 							}
 						}
 					} else {
@@ -261,7 +284,6 @@ export async function respond(request, options, state = {}) {
 				throw new Error('request in handle has been replaced with event' + details);
 			}
 		});
-
 		// TODO for 1.0, change the error message to point to docs rather than PR
 		if (response && !(response instanceof Response)) {
 			throw new Error('handle must return a Response object' + details);
