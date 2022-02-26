@@ -196,7 +196,7 @@ export async function respond(request, options, state = {}) {
 						response = await render_endpoint(event, await route.shadow());
 
 						// loading data for a client-side transition is a special case
-						if (request.headers.get('x-sveltekit-load') === 'true') {
+						if (requestRouteKey !== null) {
 							if (response) {
 								// since redirects are opaque to the browser, we need to repackage
 								// 3xx responses as 200s with a custom header

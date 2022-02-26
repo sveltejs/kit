@@ -718,7 +718,7 @@ export class Renderer {
 			if (cached) return cached;
 		}
 
-		const [pattern, a, b, get_params, has_shadow, routeKey = ''] = route;
+		const [pattern, a, b, get_params, has_shadow, routeKey] = route;
 		const params = get_params
 			? // the pattern is for the route which we've already matched to this path
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
@@ -775,6 +775,7 @@ export class Renderer {
 						const res = await fetch(
 							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
 							{
+								// @ts-ignore
 								headers: {
 									'x-sveltekit-load': routeKey
 								}
