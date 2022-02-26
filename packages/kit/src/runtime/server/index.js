@@ -153,26 +153,31 @@ export async function respond(request, options, state = {}) {
 
 				const requestRouteKey = request.headers.get('x-sveltekit-load');
 				if (requestRouteKey !== null) {
-					const route = options.manifest._.routes.find((route) => route.key === requestRouteKey);
-					const shadow = route?.shadow;
-					if (shadow) {
-						const match = route.pattern.exec(decoded);
-						if (match) {
-							event.params = route.params ? decode_params(route.params(match)) : {};
-							const response = await render_endpoint(event, await shadow());
-							if (response) {
-								if (response.status >= 300 && response.status < 400) {
-									const location = response.headers.get('location');
-									if (location) {
-										const headers = new Headers(response.headers);
-										headers.set('x-sveltekit-location', location);
-										return new Response(undefined, {
-											status: 204,
-											headers
-										});
+					const route = options.manifest._.routes.find(
+						(route) => route.type === 'page' && route.key === requestRouteKey
+					);
+					if (route) {
+						// @ts-ignore
+						const shadow = route.shadow;
+						if (shadow) {
+							const match = route.pattern.exec(decoded);
+							if (match) {
+								event.params = route.params ? decode_params(route.params(match)) : {};
+								const response = await render_endpoint(event, await shadow());
+								if (response) {
+									if (response.status >= 300 && response.status < 400) {
+										const location = response.headers.get('location');
+										if (location) {
+											const headers = new Headers(response.headers);
+											headers.set('x-sveltekit-location', location);
+											return new Response(undefined, {
+												status: 204,
+												headers
+											});
+										}
 									}
+									return response;
 								}
-								return response;
 							}
 						}
 					}

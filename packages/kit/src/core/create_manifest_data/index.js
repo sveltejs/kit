@@ -273,10 +273,11 @@ export default function create_manifest_data({
 		}
 	});
 	ends.forEach((i) => {
-		const route = routes[i];
-		const page = pages.get(route.key);
+		const endpoint = routes[i];
+		const page = pages.get(endpoint.key);
 		if (page) {
-			page.shadow = route.file;
+			// @ts-ignore
+			page.shadow = endpoint.file;
 			routes.splice(i, 1);
 		}
 	});

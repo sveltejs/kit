@@ -105,9 +105,10 @@ export async function create_plugin(config, cwd) {
 						}),
 						routes: manifest_data.routes.map((route) => {
 							if (route.type === 'page') {
+								/**@type import('types').SSRPage**/
 								return {
-									type: 'page',
 									key: route.key,
+									type: 'page',
 									pattern: route.pattern,
 									params: get_params(route.params),
 									shadow: route.shadow
@@ -120,7 +121,7 @@ export async function create_plugin(config, cwd) {
 									b: route.b.map((id) => manifest_data.components.indexOf(id))
 								};
 							}
-
+							/**@type import('types').SSREndpoint**/
 							return {
 								type: 'endpoint',
 								pattern: route.pattern,
