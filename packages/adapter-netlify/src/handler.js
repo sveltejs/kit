@@ -9,8 +9,8 @@ import { split_headers } from './headers';
 export function init(manifest) {
 	const server = new Server(manifest);
 
-	return async (event) => {
-		const rendered = await server.respond(to_request(event));
+	return async (event, context) => {
+		const rendered = await server.respond(to_request(event), { platform: { context } });
 
 		const partial_response = {
 			statusCode: rendered.status,
