@@ -62,6 +62,12 @@ export function generate_tsconfig(config) {
 
 	mkdirp(SVELTE_KIT);
 
+	/** @param {string} file */
+	const project_relative = (file) => path.relative('.', file);
+
+	/** @param {string} file */
+	const config_relative = (file) => path.relative(SVELTE_KIT, file);
+
 	fs.writeFileSync(
 		`${SVELTE_KIT}/tsconfig.json`,
 		JSON.stringify(
@@ -85,16 +91,16 @@ export function generate_tsconfig(config) {
 					esModuleInterop: true,
 					skipLibCheck: true,
 					forceConsistentCasingInFileNames: true,
-					baseUrl: path.relative(SVELTE_KIT, '.'),
+					baseUrl: config_relative('.'),
 					allowJs: true,
 					checkJs: true,
 					paths: {
-						$lib: [path.relative('.', config.kit.files.lib)],
-						'$lib/*': [path.relative('.', config.kit.files.lib) + '/*']
+						$lib: [project_relative(config.kit.files.lib)],
+						'$lib/*': [project_relative(config.kit.files.lib + '/*')]
 					}
 				},
-				include: ['../**/*.d.ts', '../**/*.js', '../**/*.ts', '../**/*.svelte'],
-				exclude: ['../node_modules/**']
+				include: ['**/*.d.ts', '**/*.js', '**/*.ts', '**/*.svelte'].map(config_relative),
+				exclude: ['node_modules/**'].map(config_relative)
 			},
 			null,
 			'\t'
