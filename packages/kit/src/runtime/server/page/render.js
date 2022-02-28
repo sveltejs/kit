@@ -168,6 +168,7 @@ export async function render_response({
 			})},
 			route: ${!!page_config.router},
 			spa: ${!resolve_opts.ssr},
+			is_fallback: ${!!state.prerender?.fallback},
 			trailing_slash: ${s(options.trailing_slash)},
 			hydrate: ${resolve_opts.ssr && page_config.hydrate ? `{
 				status: ${status},

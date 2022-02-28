@@ -174,7 +174,7 @@ export class Renderer {
 			if (!ready || !this.router) return;
 			this.session_id += 1;
 
-			const info = this.router.parse(new URL(location.href), true);
+			const info = this.router.parse(new URL(location.href));
 			if (info) this.update(info, [], true);
 		});
 		ready = true;
@@ -315,6 +315,14 @@ export class Renderer {
 	async update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
+
+		if (!navigation_result && this.router?.is_fallback) {
+			navigation_result = await this._load_error({
+				status: 404,
+				error: new Error(`Not found: ${info.url.pathname}`),
+				url: info.url
+			});
+		}
 
 		if (!navigation_result) {
 			location.href = info.url.href;
@@ -506,14 +514,6 @@ export class Renderer {
 				no_cache
 			);
 			if (result) return result;
-		}
-
-		if (info.initial) {
-			return await this._load_error({
-				status: 404,
-				error: new Error(`Not found: ${info.url.pathname}`),
-				url: info.url
-			});
 		}
 	}
 

@@ -56,15 +56,18 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types').CSRRoute[];
 	 *    trailing_slash: import('types').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    renderer: import('./renderer').Renderer;
+	 *    is_fallback: boolean;
 	 * }} opts
 	 */
-	constructor({ base, routes, trailing_slash, renderer }) {
+	constructor({ base, routes, trailing_slash, renderer, is_fallback }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
+
+		this.is_fallback = is_fallback;
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -283,10 +286,9 @@ export class Router {
 
 	/**
 	 * @param {URL} url
-	 * @param {boolean} [skip_browser_reload]
 	 * @returns {import('./types').NavigationInfo | undefined}
 	 */
-	parse(url, skip_browser_reload) {
+	parse(url) {
 		if (this.owns(url)) {
 			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
@@ -294,8 +296,7 @@ export class Router {
 				id: url.pathname + url.search,
 				routes: this.routes.filter(([pattern]) => pattern.test(path)),
 				url,
-				path,
-				initial: skip_browser_reload ?? !this.initialized
+				path
 			};
 		}
 	}
@@ -449,6 +450,10 @@ export class Router {
 		}
 
 		if (details) {
+			if (this.is_fallback && info.url.pathname !== location.pathname) {
+				this.is_fallback = false;
+			}
+
 			const change = details.replaceState ? 0 : 1;
 			details.state['sveltekit:index'] = this.current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
