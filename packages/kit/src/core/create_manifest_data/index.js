@@ -262,17 +262,16 @@ export default function create_manifest_data({
 	walk(config.kit.files.routes, [], [], [], [layout], [error]);
 
 	const pages = new Map();
-	/**@type {number[]}**/
-	const ends = [];
+	/** @type {number[]} */
+	const endpoints = [];
 	routes.forEach((route, i) => {
-		const { key, type } = route;
-		if (type === 'page') {
-			pages.set(key, route);
+		if (route.type === 'page') {
+			pages.set(route.key, route);
 		} else {
-			ends.unshift(i);
+			endpoints.unshift(i);
 		}
 	});
-	ends.forEach((i) => {
+	endpoints.forEach((i) => {
 		const endpoint = routes[i];
 		const page = pages.get(endpoint.key);
 		if (page) {

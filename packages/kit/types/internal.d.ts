@@ -76,7 +76,6 @@ export type CSRRoute = [
 	CSRComponentLoader[],
 	CSRComponentLoader[],
 	GetParams?,
-	HasShadow?,
 	string?
 ];
 
@@ -218,7 +217,6 @@ export interface SSREndpoint {
 	type: 'endpoint';
 	pattern: RegExp;
 	params: GetParams;
-
 	load(): Promise<{
 		[method: string]: RequestHandler;
 	}>;
@@ -244,9 +242,7 @@ export interface SSROptions {
 	dev: boolean;
 	floc: boolean;
 	get_stack: (error: Error) => string | undefined;
-
 	handle_error(error: Error & { frame?: string }, event: RequestEvent): void;
-
 	hooks: Hooks;
 	hydrate: boolean;
 	manifest: SSRManifest;
@@ -257,13 +253,10 @@ export interface SSROptions {
 	};
 	prefix: string;
 	prerender: boolean;
-
 	read(file: string): Buffer;
-
 	root: SSRComponent['default'];
 	router: boolean;
 	service_worker?: string;
-
 	template({
 		head,
 		body,
@@ -275,7 +268,6 @@ export interface SSROptions {
 		assets: string;
 		nonce: string;
 	}): string;
-
 	template_contains_nonce: boolean;
 	trailing_slash: TrailingSlash;
 }
