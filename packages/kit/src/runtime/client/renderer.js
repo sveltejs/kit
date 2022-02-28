@@ -369,11 +369,11 @@ export class Renderer {
 			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
-				// reset page selection and focus
-				// we try to mimick browsers' behaviour as closely as possible by targetting the
-				// viewport, but unfortunately it's not a perfect match—eg. shift-tabbing won't
+				// Reset page selection and focus
+				// We try to mimick browsers' behaviour as closely as possible by targeting the
+				// viewport, but unfortunately it's not a perfect match — e.g. shift-tabbing won't
 				// immediately cycle from the end of the page
-				// see https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+				// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
 				const root = document.documentElement;
 				const tabindex = root.getAttribute('tabindex');
 
