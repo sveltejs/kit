@@ -57,9 +57,9 @@ During compilation, redirect rules are automatically appended to your `_redirect
 
 ### Using Netlify Functions
 
-With this adapter, SvelteKit Endpoints are automatically hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify Function handlers have additional context passed to them by Netlify, including Netlify Identity information. You can access this context via the `event.platform.context` field inside of your `hooks` and Endpoint handlers.
+With this adapter, SvelteKit endpoints are hosted as [Netlify Functions](https://docs.netlify.com/functions/overview/). Netlify function handlers have additional context, including [Netlify Identity](https://docs.netlify.com/visitor-access/identity/) information. You can access this context via the `event.platform.context` field inside your hooks and endpoints.
 
-Additionally, Netlify Functions can be used alongside your SvelteKit routes. If you would like to add them to your site separately from your Endpoints, you should create a directory for them and add the configuration to your `netlify.toml` file. For example:
+Additionally, you can add your own Netlify functions by creating a directory for them and adding the configuration to your `netlify.toml` file. For example:
 
 ```toml
 [build]
