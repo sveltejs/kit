@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.288
+
+### Patch Changes
+
+- Fix XSS vulnerability on SSR pages with fetched data on `load()` ([#4128](https://github.com/sveltejs/kit/pull/4128))
+
+* [breaking] `tabindex="-1"` is no longer added to `<body>`; `<html>` only briefly receives it during navigation ([#4140](https://github.com/sveltejs/kit/pull/4140))
+
+- `RequestHandlerOutput` accepts body when it has or maybe is `undefined` ([#4152](https://github.com/sveltejs/kit/pull/4152))
+
 ## 1.0.0-next.287
 
 ### Patch Changes
