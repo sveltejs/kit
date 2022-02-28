@@ -96,7 +96,8 @@ export function generate_tsconfig(config) {
 					checkJs: true,
 					paths
 				},
-				include: ['src/**/*.d.ts', 'src/**/*.js', 'src/**/*.ts', 'src/**/*.svelte']
+				include: ['../**/*.d.ts', '../**/*.js', '../**/*.ts', '../**/*.svelte'],
+				exclude: ['../node_modules/**']
 			},
 			null,
 			'\t'
