@@ -57,7 +57,9 @@
 			const scroll = -parseInt(document.body.style.top || '0');
 			document.body.style.position = '';
 			document.body.style.top = '';
+			document.body.tabIndex = -1;
 			document.body.focus();
+			document.body.removeAttribute('tabindex');
 			window.scrollTo(0, scroll);
 		}
 	}

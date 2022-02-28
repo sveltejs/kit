@@ -125,7 +125,7 @@ declare module '$app/navigation' {
 	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
 	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
 	 *
-	 * Unlike prefetch, this won't call preload for individual pages.
+	 * Unlike prefetch, this won't call load for individual pages.
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
@@ -281,11 +281,10 @@ declare module '@sveltejs/kit/hooks' {
  * A polyfill for `fetch` and its related interfaces, used by adapters for environments that don't provide a native implementation.
  */
 declare module '@sveltejs/kit/install-fetch' {
-	import fetch, { Headers, Request, Response } from 'node-fetch';
-
-	export function __fetch_polyfill(): void;
-
-	export { fetch, Headers, Request, Response };
+	/**
+	 * Make `fetch`, `Headers`, `Request` and `Response` available as globals, via `node-fetch`
+	 */
+	export function installFetch(): void;
 }
 
 /**

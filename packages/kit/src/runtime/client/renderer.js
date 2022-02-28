@@ -95,12 +95,12 @@ function create_updated_store() {
  * @param {RequestInit} [opts]
  */
 function initial_fetch(resource, opts) {
-	const url = typeof resource === 'string' ? resource : resource.url;
+	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
 
-	let selector = `script[data-type="svelte-data"][data-url=${JSON.stringify(url)}]`;
+	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
 
 	if (opts && typeof opts.body === 'string') {
-		selector += `[data-body="${hash(opts.body)}"]`;
+		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
 	}
 
 	const script = document.querySelector(selector);
@@ -219,7 +219,7 @@ export class Renderer {
 				let props;
 
 				if (is_leaf) {
-					const serialized = document.querySelector('[data-type="svelte-props"]');
+					const serialized = document.querySelector('script[sveltekit\\:data-type="props"]');
 					if (serialized) {
 						props = JSON.parse(/** @type {string} */ (serialized.textContent));
 					}
@@ -369,8 +369,24 @@ export class Renderer {
 			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
+				// Reset page selection and focus
+				// We try to mimick browsers' behaviour as closely as possible by targeting the
+				// viewport, but unfortunately it's not a perfect match — e.g. shift-tabbing won't
+				// immediately cycle from the end of the page
+				// See https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
+				const root = document.documentElement;
+				const tabindex = root.getAttribute('tabindex');
+
 				getSelection()?.removeAllRanges();
-				document.body.focus();
+				root.tabIndex = -1;
+				root.focus();
+
+				// restore `tabindex` as to prevent the document from stealing input from elements
+				if (tabindex !== null) {
+					root.setAttribute('tabindex', tabindex);
+				} else {
+					root.removeAttribute('tabindex');
+				}
 			}
 
 			// need to render the DOM before we can scroll to the rendered elements

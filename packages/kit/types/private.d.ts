@@ -208,7 +208,15 @@ export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export type JSONObject = { [key: string]: JSONValue };
 
-export type JSONValue = string | number | boolean | null | ToJSON | JSONValue[] | JSONObject;
+export type JSONValue =
+	| string
+	| number
+	| boolean
+	| null
+	| undefined
+	| ToJSON
+	| JSONValue[]
+	| JSONObject;
 
 export interface LoadInput<Params = Record<string, string>> {
 	url: URL;
@@ -240,6 +248,12 @@ export interface Logger {
 export type MaybePromise<T> = T | Promise<T>;
 
 export type Only<T, U> = { [P in keyof T]: T[P] } & { [P in Exclude<keyof U, keyof T>]?: never };
+
+export type PayloadScriptAttributes = PayloadScriptAttributesData | PayloadScriptAttributesProps;
+
+type PayloadScriptAttributesData = { type: 'data'; url: string; body?: string };
+
+type PayloadScriptAttributesProps = { type: 'props' };
 
 export interface Prerendered {
 	pages: Map<

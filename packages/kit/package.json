@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "1.0.0-next.286",
+	"version": "1.0.0-next.288",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/sveltejs/kit",
@@ -15,7 +15,7 @@
 		"vite": "^2.8.0"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.17.1",
+		"@playwright/test": "^1.19.1",
 		"@rollup/plugin-replace": "^4.0.0",
 		"@types/amphtml-validator": "^1.0.1",
 		"@types/cookie": "^0.4.1",
@@ -64,8 +64,9 @@
 		"format": "npm run check-format -- --write",
 		"check-format": "prettier --check . --config ../../.prettierrc --ignore-path .gitignore",
 		"prepublishOnly": "npm run build",
-		"test": "npm run test:unit && npm run test:packaging && npm run test:prerendering && npm run test:integration",
+		"test": "npm run test:unit && npm run test:typings && npm run test:packaging && npm run test:prerendering && npm run test:integration",
 		"test:unit": "uvu src \"(spec\\.js|test[\\\\/]index\\.js)\" -i packaging",
+		"test:typings": "tsc --project test/typings",
 		"test:prerendering": "pnpm test:prerendering:basics && pnpm test:prerendering:options",
 		"test:prerendering:basics": "cd test/prerendering/basics && pnpm test",
 		"test:prerendering:options": "cd test/prerendering/options && pnpm test",

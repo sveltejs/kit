@@ -1,5 +1,11 @@
 # @sveltejs/adapter-node
 
+## 1.0.0-next.70
+
+### Patch Changes
+
+- Rename `__fetch_polyfill` to `installFetch` ([#4111](https://github.com/sveltejs/kit/pull/4111))
+
 ## 1.0.0-next.69
 
 ### Patch Changes

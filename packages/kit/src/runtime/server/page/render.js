@@ -2,7 +2,7 @@ import devalue from 'devalue';
 import { readable, writable } from 'svelte/store';
 import { coalesce_to_error } from '../../../utils/error.js';
 import { hash } from '../../hash.js';
-import { escape_html_attr, escape_json_in_html } from '../../../utils/escape.js';
+import { render_json_payload_script } from '../../../utils/escape.js';
 import { s } from '../../../utils/misc.js';
 import { create_prerendering_url_proxy } from './utils.js';
 import { Csp, csp_ready } from './csp.js';
@@ -57,7 +57,7 @@ export async function render_response({
 	/** @type {Map<string, string>} */
 	const styles = new Map();
 
-	/** @type {Array<{ url: string, body: string, json: string }>} */
+	/** @type {Array<import('./types').Fetched>} */
 	const serialized_data = [];
 
 	let shadow_props;
@@ -253,19 +253,17 @@ export async function render_response({
 
 			body += `\n\t\t<script ${attributes.join(' ')}>${init_app}</script>`;
 
-			// prettier-ignore
 			body += serialized_data
-				.map(({ url, body, json }) => {
-					let attributes = `type="application/json" data-type="svelte-data" data-url=${escape_html_attr(url)}`;
-					if (body) attributes += ` data-body="${hash(body)}"`;
-
-					return `<script ${attributes}>${json}</script>`;
-				})
+				.map(({ url, body, response }) =>
+					render_json_payload_script(
+						{ type: 'data', url, body: typeof body === 'string' ? hash(body) : undefined },
+						response
+					)
+				)
 				.join('\n\t');
 
 			if (shadow_props) {
-				// prettier-ignore
-				body += `<script type="application/json" data-type="svelte-props">${escape_json_in_html(shadow_props)}</script>`;
+				body += render_json_payload_script({ type: 'props' }, shadow_props);
 			}
 		}
 

@@ -25,6 +25,8 @@ test.describe.parallel('a11y', () => {
 		await page.keyboard.press('Tab');
 		expect(await page.evaluate(() => (document.activeElement || {}).nodeName)).toBe('A');
 		expect(await page.evaluate(() => (document.activeElement || {}).textContent)).toBe('a');
+
+		expect(await page.evaluate(() => document.documentElement.getAttribute('tabindex'))).toBe(null);
 	});
 
 	test('announces client-side navigation', async ({ page, clicknav, javaScriptEnabled }) => {
@@ -1068,7 +1070,7 @@ test.describe.parallel('Load', () => {
 
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
-			const script_contents = await page.innerHTML('script[data-type="svelte-data"]');
+			const script_contents = await page.innerHTML('script[sveltekit\\:data-type="data"]');
 
 			const payload =
 				'{"status":200,"statusText":"","headers":{"content-type":"application/json; charset=utf-8"},"body":"{\\"answer\\":42}"}';
@@ -1098,11 +1100,11 @@ test.describe.parallel('Load', () => {
 		if (!javaScriptEnabled) {
 			// by the time JS has run, hydration will have nuked these scripts
 			const script_contents_a = await page.innerHTML(
-				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t25"]'
+				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t25"]'
 			);
 
 			const script_contents_b = await page.innerHTML(
-				'script[data-type="svelte-data"][data-url="/load/serialization-post.json"][data-body="3t24"]'
+				'script[sveltekit\\:data-type="data"][sveltekit\\:data-url="/load/serialization-post.json"][sveltekit\\:data-body="3t24"]'
 			);
 
 			expect(script_contents_a).toBe(payload_a);
@@ -1422,8 +1424,8 @@ test.describe.parallel('Page options', () => {
 		expect(await page.textContent('button')).toBe('clicks: 0');
 
 		if (javaScriptEnabled) {
-			await Promise.all([page.click('[href="/no-hydrate/other"]'), page.waitForNavigation()]);
-			await Promise.all([page.click('[href="/no-hydrate"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate/other"]')]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-hydrate"]')]);
 
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
@@ -1431,7 +1433,7 @@ test.describe.parallel('Page options', () => {
 			// ensure data wasn't inlined
 			expect(
 				await page.evaluate(
-					() => document.querySelectorAll('script[data-type="svelte-data"]').length
+					() => document.querySelectorAll('script[sveltekit\\:data-type="data"]').length
 				)
 			).toBe(0);
 		}
@@ -1457,7 +1459,7 @@ test.describe.parallel('Page options', () => {
 			await page.click('button');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 
 			await page.click('button');
@@ -1466,7 +1468,7 @@ test.describe.parallel('Page options', () => {
 			await clicknav('[href="/no-router/a"]');
 			expect(await page.textContent('button')).toBe('clicks: 1');
 
-			await Promise.all([page.click('[href="/no-router/b"]'), page.waitForNavigation()]);
+			await Promise.all([page.waitForNavigation(), page.click('[href="/no-router/b"]')]);
 			expect(await page.textContent('button')).toBe('clicks: 0');
 		}
 	});

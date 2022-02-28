@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2.2.0
+      - uses: pnpm/action-setup@v2.2.1
         with:
           version: 6.23.2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: '14.x'
           cache: pnpm
@@ -27,7 +27,7 @@ jobs:
       - run: pnpm check
   Tests:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -39,10 +39,10 @@ jobs:
     steps:
       - run: git config --global core.autocrlf false
       - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2.2.0
+      - uses: pnpm/action-setup@v2.2.1
         with:
           version: 6.23.2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
