@@ -199,6 +199,7 @@ function generate_app(manifest_data) {
  * @param {ManifestData} manifest_data
  */
 function create_types(config, manifest_data) {
+	/** @type {Map<string, { params: string[], type: 'page' | 'endpoint' | 'both' }>} */
 	const shadow_types = new Map();
 
 	/** @param {string} key */
