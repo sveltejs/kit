@@ -57,17 +57,14 @@ export class Router {
 	 *    routes: import('types').CSRRoute[];
 	 *    trailing_slash: import('types').TrailingSlash;
 	 *    renderer: import('./renderer').Renderer;
-	 *    is_fallback: boolean;
 	 * }} opts
 	 */
-	constructor({ base, routes, trailing_slash, renderer, is_fallback }) {
+	constructor({ base, routes, trailing_slash, renderer }) {
 		this.base = base;
 		this.routes = routes;
 		this.trailing_slash = trailing_slash;
 		/** Keeps tracks of multiple navigations caused by redirects during rendering */
 		this.navigating = 0;
-
-		this.is_fallback = is_fallback;
 
 		/** @type {import('./renderer').Renderer} */
 		this.renderer = renderer;
@@ -450,10 +447,6 @@ export class Router {
 		}
 
 		if (details) {
-			if (this.is_fallback && info.url.pathname !== location.pathname) {
-				this.is_fallback = false;
-			}
-
 			const change = details.replaceState ? 0 : 1;
 			details.state['sveltekit:index'] = this.current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);

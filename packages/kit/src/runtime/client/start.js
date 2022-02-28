@@ -16,7 +16,6 @@ import { set_paths } from '../paths.js';
  *   session: any;
  *   route: boolean;
  *   spa: boolean;
- *   is_fallback: boolean;
  *   trailing_slash: import('types').TrailingSlash;
  *   hydrate: {
  *     status: number;
@@ -26,16 +25,7 @@ import { set_paths } from '../paths.js';
  *   };
  * }} opts
  */
-export async function start({
-	paths,
-	target,
-	session,
-	route,
-	spa,
-	is_fallback,
-	trailing_slash,
-	hydrate
-}) {
+export async function start({ paths, target, session, route, spa, trailing_slash, hydrate }) {
 	const renderer = new Renderer({
 		Root,
 		fallback,
@@ -48,8 +38,7 @@ export async function start({
 				base: paths.base,
 				routes,
 				trailing_slash,
-				renderer,
-				is_fallback
+				renderer
 		  })
 		: null;
 

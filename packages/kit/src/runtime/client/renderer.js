@@ -316,7 +316,7 @@ export class Renderer {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
-		if (!navigation_result && this.router?.is_fallback) {
+		if (!navigation_result && info.url.pathname === location.pathname) {
 			navigation_result = await this._load_error({
 				status: 404,
 				error: new Error(`Not found: ${info.url.pathname}`),
