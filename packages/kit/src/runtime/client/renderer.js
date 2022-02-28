@@ -369,6 +369,11 @@ export class Renderer {
 			const { scroll, keepfocus } = opts;
 
 			if (!keepfocus) {
+				// reset page selection and focus
+				// we try to mimick browsers' behaviour as closely as possible by targetting the
+				// viewport, but unfortunately it's not a perfect match—eg. shift-tabbing won't
+				// immediately cycle from the end of the page
+				// see https://html.spec.whatwg.org/multipage/interaction.html#get-the-focusable-area
 				const root = document.documentElement;
 				const tabindex = root.getAttribute('tabindex');
 
@@ -376,6 +381,7 @@ export class Renderer {
 				root.tabIndex = -1;
 				root.focus();
 
+				// restore `tabindex` as to prevent the document from stealing input from elements
 				if (tabindex !== null) {
 					root.setAttribute('tabindex', tabindex);
 				} else {
