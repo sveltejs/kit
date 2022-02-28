@@ -22,6 +22,19 @@ export function generate_tsconfig(config) {
 	/** @param {string} file */
 	const config_relative = (file) => path.relative(SVELTE_KIT, file);
 
+	const dirs = new Set([
+		project_relative(path.dirname(config.kit.files.routes)),
+		project_relative(path.dirname(config.kit.files.lib))
+	]);
+
+	/** @type {string[]} */
+	const include = [];
+	dirs.forEach((dir) => {
+		include.push(config_relative(`${dir}/**/*.js`));
+		include.push(config_relative(`${dir}/**/*.ts`));
+		include.push(config_relative(`${dir}/**/*.svelte`));
+	});
+
 	fs.writeFileSync(
 		`${SVELTE_KIT}/tsconfig.json`,
 		JSON.stringify(
@@ -54,9 +67,7 @@ export function generate_tsconfig(config) {
 					},
 					rootDirs: [config_relative('.'), './types']
 				},
-				include: ['src/**/*.d.ts', 'src/**/*.js', 'src/**/*.ts', 'src/**/*.svelte'].map(
-					config_relative
-				),
+				include,
 				exclude: [config_relative('node_modules/**'), './**']
 			},
 			null,
