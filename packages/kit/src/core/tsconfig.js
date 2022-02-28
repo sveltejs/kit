@@ -13,10 +13,10 @@ export function generate_tsconfig(config) {
 
 	const user_file = exists('tsconfig.json') || exists('jsconfig.json');
 
-	const paths = {};
-
-	paths['$lib'] = [path.relative(SVELTE_KIT, config.kit.files.lib)];
-	paths['$lib/*'] = [path.relative(SVELTE_KIT, config.kit.files.lib) + '/*'];
+	const paths = {
+		'$lib': [path.relative(SVELTE_KIT, config.kit.files.lib)],
+		'$lib/*': [path.relative(SVELTE_KIT, config.kit.files.lib) + '/*'];
+	};
 
 	if (user_file) {
 		// we have to eval the file, since it's not parseable as JSON (contains comments)
