@@ -125,7 +125,7 @@ declare module '$app/navigation' {
 	 * If no argument is given, all routes will be fetched, otherwise you can specify routes by any matching pathname
 	 * such as `/about` (to match `src/routes/about.svelte`) or `/blog/*` (to match `src/routes/blog/[slug].svelte`).
 	 *
-	 * Unlike prefetch, this won't call preload for individual pages.
+	 * Unlike prefetch, this won't call load for individual pages.
 	 * Returns a Promise that resolves when the routes have been prefetched.
 	 */
 	export function prefetchRoutes(routes?: string[]): Promise<void>;
