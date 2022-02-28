@@ -208,7 +208,15 @@ export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
 export type JSONObject = { [key: string]: JSONValue };
 
-export type JSONValue = string | number | boolean | null | ToJSON | JSONValue[] | JSONObject;
+export type JSONValue =
+	| string
+	| number
+	| boolean
+	| null
+	| undefined
+	| ToJSON
+	| JSONValue[]
+	| JSONObject;
 
 export interface LoadInput<Params = Record<string, string>> {
 	url: URL;
