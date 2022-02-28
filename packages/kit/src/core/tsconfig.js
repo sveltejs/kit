@@ -54,8 +54,10 @@ export function generate_tsconfig(config) {
 					},
 					rootDirs: [config_relative('.'), './types']
 				},
-				include: ['**/*.d.ts', '**/*.js', '**/*.ts', '**/*.svelte'].map(config_relative),
-				exclude: ['node_modules/**'].map(config_relative)
+				include: ['src/**/*.d.ts', 'src/**/*.js', 'src/**/*.ts', 'src/**/*.svelte'].map(
+					config_relative
+				),
+				exclude: [config_relative('node_modules/**'), `./**`]
 			},
 			null,
 			'\t'
