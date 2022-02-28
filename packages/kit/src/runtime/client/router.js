@@ -73,9 +73,6 @@ export class Router {
 		this.enabled = true;
 		this.initialized = false;
 
-		// make it possible to reset focus
-		document.body.setAttribute('tabindex', '-1');
-
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
 
