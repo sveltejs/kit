@@ -9,7 +9,7 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```html
 /// file: src/routes/blog/[slug].svelte
 <script context="module">
-	/** @type {import('@sveltejs/kit').Load} */
+	/** @type {import('./[slug]').Load} */
 	export async function load({ params, fetch, session, stuff }) {
 		const url = `https://cms.example.com/article/${params.slug}.json`;
 		const response = await fetch(url);
@@ -25,6 +25,8 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```
 
 > Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.
+
+As with [endpoints](/docs/routing#endpoints), pages can import [generated types](/docs/types#generated) — the `./[slug]` in the example above — to ensure that `params` are correctly typed.
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that `load` runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 

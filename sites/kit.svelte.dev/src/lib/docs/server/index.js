@@ -68,12 +68,14 @@ export async function read_file(dir, file) {
 		// gross hack to accommodate FAQ
 		slug: dir === 'faq' ? slug : undefined,
 		code: (source, language, current) => {
-			let file = '';
+			/** @type {Record<string, string>} */
+			const options = {};
+
 			let html = '';
 
 			source = source
-				.replace(/\/\/\/ file: (.+)\n/, (match, value) => {
-					file = value;
+				.replace(/\/\/\/ (.+?): (.+)\n/gm, (match, key, value) => {
+					options[key] = value;
 					return '';
 				})
 				.replace(/^([\-\+])?((?:    )+)/gm, (match, prefix = '', spaces) => {
@@ -106,10 +108,9 @@ export async function read_file(dir, file) {
 				});
 
 				// preserve blank lines in output (maybe there's a more correct way to do this?)
-				html = `<div class="code-block">${file ? `<h5>${file}</h5>` : ''}${html.replace(
-					/<div class='line'><\/div>/g,
-					'<div class="line"> </div>'
-				)}</div>`;
+				html = `<div class="code-block">${
+					options.file ? `<h5>${options.file}</h5>` : ''
+				}${html.replace(/<div class='line'><\/div>/g, '<div class="line"> </div>')}</div>`;
 			} else if (language === 'diff') {
 				const lines = source.split('\n').map((content) => {
 					let type = null;
@@ -137,7 +138,7 @@ export async function read_file(dir, file) {
 					: source.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
 				html = `<div class="code-block">${
-					file ? `<h5>${file}</h5>` : ''
+					options.file ? `<h5>${options.file}</h5>` : ''
 				}<pre class='language-${plang}'><code>${highlighted}</code></pre></div>`;
 			}
 
@@ -145,7 +146,7 @@ export async function read_file(dir, file) {
 
 			return html
 				.replace(type_regex, (match, prefix, name) => {
-					if (name === current) {
+					if (options.link === 'false' || name === current) {
 						// we don't want e.g. RequestHandler to link to RequestHandler
 						return match;
 					}
