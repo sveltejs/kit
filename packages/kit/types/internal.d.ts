@@ -71,13 +71,7 @@ export type CSRComponent = any; // TODO
 
 export type CSRComponentLoader = () => Promise<CSRComponent>;
 
-export type CSRRoute = [
-	RegExp,
-	CSRComponentLoader[],
-	CSRComponentLoader[],
-	GetParams?,
-	string?
-];
+export type CSRRoute = [RegExp, CSRComponentLoader[], CSRComponentLoader[], GetParams?, string?];
 
 export interface EndpointData {
 	type: 'endpoint';

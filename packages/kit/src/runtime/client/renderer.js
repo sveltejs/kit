@@ -769,7 +769,7 @@ export class Renderer {
 					/** @type {Record<string, any>} */
 					let props = {};
 
-					const is_shadow_page = shadow_key !== undefined  && i === a.length - 1;
+					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
 
 					if (is_shadow_page) {
 						const res = await fetch(
