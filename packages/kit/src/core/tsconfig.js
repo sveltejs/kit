@@ -10,13 +10,7 @@ const exists = (file) => fs.existsSync(file) && file;
 /** @param {import('types').ValidatedConfig} config */
 export function generate_tsconfig(config) {
 	const out = path.resolve(SVELTE_KIT, 'tsconfig.json');
-
 	const user_file = exists('tsconfig.json') || exists('jsconfig.json');
-
-	const paths = {
-		$lib: [path.relative('.', config.kit.files.lib)],
-		'$lib/*': [path.relative('.', config.kit.files.lib) + '/*']
-	};
 
 	if (user_file) {
 		// we have to eval the file, since it's not parseable as JSON (contains comments)
@@ -94,7 +88,10 @@ export function generate_tsconfig(config) {
 					baseUrl: path.relative(SVELTE_KIT, '.'),
 					allowJs: true,
 					checkJs: true,
-					paths
+					paths: {
+						$lib: [path.relative('.', config.kit.files.lib)],
+						'$lib/*': [path.relative('.', config.kit.files.lib) + '/*']
+					}
 				},
 				include: ['../**/*.d.ts', '../**/*.js', '../**/*.ts', '../**/*.svelte'],
 				exclude: ['../node_modules/**']
