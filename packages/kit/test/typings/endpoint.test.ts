@@ -5,10 +5,11 @@ const valid_body = {
 	num: 12345,
 	bool: true,
 	null: null,
+	maybe: Math.random() < 0.5 ? undefined : true,
 	custom: {
 		toJSON: () => 'custom toJSON function'
 	},
-	list: ['string', 12345, false, null],
+	list: ['string', 12345, false, null, undefined],
 	nested: {
 		another: 'string',
 		big_num: 98765,
