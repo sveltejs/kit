@@ -85,13 +85,6 @@ export const differential_headers_assignment: RequestHandler = () => {
 
 // --- invalid cases ---
 
-// @ts-expect-error - should not have undefined (should it not?)
-export const error_no_undefined: RequestHandler = () => {
-	return {
-		body: { no: Math.random() < 0.5 ? undefined : 'something' }
-	};
-};
-
 // @ts-expect-error - body must be JSON serializable
 export const error_body_must_be_serializable: RequestHandler = () => {
 	return {
