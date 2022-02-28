@@ -5,6 +5,10 @@
 	import { Icon, Icons, Nav, NavItem, PreloadingIndicator, SkipLink } from '@sveltejs/site-kit';
 	import Search from '$lib/search/Search.svelte';
 	import SearchBox from '$lib/search/SearchBox.svelte';
+
+	let h = 0;
+	let w = 0;
+	$: browser && document.documentElement.style.setProperty('--ukr-footer-height', `${h}px`);
 </script>
 
 <Icons />
@@ -14,7 +18,7 @@
 {/if}
 
 <SkipLink href="#main" />
-<Nav {page} logo="/images/svelte-kit-horizontal.svg">
+<Nav {page} logo="/stopwar.svg">
 	<svelte:fragment slot="nav-center">
 		{#if browser}
 			<!-- the <Nav> component renders this content inside a <ul>, so
@@ -43,8 +47,19 @@
 		</NavItem>
 	</svelte:fragment>
 </Nav>
+	<a target="_blank" rel="noopener noreferrer" href="https://www.stopputin.net/"
+		><div class="ukr" bind:clientHeight={h} bind:clientWidth={w}>
+			{#if w < 830}
+				<strong>We stand with Ukraine.</strong>
+				Donate →
+			{:else}
+				<strong>We stand with Ukraine.</strong>
+				Petition your leaders. Show your support.
+			{/if}
+		</div></a
+	>
 
-<main id="main">
+<main id="main" style="padding-bottom: {h}px;">
 	<slot />
 
 	{#if browser}
@@ -57,6 +72,7 @@
 		position: relative;
 		margin: 0 auto;
 		padding-top: var(--nav-h);
+		overflow: scroll;
 		overflow-x: hidden;
 	}
 
@@ -118,5 +134,30 @@
 
 	:global(body) {
 		font-size: 1.6rem !important;
+	}
+
+	.ukr {
+		background-color: #0066cc;
+		color: white;
+		position: fixed;
+		bottom: 0;
+		width: 100vw;
+		text-align: center;
+		padding: 0.75em;
+		z-index: 999;
+	}
+	:global(.examples-container, .repl-outer, .tutorial-outer) {
+		height: calc(100vh - var(--nav-h) - var(--ukr-footer-height)) !important;
+	}
+	:global(.toggle) {
+		bottom: var(--ukr-footer-height) !important;
+	}
+	@media (max-width: 830px) {
+		:global(aside) {
+			z-index: 9999 !important;
+		}
+	}
+	.ukr strong {
+		color: #ffcc00;
 	}
 </style>
