@@ -151,39 +151,10 @@ export async function respond(request, options, state = {}) {
 					event.url = new URL(event.url.origin + normalized + event.url.search);
 				}
 
-				const requestRouteKey = request.headers.get('x-sveltekit-load');
-				if (requestRouteKey !== null) {
-					const route = options.manifest._.routes.find(
-						(route) => route.type === 'page' && route.key === requestRouteKey
-					);
-					if (route) {
-						// @ts-ignore
-						const shadow = route.shadow;
-						if (shadow) {
-							const match = route.pattern.exec(decoded);
-							if (match) {
-								event.params = route.params ? decode_params(route.params(match)) : {};
-								const response = await render_endpoint(event, await shadow());
-								if (response) {
-									if (response.status >= 300 && response.status < 400) {
-										const location = response.headers.get('location');
-										if (location) {
-											const headers = new Headers(response.headers);
-											headers.set('x-sveltekit-location', location);
-											return new Response(undefined, {
-												status: 204,
-												headers
-											});
-										}
-									}
-									return response;
-								}
-							}
-						}
-					}
-				}
+				const shadow_key = request.headers.get('x-sveltekit-load');
 
 				for (const route of options.manifest._.routes) {
+					if (shadow_key && route.type === 'page' && shadow_key !== route.key) continue;
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
 
@@ -196,7 +167,7 @@ export async function respond(request, options, state = {}) {
 						response = await render_endpoint(event, await route.shadow());
 
 						// loading data for a client-side transition is a special case
-						if (requestRouteKey !== null) {
+						if (shadow_key !== null) {
 							if (response) {
 								// since redirects are opaque to the browser, we need to repackage
 								// 3xx responses as 200s with a custom header
