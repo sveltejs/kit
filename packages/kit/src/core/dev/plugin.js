@@ -200,7 +200,6 @@ export async function create_plugin(config, cwd) {
 
 						/** @type {import('types').Hooks} */
 						const hooks = {
-							// @ts-expect-error this picks up types that belong to the tests
 							getSession: user_hooks.getSession || (() => ({})),
 							handle: amp ? sequence(amp, handle) : handle,
 							handleError:

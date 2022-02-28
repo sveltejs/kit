@@ -1,0 +1,9 @@
+{
+	"compilerOptions": {
+		"noEmit": true,
+		"paths": {
+			"types": ["../../../types/internal"]
+		}
+	},
+	"extends": "./.svelte-kit/tsconfig.json"
+}
