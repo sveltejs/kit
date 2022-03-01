@@ -192,23 +192,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async function _handle_navigation(info, chain, no_cache, opts) {
-		if (started) {
-			stores.navigating.set({
-				from: current.url,
-				to: info.url
-			});
-		}
-
-		await _update(info, chain, no_cache, opts);
-	}
-
-	/**
-	 * @param {import('./types').NavigationInfo} info
-	 * @param {string[]} chain
-	 * @param {boolean} no_cache
-	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
-	 */
 	async function _update(info, chain, no_cache, opts) {
 		const current_token = (token = {});
 		let navigation_result = await _get_navigation_result(info, no_cache);
@@ -891,7 +874,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const current_navigating_token = (navigating_token = {});
 
-		await _handle_navigation(info, chain, false, {
+		if (started) {
+			stores.navigating.set({
+				from: current.url,
+				to: info.url
+			});
+		}
+
+		await _update(info, chain, false, {
 			scroll,
 			keepfocus
 		});
@@ -900,9 +890,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		// navigation was aborted
 		if (navigating_token !== current_navigating_token) return;
+
 		if (!navigating) {
 			const navigation = { from, to: url };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
+
+			stores.navigating.set(null);
 		}
 
 		if (details) {
