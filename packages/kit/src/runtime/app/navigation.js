@@ -1,4 +1,4 @@
-import { router, renderer } from '../client/singletons.js';
+import { client } from '../client/singletons.js';
 import { get_base_uri } from '../client/utils.js';
 
 /**
@@ -24,14 +24,14 @@ export const afterNavigate = import.meta.env.SSR ? () => {} : afterNavigate_;
  * @type {import('$app/navigation').goto}
  */
 async function disableScrollHandling_() {
-	renderer.disable_scroll_handling();
+	client.disable_scroll_handling();
 }
 
 /**
  * @type {import('$app/navigation').goto}
  */
 async function goto_(href, opts) {
-	return router.goto(href, opts, []);
+	return client.goto(href, opts, []);
 }
 
 /**
@@ -39,14 +39,14 @@ async function goto_(href, opts) {
  */
 async function invalidate_(resource) {
 	const { href } = new URL(resource, location.href);
-	return router.renderer.invalidate(href);
+	return client.invalidate(href);
 }
 
 /**
  * @type {import('$app/navigation').prefetch}
  */
 async function prefetch_(href) {
-	await router.prefetch(new URL(href, get_base_uri(document)));
+	await client.prefetch(new URL(href, get_base_uri(document)));
 }
 
 /**
@@ -54,8 +54,8 @@ async function prefetch_(href) {
  */
 async function prefetchRoutes_(pathnames) {
 	const matching = pathnames
-		? router.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
-		: router.routes;
+		? client.routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+		: client.routes;
 
 	const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
 
@@ -66,12 +66,12 @@ async function prefetchRoutes_(pathnames) {
  * @type {import('$app/navigation').beforeNavigate}
  */
 function beforeNavigate_(fn) {
-	if (router) router.before_navigate(fn);
+	client.before_navigate(fn);
 }
 
 /**
  * @type {import('$app/navigation').afterNavigate}
  */
 function afterNavigate_(fn) {
-	if (router) router.after_navigate(fn);
+	client.after_navigate(fn);
 }
