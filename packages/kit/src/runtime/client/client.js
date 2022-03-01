@@ -113,7 +113,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/** Keeps tracks of multiple navigations caused by redirects during rendering */
 	let navigating = 0;
 
-	let enabled = true;
+	let router_enabled = true;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
 	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
@@ -151,7 +151,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		if (enabled) {
+		if (router_enabled) {
 			return _navigate({
 				url,
 				scroll: noscroll ? scroll_state() : null,
@@ -222,7 +222,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					url: intent.url
 				});
 			} else {
-				if (enabled) {
+				if (router_enabled) {
 					goto(new URL(navigation_result.redirect, intent.url).href, {}, [
 						...redirect_chain,
 						intent.url.pathname
@@ -308,7 +308,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		}
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		enabled = leaf_node?.module.router !== false;
+		router_enabled = leaf_node?.module.router !== false;
 	}
 
 	/** @param {import('./types').NavigationResult} result */
@@ -328,7 +328,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		started = true;
 
-		if (enabled) {
+		if (router_enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
 			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
@@ -1031,7 +1031,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			/** @param {MouseEvent} event */
 			addEventListener('click', (event) => {
-				if (!enabled) return;
+				if (!router_enabled) return;
 
 				// Adapted from https://github.com/visionmedia/page.js
 				// MIT license https://github.com/visionmedia/page.js#license
@@ -1101,7 +1101,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 
 			addEventListener('popstate', (event) => {
-				if (event.state && enabled) {
+				if (event.state && router_enabled) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
