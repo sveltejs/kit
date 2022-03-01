@@ -106,7 +106,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		session_id += 1;
 
 		const intent = get_navigation_intent(new URL(location.href));
-		if (intent) _update(intent, [], true);
+		_update(intent, [], true);
 	});
 	ready = true;
 
@@ -174,11 +174,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		const intent = get_navigation_intent(url);
-
-		if (!intent) {
+		if (!owns(url)) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
+
+		const intent = get_navigation_intent(url);
 
 		loading.promise = _get_navigation_result(intent, false);
 		loading.id = intent.id;
@@ -800,20 +800,23 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/** @param {URL} url */
+	function owns(url) {
+		return url.origin === location.origin && url.pathname.startsWith(base);
+	}
+
+	/** @param {URL} url */
 	function get_navigation_intent(url) {
-		if (url.origin === location.origin && url.pathname.startsWith(base)) {
-			const path = decodeURI(url.pathname.slice(base.length) || '/');
+		const path = decodeURI(url.pathname.slice(base.length) || '/');
 
-			/** @type {import('./types').NavigationIntent} */
-			const intent = {
-				id: url.pathname + url.search,
-				routes: routes.filter(([pattern]) => pattern.test(path)),
-				url,
-				path
-			};
+		/** @type {import('./types').NavigationIntent} */
+		const intent = {
+			id: url.pathname + url.search,
+			routes: routes.filter(([pattern]) => pattern.test(path)),
+			url,
+			path
+		};
 
-			return intent;
-		}
+		return intent;
 	}
 
 	/**
@@ -847,23 +850,23 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return;
 		}
 
-		const intent = get_navigation_intent(url);
-		if (!intent) {
+		if (!owns(url)) {
 			location.href = url.href;
 			return new Promise(() => {
 				// never resolves
 			});
 		}
 
+		const pathname = normalize_path(url.pathname, trailing_slash);
+		url = new URL(url.origin + pathname + url.search + url.hash);
+
+		const intent = get_navigation_intent(url);
+
 		update_scroll_positions(current_history_index);
 
 		accepted();
 
 		navigating++;
-
-		const pathname = normalize_path(url.pathname, trailing_slash);
-
-		intent.url = new URL(url.origin + pathname + url.search + url.hash);
 
 		const current_navigating_token = (navigating_token = {});
 
@@ -941,7 +944,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
 					const intent = get_navigation_intent(new URL(location.href));
-					if (intent) await _update(intent, [], true);
+					await _update(intent, [], true);
 
 					invalidating = null;
 				});
