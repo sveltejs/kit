@@ -40,4 +40,6 @@ Like `svelte-kit dev`, it accepts the following options:
 
 ### svelte-kit package
 
+> `svelte-kit package` is experimental, and may undergo breaking changes.
+
 For package authors, see [packaging](/docs/packaging).
