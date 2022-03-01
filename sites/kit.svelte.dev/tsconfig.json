@@ -1,26 +1,3 @@
 {
-	"compilerOptions": {
-		"allowJs": true,
-		"checkJs": true,
-		"moduleResolution": "node",
-		"module": "es2022",
-		"target": "esnext",
-		// svelte-preprocess cannot figure out whether you have a value or a type, so tell
-		// TypeScript to enforce using `import type` instead of `import` for Types.
-		"importsNotUsedAsValues": "error",
-		"isolatedModules": true,
-		// To have warnings/errors of the Svelte compiler at the correct position,
-		// enable source maps by default.
-		"sourceMap": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"forceConsistentCasingInFileNames": true,
-		"baseUrl": ".",
-		"paths": {
-			"$lib": ["./src/lib"],
-			"$lib/*": ["./src/lib/*"]
-		}
-	},
-	"include": ["src/**/*"],
-	"exclude": ["node_modules/*", ".svelte"]
+	"extends": "./.svelte-kit/tsconfig.json"
 }
