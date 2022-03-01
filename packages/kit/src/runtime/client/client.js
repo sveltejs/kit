@@ -197,7 +197,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		let navigation_result = await _get_navigation_result(intent, no_cache);
 
 		if (!navigation_result && intent.url.pathname === location.pathname) {
-			navigation_result = await _load_error({
+			navigation_result = await load_root_error_page({
 				status: 404,
 				error: new Error(`Not found: ${intent.url.pathname}`),
 				url: intent.url
@@ -216,7 +216,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(intent.url.pathname)) {
-				navigation_result = await _load_error({
+				navigation_result = await load_root_error_page({
 					status: 500,
 					error: new Error('Redirect loop'),
 					url: intent.url
@@ -732,7 +732,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 				}
 
-				return await _load_error({
+				return await load_root_error_page({
 					status,
 					error,
 					url
@@ -766,33 +766,34 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   url: URL;
 	 * }} opts
 	 */
-	async function _load_error({ status, error, url }) {
+	async function load_root_error_page({ status, error, url }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const node = await _load_node({
+		const root_layout = await _load_node({
 			module: await fallback[0],
 			url,
 			params,
 			stuff: {}
 		});
-		const error_node = await _load_node({
+
+		const root_error = await _load_node({
 			status,
 			error,
 			module: await fallback[1],
 			url,
 			params,
-			stuff: (node && node.loaded && node.loaded.stuff) || {}
+			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {}
 		});
-
-		const branch = [node, error_node];
-		const stuff = { ...node?.loaded?.stuff, ...error_node?.loaded?.stuff };
 
 		return await _get_navigation_result_from_branch({
 			url,
 			params,
-			stuff,
-			branch,
+			stuff: {
+				...root_layout?.loaded?.stuff,
+				...root_error?.loaded?.stuff
+			},
+			branch: [root_layout, root_error],
 			status,
 			error
 		});
@@ -1200,7 +1201,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				}
 
 				result = error_args
-					? await _load_error(error_args)
+					? await load_root_error_page(error_args)
 					: await _get_navigation_result_from_branch({
 							url,
 							params,
@@ -1212,7 +1213,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			} catch (e) {
 				if (error) throw e;
 
-				result = await _load_error({
+				result = await load_root_error_page({
 					status: 500,
 					error: coalesce_to_error(e),
 					url
