@@ -152,7 +152,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const url = new URL(href, get_base_uri(document));
 
 		if (router_enabled) {
-			return _navigate({
+			return navigate({
 				url,
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
@@ -828,7 +828,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function _navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
+	async function navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
 		const from = current.url;
 		let should_block = false;
 
@@ -1086,7 +1086,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					return;
 				}
 
-				_navigate({
+				navigate({
 					url,
 					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 					keepfocus: false,
@@ -1106,7 +1106,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					// with history.go, which means we end up back here, hence this check
 					if (event.state[INDEX_KEY] === current_history_index) return;
 
-					_navigate({
+					navigate({
 						url: new URL(location.href),
 						scroll: scroll_positions[event.state[INDEX_KEY]],
 						keepfocus: false,
