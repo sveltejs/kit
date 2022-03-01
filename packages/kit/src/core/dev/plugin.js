@@ -12,7 +12,6 @@ import { get_mime_lookup, resolve_entry, runtime } from '../utils.js';
 import { coalesce_to_error } from '../../utils/error.js';
 import { load_template } from '../config/index.js';
 import { sequence } from '../../hooks.js';
-import { generate_tsconfig } from '../tsconfig.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -46,7 +45,6 @@ export async function create_plugin(config, cwd) {
 				const manifest_data = create_manifest_data({ config, cwd });
 
 				create_app({ config, manifest_data, cwd });
-				generate_tsconfig(config);
 
 				manifest = {
 					appDir: config.kit.appDir,
