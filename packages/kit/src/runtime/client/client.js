@@ -209,6 +209,14 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 		const current_token = (token = {});
 		let navigation_result = await _get_navigation_result(info, no_cache);
 
+		if (!navigation_result && info.url.pathname === location.pathname) {
+			navigation_result = await _load_error({
+				status: 404,
+				error: new Error(`Not found: ${info.url.pathname}`),
+				url: info.url
+			});
+		}
+
 		if (!navigation_result) {
 			location.href = info.url.href;
 			return;
@@ -389,14 +397,6 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 				no_cache
 			);
 			if (result) return result;
-		}
-
-		if (info.initial) {
-			return await _load_error({
-				status: 404,
-				error: new Error(`Not found: ${info.url.pathname}`),
-				url: info.url
-			});
 		}
 	}
 
@@ -840,8 +840,7 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 				id: url.pathname + url.search,
 				routes: routes.filter(([pattern]) => pattern.test(path)),
 				url,
-				path,
-				initial: !initialized
+				path
 			};
 
 			return info;

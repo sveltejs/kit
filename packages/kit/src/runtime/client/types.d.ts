@@ -33,7 +33,6 @@ export type NavigationInfo = {
 	routes: CSRRoute[];
 	url: URL;
 	path: string;
-	initial: boolean;
 };
 
 export type NavigationCandidate = {
