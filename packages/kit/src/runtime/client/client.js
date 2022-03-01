@@ -712,7 +712,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								continue;
 							}
 
-							if (error_loaded && error_loaded.loaded && error_loaded.loaded.stuff) {
+							if (error_loaded?.loaded?.loaded.stuff) {
 								stuff = {
 									...stuff,
 									...error_loaded.loaded.stuff
