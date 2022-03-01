@@ -6,7 +6,7 @@ title: Types
 
 ### Generated types
 
-The [`RequestHandler`](#sveltejs-kit-requesthandler) and [`Load`](#sveltejs-kit-load) types both accept a `Params` argument allowing you to type the `params` object:
+The [`RequestHandler`](#sveltejs-kit-requesthandler) and [`Load`](#sveltejs-kit-load) types both accept a `Params` argument allowing you to type the `params` object. For example this endpoint expects `foo`, `bar` and `baz` params:
 
 ```js
 /// file: src/routes/[foo]/[bar]/[baz].js
