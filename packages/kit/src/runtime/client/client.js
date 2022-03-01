@@ -1,21 +1,29 @@
 import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
-import { hash } from '../hash.js';
 import { normalize } from '../load.js';
-import { base } from '../paths.js';
 import { normalize_path } from '../../utils/url';
-import { get_base_uri } from './utils';
+import {
+	create_updated_store,
+	find_anchor,
+	get_base_uri,
+	get_href,
+	initial_fetch,
+	notifiable_store,
+	scroll_state
+} from './utils';
 
 /**
  * @typedef {import('types').CSRComponent} CSRComponent
  */
 
+const SCROLL_KEY = 'sveltekit:scroll';
+const INDEX_KEY = 'sveltekit:index';
+
 // We track the scroll position associated with each history entry in sessionStorage,
 // rather than on history.state itself, because when navigation is driven by
 // popstate it's too late to update the scroll position associated with the
 // state we're navigating from
-const SCROLL_KEY = 'sveltekit:scroll';
 
 /** @typedef {{ x: number, y: number }} ScrollPosition */
 /** @type {Record<number, ScrollPosition>} */
@@ -29,130 +37,6 @@ try {
 /** @param {number} index */
 function update_scroll_positions(index) {
 	scroll_positions[index] = scroll_state();
-}
-
-function scroll_state() {
-	return {
-		x: pageXOffset,
-		y: pageYOffset
-	};
-}
-
-/** @param {Event} event */
-function find_anchor(event) {
-	const node = event
-		.composedPath()
-		.find((e) => e instanceof Node && e.nodeName.toUpperCase() === 'A'); // SVG <a> elements have a lowercase name
-	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
-}
-
-/** @param {HTMLAnchorElement | SVGAElement} node */
-function get_href(node) {
-	return node instanceof SVGAElement
-		? new URL(node.href.baseVal, document.baseURI)
-		: new URL(node.href);
-}
-
-/** @param {any} value */
-function notifiable_store(value) {
-	const store = writable(value);
-	let ready = true;
-
-	function notify() {
-		ready = true;
-		store.update((val) => val);
-	}
-
-	/** @param {any} new_value */
-	function set(new_value) {
-		ready = false;
-		store.set(new_value);
-	}
-
-	/** @param {(value: any) => void} run */
-	function subscribe(run) {
-		/** @type {any} */
-		let old_value;
-		return store.subscribe((new_value) => {
-			if (old_value === undefined || (ready && new_value !== old_value)) {
-				run((old_value = new_value));
-			}
-		});
-	}
-
-	return { notify, set, subscribe };
-}
-
-function create_updated_store() {
-	const { set, subscribe } = writable(false);
-
-	const interval = +(
-		/** @type {string} */ (import.meta.env.VITE_SVELTEKIT_APP_VERSION_POLL_INTERVAL)
-	);
-	const initial = import.meta.env.VITE_SVELTEKIT_APP_VERSION;
-
-	/** @type {NodeJS.Timeout} */
-	let timeout;
-
-	async function check() {
-		if (import.meta.env.DEV || import.meta.env.SSR) return false;
-
-		clearTimeout(timeout);
-
-		if (interval) timeout = setTimeout(check, interval);
-
-		const file = import.meta.env.VITE_SVELTEKIT_APP_VERSION_FILE;
-
-		const res = await fetch(`${base}/${file}`, {
-			headers: {
-				pragma: 'no-cache',
-				'cache-control': 'no-cache'
-			}
-		});
-
-		if (res.ok) {
-			const { version } = await res.json();
-			const updated = version !== initial;
-
-			if (updated) {
-				set(true);
-				clearTimeout(timeout);
-			}
-
-			return updated;
-		} else {
-			throw new Error(`Version check failed: ${res.status}`);
-		}
-	}
-
-	if (interval) timeout = setTimeout(check, interval);
-
-	return {
-		subscribe,
-		check
-	};
-}
-
-/**
- * @param {RequestInfo} resource
- * @param {RequestInit} [opts]
- */
-function initial_fetch(resource, opts) {
-	const url = JSON.stringify(typeof resource === 'string' ? resource : resource.url);
-
-	let selector = `script[sveltekit\\:data-type="data"][sveltekit\\:data-url=${url}]`;
-
-	if (opts && typeof opts.body === 'string') {
-		selector += `[sveltekit\\:data-body="${hash(opts.body)}"]`;
-	}
-
-	const script = document.querySelector(selector);
-	if (script && script.textContent) {
-		const { body, ...init } = JSON.parse(script.textContent);
-		return Promise.resolve(new Response(body, init));
-	}
-
-	return fetch(resource, opts);
 }
 
 /**
@@ -229,11 +113,11 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 	let initialized = false;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
-	let current_history_index = history.state?.['sveltekit:index'] ?? 0;
+	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
 
 	if (current_history_index === 0) {
 		// create initial history entry, so we can return here
-		history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
+		history.replaceState({ ...history.state, [INDEX_KEY]: 0 }, '', location.href);
 	}
 
 	// if we reload the page, or Cmd-Shift-T back to it,
@@ -1034,7 +918,7 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
-			details.state['sveltekit:index'] = current_history_index += change;
+			details.state[INDEX_KEY] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
 		}
 	}
@@ -1212,19 +1096,19 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 				if (event.state && enabled) {
 					// if a popstate-driven navigation is cancelled, we need to counteract it
 					// with history.go, which means we end up back here, hence this check
-					if (event.state['sveltekit:index'] === current_history_index) return;
+					if (event.state[INDEX_KEY] === current_history_index) return;
 
 					_navigate({
 						url: new URL(location.href),
-						scroll: scroll_positions[event.state['sveltekit:index']],
+						scroll: scroll_positions[event.state[INDEX_KEY]],
 						keepfocus: false,
 						chain: [],
 						details: null,
 						accepted: () => {
-							current_history_index = event.state['sveltekit:index'];
+							current_history_index = event.state[INDEX_KEY];
 						},
 						blocked: () => {
-							const delta = current_history_index - event.state['sveltekit:index'];
+							const delta = current_history_index - event.state[INDEX_KEY];
 							history.go(delta);
 						}
 					});
@@ -1237,7 +1121,7 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 				if (hash_navigating) {
 					hash_navigating = false;
 					history.replaceState(
-						{ ...history.state, 'sveltekit:index': ++current_history_index },
+						{ ...history.state, [INDEX_KEY]: ++current_history_index },
 						'',
 						location.href
 					);
