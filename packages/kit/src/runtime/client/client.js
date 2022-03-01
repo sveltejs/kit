@@ -110,7 +110,6 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 	let navigating = 0;
 
 	let enabled = true;
-	let initialized = false;
 
 	// keeping track of the history index in order to prevent popstate navigation events if needed
 	let current_history_index = history.state?.[INDEX_KEY] ?? 0;
@@ -1126,8 +1125,6 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 					);
 				}
 			});
-
-			initialized = true;
 		},
 
 		invalidate: (resource) => {
