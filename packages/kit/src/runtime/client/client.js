@@ -1062,7 +1062,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				// 2. 'rel' attribute includes external
 				const rel = (a.getAttribute('rel') || '').split(/\s+/);
 
-				if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
+				if (a.hasAttribute('download') || rel.includes('external')) {
 					return;
 				}
 
