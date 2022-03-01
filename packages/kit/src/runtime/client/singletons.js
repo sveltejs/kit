@@ -1,9 +1,9 @@
-/** @type {import('./client').Client} */
+/** @type {import('./types').Client} */
 export let client;
 
 /**
  * @param {{
- *   client: import('./client').Client;
+ *   client: import('./types').Client;
  * }} opts
  */
 export function init(opts) {

@@ -1,4 +1,35 @@
+import {
+	afterNavigate,
+	beforeNavigate,
+	goto,
+	invalidate,
+	prefetch,
+	prefetchRoutes
+} from '$app/navigation';
 import { CSRComponent, CSRRoute, NormalizedLoadOutput } from 'types';
+
+export interface Client {
+	// public API, exposed via $app/navigation
+	after_navigate: typeof afterNavigate;
+	before_navigate: typeof beforeNavigate;
+	goto: typeof goto;
+	invalidate: typeof invalidate;
+	prefetch: typeof prefetch;
+	prefetch_routes: typeof prefetchRoutes;
+
+	// private API
+	disable_scroll_handling: () => void;
+	init_listeners: () => void;
+	start: (opts: {
+		status: number;
+		error: Error;
+		nodes: Array<Promise<CSRComponent>>;
+		params: Record<string, string>;
+	}) => Promise<void>;
+
+	// TODO don't expose this
+	routes: CSRRoute[];
+}
 
 export type NavigationInfo = {
 	id: string;

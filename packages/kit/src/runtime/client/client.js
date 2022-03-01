@@ -1,10 +1,9 @@
-import { tick } from 'svelte';
+import { onMount, tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { coalesce_to_error } from '../../utils/error.js';
 import { hash } from '../hash.js';
 import { normalize } from '../load.js';
 import { base } from '../paths.js';
-import { onMount } from 'svelte';
 import { normalize_path } from '../../utils/url';
 import { get_base_uri } from './utils';
 
@@ -39,10 +38,7 @@ function scroll_state() {
 	};
 }
 
-/**
- * @param {Event} event
- * @returns {HTMLAnchorElement | SVGAElement | undefined}
- */
+/** @param {Event} event */
 function find_anchor(event) {
 	const node = event
 		.composedPath()
@@ -50,10 +46,7 @@ function find_anchor(event) {
 	return /** @type {HTMLAnchorElement | SVGAElement | undefined} */ (node);
 }
 
-/**
- * @param {HTMLAnchorElement | SVGAElement} node
- * @returns {URL}
- */
+/** @param {HTMLAnchorElement | SVGAElement} node */
 function get_href(node) {
 	return node instanceof SVGAElement
 		? new URL(node.href.baseVal, document.baseURI)
@@ -162,159 +155,116 @@ function initial_fetch(resource, opts) {
 	return fetch(resource, opts);
 }
 
-export class Client {
-	/**
-	 * @param {{
-	 *   Root: CSRComponent;
-	 *   fallback: [CSRComponent, CSRComponent];
-	 *   target: Node;
-	 *   session: any;
-	 *   base: string;
-	 *   routes: import('types').CSRRoute[];
-	 *   trailing_slash: import('types').TrailingSlash;
-	 * }} opts
-	 */
-	constructor({ Root, fallback, target, session, base, routes, trailing_slash }) {
-		this.Root = Root;
-		this.fallback = fallback;
-		this.target = target;
+/**
+ * @param {{
+ *   Root: CSRComponent;
+ *   fallback: [CSRComponent, CSRComponent];
+ *   target: Node;
+ *   session: App.Session;
+ *   base: string;
+ *   routes: import('types').CSRRoute[];
+ *   trailing_slash: import('types').TrailingSlash;
+ * }} opts
+ * @returns {import('./types').Client}
+ */
+export function create_client({ Root, fallback, target, session, base, routes, trailing_slash }) {
+	/** @type {Map<string, import('./types').NavigationResult>} */
+	const cache = new Map();
 
-		this.started = false;
+	/** @type {Set<string>} */
+	const invalid = new Set();
 
-		this.session_id = 1;
-		this.invalid = new Set();
-		this.invalidating = null;
-		this.autoscroll = true;
-		this.updating = false;
+	const stores = {
+		url: notifiable_store({}),
+		page: notifiable_store({}),
+		navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
+		session: writable(session),
+		updated: create_updated_store()
+	};
 
-		/** @type {import('./types').NavigationState} */
-		this.current = {
-			// @ts-ignore - we need the initial value to be null
-			url: null,
-			session_id: 0,
-			branch: []
-		};
+	/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
+	const loading = {
+		id: null,
+		promise: null
+	};
 
-		/** @type {Map<string, import('./types').NavigationResult>} */
-		this.cache = new Map();
+	/** @type {import('./types').NavigationState} */
+	let current = {
+		// @ts-ignore - we need the initial value to be null
+		url: null,
+		session_id: 0,
+		branch: []
+	};
 
-		/** @type {{id: string | null, promise: Promise<import('./types').NavigationResult | undefined> | null}} */
-		this.loading = {
-			id: null,
-			promise: null
-		};
+	let started = false;
+	let autoscroll = true;
+	let updating = false;
+	let session_id = 1;
 
-		this.stores = {
-			url: notifiable_store({}),
-			page: notifiable_store({}),
-			navigating: writable(/** @type {import('types').Navigation | null} */ (null)),
-			session: writable(session),
-			updated: create_updated_store()
-		};
+	/** @type {Promise<void> | null} */
+	let invalidating = null;
 
-		this.$session = null;
+	/** @type {import('svelte').SvelteComponent} */
+	let root;
 
-		this.root = null;
+	/** @type {App.Session} */
+	let $session;
 
-		let ready = false;
-		this.stores.session.subscribe(async (value) => {
-			this.$session = value;
+	let ready = false;
+	stores.session.subscribe(async (value) => {
+		$session = value;
 
-			if (!ready) return;
-			this.session_id += 1;
+		if (!ready) return;
+		session_id += 1;
 
-			const info = this._parse(new URL(location.href));
-			if (info) this._update(info, [], true);
-		});
-		ready = true;
+		const info = _parse(new URL(location.href));
+		if (info) _update(info, [], true);
+	});
+	ready = true;
 
-		// --------
+	/** Keeps tracks of multiple navigations caused by redirects during rendering */
+	let navigating = 0;
 
-		this.base = base;
-		this.routes = routes;
-		this.trailing_slash = trailing_slash;
-		/** Keeps tracks of multiple navigations caused by redirects during rendering */
-		this.navigating = 0;
+	let enabled = true;
+	let initialized = false;
 
-		this.enabled = true;
-		this.initialized = false;
+	// keeping track of the history index in order to prevent popstate navigation events if needed
+	let current_history_index = history.state?.['sveltekit:index'] ?? 0;
 
-		// keeping track of the history index in order to prevent popstate navigation events if needed
-		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
-
-		if (this.current_history_index === 0) {
-			// create initial history entry, so we can return here
-			history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
-		}
-
-		// if we reload the page, or Cmd-Shift-T back to it,
-		// recover scroll position
-		const scroll = scroll_positions[this.current_history_index];
-		if (scroll) scrollTo(scroll.x, scroll.y);
-
-		this.hash_navigating = false;
-
-		this.callbacks = {
-			/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
-			before_navigate: [],
-
-			/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
-			after_navigate: []
-		};
+	if (current_history_index === 0) {
+		// create initial history entry, so we can return here
+		history.replaceState({ ...history.state, 'sveltekit:index': 0 }, '', location.href);
 	}
 
-	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
-	after_navigate(fn) {
-		onMount(() => {
-			this.callbacks.after_navigate.push(fn);
+	// if we reload the page, or Cmd-Shift-T back to it,
+	// recover scroll position
+	const scroll = scroll_positions[current_history_index];
+	if (scroll) scrollTo(scroll.x, scroll.y);
 
-			return () => {
-				const i = this.callbacks.after_navigate.indexOf(fn);
-				this.callbacks.after_navigate.splice(i, 1);
-			};
-		});
-	}
+	let hash_navigating = false;
+
+	const callbacks = {
+		/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		before_navigate: [],
+
+		/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
+		after_navigate: []
+	};
 
 	/**
-	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
-	 */
-	before_navigate(fn) {
-		onMount(() => {
-			this.callbacks.before_navigate.push(fn);
-
-			return () => {
-				const i = this.callbacks.before_navigate.indexOf(fn);
-				this.callbacks.before_navigate.splice(i, 1);
-			};
-		});
-	}
-
-	disable_scroll_handling() {
-		if (import.meta.env.DEV && this.started && !this.updating) {
-			throw new Error('Can only disable scroll handling during navigation');
-		}
-
-		if (this.updating || !this.started) {
-			this.autoscroll = false;
-		}
-	}
-
-	/**
-	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
-	 *
-	 * @param {GotoParams[0]} href
-	 * @param {GotoParams[1]} opts
+	 * @param {string} href
+	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
 	 * @param {string[]} chain
 	 */
-	async goto(
+	async function goto(
 		href,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
+		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
 		chain
 	) {
 		const url = new URL(href, get_base_uri(document));
 
-		if (this.enabled) {
-			return this._navigate({
+		if (enabled) {
+			return _navigate({
 				url,
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
@@ -334,306 +284,15 @@ export class Client {
 		});
 	}
 
-	init_listeners() {
-		history.scrollRestoration = 'manual';
-
-		// Adopted from Nuxt.js
-		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and back-navigation from other pages to use the browser to restore the
-		// scrolling position.
-		addEventListener('beforeunload', (e) => {
-			let should_block = false;
-
-			const intent = {
-				from: this.current.url,
-				to: null,
-				cancel: () => (should_block = true)
-			};
-
-			this.callbacks.before_navigate.forEach((fn) => fn(intent));
-
-			if (should_block) {
-				e.preventDefault();
-				e.returnValue = '';
-			} else {
-				history.scrollRestoration = 'auto';
-			}
-		});
-
-		addEventListener('visibilitychange', () => {
-			if (document.visibilityState === 'hidden') {
-				update_scroll_positions(this.current_history_index);
-
-				try {
-					sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
-				} catch {
-					// do nothing
-				}
-			}
-		});
-
-		/** @param {Event} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(event);
-			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(get_href(a));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-				// add a layer of indirection to address that
-				event.target?.dispatchEvent(
-					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-				);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
-
-		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
-			if (!this.enabled) return;
-
-			// Adapted from https://github.com/visionmedia/page.js
-			// MIT license https://github.com/visionmedia/page.js#license
-			if (event.button || event.which !== 1) return;
-			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-			if (event.defaultPrevented) return;
-
-			const a = find_anchor(event);
-			if (!a) return;
-
-			if (!a.href) return;
-
-			const is_svg_a_element = a instanceof SVGAElement;
-			const url = get_href(a);
-			const url_string = url.toString();
-			if (url_string === location.href) {
-				if (!location.hash) event.preventDefault();
-				return;
-			}
-
-			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
-			// MEMO: Without this condition, firefox will open mailer twice.
-			// See: https://github.com/sveltejs/kit/issues/4045
-			if (!is_svg_a_element && url.origin === 'null') return;
-
-			// Ignore if tag has
-			// 1. 'download' attribute
-			// 2. 'rel' attribute includes external
-			const rel = (a.getAttribute('rel') || '').split(/\s+/);
-
-			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
-				return;
-			}
-
-			// Ignore if <a> has a target
-			if (is_svg_a_element ? a.target.baseVal : a.target) return;
-
-			// Check if new url only differs by hash and use the browser default behavior in that case
-			// This will ensure the `hashchange` event is fired
-			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-			const [base, hash] = url.href.split('#');
-			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// set this flag to distinguish between navigations triggered by
-				// clicking a hash link and those triggered by popstate
-				this.hash_navigating = true;
-
-				update_scroll_positions(this.current_history_index);
-				this._update_page_store(new URL(url.href));
-
-				return;
-			}
-
-			this._navigate({
-				url,
-				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
-				keepfocus: false,
-				chain: [],
-				details: {
-					state: {},
-					replaceState: false
-				},
-				accepted: () => event.preventDefault(),
-				blocked: () => event.preventDefault()
-			});
-		});
-
-		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
-				// if a popstate-driven navigation is cancelled, we need to counteract it
-				// with history.go, which means we end up back here, hence this check
-				if (event.state['sveltekit:index'] === this.current_history_index) return;
-
-				this._navigate({
-					url: new URL(location.href),
-					scroll: scroll_positions[event.state['sveltekit:index']],
-					keepfocus: false,
-					chain: [],
-					details: null,
-					accepted: () => {
-						this.current_history_index = event.state['sveltekit:index'];
-					},
-					blocked: () => {
-						const delta = this.current_history_index - event.state['sveltekit:index'];
-						history.go(delta);
-					}
-				});
-			}
-		});
-
-		addEventListener('hashchange', () => {
-			// if the hashchange happened as a result of clicking on a link,
-			// we need to update history, otherwise we have to leave it alone
-			if (this.hash_navigating) {
-				this.hash_navigating = false;
-				history.replaceState(
-					{ ...history.state, 'sveltekit:index': ++this.current_history_index },
-					'',
-					location.href
-				);
-			}
-		});
-
-		this.initialized = true;
-	}
-
-	/** @param {string} href */
-	invalidate(href) {
-		this.invalid.add(href);
-
-		if (!this.invalidating) {
-			this.invalidating = Promise.resolve().then(async () => {
-				const info = this._parse(new URL(location.href));
-				if (info) await this._update(info, [], true);
-
-				this.invalidating = null;
-			});
-		}
-
-		return this.invalidating;
-	}
-
-	/**
-	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
-	 */
-	async prefetch(url) {
-		const info = this._parse(url);
+	/** @param {URL} url */
+	async function prefetch(url) {
+		const info = _parse(url);
 
 		if (!info) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		return this.load(info);
-	}
-
-	/**
-	 * @param {{
-	 *   status: number;
-	 *   error: Error;
-	 *   nodes: Array<Promise<CSRComponent>>;
-	 *   params: Record<string, string>;
-	 * }} selected
-	 */
-	async start({ status, error, nodes, params }) {
-		const url = new URL(location.href);
-
-		/** @type {Array<import('./types').BranchNode | undefined>} */
-		const branch = [];
-
-		/** @type {Record<string, any>} */
-		let stuff = {};
-
-		/** @type {import('./types').NavigationResult | undefined} */
-		let result;
-
-		let error_args;
-
-		try {
-			for (let i = 0; i < nodes.length; i += 1) {
-				const is_leaf = i === nodes.length - 1;
-
-				let props;
-
-				if (is_leaf) {
-					const serialized = document.querySelector('script[sveltekit\\:data-type="props"]');
-					if (serialized) {
-						props = JSON.parse(/** @type {string} */ (serialized.textContent));
-					}
-				}
-
-				const node = await this._load_node({
-					module: await nodes[i],
-					url,
-					params,
-					stuff,
-					status: is_leaf ? status : undefined,
-					error: is_leaf ? error : undefined,
-					props
-				});
-
-				if (props) {
-					node.uses.dependencies.add(url.href);
-					node.uses.url = true;
-				}
-
-				branch.push(node);
-
-				if (node && node.loaded) {
-					if (node.loaded.error) {
-						if (error) throw node.loaded.error;
-						error_args = {
-							status: node.loaded.status,
-							error: node.loaded.error,
-							url
-						};
-					} else if (node.loaded.stuff) {
-						stuff = {
-							...stuff,
-							...node.loaded.stuff
-						};
-					}
-				}
-			}
-
-			result = error_args
-				? await this._load_error(error_args)
-				: await this._get_navigation_result_from_branch({
-						url,
-						params,
-						stuff,
-						branch,
-						status,
-						error
-				  });
-		} catch (e) {
-			if (error) throw e;
-
-			result = await this._load_error({
-				status: 500,
-				error: coalesce_to_error(e),
-				url
-			});
-		}
-
-		if (result.redirect) {
-			// this is a real edge case — `load` would need to return
-			// a redirect but only in the browser
-			location.href = new URL(result.redirect, location.href).href;
-			return;
-		}
-
-		this._init(result);
+		await load(info);
 	}
 
 	/**
@@ -642,16 +301,19 @@ export class Client {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async _handle_navigation(info, chain, no_cache, opts) {
-		if (this.started) {
-			this.stores.navigating.set({
-				from: this.current.url,
+	async function _handle_navigation(info, chain, no_cache, opts) {
+		if (started) {
+			stores.navigating.set({
+				from: current.url,
 				to: info.url
 			});
 		}
 
-		await this._update(info, chain, no_cache, opts);
+		await _update(info, chain, no_cache, opts);
 	}
+
+	/** @type {{}} */
+	let token;
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
@@ -659,9 +321,9 @@ export class Client {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async _update(info, chain, no_cache, opts) {
-		const token = (this.token = {});
-		let navigation_result = await this._get_navigation_result(info, no_cache);
+	async function _update(info, chain, no_cache, opts) {
+		const current_token = (token = {});
+		let navigation_result = await _get_navigation_result(info, no_cache);
 
 		if (!navigation_result) {
 			location.href = info.url.href;
@@ -669,20 +331,20 @@ export class Client {
 		}
 
 		// abort if user navigated during update
-		if (token !== this.token) return;
+		if (token !== current_token) return;
 
-		this.invalid.clear();
+		invalid.clear();
 
 		if (navigation_result.redirect) {
 			if (chain.length > 10 || chain.includes(info.url.pathname)) {
-				navigation_result = await this._load_error({
+				navigation_result = await _load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
 					url: info.url
 				});
 			} else {
-				if (this.enabled) {
-					this.goto(new URL(navigation_result.redirect, info.url).href, {}, [
+				if (enabled) {
+					goto(new URL(navigation_result.redirect, info.url).href, {}, [
 						...chain,
 						info.url.pathname
 					]);
@@ -693,22 +355,22 @@ export class Client {
 				return;
 			}
 		} else if (navigation_result.props?.page?.status >= 400) {
-			const updated = await this.stores.updated.check();
+			const updated = await stores.updated.check();
 			if (updated) {
 				location.href = info.url.href;
 				return;
 			}
 		}
 
-		this.updating = true;
+		updating = true;
 
-		if (this.started) {
-			this.current = navigation_result.state;
+		if (started) {
+			current = navigation_result.state;
 
-			this.root.$set(navigation_result.props);
-			this.stores.navigating.set(null);
+			root.$set(navigation_result.props);
+			stores.navigating.set(null);
 		} else {
-			this._init(navigation_result);
+			_init(navigation_result);
 		}
 
 		// opts must be passed if we're navigating
@@ -739,7 +401,7 @@ export class Client {
 			// need to render the DOM before we can scroll to the rendered elements
 			await tick();
 
-			if (this.autoscroll) {
+			if (autoscroll) {
 				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
@@ -757,74 +419,66 @@ export class Client {
 			await tick();
 		}
 
-		this.loading.promise = null;
-		this.loading.id = null;
-		this.autoscroll = true;
-		this.updating = false;
+		loading.promise = null;
+		loading.id = null;
+		autoscroll = true;
+		updating = false;
 
 		if (navigation_result.props.page) {
-			this.page = navigation_result.props.page;
+			page = navigation_result.props.page;
 		}
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
-		if (leaf_node && leaf_node.module.router === false) {
-			this._disable();
-		} else {
-			this._enable();
-		}
+		enabled = leaf_node?.module.router !== false;
 	}
 
-	/**
-	 * @param {import('./types').NavigationInfo} info
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
-	 */
-	load(info) {
-		this.loading.promise = this._get_navigation_result(info, false);
-		this.loading.id = info.id;
+	/** @param {import('./types').NavigationInfo} info */
+	function load(info) {
+		loading.promise = _get_navigation_result(info, false);
+		loading.id = info.id;
 
-		return this.loading.promise;
+		return loading.promise;
 	}
 
 	/** @param {URL} url */
-	_update_page_store(url) {
-		this.stores.page.set({ ...this.page, url });
-		this.stores.page.notify();
+	function _update_page_store(url) {
+		stores.page.set({ ...page, url });
+		stores.page.notify();
 	}
 
+	/** @type {import('types').Page} */
+	let page;
+
 	/** @param {import('./types').NavigationResult} result */
-	_init(result) {
-		this.current = result.state;
+	function _init(result) {
+		current = result.state;
 
 		const style = document.querySelector('style[data-svelte]');
 		if (style) style.remove();
 
-		this.page = result.props.page;
+		page = result.props.page;
 
-		this.root = new this.Root({
-			target: this.target,
-			props: {
-				stores: this.stores,
-				...result.props
-			},
+		root = new Root({
+			target,
+			props: { ...result.props, stores },
 			hydrate: true
 		});
 
-		this.started = true;
+		started = true;
 
-		if (this.enabled) {
+		if (enabled) {
 			const navigation = { from: null, to: new URL(location.href) };
-			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
+			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
 	}
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
 	 * @param {boolean} no_cache
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
 	 */
-	async _get_navigation_result(info, no_cache) {
-		if (this.loading.id === info.id && this.loading.promise) {
-			return this.loading.promise;
+	async function _get_navigation_result(info, no_cache) {
+		if (loading.id === info.id && loading.promise) {
+			return loading.promise;
 		}
 
 		for (let i = 0; i < info.routes.length; i += 1) {
@@ -843,7 +497,7 @@ export class Client {
 				}
 			}
 
-			const result = await this._load(
+			const result = await _load(
 				{
 					route,
 					info
@@ -854,7 +508,7 @@ export class Client {
 		}
 
 		if (info.initial) {
-			return await this._load_error({
+			return await _load_error({
 				status: 404,
 				error: new Error(`Not found: ${info.url.pathname}`),
 				url: info.url
@@ -873,7 +527,7 @@ export class Client {
 	 *   error?: Error;
 	 * }} opts
 	 */
-	async _get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
+	async function _get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
@@ -884,7 +538,7 @@ export class Client {
 				url,
 				params,
 				branch,
-				session_id: this.session_id
+				session_id
 			},
 			props: {
 				components: filtered.map((node) => node.module.default)
@@ -896,7 +550,7 @@ export class Client {
 			result.props[`props_${i}`] = loaded ? await loaded.props : null;
 		}
 
-		if (!this.current.url || url.href !== this.current.url.href) {
+		if (!current.url || url.href !== current.url.href) {
 			result.props.page = { url, params, status, error, stuff };
 
 			// TODO remove this for 1.0
@@ -925,8 +579,8 @@ export class Client {
 			let ready = false;
 
 			const clear = () => {
-				if (this.cache.get(key) === result) {
-					this.cache.delete(key);
+				if (cache.get(key) === result) {
+					cache.delete(key);
 				}
 
 				unsubscribe();
@@ -935,13 +589,13 @@ export class Client {
 
 			const timeout = setTimeout(clear, maxage * 1000);
 
-			const unsubscribe = this.stores.session.subscribe(() => {
+			const unsubscribe = stores.session.subscribe(() => {
 				if (ready) clear();
 			});
 
 			ready = true;
 
-			this.cache.set(key, result);
+			cache.set(key, result);
 		}
 
 		return result;
@@ -957,9 +611,8 @@ export class Client {
 	 *   stuff: Record<string, any>;
 	 *   props?: Record<string, any>;
 	 * }} options
-	 * @returns
 	 */
-	async _load_node({ status, error, module, url, params, stuff, props }) {
+	async function _load_node({ status, error, module, url, params, stuff, props }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -991,11 +644,9 @@ export class Client {
 			});
 		}
 
-		const session = this.$session;
+		const session = $session;
 
 		if (module.load) {
-			const { started } = this;
-
 			/** @type {import('types').LoadInput | import('types').ErrorLoadInput} */
 			const load_input = {
 				params: uses_params,
@@ -1053,13 +704,12 @@ export class Client {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
-	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info: { url, path } }, no_cache) {
+	async function _load({ route, info: { url, path } }, no_cache) {
 		const key = url.pathname + url.search;
 
 		if (!no_cache) {
-			const cached = this.cache.get(key);
+			const cached = cache.get(key);
 			if (cached) return cached;
 		}
 
@@ -1069,10 +719,10 @@ export class Client {
 			  get_params(/** @type {RegExpExecArray}  */ (pattern.exec(path)))
 			: {};
 
-		const changed = this.current.url && {
-			url: key !== this.current.url.pathname + this.current.url.search,
-			params: Object.keys(params).filter((key) => this.current.params[key] !== params[key]),
-			session: this.session_id !== this.current.session_id
+		const changed = current.url && {
+			url: key !== current.url.pathname + current.url.search,
+			params: Object.keys(params).filter((key) => current.params[key] !== params[key]),
+			session: session_id !== current.session_id
 		};
 
 		/** @type {Array<import('./types').BranchNode | undefined>} */
@@ -1099,7 +749,7 @@ export class Client {
 				if (!a[i]) continue;
 
 				const module = await a[i]();
-				const previous = this.current.branch[i];
+				const previous = current.branch[i];
 
 				const changed_since_last_render =
 					!previous ||
@@ -1107,7 +757,7 @@ export class Client {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => this.invalid.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalid.has(dep)) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -1133,7 +783,7 @@ export class Client {
 								return {
 									redirect,
 									props: {},
-									state: this.current
+									state: current
 								};
 							}
 
@@ -1145,7 +795,7 @@ export class Client {
 					}
 
 					if (!error) {
-						node = await this._load_node({
+						node = await _load_node({
 							module,
 							url,
 							params,
@@ -1172,7 +822,7 @@ export class Client {
 								return {
 									redirect: node.loaded.redirect,
 									props: {},
-									state: this.current
+									state: current
 								};
 							}
 
@@ -1202,7 +852,7 @@ export class Client {
 						}
 
 						try {
-							error_loaded = await this._load_node({
+							error_loaded = await _load_node({
 								status,
 								error,
 								module: await b[i](),
@@ -1230,7 +880,7 @@ export class Client {
 					}
 				}
 
-				return await this._load_error({
+				return await _load_error({
 					status,
 					error,
 					url
@@ -1247,7 +897,7 @@ export class Client {
 			}
 		}
 
-		return await this._get_navigation_result_from_branch({
+		return await _get_navigation_result_from_branch({
 			url,
 			params,
 			stuff,
@@ -1264,20 +914,20 @@ export class Client {
 	 *   url: URL;
 	 * }} opts
 	 */
-	async _load_error({ status, error, url }) {
+	async function _load_error({ status, error, url }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const node = await this._load_node({
-			module: await this.fallback[0],
+		const node = await _load_node({
+			module: await fallback[0],
 			url,
 			params,
 			stuff: {}
 		});
-		const error_node = await this._load_node({
+		const error_node = await _load_node({
 			status,
 			error,
-			module: await this.fallback[1],
+			module: await fallback[1],
 			url,
 			params,
 			stuff: (node && node.loaded && node.loaded.stuff) || {}
@@ -1286,7 +936,7 @@ export class Client {
 		const branch = [node, error_node];
 		const stuff = { ...node?.loaded?.stuff, ...error_node?.loaded?.stuff };
 
-		return await this._get_navigation_result_from_branch({
+		return await _get_navigation_result_from_branch({
 			url,
 			params,
 			stuff,
@@ -1296,39 +946,26 @@ export class Client {
 		});
 	}
 
-	/**
-	 * Returns true if `url` has the same origin and basepath as the app
-	 * @param {URL} url
-	 */
-	_owns(url) {
-		return url.origin === location.origin && url.pathname.startsWith(this.base);
-	}
+	/** @param {URL} url */
+	function _parse(url) {
+		if (url.origin === location.origin && url.pathname.startsWith(base)) {
+			const path = decodeURI(url.pathname.slice(base.length) || '/');
 
-	/**
-	 * @param {URL} url
-	 * @returns {import('./types').NavigationInfo | undefined}
-	 */
-	_parse(url) {
-		if (this._owns(url)) {
-			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
-
-			return {
+			/** @type {import('./types').NavigationInfo} */
+			const info = {
 				id: url.pathname + url.search,
-				routes: this.routes.filter(([pattern]) => pattern.test(path)),
+				routes: routes.filter(([pattern]) => pattern.test(path)),
 				url,
 				path,
-				initial: !this.initialized
+				initial: !initialized
 			};
+
+			return info;
 		}
 	}
 
-	_enable() {
-		this.enabled = true;
-	}
-
-	_disable() {
-		this.enabled = false;
-	}
+	/** @type {{}} */
+	let navigating_token;
 
 	/**
 	 * @param {{
@@ -1344,8 +981,8 @@ export class Client {
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
-		const from = this.current.url;
+	async function _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
+		const from = current.url;
 		let should_block = false;
 
 		const intent = {
@@ -1354,14 +991,14 @@ export class Client {
 			cancel: () => (should_block = true)
 		};
 
-		this.callbacks.before_navigate.forEach((fn) => fn(intent));
+		callbacks.before_navigate.forEach((fn) => fn(intent));
 
 		if (should_block) {
 			blocked();
 			return;
 		}
 
-		const info = this._parse(url);
+		const info = _parse(url);
 		if (!info) {
 			location.href = url.href;
 			return new Promise(() => {
@@ -1369,36 +1006,372 @@ export class Client {
 			});
 		}
 
-		update_scroll_positions(this.current_history_index);
+		update_scroll_positions(current_history_index);
 
 		accepted();
 
-		this.navigating++;
+		navigating++;
 
-		const pathname = normalize_path(url.pathname, this.trailing_slash);
+		const pathname = normalize_path(url.pathname, trailing_slash);
 
 		info.url = new URL(url.origin + pathname + url.search + url.hash);
 
-		const token = (this.navigating_token = {});
+		const current_navigating_token = (navigating_token = {});
 
-		await this._handle_navigation(info, chain, false, {
+		await _handle_navigation(info, chain, false, {
 			scroll,
 			keepfocus
 		});
 
-		this.navigating--;
+		navigating--;
 
 		// navigation was aborted
-		if (this.navigating_token !== token) return;
-		if (!this.navigating) {
+		if (navigating_token !== current_navigating_token) return;
+		if (!navigating) {
 			const navigation = { from, to: url };
-			this.callbacks.after_navigate.forEach((fn) => fn(navigation));
+			callbacks.after_navigate.forEach((fn) => fn(navigation));
 		}
 
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
-			details.state['sveltekit:index'] = this.current_history_index += change;
+			details.state['sveltekit:index'] = current_history_index += change;
 			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
 		}
 	}
+
+	return {
+		after_navigate: (fn) => {
+			onMount(() => {
+				callbacks.after_navigate.push(fn);
+
+				return () => {
+					const i = callbacks.after_navigate.indexOf(fn);
+					callbacks.after_navigate.splice(i, 1);
+				};
+			});
+		},
+
+		before_navigate: (fn) => {
+			onMount(() => {
+				callbacks.before_navigate.push(fn);
+
+				return () => {
+					const i = callbacks.before_navigate.indexOf(fn);
+					callbacks.before_navigate.splice(i, 1);
+				};
+			});
+		},
+
+		disable_scroll_handling: () => {
+			if (import.meta.env.DEV && started && !updating) {
+				throw new Error('Can only disable scroll handling during navigation');
+			}
+
+			if (updating || !started) {
+				autoscroll = false;
+			}
+		},
+
+		goto: (href, opts = {}) => goto(href, opts, []),
+
+		init_listeners: () => {
+			history.scrollRestoration = 'manual';
+
+			// Adopted from Nuxt.js
+			// Reset scrollRestoration to auto when leaving page, allowing page reload
+			// and back-navigation from other pages to use the browser to restore the
+			// scrolling position.
+			addEventListener('beforeunload', (e) => {
+				let should_block = false;
+
+				const intent = {
+					from: current.url,
+					to: null,
+					cancel: () => (should_block = true)
+				};
+
+				callbacks.before_navigate.forEach((fn) => fn(intent));
+
+				if (should_block) {
+					e.preventDefault();
+					e.returnValue = '';
+				} else {
+					history.scrollRestoration = 'auto';
+				}
+			});
+
+			addEventListener('visibilitychange', () => {
+				if (document.visibilityState === 'hidden') {
+					update_scroll_positions(current_history_index);
+
+					try {
+						sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
+					} catch {
+						// do nothing
+					}
+				}
+			});
+
+			/** @param {Event} event */
+			const trigger_prefetch = (event) => {
+				const a = find_anchor(event);
+				if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+					prefetch(get_href(a));
+				}
+			};
+
+			/** @type {NodeJS.Timeout} */
+			let mousemove_timeout;
+
+			/** @param {MouseEvent|TouchEvent} event */
+			const handle_mousemove = (event) => {
+				clearTimeout(mousemove_timeout);
+				mousemove_timeout = setTimeout(() => {
+					// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
+					// add a layer of indirection to address that
+					event.target?.dispatchEvent(
+						new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+					);
+				}, 20);
+			};
+
+			addEventListener('touchstart', trigger_prefetch);
+			addEventListener('mousemove', handle_mousemove);
+			addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+
+			/** @param {MouseEvent} event */
+			addEventListener('click', (event) => {
+				if (!enabled) return;
+
+				// Adapted from https://github.com/visionmedia/page.js
+				// MIT license https://github.com/visionmedia/page.js#license
+				if (event.button || event.which !== 1) return;
+				if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+				if (event.defaultPrevented) return;
+
+				const a = find_anchor(event);
+				if (!a) return;
+
+				if (!a.href) return;
+
+				const is_svg_a_element = a instanceof SVGAElement;
+				const url = get_href(a);
+				const url_string = url.toString();
+				if (url_string === location.href) {
+					if (!location.hash) event.preventDefault();
+					return;
+				}
+
+				// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+				// MEMO: Without this condition, firefox will open mailer twice.
+				// See: https://github.com/sveltejs/kit/issues/4045
+				if (!is_svg_a_element && url.origin === 'null') return;
+
+				// Ignore if tag has
+				// 1. 'download' attribute
+				// 2. 'rel' attribute includes external
+				const rel = (a.getAttribute('rel') || '').split(/\s+/);
+
+				if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
+					return;
+				}
+
+				// Ignore if <a> has a target
+				if (is_svg_a_element ? a.target.baseVal : a.target) return;
+
+				// Check if new url only differs by hash and use the browser default behavior in that case
+				// This will ensure the `hashchange` event is fired
+				// Removing the hash does a full page navigation in the browser, so make sure a hash is present
+				const [base, hash] = url.href.split('#');
+				if (hash !== undefined && base === location.href.split('#')[0]) {
+					// set this flag to distinguish between navigations triggered by
+					// clicking a hash link and those triggered by popstate
+					hash_navigating = true;
+
+					update_scroll_positions(current_history_index);
+					_update_page_store(new URL(url.href));
+
+					return;
+				}
+
+				_navigate({
+					url,
+					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+					keepfocus: false,
+					chain: [],
+					details: {
+						state: {},
+						replaceState: false
+					},
+					accepted: () => event.preventDefault(),
+					blocked: () => event.preventDefault()
+				});
+			});
+
+			addEventListener('popstate', (event) => {
+				if (event.state && enabled) {
+					// if a popstate-driven navigation is cancelled, we need to counteract it
+					// with history.go, which means we end up back here, hence this check
+					if (event.state['sveltekit:index'] === current_history_index) return;
+
+					_navigate({
+						url: new URL(location.href),
+						scroll: scroll_positions[event.state['sveltekit:index']],
+						keepfocus: false,
+						chain: [],
+						details: null,
+						accepted: () => {
+							current_history_index = event.state['sveltekit:index'];
+						},
+						blocked: () => {
+							const delta = current_history_index - event.state['sveltekit:index'];
+							history.go(delta);
+						}
+					});
+				}
+			});
+
+			addEventListener('hashchange', () => {
+				// if the hashchange happened as a result of clicking on a link,
+				// we need to update history, otherwise we have to leave it alone
+				if (hash_navigating) {
+					hash_navigating = false;
+					history.replaceState(
+						{ ...history.state, 'sveltekit:index': ++current_history_index },
+						'',
+						location.href
+					);
+				}
+			});
+
+			initialized = true;
+		},
+
+		invalidate: (resource) => {
+			const { href } = new URL(resource, location.href);
+
+			invalid.add(href);
+
+			if (!invalidating) {
+				invalidating = Promise.resolve().then(async () => {
+					const info = _parse(new URL(location.href));
+					if (info) await _update(info, [], true);
+
+					invalidating = null;
+				});
+			}
+
+			return invalidating;
+		},
+
+		prefetch: (href) => {
+			const url = new URL(href, get_base_uri(document));
+			return prefetch(url);
+		},
+
+		// TODO rethink this API
+		prefetch_routes: async (pathnames) => {
+			const matching = pathnames
+				? routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+				: routes;
+
+			const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
+
+			await Promise.all(promises);
+		},
+
+		start: async ({ status, error, nodes, params }) => {
+			const url = new URL(location.href);
+
+			/** @type {Array<import('./types').BranchNode | undefined>} */
+			const branch = [];
+
+			/** @type {Record<string, any>} */
+			let stuff = {};
+
+			/** @type {import('./types').NavigationResult | undefined} */
+			let result;
+
+			let error_args;
+
+			try {
+				for (let i = 0; i < nodes.length; i += 1) {
+					const is_leaf = i === nodes.length - 1;
+
+					let props;
+
+					if (is_leaf) {
+						const serialized = document.querySelector('script[sveltekit\\:data-type="props"]');
+						if (serialized) {
+							props = JSON.parse(/** @type {string} */ (serialized.textContent));
+						}
+					}
+
+					const node = await _load_node({
+						module: await nodes[i],
+						url,
+						params,
+						stuff,
+						status: is_leaf ? status : undefined,
+						error: is_leaf ? error : undefined,
+						props
+					});
+
+					if (props) {
+						node.uses.dependencies.add(url.href);
+						node.uses.url = true;
+					}
+
+					branch.push(node);
+
+					if (node && node.loaded) {
+						if (node.loaded.error) {
+							if (error) throw node.loaded.error;
+							error_args = {
+								status: node.loaded.status,
+								error: node.loaded.error,
+								url
+							};
+						} else if (node.loaded.stuff) {
+							stuff = {
+								...stuff,
+								...node.loaded.stuff
+							};
+						}
+					}
+				}
+
+				result = error_args
+					? await _load_error(error_args)
+					: await _get_navigation_result_from_branch({
+							url,
+							params,
+							stuff,
+							branch,
+							status,
+							error
+					  });
+			} catch (e) {
+				if (error) throw e;
+
+				result = await _load_error({
+					status: 500,
+					error: coalesce_to_error(e),
+					url
+				});
+			}
+
+			if (result.redirect) {
+				// this is a real edge case — `load` would need to return
+				// a redirect but only in the browser
+				location.href = new URL(result.redirect, location.href).href;
+				return;
+			}
+
+			_init(result);
+		},
+
+		// TODO don't expose this
+		routes
+	};
 }
