@@ -6,7 +6,6 @@ import { print_config_conflicts } from '../config/index.js';
 import { SVELTE_KIT } from '../constants.js';
 import { copy_assets, get_aliases, runtime } from '../utils.js';
 import { create_plugin } from './plugin.js';
-import { generate_tsconfig } from '../tsconfig.js';
 
 /**
  * @typedef {{
@@ -22,8 +21,6 @@ import { generate_tsconfig } from '../tsconfig.js';
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
 	copy_assets(`${SVELTE_KIT}/runtime`);
-
-	generate_tsconfig(config);
 
 	const [vite_config] = deep_merge(
 		{
