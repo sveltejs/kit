@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fixes SPA mode error handling
+Only fall back to full page reload if pathname has changed
