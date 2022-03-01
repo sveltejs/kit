@@ -1369,9 +1369,6 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 			}
 
 			_init(result);
-		},
-
-		// TODO don't expose this
-		routes
+		}
 	};
 }

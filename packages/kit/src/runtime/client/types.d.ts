@@ -26,9 +26,6 @@ export interface Client {
 		nodes: Array<Promise<CSRComponent>>;
 		params: Record<string, string>;
 	}) => Promise<void>;
-
-	// TODO don't expose this
-	routes: CSRRoute[];
 }
 
 export type NavigationInfo = {
