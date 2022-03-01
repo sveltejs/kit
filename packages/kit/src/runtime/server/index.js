@@ -152,28 +152,26 @@ export async function respond(request, options, state = {}) {
 				}
 
 				const shadow_key = request.headers.get('x-sveltekit-load');
+				let from_fallthrough = false;
 
 				for (const route of options.manifest._.routes) {
-					if (shadow_key && route.type === 'page' && shadow_key !== route.key) continue;
 					const match = route.pattern.exec(decoded);
 					if (!match) continue;
-
 					event.params = route.params ? decode_params(route.params(match)) : {};
 
 					/** @type {Response | undefined} */
 					let response;
-
-					if (is_data_request && route.type === 'page' && route.shadow) {
-						response = await render_endpoint(event, await route.shadow());
-
-						// loading data for a client-side transition is a special case
-						if (shadow_key !== null) {
+					const is_page = route.type === 'page';
+					if (is_data_request && is_page && route.shadow) {
+						if (!from_fallthrough && shadow_key && shadow_key !== route.key) continue;
+						if (is_data_request && route.shadow) {
+							response = await render_endpoint(event, await route.shadow());
+							// loading data for a client-side transition is a special case
 							if (response) {
 								// since redirects are opaque to the browser, we need to repackage
 								// 3xx responses as 200s with a custom header
 								if (response.status >= 300 && response.status < 400) {
 									const location = response.headers.get('location');
-
 									if (location) {
 										const headers = new Headers(response.headers);
 										headers.set('x-sveltekit-location', location);
@@ -183,17 +181,39 @@ export async function respond(request, options, state = {}) {
 										});
 									}
 								}
+								if (from_fallthrough && response.ok) {
+									const headers = new Headers(response.headers);
+									// client-site will fallthrough to the route
+									headers.set('x-sveltekit-load', route.key);
+									response = new Response(response.body, {
+										status: response.status,
+										headers
+									});
+								}
 							} else {
-								// TODO ideally, the client wouldn't request this data
-								// in the first place (at least in production)
-								return new Response(null, { status: 204 });
+								// continue to next match page router
+								// if next page has shadow ,  fallthrough at serve-site
+								from_fallthrough = true;
+								continue;
 							}
 						}
 					} else {
-						response =
-							route.type === 'endpoint'
-								? await render_endpoint(event, await route.load())
-								: await render_page(event, route, options, state, resolve_opts);
+						if (is_page) {
+							if (from_fallthrough) {
+								const headers = new Headers({
+									'x-sveltekit-load': route.key
+								});
+								// next match not a shadow  so fallthrough at client-side
+								return new Response(undefined, {
+									headers,
+									status: 204
+								});
+							}
+							response = await render_page(event, route, options, state, resolve_opts);
+						} else {
+							if (shadow_key || from_fallthrough) continue;
+							response = await render_endpoint(event, await route.load());
+						}
 					}
 
 					if (response) {
@@ -229,9 +249,15 @@ export async function respond(request, options, state = {}) {
 								});
 							}
 						}
-
 						return response;
 					}
+				}
+
+				// shadow point fallthrough but not match any page
+				if (from_fallthrough) {
+					return new Response(undefined, {
+						status: 404
+					});
 				}
 
 				// if this request came direct from the user, rather than

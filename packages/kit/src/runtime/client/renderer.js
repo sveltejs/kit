@@ -708,11 +708,13 @@ export class Renderer {
 	/**
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
+	 * @param {string} [next_route_key]
+	 * @param {Record<string, any>} [next_route_props]
 	 * @returns {Promise<import('./types').NavigationResult | undefined>} undefined if fallthrough
 	 */
-	async _load({ route, info: { url, path } }, no_cache) {
+	async _load({ route, info }, no_cache, next_route_key, next_route_props) {
+		const { url, path, routes } = info;
 		const key = url.pathname + url.search;
-
 		if (!no_cache) {
 			const cached = this.cache.get(key);
 			if (cached) return cached;
@@ -772,30 +774,44 @@ export class Renderer {
 					const is_shadow_page = shadow_key !== undefined && i === a.length - 1;
 
 					if (is_shadow_page) {
-						const res = await fetch(
-							`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
-							{
-								// @ts-ignore
-								headers: {
-									'x-sveltekit-load': shadow_key
-								}
-							}
-						);
-						if (res.ok) {
-							const redirect = res.headers.get('x-sveltekit-location');
-
-							if (redirect) {
-								return {
-									redirect,
-									props: {},
-									state: this.current
-								};
-							}
-							if (res.status === 204) return;
-							props = await res.json();
+						if (next_route_key !== undefined && shadow_key === next_route_key) {
+							if (next_route_props) props = next_route_props;
 						} else {
-							status = res.status;
-							error = new Error('Failed to load data');
+							const res = await fetch(
+								`${url.pathname}${url.pathname.endsWith('/') ? '' : '/'}__data.json${url.search}`,
+								{
+									// @ts-ignore
+									headers: {
+										'x-sveltekit-load': shadow_key
+									}
+								}
+							);
+							if (res.ok) {
+								const redirect = res.headers.get('x-sveltekit-location');
+								const route_key = res.headers.get('x-sveltekit-load');
+								if (redirect) {
+									return {
+										redirect,
+										props: {},
+										state: this.current
+									};
+								}
+								props = await res.json();
+								if (route_key) {
+									const next_route = routes.find((r) => r[4] === route_key);
+									if (next_route) {
+										return await this._load(
+											{ route: next_route, info },
+											no_cache,
+											route_key,
+											props
+										);
+									}
+								}
+							} else {
+								status = res.status;
+								error = new Error('Failed to load data');
+							}
 						}
 					}
 
