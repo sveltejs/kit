@@ -8,10 +8,14 @@ title: Types
 
 The [`RequestHandler`](#sveltejs-kit-requesthandler) and [`Load`](#sveltejs-kit-load) types both accept a `Params` argument allowing you to type the `params` object:
 
-```diff
+```js
 /// file: src/routes/[foo]/[bar]/[baz].js
--/** @type {import('@sveltejs').RequestHandler} */
-+/** @type {import('@sveltejs').RequestHandler<{ foo: string; bar: string; baz: string }>} */
+// @errors: 2355
+/** @type {import('@sveltejs/kit').RequestHandler<{
+ *   foo: string;
+ *   bar: string;
+ *   baz: string
+ * }>} */
 export async function get({ params }) {
 	// ...
 }
