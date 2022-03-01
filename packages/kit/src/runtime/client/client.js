@@ -105,8 +105,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (!ready) return;
 		session_id += 1;
 
-		const info = _parse(new URL(location.href));
-		if (info) _update(info, [], true);
+		const intent = get_navigation_intent(new URL(location.href));
+		if (intent) _update(intent, [], true);
 	});
 	ready = true;
 
@@ -174,38 +174,38 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/** @param {URL} url */
 	async function prefetch(url) {
-		const info = _parse(url);
+		const intent = get_navigation_intent(url);
 
-		if (!info) {
+		if (!intent) {
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		loading.promise = _get_navigation_result(info, false);
-		loading.id = info.id;
+		loading.promise = _get_navigation_result(intent, false);
+		loading.id = intent.id;
 
 		return loading.promise;
 	}
 
 	/**
-	 * @param {import('./types').NavigationInfo} info
+	 * @param {import('./types').NavigationIntent} intent
 	 * @param {string[]} chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async function _update(info, chain, no_cache, opts) {
+	async function _update(intent, chain, no_cache, opts) {
 		const current_token = (token = {});
-		let navigation_result = await _get_navigation_result(info, no_cache);
+		let navigation_result = await _get_navigation_result(intent, no_cache);
 
-		if (!navigation_result && info.url.pathname === location.pathname) {
+		if (!navigation_result && intent.url.pathname === location.pathname) {
 			navigation_result = await _load_error({
 				status: 404,
-				error: new Error(`Not found: ${info.url.pathname}`),
-				url: info.url
+				error: new Error(`Not found: ${intent.url.pathname}`),
+				url: intent.url
 			});
 		}
 
 		if (!navigation_result) {
-			location.href = info.url.href;
+			location.href = intent.url.href;
 			return;
 		}
 
@@ -215,17 +215,17 @@ export function create_client({ target, session, base, trailing_slash }) {
 		invalid.clear();
 
 		if (navigation_result.redirect) {
-			if (chain.length > 10 || chain.includes(info.url.pathname)) {
+			if (chain.length > 10 || chain.includes(intent.url.pathname)) {
 				navigation_result = await _load_error({
 					status: 500,
 					error: new Error('Redirect loop'),
-					url: info.url
+					url: intent.url
 				});
 			} else {
 				if (enabled) {
-					goto(new URL(navigation_result.redirect, info.url).href, {}, [
+					goto(new URL(navigation_result.redirect, intent.url).href, {}, [
 						...chain,
-						info.url.pathname
+						intent.url.pathname
 					]);
 				} else {
 					location.href = new URL(navigation_result.redirect, location.href).href;
@@ -236,7 +236,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		} else if (navigation_result.props?.page?.status >= 400) {
 			const updated = await stores.updated.check();
 			if (updated) {
-				location.href = info.url.href;
+				location.href = intent.url.href;
 				return;
 			}
 		}
@@ -281,7 +281,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			await tick();
 
 			if (autoscroll) {
-				const deep_linked = info.url.hash && document.getElementById(info.url.hash.slice(1));
+				const deep_linked = intent.url.hash && document.getElementById(intent.url.hash.slice(1));
 				if (scroll) {
 					scrollTo(scroll.x, scroll.y);
 				} else if (deep_linked) {
@@ -335,22 +335,22 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationInfo} info
+	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function _get_navigation_result(info, no_cache) {
-		if (loading.id === info.id && loading.promise) {
+	async function _get_navigation_result(intent, no_cache) {
+		if (loading.id === intent.id && loading.promise) {
 			return loading.promise;
 		}
 
-		for (let i = 0; i < info.routes.length; i += 1) {
-			const route = info.routes[i];
+		for (let i = 0; i < intent.routes.length; i += 1) {
+			const route = intent.routes[i];
 
 			// load code for subsequent routes immediately, if they are as
 			// likely to match the current path/query as the current one
 			let j = i + 1;
-			while (j < info.routes.length) {
-				const next = info.routes[j];
+			while (j < intent.routes.length) {
+				const next = intent.routes[j];
 				if (next[0].toString() === route[0].toString()) {
 					next[1].forEach((loader) => loader());
 					j += 1;
@@ -362,7 +362,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			const result = await _load(
 				{
 					route,
-					info
+					intent
 				},
 				no_cache
 			);
@@ -559,11 +559,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationCandidate} selected
 	 * @param {boolean} no_cache
 	 */
-	async function _load({ route, info: { url, path } }, no_cache) {
-		const key = url.pathname + url.search;
-
+	async function _load({ route, intent: { id, url, path } }, no_cache) {
 		if (!no_cache) {
-			const cached = cache.get(key);
+			const cached = cache.get(id);
 			if (cached) return cached;
 		}
 
@@ -574,7 +572,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			: {};
 
 		const changed = current.url && {
-			url: key !== current.url.pathname + current.url.search,
+			url: id !== current.url.pathname + current.url.search,
 			params: Object.keys(params).filter((key) => current.params[key] !== params[key]),
 			session: session_id !== current.session_id
 		};
@@ -801,19 +799,19 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/** @param {URL} url */
-	function _parse(url) {
+	function get_navigation_intent(url) {
 		if (url.origin === location.origin && url.pathname.startsWith(base)) {
 			const path = decodeURI(url.pathname.slice(base.length) || '/');
 
-			/** @type {import('./types').NavigationInfo} */
-			const info = {
+			/** @type {import('./types').NavigationIntent} */
+			const intent = {
 				id: url.pathname + url.search,
 				routes: routes.filter(([pattern]) => pattern.test(path)),
 				url,
 				path
 			};
 
-			return info;
+			return intent;
 		}
 	}
 
@@ -835,21 +833,21 @@ export function create_client({ target, session, base, trailing_slash }) {
 		const from = current.url;
 		let should_block = false;
 
-		const intent = {
+		const navigation = {
 			from,
 			to: url,
 			cancel: () => (should_block = true)
 		};
 
-		callbacks.before_navigate.forEach((fn) => fn(intent));
+		callbacks.before_navigate.forEach((fn) => fn(navigation));
 
 		if (should_block) {
 			blocked();
 			return;
 		}
 
-		const info = _parse(url);
-		if (!info) {
+		const intent = get_navigation_intent(url);
+		if (!intent) {
 			location.href = url.href;
 			return new Promise(() => {
 				// never resolves
@@ -864,18 +862,18 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const pathname = normalize_path(url.pathname, trailing_slash);
 
-		info.url = new URL(url.origin + pathname + url.search + url.hash);
+		intent.url = new URL(url.origin + pathname + url.search + url.hash);
 
 		const current_navigating_token = (navigating_token = {});
 
 		if (started) {
 			stores.navigating.set({
 				from: current.url,
-				to: info.url
+				to: intent.url
 			});
 		}
 
-		await _update(info, chain, false, {
+		await _update(intent, chain, false, {
 			scroll,
 			keepfocus
 		});
@@ -895,7 +893,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		if (details) {
 			const change = details.replaceState ? 0 : 1;
 			details.state[INDEX_KEY] = current_history_index += change;
-			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', info.url);
+			history[details.replaceState ? 'replaceState' : 'pushState'](details.state, '', intent.url);
 		}
 	}
 
@@ -941,8 +939,8 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
-					const info = _parse(new URL(location.href));
-					if (info) await _update(info, [], true);
+					const intent = get_navigation_intent(new URL(location.href));
+					if (intent) await _update(intent, [], true);
 
 					invalidating = null;
 				});
@@ -977,13 +975,13 @@ export function create_client({ target, session, base, trailing_slash }) {
 			addEventListener('beforeunload', (e) => {
 				let should_block = false;
 
-				const intent = {
+				const navigation = {
 					from: current.url,
 					to: null,
 					cancel: () => (should_block = true)
 				};
 
-				callbacks.before_navigate.forEach((fn) => fn(intent));
+				callbacks.before_navigate.forEach((fn) => fn(navigation));
 
 				if (should_block) {
 					e.preventDefault();

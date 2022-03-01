@@ -28,16 +28,28 @@ export interface Client {
 	_start_router: () => void;
 }
 
-export type NavigationInfo = {
+export type NavigationIntent = {
+	/**
+	 * `url.pathname + url.search`
+	 */
 	id: string;
-	routes: CSRRoute[];
-	url: URL;
+	/**
+	 * `url.pathname`, minus any `paths.base` prefix
+	 */
 	path: string;
+	/**
+	 * The routes that could satisfy this navigation intent
+	 */
+	routes: CSRRoute[];
+	/**
+	 * The destination URL
+	 */
+	url: URL;
 };
 
 export type NavigationCandidate = {
 	route: CSRRoute;
-	info: NavigationInfo;
+	intent: NavigationIntent;
 };
 
 export type NavigationResult = {
