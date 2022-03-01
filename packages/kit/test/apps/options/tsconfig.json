@@ -2,8 +2,8 @@
 	"compilerOptions": {
 		"noEmit": true,
 		"paths": {
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"],
+			"$lib": ["source/components"],
+			"$lib/*": ["source/components/*"],
 			"types": ["../../../types/internal"]
 		}
 	},
