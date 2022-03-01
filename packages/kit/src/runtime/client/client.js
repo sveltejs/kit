@@ -13,9 +13,8 @@ import {
 	scroll_state
 } from './utils';
 
-/**
- * @typedef {import('types').CSRComponent} CSRComponent
- */
+import Root from '__GENERATED__/root.svelte';
+import { routes, fallback } from '__GENERATED__/manifest.js';
 
 const SCROLL_KEY = 'sveltekit:scroll';
 const INDEX_KEY = 'sveltekit:index';
@@ -41,17 +40,14 @@ function update_scroll_positions(index) {
 
 /**
  * @param {{
- *   Root: CSRComponent;
- *   fallback: [CSRComponent, CSRComponent];
- *   target: Node;
+ *   target: Element;
  *   session: App.Session;
  *   base: string;
- *   routes: import('types').CSRRoute[];
  *   trailing_slash: import('types').TrailingSlash;
  * }} opts
  * @returns {import('./types').Client}
  */
-export function create_client({ Root, fallback, target, session, base, routes, trailing_slash }) {
+export function create_client({ target, session, base, trailing_slash }) {
 	/** @type {Map<string, import('./types').NavigationResult>} */
 	const cache = new Map();
 
@@ -483,7 +479,7 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 	 * @param {{
 	 *   status?: number;
 	 *   error?: Error;
-	 *   module: CSRComponent;
+	 *   module: import('types').CSRComponent;
 	 *   url: URL;
 	 *   params: Record<string, string>;
 	 *   stuff: Record<string, any>;
