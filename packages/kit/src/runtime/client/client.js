@@ -68,6 +68,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 		promise: null
 	};
 
+	const callbacks = {
+		/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		before_navigate: [],
+
+		/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
+		after_navigate: []
+	};
+
 	/** @type {import('./types').NavigationState} */
 	let current = {
 		// @ts-ignore - we need the initial value to be null
@@ -122,13 +130,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	let hash_navigating = false;
 
-	const callbacks = {
-		/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
-		before_navigate: [],
+	/** @type {import('types').Page} */
+	let page;
 
-		/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
-		after_navigate: []
-	};
+	/** @type {{}} */
+	let token;
+
+	/** @type {{}} */
+	let navigating_token;
 
 	/**
 	 * @param {string} href
@@ -193,9 +202,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		await _update(info, chain, no_cache, opts);
 	}
-
-	/** @type {{}} */
-	let token;
 
 	/**
 	 * @param {import('./types').NavigationInfo} info
@@ -327,9 +333,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		stores.page.set({ ...page, url });
 		stores.page.notify();
 	}
-
-	/** @type {import('types').Page} */
-	let page;
 
 	/** @param {import('./types').NavigationResult} result */
 	function _init(result) {
@@ -836,9 +839,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			return info;
 		}
 	}
-
-	/** @type {{}} */
-	let navigating_token;
 
 	/**
 	 * @param {{
