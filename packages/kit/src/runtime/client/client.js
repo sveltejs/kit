@@ -708,7 +708,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 								stuff: node_loaded.stuff
 							});
 
-							if (error_loaded && error_loaded.loaded && error_loaded.loaded.error) {
+							if (error_loaded?.loaded?.error) {
 								continue;
 							}
 
