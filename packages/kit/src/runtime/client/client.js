@@ -142,12 +142,12 @@ export function create_client({ target, session, base, trailing_slash }) {
 	/**
 	 * @param {string} href
 	 * @param {{ noscroll?: boolean; replaceState?: boolean; keepfocus?: boolean; state?: any }} opts
-	 * @param {string[]} chain
+	 * @param {string[]} redirect_chain
 	 */
 	async function goto(
 		href,
 		{ noscroll = false, replaceState = false, keepfocus = false, state = {} },
-		chain
+		redirect_chain
 	) {
 		const url = new URL(href, get_base_uri(document));
 
@@ -156,7 +156,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				url,
 				scroll: noscroll ? scroll_state() : null,
 				keepfocus,
-				chain,
+				redirect_chain,
 				details: {
 					state,
 					replaceState
@@ -188,11 +188,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 	/**
 	 * @param {import('./types').NavigationIntent} intent
-	 * @param {string[]} chain
+	 * @param {string[]} redirect_chain
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async function update(intent, chain, no_cache, opts) {
+	async function update(intent, redirect_chain, no_cache, opts) {
 		const current_token = (token = {});
 		let navigation_result = await get_navigation_result(intent, no_cache);
 
@@ -215,7 +215,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		invalid.clear();
 
 		if (navigation_result.redirect) {
-			if (chain.length > 10 || chain.includes(intent.url.pathname)) {
+			if (redirect_chain.length > 10 || redirect_chain.includes(intent.url.pathname)) {
 				navigation_result = await load_root_error_page({
 					status: 500,
 					error: new Error('Redirect loop'),
@@ -224,7 +224,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			} else {
 				if (enabled) {
 					goto(new URL(navigation_result.redirect, intent.url).href, {}, [
-						...chain,
+						...redirect_chain,
 						intent.url.pathname
 					]);
 				} else {
@@ -819,7 +819,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   url: URL;
 	 *   scroll: { x: number, y: number } | null;
 	 *   keepfocus: boolean;
-	 *   chain: string[];
+	 *   redirect_chain: string[];
 	 *   details: {
 	 *     replaceState: boolean;
 	 *     state: any;
@@ -828,7 +828,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   blocked: () => void;
 	 * }} opts
 	 */
-	async function _navigate({ url, scroll, keepfocus, chain, details, accepted, blocked }) {
+	async function _navigate({ url, scroll, keepfocus, redirect_chain, details, accepted, blocked }) {
 		const from = current.url;
 		let should_block = false;
 
@@ -872,7 +872,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await update(intent, chain, false, {
+		await update(intent, redirect_chain, false, {
 			scroll,
 			keepfocus
 		});
@@ -1090,7 +1090,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					url,
 					scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
 					keepfocus: false,
-					chain: [],
+					redirect_chain: [],
 					details: {
 						state: {},
 						replaceState: false
@@ -1110,7 +1110,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						url: new URL(location.href),
 						scroll: scroll_positions[event.state[INDEX_KEY]],
 						keepfocus: false,
-						chain: [],
+						redirect_chain: [],
 						details: null,
 						accepted: () => {
 							current_history_index = event.state[INDEX_KEY];
