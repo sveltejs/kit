@@ -175,7 +175,10 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 			throw new Error('Attempted to prefetch a URL that does not belong to this app');
 		}
 
-		await load(info);
+		loading.promise = _get_navigation_result(info, false);
+		loading.id = info.id;
+
+		return loading.promise;
 	}
 
 	/**
@@ -321,14 +324,6 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		enabled = leaf_node?.module.router !== false;
-	}
-
-	/** @param {import('./types').NavigationInfo} info */
-	function load(info) {
-		loading.promise = _get_navigation_result(info, false);
-		loading.id = info.id;
-
-		return loading.promise;
 	}
 
 	/** @param {URL} url */
@@ -956,7 +951,40 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 
 		goto: (href, opts = {}) => goto(href, opts, []),
 
-		init_listeners: () => {
+		invalidate: (resource) => {
+			const { href } = new URL(resource, location.href);
+
+			invalid.add(href);
+
+			if (!invalidating) {
+				invalidating = Promise.resolve().then(async () => {
+					const info = _parse(new URL(location.href));
+					if (info) await _update(info, [], true);
+
+					invalidating = null;
+				});
+			}
+
+			return invalidating;
+		},
+
+		prefetch: async (href) => {
+			const url = new URL(href, get_base_uri(document));
+			await prefetch(url);
+		},
+
+		// TODO rethink this API
+		prefetch_routes: async (pathnames) => {
+			const matching = pathnames
+				? routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
+				: routes;
+
+			const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
+
+			await Promise.all(promises);
+		},
+
+		_start_router: () => {
 			history.scrollRestoration = 'manual';
 
 			// Adopted from Nuxt.js
@@ -1127,40 +1155,7 @@ export function create_client({ Root, fallback, target, session, base, routes, t
 			});
 		},
 
-		invalidate: (resource) => {
-			const { href } = new URL(resource, location.href);
-
-			invalid.add(href);
-
-			if (!invalidating) {
-				invalidating = Promise.resolve().then(async () => {
-					const info = _parse(new URL(location.href));
-					if (info) await _update(info, [], true);
-
-					invalidating = null;
-				});
-			}
-
-			return invalidating;
-		},
-
-		prefetch: (href) => {
-			const url = new URL(href, get_base_uri(document));
-			return prefetch(url);
-		},
-
-		// TODO rethink this API
-		prefetch_routes: async (pathnames) => {
-			const matching = pathnames
-				? routes.filter((route) => pathnames.some((pathname) => route[0].test(pathname)))
-				: routes;
-
-			const promises = matching.map((r) => Promise.all(r[1].map((load) => load())));
-
-			await Promise.all(promises);
-		},
-
-		start: async ({ status, error, nodes, params }) => {
+		_hydrate: async ({ status, error, nodes, params }) => {
 			const url = new URL(location.href);
 
 			/** @type {Array<import('./types').BranchNode | undefined>} */

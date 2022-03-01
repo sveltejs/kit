@@ -12,20 +12,20 @@ export interface Client {
 	// public API, exposed via $app/navigation
 	after_navigate: typeof afterNavigate;
 	before_navigate: typeof beforeNavigate;
+	disable_scroll_handling: () => void;
 	goto: typeof goto;
 	invalidate: typeof invalidate;
 	prefetch: typeof prefetch;
 	prefetch_routes: typeof prefetchRoutes;
 
 	// private API
-	disable_scroll_handling: () => void;
-	init_listeners: () => void;
-	start: (opts: {
+	_hydrate: (opts: {
 		status: number;
 		error: Error;
 		nodes: Array<Promise<CSRComponent>>;
 		params: Record<string, string>;
 	}) => Promise<void>;
+	_start_router: () => void;
 }
 
 export type NavigationInfo = {

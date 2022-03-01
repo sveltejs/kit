@@ -38,10 +38,13 @@ export async function start({ paths, target, session, route, spa, trailing_slash
 	init({ client });
 	set_paths(paths);
 
-	if (hydrate) await client.start(hydrate);
+	if (hydrate) {
+		await client._hydrate(hydrate);
+	}
+
 	if (route) {
 		if (spa) client.goto(location.href, { replaceState: true });
-		client.init_listeners();
+		client._start_router();
 	}
 
 	dispatchEvent(new CustomEvent('sveltekit:start'));
