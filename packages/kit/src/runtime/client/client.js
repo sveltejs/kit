@@ -381,7 +381,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
-			redirect: redirect && redirect.loaded ? redirect.loaded.redirect : undefined,
+			redirect: redirect?.loaded.redirect,
 			state: {
 				url,
 				params,
