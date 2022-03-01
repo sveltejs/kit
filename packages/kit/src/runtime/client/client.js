@@ -377,7 +377,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 */
 	async function get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
-		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
+		const redirect = filtered.find((f) => f.loaded?.redirect);
 
 		/** @type {import('./types').NavigationResult} */
 		const result = {
