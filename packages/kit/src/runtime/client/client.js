@@ -359,13 +359,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				}
 			}
 
-			const result = await _load(
-				{
-					route,
-					intent
-				},
-				no_cache
-			);
+			const result = await _load(route, intent, no_cache);
 			if (result) return result;
 		}
 	}
@@ -556,10 +550,11 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/**
-	 * @param {import('./types').NavigationCandidate} selected
+	 * @param {import('types').CSRRoute} route
+	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function _load({ route, intent: { id, url, path } }, no_cache) {
+	async function _load(route, { id, url, path }, no_cache) {
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;

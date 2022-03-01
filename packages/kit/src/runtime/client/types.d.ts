@@ -47,11 +47,6 @@ export type NavigationIntent = {
 	url: URL;
 };
 
-export type NavigationCandidate = {
-	route: CSRRoute;
-	intent: NavigationIntent;
-};
-
 export type NavigationResult = {
 	redirect?: string;
 	state: NavigationState;
