@@ -69,10 +69,10 @@ export function create_client({ target, session, base, trailing_slash }) {
 	};
 
 	const callbacks = {
-		/** @type {Array<({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void>} */
+		/** @type {Array<(opts: { from: URL, to: URL | null, cancel: () => void }) => void>} */
 		before_navigate: [],
 
-		/** @type {Array<({ from, to }: { from: URL | null, to: URL }) => void>} */
+		/** @type {Array<(opts: { from: URL | null, to: URL }) => void>} */
 		after_navigate: []
 	};
 
