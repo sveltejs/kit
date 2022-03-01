@@ -223,8 +223,8 @@ export class Client {
 			if (!ready) return;
 			this.session_id += 1;
 
-			const info = this.parse(new URL(location.href));
-			if (info) this.update(info, [], true);
+			const info = this._parse(new URL(location.href));
+			if (info) this._update(info, [], true);
 		});
 		ready = true;
 
@@ -263,6 +263,32 @@ export class Client {
 		};
 	}
 
+	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
+	after_navigate(fn) {
+		onMount(() => {
+			this.callbacks.after_navigate.push(fn);
+
+			return () => {
+				const i = this.callbacks.after_navigate.indexOf(fn);
+				this.callbacks.after_navigate.splice(i, 1);
+			};
+		});
+	}
+
+	/**
+	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
+	 */
+	before_navigate(fn) {
+		onMount(() => {
+			this.callbacks.before_navigate.push(fn);
+
+			return () => {
+				const i = this.callbacks.before_navigate.indexOf(fn);
+				this.callbacks.before_navigate.splice(i, 1);
+			};
+		});
+	}
+
 	disable_scroll_handling() {
 		if (import.meta.env.DEV && this.started && !this.updating) {
 			throw new Error('Can only disable scroll handling during navigation');
@@ -271,6 +297,244 @@ export class Client {
 		if (this.updating || !this.started) {
 			this.autoscroll = false;
 		}
+	}
+
+	/**
+	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
+	 *
+	 * @param {GotoParams[0]} href
+	 * @param {GotoParams[1]} opts
+	 * @param {string[]} chain
+	 */
+	async goto(
+		href,
+		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
+		chain
+	) {
+		const url = new URL(href, get_base_uri(document));
+
+		if (this.enabled) {
+			return this._navigate({
+				url,
+				scroll: noscroll ? scroll_state() : null,
+				keepfocus,
+				chain,
+				details: {
+					state,
+					replaceState
+				},
+				accepted: () => {},
+				blocked: () => {}
+			});
+		}
+
+		location.href = url.href;
+		return new Promise(() => {
+			/* never resolves */
+		});
+	}
+
+	init_listeners() {
+		history.scrollRestoration = 'manual';
+
+		// Adopted from Nuxt.js
+		// Reset scrollRestoration to auto when leaving page, allowing page reload
+		// and back-navigation from other pages to use the browser to restore the
+		// scrolling position.
+		addEventListener('beforeunload', (e) => {
+			let should_block = false;
+
+			const intent = {
+				from: this.current.url,
+				to: null,
+				cancel: () => (should_block = true)
+			};
+
+			this.callbacks.before_navigate.forEach((fn) => fn(intent));
+
+			if (should_block) {
+				e.preventDefault();
+				e.returnValue = '';
+			} else {
+				history.scrollRestoration = 'auto';
+			}
+		});
+
+		addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'hidden') {
+				update_scroll_positions(this.current_history_index);
+
+				try {
+					sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
+				} catch {
+					// do nothing
+				}
+			}
+		});
+
+		/** @param {Event} event */
+		const trigger_prefetch = (event) => {
+			const a = find_anchor(event);
+			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
+				this.prefetch(get_href(a));
+			}
+		};
+
+		/** @type {NodeJS.Timeout} */
+		let mousemove_timeout;
+
+		/** @param {MouseEvent|TouchEvent} event */
+		const handle_mousemove = (event) => {
+			clearTimeout(mousemove_timeout);
+			mousemove_timeout = setTimeout(() => {
+				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
+				// add a layer of indirection to address that
+				event.target?.dispatchEvent(
+					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
+				);
+			}, 20);
+		};
+
+		addEventListener('touchstart', trigger_prefetch);
+		addEventListener('mousemove', handle_mousemove);
+		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
+
+		/** @param {MouseEvent} event */
+		addEventListener('click', (event) => {
+			if (!this.enabled) return;
+
+			// Adapted from https://github.com/visionmedia/page.js
+			// MIT license https://github.com/visionmedia/page.js#license
+			if (event.button || event.which !== 1) return;
+			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+			if (event.defaultPrevented) return;
+
+			const a = find_anchor(event);
+			if (!a) return;
+
+			if (!a.href) return;
+
+			const is_svg_a_element = a instanceof SVGAElement;
+			const url = get_href(a);
+			const url_string = url.toString();
+			if (url_string === location.href) {
+				if (!location.hash) event.preventDefault();
+				return;
+			}
+
+			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
+			// MEMO: Without this condition, firefox will open mailer twice.
+			// See: https://github.com/sveltejs/kit/issues/4045
+			if (!is_svg_a_element && url.origin === 'null') return;
+
+			// Ignore if tag has
+			// 1. 'download' attribute
+			// 2. 'rel' attribute includes external
+			const rel = (a.getAttribute('rel') || '').split(/\s+/);
+
+			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
+				return;
+			}
+
+			// Ignore if <a> has a target
+			if (is_svg_a_element ? a.target.baseVal : a.target) return;
+
+			// Check if new url only differs by hash and use the browser default behavior in that case
+			// This will ensure the `hashchange` event is fired
+			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
+			const [base, hash] = url.href.split('#');
+			if (hash !== undefined && base === location.href.split('#')[0]) {
+				// set this flag to distinguish between navigations triggered by
+				// clicking a hash link and those triggered by popstate
+				this.hash_navigating = true;
+
+				update_scroll_positions(this.current_history_index);
+				this._update_page_store(new URL(url.href));
+
+				return;
+			}
+
+			this._navigate({
+				url,
+				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
+				keepfocus: false,
+				chain: [],
+				details: {
+					state: {},
+					replaceState: false
+				},
+				accepted: () => event.preventDefault(),
+				blocked: () => event.preventDefault()
+			});
+		});
+
+		addEventListener('popstate', (event) => {
+			if (event.state && this.enabled) {
+				// if a popstate-driven navigation is cancelled, we need to counteract it
+				// with history.go, which means we end up back here, hence this check
+				if (event.state['sveltekit:index'] === this.current_history_index) return;
+
+				this._navigate({
+					url: new URL(location.href),
+					scroll: scroll_positions[event.state['sveltekit:index']],
+					keepfocus: false,
+					chain: [],
+					details: null,
+					accepted: () => {
+						this.current_history_index = event.state['sveltekit:index'];
+					},
+					blocked: () => {
+						const delta = this.current_history_index - event.state['sveltekit:index'];
+						history.go(delta);
+					}
+				});
+			}
+		});
+
+		addEventListener('hashchange', () => {
+			// if the hashchange happened as a result of clicking on a link,
+			// we need to update history, otherwise we have to leave it alone
+			if (this.hash_navigating) {
+				this.hash_navigating = false;
+				history.replaceState(
+					{ ...history.state, 'sveltekit:index': ++this.current_history_index },
+					'',
+					location.href
+				);
+			}
+		});
+
+		this.initialized = true;
+	}
+
+	/** @param {string} href */
+	invalidate(href) {
+		this.invalid.add(href);
+
+		if (!this.invalidating) {
+			this.invalidating = Promise.resolve().then(async () => {
+				const info = this._parse(new URL(location.href));
+				if (info) await this._update(info, [], true);
+
+				this.invalidating = null;
+			});
+		}
+
+		return this.invalidating;
+	}
+
+	/**
+	 * @param {URL} url
+	 * @returns {Promise<import('./types').NavigationResult | undefined>}
+	 */
+	async prefetch(url) {
+		const info = this._parse(url);
+
+		if (!info) {
+			throw new Error('Attempted to prefetch a URL that does not belong to this app');
+		}
+
+		return this.load(info);
 	}
 
 	/**
@@ -378,7 +642,7 @@ export class Client {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async handle_navigation(info, chain, no_cache, opts) {
+	async _handle_navigation(info, chain, no_cache, opts) {
 		if (this.started) {
 			this.stores.navigating.set({
 				from: this.current.url,
@@ -386,7 +650,7 @@ export class Client {
 			});
 		}
 
-		await this.update(info, chain, no_cache, opts);
+		await this._update(info, chain, no_cache, opts);
 	}
 
 	/**
@@ -395,7 +659,7 @@ export class Client {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async update(info, chain, no_cache, opts) {
+	async _update(info, chain, no_cache, opts) {
 		const token = (this.token = {});
 		let navigation_result = await this._get_navigation_result(info, no_cache);
 
@@ -504,9 +768,9 @@ export class Client {
 
 		const leaf_node = navigation_result.state.branch[navigation_result.state.branch.length - 1];
 		if (leaf_node && leaf_node.module.router === false) {
-			this.disable();
+			this._disable();
 		} else {
-			this.enable();
+			this._enable();
 		}
 	}
 
@@ -521,24 +785,8 @@ export class Client {
 		return this.loading.promise;
 	}
 
-	/** @param {string} href */
-	invalidate(href) {
-		this.invalid.add(href);
-
-		if (!this.invalidating) {
-			this.invalidating = Promise.resolve().then(async () => {
-				const info = this.parse(new URL(location.href));
-				if (info) await this.update(info, [], true);
-
-				this.invalidating = null;
-			});
-		}
-
-		return this.invalidating;
-	}
-
 	/** @param {URL} url */
-	update_page_store(url) {
+	_update_page_store(url) {
 		this.stores.page.set({ ...this.page, url });
 		this.stores.page.notify();
 	}
@@ -1048,184 +1296,11 @@ export class Client {
 		});
 	}
 
-	init_listeners() {
-		history.scrollRestoration = 'manual';
-
-		// Adopted from Nuxt.js
-		// Reset scrollRestoration to auto when leaving page, allowing page reload
-		// and back-navigation from other pages to use the browser to restore the
-		// scrolling position.
-		addEventListener('beforeunload', (e) => {
-			let should_block = false;
-
-			const intent = {
-				from: this.current.url,
-				to: null,
-				cancel: () => (should_block = true)
-			};
-
-			this.callbacks.before_navigate.forEach((fn) => fn(intent));
-
-			if (should_block) {
-				e.preventDefault();
-				e.returnValue = '';
-			} else {
-				history.scrollRestoration = 'auto';
-			}
-		});
-
-		addEventListener('visibilitychange', () => {
-			if (document.visibilityState === 'hidden') {
-				update_scroll_positions(this.current_history_index);
-
-				try {
-					sessionStorage[SCROLL_KEY] = JSON.stringify(scroll_positions);
-				} catch {
-					// do nothing
-				}
-			}
-		});
-
-		/** @param {Event} event */
-		const trigger_prefetch = (event) => {
-			const a = find_anchor(event);
-			if (a && a.href && a.hasAttribute('sveltekit:prefetch')) {
-				this.prefetch(get_href(a));
-			}
-		};
-
-		/** @type {NodeJS.Timeout} */
-		let mousemove_timeout;
-
-		/** @param {MouseEvent|TouchEvent} event */
-		const handle_mousemove = (event) => {
-			clearTimeout(mousemove_timeout);
-			mousemove_timeout = setTimeout(() => {
-				// event.composedPath(), which is used in find_anchor, will be empty if the event is read in a timeout
-				// add a layer of indirection to address that
-				event.target?.dispatchEvent(
-					new CustomEvent('sveltekit:trigger_prefetch', { bubbles: true })
-				);
-			}, 20);
-		};
-
-		addEventListener('touchstart', trigger_prefetch);
-		addEventListener('mousemove', handle_mousemove);
-		addEventListener('sveltekit:trigger_prefetch', trigger_prefetch);
-
-		/** @param {MouseEvent} event */
-		addEventListener('click', (event) => {
-			if (!this.enabled) return;
-
-			// Adapted from https://github.com/visionmedia/page.js
-			// MIT license https://github.com/visionmedia/page.js#license
-			if (event.button || event.which !== 1) return;
-			if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-			if (event.defaultPrevented) return;
-
-			const a = find_anchor(event);
-			if (!a) return;
-
-			if (!a.href) return;
-
-			const is_svg_a_element = a instanceof SVGAElement;
-			const url = get_href(a);
-			const url_string = url.toString();
-			if (url_string === location.href) {
-				if (!location.hash) event.preventDefault();
-				return;
-			}
-
-			// Ignore if url does not have origin (e.g. `mailto:`, `tel:`.)
-			// MEMO: Without this condition, firefox will open mailer twice.
-			// See: https://github.com/sveltejs/kit/issues/4045
-			if (!is_svg_a_element && url.origin === 'null') return;
-
-			// Ignore if tag has
-			// 1. 'download' attribute
-			// 2. 'rel' attribute includes external
-			const rel = (a.getAttribute('rel') || '').split(/\s+/);
-
-			if (a.hasAttribute('download') || (rel && rel.includes('external'))) {
-				return;
-			}
-
-			// Ignore if <a> has a target
-			if (is_svg_a_element ? a.target.baseVal : a.target) return;
-
-			// Check if new url only differs by hash and use the browser default behavior in that case
-			// This will ensure the `hashchange` event is fired
-			// Removing the hash does a full page navigation in the browser, so make sure a hash is present
-			const [base, hash] = url.href.split('#');
-			if (hash !== undefined && base === location.href.split('#')[0]) {
-				// set this flag to distinguish between navigations triggered by
-				// clicking a hash link and those triggered by popstate
-				this.hash_navigating = true;
-
-				update_scroll_positions(this.current_history_index);
-				this.update_page_store(new URL(url.href));
-
-				return;
-			}
-
-			this._navigate({
-				url,
-				scroll: a.hasAttribute('sveltekit:noscroll') ? scroll_state() : null,
-				keepfocus: false,
-				chain: [],
-				details: {
-					state: {},
-					replaceState: false
-				},
-				accepted: () => event.preventDefault(),
-				blocked: () => event.preventDefault()
-			});
-		});
-
-		addEventListener('popstate', (event) => {
-			if (event.state && this.enabled) {
-				// if a popstate-driven navigation is cancelled, we need to counteract it
-				// with history.go, which means we end up back here, hence this check
-				if (event.state['sveltekit:index'] === this.current_history_index) return;
-
-				this._navigate({
-					url: new URL(location.href),
-					scroll: scroll_positions[event.state['sveltekit:index']],
-					keepfocus: false,
-					chain: [],
-					details: null,
-					accepted: () => {
-						this.current_history_index = event.state['sveltekit:index'];
-					},
-					blocked: () => {
-						const delta = this.current_history_index - event.state['sveltekit:index'];
-						history.go(delta);
-					}
-				});
-			}
-		});
-
-		addEventListener('hashchange', () => {
-			// if the hashchange happened as a result of clicking on a link,
-			// we need to update history, otherwise we have to leave it alone
-			if (this.hash_navigating) {
-				this.hash_navigating = false;
-				history.replaceState(
-					{ ...history.state, 'sveltekit:index': ++this.current_history_index },
-					'',
-					location.href
-				);
-			}
-		});
-
-		this.initialized = true;
-	}
-
 	/**
 	 * Returns true if `url` has the same origin and basepath as the app
 	 * @param {URL} url
 	 */
-	owns(url) {
+	_owns(url) {
 		return url.origin === location.origin && url.pathname.startsWith(this.base);
 	}
 
@@ -1233,8 +1308,8 @@ export class Client {
 	 * @param {URL} url
 	 * @returns {import('./types').NavigationInfo | undefined}
 	 */
-	parse(url) {
-		if (this.owns(url)) {
+	_parse(url) {
+		if (this._owns(url)) {
 			const path = decodeURI(url.pathname.slice(this.base.length) || '/');
 
 			return {
@@ -1247,87 +1322,12 @@ export class Client {
 		}
 	}
 
-	/**
-	 * @typedef {Parameters<typeof import('$app/navigation').goto>} GotoParams
-	 *
-	 * @param {GotoParams[0]} href
-	 * @param {GotoParams[1]} opts
-	 * @param {string[]} chain
-	 */
-	async goto(
-		href,
-		{ noscroll = false, replaceState = false, keepfocus = false, state = {} } = {},
-		chain
-	) {
-		const url = new URL(href, get_base_uri(document));
-
-		if (this.enabled) {
-			return this._navigate({
-				url,
-				scroll: noscroll ? scroll_state() : null,
-				keepfocus,
-				chain,
-				details: {
-					state,
-					replaceState
-				},
-				accepted: () => {},
-				blocked: () => {}
-			});
-		}
-
-		location.href = url.href;
-		return new Promise(() => {
-			/* never resolves */
-		});
-	}
-
-	enable() {
+	_enable() {
 		this.enabled = true;
 	}
 
-	disable() {
+	_disable() {
 		this.enabled = false;
-	}
-
-	/**
-	 * @param {URL} url
-	 * @returns {Promise<import('./types').NavigationResult | undefined>}
-	 */
-	async prefetch(url) {
-		const info = this.parse(url);
-
-		if (!info) {
-			throw new Error('Attempted to prefetch a URL that does not belong to this app');
-		}
-
-		return this.load(info);
-	}
-
-	/** @param {({ from, to }: { from: URL | null, to: URL }) => void} fn */
-	after_navigate(fn) {
-		onMount(() => {
-			this.callbacks.after_navigate.push(fn);
-
-			return () => {
-				const i = this.callbacks.after_navigate.indexOf(fn);
-				this.callbacks.after_navigate.splice(i, 1);
-			};
-		});
-	}
-
-	/**
-	 * @param {({ from, to, cancel }: { from: URL, to: URL | null, cancel: () => void }) => void} fn
-	 */
-	before_navigate(fn) {
-		onMount(() => {
-			this.callbacks.before_navigate.push(fn);
-
-			return () => {
-				const i = this.callbacks.before_navigate.indexOf(fn);
-				this.callbacks.before_navigate.splice(i, 1);
-			};
-		});
 	}
 
 	/**
@@ -1361,7 +1361,7 @@ export class Client {
 			return;
 		}
 
-		const info = this.parse(url);
+		const info = this._parse(url);
 		if (!info) {
 			location.href = url.href;
 			return new Promise(() => {
@@ -1381,7 +1381,7 @@ export class Client {
 
 		const token = (this.navigating_token = {});
 
-		await this.handle_navigation(info, chain, false, {
+		await this._handle_navigation(info, chain, false, {
 			scroll,
 			keepfocus
 		});
