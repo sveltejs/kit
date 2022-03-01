@@ -796,6 +796,8 @@ export class Renderer {
 										state: this.current
 									};
 								}
+								// '.' means fallthrough from server-side  not match any router
+								if (route_key === '.') return;
 								props = await res.json();
 								if (route_key) {
 									const next_route = routes.find((r) => r[4] === route_key);

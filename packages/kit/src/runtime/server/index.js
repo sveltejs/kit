@@ -164,7 +164,7 @@ export async function respond(request, options, state = {}) {
 					const is_page = route.type === 'page';
 					if (is_data_request && is_page && route.shadow) {
 						if (!from_fallthrough && shadow_key && shadow_key !== route.key) continue;
-						if (is_data_request && route.shadow) {
+						if (route.shadow) {
 							response = await render_endpoint(event, await route.shadow());
 							// loading data for a client-side transition is a special case
 							if (response) {
@@ -253,10 +253,15 @@ export async function respond(request, options, state = {}) {
 					}
 				}
 
-				// shadow point fallthrough but not match any page
+				// no match route
 				if (from_fallthrough) {
+					const headers = new Headers({
+						'x-sveltekit-load': '.'
+					});
+					// next match not a shadow  so fallthrough at client-side
 					return new Response(undefined, {
-						status: 404
+						headers,
+						status: 204
 					});
 				}
 
