@@ -733,7 +733,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					url
 				});
 			} else {
-				if (node && node.loaded && node.loaded.stuff) {
+				if (node?.loaded?.stuff) {
 					stuff = {
 						...stuff,
 						...node.loaded.stuff
