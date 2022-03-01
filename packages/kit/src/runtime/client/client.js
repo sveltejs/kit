@@ -106,7 +106,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		session_id += 1;
 
 		const intent = get_navigation_intent(new URL(location.href));
-		_update(intent, [], true);
+		update(intent, [], true);
 	});
 	ready = true;
 
@@ -180,7 +180,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 		const intent = get_navigation_intent(url);
 
-		loading.promise = _get_navigation_result(intent, false);
+		loading.promise = get_navigation_result(intent, false);
 		loading.id = intent.id;
 
 		return loading.promise;
@@ -192,9 +192,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {boolean} no_cache
 	 * @param {{hash?: string, scroll: { x: number, y: number } | null, keepfocus: boolean}} [opts]
 	 */
-	async function _update(intent, chain, no_cache, opts) {
+	async function update(intent, chain, no_cache, opts) {
 		const current_token = (token = {});
-		let navigation_result = await _get_navigation_result(intent, no_cache);
+		let navigation_result = await get_navigation_result(intent, no_cache);
 
 		if (!navigation_result && intent.url.pathname === location.pathname) {
 			navigation_result = await load_root_error_page({
@@ -249,7 +249,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			root.$set(navigation_result.props);
 			stores.navigating.set(null);
 		} else {
-			_init(navigation_result);
+			initialize(navigation_result);
 		}
 
 		// opts must be passed if we're navigating
@@ -312,7 +312,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	}
 
 	/** @param {import('./types').NavigationResult} result */
-	function _init(result) {
+	function initialize(result) {
 		current = result.state;
 
 		const style = document.querySelector('style[data-svelte]');
@@ -338,7 +338,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function _get_navigation_result(intent, no_cache) {
+	async function get_navigation_result(intent, no_cache) {
 		if (loading.id === intent.id && loading.promise) {
 			return loading.promise;
 		}
@@ -359,7 +359,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				}
 			}
 
-			const result = await _load(route, intent, no_cache);
+			const result = await load_route(route, intent, no_cache);
 			if (result) return result;
 		}
 	}
@@ -375,7 +375,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   error?: Error;
 	 * }} opts
 	 */
-	async function _get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
+	async function get_navigation_result_from_branch({ url, params, stuff, branch, status, error }) {
 		const filtered = /** @type {import('./types').BranchNode[] } */ (branch.filter(Boolean));
 		const redirect = filtered.find((f) => f.loaded && f.loaded.redirect);
 
@@ -460,7 +460,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 *   props?: Record<string, any>;
 	 * }} options
 	 */
-	async function _load_node({ status, error, module, url, params, stuff, props }) {
+	async function load_node({ status, error, module, url, params, stuff, props }) {
 		/** @type {import('./types').BranchNode} */
 		const node = {
 			module,
@@ -554,7 +554,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	 * @param {import('./types').NavigationIntent} intent
 	 * @param {boolean} no_cache
 	 */
-	async function _load(route, { id, url, path }, no_cache) {
+	async function load_route(route, { id, url, path }, no_cache) {
 		if (!no_cache) {
 			const cached = cache.get(id);
 			if (cached) return cached;
@@ -642,7 +642,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					}
 
 					if (!error) {
-						node = await _load_node({
+						node = await load_node({
 							module,
 							url,
 							params,
@@ -699,7 +699,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 
 						try {
-							error_loaded = await _load_node({
+							error_loaded = await load_node({
 								status,
 								error,
 								module: await b[i](),
@@ -744,7 +744,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			}
 		}
 
-		return await _get_navigation_result_from_branch({
+		return await get_navigation_result_from_branch({
 			url,
 			params,
 			stuff,
@@ -765,14 +765,14 @@ export function create_client({ target, session, base, trailing_slash }) {
 		/** @type {Record<string, string>} */
 		const params = {}; // error page does not have params
 
-		const root_layout = await _load_node({
+		const root_layout = await load_node({
 			module: await fallback[0],
 			url,
 			params,
 			stuff: {}
 		});
 
-		const root_error = await _load_node({
+		const root_error = await load_node({
 			status,
 			error,
 			module: await fallback[1],
@@ -781,7 +781,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			stuff: (root_layout && root_layout.loaded && root_layout.loaded.stuff) || {}
 		});
 
-		return await _get_navigation_result_from_branch({
+		return await get_navigation_result_from_branch({
 			url,
 			params,
 			stuff: {
@@ -872,7 +872,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			});
 		}
 
-		await _update(intent, chain, false, {
+		await update(intent, chain, false, {
 			scroll,
 			keepfocus
 		});
@@ -939,7 +939,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
 					const intent = get_navigation_intent(new URL(location.href));
-					await _update(intent, [], true);
+					await update(intent, [], true);
 
 					invalidating = null;
 				});
@@ -1164,7 +1164,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 						}
 					}
 
-					const node = await _load_node({
+					const node = await load_node({
 						module: await nodes[i],
 						url,
 						params,
@@ -1200,7 +1200,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 
 				result = error_args
 					? await load_root_error_page(error_args)
-					: await _get_navigation_result_from_branch({
+					: await get_navigation_result_from_branch({
 							url,
 							params,
 							stuff,
@@ -1225,7 +1225,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 				return;
 			}
 
-			_init(result);
+			initialize(result);
 		}
 	};
 }
