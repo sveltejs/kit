@@ -110,8 +110,8 @@ export interface HandleError {
 	(input: { error: Error & { frame?: string }; event: RequestEvent }): void;
 }
 
-export interface Load<Params = Record<string, string>, Props = Record<string, any>> {
-	(input: LoadInput<Params>): MaybePromise<Either<Fallthrough, LoadOutput<Props>>>;
+export interface Load<Params = Record<string, string>, InputProps = Record<string, any>, OutputProps = Record<string, any>> {
+	(input: LoadInput<Params, InputProps>): MaybePromise<Either<Fallthrough, LoadOutput<OutputProps>>>;
 }
 
 export interface Page<Params extends Record<string, string> = Record<string, string>> {
