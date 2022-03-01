@@ -311,12 +311,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 		enabled = leaf_node?.module.router !== false;
 	}
 
-	/** @param {URL} url */
-	function _update_page_store(url) {
-		stores.page.set({ ...page, url });
-		stores.page.notify();
-	}
-
 	/** @param {import('./types').NavigationResult} result */
 	function _init(result) {
 		current = result.state;
@@ -1088,7 +1082,9 @@ export function create_client({ target, session, base, trailing_slash }) {
 					hash_navigating = true;
 
 					update_scroll_positions(current_history_index);
-					_update_page_store(new URL(url.href));
+
+					stores.page.set({ ...page, url });
+					stores.page.notify();
 
 					return;
 				}
