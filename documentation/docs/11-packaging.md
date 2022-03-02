@@ -2,7 +2,7 @@
 title: Packaging
 ---
 
-> `svelte-kit package` is experimental, and may undergo breaking changes.
+> `svelte-kit package` is currently experimental and is not subject to Semantic Versioning rules. Non-backward compatible changes may occur in any future release.
 
 You can use SvelteKit to build component libraries as well as apps.
 
