@@ -247,7 +247,6 @@ export function create_client({ target, session, base, trailing_slash }) {
 			current = navigation_result.state;
 
 			root.$set(navigation_result.props);
-			stores.navigating.set(null);
 		} else {
 			initialize(navigation_result);
 		}
