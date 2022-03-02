@@ -76,6 +76,10 @@ export default function create_manifest_data({
 
 			const ext = config.extensions.find((ext) => basename.endsWith(ext)) || path.extname(basename);
 
+			// treat .css files as a special case (https://github.com/sveltejs/kit/issues/3997)
+			// TODO do we want to treat all non-.js/.ts files similarly?
+			if (ext === '.css') return;
+
 			const name = ext ? basename.slice(0, -ext.length) : basename;
 
 			// TODO remove this after a while
