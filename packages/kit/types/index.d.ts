@@ -6,6 +6,7 @@ import './ambient';
 import { CompileOptions } from 'svelte/types/compiler/interfaces';
 import {
 	Body,
+	BodyValidator,
 	Builder,
 	CspDirectives,
 	Either,
@@ -133,16 +134,16 @@ export interface Navigation {
  * that method. Note that since 'delete' is a reserved word in
  * JavaScript, delete handles are called `del` instead.
  */
-export interface RequestHandler<Params = Record<string, string>, Output extends Body = Body> {
+export interface RequestHandler<Params = Record<string, string>, Output = Body> {
 	(event: RequestEvent<Params>): RequestHandlerOutput<Output>;
 }
 
-export type RequestHandlerOutput<Output extends Body = Body> = MaybePromise<
+export type RequestHandlerOutput<Output = Body> = MaybePromise<
 	Either<
 		{
 			status?: number;
 			headers?: Headers | Partial<ResponseHeaders>;
-			body?: Output;
+			body?: Output extends Body ? Output : BodyValidator<Output>;
 		},
 		Fallthrough
 	>
