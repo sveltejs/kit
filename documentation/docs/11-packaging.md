@@ -2,6 +2,8 @@
 title: Packaging
 ---
 
+> `svelte-kit package` is currently experimental and is not subject to Semantic Versioning rules. Non-backward compatible changes may occur in any future release.
+
 You can use SvelteKit to build component libraries as well as apps.
 
 When you're creating an app, the contents of `src/routes` is the public-facing stuff; [`src/lib`](/docs/modules#$lib) contains your app's internal library.

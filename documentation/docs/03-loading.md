@@ -9,7 +9,7 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```html
 /// file: src/routes/blog/[slug].svelte
 <script context="module">
-	/** @type {import('@sveltejs/kit').Load} */
+	/** @type {import('./[slug]').Load} */
 	export async function load({ params, fetch, session, stuff }) {
 		const url = `https://cms.example.com/article/${params.slug}.json`;
 		const response = await fetch(url);
@@ -25,6 +25,8 @@ If the data for a page comes from its endpoint, you may not need a `load` functi
 ```
 
 > Note the `<script context="module">` — this is necessary because `load` runs before the component is rendered. Code that is per-component instance should go into a second `<script>` tag.
+
+As with [endpoints](/docs/routing#endpoints), pages can import [generated types](/docs/types#generated) — the `./[slug]` in the example above — to ensure that `params` are correctly typed.
 
 `load` is similar to `getStaticProps` or `getServerSideProps` in Next.js, except that `load` runs on both the server and the client. In the example above, if a user clicks on a link to this page the data will be fetched from `cms.example.com` without going via our server.
 
@@ -56,7 +58,7 @@ The `load` function receives an object containing six fields — `url`, `params`
 
 #### url
 
-`url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams`.
+`url` is an instance of [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL), containing properties like the `origin`, `hostname`, `pathname` and `searchParams` (which contains the parsed query string as a [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams) object).
 
 > In some environments this is derived from request headers during server-side rendering. If you're using [adapter-node](/docs/adapters#supported-environments-node-js), for example, you may need to configure the adapter in order for the URL to be correct.
 

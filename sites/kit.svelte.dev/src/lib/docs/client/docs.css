@@ -192,6 +192,10 @@
 	background: #d5e2ea;
 }
 
+.content blockquote pre code {
+	background: transparent;
+}
+
 .content section a:hover {
 	text-decoration: underline;
 }
