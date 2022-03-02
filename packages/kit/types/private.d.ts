@@ -126,7 +126,7 @@ export namespace Csp {
 	type UriPath = `${HttpDelineator}${string}`;
 }
 
-export type CspDirectives = {
+export interface CspDirectives {
 	'child-src'?: Csp.Sources;
 	'default-src'?: Array<Csp.Source | Csp.ActionSource>;
 	'frame-src'?: Csp.Sources;
@@ -191,7 +191,7 @@ export type CspDirectives = {
 		| 'unsafe-url'
 		| 'none'
 	>;
-};
+}
 
 export type Either<T, U> = Only<T, U> | Only<U, T>;
 
@@ -206,7 +206,9 @@ export interface Fallthrough {
 
 export type HttpMethod = 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch';
 
-export type JSONObject = { [key: string]: JSONValue };
+export interface JSONObject {
+	[key: string]: JSONValue;
+}
 
 export type JSONValue =
 	| string
@@ -302,10 +304,10 @@ export interface RequestOptions {
 	platform?: App.Platform;
 }
 
-export type ResolveOptions = {
+export interface ResolveOptions {
 	ssr?: boolean;
 	transformPage?: ({ html }: { html: string }) => MaybePromise<string>;
-};
+}
 
 /** `string[]` is only for set-cookie, everything else must be type of `string` */
 export type ResponseHeaders = Record<string, string | number | string[]>;
@@ -344,6 +346,8 @@ export interface SSRManifest {
 	};
 }
 
-export type ToJSON = { toJSON(...args: any[]): Exclude<JSONValue, ToJSON> };
+export interface ToJSON {
+	toJSON(...args: any[]): Exclude<JSONValue, ToJSON>;
+}
 
 export type TrailingSlash = 'never' | 'always' | 'ignore';
