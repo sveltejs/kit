@@ -52,7 +52,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 	const cache = new Map();
 
 	/** @type {Set<string>} */
-	const invalid = new Set();
+	const invalidated = new Set();
 
 	const stores = {
 		url: notifiable_store({}),
@@ -209,7 +209,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		// abort if user navigated during update
 		if (token !== current_token) return;
 
-		invalid.clear();
+		invalidated.clear();
 
 		if (navigation_result.redirect) {
 			if (redirect_chain.length > 10 || redirect_chain.includes(intent.url.pathname)) {
@@ -599,7 +599,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 					(changed.url && previous.uses.url) ||
 					changed.params.some((param) => previous.uses.params.has(param)) ||
 					(changed.session && previous.uses.session) ||
-					Array.from(previous.uses.dependencies).some((dep) => invalid.has(dep)) ||
+					Array.from(previous.uses.dependencies).some((dep) => invalidated.has(dep)) ||
 					(stuff_changed && previous.uses.stuff);
 
 				if (changed_since_last_render) {
@@ -937,7 +937,7 @@ export function create_client({ target, session, base, trailing_slash }) {
 		invalidate: (resource) => {
 			const { href } = new URL(resource, location.href);
 
-			invalid.add(href);
+			invalidated.add(href);
 
 			if (!invalidating) {
 				invalidating = Promise.resolve().then(async () => {
