@@ -94,16 +94,15 @@ function validate(config, out, user_file) {
 		const { paths: user_paths } = user_tsconfig.compilerOptions || {};
 
 		if (user_paths) {
+			/** @type {string[]} */
 			const lib = user_paths['$lib'] || [];
+			/** @type {string[]} */
 			const lib_ = user_paths['$lib/*'] || [];
 
 			const missing_lib_paths =
-				!lib.some(
-					(/** @type {string} */ relative) => path.resolve('.', relative) === config.kit.files.lib
-				) ||
+				!lib.some((relative) => path.resolve('.', relative) === config.kit.files.lib) ||
 				!lib_.some(
-					(/** @type {string} */ relative) =>
-						path.resolve('.', relative) === config.kit.files.lib + '/*'
+					(relative) => path.resolve('.', relative) === path.join(config.kit.files.lib, '/*')
 				);
 
 			if (missing_lib_paths) {
@@ -112,12 +111,12 @@ function validate(config, out, user_file) {
 						.bold()
 						.yellow(`Your compilerOptions.paths in ${user_file} should include the following:`)
 				);
-				const relative = path.relative('.', config.kit.files.lib);
+				const relative = posixify(path.relative('.', config.kit.files.lib));
 				console.warn(`{\n  "$lib":["${relative}"],\n  "$lib/*":["${relative}/*"]\n}`);
 			}
 		}
 	} else {
-		let relative = path.relative('.', out);
+		let relative = posixify(path.relative('.', out));
 		if (relative.startsWith(SVELTE_KIT)) relative = './' + relative;
 
 		console.warn(
