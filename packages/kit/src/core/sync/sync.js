@@ -1,7 +1,52 @@
 import fs from 'fs';
 import path from 'path';
 import { s } from '../../utils/misc.js';
-import { mkdirp } from '../../utils/filesystem.js';
+import { copy, mkdirp } from '../../utils/filesystem.js';
+import { generate_tsconfig } from './tsconfig.js';
+import create_manifest_data from './create_manifest_data/index.js';
+import { fileURLToPath } from 'url';
+
+/** @param {import('types').ValidatedConfig} config */
+export function init(config) {
+	generate_tsconfig(config);
+	copy_assets(path.join(config.kit.outDir, 'runtime'));
+}
+
+/** @param {import('types').ValidatedConfig} config */
+export function update(config) {
+	const manifest_data = create_manifest_data({ config });
+	create_app({ config, manifest_data });
+
+	return { manifest_data };
+}
+
+/** @param {import('types').ValidatedConfig} config */
+export function sync(config) {
+	init(config);
+	return update(config);
+}
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/** @param {string} dest */
+export function copy_assets(dest) {
+	if (process.env.BUNDLED) {
+		let prefix = '..';
+		do {
+			// we jump through these hoops so that this function
+			// works whether or not it's been bundled
+			const resolved = path.resolve(__dirname, `${prefix}/assets`);
+
+			if (fs.existsSync(resolved)) {
+				copy(resolved, dest);
+				return;
+			}
+
+			prefix = `../${prefix}`;
+		} while (true); // eslint-disable-line
+	}
+}
 
 /** @type {Map<string, string>} */
 const previous_contents = new Map();
@@ -24,7 +69,7 @@ export function write_if_changed(file, code) {
  * @param {{
  *   config: import('types').ValidatedConfig;
  *   manifest_data: ManifestData;
- *   cwd: string;
+ *   cwd?: string;
  * }} options
  */
 export function create_app({ config, manifest_data, cwd = process.cwd() }) {

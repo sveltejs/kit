@@ -3,9 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import vite from 'vite';
 import { deep_merge } from '../../utils/object.js';
 import { print_config_conflicts } from '../config/index.js';
-import { copy_assets, get_aliases, get_runtime_path } from '../utils.js';
+import { get_aliases, get_runtime_path } from '../utils.js';
 import { create_plugin } from './plugin.js';
-import { generate_tsconfig } from '../tsconfig.js';
+import * as sync from '../sync/sync.js';
 
 /**
  * @typedef {{
@@ -20,9 +20,7 @@ import { generate_tsconfig } from '../tsconfig.js';
 
 /** @param {Options} opts */
 export async function dev({ cwd, port, host, https, config }) {
-	copy_assets(path.join(config.kit.outDir, 'runtime'));
-
-	generate_tsconfig(config);
+	sync.init(config);
 
 	const [vite_config] = deep_merge(
 		{

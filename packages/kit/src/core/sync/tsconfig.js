@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import colors from 'kleur';
-import { mkdirp, posixify } from '../utils/filesystem.js';
+import { mkdirp, posixify } from '../../utils/filesystem.js';
 
 /** @param {string} file */
 const exists = (file) => fs.existsSync(file) && file;

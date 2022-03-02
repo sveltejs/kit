@@ -4,8 +4,7 @@ import { URL } from 'url';
 import colors from 'kleur';
 import sirv from 'sirv';
 import { installFetch } from '../../install-fetch.js';
-import { create_app } from '../create_app/index.js';
-import create_manifest_data from '../create_manifest_data/index.js';
+import * as sync from '../sync/sync.js';
 import { getRequest, setResponse } from '../../node.js';
 import { SVELTE_KIT_ASSETS } from '../constants.js';
 import { get_mime_lookup, get_runtime_path, resolve_entry } from '../utils.js';
@@ -45,9 +44,7 @@ export async function create_plugin(config, cwd) {
 			let manifest;
 
 			function update_manifest() {
-				const manifest_data = create_manifest_data({ config, cwd });
-
-				create_app({ config, manifest_data, cwd });
+				const { manifest_data } = sync.update(config);
 
 				manifest = {
 					appDir: config.kit.appDir,
