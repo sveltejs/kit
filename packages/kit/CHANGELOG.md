@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 1.0.0-next.289
+
+### Patch Changes
+
+- Only fall back to full page reload if pathname has changed ([#4116](https://github.com/sveltejs/kit/pull/4116))
+
+* Generate types for each page/endpoint ([#4120](https://github.com/sveltejs/kit/pull/4120))
+
+- Extend user tsconfig from generated .svelte-kit/tsconfig.json ([#4118](https://github.com/sveltejs/kit/pull/4118))
+
 ## 1.0.0-next.288
 
 ### Patch Changes

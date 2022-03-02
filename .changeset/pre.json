@@ -19,7 +19,11 @@
     "prerendering-test-basics": "0.0.1",
     "prerendering-test-options": "0.0.1",
     "kit.svelte.dev": "0.0.1",
-    "default-template": "0.0.1"
+    "default-template": "0.0.1",
+    "test-amp": "0.0.1",
+    "test-basics": "0.0.1",
+    "test-options": "0.0.1",
+    "test-options-2": "0.0.1"
   },
   "changesets": [
     "afraid-eels-tease",
@@ -41,6 +45,7 @@
     "blue-bulldogs-visit",
     "blue-cats-mate",
     "blue-llamas-exist",
+    "blue-parents-invite",
     "blue-poets-jam",
     "blue-squids-march",
     "blue-teachers-allow",
@@ -278,6 +283,7 @@
     "hip-windows-sit",
     "honest-beers-sing",
     "honest-bikes-pull",
+    "honest-cows-notice",
     "honest-islands-flash",
     "honest-jars-report",
     "honest-singers-guess",
@@ -574,6 +580,7 @@
     "silly-phones-worry",
     "silly-suns-look",
     "silver-elephants-tap",
+    "silver-horses-check",
     "silver-hounds-clean",
     "silver-lemons-fail",
     "silver-needles-judge",
