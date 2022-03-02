@@ -56,7 +56,7 @@ export class Router {
 	 *    base: string;
 	 *    routes: import('types').CSRRoute[];
 	 *    trailing_slash: import('types').TrailingSlash;
-	 *    renderer: import('./renderer').Renderer
+	 *    renderer: import('./renderer').Renderer;
 	 * }} opts
 	 */
 	constructor({ base, routes, trailing_slash, renderer }) {
@@ -72,9 +72,6 @@ export class Router {
 
 		this.enabled = true;
 		this.initialized = false;
-
-		// make it possible to reset focus
-		document.body.setAttribute('tabindex', '-1');
 
 		// keeping track of the history index in order to prevent popstate navigation events if needed
 		this.current_history_index = history.state?.['sveltekit:index'] ?? 0;
@@ -293,8 +290,7 @@ export class Router {
 				id: url.pathname + url.search,
 				routes: this.routes.filter(([pattern]) => pattern.test(path)),
 				url,
-				path,
-				initial: !this.initialized
+				path
 			};
 		}
 	}

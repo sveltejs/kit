@@ -5,10 +5,11 @@ const valid_body = {
 	num: 12345,
 	bool: true,
 	null: null,
+	maybe: Math.random() < 0.5 ? undefined : true,
 	custom: {
 		toJSON: () => 'custom toJSON function'
 	},
-	list: ['string', 12345, false, null],
+	list: ['string', 12345, false, null, undefined],
 	nested: {
 		another: 'string',
 		big_num: 98765,
@@ -83,13 +84,6 @@ export const differential_headers_assignment: RequestHandler = () => {
 // };
 
 // --- invalid cases ---
-
-// @ts-expect-error - should not have undefined (should it not?)
-export const error_no_undefined: RequestHandler = () => {
-	return {
-		body: { no: Math.random() < 0.5 ? undefined : 'something' }
-	};
-};
 
 // @ts-expect-error - body must be JSON serializable
 export const error_body_must_be_serializable: RequestHandler = () => {

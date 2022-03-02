@@ -1,5 +1,11 @@
 # @sveltejs/adapter-netlify
 
+## 1.0.0-next.49
+
+### Patch Changes
+
+- Add Netlify Functions context as `event.platform.context` ([#4145](https://github.com/sveltejs/kit/pull/4145))
+
 ## 1.0.0-next.48
 
 ### Patch Changes
