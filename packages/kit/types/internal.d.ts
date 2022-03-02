@@ -139,6 +139,10 @@ export interface PageData {
 	b: string[];
 }
 
+export type PayloadScriptAttributes =
+	| { type: 'data'; url: string; body?: string }
+	| { type: 'props' };
+
 export interface PrerenderDependency {
 	response: Response;
 	body: null | string | Uint8Array;
